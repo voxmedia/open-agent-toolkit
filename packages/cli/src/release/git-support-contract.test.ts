@@ -7,7 +7,10 @@ const cliPackagePath = fileURLToPath(
   new URL('../../package.json', import.meta.url),
 );
 const quickstartPath = fileURLToPath(
-  new URL('../../../../apps/oat-docs/docs/quickstart.md', import.meta.url),
+  new URL(
+    '../../../../apps/oat-docs/docs/getting-started/quickstart.md',
+    import.meta.url,
+  ),
 );
 const hookSourcePath = fileURLToPath(
   new URL('../engine/hook.ts', import.meta.url),

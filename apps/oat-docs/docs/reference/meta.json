@@ -1,10 +1,16 @@
 {
   "title": "Reference",
   "pages": [
+    "what-oat-writes",
+    "configuration",
+    "config-and-local-state",
     "cli-reference",
     "file-locations",
     "docs-index-contract",
     "oat-directory-structure",
-    "troubleshooting"
+    "troubleshooting",
+    "project-artifacts",
+    "project-state-machine",
+    "repository-pr-comments"
   ]
 }

@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.1
+  version: '1.3.2'
 ---
 
 # Docs Bootstrap

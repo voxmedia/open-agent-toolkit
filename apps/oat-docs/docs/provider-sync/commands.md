@@ -13,8 +13,8 @@ These command definitions inherit the cross-cutting CLI conventions in:
 
 ## Adjacent command docs (outside provider interop scope)
 
-- `oat init` (bootstrap): `../cli-utilities/bootstrap.md`
-- `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): `../cli-utilities/tool-packs.md`
+- `oat init` (bootstrap): [CLI Bootstrap](../getting-started/bootstrap.md)
+- `oat tools ...` (tool-pack lifecycle — install, update, remove, list, info): [Tool Packs and Installed Assets](../getting-started/tool-packs.md)
 - `oat doctor` (cross-cutting diagnostics): `../reference/cli-reference.md`
 
 ## Quick Look
@@ -241,3 +241,26 @@ Key behavior:
 - Under `none`, warns about every `CLAUDE.md` that remains after sync, including inside excluded trees, because any one of them makes Claude Code ignore every `AGENTS.md`
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy
 - Detailed behavior and examples: [`Instruction Sync`](instruction-sync.md)
+
+## Safe scope for routine refresh
+
+`oat sync` copies or links your canonical assets (the skills, agents, and rules
+you edit under `.agents/`) into provider views, the per-tool files such as
+`.claude/skills/<name>` that each agent tool reads. The scope decides which
+trees it touches: `project` is this repository, `user` is your home directory,
+and `all` is both.
+
+> [!WARNING]
+> A bare `oat sync` uses scope `all`, so it also writes under your home
+> directory. Every sync also overwrites edits made directly in provider folders,
+> replaces an untracked file sitting at a view path, and removes a view whose
+> canonical source was deleted. Edit files under `.agents/` rather than in
+> provider folders, and pass `--scope` explicitly.
+
+- For a repository-only refresh, run `oat sync --scope project --dry-run` to
+  preview, then run it again without `--dry-run`.
+- In CI or scripts, always pass `--scope project` so the run cannot touch
+  anything in a home directory.
+- To refresh your personal skills across repositories, run
+  `oat sync --scope user`.
+- If you do mean to refresh both, preview `oat sync --scope all --dry-run` first.

@@ -25,7 +25,7 @@ const filingSkill = readRepoFile(
 );
 const retroTemplate = readRepoFile('.oat/templates/project-retro.md');
 const retroDocs = readRepoFile(
-  'apps/oat-docs/docs/workflows/projects/retro.md',
+  'apps/oat-docs/docs/workflows/projects/closeout/retro.md',
 );
 
 function readScenarioRow(content: string, scenario: string): string[] {

@@ -10,7 +10,7 @@ Use this section when you are changing OAT itself rather than consuming it as a 
 ## Contents
 
 - [Contributing Code](code.md) - Repo setup, monorepo structure, quality gates, and PR expectations.
-- [Contributing Docs](documentation.md) - Docs contract, local docs workflow, and docs-specific authoring guidance.
+- [Contributing to OAT Docs](documentation.md) - Docs contract, local docs workflow, and docs-specific authoring guidance.
 - [Markdown Features](markdown-features.md) - Supported docs syntax for callouts, tabs, Mermaid, and code blocks.
 - [Writing Skills](skills.md) - Skill authoring guidance, runtime contracts, and governance.
 - [CLI Design Principles](design-principles.md) - Cross-cutting CLI architecture and UX principles.
@@ -19,3 +19,16 @@ Use this section when you are changing OAT itself rather than consuming it as a 
 - [Smoke Testing](smoke-testing.md) - Runbook for the live workflow smoke runner: prerequisites, scenarios, evidence reports, and recovery.
 - [Updating Model Guidance](updating-model-guidance.md) - Source map and verification checklist for provider model refreshes.
 - [Verifying Cursor Pins](verifying-cursor-pins.md) - Runbook for probe-verifying a Cursor model pin before shipping it.
+
+## Source-of-truth hierarchy
+
+When you document OAT behavior, check it against these sources, highest
+first:
+
+1. Runtime behavior: `packages/cli/src/**`
+2. Skill behavior contracts: `.agents/skills/*/SKILL.md`
+3. OAT templates and runtime state: `.oat/templates/**`, `.oat/sync/**`, `.oat/config.json`, `.oat/config.local.json`
+4. Repo reference records: `.oat/repo/**`
+
+New pages belong in one of the top-level sections listed on the
+[docs home page](../index.md); the older `guide/` section no longer exists.

@@ -23,7 +23,9 @@ OAT lifecycle order:
 
 **Shortcut:** `oat-project-next` reads project state and invokes the correct next skill automatically — use it instead of remembering which skill comes next. Complements `oat-project-progress` (which is read-only diagnostic).
 
-Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](design-modes.md) for details.
+Full spec-driven design supports three interaction modes: collaborative, selective collaborative, and draft-and-review. Selective collaborative drafts routine sections silently and presents high-risk or uncertain sections for live review. Quick-start lightweight design stays simpler and offers only collaborative or draft-and-review. See [Design Modes](planning/design-modes.md) for details.
+
+For a one-page view of where people approve and what runs automatically in each mode, see [Approvals and Automation](../approvals-and-automation.md).
 
 ## Quick Look
 
@@ -126,7 +128,7 @@ On completion, OAT treats archive handling as an explicit closeout choice:
   pointer immediately, as does any completion that declines archive. An archive
   failure therefore leaves the pointer intact and the completion directly
   resumable. See
-  [Picking Up a Project](picking-up-projects.md#archive-contents) for the
+  [Picking Up a Project](execution/picking-up-projects.md#archive-contents) for the
   post-archive resume and its manual recovery path.
 - When archiving is disabled or declined, durable projects remain at their
   active path. Synced completion still finalizes and pushes the project ref,
@@ -144,7 +146,7 @@ On completion, OAT treats archive handling as an explicit closeout choice:
   valid terminal shapes. The active alias is inert: list omits it and pull/open
   reject it. Differing SHAs are a hard mismatch with recovery guidance.
 - If `.oat/config.json` enables `archive.s3SyncOnComplete` and sets `archive.s3Uri`, completion requires the S3 upload of a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/` to succeed before terminal record/ref cleanup. A failed configured upload leaves retry identity intact and does not claim closeout.
-- If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../cli-utilities/config-and-local-state.md) for the full precedence chain.
+- If `.oat/config.json` sets `archive.awsProfile` and/or `archive.awsRegion`, those values are forwarded to every `aws` invocation triggered by completion (preflight checks + `aws s3 sync`) and override any ambient shell `AWS_PROFILE` / `AWS_DEFAULT_PROFILE` / `AWS_REGION` / `AWS_DEFAULT_REGION` values. The repo's archive-scoped credentials are treated as deliberate intent so users don't have to unset shell env vars before running completion. See [`config-and-local-state.md`](../../reference/config-and-local-state.md) for the full precedence chain.
 - If `.oat/config.json` sets `archive.summaryExportPath`, completion copies `summary.md` to `<archive.summaryExportPath>/20260401-<project>.md`.
 - Missing or unusable AWS CLI configuration blocks synced terminal cleanup when S3 durability is configured; when S3 sync is not configured, it is not part of the durability requirement.
 - `oat repo archive sync` can later sync all archived projects, or one named archived project, back down from S3; it selects the latest dated remote snapshot and materializes it into the local bare archive tree.
@@ -225,6 +227,8 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 
 ### Auto-review at HiLL checkpoints
 
+When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). The preference is unset by default; interactive implementation asks with "no" suggested, while autonomous non-lite implementation forces it on. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
+
 ### Approval-aware post-implementation sequencing
 
 `workflow.postImplementSequence` can use the legacy string values or a structured
@@ -264,8 +268,6 @@ registers. Non-interactive completion skips this offer, so autonomous
 generation occurs only through an explicitly configured post-approval `retro`
 step.
 
-When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (low findings auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
-
 ### Phase-review setup during planning
 
 Spec-driven, quick, and import planning run one shared setup after stable phase
@@ -302,7 +304,7 @@ Within either tier, parallelism is expressed as plan metadata:
 - **Sequential (default):** plans with no `oat_plan_parallel_groups` field, or with an empty array. Phases run in plan order on the orchestration branch.
 - **Parallel groups:** phases listed together in `oat_plan_parallel_groups` run concurrently in worktrees (Tier 1 only) and merge back to the orchestration branch in plan order. Groups themselves execute sequentially.
 
-See [Implementation Execution](implementation-execution.md) for the full execution model — tier detection, bounded fix loop, fan-in, merge-conflict handling, dry-run, and resumption.
+See [Implementation Execution](execution/implementation-execution.md) for the full execution model — tier detection, bounded fix loop, fan-in, merge-conflict handling, dry-run, and resumption.
 
 ## Review receive behavior
 
@@ -312,7 +314,7 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 
 ## Alternate lifecycle lanes
 
-### Quick lane diagram
+### Quick lane steps
 
 1. `oat-project-quick-start` (adaptive discovery — provide a project name and optional description; if only the name is provided, quick-start asks for the missing description before discovery. Well-understood requests synthesize quickly, exploratory requests invest in solution space exploration. Before scaffolding, the skill checks inherited git state and asks whether to commit, proceed, or abort when the worktree is already dirty.)
 2. Decision point: straight to plan, optional lightweight `design.md`, or promote to spec-driven
@@ -320,14 +322,14 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 4. `oat-project-review-provide` / `oat-project-pr-final`
 5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
 
-### Lite lane diagram
+### Lite lane steps
 
 1. `oat-project-lite` runs one batched interview, authors a single-phase `plan.md` with validation criteria, and pauses once for approval
 2. Implement: `oat-project-implement` runs the single phase without HiLL checkpoint prompts
 3. Pass the mandatory final review, then route directly to `oat-project-pr-final`
 4. Optional `oat project promote <project-path> --to quick` when the work no longer fits one sitting
 
-### Import lane diagram
+### Import lane steps
 
 1. `oat-project-import-plan` (checks inherited git state before import scaffolding so sync-generated or unrelated dirty files do not silently roll into project bookkeeping)
 2. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
@@ -513,7 +515,7 @@ Capture lane progression:
 
 The lifecycle has several interactive prompts that power users often answer the same way every time — HiLL checkpoint behavior, archive on complete, auto-create PR, post-implementation chaining, final review execution model, and re-review scope narrowing. These can be configured once via `workflow.*` preference keys and respected automatically by skills.
 
-See the [Workflow preferences section in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Preferences resolve through a three-layer chain (`env > repo-local > repo-shared > user > default`), so you can set personal defaults at user scope once and override per-repo only when needed.
+See the [Workflow preferences section in the Configuration guide](../../reference/configuration.md#workflow-preferences-workflow) for the full list of keys and how to set them. Workflow preferences resolve through `repo-local > repo-shared > user > default`; there is no generic workflow environment layer. Individual skills may separately read environment controls such as `OAT_DESIGN_MODE`. Set personal defaults at user scope and override per-repo when needed.
 
 ## Active project resolution
 
@@ -538,7 +540,7 @@ separate checks, and both must hold before any PJM write:
 Pack presence is never treated as evidence of repository adoption. A skill that
 finds the capability available but the repository unadopted reports the
 actionable `oat pjm init` stop instead of scaffolding implicitly. See
-[Install vs. initialize](../../cli-utilities/tool-packs.md#install-vs-initialize).
+[Install vs. initialize](../../getting-started/tool-packs.md#install-vs-initialize).
 
 ## Brainstorming integration with the project lifecycle
 
@@ -566,3 +568,37 @@ The fold-back path is what makes "we got to plan and realized the design missed 
 - `.oat/projects/<scope>/<project>/design.md`
 - `.oat/projects/<scope>/<project>/plan.md`
 - `.oat/projects/<scope>/<project>/implementation.md`
+
+## Choosing lifecycle controls
+
+OAT has four separate controls that are easy to confuse. Each one adds a
+different kind of check:
+
+- **Planning checkpoints** hold a spec-driven project after discovery and after
+  design until a person approves.
+- **Implementation checkpoints** (HiLL checkpoints) pause implementation after
+  chosen phases until a person approves.
+- **Artifact review loops** have the same agent session check a generated plan
+  or analysis and fix clear problems before handing it on.
+- **Gates** send the work to a second agent CLI, preferably running a different
+  family of models, and turn its findings into a pass or a fail.
+
+None of these replaces the code reviews that run after every implementation
+phase and before closeout; those run whatever you choose here.
+
+Decide in this order: first the
+[workflow mode](../choose-workflow.md#which-mode-should-i-choose), then the
+[design interaction mode](planning/design-modes.md#choosing-an-interaction-mode),
+then the [checkpoint frequency](planning/hill-checkpoints.md#choosing-checkpoint-frequency).
+
+- If your team needs to approve the architecture before any code is written,
+  choose a spec-driven project for its planning checkpoints, or add a gate to a
+  planning skill.
+- If you want to steer implementation after risky phases, choose
+  implementation checkpoints for those phases.
+- If a plan or analysis will be handed to another workflow, keep its artifact
+  review loop on.
+- If a high-risk change needs a reviewer from a different model family, add a
+  [gate](../advanced/workflow-gates.md#choosing-gate-posture) and check which
+  reviewer it actually used. Adding more reviews makes a run slower; it does not
+  by itself make them independent.

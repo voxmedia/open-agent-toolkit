@@ -19,7 +19,9 @@ This document defines the project and user sync config used by provider-interop 
 Discovery note:
 
 - `oat config describe` includes both sync config scopes in its catalog so you can inspect sync/provider keys from the main config help surface.
-- Mutation ownership still lives with provider-sync commands such as `oat providers set`, not `oat config set`.
+- Enablement mutation lives with `oat providers set`, not `oat config set`.
+  Strategy fields are edited directly in sync config; the provider command does
+  not set them.
 
 It is read by:
 
@@ -143,3 +145,60 @@ safe, including after interruption.
 - [`commands.md`](commands.md)
 - [`manifest-and-drift.md`](manifest-and-drift.md)
 - [`../reference/oat-directory-structure.md`](../reference/oat-directory-structure.md)
+
+## Choosing providers and strategy
+
+### Which providers to enable
+
+Enabling a provider tells OAT to maintain that agent tool's provider views (the
+per-tool files it generates from your `.agents/` canonical assets). Set it with
+`oat providers set --enabled <list> --disabled <list>`.
+
+| `enabled`       | Choose it when                     | What you give up                                                                  |
+| --------------- | ---------------------------------- | --------------------------------------------------------------------------------- |
+| `true`          | Someone on the team uses that tool | Generated files appear in your diffs, even in checkouts without the tool's folder |
+| `false`         | Nobody uses that tool              | OAT stops creating, updating, or removing its files; existing views stay on disk  |
+| Unset (default) | You have not chosen yet            | Predictability: the provider is active only if its folder already exists          |
+
+Interactive `oat init` writes an explicit choice for each provider. While a
+disabled provider's folder still exists, a non-interactive `oat sync` warns
+about it on every run, and an interactive `oat sync --scope project` offers to
+re-enable it with that option already ticked. Untick it, or delete the folder.
+
+- If your team uses only Claude Code, enable `claude` and disable the others.
+- If your team mixes Claude Code, Cursor, and Codex, enable those three and
+  disable `copilot` and `gemini`, so fresh checkouts and worktrees get the same
+  views without depending on which folders happen to exist.
+- If you stop using a tool, disable it, then delete its old views yourself.
+
+### Links or copies
+
+The strategy decides whether provider views are links to the canonical files or
+copies of them. No command sets it: edit `defaultStrategy` or
+`providers.<name>.strategy` in this file by hand, and keep `"version": 1` and
+`"defaultStrategy"`, or sync and status stop with a validation error. The
+"default strategy" that `oat providers inspect` prints for an adapter is not
+used by sync; this file's setting always wins.
+
+| Strategy         | Choose it when                       | What you give up                                                                                          |
+| ---------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `auto` (default) | Almost always                        | Once `auto` has adopted a whole-folder link, switching strategy needs the manual recovery described above |
+| `symlink`        | You want one link per skill or agent | It refuses to sync through an existing whole-folder link                                                  |
+| `copy`           | Links really cannot work for you     | Canonical edits reach the tools only after you run `oat sync` again                                       |
+
+Rules are always copied, whatever the strategy. If the operating system refuses
+to create a link, `auto` and `symlink` quietly copy that entry instead, so check
+the views sync actually produced. With `copy`, `oat status` can still report a
+stale copy as in sync, because it compares the copy with what OAT last wrote.
+
+> [!WARNING]
+> The `copy` strategy stamps the absolute path of the checkout that ran sync
+> into each copied skill. Committed copies therefore show as drifted in every
+> other checkout (teammates, worktrees, CI), and each `oat sync` there rewrites
+> them, so expect constant churn in Git if you commit copied views.
+
+- If you are unsure, keep `auto`.
+- If you want one link per entry, choose `symlink`, but remove any whole-folder
+  link first.
+- If links truly cannot work, choose `copy`, rerun `oat sync` after every
+  canonical edit, and expect the churn described above.

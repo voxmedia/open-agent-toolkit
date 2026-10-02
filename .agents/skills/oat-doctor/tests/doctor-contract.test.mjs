@@ -124,7 +124,7 @@ test('every pjm:* check the CLI defines has a place in the PJM dive', async () =
 test('every cited docs section is a prefix of a real heading', async () => {
   const citations = [
     ...skill.matchAll(
-      /`cli-utilities\/([a-z-]+)\.md` § ([^|\n;)]+?)(?= for | and |\)|\||;|\n)/g,
+      /`([a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)+\.md)` § ([^|\n;)]+?)(?= for | and |\)|\||;|\n)/g,
     ),
   ];
   assert.ok(
@@ -136,10 +136,7 @@ test('every cited docs section is a prefix of a real heading', async () => {
     if (!cache.has(page)) {
       cache.set(
         page,
-        await readFile(
-          join(REPO_ROOT, 'apps/oat-docs/docs/cli-utilities', `${page}.md`),
-          'utf8',
-        ),
+        await readFile(join(REPO_ROOT, 'apps/oat-docs/docs', page), 'utf8'),
       );
     }
     const headings = [...cache.get(page).matchAll(/^## (.+)$/gm)].map(
@@ -148,7 +145,7 @@ test('every cited docs section is a prefix of a real heading', async () => {
     const cited = headingText.trim();
     assert.ok(
       headings.some((heading) => heading.startsWith(cited)),
-      `${page}.md has no heading starting with "${cited}"`,
+      `${page} has no heading starting with "${cited}"`,
     );
   }
 });
@@ -418,16 +415,17 @@ test('a missing CLAUDE.md is an error only under a shim strategy, and leftover C
 
 test('every cited docs page exists, with or without a section', async () => {
   const pages = new Set(
-    [...skill.matchAll(/`cli-utilities\/([a-z-]+)\.md`/g)].map((m) => m[1]),
+    [...skill.matchAll(/`([a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)+\.md)`/g)].map(
+      (match) => match[1],
+    ),
   );
   assert.ok(pages.size >= 6, `expected cited pages, found ${pages.size}`);
   for (const page of pages) {
-    await readFile(
-      join(REPO_ROOT, 'apps/oat-docs/docs/cli-utilities', `${page}.md`),
-      'utf8',
-    ).catch(() => {
-      assert.fail(`cited docs page does not exist: cli-utilities/${page}.md`);
-    });
+    await readFile(join(REPO_ROOT, 'apps/oat-docs/docs', page), 'utf8').catch(
+      () => {
+        assert.fail(`cited docs page does not exist: ${page}`);
+      },
+    );
   }
 });
 

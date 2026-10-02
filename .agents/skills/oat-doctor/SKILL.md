@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.2
+  version: 2.0.3
 ---
 
 # OAT Doctor
@@ -194,38 +194,38 @@ Docs citations below name a page under `~/.oat/docs/` (the same tree as `apps/oa
 
 Walk every distinct `group` value in the `describe` output — nine today, including `PJM Remote Shared Policy`, `Explainer Defaults (local > shared)`, and `User Sync (~/.oat/sync/config.json)`; never a hard-coded list. For each group, say what is set (from the dump or the sync files), what is deprecated, and what is unset; for an unset group, teach it from the entry descriptions and its docs section:
 
-| Group                                                              | Docs section                                                                    |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| The five surfaces themselves (which file owns what)                | `cli-utilities/configuration.md` § The five config surfaces                     |
-| `Shared Repo (.oat/config.json)`                                   | `cli-utilities/configuration.md` § Shared repo config you will touch most often |
-| `Repo Local (.oat/config.local.json)`, `User (~/.oat/config.json)` | `cli-utilities/configuration.md` § Repo-local and user state                    |
-| `Workflow Preferences` (dispatch policy keys)                      | `cli-utilities/configuration.md` § Dispatch policy resolution                   |
-| `Workflow Preferences` (everything else)                           | `cli-utilities/configuration.md` § Workflow preferences                         |
-| `Workflow Preferences` (gate keys)                                 | `cli-utilities/workflow-gates.md` § Gate config                                 |
-| `Sync/Provider`, `User Sync`                                       | `cli-utilities/configuration.md` § Provider sync config is different            |
-| `PJM Remote Shared Policy`                                         | `cli-utilities/remote-project-management.md`                                    |
-| the `pjm.*` keys under Shared Repo                                 | `cli-utilities/backlog-lifecycle.md` § Adoption comes first                     |
-| `Explainer Defaults`                                               | the entry descriptions (`oat config describe explainers.defaults.style`)        |
+| Group                                                              | Docs section                                                                 |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| The five surfaces themselves (which file owns what)                | `reference/configuration.md` § The five config surfaces                      |
+| `Shared Repo (.oat/config.json)`                                   | `reference/configuration.md` § Shared repo config you will touch most often  |
+| `Repo Local (.oat/config.local.json)`, `User (~/.oat/config.json)` | `reference/configuration.md` § Repo-local and user state                     |
+| `Workflow Preferences` (dispatch policy keys)                      | `reference/configuration.md` § Dispatch policy resolution                    |
+| `Workflow Preferences` (everything else)                           | `reference/configuration.md` § Workflow preferences                          |
+| `Workflow Preferences` (gate keys)                                 | `workflows/advanced/workflow-gates.md` § Gate config                         |
+| `Sync/Provider`, `User Sync`                                       | `reference/configuration.md` § Provider sync config is different             |
+| `PJM Remote Shared Policy`                                         | `workflows/backlog-and-planning/remote-project-management.md`                |
+| the `pjm.*` keys under Shared Repo                                 | `workflows/backlog-and-planning/backlog-lifecycle.md` § Adoption comes first |
+| `Explainer Defaults`                                               | the entry descriptions (`oat config describe explainers.defaults.style`)     |
 
 A deprecated key is explained through its `deprecated.supersededBy` and the successor's `owningCommand`.
 
 #### PJM dive
 
-State the adoption state (`declared`, `inferred-legacy`, `partial-initialization`, or `none`) and what it means (`cli-utilities/backlog-lifecycle.md` § Adoption comes first). Then each non-passing check and its fix:
+State the adoption state (`declared`, `inferred-legacy`, `partial-initialization`, or `none`) and what it means (`workflows/backlog-and-planning/backlog-lifecycle.md` § Adoption comes first). Then each non-passing check and its fix:
 
-| Check                                                                                                                                                                                                                                         | Fix path                                                                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pjm:adoption`                                                                                                                                                                                                                                | not reported separately: the `adoption.state` rule owns it; fix `oat pjm init`                                                                                                   |
-| `pjm:canonical_files`, `pjm:template_frontmatter`, `pjm:top_level_layout`                                                                                                                                                                     | `oat pjm init` re-creates canonical files; unknown top-level folders are the person's to move (`cli-utilities/backlog-lifecycle.md` § Catching lifecycle drift)                  |
-| `pjm:legacy_monoliths`, `pjm:loose_reference_files`, `pjm:second_roadmap`                                                                                                                                                                     | structural drift: `cli-utilities/backlog-lifecycle.md` § Catching lifecycle drift and the migration guidance it links; `oat-pjm-update-repo-reference` for the reference records |
-| `pjm:backlog_terminal_in_items`, `pjm:backlog_completed_unarchived`                                                                                                                                                                           | `oat backlog archive <id>` for each named item, then `oat backlog regenerate-index`                                                                                              |
-| `pjm:backlog_invalid_status`, `pjm:backlog_archived_open`, `pjm:backlog_duplicate_id`                                                                                                                                                         | edit the named item's frontmatter (the person), then `oat backlog regenerate-index`                                                                                              |
-| `pjm:remote_schema`, `pjm:remote_binding_ids`, `pjm:remote_metadata_state`, `pjm:remote_storage_content`, `pjm:remote_policy`, `pjm:remote_concurrent_intents`, `pjm:remote_operations`, `pjm:remote_retention`, `pjm:remote_host_capability` | emitted only when a remote binding is adopted: `oat-pjm-remote` (reconcile or refresh) and `cli-utilities/remote-project-management.md`                                          |
-| any other `pjm:*` name                                                                                                                                                                                                                        | `info` with the check's message; no fix path is invented                                                                                                                         |
+| Check                                                                                                                                                                                                                                         | Fix path                                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pjm:adoption`                                                                                                                                                                                                                                | not reported separately: the `adoption.state` rule owns it; fix `oat pjm init`                                                                                                                    |
+| `pjm:canonical_files`, `pjm:template_frontmatter`, `pjm:top_level_layout`                                                                                                                                                                     | `oat pjm init` re-creates canonical files; unknown top-level folders are the person's to move (`workflows/backlog-and-planning/backlog-lifecycle.md` § Catching lifecycle drift)                  |
+| `pjm:legacy_monoliths`, `pjm:loose_reference_files`, `pjm:second_roadmap`                                                                                                                                                                     | structural drift: `workflows/backlog-and-planning/backlog-lifecycle.md` § Catching lifecycle drift and the migration guidance it links; `oat-pjm-update-repo-reference` for the reference records |
+| `pjm:backlog_terminal_in_items`, `pjm:backlog_completed_unarchived`                                                                                                                                                                           | `oat backlog archive <id>` for each named item, then `oat backlog regenerate-index`                                                                                                               |
+| `pjm:backlog_invalid_status`, `pjm:backlog_archived_open`, `pjm:backlog_duplicate_id`                                                                                                                                                         | edit the named item's frontmatter (the person), then `oat backlog regenerate-index`                                                                                                               |
+| `pjm:remote_schema`, `pjm:remote_binding_ids`, `pjm:remote_metadata_state`, `pjm:remote_storage_content`, `pjm:remote_policy`, `pjm:remote_concurrent_intents`, `pjm:remote_operations`, `pjm:remote_retention`, `pjm:remote_host_capability` | emitted only when a remote binding is adopted: `oat-pjm-remote` (reconcile or refresh) and `workflows/backlog-and-planning/remote-project-management.md`                                          |
+| any other `pjm:*` name                                                                                                                                                                                                                        | `info` with the check's message; no fix path is invented                                                                                                                                          |
 
 #### Agent instructions dive
 
-Explain the sync strategy in use (`oat instructions validate --json` `.strategy`: `none`, the default, keeps no CLAUDE.md because Claude Code reads AGENTS.md itself; `pointer`, `symlink`, and `copy` keep a shim beside each AGENTS.md) and each non-`ok` entry and leftover-CLAUDE.md warning with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`cli-utilities/bootstrap.md` for `## Tool Packs`; `cli-utilities/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools guidance` (read-only: prints the `OAT tools` block to add), or `oat pjm init` (appends absent PJM blocks) as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
+Explain the sync strategy in use (`oat instructions validate --json` `.strategy`: `none`, the default, keeps no CLAUDE.md because Claude Code reads AGENTS.md itself; `pointer`, `symlink`, and `copy` keep a shim beside each AGENTS.md) and each non-`ok` entry and leftover-CLAUDE.md warning with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`getting-started/bootstrap.md` for `## Tool Packs`; `workflows/backlog-and-planning/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools guidance` (read-only: prints the `OAT tools` block to add), or `oat pjm init` (appends absent PJM blocks) as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.
 
 #### Docs dive
 
@@ -233,7 +233,7 @@ Say what surface was detected and what `documentation.*` says. This dive owns no
 
 #### Tools dive
 
-List outdated tools with installed and bundled versions and scope, packs at both scopes, and packs enabled but not installed, each with its command. Explain scopes from `cli-utilities/tool-packs.md`.
+List outdated tools with installed and bundled versions and scope, packs at both scopes, and packs enabled but not installed, each with its command. Explain scopes from `getting-started/tool-packs.md`.
 
 ### Step 4: Summary Mode (`--summary`)
 

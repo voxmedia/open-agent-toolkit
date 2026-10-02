@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # OAT Docs
@@ -91,21 +91,21 @@ Read the user's question from `$ARGUMENTS`. If no question was provided or the q
 
 Classify the question into one or more topic areas to guide the search:
 
-| Topic Area       | Docs Path                                   | Key Content                                  |
-| ---------------- | ------------------------------------------- | -------------------------------------------- |
-| Getting started  | `quickstart.md`, `guide/getting-started.md` | Installation, first project setup            |
-| Concepts         | `guide/concepts.md`                         | Core OAT concepts and terminology            |
-| CLI commands     | `guide/cli-reference.md`                    | Full CLI command reference                   |
-| Tool packs       | `guide/tool-packs.md`                       | Installing and managing skill packs          |
-| Skills           | `guide/skills/`                             | Skill authoring, SKILL.md format             |
-| Workflows        | `guide/workflow/`                           | Project lifecycle, state machine, artifacts  |
-| Ideas            | `guide/ideas/`                              | Idea capture and brainstorming               |
-| Provider sync    | `guide/provider-sync/`                      | Multi-provider sync, config, commands        |
-| Documentation    | `guide/documentation/`                      | Docs analysis and apply workflows            |
-| Contributing     | `contributing/`                             | Code contributions, design principles, hooks |
-| File locations   | `reference/file-locations.md`               | Where OAT puts things                        |
-| Directory layout | `reference/oat-directory-structure.md`      | `.oat/` and `.agents/` structure             |
-| Troubleshooting  | `reference/troubleshooting.md`              | Common issues and fixes                      |
+| Topic Area       | Docs Path                                                       | Key Content                                  |
+| ---------------- | --------------------------------------------------------------- | -------------------------------------------- |
+| Getting started  | `getting-started/quickstart.md`, `getting-started/bootstrap.md` | Installation, first project setup            |
+| Concepts         | `getting-started/concepts.md`                                   | Core OAT concepts and terminology            |
+| CLI commands     | `reference/cli-reference.md`                                    | Full CLI command reference                   |
+| Tool packs       | `getting-started/tool-packs.md`                                 | Installing and managing skill packs          |
+| Skills           | `contributing/skills.md`                                        | Skill authoring, SKILL.md format             |
+| Workflows        | `workflows/projects/`                                           | Project lifecycle, state machine, artifacts  |
+| Ideas            | `workflows/ideas/`                                              | Idea capture and brainstorming               |
+| Provider sync    | `provider-sync/`                                                | Multi-provider sync, config, commands        |
+| Documentation    | `docs-tooling/`                                                 | Docs analysis and apply workflows            |
+| Contributing     | `contributing/`                                                 | Code contributions, design principles, hooks |
+| File locations   | `reference/file-locations.md`                                   | Where OAT puts things                        |
+| Directory layout | `reference/oat-directory-structure.md`                          | `.oat/` and `.agents/` structure             |
+| Troubleshooting  | `reference/troubleshooting.md`                                  | Common issues and fixes                      |
 
 ### Step 3: Search and Read Documentation
 
@@ -143,7 +143,7 @@ Frame these as suggestions, not automatic actions. Let the user decide.
 ```
 Based on the docs, here's how OAT project workflows work: [answer]
 
-You can read more in `guide/workflow/lifecycle.md`.
+You can read more in `workflows/projects/lifecycle.md`.
 
 Would you like me to:
 - Start a new project? (I'd invoke oat-project-lite for single-sitting work, or oat-project-quick-start for a larger quick workflow)
@@ -181,7 +181,7 @@ Both create a project directory under your projects root
 state.md, plan.md, and implementation.md; quick and spec-driven modes also use
 discovery.md.
 
-See: guide/workflow/lifecycle.md, guide/getting-started.md
+See: workflows/projects/lifecycle.md, getting-started/quickstart.md
 
 Would you like me to create a project for you?
 ```
@@ -207,7 +207,7 @@ There are four packs:
 Install with: oat init tools
 Manage with: oat tools list, oat tools update, oat tools outdated
 
-See: guide/tool-packs.md
+See: getting-started/tool-packs.md
 
 Would you like me to check which packs you have installed? (I'd run /oat-doctor --summary)
 ```

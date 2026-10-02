@@ -1,0 +1,296 @@
+---
+title: Orchestration Model
+description: Root-owned phase execution, optional nested work, independent reviews, and provider-neutral dispatch in OAT projects.
+---
+
+# Orchestration Model
+
+OAT separates lifecycle ownership from implementation ownership:
+
+- the project root owns sequencing, reviews, fix routing, checkpoints, fan-in,
+  and bookkeeping;
+- one phase implementer owns all planned tasks for one phase; and
+- optional nested agents provide bounded help only when useful.
+
+This topology keeps model control at the meaningful phase boundary without
+making every task pay another dispatch and context-loading round.
+
+Terms used on this page:
+
+- **Phase:** one numbered section of a project's `plan.md` (for example `p02`)
+  that groups related tasks.
+- **Dispatch:** launching a worker or reviewer subagent on a chosen model and
+  route. The **dispatch policy** is the project's rule for which models those
+  subagents may use; see [Dispatch Policy](dispatch-ceiling.md).
+- **Worktree:** a separate Git checkout of the same repository on its own
+  branch, used so parallel phases do not overwrite each other's files.
+- **HiLL checkpoint:** a human-in-the-loop stop after a phase where an
+  interactive run waits for your approval.
+
+## Default Topology
+
+```mermaid
+flowchart TD
+  Root["Project root\nlifecycle owner"]
+  Adapter["Project dispatch adapter"]
+  Engine["Provider-neutral dispatch engine"]
+
+  Root --> Adapter --> Engine
+  Engine --> P["Phase implementer\none per phase"]
+  P --> T1["Planned task commit"]
+  P --> T2["Planned task commit"]
+  P -. optional .-> Recon["Recon / specialist / isolated fanout"]
+
+  Root -. independent review lane .-> Adapter
+  Engine -. exact reviewer route .-> R["Phase reviewer"]
+  R -->|blocking findings| Root
+  Root -->|resume bounded fix| P
+
+  Root -. external gate lane .-> G["Configured cross-runtime gate"]
+```
+
+The solid implementation lane is mandatory. The dotted nested lane is
+benefit-driven. A run does not fail merely because the phase agent cannot or
+does not launch a third tier.
+
+## Role Boundaries
+
+| Role                  | Generic class       | Owns                                                                                      | Must not                                                                                       |
+| --------------------- | ------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Project root          | lifecycle caller    | Phase schedule, dispatch policy, phase review, fixes, worktrees, checkpoints, bookkeeping | Take over an accepted child scope or silently replace an accepted launch                       |
+| Phase implementer     | `worker`            | One whole phase, ordered task execution, per-task commits, phase verification             | Dispatch the phase reviewer, alter plan sequencing, own project checkpoints                    |
+| Optional nested child | `worker` or `recon` | Explicit bounded objective, files/read scope, output, verification                        | Become mandatory for ordinary tasks, widen phase authority, commit in place of the phase agent |
+| Phase reviewer        | `reviewer`          | Independent review of one phase commit range                                              | Inherit a below-ceiling producer silently or mutate implementation                             |
+| External gate         | `reviewer`          | Configured producer-independent lifecycle decision                                        | Substitute same-context self-review when independence is required                              |
+
+## Dispatch Layers
+
+Every lifecycle launch composes three responsibilities:
+
+1. `oat-project-dispatch-subagents` resolves project state, role policy,
+   ceilings, scope, files, commits, worktrees, and checkpoints.
+2. `subagent-orchestration` supplies the durable task classes and
+   model-selection principles. The caller loads exactly one active-provider
+   selection reference for dated candidates and refresh evidence.
+3. `oat-dispatch-subagents` resolves capabilities, live catalogs, exact
+   routes, launch acceptance, continuation, recovery, and dispatch records. It
+   loads exactly one matching provider mechanics reference.
+
+The selection and mechanics references form a two-reference provider contract:
+the first owns model guidance, while the second owns provider control surfaces.
+They are loaded together for dispatch but never collapsed into one universal
+matrix. The lifecycle workflow remains authoritative for classification,
+selection judgment, synthesis, and state mutation. The dispatch engine does
+not edit `plan.md`, `implementation.md`, or project state.
+
+```mermaid
+sequenceDiagram
+  participant Root as Project root
+  participant Adapter as Project adapter
+  participant Engine as Dispatch engine
+  participant Record as Run record in implementation.md
+  participant Phase as Phase implementer
+
+  Root->>Adapter: Phase + lifecycle authority
+  Adapter->>Engine: Provider-neutral dispatch request
+  Engine-->>Root: Exact route + request ID
+  Root->>Phase: Phase Scope
+  Root->>Record: Accepted or blocked-before-start result
+  Phase-->>Root: Phase report + commits
+```
+
+## Phase Execution
+
+The phase implementer reads its artifact set once and executes tasks serially in
+plan order. Each task retains its file boundary, verification, and one-commit
+contract. The phase agent self-checks before committing and runs phase-wide
+verification before returning.
+
+The root verifies the report against Git rather than trusting child prose:
+
+- phase base and final HEAD;
+- one commit per planned task;
+- declared file boundaries;
+- task and phase verification;
+- clean worktree; and
+- optional child records, if any.
+
+See [Implementation Execution](../projects/execution/implementation-execution.md) for the executable
+contract.
+
+## Independent Phase Review
+
+After a phase report is accepted, the root resolves and launches the reviewer
+at the configured review ceiling. Review ownership does not sit inside a
+possibly below-ceiling phase agent.
+
+Blocking findings return to the original phase handle in fix mode. If that
+completed handle cannot resume, one fresh same-target phase agent may receive
+the bounded fix scope, with `continuation_events` linking the new request to the
+original `request_id`.
+
+This preserves continuity without allowing replacement after an accepted failed
+launch.
+
+## Native Dispatch Lineage
+
+The launcher constructs and redacts the complete generic record plus the
+namespaced OAT role event before it calls the native host. When the host
+returns, the calling workflow writes the accepted or `blocked-before-start`
+state into its run record in `implementation.md`, the only launch record.
+`oat project dispatch record` validates a record and writes nothing; it never
+launches a provider or changes selection authority.
+
+An accepted handle owns the scope and closes replacement. One fresh fallback
+record is legal only when the native wrapper proves no child started, links the
+trigger and fallback request IDs, preserves the exact provider/model/effort/
+route/authority controls, resolves canonical role identity, and labels the
+fresh child as an approximation. Timeout, `BLOCKED`, refusal after acceptance,
+runtime mismatch, missing telemetry, interruption, and malformed output never
+authorize a fallback.
+
+## Optional Third Tier
+
+Nested work is appropriate when the work itself benefits:
+
+- read-only reconnaissance that can run independently;
+- analysis fanout across separate concerns;
+- safely isolated implementation lanes; or
+- a specialist capability the phase agent does not provide efficiently.
+
+Before launch, the phase agent defines objective, authority, exact target,
+output, verification, deadline, retry policy, and fallback. The parent retains
+phase ownership and task commit authority.
+
+Do not use nested dispatch merely to mirror task granularity. The smoke fixture
+intentionally proves successful execution with no task workers.
+
+## Dispatch Mode and Liveness
+
+Choose foreground or background mode from expected duration and the host
+interaction model. Short checks may run in foreground when interruption risk is
+negligible. Multi-minute implementers, fix loops, and reviewers should use a
+durable background handle when the host supports one, because ordinary session
+interaction can interrupt a foreground child in Cursor.
+
+Background is never fire-and-forget: retain the accepted handle, monitor useful
+progress, and resume that same handle for bounded fixes. For a silent child,
+provider transcript mtime and size can show observable activity without reading
+transcript content; that evidence is liveness telemetry, not a health or
+completion verdict.
+
+Claude print mode (`claude -p`) has a separate hazard: background children are
+terminated at its background-wait ceiling (600 seconds by default). Interactive
+Claude Code is unaffected. Headless gate children therefore do not follow the
+ordinary background preference; they use the gate's inline or synchronously
+awaited route and fail closed when neither is available. See
+[Workflow Gates](workflow-gates.md#headless-completion-safety).
+
+## Catalogs and Exact Selection
+
+Native model catalogs are per-dispatch-context snapshots. A root catalog does
+not prove what a nested agent can launch, and a provider CLI catalog does not
+prove native eligibility.
+
+The full-information selection order is:
+
+1. inspect the current dispatch context's native catalog;
+2. intersect it with configured candidates under the named ceiling;
+3. prefer a satisfying exact native route;
+4. otherwise select a policy-authorized CLI/programmatic route before launch;
+5. record the reason and ordered candidates; and
+6. fail closed if no exact authorized route exists.
+
+Configured values remain opaque where the provider defines them that way.
+Never infer capabilities from Cursor selector spelling.
+
+## Accepted-Launch Terminality
+
+Pre-start rejection and accepted child failure are different states:
+
+- **Pre-start rejection:** no child owns the scope; another configured route may
+  be selected.
+- **Accepted launch:** the child owns the scope; its completed, failed,
+  interrupted, timed-out, or `BLOCKED` result is authoritative.
+
+`invalid-run-abort` is cancellation of a proven-invalid run, not a child outcome
+and not permission to launch a replacement.
+
+## Parallel Phases
+
+Plan-declared phase groups run in separate worktrees. The root creates and
+registers worktrees, verifies the common base, dispatches one phase implementer
+per worktree, owns each review/fix loop, then merges passing phases in plan
+order.
+
+Task-level concurrency inside one worktree remains disallowed unless an
+optional child has explicitly isolated write authority.
+
+## Provider Shapes
+
+- **Codex:** root uses the exact materialized phase implementer and reviewer
+  roles. Depth one supports the default topology; depth two enables optional
+  nested work.
+- **Claude:** root uses native Agent dispatch for phase implementation and
+  review. Nested Agent work is optional and evidenced per run.
+- **Cursor IDE:** operator starts the root session. Native and CLI routes use
+  full-information selection, with deliberate pre-start CLI choice when the
+  native catalog is unsatisfying.
+- **Cursor CLI:** treated as a separate harness with its own catalog and event
+  evidence.
+
+## Related
+
+- [Implementation Execution](../projects/execution/implementation-execution.md)
+- [Dispatch Policy](dispatch-ceiling.md)
+- [Review Flavors](../projects/reviews/review-flavors.md)
+- [Programmatic Execution](programmatic-execution.md)
+- [Evidence Layers](evidence-layers.md)
+- [Workflow Smoke Testing](../../contributing/smoke-testing.md)
+
+## subagent-orchestration
+
+Use this skill to decide what to delegate and which capability class the task
+needs. It supplies model-selection guidance, not a command that launches workers.
+OAT's dispatch skills own capability checks, exact routes, acceptance records,
+and recovery.
+
+**Invocation:** Give the agent a bounded delegation decision. The slash form is
+a skill request, not a terminal command. Providers with `$` syntax use
+`$subagent-orchestration`.
+
+```text
+/subagent-orchestration
+Classify a read-only API-usage audit and a final approval-provenance review. Define their scopes, required evidence, and escalation conditions before selecting models.
+```
+
+**Prerequisites:** Needs an active OAT project: no. The guidance is
+self-contained and needs no OAT project or installation. You need the task's
+objective, authority, verification needs, and active provider context. Read
+exactly that provider's selection reference. Current catalogs and instructions
+outrank dated model examples.
+
+**What it does without asking:** nothing outside the conversation. The skill
+is guidance only: it writes no files, makes no commits, and launches no
+subagents. Any launch happens later, through the dispatch skills, under their
+own checks.
+
+**Example scenario:** A root agent needs an unfamiliar API audit and an
+independent review of approval handling. The audit needs intelligent
+reconnaissance because a missed usage could be silent. Approval provenance
+needs consequential review because a subtle miss could authorize unsafe work.
+The root keeps authorization and cross-scope judgment while defining each
+worker's output and evidence. Choosing a stronger model does not repair an
+over-broad assignment.
+
+**Expected output:** A routing decision states the task class, role, exact model
+selector, provider-native effort, service tier, route, and authority separately.
+It preserves each class's capability floor and names escalation conditions.
+Load-bearing worker claims require verified evidence before the root acts on
+them. File count or duration alone does not justify a higher reasoning class.
+
+**Next step:** Use the appropriate dispatch machinery only after the bounded
+scope and route are justified. Within OAT, follow the project adapter
+(`oat-project-dispatch-subagents`) and the dispatch engine
+(`oat-dispatch-subagents`). Guidance alone is not evidence that a worker launched or that
+its result passed review.
