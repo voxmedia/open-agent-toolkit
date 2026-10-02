@@ -290,7 +290,7 @@ must be integer milliseconds from `1,000` through `14,400,000`.
   "workflow": {
     "gateTimeouts": {
       "code": 2400000,
-      "artifact": 900000
+      "artifact": 2400000
     },
     "gates": {
       "execTargets": {

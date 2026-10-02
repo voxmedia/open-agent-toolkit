@@ -1,10 +1,12 @@
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
+  link,
   mkdir,
   readdir,
   readFile,
   realpath,
+  rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -164,7 +166,6 @@ interface GateCommandDependencies {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
-  listGateRunMarkers: (dir: string) => Promise<GateRunMarkerEntry[]>;
   isProcessAlive: (pid: number) => boolean;
   writeGateProjectLogReceipt: (
     path: string,
@@ -248,36 +249,34 @@ interface GateRunMarker {
   reviewType: string | null;
   reviewScope: string | null;
   project: string;
-  /** Absolute, symlink-resolved project directory: the duplicate-run identity. */
+  /** Absolute, symlink-resolved project directory. */
   projectRoot: string;
-  /** The gate process that owns the marker; a duplicate match must be alive. */
+  /** The gate process that owns the marker. */
   pid: number;
   startedAt: string;
   budgetMs: number;
   budgetSource: GateTimeoutSource;
 }
 
-/** One top-level entry of the run-marker directory, read lazily. */
-interface GateRunMarkerEntry {
-  name: string;
-  isFile: boolean;
-  read: () => Promise<string>;
-}
-
 /**
- * Whether another live gate already reviews the same project, review type,
- * and scope. `unchecked` means the marker scan itself failed.
+ * Whether another live gate already holds the claim for the same project,
+ * review type, and scope. `unchecked` means the claim could not be taken.
  */
 type GateRecursionDecision =
   | { decision: 'none' }
   | { decision: 'unchecked' }
   | { decision: 'rejected'; matchedRunId: string };
 
-interface LiveGateRunMatch {
+/** The live run that holds a claim; `path` is the claim file. */
+interface GateRunClaimHolder {
   runId: string;
   pid: number;
   path: string;
 }
+
+type GateRunClaim =
+  | { status: 'acquired'; path: string }
+  | { status: 'held'; holder: GateRunClaimHolder };
 
 type PersistedTimeoutLayer = 'local' | 'shared' | 'user';
 
@@ -464,7 +463,6 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
-  listGateRunMarkers,
   isProcessAlive,
   writeGateProjectLogReceipt,
   sleep: async (ms) => {
@@ -516,8 +514,16 @@ const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 const GATE_LIVENESS_INTERVAL_MS = 30_000;
 const AMBIENT_ACTIVITY_ATTRIBUTION = 'not attributable to this gate child';
 
-function gateRunMarkerDir(): string {
-  return join(tmpdir(), 'oat-gate-runs');
+/**
+ * Run markers and duplicate-run claims share one directory. A gate exports it
+ * to its reviewer child as `OAT_GATE_RUN_MARKER_DIR`, so a nested gate finds
+ * its parent's claim even when the child's TMPDIR differs.
+ */
+function gateRunMarkerDir(env: NodeJS.ProcessEnv): string {
+  const exported = env.OAT_GATE_RUN_MARKER_DIR?.trim();
+  return exported && isAbsolute(exported)
+    ? exported
+    : join(tmpdir(), 'oat-gate-runs');
 }
 
 async function writeGateRunMarker(
@@ -526,7 +532,7 @@ async function writeGateRunMarker(
   warn: (message: string) => void,
 ): Promise<boolean> {
   try {
-    await mkdir(gateRunMarkerDir(), { recursive: true });
+    await mkdir(dirname(path), { recursive: true });
     await writeFile(path, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
     return true;
   } catch (error) {
@@ -598,109 +604,170 @@ function warnWhenReceiptIsTracked(
   }
 }
 
-/**
- * Lists the top-level entries of the run-marker directory. Branch-local CLI
- * shims live in per-run subdirectories of the same directory, so entries keep
- * their file type for the caller to skip.
- */
-async function listGateRunMarkers(dir: string): Promise<GateRunMarkerEntry[]> {
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch (error) {
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'ENOENT'
-    ) {
-      return [];
-    }
-    throw error;
-  }
-  return entries.map((entry) => ({
-    name: entry.name,
-    isFile: entry.isFile(),
-    read: async () => readFile(join(dir, entry.name), 'utf8'),
-  }));
-}
-
 function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;
   } catch (error) {
     // EPERM: the process exists but belongs to another user.
-    return (
-      !!error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      error.code === 'EPERM'
-    );
+    return isErrorCode(error, 'EPERM');
   }
 }
 
-function normalizeGateRunKey(value: unknown): string | null {
-  if (typeof value !== 'string') {
-    return null;
+function isErrorCode(error: unknown, code: string): boolean {
+  return (
+    !!error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === code
+  );
+}
+
+function normalizeGateRunKey(value: string | undefined): string {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function gateRunClaimPath(
+  dir: string,
+  identity: { projectRoot: string; reviewType?: string; reviewScope?: string },
+): string {
+  const key = createHash('sha256')
+    .update(
+      [
+        identity.projectRoot,
+        normalizeGateRunKey(identity.reviewType),
+        normalizeGateRunKey(identity.reviewScope),
+      ].join('\0'),
+    )
+    .digest('hex')
+    .slice(0, 32);
+  return join(dir, `claim-${key}.lock`);
+}
+
+async function readGateRunClaim(
+  path: string,
+): Promise<{ text: string; holder: GateRunClaimHolder | null } | null> {
+  let text: string;
+  try {
+    text = await readFile(path, 'utf8');
+  } catch (error) {
+    if (isErrorCode(error, 'ENOENT')) {
+      return null;
+    }
+    throw error;
   }
-  return value.trim().toLowerCase() || null;
+  let record: Record<string, unknown> | null = null;
+  try {
+    record = rawRecord(JSON.parse(text));
+  } catch {
+    record = null;
+  }
+  const holder =
+    record &&
+    typeof record.runId === 'string' &&
+    typeof record.pid === 'number' &&
+    Number.isInteger(record.pid) &&
+    record.pid > 0
+      ? { runId: record.runId, pid: record.pid, path }
+      : null;
+  return { text, holder };
 }
 
 /**
- * Finds a live gate run marker for the same project, review type, and scope.
- * Unparseable markers, markers without a pid or project root (written by an
- * older CLI), non-JSON entries, and shim directories are ignored. Liveness is
- * checked only for a matching marker.
+ * Atomically claims the duplicate-run slot for one project root, review type,
+ * and scope. The claim content is written to a private file created with
+ * `wx`, then hard-linked to the shared claim path; `link` fails with EEXIST
+ * when another run holds the slot, so two simultaneous gates can never both
+ * acquire it and a reader never sees a half-written claim. A claim whose
+ * owner is dead, or which cannot be parsed, is replaced once: it is renamed
+ * aside first, so a claim that a faster run has just taken is restored rather
+ * than deleted.
  */
-async function findLiveGateRun(input: {
+async function acquireGateRunClaim(input: {
   dir: string;
   projectRoot: string;
-  reviewType: string | undefined;
-  reviewScope: string | undefined;
-  dependencies: Pick<
-    GateCommandDependencies,
-    'listGateRunMarkers' | 'isProcessAlive'
-  >;
-}): Promise<LiveGateRunMatch | null> {
-  const reviewType = normalizeGateRunKey(input.reviewType);
-  const reviewScope = normalizeGateRunKey(input.reviewScope);
-  for (const entry of await input.dependencies.listGateRunMarkers(input.dir)) {
-    if (!entry.isFile || !entry.name.endsWith('.json')) {
-      continue;
-    }
-    let marker: Record<string, unknown> | null;
+  reviewType?: string;
+  reviewScope?: string;
+  runId: string;
+  isProcessAlive: (pid: number) => boolean;
+}): Promise<GateRunClaim> {
+  await mkdir(input.dir, { recursive: true });
+  const path = gateRunClaimPath(input.dir, input);
+  const content = `${JSON.stringify({
+    runId: input.runId,
+    pid: process.pid,
+    projectRoot: input.projectRoot,
+    reviewType: input.reviewType?.trim() || null,
+    reviewScope: input.reviewScope?.trim() || null,
+    claimedAt: new Date().toISOString(),
+  })}\n`;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const draft = join(input.dir, `.claim-${input.runId}.tmp`);
+    await writeFile(draft, content, { encoding: 'utf8', flag: 'wx' });
     try {
-      marker = rawRecord(JSON.parse(await entry.read()));
-    } catch {
-      continue;
+      await link(draft, path);
+      return { status: 'acquired', path };
+    } catch (error) {
+      if (!isErrorCode(error, 'EEXIST')) {
+        throw error;
+      }
+    } finally {
+      await rm(draft, { force: true });
     }
-    if (
-      !marker ||
-      typeof marker.runId !== 'string' ||
-      typeof marker.projectRoot !== 'string' ||
-      typeof marker.pid !== 'number' ||
-      !Number.isInteger(marker.pid) ||
-      marker.pid <= 0
-    ) {
-      continue;
+
+    const existing = await readGateRunClaim(path);
+    if (!existing) {
+      continue; // Released between the link and the read.
     }
-    if (
-      marker.projectRoot !== input.projectRoot ||
-      normalizeGateRunKey(marker.reviewType) !== reviewType ||
-      normalizeGateRunKey(marker.reviewScope) !== reviewScope
-    ) {
-      continue;
+    if (existing.holder && input.isProcessAlive(existing.holder.pid)) {
+      return { status: 'held', holder: existing.holder };
     }
-    if (input.dependencies.isProcessAlive(marker.pid)) {
-      return {
-        runId: marker.runId,
-        pid: marker.pid,
-        path: join(input.dir, entry.name),
-      };
+    if (attempt > 0) {
+      break;
     }
+    const aside = join(input.dir, `.claim-${input.runId}.stale`);
+    try {
+      await rename(path, aside);
+    } catch (error) {
+      if (isErrorCode(error, 'ENOENT')) {
+        continue;
+      }
+      throw error;
+    }
+    const moved = await readGateRunClaim(aside);
+    if (moved && moved.text !== existing.text) {
+      // Another run claimed the slot after the stale read; put it back.
+      await link(aside, path).catch(() => undefined);
+      await rm(aside, { force: true });
+      if (moved.holder) {
+        return { status: 'held', holder: moved.holder };
+      }
+      break;
+    }
+    await rm(aside, { force: true });
   }
-  return null;
+  const final = await readGateRunClaim(path);
+  return {
+    status: 'held',
+    holder: final?.holder ?? { runId: 'unknown', pid: 0, path },
+  };
+}
+
+/** Removes a claim only while it still belongs to this run. */
+async function releaseGateRunClaim(
+  path: string,
+  runId: string,
+  warn: (message: string) => void,
+): Promise<void> {
+  try {
+    const existing = await readGateRunClaim(path);
+    if (existing?.holder?.runId === runId) {
+      await rm(path, { force: true });
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    warn(`Unable to release gate run claim ${path}: ${detail}`);
+  }
 }
 
 async function resolveGateProjectRoot(
@@ -2846,7 +2913,7 @@ function writeReviewGateExecutionFailure(
     noOutputProduced?: boolean;
     refusal?: string;
     activityEvidence?: GateActivityEvidence;
-    duplicateRun?: LiveGateRunMatch & { reviewType: string; scope: string };
+    duplicateRun?: GateRunClaimHolder & { reviewType: string; scope: string };
     recursion?: GateRecursionDecision;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
@@ -2854,7 +2921,7 @@ function writeReviewGateExecutionFailure(
   },
 ): void {
   const message = payload.duplicateRun
-    ? `Review did not start: gate run ${payload.duplicateRun.runId} (pid ${payload.duplicateRun.pid}) is already reviewing ${payload.project} (${payload.duplicateRun.reviewType} review, scope ${payload.duplicateRun.scope}). Wait for it to finish, or remove its marker ${payload.duplicateRun.path} if that process is not a gate.`
+    ? `Review did not start: gate run ${payload.duplicateRun.runId} (pid ${payload.duplicateRun.pid}) is already reviewing ${payload.project} (${payload.duplicateRun.reviewType} review, scope ${payload.duplicateRun.scope}). Wait for it to finish, or remove its claim ${payload.duplicateRun.path} if that process is not a gate.`
     : payload.refusal
       ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
       : payload.timedOut
@@ -4237,6 +4304,7 @@ async function runReviewGate(
 ): Promise<void> {
   const runId = randomUUID();
   let recursion: GateRecursionDecision | undefined;
+  let runClaimPath: string | undefined;
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
   let branchLocalGateCli: BranchLocalGateCli | undefined;
@@ -4306,26 +4374,32 @@ async function runReviewGate(
       gateInvocation,
       options.reviewScope?.trim() || 'gate-review',
     );
-    // Reject a second live gate for the same project, review type, and scope
-    // (for example a reviewer that launches its own gate) before anything is
-    // launched or logged.
+    // Claim the project, review type, and scope atomically before anything is
+    // launched or logged, so a second live gate (a reviewer that launches its
+    // own gate, or two simultaneous launches) is rejected.
+    const runMarkerDir = gateRunMarkerDir(dependencies.processEnv);
     const projectRoot = await resolveGateProjectRoot(repoRoot, projectPath);
-    let duplicateRun: LiveGateRunMatch | null = null;
+    let duplicateRun: GateRunClaimHolder | null = null;
     try {
-      duplicateRun = await findLiveGateRun({
-        dir: gateRunMarkerDir(),
+      const claim = await acquireGateRunClaim({
+        dir: runMarkerDir,
         projectRoot,
         reviewType: options.reviewType,
         reviewScope: options.reviewScope,
-        dependencies,
+        runId,
+        isProcessAlive: dependencies.isProcessAlive,
       });
-      recursion = duplicateRun
-        ? { decision: 'rejected', matchedRunId: duplicateRun.runId }
-        : { decision: 'none' };
+      if (claim.status === 'acquired') {
+        runClaimPath = claim.path;
+        recursion = { decision: 'none' };
+      } else {
+        duplicateRun = claim.holder;
+        recursion = { decision: 'rejected', matchedRunId: claim.holder.runId };
+      }
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       context.logger.warn(
-        `Unable to scan gate run markers in ${gateRunMarkerDir()}: ${detail}; continuing without duplicate-run detection.`,
+        `Unable to claim this gate run in ${runMarkerDir}: ${detail}; continuing without duplicate-run detection.`,
       );
       recursion = { decision: 'unchecked' };
     }
@@ -4336,7 +4410,7 @@ async function runReviewGate(
           runId,
           ...recursion,
           ...(duplicateRun
-            ? { matchedPid: duplicateRun.pid, markerPath: duplicateRun.path }
+            ? { matchedPid: duplicateRun.pid, claimPath: duplicateRun.path }
             : {}),
         })}\n`,
       );
@@ -4410,7 +4484,7 @@ async function runReviewGate(
         : []),
       prompt.join(' '),
     ]);
-    runMarkerPath = join(gateRunMarkerDir(), `${runId}.json`);
+    runMarkerPath = join(runMarkerDir, `${runId}.json`);
     runMarkerWritten = await dependencies.writeGateRunMarker(
       runMarkerPath,
       {
@@ -4461,6 +4535,7 @@ async function runReviewGate(
           OAT_GATE_CLI_PATH: branchLocalGateCli.cliPath,
           OAT_GATE_CLI_ROOT: branchLocalGateCli.cliRoot,
           OAT_GATE_ROUTE_RECEIPT_PATH: branchLocalGateCli.routeReceiptPath,
+          OAT_GATE_RUN_MARKER_DIR: runMarkerDir,
         },
       },
       timeout,
@@ -4870,6 +4945,11 @@ async function runReviewGate(
       }
       if (runMarkerPath) {
         await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
+          context.logger.warn(message),
+        );
+      }
+      if (runClaimPath) {
+        await releaseGateRunClaim(runClaimPath, runId, (message) =>
           context.logger.warn(message),
         );
       }
