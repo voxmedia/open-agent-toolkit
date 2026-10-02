@@ -179,3 +179,114 @@ The ideas directory is created automatically by `oat-idea-new` or `oat-idea-scra
 - `{IDEAS_ROOT}/{idea-name}/discovery.md`
 - `{IDEAS_ROOT}/{idea-name}/summary.md`
 - `.oat/templates/ideas/`
+
+## oat-idea-scratchpad
+
+**Invocation:** `/oat-idea-scratchpad capture` or
+`/oat-idea-scratchpad review`; add `--global` for the user-level scratchpad.
+These are agent instructions, not shell commands. Codex uses
+`$oat-idea-scratchpad`, or you can ask for the skill by name; the same
+convention applies to the other idea skills below.
+
+**Prerequisites:** Installed idea templates and a chosen ideas level. Neither
+an active idea nor an OAT lifecycle project is required. Without `--global`,
+the skill resolves existing idea pointers/directories and asks when the
+destination is ambiguous; repository-level ideas do not mean an active
+project is required.
+
+**Example scenario:** During a support review, you notice that upload failures
+might be easier to recover if customers could keep a recovery token. Capture
+the seed and one or two observations now without stopping the review to
+design a feature. In a later review session, inspect the unchecked seeds and
+choose which one deserves exploration.
+
+**Expected output:** Capture adds a named, dated checklist entry with the
+required one-line summary and any supplied notes to
+`{IDEAS_ROOT}/scratchpad.md`, initializing the scratchpad/backlog from
+templates on first use. Review reads the existing seeds instead. A captured
+seed is not a project, formal requirement, or implementation commitment.
+
+**Next step:** Explicitly select a seed for [oat-idea-ideate](#oat-idea-ideate)
+or start a named idea with [oat-idea-new](#oat-idea-new). Capture offers these
+actions but does not automatically launch brainstorming.
+
+## oat-idea-new
+
+**Invocation:** `/oat-idea-new upload-recovery`, with optional `--global`.
+Supply a new idea name, or answer the naming question. Confirm the ideas
+level if both repository and user stores are possible.
+
+**Prerequisites:** Installed ideas templates and the chained
+`oat-idea-ideate` skill, plus a writable chosen ideas store. No existing
+idea or active OAT project is required. A name collision is not permission
+to overwrite an existing discovery document.
+
+**Example scenario:** You chose the upload-recovery seed for a longer
+conversation and want its notes to survive across sessions. Create a named
+idea rather than a project so the team can explore its value before
+committing to scope or implementation.
+
+**Expected output:** `{IDEAS_ROOT}/upload-recovery/discovery.md`, an Active
+Brainstorming backlog entry, and an `activeIdea` pointer to the new record.
+The workflow initializes missing idea indexes, checks for a matching
+scratchpad seed, verifies setup, and hands off to ideation. The idea pointer
+is separate from the active-project pointer.
+
+**Next step:** Continue the conversational exploration with
+[oat-idea-ideate](#oat-idea-ideate). Keep uncertainty as questions rather than
+turning a freshly created template into an approved design.
+
+## oat-idea-ideate
+
+**Invocation:** `/oat-idea-ideate`, with optional `--global`, to resume the
+resolved idea or select an actual existing idea/scratchpad seed when
+prompted. For an untracked, destinationless brainstorm, use `oat-brainstorm`
+instead of inventing a scratchpad entry as the starting point.
+
+**Prerequisites:** An existing tracked idea or an explicitly selected
+unchecked scratchpad seed. Selecting a seed uses the new-idea scaffolding
+steps before continuing. No active lifecycle project is required. If there
+are no ideas or seeds, the skill stops with capture/new-idea guidance.
+
+**Example scenario:** After speaking with support, you have new questions
+about who would use a recovery token. Resume the upload-recovery idea, review
+the earlier notes, and explore the new observations without converting the
+session into architecture work or a task breakdown.
+
+**Expected output:** A dated session in the idea's `discovery.md`, capturing
+discussion, observations, and open questions. If the idea was already
+summarized, choose explicitly whether to reopen brainstorming, view its
+summary, or select a different idea. The exploratory mode does not write
+code, a specification, or an implementation plan.
+
+**Next step:** Resume another session if the idea is still unclear, or use
+[oat-idea-summarize](#oat-idea-summarize) when the discovery content is mature
+enough for a stable handoff.
+
+## oat-idea-summarize
+
+**Invocation:** `/oat-idea-summarize`, optionally with `--global`, for the
+resolved idea. Review the generated summary before accepting it.
+
+**Prerequisites:** An active idea with meaningful `discovery.md` content,
+the summary template, and the chained ideation skill for a return to
+brainstorming. This is an idea requirement, not an active-project
+requirement; an empty scaffold is insufficient evidence for a useful
+summary.
+
+**Example scenario:** Several sessions established the recovery-token idea's
+audience, potential value, and main unknowns. Summarize those findings so the
+team can revisit the concept next month without rereading every session.
+Keep unresolved security and operational questions visible rather than
+presenting the concept as approved to build.
+
+**Expected output:** A proposed `summary.md` synthesizing the idea's overview,
+key points, value, possible effort, next steps, references, and open
+questions. Acceptance changes discovery state to `summarized` and moves its
+backlog entry to Captured Ideas. Refinement requires another review; choosing
+continued brainstorming discards the proposed summary and does not finalize
+state or backlog.
+
+**Next step:** Keep the summarized idea for future prioritization or explicitly
+start a project using its summary as input. Summarization itself neither
+creates a lifecycle project nor authorizes implementation.

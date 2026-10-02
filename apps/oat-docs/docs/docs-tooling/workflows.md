@@ -142,3 +142,216 @@ to open every page.
 - [`add-docs-to-a-repo.md`](add-docs-to-a-repo.md)
 - [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
 - [`../contributing/skills.md`](../contributing/skills.md)
+
+## authoring-docs
+
+**Invocation:** Ask, “Use authoring-docs to improve the recovery instructions
+in `docs/imports.md` for an on-call engineer.” Skill invocations are agent
+instructions, not shell commands: use `/authoring-docs` where supported,
+`$authoring-docs` in Codex, or the skill's name in a request. This convention
+also applies to the other skills below; example paths refer to your files.
+
+**Prerequisites:** A documentation target, intended reader, and accessible
+sources of truth. No OAT project or OAT documentation configuration is
+required. Source code, configuration, tests, deployment files, and existing
+instructions establish what you can safely document.
+
+**Example scenario:** An import runbook says to retry a job but does not
+explain how an operator confirms that retrying is safe. Ask the skill to
+inspect the actual job behavior and add a reader-focused recovery sequence,
+marking any operational assumption that needs the owner's confirmation.
+
+Choose the page's primary job before writing: a tutorial gets a reader to
+first success, a how-to completes a task, reference provides exact contracts,
+explanation builds understanding, and a runbook supports safe recovery. This
+avoids mixing an introductory story, an exhaustive flag list, and an
+incident procedure into one undifferentiated page. Preserve useful existing
+intent and improve the nearest appropriate page instead of creating a
+parallel documentation surface.
+
+**Expected output:** Evidence-backed Markdown with clear prerequisites,
+steps, expected results, verification, and relevant links. Risky operations
+need recovery or rollback guidance when the sources establish it. Unknown
+ownership, commands, endpoints, or compatibility guarantees remain explicit
+questions rather than invented facts. The handoff identifies changed files,
+sources inspected, checks run, and remaining uncertainty.
+
+**Next step:** Run the target repository's documented checks and resolve
+owner-review gaps before sharing. Use [oat-docs-authoring](#oat-docs-authoring)
+when the target also needs OAT placement and navigation conventions.
+
+## oat-docs
+
+**Invocation:** `/oat-docs "How do I choose between a quick and lite project?"`.
+If you provide no question, the skill asks what you want to understand.
+
+**Prerequisites:** Installed bundled OAT documentation under `~/.oat/docs/`.
+No active project is required. If that documentation is missing, the skill
+stops with installation guidance rather than substituting a repository
+checkout that may describe a different release.
+
+**Example scenario:** You are about to plan a small maintenance change and
+want to understand the artifacts and approval boundary of each workflow.
+Ask the skill to explain the choices from the installed documentation before
+starting a project or changing configuration.
+
+**Expected output:** A documentation-backed answer with practical examples
+and pointers to relevant bundled pages. The skill searches and reads the
+actual documentation rather than answering only from remembered behavior.
+It can offer a related setup action or skill, but does not execute that offer
+without confirmation.
+
+**Next step:** Choose the workflow or command that matches your task. If the
+answer suggests setup changes, confirm the exact action separately from the
+question-and-answer conversation.
+
+## oat-docs-authoring
+
+**Invocation:** Ask, “Use oat-docs-authoring to add a retry troubleshooting
+section to the existing imports guide and update its local map if needed.”
+The skill can also be invoked as `/oat-docs-authoring` with your task.
+
+**Prerequisites:** An existing OAT Markdown surface, OAT/Fumadocs app, or
+clearly identified target following OAT conventions, plus the installed
+`authoring-docs` baseline. No active lifecycle project is required. This is
+a targeted authoring or repair workflow, not bootstrap, a broad audit, or
+bulk application of an analysis report.
+
+**Example scenario:** One documented import error has a new recovery path.
+Update that guide from the actual implementation and tests without
+reorganizing unrelated sections or hand-editing generated sidebar files.
+
+The wrapper adds OAT-specific placement and navigation rules to universal
+authoring standards. Edit authored pages and relevant local `index.md`
+Contents maps together, preserve useful context and local instructions, and
+prefer `.md` unless the page needs JSX. For configured Markdown, use the
+literal content root and authored index, even if it contains a nested
+directory named `docs`; do not create an unnecessary app shell.
+
+**Expected output:** Focused authored-source changes, checked links and
+metadata, and any locally required generated-artifact refresh or freshness
+check. The handoff distinguishes checks actually run from checks unavailable
+or intentionally not applicable. Project-derived release documentation
+belongs in the project-document workflow, not this wrapper.
+
+**Next step:** Review and validate the focused diff. For broader uncertainty
+about the surface, use [oat-docs-analyze](#oat-docs-analyze); for a new surface,
+use [oat-docs-bootstrap](#oat-docs-bootstrap).
+
+## oat-docs-bootstrap
+
+**Invocation:** `/oat-docs-bootstrap`, optionally with a target directory.
+The conversation chooses Markdown, Fumadocs, or MkDocs and confirms the
+destination before scaffolding or adoption. Selecting a framework here is
+not an instruction to add framework flags to unrelated navigation commands.
+
+**Prerequisites:** An initialized OAT repository with readable
+`.oat/config.json`, `.agents/`, and a runnable OAT CLI. An active project is
+optional: it may provide context for the walkthrough, but setup does not
+require one. The installed CLI must support the selected setup path.
+
+**Example scenario:** Your repository already has useful Markdown guides in
+`documentation/`, and the team wants OAT discovery and authoring guidance
+without a site runtime. Choose additive Markdown adoption, retain those
+guides, and then audit their metadata and local maps. Do not replace the tree
+with a docs app simply because one can be scaffolded.
+
+Preflight reads declared documentation configuration before discovery and
+checks framework evidence before assuming a populated directory is plain
+Markdown. An existing plain tree needs an explicit adopt, audit-only, or
+abort choice. A non-interactive confirmation alone is not adoption authority.
+Markdown setup collects a title, dedicated repository-relative root, and
+optional description; it does not require an app name, dependency install,
+preview server, or site build. Existing content and instructions are
+preserved, and missing content conformity becomes audit work rather than
+silent repair.
+
+For Fumadocs or MkDocs, the skill gathers the appropriate app inputs, probes
+CLI capabilities, invokes the scaffold, and applies only relevant,
+capability-gated post-patches. The visible site title and package name are
+different inputs. Verification follows the selected surface: file/config/link
+checks for Markdown, framework-specific checks and build verification for an
+app. Optional completion enforcement is an explicit choice, not a hidden
+side effect of initialization.
+
+**Expected output:** A verified fresh setup or additive adoption, followed
+by a walkthrough of actual configuration, authored indexes, page metadata,
+and contribution conventions. Markdown keeps its configured index authored;
+an optional generated inventory needs an explicit destination outside the
+configured content tree and never replaces it. A dry-run is only a preview.
+A partial result can have created files while still requiring manual
+guidance work; report that state rather than claiming complete bootstrap.
+
+**Next step:** For an adopted tree, run [oat-docs-analyze](#oat-docs-analyze)
+and approve any repairs through apply. For a fresh surface, add the first
+reader task using [oat-docs-authoring](#oat-docs-authoring) and its walkthrough
+conventions.
+
+## oat-docs-analyze
+
+**Invocation:** `/oat-docs-analyze`, with a request identifying the docs
+surface you want evaluated. The skill resolves declared configuration and
+framework evidence before generic directory fallbacks; it does not rely on
+a guessed root when the repository already declares one.
+
+**Prerequisites:** A Git repository with a docs app, Markdown tree, or
+root-level documentation, and `jq` for tracking updates. No active project
+is required. Configured Markdown does not need an app package, generated
+manifest, or docs-root agent file to qualify for analysis.
+
+**Example scenario:** A team adopted an existing Markdown tree, but users
+still cannot find several supported CLI operations. Analyze the literal
+configured root against command definitions, examples, and local maps so
+the report identifies which capability needs which page or section, rather
+than prescribing a new framework as the fix.
+
+The skill inventories content, checks index-contract coverage, verifies
+substantive claims against repository sources, finds missing or thin
+capability coverage, and checks navigation and drift. A usable finding names
+the evidence, severity, proposed location, and concrete subtopics. Ownership
+or operational claims that local sources cannot establish become
+owner-review gaps, not confident invented instructions.
+
+Existing tracking selects full or delta analysis when its recorded commit
+is valid. The workflow is read-only toward docs and navigation; it writes
+and may correct its own report, then updates analysis tracking. Generated
+navigation is freshness-checked, not repaired during the audit.
+
+**Expected output:** A timestamped `.oat/repo/analysis/docs-*.md` report with
+evidence, confidence, and disclosure decisions, including concrete targets
+for link-only recommendations. By default, a bounded auto artifact-review
+loop checks the report before tracking and handoff. A disabled loop or
+residual findings must remain disclosed; a report's existence alone does
+not mean every recommendation is verified or approved.
+
+**Next step:** Review the findings and run [oat-docs-apply](#oat-docs-apply)
+for selected recommendations. If evidence or target information is missing,
+repair the analysis contract rather than asking apply to fill it in.
+
+## oat-docs-apply
+
+**Invocation:** `/oat-docs-apply` after reviewing a docs analysis report.
+The skill locates the recent report, builds a recommendation plan, and asks
+which actions you approve before changing documentation.
+
+**Prerequisites:** A recent, complete docs analysis artifact and an unchanged
+compatible target. Recommendations need evidence, confidence, disclosure,
+and concrete link targets where applicable. No active lifecycle project is
+required. Missing analysis or a changed target requires a fresh analysis,
+not conventions invented during apply.
+
+**Example scenario:** The audit found three hidden CLI pages, an inaccurate
+example, and a proposed reorganization. Approve only the page listings and
+example correction, leaving the reorganization for discussion. Apply should
+execute those selected actions without broadening the work to every finding.
+
+**Expected output:** Approved changes on the workflow's branch, relevant
+source/link checks, and declared navigation or generated-artifact refreshes.
+Markdown retains its authored index and needs no framework build or nav
+sync; Fumadocs sidebar metadata is regenerated from approved Contents
+changes, never hand-edited. The summary reports the applied plan and checks.
+Commit and optional PR steps remain explicit; pushing requires confirmation.
+
+**Next step:** Review the diff and approve publication separately. Rerun
+analysis if you need a post-apply assessment, and treat unapproved
+recommendations as remaining decisions rather than completed work.
