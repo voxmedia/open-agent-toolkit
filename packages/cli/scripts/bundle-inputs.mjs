@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+import { realpathSync } from 'node:fs';
 import { isAbsolute } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 export const BUNDLE_INPUTS = Object.freeze({
   skills: Object.freeze([
@@ -216,10 +217,24 @@ function printValue(name) {
   process.stdout.write(`${value}\n`);
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+// Node resolves the main module to its real path, while argv[1] keeps the path
+// as invoked. Compare real paths, so a symlinked checkout still runs the CLI
+// instead of silently printing nothing for every lookup.
+function isEntryPoint() {
+  if (!process.argv[1]) {
+    return false;
+  }
+  try {
+    return (
+      realpathSync(process.argv[1]) ===
+      realpathSync(fileURLToPath(import.meta.url))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) {
   const [command, name] = process.argv.slice(2);
   if (command === '--json' && name === undefined) {
     process.stdout.write(`${JSON.stringify(BUNDLE_INPUTS)}\n`);

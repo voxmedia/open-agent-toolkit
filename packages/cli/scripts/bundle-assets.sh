@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+# Physical paths: run through a symlinked checkout, a logical path made node
+# resolve the inventory module to a different path than argv[1], so every
+# lookup printed nothing (the likely trigger of the Wave 3 disk fill).
+SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_ROOT="$(cd -P "${SCRIPT_DIR}/../../.." && pwd -P)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
 INVENTORY="${SCRIPT_DIR}/bundle-inputs.mjs"
 
@@ -17,8 +20,8 @@ fail_bundle() {
 
 # Print the physical absolute form of a path that may not exist yet: resolve
 # the nearest existing ancestor with `cd -P` and `pwd -P`, so neither a symlink
-# alias nor a `<symlink>/..` spelling can hide a destination inside a copied
-# source, and append the missing components. A logical `cd` would trim
+# alias nor a `<symlink>/..` spelling can hide a staging directory inside a
+# copied source, and append the missing components. A logical `cd` would trim
 # `<symlink>/..` as text while the kernel follows the symlink first.
 physical_path() {
   local path="$1" suffix="" name resolved
@@ -54,9 +57,10 @@ path_is_within() {
 }
 
 # Print "${REPO_ROOT}/<value>" for an inventory path lookup, or exit when the
-# value is empty, absolute, climbs with '..', or names the repository root.
+# value is empty, absolute, climbs with '..', or physically names the
+# repository root.
 require_inventory_path() {
-  local key="$1" value normalized
+  local key="$1" value
   value="$(node "${INVENTORY}" --get "${key}")" ||
     fail_bundle "inventory lookup '${key}' failed."
   [ -n "${value}" ] ||
@@ -67,16 +71,7 @@ require_inventory_path() {
   case "/${value}/" in
     */../*) fail_bundle "inventory lookup '${key}' contains a '..' segment (${value}); expected a path inside the repository." ;;
   esac
-  normalized="/${value}/"
-  while :; do
-    case "${normalized}" in
-      *//*) normalized="${normalized//\/\///}" ;;
-      */./*) normalized="${normalized//\/.\///}" ;;
-      *) break ;;
-    esac
-  done
-  if [ "${normalized}" = "/" ] ||
-    [ "$(physical_path "${REPO_ROOT}/${value}")" = "$(physical_path "${REPO_ROOT}")" ]; then
+  if [ "$(physical_path "${REPO_ROOT}/${value}")" = "${REPO_ROOT}" ]; then
     fail_bundle "inventory lookup '${key}' resolves to the repository root (${value}); refusing to copy the repository into its own bundle."
   fi
   printf '%s\n' "${REPO_ROOT}/${value}"
@@ -98,60 +93,29 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)"
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
 
-# physical_path resolves directories, not files, so a symlinked source file
-# copied on its own would leave its target outside the containment check below,
-# and publishing onto the target's directory would delete the real file. The
-# repository's NOTICES.md is a regular file, so a link there is refused.
-INDIVIDUALLY_COPIED_SOURCE_FILES=("notices file|${REPO_ROOT}/NOTICES.md")
-for linked_source_entry in "${INDIVIDUALLY_COPIED_SOURCE_FILES[@]}"; do
-  if [ -L "${linked_source_entry#*|}" ]; then
-    fail_bundle "refusing to build: the ${linked_source_entry%%|*} (${linked_source_entry#*|}) is a symlink; an individually copied bundle source must be a regular file."
+# Destination rule. Publishing renames whatever sits at ASSETS to PREVIOUS and
+# deletes it, so an OAT_ASSETS_DIR override is published only when it is
+# absent, an empty directory, or a directory holding bundle-metadata.json (a
+# previous bundle); anything else is refused. The default destination,
+# packages/cli/assets, is exempt: a fresh checkout holds its tracked files
+# without bundle-metadata.json.
+if [ -n "${OAT_ASSETS_DIR:-}" ] && { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; }; then
+  if [ ! -d "${ASSETS}" ] ||
+    { [ ! -f "${ASSETS}/bundle-metadata.json" ] && [ -n "$(ls -A "${ASSETS}")" ]; }; then
+    fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."
   fi
-done
-
-# Publishing renames whatever sits at ASSETS to PREVIOUS and deletes it. This
-# check only requires an existing destination to be a directory, since a file
-# there is never a bundle and may be a canonical source; the containment check
-# below then refuses a destination that is or contains a protected source. It
-# does not verify that an existing directory holds a previous bundle.
-if { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; } && [ ! -d "${ASSETS}" ]; then
-  fail_bundle "refusing to build: the assets destination (${ASSETS}) exists and is not a directory."
 fi
 
-# No destination may be, sit inside, or contain any path the bundle copies
-# from: the recursively copied skills, templates, and docs roots; the
-# directories whose files are copied one by one (agents, OAT scripts, and the
-# migration-prompt and dispatch-matrix config); and NOTICES.md, the one file
-# copied from a directory (the repository root) that cannot itself be listed
-# here, because the default destination lives inside it. A destination inside a
-# recursively copied root copies that tree into itself; publishing onto a
-# destination that is or contains a source renames the canonical source away
-# and deletes it. The repository root contains every path below, so a
-# destination at or above it is refused too. Checked on physical paths before
-# the trap is installed, so a refusal touches nothing.
-COPIED_SOURCE_PATHS=(
-  "skills root|${REPO_ROOT}/.agents/skills"
-  "agents directory|${REPO_ROOT}/.agents/agents"
-  "templates root|${REPO_ROOT}/.oat/templates"
-  "OAT scripts directory|${REPO_ROOT}/.oat/scripts"
-  "docs source|${DOCS_SOURCE}"
-  "migration prompt directory|$(dirname "${MIGRATION_PROMPT_SOURCE}")"
-  "dispatch matrix directory|$(dirname "${DISPATCH_MATRIX_RECOMMENDATION_SOURCE}")"
-  "notices file|${REPO_ROOT}/NOTICES.md"
-)
-for destination_entry in "assets destination|${ASSETS}" "staging directory|${STAGING}" "previous-bundle directory|${PREVIOUS}"; do
-  destination_label="${destination_entry%%|*}"
-  destination_path="$(physical_path "${destination_entry#*|}")" || exit 1
-  for source_entry in "${COPIED_SOURCE_PATHS[@]}"; do
-    source_label="${source_entry%%|*}"
-    source_path="$(physical_path "${source_entry#*|}")" || exit 1
-    if path_is_within "${destination_path}" "${source_path}"; then
-      fail_bundle "refusing to build: the ${destination_label} (${destination_path}) is at or inside the copied ${source_label} (${source_path})."
-    fi
-    if path_is_within "${source_path}" "${destination_path}"; then
-      fail_bundle "refusing to build: the copied ${source_label} (${source_path}) is inside the ${destination_label} (${destination_path})."
-    fi
-  done
+# Recursion rule. The staging directory must not be at or inside a recursively
+# copied source root (skills, templates, docs), or the copy would copy that tree
+# into itself. Compared on physical paths, so a symlink alias or `<link>/..`
+# cannot hide it.
+STAGING_PHYSICAL="$(physical_path "${STAGING}")" || exit 1
+for source_root in "${REPO_ROOT}/.agents/skills" "${REPO_ROOT}/.oat/templates" "${DOCS_SOURCE}"; do
+  source_root_physical="$(physical_path "${source_root}")" || exit 1
+  if path_is_within "${STAGING_PHYSICAL}" "${source_root_physical}"; then
+    fail_bundle "refusing to build: the staging directory (${STAGING_PHYSICAL}) is at or inside the recursively copied source ${source_root_physical}."
+  fi
 done
 
 # The trap must not destroy the only surviving copy. If the first rename below
