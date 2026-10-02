@@ -11,7 +11,11 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -85,7 +89,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Lightweight design, draft-and-review
+**Status:** Plan draft, independent review pending
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-01
 
@@ -95,10 +99,10 @@ The user authorized continuation through lightweight design and plan readiness w
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete through CLI validation)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (draft for Fable review)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete; Fable required corrections incorporated)
+- **Plan:** `plan.md` (15-task draft; artifact reviews and configured exit gate pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
@@ -111,7 +115,7 @@ The user authorized continuation through lightweight design and plan readiness w
 
 ## Blockers
 
-Review delivery is paused because Fable's pane reports an unsent human draft; root requested submission/clearance and did not overwrite it. The project dispatch-policy question is also pending. Neither is a product-design blocker.
+None. The user selected High dispatch and authorized autonomous collaboration through plan readiness. Fable's resumed pane and the new root return address are verified; the previous unsent-draft delivery pause is resolved. Disk has 24 GiB available at resume.
 
 ## Next Milestone
 

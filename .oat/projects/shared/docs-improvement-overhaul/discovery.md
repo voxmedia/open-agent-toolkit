@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-10-01
+oat_last_updated: 2026-10-02
 oat_generated: false
 ---
 
@@ -89,6 +89,7 @@ Adopt the skills repo's manually authored Fumadocs metadata pattern, updating th
 5. **User-approved scope expansion:** Improve the root README and purposeful docs visuals; use Gizmo patterns as inspiration, not copied assets.
 6. **Visual QA cadence:** Full independent reviewer computer-use tour after the final implementation phase. Focused implementer browser smoke checks follow navigation and migration. This does not change automated or source-review gates.
 7. **User-approved compatibility boundary:** Allow moved URLs to break. No aliases, redirects or compatibility stubs; update repository links and verify canonical destinations.
+8. **Planning continuation:** The user requested autonomous collaboration with Fable through plan readiness and selected High dispatch. Keep configured lifecycle gates unchanged and use the documented non-interactive default for optional additional phase gates. This does not authorize implementation or publication.
 
 ## Constraints
 
@@ -125,7 +126,7 @@ Criteria for the reviewed design and plan:
 
 ## Open Questions
 
-- Planning setup still needs the project dispatch policy and the independent configured-gate choices; these are not new product-scope questions.
+- High dispatch is confirmed. Configured lifecycle gates remain enabled; no additional optional phase gate is selected under the non-interactive planning default. Implementation HiLL remains unset until implementation begins.
 - The five unshipped skills with unknown intent remain excluded as currently unshipped, not labeled permanently internal. Any promotion is outside this pass.
 
 ## Assumptions
