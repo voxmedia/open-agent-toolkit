@@ -438,7 +438,7 @@ Complete seven journeys using sidebar/search/links/anchors: provider-sync-only i
 | plan           | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
 | plan           | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | auto       | -                    |
 | design         | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | manual     | -                    |
-| final          | code     | received        | 2026-10-02 | reviews/final-review-2026-10-02T222323Z.md                  | 1cbdd5b6b6b7870551394db6314705b66a97abcd | gate       | claude-opus-5-5-high |
+| final          | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T222323Z.md         | 1cbdd5b6b6b7870551394db6314705b66a97abcd | gate       | claude-opus-5-5-high |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 

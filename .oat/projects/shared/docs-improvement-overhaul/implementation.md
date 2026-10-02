@@ -256,6 +256,20 @@ Resolved the configured gate once (user configuration, no project override, bloc
 
 ## Takeover closeout
 
+### Passing final gate received — 2026-10-02
+
+Root read the entire configured gate artifact, validated full reviewed HEAD `1cbdd5b6b6b7870551394db6314705b66a97abcd`, exact run/target/project correlation and receive eligibility, and consumed the same accepted reviewer's `not-attempted` reconnaissance confirmation. The original artifact omitted that signal; continuation of Claude session `bd1c5bc1-f4e8-452e-a692-daba68ced391` returned it truthfully but was denied artifact-write permission. Root transcribed the returned confirmation with provenance, preserving every finding and reviewed-head/gate field. No replacement reviewer, source re-review or subagent launched. No reconnaissance log entry is created.
+
+Gate exit 0, status ok, High threshold: 0 Critical, 0 High, 1 Medium, 2 Low. Passing-gate judgment sweep is non-pausing and adds no blocking tasks. Artifact: `reviews/archived/final-review-2026-10-02T222323Z.md`; result: `references/final-exit-gate-1.json`. The earlier deferred ledger was resurfaced; the reviewer and root retain its resolved, duplicate, product-follow-up and bounded readability dispositions.
+
+| Finding                                       | Caller judgment and disposition                                                                                                                                                                                                                                                                                         | Scope      |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| M1 active PJM/backlog stale paths             | Agree; address now. Six canonical references and both occurrences in the open recap backlog item corrected at 5e3bed75b. Seven current canonical doc links and backlog destination exist; prose/capabilities unchanged. Root-inline receipt repair avoids another worker/re-review for repository-only pointers.        | Minor      |
+| L1 two pre-existing `.agents/README.md` links | Agree; address in the already-configured document step. Both exact targets exist. This is a bounded reader-doc delta, not a new feature or blocking task; final approval waits for that step.                                                                                                                           | Negligible |
+| L2 root README absent from local Turbo hash   | Agree; explicit follow-up, not a new build-config change in this docs-closeout sweep. Current CI setup caches the pnpm store, not Turbo output; direct `pnpm docs:validate` always executes this consumer check. Record the local cached-check limitation and add README hashing in a separately scoped tooling change. | Minor      |
+
+Final review row is passed after these ordered dispositions; no Critical/High or undecided Medium remains. This is a High-threshold passing judgment sweep, not a claim of zero residual findings. Receive is archived/committed before allowing the gate or dispatching closeout.
+
 Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through phases 3–6 and the user asked Fable to take over execution (`references/fable-takeover-2026-10-02.md`). This section is the honest record for those phases; the per-task entries above only carry status and commits.
 
 **What was done**
