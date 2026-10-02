@@ -52,36 +52,35 @@ None
 
 ### Medium
 
-**M1 — Adding an app `test` script makes root `pnpm test` run the full docs `next build`, and the plan understates this** (`plan.md:65`, `plan.md:69`)
+- **M1 — Adding an app `test` script makes root `pnpm test` run the full docs `next build`, and the plan understates this** (`plan.md:65`, `plan.md:69`)
 
-`turbo.json` defines `test` with `dependsOn: ["build"]`, meaning the same package's build. The `oat-docs` `build` is `next build`, preceded by its `prebuild` (`apps/oat-docs/package.json`). Root `pnpm build` deliberately excludes the docs app (`turbo run build --filter='!oat-docs'`). Once p01-t02 adds `test` to `oat-docs`, CI gate 3 (`pnpm test`) will run a full static export of the docs site before `tsx --test` runs. The plan says only "root tests also run docs prebuild". That undersells the change: gate 3 gets a new dependency on the whole Next build, plus extra CI time and failure surface. The planned tests use package-local Fumadocs and a CLI subprocess, so they need `^build` (CLI `dist`), not the app's own export.
+  `turbo.json` defines `test` with `dependsOn: ["build"]`, meaning the same package's build. The `oat-docs` `build` is `next build`, preceded by its `prebuild` (`apps/oat-docs/package.json`). Root `pnpm build` deliberately excludes the docs app (`turbo run build --filter='!oat-docs'`). Once p01-t02 adds `test` to `oat-docs`, CI gate 3 (`pnpm test`) will run a full static export of the docs site before `tsx --test` runs. The plan says only "root tests also run docs prebuild". That undersells the change: gate 3 gets a new dependency on the whole Next build, plus extra CI time and failure surface. The planned tests use package-local Fumadocs and a CLI subprocess, so they need `^build` (CLI `dist`), not the app's own export.
 
-_Fix guidance:_ In p01-t02, pick one approach and record it:
+  _Fix guidance:_ In p01-t02, pick one approach and record it:
+  - Add a package-scoped Turbo override (`"oat-docs#test": { "dependsOn": ["^build"], "outputs": [] }`) and add `turbo.json` to that task's file scope.
+  - Or explicitly accept that `pnpm test` builds the docs site, and state the cost.
 
-- Add a package-scoped Turbo override (`"oat-docs#test": { "dependsOn": ["^build"], "outputs": [] }`) and add `turbo.json` to that task's file scope.
-- Or explicitly accept that `pnpm test` builds the docs site, and state the cost.
+  Either way, the p01-t02 cache-acceptance probe should check the chosen graph. Fix the wording at `plan.md:69` so it matches what actually runs.
 
-Either way, the p01-t02 cache-acceptance probe should check the chosen graph. Fix the wording at `plan.md:69` so it matches what actually runs.
+- **M2 — It is unclear what the CI-enrolled migration checks read, and project references are not durable CI inputs** (`plan.md:119`, `plan.md:125`)
 
-**M2 — It is unclear what the CI-enrolled migration checks read, and project references are not durable CI inputs** (`plan.md:119`, `plan.md:125`)
+  p02-t01 adds "reusable path checks" to `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts` and says they "remain in CI". The route map it builds lives at `.oat/projects/shared/docs-improvement-overhaul/references/route-migration.json`. Archived projects in this repo are untracked: `git ls-files .oat/projects/archived` lists only `.gitkeep`. If any permanent check or test reads the project-scoped map, CI will fail as soon as the project is completed and archived, or it will silently need a copied fixture. The plan never says what the reusable checks assert or which inputs they use. It only distinguishes them from the phase-local preservation comparison.
 
-p02-t01 adds "reusable path checks" to `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts` and says they "remain in CI". The route map it builds lives at `.oat/projects/shared/docs-improvement-overhaul/references/route-migration.json`. Archived projects in this repo are untracked: `git ls-files .oat/projects/archived` lists only `.gitkeep`. If any permanent check or test reads the project-scoped map, CI will fail as soon as the project is completed and archived, or it will silently need a copied fixture. The plan never says what the reusable checks assert or which inputs they use. It only distinguishes them from the phase-local preservation comparison.
-
-_Fix guidance:_ In p02-t01, name the permanent assertions. Examples: every Contents target resolves, no inventoried source consumer points to a non-exported route, and old routes are absent from the export. Require that those assertions use only durable app or repository inputs. Keep `route-migration.json` and the baseline comparison as phase-local evidence that CI never reads. If a permanent old-route list is truly needed, store it under `apps/oat-docs/` and document why it exists.
+  _Fix guidance:_ In p02-t01, name the permanent assertions. Examples: every Contents target resolves, no inventoried source consumer points to a non-exported route, and old routes are absent from the export. Require that those assertions use only durable app or repository inputs. Keep `route-migration.json` and the baseline comparison as phase-local evidence that CI never reads. If a permanent old-route list is truly needed, store it under `apps/oat-docs/` and document why it exists.
 
 ### Low
 
-**L1 — p02-t02's nav regeneration step does not name the branch CLI** (`plan.md:135`)
+- **L1 — p02-t02's nav regeneration step does not name the branch CLI** (`plan.md:135`)
 
-The canonical `oat-docs-apply` skill tells users to run bare `oat docs nav sync` (`.agents/skills/oat-docs-apply/SKILL.md:38,121,219`). The `oat` on PATH is the released 0.3.10, which supports MkDocs only: `packages/cli/src/commands/docs/nav/sync.ts:73-83` reads and writes `<appRoot>/mkdocs.yml`. It cannot accept the p01 `--framework fumadocs` flag until a release ships it. The command fails loudly, so nothing is silently corrupted. Even so, p02-t02 should name the branch invocation. Use the app prebuild or `pnpm run cli -- docs nav sync --framework fumadocs …`, and record that as part of the documented apply adaptation.
+  The canonical `oat-docs-apply` skill tells users to run bare `oat docs nav sync` (`.agents/skills/oat-docs-apply/SKILL.md:38,121,219`). The `oat` on PATH is the released 0.3.10, which supports MkDocs only: `packages/cli/src/commands/docs/nav/sync.ts:73-83` reads and writes `<appRoot>/mkdocs.yml`. It cannot accept the p01 `--framework fumadocs` flag until a release ships it. The command fails loudly, so nothing is silently corrupted. Even so, p02-t02 should name the branch invocation. Use the app prebuild or `pnpm run cli -- docs nav sync --framework fumadocs …`, and record that as part of the documented apply adaptation.
 
-**L2 — p02-t03 formats the generated agent index with oxfmt** (`plan.md:151`)
+- **L2 — p02-t03 formats the generated agent index with oxfmt** (`plan.md:151`)
 
-`apps/oat-docs/index.md` is regenerated by `oat docs generate-index` and must not be hand-edited (AGENTS.md, Documentation). It is also outside `format:root`. Running `oxfmt --write` on it can create a diff against the generator's output that the next `predev`/`prebuild` regeneration reverses. That leaves a dirty tree or fails a parity check. Regenerate the file instead of formatting it, and drop it from the Format line.
+  `apps/oat-docs/index.md` is regenerated by `oat docs generate-index` and must not be hand-edited (AGENTS.md, Documentation). It is also outside `format:root`. Running `oxfmt --write` on it can create a diff against the generator's output that the next `predev`/`prebuild` regeneration reverses. That leaves a dirty tree or fails a parity check. Regenerate the file instead of formatting it, and drop it from the Format line.
 
-**L3 — Later tasks hard-code paths that the p02 map is meant to decide** (`plan.md:223`, `plan.md:249`)
+- **L3 — Later tasks hard-code paths that the p02 map is meant to decide** (`plan.md:223`, `plan.md:249`)
 
-p04-t04 names `apps/oat-docs/docs/skills/index.md`, and p05-t02 names `getting-started/concepts.md`. Neither path exists yet; both depend on the approved p02 map (`plan.md:121-123`). The wording matches the design's intent. Add a note that implementers resolve these paths from the approved `route-migration.json` and re-check them before p04 and p05.
+  p04-t04 names `apps/oat-docs/docs/skills/index.md`, and p05-t02 names `getting-started/concepts.md`. Neither path exists yet; both depend on the approved p02 map (`plan.md:121-123`). The wording matches the design's intent. Add a note that implementers resolve these paths from the approved `route-migration.json` and re-check them before p04 and p05.
 
 ## Spec/Design Alignment
 

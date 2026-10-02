@@ -84,3 +84,10 @@
 - Before requesting design review, relay `terminal read` reported a nonempty draft in Fable's pane even though the visible tail showed an empty prompt. Treat the draft field conservatively; do not assume the screen tail proves there is no human input.
 - Root asked the user to submit or clear that draft and withheld the peer send. No control-key clearing, extra Enter, or duplicate prompt was sent. The draft's substance was separately confirmed by the user in root's conversation; that confirms the design choice, not permission to manipulate the peer's input buffer.
 - Existing draft-protection behavior is working as a safety boundary. This observation alone does not establish a new Orc bug or justify another PR.
+
+### Resumed panes and autonomous planning
+
+- After the interruption/disk incident, the old Fable terminal handle reported exited. Fresh worktree inventory found the resumed same Claude session (`3483d7f2-3893-40d6-96b6-0a84dc51d773`) at `term_f32007f0-f26b-4f65-9c4e-51d17d13ce56`; root's return address changed to `term_71bcc5f9-76bd-4673-aa39-3e26fb55c713`. Relay/runtime and Mini execution host remained the same. Re-discover process incarnations rather than reusing dead terminal handles.
+- Root supplied the new return address and received direct Fable review messages. Sends reported accepted and turn_started; this is observed submission, not proof of review completion. Later actual reviews supplied completion evidence.
+- User explicitly selected High policy and autonomous design/plan collaboration. Remaining benign pane drafts were continuation/review instructions already within that authority; root appended a clearly attributed peer request without clearing text. This is not a general license to submit unrelated or consequential human drafts.
+- On resume, df reported 24 GiB available, not the earlier 2.3 GiB peer snapshot. No cleanup performed by this session. Only planning artifacts and review bookkeeping changed.

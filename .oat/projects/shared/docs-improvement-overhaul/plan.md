@@ -68,6 +68,8 @@ In p01-t02, add these exact script values:
 
 The app's new `test`, `type-check` and extended `check` enroll automatically through existing root `turbo run test/type-check/check`; preserve those root strings and root `lint`/`lint:fix` verbatim. Turbo tests depend on each package's build, so root tests also run docs prebuild; stale committed catalog output can correctly fail both root check and root test. Preserve the existing `@open-agent-toolkit/cli: workspace:*` devDependency in the docs app (already present at package.json:28) and verify its transitive build/hash edge covers CLI nav and pack-manifest source changes. Do not add a redundant dependency or assume the edge works without a cache probe. If the actual graph omits a read input, add its narrowly scoped source/import closure to Turbo task inputs or globalDependencies and document why.
 
+Explicit cost decision: preserve Turbo's existing test→own-build dependency. Root `pnpm test` will execute the full docs `next build`/static export, not only prebuild, before app tests. Accept that added CI time and failure surface to exercise the real build; do not add an oat-docs test override in this project. Root `pnpm build` still excludes docs, and the final build:docs gate remains required even if cached. Record the graph in p01-t02 cache acceptance.
+
 `tsconfig.docs-tools.json` explicitly includes scripts/tests, excludes generated Next output/node_modules, uses Node types and aliases for app-local helpers and the repository pack-manifest source. Add exact `@oat-repo/pack-manifest` and `@shared/types` source aliases, not broad parent-relative/catch-all imports. Verify the full closure: pack-manifest's local `./types` also imports `@shared/types`, whose own `zod` import resolves from the CLI package. Type-check the actual closure rather than asserting two aliases alone prove correctness. Exclude scripts/tests from the main Next tsconfig so the two programs do not apply incompatible aliases. Unit tests use package-local Fumadocs; CLI integration invokes the branch CLI through a subprocess. No Fumadocs dependency is added at root.
 
 In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs:skills:validate`; app value is `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-mapping.ts`. In p04-t04, root generate/check wrappers forward to the same app names; app values are `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --write` and `tsx --tsconfig tsconfig.docs-tools.json scripts/skill-catalog.ts --check`. Final docs:validate invokes strict mapping validation (no pending flag) and catalog check. Prebuild order remains catalog check, nav generation, fumadocs-mdx, agent index. Tests cover Markdown escaping in generated catalog cells.
@@ -124,6 +126,8 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Verify:** Every baseline page has one destination or explicit router-consolidation accounting; every substantive section survives. Independent review checks normalization. Preservation checks are phase-local baseline comparisons, not permanent frozen-prose CI rules that would block p05 authoring. Reusable path checks remain in CI.
 
+**Permanent check inputs:** CI reads only live app docs/metadata, canonical skill sources/topic tables, the committed app skill mapping, live README links and the current exported route inventory. Assert Contents targets resolve, topic-map targets exist and hosted README links map to exported canonical routes. CI must never read `.oat/projects/**`, its route map, archived artifacts or a migration baseline SHA. Old-route absence and preservation are one-time migration evidence, not a permanent old-route blacklist. Test this boundary by running permanent checks with the project directory absent in a disposable checkout.
+
 **Format:** `pnpm exec oxfmt --write .oat/projects/shared/docs-improvement-overhaul/references/route-migration.json .oat/projects/shared/docs-improvement-overhaul/references/migration-review.md apps/oat-docs/scripts apps/oat-docs/tests` and the resolved analysis artifact.
 
 **Commit:** `docs(p02-t01): inventory and approve the information migration`.
@@ -133,6 +137,8 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 **Files:** `apps/oat-docs/docs/**` per approved map; `apps/oat-docs/app/not-found.tsx` if no useful existing not-found owner exists.
 
 **Work:** Execute the required repository-canonical oat-docs-apply workflow for approved recommendations, exact evidence, tracking, nav regeneration and verification. Deliberate project integration adaptation: reuse the implementation-authorized project/phase branch instead of its generic create-branch step; record that adaptation before applying, and do not silently spawn another branch. This plan's approval at implementation entry must cover that adaptation; planning itself creates no branch. Add real section directories/indexes; preserve leaf headings and substantive prose except authorized normalization. Consolidate obsolete routers with recorded accounting. No aliases, redirects or transitional stubs. Add small Home/search recovery affordances for missing routes, not new search machinery.
+
+**Branch CLI:** From repo root, use `pnpm run cli:source -- docs nav sync --framework fumadocs --target-dir apps/oat-docs` (or the new app prebuild that invokes it), never released bare `oat` for the new nav capability. Record this alongside the apply branch adaptation. Agent-index regeneration likewise uses the branch command `pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
 
 **Verify:** Compare actual baseline/new content and explicit index accounting. `pnpm docs:validate`; `pnpm build:docs`; exported routes match the map, moved old routes are absent, canonical destinations exist. Browser smoke checks new hierarchy and a moved leaf; search no longer indexes removed pages.
 
@@ -148,7 +154,7 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 
 **Verify:** `pnpm docs:validate`; `pnpm docs:test`; local export link crawl. Computer-use smoke: seven primary sections, choose-workflow, Skills canonical owner, an updated README link, and old-route Home/search recovery. Save `reviews/p02-browser-smoke.md`, preservation and link reports. Shared closeout plus Fable phase review.
 
-**Format:** `pnpm exec oxfmt --write README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/index.md apps/oat-docs/scripts apps/oat-docs/tests` and exact changed skill/template/release files.
+**Format:** `pnpm exec oxfmt --write README.md packages/cli/README.md packages/docs-config/README.md packages/docs-theme/README.md packages/docs-transforms/README.md apps/oat-docs/scripts apps/oat-docs/tests` and exact changed skill/template/release files. Regenerate the app-root index; never post-format generated output separately from its generator.
 
 **Commit:** `docs(p02-t03): repair route consumers and verify migration`.
 
@@ -179,6 +185,8 @@ In p04-t01, root `docs:skills:validate` forwards to `pnpm --filter oat-docs docs
 **Commit:** `docs(p03-t02): verify README consumption and record review`.
 
 ## Phase 4: Build Complete Supported-Skill Discovery
+
+Paths named in p04/p05 express the agreed destination intent. Resolve and recheck them against the approved p02 map before each phase; update task file lists if the approved map differs. Runtime/permanent checks consume the resulting durable app files, not the project map.
 
 ### Task p04-t01: Define and review the guide mapping
 
