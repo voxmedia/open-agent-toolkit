@@ -13,7 +13,10 @@ Start with the part that solves your problem; combine others when useful:
 
 Provider sync does not require project workflows. Standalone skills do not require an active OAT project; project-specific skills state their prerequisites in their guides.
 
-![Four independent starting points: Provider Sync, Reusable Skills, Workflows and Docs Tooling. Terminal commands use explicit project or user scope; agent skills appear separately as /name.](.github/assets/readme/adoption.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme/adoption-dark.svg">
+  <img alt="Four independent starting points: Provider Sync, Reusable Skills, Workflows and Docs Tooling. Terminal commands use explicit project or user scope; agent skills appear separately as /name." src=".github/assets/readme/adoption-light.svg">
+</picture>
 
 The image shows terminal commands and agent skills separately. Invoke `/name` in slash-based agents or `$name` in Codex, not in a shell. Project scope targets repository assets; the core pack, when installed, is user-only. New tracked projects default to synced scope, which stores project files on a separate Git ref and pushes that ref to your `origin` remote, so they require an `origin` Git remote; choose local project storage if you do not want remote-backed project state.
 
