@@ -1289,8 +1289,8 @@ rewrites the four inventory rows last.
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| p01    | code     | fixes_added     | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
-| p01    | code     | fixes_added     | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d970                                | auto       | -                 |
+| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
+| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t05
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 5     | 4/5       |
+| Phase 1 | in_progress | 5     | 5/5       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 4/27 tasks completed
+**Total:** 5/27 tasks completed
 
 ---
 
@@ -64,8 +64,8 @@ oat_generated: false
 
 ### Task p01-t05: (review) Correct the bundle destination guard comment (p01 re-review L1)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 062e8bf24
 
 ---
 
@@ -280,6 +280,8 @@ oat_generated: false
   L1 split: the inaccurate guard comment converted to `p01-t05`; replacing an
   arbitrary existing destination directory is pre-existing behavior outside
   the item, deferred to a follow-up backlog item at the fan-in.
+
+- Continuation `cont-backlog-wave-4-p01-fix-3`: `062e8bf24` comment-only (p01-t05); bundle-consistency 60/60.
 
 <!-- orchestration-runs-end -->
 
