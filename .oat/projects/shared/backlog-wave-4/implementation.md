@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t06
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 5/6       |
+| Phase 1 | in_progress | 6     | 6/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 5/28 tasks completed
+**Total:** 6/28 tasks completed
 
 ---
 
@@ -69,8 +69,8 @@ oat_generated: false
 
 ### Task p01-t06: (review) Close p01 gate retry finding H1 (linked notices source)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 05c71e7c8
 
 ---
 
@@ -293,6 +293,8 @@ oat_generated: false
   (a symlinked `NOTICES.md` leaves its target unprotected; non-default layout).
   Previous gate H1 confirmed fixed. Converted to `p01-t06` (refuse a linked
   individually copied source); gate retry 2 of 2 follows.
+
+- Continuation `cont-backlog-wave-4-p01-fix-4`: `05c71e7c8` refuses a symlinked individually copied source (p01-t06); failing-first and neutralization recorded; uncached CLI tests 8061 pass; root spot-check bundle-consistency passes.
 
 <!-- orchestration-runs-end -->
 
