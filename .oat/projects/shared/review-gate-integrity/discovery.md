@@ -42,11 +42,11 @@ The linked backlog items are:
 - [`BL-260806-fail-closed-when-configured` — Fail closed when configured
   closeout snapshot is absent](../../../repo/pjm/backlog/items/BL-260806-fail-closed-when-configured.md)
 - [`BL-260718-harden-full-surface-gate` — Harden full-surface gate reviews
-  against budget and recursive dispatch](../../../repo/pjm/backlog/items/BL-260718-harden-full-surface-gate.md)
+  against budget and recursive dispatch](../../../repo/pjm/backlog/archived/BL-260718-harden-full-surface-gate.md)
 - [`BL-260711-add-activity-aware-gate` — Add activity-aware gate
   timeouts](../../../repo/pjm/backlog/items/BL-260711-add-activity-aware-gate.md)
 - [`BL-260720-add-oat-project-complete-auto` — Add oat-project-complete-auto
-  companion skill for autonomous closeouts](../../../repo/pjm/backlog/items/BL-260720-add-oat-project-complete-auto.md)
+  companion skill for autonomous closeouts](../../../repo/pjm/backlog/archived/BL-260720-add-oat-project-complete-auto.md)
 
 The bounded structured-output and headless no-yield items were delivered by
 the completed combined project `gate-execution-contract-hardening`:
