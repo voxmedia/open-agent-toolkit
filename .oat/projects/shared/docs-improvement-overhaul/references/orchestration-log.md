@@ -123,6 +123,12 @@
 
 ### Parsed CLI help and FIFO acknowledgment
 
+### Refresh integration base before dispatch
+
+- Main shipped Fumadocs navigation while this project's older base was being implemented. Failing to refresh and diff main before p01 led to duplicated work. Root and Fable selected main's foundation wholesale, not a hybrid; merge084053c3525344a0ab7c808a722715d574fae7bd retires the duplicate while preserving migrated routes and all main documentation changes. Fetch/diff main at phase start and before each PR is now the execution rule.
+- The user directed merge-first. Root held mapping/catalog family lanes, retained their worktrees and handles, and gave the original phase02 implementer sole root source ownership. Its DONE/HOLD report returned ownership before root bookkeeping resumed. Isolated README visual work did not mutate the merge worktree.
+- The scoped SVG handoff now uses explicit project/user scopes. Local830px light and375px dark renders were actually viewed without clipping; this is not GitHub theme acceptance. Pack scope is independent of init scope, and the core pack is user-only when installed, so prose must not promise all project-scoped setup stays inside a repository.
+
 - On this relay/runtime, `orca orchestration check --help` unexpectedly returned a consuming Delivery rather than help. Use `orca agent-context --json` to inspect parsed command contracts instead of assuming a help flag is read-only. This is a dated observed gotcha, not a general diagnosis of Orca internals.
 - Root had already read all three rows via peek and processed them durably. The supported schema names `orchestration check --ack <delivery_id>`, not an `orchestration ack` command. Root acknowledged exactly `delivery_2f474fdba537` after complete batch processing; the result confirmed that acknowledgment and an empty next batch. No unseen mail was acknowledged.
 - For the new format-boundary question, the queued message and direct inbox nudge were distinct actions. Input acceptance was not promoted to turn-start evidence; Fable's actual inbox reply supplied independent response evidence.

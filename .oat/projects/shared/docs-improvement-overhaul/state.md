@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t03
-oat_last_commit: 3f0c0b0bff06667a2745b492873f9ff69546aa92
+oat_last_commit: 084053c3525344a0ab7c808a722715d574fae7bd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,7 +95,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; all phase 2 task commits complete, phase review underway
+**Status:** Main integration complete; phase 2 closure gates and focused integration review underway
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 

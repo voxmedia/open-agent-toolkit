@@ -60,6 +60,10 @@ docs-overhaul-run1-p02-peer-map-blocked: STOP at required Fable migration-map re
 
 docs-overhaul-run1-p02-peer-map-resume: actual Fable map review received via user, destinations and route-only supersessions approved conditional on R1/R2; resume same phase handle for bounded corrections and independent conservation recheck. User explicitly authorizes direct peer sends despite draft signals; see references/orchestration-log.md and references/fable-p02-map-review.md.
 
+### 2026-10-02 · structural · oat-project-implement · p02-main-integration
+
+docs-main-merge-084053c: merge complete, original phase02 handle DONE/HOLD, main-only foundation and all moved main docs retained; focused integration review and new closure gates underway.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
