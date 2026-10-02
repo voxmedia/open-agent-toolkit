@@ -37,6 +37,20 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- Documentation overhaul (`docs-improvement-overhaul`, branch `amphipod`;
+  five public packages prepared at `0.3.14`, not published) is implemented
+  locally with reader-first navigation, canonical guides and a generated
+  catalog for 71 shipped user-facing skills, independent adoption paths,
+  configuration choices, an evaluator README and supporting visuals. It
+  retains main's already-shipped navigation compiler rather than a duplicate
+  implementation. Source-route validation now resolves reference-style
+  Markdown links and images. The configured implementation exit gate passed;
+  summary is complete. Final approval remains pending, and PR #342 is open,
+  not merged. Recorded
+  coverage gaps and product follow-ups remain unresolved; this is not project
+  completion, publication or release. See the
+  [project summary](../../projects/shared/docs-improvement-overhaul/summary.md).
+
 - Markdown docs bootstrap (`markdown-docs-bootstrap`, branch
   `t3code/support-markdown-docs-bootstrap`; five public packages prepared at
   `0.3.13`, not published) supports `oat docs init --framework markdown`,

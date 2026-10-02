@@ -60,7 +60,7 @@ flowchart TD
 
 - **OAT overview:** [`apps/oat-docs/docs/index.md`](../apps/oat-docs/docs/index.md)
 - **Quickstart:** [`apps/oat-docs/docs/getting-started/quickstart.md`](../apps/oat-docs/docs/getting-started/quickstart.md)
-- **CLI reference:** [`apps/oat-docs/docs/cli/index.md`](../apps/oat-docs/docs/cli/index.md)
+- **CLI reference:** [`apps/oat-docs/docs/reference/cli-reference.md`](../apps/oat-docs/docs/reference/cli-reference.md)
 - **Skills index:** [`apps/oat-docs/docs/skills/index.md`](../apps/oat-docs/docs/skills/index.md)
 - **Agent instruction guide:** [`.agents/docs/agent-instruction.md`](docs/agent-instruction.md)
 - **Provider reference:** [`.agents/docs/provider-reference.md`](docs/provider-reference.md)
@@ -73,4 +73,4 @@ OAT project documentation lives in `.oat/projects/` (gitignored). Create new pro
 oat project new <project-name>
 ```
 
-See [`apps/oat-docs/docs/projects/index.md`](../apps/oat-docs/docs/projects/index.md) for the project lifecycle workflow.
+See [`apps/oat-docs/docs/workflows/projects/index.md`](../apps/oat-docs/docs/workflows/projects/index.md) for the project lifecycle workflow.
