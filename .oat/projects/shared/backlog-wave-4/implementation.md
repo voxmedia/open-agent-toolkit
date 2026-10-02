@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 4     | 3/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 4     | 4/4       |
 
-**Total:** 38/39 tasks completed
+**Total:** 39/39 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -270,8 +270,8 @@ oat_generated: false
 
 ### Task p07-t04: (review) Close final review findings M1, L1, L2, L3, L5
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c44417bb4
 
 ---
 
@@ -677,6 +677,14 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   `p07-t04`; L4 (`DR-260720` question missing from PR-facing artifacts) fixed
   by the root in plan.md PR Requirements and the Final Summary.
   `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p07-fix-1`: `c44417bb4` (p07-t04) closed
+  final M1 (honest recovery routing to `oat-project-complete`), L1 (claim-race
+  caution), L2 (dashboard reads parsed HiLL arrays), L3 (lifecycle route
+  advertised as inactive), L5 (program-close next step); filed
+  `BL-261002-route-validated-archive` and `BL-261002-serialize-stale-gate-claim`.
+  Build, scoped vitest 1326, gate 440, validate-skills, check:skill-bumps,
+  format:root, docs check, type-check, test:skills exit 0.
 
 <!-- orchestration-runs-end -->
 

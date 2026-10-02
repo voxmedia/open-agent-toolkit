@@ -1738,7 +1738,7 @@ rewrites the four inventory rows last.
 | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
 | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
-| final  | code     | fixes_added     | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+| final  | code     | fixes_completed | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
