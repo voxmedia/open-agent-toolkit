@@ -480,3 +480,77 @@ describe('oat-project-complete-auto composed controls', () => {
     }
   });
 });
+
+describe('wave closeout invokes the companion', () => {
+  const WAVE_EXECUTE = '.agents/skills/oat-wave-execute/SKILL.md';
+  const WAVE_PROGRAM = '.agents/skills/oat-wave-program/SKILL.md';
+
+  function waveExecuteStep8(): string {
+    return normalize(
+      sliceBetween(
+        readRepoFile(WAVE_EXECUTE),
+        '8. **The full `oat-project-complete` PROCESS',
+        '9. **After the operator merges:**',
+      ),
+    );
+  }
+
+  function waveProgramCheckpoint(): string {
+    return normalize(
+      sliceBetween(
+        readRepoFile(WAVE_PROGRAM),
+        '6. When the final wave',
+        '### Program-close explainer caller',
+      ),
+    );
+  }
+
+  function requestedBy(section: string): string {
+    const match = section.match(/--requested-by (\S+)/);
+    if (!match) {
+      throw new Error('Missing --requested-by in the requesting step');
+    }
+    return match[1]!;
+  }
+
+  it('wave-execute step 8 invokes oat-project-complete-auto with its completion-before-merge provenance', () => {
+    const step = waveExecuteStep8();
+
+    expect(step).toContain('invoke `oat-project-complete-auto`');
+    expect(step).toContain(
+      '--requested-by oat-wave-execute:closeout-step-8 --completion-before-merge --reason',
+    );
+    expect(step).not.toContain('as a document');
+    expect(step).not.toContain('until an `oat-project-complete-auto`');
+  });
+
+  it('the provenance wave-execute step 8 passes completes a reviewed wave with an open tracked PR', () => {
+    const step = waveExecuteStep8();
+
+    expect(
+      decide({
+        ...REVIEWED_WAVE_OPEN_PR,
+        requestedBy: requestedBy(step),
+        completionBeforeMerge: step.includes('--completion-before-merge'),
+      }),
+    ).toEqual({ kind: 'completed', exception: true });
+  });
+
+  it('the program completion checkpoint runs the companion in batch mode, never as a document', () => {
+    const checkpoint = waveProgramCheckpoint();
+
+    expect(checkpoint).toContain('`oat-project-complete-auto`');
+    expect(checkpoint).toContain(
+      '--requested-by oat-wave-program:program-completion-checkpoint --batch --program-checkpoint',
+    );
+    expect(checkpoint).toContain('never answer it autonomously');
+    expect(checkpoint).not.toContain('as a document');
+    expect(checkpoint).not.toContain('when it ships');
+    expect(
+      decide({
+        ...MERGED_BATCH_MEMBER,
+        requestedBy: requestedBy(checkpoint),
+      }),
+    ).toEqual({ kind: 'completed', exception: false });
+  });
+});

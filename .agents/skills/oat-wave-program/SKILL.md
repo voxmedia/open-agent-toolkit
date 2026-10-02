@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.5.3
+  version: 1.5.4
 ---
 
 # Program a Corpus of External Plans into Waves
@@ -124,11 +124,15 @@ target (same disclaimer as the plan indexes).
    including in autonomous runs:
    "All waves are merged and the program is complete. Run the completion tail
    (oat-project-complete: archive + S3 + pointer clear) across all N wave wrapper
-   projects now?" On yes, run the full deferred tail for each wrapper via
-   `oat-project-complete-auto` when it ships, or execute the interactive skill's
-   `SKILL.md` as a document until then, and flip every
-   `completion tail: deferred to program close` ledger disposition to `done`. On
-   no or defer, record the standing deferral and its owner in the program ledger.
+   projects now?" On yes, record the answer in the program ledger and invoke
+   `oat-project-complete-auto` once in batch mode with
+   `--requested-by oat-wave-program:program-completion-checkpoint --batch --program-checkpoint <ledger-ref>`
+   and every deferred wrapper project path. Flip each wrapper the run report
+   lists as `completed` from `completion tail: deferred to program close` to
+   `done`; a refused or failed wrapper keeps its deferral with the reported
+   reason. When the companion stops with `interactive completion required`, the
+   operator completes the wrappers with `oat-project-complete`. On no or defer,
+   record the standing deferral and its owner in the program ledger.
    This is the program completion gate; never answer it autonomously or repeat
    it once per wave.
 
