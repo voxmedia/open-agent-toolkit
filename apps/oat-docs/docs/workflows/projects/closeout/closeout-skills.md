@@ -21,7 +21,9 @@ When no closeout sequence is stored for the project, finish it in this order:
 4. Optionally, after you approve the finished work, `oat-project-retro` writes
    a retrospective, and `oat-project-retro-file` files its tracker items.
 5. `oat-project-complete` finalizes the project. You can run it before or after
-   the pull request merges.
+   the pull request merges. Wave workflows that complete wrapper projects
+   without prompts use the
+   [`oat-project-complete-auto`](#oat-project-complete-auto) companion instead.
 
 Use `oat-project-pr-progress` instead of the final PR only to share one
 finished phase while later phases are still in progress. Use
@@ -536,3 +538,62 @@ fakes completion by editing a status field by hand.
 **Next step:** Confirm the reported completion and PR-update outcomes. Follow
 any explicit recovery action if the flow stopped. Merge and release remain
 separate operations under repository policy.
+
+## oat-project-complete-auto
+
+The non-interactive companion to `oat-project-complete`. Workflow steps use it
+to complete projects without prompts; a person completing a project uses
+`oat-project-complete`. It decides every completion answer from config and
+recorded project state, refuses whenever an answer would need a human, and
+then follows the interactive skill's current steps.
+
+**Invocation:** You do not invoke it. The skill is model-invocable but not
+user-invocable, so it is never offered as a slash command. It runs only when a
+workflow step names it with a `--requested-by` value: `oat-wave-execute`
+closeout step 8 (one wave wrapper, completed before its merge handoff) and the
+`oat-wave-program` program completion checkpoint (a batch of wrappers, after
+your yes). Its `OAT_AUTONOMOUS` lifecycle route refuses until a lifecycle
+skill names the companion, and none does today. An agent never runs it on its
+own initiative, for example to clean up a finished but unarchived project.
+
+**Prerequisites:** Needs `workflow.autonomousComplete: true`; without it the
+skill stops with "interactive completion required" and writes nothing (see
+[Configuration](../../../reference/configuration.md)). It also needs an
+installed `oat-project-complete` with its scripts. Each project is then
+preflighted on its own and refused, with the failing check named, when its
+closeout sequence is incomplete, a task is incomplete, the final review has
+not passed, the PR precondition is unmet, blockers are recorded, the project
+log is ambiguous, or a completion question has no recorded answer (for
+example `workflow.archiveOnComplete` unset on a shared or synced project). The
+PR must be merged, or, for a step that completes before the merge, open and
+tracked in the project's state.
+
+**What it does without asking:** after every guard passes, it records a
+completion-before-merge exception in `implementation.md` when the PR is still
+open, points the active project at the project, and follows
+`oat-project-complete` with the resolved answers: archive per
+`workflow.archiveOnComplete`, a summary refresh when the summary is missing or
+stale, and no retrospective. It never creates a PR, whatever
+`workflow.createPrOnComplete` says; it updates the description of an existing
+tracked PR as the interactive steps require. The completion commit body
+records the requesting step (for a synced archive, the run report does). In batch mode a refused project stays deferred
+while the others complete.
+
+**Example scenario:** An autonomous wave run reaches closeout with the final
+review passed and the wave PR open. Execute's step 8 runs the companion with
+`--completion-before-merge`, which records the exception and completes and
+archives the wrapper before the merge handoff. Had `workflow.autonomousComplete`
+been off, the companion would refuse and the wave would defer the completion
+tail to program close instead.
+
+**Expected output:** A run report with one entry per project: `completed`,
+`refused`, or `failed`, the refusing check (`opt-in`, `activation`, or
+`preflight:<n>`), the PR and its state, any exception, the archive decision,
+and the completion commit. The calling workflow records the outcome in its own
+ledger.
+
+**Next step:** For a refused project, fix the named check or complete it with
+`oat-project-complete`. If a completion step fails after the project was
+archived, a later companion run refuses because the project directory is gone;
+resume with `oat-project-complete`, whose archive-resume branches finish the
+tail.

@@ -145,6 +145,7 @@ for policy, storage, approval, and recovery details.
     - `oat-explainer-kit`
     - `oat-wrap-up`
     - `oat-project-complete`
+    - `oat-project-complete-auto`
     - `oat-wave-program`
     - `oat-wave-execute`
 

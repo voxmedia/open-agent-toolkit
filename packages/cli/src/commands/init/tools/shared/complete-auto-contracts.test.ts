@@ -318,7 +318,7 @@ describe('oat-project-complete-auto identity', () => {
       ),
     );
     const configuration = normalize(
-      readRepoFile('apps/oat-docs/docs/cli-utilities/configuration.md'),
+      readRepoFile('apps/oat-docs/docs/reference/configuration.md'),
     );
 
     // No lifecycle skill names the companion, so the OAT_AUTONOMOUS route
@@ -386,9 +386,20 @@ describe('oat-project-complete-auto identity', () => {
     expect(readRepoFile('packages/cli/scripts/bundle-inputs.mjs')).toContain(
       `'${SKILL}',`,
     );
+    expect(readRepoFile('apps/oat-docs/docs/skills/index.md')).toContain(
+      `- \`${SKILL}\``,
+    );
+    // Not user-invocable, so the docs skill mapping accounts for it as an
+    // exclusion and the closeout guide describes it.
+    const mapping = JSON.parse(
+      readRepoFile('apps/oat-docs/skill-docs.json'),
+    ) as { excluded: { name: string }[] };
+    expect(mapping.excluded.map((entry) => entry.name)).toContain(SKILL);
     expect(
-      readRepoFile('apps/oat-docs/docs/workflows/skills/index.md'),
-    ).toContain(`- \`${SKILL}\``);
+      readRepoFile(
+        'apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md',
+      ),
+    ).toContain(`## ${SKILL}`);
   });
 });
 

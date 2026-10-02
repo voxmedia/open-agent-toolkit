@@ -2613,7 +2613,9 @@ describe('validateOatSkills', () => {
     // The gate renames a stale claim aside without a recovery lock, so the
     // docs must not promise more than at-most-one live run in that window.
     const workflowGates = (
-      await readRepoFile('apps/oat-docs/docs/cli-utilities/workflow-gates.md')
+      await readRepoFile(
+        'apps/oat-docs/docs/workflows/advanced/workflow-gates.md',
+      )
     ).replace(/\s+/g, ' ');
 
     expect(workflowGates).toContain(

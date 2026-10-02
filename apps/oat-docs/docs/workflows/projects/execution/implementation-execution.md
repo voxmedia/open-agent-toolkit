@@ -471,7 +471,7 @@ The bounded loops end at fixed budgets: fix and re-review rounds at
 `oat_orchestration_retry_limit`, phase review gate rounds at the same limit,
 the final review at its three-cycle cap, and the configured exit gate at
 `maxAttempts`. At each of these points the root dispatches one read-only
-[complexity review](reviews.md#complexity-review-at-budget-exhaustion) before
+[complexity review](../reviews/index.md#complexity-review-at-budget-exhaustion) before
 escalating, saves its report under `reviews/archived/`, and shows a decision
 message with the stop reasons, the verdict, and the recommended disposition.
 The operator chooses: extra cycles, proceed with override, corrective revision,

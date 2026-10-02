@@ -311,7 +311,7 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 - `oat-project-review-receive` now presents a findings overview before asking for any disposition decisions.
 - Findings are shown with stable IDs by severity (`C*`, `I*`, `M*`, `m*`) so follow-up choices map clearly to specific items.
 - For each finding, the receive step summarizes the reviewer note, adds agent analysis, and gives a recommendation (convert now vs defer with rationale).
-- When a scope reaches the three-cycle review cap, the receive step dispatches a [complexity review](reviews.md#complexity-review-at-budget-exhaustion) and adds **simplify** to the dispositions the operator can choose. Every other budget exhaustion in the lifecycle (the orchestration retry limit, the final review cap, and a gate's `maxAttempts`) runs the same review before escalating.
+- When a scope reaches the three-cycle review cap, the receive step dispatches a [complexity review](reviews/index.md#complexity-review-at-budget-exhaustion) and adds **simplify** to the dispositions the operator can choose. Every other budget exhaustion in the lifecycle (the orchestration retry limit, the final review cap, and a gate's `maxAttempts`) runs the same review before escalating.
 
 ## Alternate lifecycle lanes
 
@@ -380,7 +380,7 @@ Quick lane lightweight design intentionally keeps a smaller collaborative/draft 
 
 When a plan gate is configured, quick-start persists its outcome as
 `oat_quick_start_gate` in project state (see
-[Gate approval records](../../cli-utilities/workflow-gates.md#gate-approval-records)).
+[Gate approval records](../advanced/workflow-gates.md#gate-approval-records)).
 `oat-project-next` and `oat-project-progress` report that record; quick plan
 readiness stays the only routing rule for quick plans.
 

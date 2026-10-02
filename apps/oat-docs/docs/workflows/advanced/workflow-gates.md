@@ -994,7 +994,7 @@ cannot turn them into an allowed disposition.
 
 When `block` still fails after `maxAttempts`, the implementation exit gate and
 the quick-start plan gate run a
-[complexity review](../workflows/projects/reviews.md#complexity-review-at-budget-exhaustion)
+[complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
 before escalating, and show it with the accumulated feedback. The operator
 chooses how to proceed, including **simplify**; agents never choose for them.
 

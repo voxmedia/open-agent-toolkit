@@ -596,6 +596,10 @@
       "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
     },
     {
+      "name": "oat-project-complete-auto",
+      "reason": "Canonical SKILL.md explicitly declares user-invocable: false; a workflow-step companion that oat-wave-execute and oat-wave-program invoke, not a supported direct invocation. Its behavior is described in workflows/projects/closeout/closeout-skills.md#oat-project-complete-auto."
+    },
+    {
       "name": "oat-project-dispatch-subagents",
       "reason": "Canonical SKILL.md explicitly declares user-invocable: false; an internal calling contract, not a supported direct invocation."
     },
