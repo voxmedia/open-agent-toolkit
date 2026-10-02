@@ -3,5 +3,5 @@
   "brokenCount": 0,
   "crawledPages": 70,
   "discoveredLinks": 848,
-  "startUrl": "http://100.98.33.81:65263/open-agent-toolkit/"
+  "startUrl": "http://<tailnet-host>:65263/open-agent-toolkit/"
 }

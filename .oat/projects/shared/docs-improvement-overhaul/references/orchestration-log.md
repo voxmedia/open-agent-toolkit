@@ -22,7 +22,7 @@ The owning relay now lists `term_`-prefixed terminal handles. Reusing the bare h
 ### Confirmed topology
 
 - The user views Orca on the laptop; Codex and Fable execute on the Mac mini in this worktree.
-- The laptop-owned runtime is `5c02600b-ff8e-43e8-8747-3cab54da4bda`, reporting app version `1.4.216`.
+- The laptop-owned runtime is `<orca-runtime-id>`, reporting app version `1.4.216`.
 - The Mini-local runtime is `549769de-ddb1-4f3c-906f-469c3f04dbe6`, reporting app version `1.4.200`. It is a different inventory, not evidence that the user's panes are absent.
 
 ### Friction and recovery

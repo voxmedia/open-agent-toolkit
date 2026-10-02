@@ -31,13 +31,13 @@ First personas need not wait for pending progress-PR publication: reviewed plan 
 
 ## Servers and UI ownership
 
-- Frozen first-persona baseline: `http://100.98.33.81:65263/open-agent-toolkit/`, built084053c35. Do not overwrite its export while a persona reads it.
+- Frozen first-persona baseline: `http://<tailnet-host>:65263/open-agent-toolkit/`, built084053c35. Do not overwrite its export while a persona reads it.
 - Combined integration export: `http://127.0.0.1:59786/open-agent-toolkit/` on Mini, preview PID28515. Successful latest buildf2ffaa20c changes this export. Laptop access requires a tailnet address/server binding; loopback is not a laptop URL.
 - Root CUA controls Mini Zen. Fable relay controls laptop; the user authorized dedicated Zen for final independent QA. Verify host, dedicated window and reachability before driving. No independent final tour has happened.
 
 ## Communication and process
 
-Owning relay `/Users/tstang/.orca-relay/bin/orca`; runtime5c02600b-ff8e-43e8-8747-3cab54da4bda. Exact current handles: root `term_71bcc5f9-76bd-4673-aa39-3e26fb55c713`, Fable `term_f32007f0-f26b-4f65-9c4e-51d17d13ce56`. UUID-only send now fails. Use inventory-returned opaque handles. Structured send only enqueues; immediately nudge the peer terminal when review action is needed. `input_accepted` is not `turn_started`; retry the SAME receipt with `--retry-request`/`--wait-submit`, not duplicate text. Do not clear drafts. A–E requests sat about35minutes because enqueue was not followed by a wake; record this lesson in orchestration-log.md and finish the Orc skill followup.
+Owning relay `/Users/tstang/.orca-relay/bin/orca`; runtime<orca-runtime-id>. Exact current handles: root `term_71bcc5f9-76bd-4673-aa39-3e26fb55c713`, Fable `term_f32007f0-f26b-4f65-9c4e-51d17d13ce56`. UUID-only send now fails. Use inventory-returned opaque handles. Structured send only enqueues; immediately nudge the peer terminal when review action is needed. `input_accepted` is not `turn_started`; retry the SAME receipt with `--retry-request`/`--wait-submit`, not duplicate text. Do not clear drafts. A–E requests sat about35minutes because enqueue was not followed by a wake; record this lesson in orchestration-log.md and finish the Orc skill followup.
 
 All artifact edits belong to this selected OAT quick project. Keep isolated author writes; root/now-Fable owns fan-in, indexes, committed catalog, bundle generation, version alignment, tracking and PRs. One parallel native/Fable review round per phase, re-review only Critical/High corrections, full eight gates once at phase close, targeted fixes between. No docs-only receipt bureaucracy. Fresh source/capability inventories at close still required; original migration and capability baselines must not be overwritten. Source code and generated bundle are different owners; regenerate, don't patch copies.
 

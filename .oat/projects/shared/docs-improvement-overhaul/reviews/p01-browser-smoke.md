@@ -9,8 +9,8 @@
 - Execution/display host: native Mini, `tstang-mini.local`, ComputerName `tstang-mini`; local Zen PID 435, executable `/Applications/Zen.app/Contents/MacOS/zen`.
 - Computer-use capability: actual `mcp__cua_repl` native application API, bound with `cua.getApp('app.zen-browser.zen')`. No laptop relay, scripted desktop input, or Playwright substitution for visual proof.
 - Viewport: native window screenshot 1880 × 923, desktop dark theme. Retained PNGs crop to the 1620 × 843 documentation area, excluding unrelated native browser chrome/tabs.
-- Preview URL: `http://100.98.33.81:65263/open-agent-toolkit/`.
-- Root-owned server: `node /tmp/oat-docs-preview-server.mjs /Users/tstang/orca/workspaces/open-agent-toolkit/amphipod/apps/oat-docs/out 100.98.33.81`; PID 61724, execution session 38210. Script SHA-256: `5397b794b7cd98eb57246888747d3d152665d4b473c4b7ad059e1a57c774a104`.
+- Preview URL: `http://<tailnet-host>:65263/open-agent-toolkit/`.
+- Root-owned server: `node /tmp/oat-docs-preview-server.mjs /Users/tstang/orca/workspaces/open-agent-toolkit/amphipod/apps/oat-docs/out <tailnet-host>`; PID 61724, execution session 38210. Script SHA-256: `5397b794b7cd98eb57246888747d3d152665d4b473c4b7ad059e1a57c774a104`.
 - Server binds only Mini tailnet IP, selects its available port, serves exported files/file.html/directory indexes under `/open-agent-toolkit/`, and returns real 404s without SPA fallback. Independent smoke `curl` checks returned home 200 and `/p01-missing-route-control/` 404.
 
 ## Performed Native Actions
@@ -38,7 +38,7 @@ Observed links use `/open-agent-toolkit/` exactly once, including sidebar, body 
 - `pnpm oat:validate-skills`: exit 0, 65 canonical skills validated.
 - `pnpm lint`: exit 0, six executed and four cached Turbo tasks, followed by successful root oxlint pass.
 - `pnpm format`: exit 0. Generated metadata/sidecar excluded from write formatting.
-- `pnpm docs:check-links --url http://100.98.33.81:65263/open-agent-toolkit/ --no-external --output .oat/projects/shared/docs-improvement-overhaul/reviews/p01-browser-smoke/link-check.json`: exit 0; 70 pages crawled, 848 links checked, zero broken. Companion exported-site report retained alongside screenshots. This automated crawl is separate from native visual proof.
+- `pnpm docs:check-links --url http://<tailnet-host>:65263/open-agent-toolkit/ --no-external --output .oat/projects/shared/docs-improvement-overhaul/reviews/p01-browser-smoke/link-check.json`: exit 0; 70 pages crawled, 848 links checked, zero broken. Companion exported-site report retained alongside screenshots. This automated crawl is separate from native visual proof.
 
 The initial crawl launch failed because the installed Playwright headless-shell binary was absent. `pnpm exec playwright install chromium` exited 0 and installed the matching official binary; the same command was rerun without a source change. This was runtime fixture preparation, not code recovery.
 

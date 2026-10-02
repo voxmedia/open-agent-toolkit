@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -13,16 +13,16 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 2     | 0/2       |
-| Phase 4 | in_progress | 4     | 0/4       |
-| Phase 5 | in_progress | 3     | 0/3       |
-| Phase 6 | in_progress | 5     | 0/5       |
+| Phase   | Status                         | Tasks | Completed |
+| ------- | ------------------------------ | ----- | --------- |
+| Phase 1 | superseded by main (#336/#338) | 3     | 3/3       |
+| Phase 2 | complete                       | 3     | 3/3       |
+| Phase 3 | complete                       | 2     | 2/2       |
+| Phase 4 | complete                       | 4     | 4/4       |
+| Phase 5 | complete                       | 3     | 3/3       |
+| Phase 6 | complete                       | 5     | 5/5       |
 
-**Total:** 6/20 tasks completed.
+**Total:** 20/20 tasks completed. Phases 3–6 were closed under the Fable takeover; see "Takeover closeout" below for what was done, by whom, and where it deviated from the plan.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -106,107 +106,136 @@ p02 review fix ad71d9cd99f181a7fcd804fe2d9bc9a8d36c8e88 is accepted as a scoped 
 
 Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supplies source-verified SVG/Mermaid/config drafts and blind applicability audit; no duplicate Codex audit/config author. Catalog tooling follows the mapping schema in parallel with family authoring. p05-t01's twelve deep guides are authored in p04-t03 once. First personas follow the p01+p02 progress PR on the restructured site; editorial work may overlap disjoint skill pages. Final rerun, coverage-ledger close and independent visual acceptance remain required. First progress PR is p01+p02, README must not delay it; ask one-line push confirmation at readiness, no merge/release authority.
 
-**Status:** pending
-**Started:** Not started
+**Status:** complete
+**Started:** 2026-10-02
 
 ### Task p03-t01: Write a concise adoption story and original visual
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** 4198712f9, 273aed8bd
+**Verification:** See Takeover closeout.
 
 ### Task p03-t02: Review actual README consumption
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** 273aed8bd (review in closeout)
+**Verification:** See Takeover closeout.
 
 ## Phase 4: Build Complete Supported-Skill Discovery
 
-**Status:** pending
-**Started:** Not started
+**Status:** complete
+**Started:** 2026-10-02
 
 ### Task p04-t01: Define and review the guide mapping
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** ec2034bdb
+**Verification:** See Takeover closeout.
 
 ### Task p04-t02: Independently audit every applicability claim
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** a080dfbef
+**Verification:** See Takeover closeout.
 
 ### Task p04-t03: Author minimum useful family coverage
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** ec321b21d..0118089dc, cc656ae65, 7537595f5
+**Verification:** See Takeover closeout.
 
 ### Task p04-t04: Generate and enforce the committed catalog
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** 33daefefe, bcd5b08c6
+**Verification:** See Takeover closeout.
 
 ## Phase 5: Fill Named Gaps and Accept the Rendered Site
 
-**Status:** pending
-**Started:** Not started
+**Status:** complete
+**Started:** 2026-10-02
 
 ### Task p05-t01: Deepen the named thin and missing guides
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** f2ffaa20c, 7537595f5
+**Verification:** See Takeover closeout.
 
 ### Task p05-t02: Add four purposeful docs visual treatments
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** ab4918343, e1c6b7d94
+**Verification:** See Takeover closeout.
 
 ### Task p05-t03: Verify phase visuals and release readiness
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** see Takeover closeout
+**Verification:** See Takeover closeout.
 
 ## Phase 6: Evaluate and Improve the Whole Reader Experience
 
-**Status:** pending amendment review
-**Started:** Not started
+**Status:** complete
+**Started:** 2026-10-02
 
 ### Task p06-t01: Reconcile whole-site coverage and capabilities
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** d9177ea2c (records)
+**Verification:** See Takeover closeout.
 
 ### Task p06-t02: Run two fresh reader-persona reviews
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** d9177ea2c, e48268de8 (records)
+**Verification:** See Takeover closeout.
 
 ### Task p06-t03: Converge on a bounded editorial list
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** e48268de8
+**Verification:** See Takeover closeout.
 
 ### Task p06-t04: Apply evidence-backed editorial improvements
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** f2ffaa20c, 0062ba850
+**Verification:** See Takeover closeout.
 
 ### Task p06-t05: Re-evaluate readers and execute independent final acceptance
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** complete
+**Commit:** a554e9e46, 7f508e58a, e1c6b7d94
+**Verification:** See Takeover closeout.
+
+## Takeover closeout
+
+Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through phases 3–6 and the user asked Fable to take over execution (`references/fable-takeover-2026-10-02.md`). This section is the honest record for those phases; the per-task entries above only carry status and commits.
+
+**What was done**
+
+- Phase 1's own navigation compiler is void as a deliverable. Main shipped `oat docs nav sync` with committed `meta.json` (#336, #338) while this branch was in flight; main was merged (`084053c35`) and its implementation taken. The docs app's validator, tests and authoring instructions from phase 1 remain.
+- Phase 3: README rewritten around an adoption story with one original SVG (`.github/assets/readme/adoption.svg`).
+- Phase 4: 71 skill-guide sections, each with an example scenario and a "What it does without asking" note; a generated, committed catalog in `docs/skills/index.md` with a parity check in `docs:validate`.
+- Phase 5: "Choosing…" guidance on 18 configuration pages; four Mermaid diagrams with text equivalents; new pages `workflows/approvals-and-automation.md`, `reference/what-oat-writes.md`, `provider-sync/pilot-with-a-team.md`; quickstart rewritten.
+- Phase 6: two persona reviews (onboarding developer, adoption evaluator), one editorial round, one rerun each. Developer rerun: all six earlier problems fixed. Evaluator rerun: 11 of 14 fixed, 2 partly, 1 still present and then addressed in `a554e9e46`. Reports are in `reviews/p06-persona-*.md`; the agreed list is `references/editorial-consensus.md`.
+- Every new factual claim was drafted by one Opus lane and checked by a separate Opus lane against source or a scratch-repository run (`references/fable-lanes/`). The checks found errors in the first fact sheet, recorded in `references/fact-sheet-errata.md` and corrected on the pages.
+- 25 product defects found along the way are filed as `BL-261002-*` backlog items (`references/product-defects-found.md`). No product behavior was changed in this project.
+
+**Deviations from the plan**
+
+- Speed amendment (user-approved): one review round per phase, the eight gates once at close, no receipt or negative-control artifacts for docs-only changes.
+- Phases 3–6 did not get the per-phase native `oat-reviewer` artifact the plan names. Their review was the drafter/verifier lane pairs plus the persona reruns.
+- The evaluator persona read the site as HTTP text, not in a browser.
+- Final visual QA was done with Playwright Chromium on the Mini, not by an independent agent in a desktop browser. Laptop Zen confirmed only that the preview was reachable and that Home and Getting Started render in dark mode. See `reviews/final-visual-qa.md`.
+- Old URLs break with no aliases or redirects (user decision recorded in `design.md`).
+
+**Known residuals**
+
+- The README image has not been seen rendered on GitHub; that can only be checked after the branch is pushed.
+- The ideas-lifecycle diagram is hard to read at phone width; its text equivalent sits directly under it.
+- `getting-started/tool-packs.md`, `workflows/advanced/workflow-gates.md` and `dispatch-ceiling.md` still need restructuring (backlogged).
+- A project stability, support and non-goals statement needs the owner's own wording.
 
 ## Orchestration Runs
 

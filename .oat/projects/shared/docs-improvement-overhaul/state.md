@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 85df822da931a8b2ca3eeca5f4cccc1fbf304a2c
+oat_current_task: null
+oat_last_commit: e1c6b7d94020ffe087c290483867ae5ce5ea4349
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -95,13 +95,13 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 2 locally complete; README and skill families executing concurrently
+**Status:** All six phases complete locally; final gates and single pull request pending
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
 ## Current Phase
 
-The user invoked oat-project-implement after the reviewed handoff. Execute dependency-ready tasks concurrently under High dispatch, with the user-approved speed amendment in plan.md: one parallel native/Fable review round per phase, Critical/High-only re-review, one closing gate run, isolated README/mapping worktrees and file-disjoint family authoring. Fable supplies independently verified visuals/configuration drafts and a blind applicability audit. First personas follow the p01+p02 progress PR; final personas/conservation/editorial verification and independent visual QA remain. Triage is Codex/Fable consensus without user wait. Moved URLs may break; no aliases. Confirm first push at PR readiness; merge/release remain separate boundaries.
+Implementation is complete. Codex paused for a usage reset during phases 3–6 and the user asked Fable to take over; Fable closed those phases. The record, including where execution deviated from the plan, is the "Takeover closeout" section of `implementation.md`. The user asked for one pull request with everything. Merge and release remain separate decisions for the user.
 
 ## Artifacts
 
@@ -109,7 +109,7 @@ The user invoked oat-project-implement after the reviewed handoff. Execute depen
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independently reviewed)
 - **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
-- **Implementation:** `implementation.md` (p01 superseded by main; p02 accepted, 6/20 tasks)
+- **Implementation:** `implementation.md` (20/20 tasks; p01 superseded by main; p03–p06 closed under the Fable takeover)
 - **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
@@ -123,8 +123,8 @@ The user invoked oat-project-implement after the reviewed handoff. Execute depen
 
 ## Blockers
 
-None currently. Actual Fable approval and non-author R1/R2 conservation proof are accepted; reviewed map committed. User explicitly directs root to send authorized peer prompts despite draft signals rather than stopping. Later preservation/export/browser checks remain mandatory, not inferred from map approval.
+None.
 
 ## Next Milestone
 
-Close phase 2 ordered gates and independent reviews, then continue README and skill authoring. Continue through p06 final QA and configured implementation gate without routine user checkpoints; publication/removal authority remains separate.
+Open the single pull request, then check the README image on GitHub in both themes.
