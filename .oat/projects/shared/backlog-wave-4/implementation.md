@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p05-t06
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 6     | 5/6       |
-| Phase 6 | pending     | 3     | 0/3       |
-| Phase 7 | pending     | 3     | 0/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | pending  | 3     | 0/3       |
+| Phase 7 | pending  | 3     | 0/3       |
 
-**Total:** 30/37 tasks completed
+**Total:** 31/37 tasks completed
 
 ---
 
@@ -189,7 +189,7 @@ oat_generated: false
 
 ## Phase 5: Completion
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p05-t01: Add the `workflow.autonomousComplete` opt-in
 
@@ -218,8 +218,8 @@ oat_generated: false
 
 ### Task p05-t06: (review) Address p05 gate finding M2 (never create a PR from the companion)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 566a04f8e
 
 ---
 
@@ -577,6 +577,14 @@ oat_generated: false
   create) addressed now as `p05-t06`; M1 (archive-resume recovery blocked by
   preflight) deferred to final; L1 is the stale `DR-260720` already held for
   the operator.
+
+- Continuation `cont-backlog-wave-4-p05-fix-2`: `566a04f8e` (p05-t06): the
+  companion forces `SHOULD_OPEN_PR=false` after interactive Step 2 and before
+  Step 11; composed controls read the real interactive rules; complete-auto
+  27/27; shared contracts and validation 1003. Root spot-check passes.
+- Phase p05 outcome: complete; 6/6 tasks (4 planned, 2 review-fix); one root
+  review round, one passing gate (one Medium addressed now, one deferred to
+  final, one Low held for the operator).
 
 <!-- orchestration-runs-end -->
 

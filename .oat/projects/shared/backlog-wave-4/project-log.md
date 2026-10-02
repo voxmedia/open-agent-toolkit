@@ -92,6 +92,10 @@ Review reconnaissance cda6fb19-ae51-463d-b84c-b7340ab122fd-review-recon complete
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p05-review-2026-10-02T221406Z.md run=cda6fb19-ae51-463d-b84c-b7340ab122fd
 
+### 2026-10-02 · structural · oat-project-implement · p05
+
+Phase p05 complete (6/6 tasks): workflow.autonomousComplete opt-in, oat-project-complete-auto companion skill with three-layer guard and batch mode, wave closeout repoint, pr-final ledger prose. One root review round (2 Medium, 2 Low fixed), Codex gate passed (1 Medium addressed now, 1 Medium deferred to final, stale DR-260720 held for the operator).
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
