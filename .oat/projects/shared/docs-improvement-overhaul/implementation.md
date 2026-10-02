@@ -250,6 +250,10 @@ Accepted parent-attached native lanes run on the Mini in this worktree, not sepa
 
 All eight ordered gates exit 0 on the correction basis through 64a48da1e: check, type-check, test, build, skill bumps, release versions (after fetch), release validation and docs build. Logs: `/tmp/docs-overhaul-final-gates/`. Check/types executed six of eleven tasks, test executed five of eleven plus direct smoke/skill/script suites; CLI 8027, control-plane 153, smoke 163, skills 690 and scripts 1 pass. Root build and gate docs build replayed caches, not fresh execution. After the bounded c916 Quickstart correction, docs validation and 13 focused tests pass; final forced docs build executes all six tasks with zero cache and exit 0 (`/tmp/docs-conservation-final-build.log`). Full eight-gate evidence is not claimed to have been rerun after that one-line correction. Source changes are finished; only lifecycle outputs remain.
 
+### Configured implementation exit gate — accepted
+
+Resolved the configured gate once (user configuration, no project override, block posture, two remediation attempts). Durable state records immutable configuration and effective-delta-v2 basis before launch. Exact configured argv retains legacy `important`, which the installed gate maps to High. The CLI accepted run `45d2802b-263d-447c-904b-5a36d35b1dd9`, target `claude-opus-5-5-high`, runtime Claude, configured model `claude-opus-5-5`, effort high, timeout 2,400,000 ms. Marker and result path are persisted in state. This policy-resolved cross-family gate is independent of the native final reviewer; no runtime identity telemetry or completed verdict is claimed at acceptance. Poll the same accepted process; do not replace it.
+
 ## Takeover closeout
 
 Recorded by Fable on 2026-10-02. Codex paused for a usage reset part-way through phases 3–6 and the user asked Fable to take over execution (`references/fable-takeover-2026-10-02.md`). This section is the honest record for those phases; the per-task entries above only carry status and commits.
