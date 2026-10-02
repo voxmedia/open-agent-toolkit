@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t03
-oat_last_commit: 7f824c2276fe53d8e544842cddb6d2c268cc2aa0
+oat_last_commit: 3f0c0b0bff06667a2745b492873f9ff69546aa92
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -83,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-01T22:42:17.072Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-02T13:07:50Z'
+oat_project_state_updated: '2026-10-02T14:40:15Z'
 oat_generated: false
 ---
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Phase 1 accepted; phase 2 inventory and page moves complete, consumer repair underway
+**Status:** Phase 1 accepted; all phase 2 task commits complete, phase review underway
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
@@ -103,7 +103,7 @@ The user invoked oat-project-implement after the reviewed handoff. Execute six s
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete; independently reviewed)
 - **Plan:** `plan.md` (20 tasks across 6 phases; added scope requires amendment review before p06)
-- **Implementation:** `implementation.md` (p01 accepted; p02-t01/t02 complete, 5/20 tasks)
+- **Implementation:** `implementation.md` (p01 accepted; all p02 tasks complete, 6/20 tasks)
 - **Review receipt:** `reviews/plan-review-round-03.md` (gate provenance, fixes, independent verification and Fable final confirmation)
 - **References:** [Evidence index](references/index.md), including initial evaluations, the proposed IA, Fable's skill inventory advisory, and orchestration observations.
 
@@ -121,4 +121,4 @@ None currently. Actual Fable approval and non-author R1/R2 conservation proof ar
 
 ## Next Milestone
 
-Finish p02-t03 live-consumer/bundle/check repair on the existing phase02 handle, then close phase gates and independent reviews. Continue through p06 final QA and configured implementation gate without routine user checkpoints; publication/removal authority remains separate.
+Close phase 2 ordered gates and independent reviews, then continue README and skill authoring. Continue through p06 final QA and configured implementation gate without routine user checkpoints; publication/removal authority remains separate.

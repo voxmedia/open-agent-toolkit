@@ -13,16 +13,16 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 3     | 3/3       |
-| Phase 2 | in_progress | 3     | 2/3       |
-| Phase 3 | pending     | 2     | 0/2       |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 5     | 0/5       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | complete  | 3     | 3/3       |
+| Phase 2 | in_review | 3     | 3/3       |
+| Phase 3 | pending   | 2     | 0/2       |
+| Phase 4 | pending   | 4     | 0/4       |
+| Phase 5 | pending   | 3     | 0/3       |
+| Phase 6 | pending   | 5     | 0/5       |
 
-**Total:** 5/20 tasks completed.
+**Total:** 6/20 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -49,7 +49,7 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 2: Migrate Information Without Rewriting It
 
-**Status:** in_progress; inventory and preservation-only move accepted, consumer repair underway
+**Status:** in_review; all three task commits accepted, ordered gates and independent reviews pending
 **Started:** 2026-10-02
 
 ### Task p02-t01: Review the complete migration map
@@ -66,9 +66,9 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ### Task p02-t03: Repair consumers and verify migrated journeys
 
-**Status:** in_progress
-**Commit:** -
-**Verification:** Not run.
+**Status:** completed
+**Commit:** 3f0c0b0bff06667a2745b492873f9ff69546aa92
+**Verification:** Root verified clean exact parent2588944d and25 scoped files; hook changed zero bytes. All17 hosted README occurrences and14 topic paths resolve; three canonical skills bumped. Direct12 docs and386 CLI consumer tests execute/pass; postcommit controls, conservation, export, source checks and types exit0. Pristine source validation needs no project/generated inputs; isolated guards prove intended rejections can fail. Local crawl76 pages/867 links/zero broken; app build executed with five cached dependencies. Mini author smoke is in reviews/p02-browser-smoke.md, not final independent QA. No recovery events; root phase gates/reviews remain pending.
 
 ## Phase 3: Improve the Evaluator README
 

@@ -1,5 +1,12 @@
 # Orchestration log
 
+## 2026-10-02 — Follow-up publication and throughput
+
+- PR47 merged at14:14:03Z while the helper held. Root preserved its checkout and created a new Orca-managed Mini worktree `/Users/tstang/orca/workspaces/orc/parsed-cli-help-guidance`, branch `parsed-cli-help-guidance`, base15d1e0513bb3266cb2710eb74cdeb0b11477619d. Display/app host remains laptop; execution host is Mini. Registration is verified, not a standalone helper chat.
+- Same parent-attached GPT-6.1 Sol/high helper added parsed-contract/FIFO guidance and the new PR-scoped1.3.5 bump. Root reviewed, committed491d1ab58fe5514d141820eb2ce077f5a0c1555a and opened draft [Orc PR51](https://github.com/tkstang/orc/pull/51). Verified open/draft/exact head; CI had no results at that read. Full validation executed608 tests with11 skipped; lint/format passed; typecheck10 tasks and build6 tasks were cached. No merge, install or deployment.
+- Orc initialization ends in `oat sync --scope all`. Root authorized a temporary invocation-local wrapper changing only that exact argv to project scope, avoiding user provider writes for this bounded helper. Project scope observed, wrapper removed, only its generated manifest-version scalar restored; no tracked init or global PATH changes.
+- User flagged slow throughput. Avoid further custom receipt expansion and duplicated phase gates; retain required conservation/review evidence and parallelize file-disjoint authoring. This is not permission to omit acceptance criteria or call provisional QA complete.
+
 ## 2026-10-01 — Docs IA collaboration
 
 ### Confirmed topology

@@ -172,6 +172,10 @@ Capture the all-phase conservation baseline now, not retrospectively after p05. 
 
 ### Task p02-t03: Repair consumers and verify migrated journeys
 
+**Execution:** Complete at `3f0c0b0bff06667a2745b492873f9ff69546aa92`; task proof accepted, phase gates and independent reviews pending.
+
+**Mechanical consumer amendment:** Five existing CLI test consumers (nav Fumadocs, init post-implement/retro contracts, release Git support and validation skills) required literal moved-file/Home Contents updates. Root accepted these directly derived migration consumers; assertions and production compiler behavior are unchanged. Exact occurrences are inventoried in p02-t03-consumers.json.
+
 **Files:** root/public package READMEs; `.agents/skills/oat-docs/SKILL.md`, `oat-doctor/SKILL.md`, `docs-completed-projects-gap-review/SKILL.md`, `subagent-orchestration/references/provider-cursor.md` under the skill root; other inventoried live consumers/templates; `apps/oat-docs/scripts/validate.ts`; generated agent index, bundles and release files.
 
 **Work:** Repair source/hosted consumers, including the already stale oat-docs topic map. Add executable topic-map target validation and a mechanical mapping of all hosted docs targets in the five READMEs to exported routes (baseline 17 targets; account for drift). Regenerate indexes/bundles from canonical sources. Do not rewrite archived historical evidence just because it mentions an old route. Clearly report intentional URL breakage, including links in already-published npm READMEs that remain stale until a new package release.
