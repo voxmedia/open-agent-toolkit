@@ -48,6 +48,10 @@ target=claude-opus-5-5-high threshold=high exit=1 status=artifact_validation_fai
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/docs-improvement-overhaul/reviews/artifact-plan-review-2026-10-02T032232Z.md run=7b51c81d-c62c-42d2-aab5-1316713014c1
 
+### 2026-10-02 · structural · oat-project-implement · p01
+
+docs-overhaul-run1-p01-pass: p01 accepted after two bounded fix rounds; original native dispatch and terminal review provenance in implementation.md and reviews/p01-code-review-round03-2026-10-02T060828Z.md; all eight root gates exit zero.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

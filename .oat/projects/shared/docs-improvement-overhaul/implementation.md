@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t03
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -13,20 +13,20 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | in_review | 3     | 3/3       |
-| Phase 2 | pending   | 3     | 0/3       |
-| Phase 3 | pending   | 2     | 0/2       |
-| Phase 4 | pending   | 4     | 0/4       |
-| Phase 5 | pending   | 3     | 0/3       |
-| Phase 6 | pending   | 5     | 0/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 3     | 0/3       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 5     | 0/5       |
 
 **Total:** 3/20 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
-**Status:** in_review; root full gates and independent review pending
+**Status:** complete; source, ordered gates and native terminal review accepted; Fable advisory request queued
 **Started:** 2026-10-02
 
 ### Task p01-t01: Compile safe Fumadocs metadata
@@ -472,7 +472,7 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
   "deadline_seconds": 3600,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -628,6 +628,14 @@ Re-review artifact reviews/p01-code-review-round02-2026-10-02T055341Z.md returne
 
 ## Final Summary (for PR/docs)
 
+### Phase 1 accepted: 2026-10-02
+
+Terminal native artifact reviews/p01-code-review-round03-2026-10-02T060828Z.md returned exactly not-attempted, no Review Orchestration, valid p01/code/auto provenance and reviewed head24d1bddfbf1ea4467125c2b8ca88c65ce57fc06a. Zero findings at all severities. Reviewer independently ran35 nav/MkDocs tests, six real app tests, source validation and additional installed-loader/source controls. Root accepts p01 after two bounded fixes and three independent review cycles; no implementation recovery used.
+
+All eight new-head gates exit0, plus main fetch0, recorded in /tmp/docs-overhaul-p01-fix2-gates/receipts.txt. Check3 executed/8cached, types2/9, tests3/8; root test actually rebuilt oat-docs and executed7939 CLI tests/six app tests, followed by smoke163/skills660/scripts1. Build5 and final docs6 replay cached results; the actual docs build ran earlier in the same root test gate. Required per-phase Mini computer-use smoke remains the retained bounded implementer desktop/dark evidence, not final independent QA. Applicable lint/format evidence passed. No source finding or configured phase gate remains outstanding.
+
+Fable's p01 fixed-diff advisory request is queued via Orca, consumption unverified because the pane has an unsent human draft. Root preserves it and proceeds with the p02 inventory only; the migration map still requires Fable review before moves. Optional docs-branch publication approval remains pending and does not authorize a push. The phase 6 A1/A2 readiness conditions are implemented; Fable's conditional readiness is recorded, not falsely represented as a new executed re-review.
+
 ### Fable amendment and phase-one review disposition: 2026-10-02
 
 Fable reviewed committed 3daaacfec and read p01 source at 257517ab..61450540, executing nothing. Root accepts A1/A2: page/heading-keyed normalized section hashes protect the pure move; independently verified fact ledgers are created only before existing prose changes. One editorial round and one persona rerun end in one consensus triage of bounded small fixes or explicitly reported residuals; safety, conservation and blocking findings cannot be waived. A3/A4 are adopted with honest source-blindness limits and current-tree capability re-inventory. This is the second bounded amendment correction; Fable readiness was conditional only on A1/A2, now implemented. No new user checkpoint.
@@ -640,7 +648,7 @@ First native review dispatch outcome: completed, 0 Critical / 1 High / 3 Medium 
 
 Orc follow-up is independently owned and published as draft PR https://github.com/tkstang/orc/pull/47 at 69fa78ae5411cf4c5f4da81c89e7a7380f3d220c, Mini worktree /Users/tstang/orca/workspaces/orc/docs-qa-orchestration-guidance, branch docs-qa-orchestration-guidance. Native helper attached to root; Orca CLI registration verified, standalone chat visibility not claimed. Six repository gates passed, with type/build cache replay disclosed. Not merged or installed; docs-branch publication is separately unapproved and does not block local execution.
 
-Implementation is underway, not published or merged. p01 source foundation is committed with implementer proof; phase acceptance awaits root gates/review. Reader-facing migration, catalog/scenarios, persona/editorial work and final independent acceptance remain pending.
+Implementation is underway, not published or merged. Phase 1 source foundation is accepted after implementer proof, ordered root gates and a clean terminal independent review. Reader-facing migration, catalog/scenarios, persona/editorial work and final independent acceptance remain pending.
 
 ## References
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: p01-t03
+oat_current_task: p02-t01
 oat_last_commit: 727c40abb5be32885d37d28b21887ac7c986ea42
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -89,7 +89,7 @@ oat_generated: false
 
 # Project State: docs-improvement-overhaul
 
-**Status:** Implementation p01 fix round 2 complete; final gates and re-review pending
+**Status:** Phase 1 accepted; phase 2 inventory is next
 **Started:** 2026-10-01
 **Last Updated:** 2026-10-02
 
