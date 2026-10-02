@@ -302,8 +302,8 @@ hard-timer kill path and samples probe evidence on the existing liveness tick
 evidence that advanced since the previous observation count as activity;
 `ambient-runtime` evidence does not. Resolve the idle window as 600_000 ms by
 default, disabled when it is not below the hard budget, never applied to
-`stdio: 'inherit'` runs, and disabled by default for runtimes whose transcript
-evidence is only `ambient-runtime` (Codex, `activity-probes.ts` around 169):
+`stdio: 'inherit'` runs, and disabled for runtimes whose transcript evidence
+is only `ambient-runtime` (no override in this wave; do not add a config key) (Codex, `activity-probes.ts` around 169):
 an outer Codex process can stay silent on stdout while a nested reviewer
 works, which is the incident behind this item, so Codex runs keep the hard
 cap only. Document this in `workflow-gates.md` and the PR callout. Report `timeoutKind` (`idle` or
@@ -744,7 +744,10 @@ quick plan readiness predicate stays the single routing rule for quick plans
 (it is defined once in quick-start and mirrored by the control-plane router
 and, after p06-t03, the dashboard), so the record adds no route: after
 readiness passes, next reports a missing, `blocked`, or fingerprint-stale
-quick-start record as a warning in its recommendation, and progress reports
+quick-start record as a warning in its recommendation, but only when the
+resolved quick-start gate declaration exists and is not project-disabled (a
+ready quick plan with no configured gate and no record produces no warning;
+pin that negative case), and progress reports
 both records' status and disposition. A pin fails when quick-start's
 approval write (p04-t06) is removed, because the readers' documented record
 no longer has a writer.
@@ -1083,7 +1086,9 @@ any PJM write. After `pnpm build`, run `node packages/cli/dist/index.js backlog 
 --summary "<outcome>"` for each item whose in-scope criteria all pass:
 `BL-261001-fail-closed-when-bundle-assets`,
 `BL-260906-report-errno-for-asset-root`, `BL-260718-harden-full-surface-gate`,
-`BL-260927-persist-quick-start-prompt`, `BL-261001-run-a-complexity-review-when`,
+`BL-260927-persist-quick-start-prompt` (its archive summary states that next
+and progress report the quick-start record without routing on it, per
+discovery decision 8), `BL-261001-run-a-complexity-review-when`,
 `BL-260713-root-agent-judgment-logging`, `BL-260720-add-oat-project-complete-auto`
 (strip its `{Outcome}` placeholders first), `BL-260908-tighten-the-pr-final-ledger`,
 `BL-261001-downgrade-claims-that-thorough`,
@@ -1097,7 +1102,9 @@ summary saying it is superseded by `BL-260908-remove-the-top-level-skill`.
 - `BL-260711-add-activity-aware-gate`: record the shipped idle kill and
   distinct outcomes; keep criteria 4 (early template write, after
   `BL-260729-implement-reviewplan-first`), 8, and 9 open, plus criterion 7's
-  live smoke-fixture verification.
+  live smoke-fixture verification, and add an open note that Codex runs get no
+  idle kill because their transcript evidence cannot be attributed to the
+  gate child.
 - `BL-260909-restamp-a-stale-copy-strategy`: record the shipped parts; keep
   only the bridge and legacy-encoder retirement open.
 - Add the Wave 4 complexity-review slice to
@@ -1159,7 +1166,8 @@ The plan is fully sequential (`oat_plan_parallel_groups: []`).
   earlier phase.
 
 Within p04, tasks edit the same skills in order (implement in t03 and t05,
-quick-start in t05 and t06, the autonomy contract last in t08).
+quick-start in t05 and t06); coverage keys land with each task, and t08
+rewrites the four inventory rows last.
 
 ---
 
@@ -1176,7 +1184,7 @@ quick-start in t05 and t06, the autonomy contract last in t08).
 |                                            | Matching in-flight run rejected, not relaunched                              | p02-t02                   |
 |                                            | Tests: precedence, long envelope, nested invocation                          | p02-t01, p02-t02          |
 |                                            | Markers and JSON show budget and recursion decision                          | p02-t01, p02-t02          |
-| `BL-260711-add-activity-aware-gate`        | Active child not idle-killed; silent child killed in window; hard cap stays  | p02-t03                   |
+| `BL-260711-add-activity-aware-gate`        | Active child not idle-killed; silent child killed in window (non-Codex); cap | p02-t03                   |
 |                                            | Timeout checks for a recovered artifact (existing `lateCompletion`)          | p02-t03 (asserted)        |
 |                                            | Distinct idle, hard-cap, and recovered outcomes; tests                       | p02-t03                   |
 |                                            | Early template write, provider preflight, unavailable-target envelope        | open (p07-t02 rewrite)    |

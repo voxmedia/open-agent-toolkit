@@ -138,6 +138,11 @@ phase grouping and the two partial-scope items, covered under Key Decisions.
      vendor by symlink, following the existing autonomy-contract pattern.
    - The opt-in early complexity trigger is a `workflow.*` boolean that
      defaults to off.
+   - Next and progress report the persisted quick-start gate record without
+     routing on it: quick plan readiness stays the single routing rule for
+     quick plans (defined once in quick-start and mirrored by the router and
+     dashboard), so `BL-260927-persist-quick-start-prompt`'s "read it the
+     same way" is met by validating and reporting the record.
    - Sibling gate-capable skills outside the item's list (plan, import-plan,
      design, discover, lite) are a follow-up, filed at the fan-in.
 
