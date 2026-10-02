@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | pending  | 7     | 0/7       |
-| Phase 5 | pending  | 4     | 0/4       |
-| Phase 6 | pending  | 3     | 0/3       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | in_progress | 7     | 7/7       |
+| Phase 5 | pending     | 4     | 0/4       |
+| Phase 6 | pending     | 3     | 0/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 16/33 tasks completed
+**Total:** 23/33 tasks completed
 
 ---
 
@@ -138,42 +138,42 @@ oat_generated: false
 
 ## Phase 4: Review-loop skills
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p04-t01: Add the condensed complexity-review guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 664e2e297
 
 ### Task p04-t03: Run the complexity review at implement's exhaustion points and log root judgment
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5bcca212e
 
 ### Task p04-t04: Run the complexity review at review-receive's cycle cap
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 32ac81088
 
 ### Task p04-t05: Define the gate approval record once
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0999bc975
 
 ### Task p04-t06: Persist quick-start gate outcomes and run the complexity review at QS-12
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0f325be20
 
 ### Task p04-t07: Read both gate records in next and progress
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1bb2e7020
 
 ### Task p04-t08: Update the autonomy contract and the docs for the review loop
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 03933c299
 
 ---
 
@@ -454,6 +454,26 @@ oat_generated: false
   passes.
 - Phase p03 outcome: complete; 5/5 tasks (3 planned, 2 review-fix); one root
   review round, one passing gate (Medium addressed now).
+
+### Phase p04 dispatch
+
+- Request `bw4-p04-impl-1`: accepted and returned `DONE_WITH_CONCERNS`
+  (validated success; deliberate deviations recorded); target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `664e2e297..03933c299` (p04-t01, t03-t08; no t02 by operator decision);
+  phase verification pass (build; isolated-HOME validation and shared
+  contracts 970; full CLI vitest 8130; check, type-check, lint,
+  validate-skills, check:skill-bumps (8 skills), format:root, docs check);
+  recovery 0/10. Skills bumped: implement 2.3.17, quick-start 2.3.18,
+  review-receive 1.6.8, document 1.8.7, lite 1.1.7, pr-final 1.6.8, next
+  1.1.5, progress 1.4.4. Deviations: complexity reports saved under
+  `reviews/archived/` (top-level `reviews/` files read as unprocessed reviews
+  by next and the control-plane scanner); receive cycle count skips
+  `complexity-*`; implement SKILL.md line cap 246 to 251; progress also
+  reports the implement exit-gate record. Root spot-check: symlinks, bundle
+  `linkedFiles`, `NOTICES.md` entry, contract and inventory pins 59/59,
+  check:skill-bumps OK.
+  `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
