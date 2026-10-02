@@ -1,0 +1,28 @@
+# Fable approach review and disposition
+
+Received directly from the user-authorized Fable 5.1 peer on 2026-10-01. This is a condensed record of the peer message, not a claim that a formal OAT artifact gate ran. Fable reviewed discovery, IA consensus, planning recon and selected source. Root owns the design and implementation decisions.
+
+| Item | Peer finding                                                                                                    | Draft disposition                                                                                                                                                                                     |
+| ---- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1   | Native owned pages should use frontmatter titles, not synthetic label overrides; four observed label mismatches | Adopted. Align mismatches in phase 1 and check title parity. Retain native page identity.                                                                                                             |
+| B2   | Sidebar must not become the 71-skill catalog                                                                    | Adopted. Catalog is page-body content; sidebar cross-links are family-level only.                                                                                                                     |
+| B3   | Aliases must not enter the content source/search; ask whether compatibility is needed                           | User explicitly chose to allow moved URLs to break. No alias implementation. Preserve headings/content, update repository consumers.                                                                  |
+| B4   | Coverage plus README plus visuals is unbounded                                                                  | Enumerate guide families and five visual treatments. README is its own third phase, dependent only on migration.                                                                                      |
+| R1   | Ignore generated metadata; prefer tracking-based overwrite refusal                                              | Ignore output, but retain marker-based refusal even for untracked files because shipped CLI/scaffolds also operate outside Git. Source validation and real-loader checks remain required.             |
+| R2   | Keep catalog generation repository-specific                                                                     | Adopted; script under tools/docs, not product CLI.                                                                                                                                                    |
+| R3   | Two-way mapping check, pack-derived support set, account for unshipped skills                                   | Adopted. Exclude currently unshipped candidates without inventing internal intent; distribution changes are outside this project.                                                                     |
+| R4   | Repair stale oat-docs topic map, bump skill version and add path validation                                     | Include in migration consumer sweep and enforce the table's source targets.                                                                                                                           |
+| R5   | Test the real installed Fumadocs loader                                                                         | Adopted, including breadcrumb/previous-next and cross-link ownership behavior.                                                                                                                        |
+| R6   | Mermaid default, limited original SVG, source-verify behavior diagrams                                          | Adopted; one original README SVG and four named docs Mermaid treatments, with no copied assets. Package READMEs remain text-usable.                                                                   |
+| R7   | README for evaluators, concise, one diagram, contributor setup last                                             | Adopted.                                                                                                                                                                                              |
+| R8   | Lockstep versions and bundle regeneration per shipped PR                                                        | Explicit per-phase release closeout.                                                                                                                                                                  |
+| R9   | Detailed foundation/migration, bounded later authoring, HiLL between                                            | All phases will have runnable tasks; recommend a post-migration implementation checkpoint but do not set HiLL without user confirmation at implementation. Bound review retries to configured policy. |
+
+## Later user directions
+
+- Full independent reviewer computer-use visual QA after the last phase, not every phase. Targeted implementer smoke checks after navigation and migration remain in the design.
+- Allow moved URLs to break. No redirect or compatibility-page work.
+
+## Remaining review work
+
+Fable must review the actual design and plan drafts. This approach review alone does not establish approval of those artifacts or implementation readiness.
