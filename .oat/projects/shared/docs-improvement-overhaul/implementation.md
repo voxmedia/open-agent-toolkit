@@ -13,14 +13,14 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 3     | 3/3       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | pending  | 2     | 0/2       |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 5     | 0/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 3     | 3/3       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | in_progress | 2     | 0/2       |
+| Phase 4 | in_progress | 4     | 0/4       |
+| Phase 5 | in_progress | 3     | 0/3       |
+| Phase 6 | in_progress | 5     | 0/5       |
 
 **Total:** 6/20 tasks completed.
 
@@ -1019,6 +1019,14 @@ Same original phase handle completed cont-docs-overhaul-p01-fix-1 at 686b2663fd8
 Implementer reports post-commit 33 executed CLI navigation tests, six real app tests, source validation, output check of 11 files, skill bumps, forced docs build (six executed/zero cached), and diff check all exit zero. Logs /tmp/docs-p01-fix-post-\*.log. Pre-fix regression and guard/anchor neutralization failed as intended; root full ordered gates and fresh independent review remain pending. Original tasks/commits and zero recovery usage are unchanged. No phase acceptance is claimed.
 
 ## Test Results
+
+### Parallel authoring and visual integration checkpoint
+
+All71 supported skill drafts are written in isolated worker worktrees, not yet independently accepted or integrated: FamilyA591e119898 (15), B d811cffeff (11), C9a2205f40 (14), Dbb0f6120d (17), Eee5807b36 (14). Authors verified source fields/examples and preservation; Fable receives each batch for independent source verification. Mapping scenario guard3f5c3364b adds actual Markdown-AST marker validation and negative controls;45 focused tests/types/lint/format pass. Full58-test app run intentionally fails only unlisted execution-skills navigation pending root fan-in. Guard neutralization fails its rejection control, restored guard passes. No phase4 acceptance claimed.
+
+Root-inline p03/p05 integration, avoiding a new author lane at the visual seam: README scoped SVG/prose273aed8bd; four diagram treatments plus pre-edit fact ledgerab491834338b2ef47081ab7386f1e33ba2ed71dc in docs-overhaul-readme-visual. Scope is independent adoption, canonical/provider ownership, docs maintenance and idea promotion. Root actually viewed the README light/narrow-dark PNGs and Mini Zen desktop/dark Concepts, drift, docs workflow and ideas diagrams. Tiny chart text and a clipped setup heading prompted compact high-level graphs with every detail retained in adjacent text; final compact drift/docs render, both-theme/narrow site smoke, GitHub render and independent final tour remain pending. Four-page Markdownlint/format/diff pass. Earlier six-task forced docs build0 at pre-compaction working tree; final rebuild was interrupted after stalling, not a passing final-build claim. No phase3/5 acceptance.
+
+Mandatory config editorial is underway across18 agreed pages with pre-edit fact ledger independently checked by root against relevant current-main source and Fable's six verified draft lanes. First source-blind junior/mid persona reviewer /root/persona_developer uses exact High Sol/high reviewer target and exclusive Mini UI on frozen084053c export. No repository reads or nested dispatch; inherited repository CWD is not structural source isolation. First README brief typo corrected to voxmedia. Final independent visual QA remains Fable-owned and deferred.
 
 ### p01 bounded fix round 2
 

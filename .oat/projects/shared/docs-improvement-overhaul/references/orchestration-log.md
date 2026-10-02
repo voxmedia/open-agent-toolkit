@@ -1,5 +1,9 @@
 # Orchestration log
 
+## 2026-10-02: relay terminal handle refresh
+
+The owning relay now lists `term_`-prefixed terminal handles. Reusing the bare historical UUID for a peer send failed `terminal_not_found` despite a live pane. Inventory filtered to this worktree confirmed the same pane identity with `term_`; sending to the exact returned handle succeeded as msg_fc20ec6ec390. A send proves enqueue, not peer reading. Keep previous requests intact; do not duplicate accepted messages or treat absent attention as process death.
+
 ## 2026-10-02 — Approved speed and split ownership
 
 - User approved dependency-ready parallel tasks, one native/Fable phase review round, Critical/High-only re-review, targeted fix checks and one full closing gate run. Docs-only edits use conservation diffs instead of new receipt/control artifacts. Twelve deep guides are written fully in the first family-authoring pass; catalog follows the mapping schema concurrently. First personas follow the progress PR; final rerun and coverage close remain.
