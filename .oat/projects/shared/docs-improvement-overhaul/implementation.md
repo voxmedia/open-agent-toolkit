@@ -72,6 +72,14 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Phase 3: Improve the Evaluator README
 
+### User-approved concurrent execution amendment — 2026-10-02
+
+Speed and parallelization directions supersede sequential scheduling, not task scope or conservation. One native/Fable review round per phase; repeat review only for Critical/High corrections. Full eight gates once at phase close; targeted checks between fixes. No new docs-only receipts/negative-control artifacts; preserve existing baseline evidence. Root integrates independently owned Mini worktrees and release units, without concurrent core-artifact writers.
+
+p02 review fix ad71d9cd99f181a7fcd804fe2d9bc9a8d36c8e88 is accepted as a scoped correction commit, with phase acceptance still pending closing gates and Fable's one correction review. H1 recovery remains separate at777810f5b; usage remains1/10. Native M1 and Fable B3 are corrected, N1 adopted; optional N2 remains bounded p06 editorial work. Fifteen scoped files, clean handoff, targeted app15/15 tests/types/checks, fresh six-task build and76-page/862-link zero-broken crawl reported by the implementer. Root verified commit identity/bounds; full gates running against ad71d9cd.
+
+Dispatch p03 prose and p04-t01 mapping independently now. Fable exclusively supplies source-verified SVG/Mermaid/config drafts and blind applicability audit; no duplicate Codex audit/config author. Catalog tooling follows the mapping schema in parallel with family authoring. p05-t01's twelve deep guides are authored in p04-t03 once. First personas follow the p01+p02 progress PR on the restructured site; editorial work may overlap disjoint skill pages. Final rerun, coverage-ledger close and independent visual acceptance remain required. First progress PR is p01+p02, README must not delay it; ask one-line push confirmation at readiness, no merge/release authority.
+
 **Status:** pending
 **Started:** Not started
 

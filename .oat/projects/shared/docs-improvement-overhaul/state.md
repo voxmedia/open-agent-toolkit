@@ -101,7 +101,7 @@ oat_generated: false
 
 ## Current Phase
 
-The user invoked oat-project-implement after the reviewed handoff. Execute six sequential phases under High dispatch, with independent reviews and Fable collaboration. User additions relayed during p01 require whole-site personas/conservation/editorial work, universal skill scenarios and configuration decision guidance. Final checkpoint moves to p06 with auto-review; triage is Codex/Fable consensus without user wait. Moved URLs may break; no aliases. Publication and merge remain separate boundaries.
+The user invoked oat-project-implement after the reviewed handoff. Execute dependency-ready tasks concurrently under High dispatch, with the user-approved speed amendment in plan.md: one parallel native/Fable review round per phase, Critical/High-only re-review, one closing gate run, isolated README/mapping worktrees and file-disjoint family authoring. Fable supplies independently verified visuals/configuration drafts and a blind applicability audit. First personas follow the p01+p02 progress PR; final personas/conservation/editorial verification and independent visual QA remain. Triage is Codex/Fable consensus without user wait. Moved URLs may break; no aliases. Confirm first push at PR readiness; merge/release remain separate boundaries.
 
 ## Artifacts
 
