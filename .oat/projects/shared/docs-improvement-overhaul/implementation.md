@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -15,13 +15,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 1/3       |
+| Phase 1 | in_progress | 3     | 2/3       |
 | Phase 2 | pending     | 3     | 0/3       |
 | Phase 3 | pending     | 2     | 0/2       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 
-**Total:** 1/15 tasks completed.
+**Total:** 2/15 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
@@ -36,9 +36,9 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ### Task p01-t02: Integrate the real loader and first build
 
-**Status:** blocked pending generated-output restoration and verification
+**Status:** completed
 **Commit:** b371e1da4b7b66cde6fa949275ea395b196dfb60
-**Verification:** Focused CLI/app tests, source checks, type checks, pristine checks, cache perturbation and installed external-consumer first build passed. Final main-worktree docs build and one no-edit rerun failed because broad formatting changed generated metadata bytes. Do not count this task complete before a passing committed-head build. The original task commit remains immutable.
+**Verification:** Focused 39 CLI/4 app tests, source checks, app/CLI type checks, pristine app checks/direct tests, cache perturbation and installed external-consumer first build passed. Final main-worktree build initially failed on formatter-modified metadata; preserved restoration and forced committed-head build then passed, exit 0, all six tasks executed with zero cached. Root verified logs and immutable task bounds. Cache graph/hash probes prove both nav compiler and pack-manifest changes invalidate app tasks through the existing CLI workspace edge; turbo.json unchanged.
 
 ### Task p01-t03: Align authoring instructions and verify foundation
 
@@ -227,11 +227,13 @@ Acceptance: /root/phase01 (Ptolemy); holding before work until root supplies cle
 
 Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
 
+Task p01-t02 accepted after root resolved disposable-output restoration. Exact backup: /private/tmp/docs-p01-generated-quarantine-1790914670899 (11 metadata files, sidecar and hash evidence). Semantic equality and untracked regular-file checks preceded preservation; backup byte hashes matched before removing only generated files. Guard and source remained unchanged. `pnpm build:docs` exit 0 replayed six cached tasks and was not accepted as execution proof; `pnpm exec turbo run build --filter=oat-docs --force` then passed with all six tasks executed, `/tmp/docs-p01-restored-build-forced.log`. No code recovery attempt or successful recovery commit is claimed; pre-attempt stop remains recorded. Root fetch found origin/main 0.3.12; p01 lockstep release prepared at 0.3.13, without publication.
+
 ### Plan artifact review received: 2026-10-02
 
 Eligible gate run `7b51c81d-c62c-42d2-aab5-1316713014c1`: 0 critical, 0 high, 1 medium, 1 low. Root resolved both findings directly in plan/design, with clean native re-review and Fable final readiness confirmation. No implementation fix tasks or deferrals. Review archived at `reviews/archived/artifact-plan-review-2026-10-02T032232Z.md`; durable provenance/dispositions in `reviews/plan-review-round-03.md`.
 
-The earlier invalid gate artifact is superseded history, not a received gate pass. Next task remains p01-t01 only after separate implementation authorization and HiLL setup; progress stays 0/15.
+The earlier invalid gate artifact is superseded history, not a received gate pass. Implementation authorization arrived separately after this planning receipt; current implementation progress is tracked above.
 
 ## Deviations from Plan / Design
 
