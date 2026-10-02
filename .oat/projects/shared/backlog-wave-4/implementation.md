@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p06-t04
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -31,10 +31,10 @@ oat_generated: false
 | Phase 3 | complete    | 5     | 5/5       |
 | Phase 4 | complete    | 9     | 9/9       |
 | Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | in_progress | 4     | 3/4       |
+| Phase 6 | in_progress | 4     | 4/4       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 34/38 tasks completed
+**Total:** 35/38 tasks completed
 
 ---
 
@@ -244,8 +244,8 @@ oat_generated: false
 
 ### Task p06-t04: (review) Close p06 review findings M1, L1 (dashboard quick-plan parity)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 712f8f05f
 
 ---
 
@@ -614,6 +614,11 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   not-ready quick plan differs from the router; L1 pending plan HiLL ordering
   differs at `plan:in_progress`.
   `Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
+- Continuation `cont-backlog-wave-4-p06-fix-1`: `712f8f05f` (p06-t04): the
+  dashboard applies the quick readiness gate at every plan-phase status and
+  checks a pending HiLL first, as the router does; generate 30/30, router
+  45/45. Root spot-check: generate passes.
 
 <!-- orchestration-runs-end -->
 
