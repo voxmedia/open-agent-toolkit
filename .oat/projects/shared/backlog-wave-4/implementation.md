@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 3     | 3/3       |
 
-**Total:** 35/38 tasks completed
+**Total:** 38/38 tasks completed
 
 ---
 
@@ -251,22 +251,22 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** afc2fd95a
 
 ### Task p07-t02: Close out the backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 59390951b
 
 ### Task p07-t03: Run the full Definition of Done
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1ecd4429b
 
 ---
 
@@ -626,6 +626,20 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   the dashboard) deferred to final.
 - Phase p06 outcome: complete; 4/4 tasks (3 planned, 1 review-fix); one root
   review round, one passing gate.
+
+### Phase p07 dispatch
+
+- Request `bw4-p07-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `afc2fd95a..1ecd4429b` (p07-t01..t03): lockstep 0.3.14; 11 items archived
+  `closed`, `BL-260908-retire-the-top-level-skill` archived `wont_do`; three
+  items rewritten (BL-260711, BL-260909, BL-260818); two filed
+  (`BL-261002-wire-the-complexity-review`,
+  `BL-261002-teach-check-skill-bumps`); full Definition of Done exit 0 at
+  `59390951b` (uncached tests: CLI 8172, control-plane 153). Recovery 0/10.
+  Note: `oat pjm doctor` reports a pre-existing `backlog_completed_unarchived`
+  warning class.
+  `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
