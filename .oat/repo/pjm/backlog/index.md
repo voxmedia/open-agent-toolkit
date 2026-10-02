@@ -403,6 +403,7 @@
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions  | open   | medium   | task       | S        |
 | BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                            | open   | medium   | feature    | M        |
 | BL-260927-persist-quick-start-prompt     | Persist quick-start prompt approvals like implement                                                   | open   | medium   | task       | S        |
+| BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                     | open   | medium   | task       | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete     | open   | medium   | task       | S        |
