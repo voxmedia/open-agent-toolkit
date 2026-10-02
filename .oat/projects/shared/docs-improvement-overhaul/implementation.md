@@ -816,6 +816,12 @@ Required peer-review boundary: Fable map approval has not arrived. Verified owni
 
 ## Implementation Log
 
+### p02-t02 pre-commit formatter boundary: 2026-10-02
+
+The strict conservation check caught two pre-commit application issues despite source/build success. First, a one-use assembler matched inline Contents prose instead of an actual heading in docs-tooling/index.md; author restored exact baseline prose and used heading-line binding. Second, required oxfmt changes one protected Command Groups table's padding after href migration. Existing strict verifier still rejects it; no task commit, weakened baseline or recovery usage. Exactly15 third-column edge-space spans plus one separator dash-run width differ; raw cell payloads and real table AST remain equal, all other815 protected units match. First six-task build passed with zero cached but predates heading restoration, so fresh build/browser proof remains pending.
+
+Same reviewer continuation docs-overhaul-run1-p02-table-format-review01 accepted on /root/p02_map_review at unchanged oat-reviewer-gpt-6-1-sol-high, gpt-6.1-sol/high, holding until this bookkeeping release. New bounded objective is proposed exact-span formatter accounting, not another original map loop or phase-code acceptance; authority only reviews/p02-table-formatting-proposal-review.md. Resolver /tmp/docs-p02-format-review-dispatch.json exit0/notices[]. Proposal JSON eb00351b46b7a7234f9b489877b34d2735016047c53376a094c3ba29516cc4af and Markdown b945887e4f888dd1b34295c15aeb88b321cc99c2955cb52d91a3a6eb9f997865 bind uncommitted source evidence. Conditional design/plan amendment records exact non-content scope; approval and capable implementation controls still pending. Phase02 holds all commands/writes; root does not stop for user input on this mechanical conservation decision.
+
 ### p02-t01 accepted and apply continuation: 2026-10-02
 
 Root verified e790323680d35085f7b724862bb507c36e163d46 is the single planned t01 commit with parentb0e6d239,14 declared files and clean tree. Shared release preparation is root-owned438b6ecd4d54dc4f97918e307cf5cb3cc0cbc549, five public manifests0.3.14 above freshly fetched main0.3.13; release manifest/bundles remain t03 closeout. These versions do not claim publication.

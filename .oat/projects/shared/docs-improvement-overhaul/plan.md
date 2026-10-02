@@ -162,6 +162,8 @@ Capture the all-phase conservation baseline now, not retrospectively after p05. 
 
 **Verify:** Compare actual baseline/new content and explicit index accounting. `pnpm docs:validate`; `pnpm build:docs`; exported routes match the map, moved old routes are absent, canonical destinations exist. Browser smoke checks new hierarchy and a moved leaf; search no longer indexes removed pages.
 
+**Formatter-boundary amendment (pending non-author approval):** Preserve the original map/baseline hashes. The required formatter changes only the existing Command Groups table in `reference/cli-reference.md`:15 inventoried third-column outer-space spans and one delimiter dash-run width. Append-only exact-span evidence and a narrowly guarded comparison may restore only these spans to before bytes for the original hash check; raw cell payloads, topology/alignment, syntax, newlines and all other bytes stay protected. No general trim/whitespace or whole-unit formatter normalization. Review the proposal before implementation, then verify guarded positive/negative controls and an isolated capable guard-neutralization control before t02 commit. Original strict failure remains evidence; no content/capability removal is authorized.
+
 **Format:** `pnpm --filter oat-docs docs:format`; `pnpm exec oxfmt --write apps/oat-docs/app/not-found.tsx` if edited.
 
 **Commit:** `docs(p02-t02): migrate pages into reader-first sections`.
