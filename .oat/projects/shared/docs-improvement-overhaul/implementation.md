@@ -569,6 +569,14 @@ Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in o
 
 ### p02 independent code review dispatch
 
+### p02 review disposition and accepted bounded correction
+
+Consumed exactly one `**Reconnaissance:** not-attempted` brief; no Review Orchestration section. Validated p02/code/auto scope and immutable2173d81d provenance. Original counts0Critical/1High/1Medium/0Low; H1 independently verified resolved at recovery777810f5 without changing original review counts/head. M1 identifies six actual code-span guide references, not only four; project-log.md artifact lookalikes excluded. Root accepts M1 and Fable B2 for review fix1/2; no automatic review-receive workflow or new plan tasks.
+
+Actual peer consensus `msg_4c68c8cbaae7` agrees on retaining the unique independent CLI adoption claim and Reference anchor, removing only five pasted redundant lists with named existing owners, and preserving doctor safety guidance. Fable withdraws delete-all-six. Native non-author six-section audit independently identifies keepers before edits; root records them in changed-page-facts.md. Named plan amendment advances only this cleanup, keeps original move evidence immutable and does not broaden byte-normalization guards. N1 ordering accepted; N2 Home H1 and remaining stale lane/transition prose go to bounded p06 triage.
+
+Accepted same-handle `cont-docs-overhaul-p02-fix-1`, original request docs-overhaul-run1-p02-implementation, target oat-phase-implementer-gpt-6-1-sol-high, exact candidate gpt-6.1-sol/high, policy/ceilinghigh, hard-reasoning/high, candidate-requested, no notices, floor satisfied, native materialized role. Formal resolver stamp: `Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high`. Existing complete generic implementation record remains authority; this continuation owns only named citation/duplicate-section/validator files and compact semantic dispositions, one append-only fixcommit, deadline7200seconds. Recovery usage remains1/10; this is review fix1/2, not a recovery reservation. Holds until clean amendment release; no core writes/publication or final QA claim.
+
 ```json
 {
   "request_id": "docs-overhaul-run1-p02-code-review01",
