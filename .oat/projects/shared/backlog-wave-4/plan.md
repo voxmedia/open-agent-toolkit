@@ -1296,6 +1296,7 @@ rewrites the four inventory rows last.
 | design | artifact | pending         | -          | -                                                           | -             | -          | -                 |
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -             | auto       | -                 |
 | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -             | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-10-02 | reviews/artifact-plan-review-2026-10-02T145801Z.md          | -             | -          | -                 |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
