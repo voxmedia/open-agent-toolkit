@@ -1,7 +1,7 @@
 ---
 id: BL-261001-list-thorough-review-omissions
 title: List thorough-review omissions in recon Review Downgrades
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-10-01T20:42:43.108Z
-updated: 2026-10-01T20:42:43.108Z
+updated: '2026-10-01T23:23:41Z'
 associated_issues: []
 external_plans: []
 ---

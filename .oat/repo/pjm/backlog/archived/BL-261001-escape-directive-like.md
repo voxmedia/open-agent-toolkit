@@ -1,7 +1,7 @@
 ---
 id: BL-261001-escape-directive-like
 title: Escape directive-like filenames in Fumadocs nav sync output
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - fumadocs
 assignee: null
 created: 2026-10-01T20:42:42.874Z
-updated: 2026-10-01T20:42:42.874Z
+updated: '2026-10-01T23:23:41Z'
 associated_issues: []
 external_plans: []
 ---

@@ -44,6 +44,14 @@ export interface SyncFumadocsNavigationResult {
 
 const PAGE_EXTENSIONS = ['.md', '.mdx'];
 const GROUP_FOLDER = /^\(.+\)$/;
+// The `pages` item grammar of the fumadocs-core 16.10.2 page-tree builder
+// (`resolveFolderItem`): exact rest entries, separators, links, and the
+// exclude and extract prefixes are checked before an item is read as a path.
+const FUMADOCS_REST_ITEMS = new Set(['...', 'z...a']);
+const FUMADOCS_SEPARATOR = /^---(?:\[(?<icon>[^\]]+)])?(?<name>.+)---|^---$/;
+const FUMADOCS_LINK =
+  /^(?<external>external:)?(?:\[(?<icon>[^\]]+)])?\[(?<name>[^\]]+)]\((?<url>[^)]+)\)$/;
+const FUMADOCS_PREFIXES = ['!', '...'];
 const H1 = /^#\s+(.+?)\s*#*\s*$/;
 const FENCE = /^\s*(```|~~~)/;
 
@@ -161,6 +169,26 @@ function pageUrl(pagePath: string): string {
   return `/${slugs.join('/')}`;
 }
 
+/** Whether the Fumadocs page-tree builder reads `item` as a directive, not a path. */
+function isFumadocsDirective(item: string): boolean {
+  return (
+    FUMADOCS_REST_ITEMS.has(item) ||
+    FUMADOCS_SEPARATOR.test(item) ||
+    FUMADOCS_LINK.test(item) ||
+    FUMADOCS_PREFIXES.some((prefix) => item.startsWith(prefix))
+  );
+}
+
+/**
+ * The `pages` item for a page or folder in the same directory. A name the
+ * builder would read as a directive (`!hidden`, `z...a`, `---`, ...) is
+ * written in the local-path form `./name`, which its path join resolves to
+ * the same file; every other name is written as is.
+ */
+export function toFumadocsPageItem(name: string): string {
+  return isFumadocsDirective(name) ? `./${name}` : name;
+}
+
 function hrefFragment(href: string): string {
   const hashIndex = href.indexOf('#');
   return hashIndex >= 0 ? href.slice(hashIndex) : '';
@@ -225,9 +253,9 @@ async function buildFolderPages(
       target.kind === 'section' &&
       parentDir(targetDir) === relativeDir
     ) {
-      item = basename(targetDir);
+      item = toFumadocsPageItem(basename(targetDir));
     } else if (target.kind === 'page' && targetDir === relativeDir) {
-      item = basename(target.path, extname(target.path));
+      item = toFumadocsPageItem(basename(target.path, extname(target.path)));
     } else {
       item = `[${entry.title}](${pageUrl(target.path)}${hrefFragment(entry.href)})`;
     }
@@ -299,7 +327,9 @@ function collectUnlisted(
       reachablePages.add(index);
     }
     for (const item of meta.pages) {
-      if (item.startsWith('[')) {
+      // Read items the way the loader does: a directive (including a link
+      // entry) names no local page, and `./name` joins to `name`.
+      if (isFumadocsDirective(item)) {
         continue;
       }
       const itemPath = posix.join(relativeDir, item);
