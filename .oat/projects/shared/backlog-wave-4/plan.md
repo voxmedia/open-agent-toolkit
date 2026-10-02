@@ -373,6 +373,37 @@ restore.
 
 ---
 
+### Task p01-t08: (review) Close p01 targeted re-review findings L1, L2
+
+**Files:**
+
+- Modify: `packages/cli/scripts/bundle-assets.sh`
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+**Step 1: Failing tests first**
+
+- L1: an `OAT_ASSETS_DIR` directory whose listing fails (unreadable) is
+  refused, not treated as empty.
+- L2: the repository-root check normalizes both sides, so a `.` docs lookup is
+  refused by that check even without `pwd -P` (neutralize `pwd -P` and show the
+  root-check case still refuses; restore).
+
+**Step 2: Implement** both, and correct any comment claim that `pwd -P` is
+redundant.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+Expected: exit 0. No further p01 review round (operator disposition); the
+final review and exit gate cover it.
+
+**Step 4: Commit**
+
+`fix(p01-t08): close p01 targeted re-review findings L1, L2`
+
+---
+
 ## Phase 2: Gate timeouts
 
 ### Task p02-t01: Give full-surface artifact reviews a 30-minute default
@@ -1379,6 +1410,7 @@ rewrites the four inventory rows last.
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
 | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
+| p01    | code     | fixes_added     | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1390,7 +1422,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 
 **Summary:**
 
-- Phase 1: 7 tasks - Build assets
+- Phase 1: 8 tasks - Build assets
 - Phase 2: 2 tasks - Gate timeouts
 - Phase 3: 3 tasks - Sync correctness
 - Phase 4: 7 tasks - Review-loop skills
@@ -1398,7 +1430,7 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 6: 3 tasks - Small fixes
 - Phase 7: 3 tasks - Release fan-in
 
-**Total: 29 tasks**
+**Total: 30 tasks**
 
 Ready for code review and merge.
 

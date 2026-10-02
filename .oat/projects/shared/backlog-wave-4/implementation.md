@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t08
 oat_generated: false
 ---
 
@@ -26,7 +26,7 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 7     | 7/7       |
+| Phase 1 | in_progress | 8     | 7/8       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 7     | 0/7       |
@@ -34,7 +34,7 @@ oat_generated: false
 | Phase 6 | pending     | 3     | 0/3       |
 | Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 7/29 tasks completed
+**Total:** 7/30 tasks completed
 
 ---
 
@@ -76,6 +76,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** a57968edd
+
+### Task p01-t08: (review) Close p01 targeted re-review findings L1, L2
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -328,6 +333,16 @@ oat_generated: false
   net -36 lines; per-guard neutralization table recorded; uncached CLI tests
   8058 pass. Root spot-check: bundle-consistency 58/58; tracked default-asset
   files confirmed (`git ls-files packages/cli/assets`: four files).
+
+- Request `bw4-p01-review-4` (operator-authorized targeted round,
+  `360099ac8..9d0d66157`): accepted; reconnaissance not-attempted (signal
+  line initially missing from the artifact; the same reviewer handle added it
+  before receive); `reviews/archived/p01-review-2026-10-02T184328Z.md`: 0 Critical,
+  0 High, 0 Medium, 2 Low (passes; simplification verified on the real tree, a
+  fresh-clone archive, and a symlinked checkout). L1 (unreadable destination
+  counts as empty) and L2 (root check depends on `pwd -P`, untested) converted
+  to `p01-t08`, applied without a further p01 review round per the operator
+  disposition; the final review and exit gate cover it.
 
 <!-- orchestration-runs-end -->
 
