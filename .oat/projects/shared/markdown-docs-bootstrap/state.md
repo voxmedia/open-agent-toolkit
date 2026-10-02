@@ -18,28 +18,7 @@ oat_dispatch_policy:
   source: project-state
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
-# oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_phase_status: complete
 oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
@@ -85,7 +64,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/335' # tracked open PR
 oat_project_created: '2026-09-30T18:58:24.831Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-01T23:15:59Z'
+oat_project_state_updated: '2026-10-02T03:07:48Z'
 oat_generated: false
 oat_implement_exit_gate:
   disposition: passed
@@ -137,7 +116,7 @@ oat_project_recap:
   source: interactive
   decided_at: '2026-10-01T16:19:52.974Z'
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   source: configured
   final_phase: p04
   pre_approval:
@@ -157,13 +136,13 @@ oat_post_implement_sequence:
 
 # Project State: markdown-docs-bootstrap
 
-**Status:** Fourteen tasks and integrated verification complete; renewing exit gate before requested completion
+**Status:** Implementation complete; approved closeout ready for lifecycle completion
 **Started:** 2026-09-30
 **Last Updated:** 2026-10-01
 
 ## Current Phase
 
-All fourteen tasks complete. Main #338 is integrated at 5a38d447; all eight repository gates plus lint/format pass and the independent final review has zero findings. Renewing the retained exit gate before recording requested completion. Existing pre-approval sequence remains complete and recap remains skipped. PR #335 is open.
+All fourteen tasks, main #338 integration, repository verification, independent final review and the renewed implementation exit gate are complete. Final user approval is recorded; the stored summary/document/PR sequence is complete. Ready for lifecycle completion and archive. Recap remains skipped; PR #335 remains open.
 
 ## Artifacts
 

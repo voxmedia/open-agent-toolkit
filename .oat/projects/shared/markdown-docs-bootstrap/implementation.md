@@ -1,15 +1,15 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-01
+oat_last_updated: 2026-10-02
 oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: markdown-docs-bootstrap
 
-All fourteen tasks are complete. Main #338 is integrated at merge 5a38d447, with nineteen resolved conflicts and lockstep public packages 0.3.13. All eight repository gates plus lint/format passed after disk-space recovery; independent native final review returned zero findings and 575 actual focused tests. The retained implementation gate is being renewed before recording the user's requested completion. Existing summary/document/PR sequence stays complete, recap stays skipped.
+All fourteen tasks are complete. Main #338 is integrated at merge 5a38d447, with nineteen resolved conflicts and lockstep public packages 0.3.13. All eight repository gates plus lint/format passed after disk-space recovery; independent native final review returned zero findings and 575 actual focused tests. The renewed gate passed and both Low findings are settled; final user approval and the closeout snapshot are complete. Existing summary/document/PR sequence stays complete, recap stays skipped.
 
 ## Progress Overview
 
@@ -152,7 +152,7 @@ Main #338 at 4f0be26d28c9c046b79d1829abd78bc7e839d0c6 is integrated by normal me
 
 All fourteen tasks complete; recovery 0/10, no deferred review debt. All eight repository gates plus lint and format passed after ENOSPC recovery, with exact exits and cache distinctions in reviews/completion-verification/receipts.json. Workspace verification replayed cache (CLI 8,020 tests in 402 files; consumer counts 153/10/31); root suites executed. Independent final native review returned 0C/0H/0M/0L and 575 actual focused tests, with older causal controls explicitly inherited.
 
-Configured Opus 5.5 High exit gate renewal precedes requested final approval. Summary/document/PR steps remain complete in stored order; PR #335 is open. The user explicitly requested completion after integration; that approval will be recorded only after fresh review/gate acceptance. Visual recap remains skipped. Publication, GitHub PR merge and deployment have not been performed.
+Configured Opus 5.5 High exit gate passed with 0C/0H/0M/2L; both Low artifact corrections are settled. Summary/document/PR steps remain complete in stored order; PR #335 is open. The user explicitly requested completion after integration; approval is recorded as user-approved after fresh review/gate acceptance and the closeout snapshot is complete. Visual recap remains skipped. Publication, GitHub PR merge and deployment have not been performed.
 
 ## Orchestration Runs
 
