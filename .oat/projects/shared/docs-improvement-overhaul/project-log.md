@@ -68,6 +68,10 @@ docs-main-merge-084053c: merge complete, original phase02 handle DONE/HOLD, main
 
 docs-p02-close-084053c: accepted, original native review fixes verified, Fable correction and main integration accepted, all eight gates0; recovery1/10, no publication.
 
+### 2026-10-02 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/docs-improvement-overhaul/references/project-retro.md evidence_used=ci-checks,claude-session-transcript,claude-subagent-transcripts,codex-child-transcripts,codex-root-transcript,git-history,lifecycle-artifacts,project-log,review-artifacts evidence_unavailable=codex-child-task-prompts,oat-execution-learnings promotions=6 upstream=6 apply=performed filing=deferred
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
