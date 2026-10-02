@@ -19,8 +19,10 @@ The package is intentionally pure and read-only. It has no CLI, UI, or server de
 
 ```ts
 import {
+  evaluateQuickPlanReadiness,
   getProjectState,
   listProjects,
+  quickPlanNotReadyReason,
   recommendSkill,
   WORKFLOW_MODES,
 } from '@open-agent-toolkit/control-plane';
@@ -90,10 +92,20 @@ a ready plan keeps its ordinary route to `oat-project-implement`, and a plan
 that is not ready routes to `oat-project-quick-start` to be finished in place.
 Every other workflow mode and phase is unaffected by the predicate.
 
+### `evaluateQuickPlanReadiness(planContent)` and `quickPlanNotReadyReason(readiness)`
+
+`evaluateQuickPlanReadiness` evaluates the quick plan readiness predicate
+against `plan.md` content (`null` when the file is missing) and returns the same
+`QuickPlanReadiness` value `quickPlanReadiness` carries.
+`quickPlanNotReadyReason` returns the reason `recommendSkill` gives when a quick
+plan is not ready. The CLI dashboard (`oat state refresh`) routes a quick plan in
+progress through both, so it reports the router's route and wording.
+
 ## Current Consumers
 
 - `packages/cli/src/commands/project/status.ts`
 - `packages/cli/src/commands/project/list.ts`
+- `packages/cli/src/commands/state/generate.ts`
 
 The CLI also uses adjacent config-resolution code for `oat config dump`, but the control plane remains focused on project artifact parsing rather than config ownership.
 

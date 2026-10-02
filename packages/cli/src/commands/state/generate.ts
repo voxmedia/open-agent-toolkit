@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readdir, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import {
@@ -15,6 +15,11 @@ import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
 import { readOatLocalConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
+import {
+  evaluateQuickPlanReadiness,
+  quickPlanNotReadyReason,
+  type QuickPlanReadiness,
+} from '@open-agent-toolkit/control-plane';
 
 export interface GitOperations {
   isGitRepo(root: string): boolean;
@@ -52,6 +57,8 @@ interface ProjectState {
   hillStatus: string;
   workflowMode: string;
   docsUpdated: string;
+  /** Read only for a quick project in its `plan` phase; otherwise `null`. */
+  quickPlanReadiness: QuickPlanReadiness | null;
 }
 
 interface ActiveProject {
@@ -194,6 +201,13 @@ async function readProjectState(
   const docsUpdated =
     docsUpdatedRaw && docsUpdatedRaw !== 'null' ? docsUpdatedRaw : '';
 
+  const quickPlanReadiness =
+    workflowMode === 'quick' && phase === 'plan'
+      ? evaluateQuickPlanReadiness(
+          await readOptionalFile(join(repoRoot, projectPath, 'plan.md')),
+        )
+      : null;
+
   let hillStatus: string;
   if (phaseInHillList(phase, hillCheckpoints)) {
     hillStatus = phaseInHillList(phase, hillCompleted) ? 'passed' : 'pending';
@@ -215,7 +229,17 @@ async function readProjectState(
     hillStatus,
     workflowMode,
     docsUpdated,
+    quickPlanReadiness,
   };
+}
+
+async function readOptionalFile(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
+  }
 }
 
 async function readKnowledgeStatus(repoRoot: string): Promise<KnowledgeStatus> {
@@ -371,6 +395,30 @@ function computeNextStep(
       step: 'oat-project-quick-start',
       reason: 'Continue the promoted quick workflow',
     };
+  }
+
+  // A quick plan in progress routes by quick plan readiness, as the
+  // control-plane router does: a plan that is not ready resumes quick-start in
+  // place, and a ready plan goes to implementation (readiness implies a
+  // complete plan whose `oat_ready_for` names it, so the router gives the
+  // explicit-pointer reason). The shared `plan:in_progress` route below is
+  // spec-driven planning. generate.test.ts pins parity with `recommendSkill`.
+  if (
+    state.workflowMode === 'quick' &&
+    state.phase === 'plan' &&
+    state.phaseStatus === 'in_progress' &&
+    state.quickPlanReadiness
+  ) {
+    return state.quickPlanReadiness.ready
+      ? {
+          step: 'oat-project-implement',
+          reason:
+            'Current artifact is complete and explicitly points to the next skill',
+        }
+      : {
+          step: 'oat-project-quick-start',
+          reason: quickPlanNotReadyReason(state.quickPlanReadiness),
+        };
   }
 
   // Workflow mode routing

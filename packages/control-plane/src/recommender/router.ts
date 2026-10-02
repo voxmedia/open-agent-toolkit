@@ -170,8 +170,19 @@ function getQuickPlanGate(
 
   return {
     skill: 'oat-project-quick-start',
-    reason: `Quick plan is not implementation-ready (${describeQuickPlanFailure(readiness)}); resume the quick workflow in place`,
+    reason: quickPlanNotReadyReason(readiness),
   };
+}
+
+/**
+ * The reason a quick plan that is not ready resumes quick-start in place. The
+ * CLI dashboard reports the same wording, so the router and the dashboard
+ * cannot disagree about why.
+ */
+export function quickPlanNotReadyReason(
+  readiness: QuickPlanReadiness | undefined,
+): string {
+  return `Quick plan is not implementation-ready (${describeQuickPlanFailure(readiness)}); resume the quick workflow in place`;
 }
 
 const QUICK_PLAN_FAILURE_REASONS: Record<QuickPlanReadinessFailure, string> = {
