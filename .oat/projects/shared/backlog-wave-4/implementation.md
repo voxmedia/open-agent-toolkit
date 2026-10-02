@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: null
+oat_current_task_id: p07-t04
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 4     | 3/4       |
 
-**Total:** 38/38 tasks completed
+**Total:** 38/39 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** complete
+**Status:** in_progress
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -267,6 +267,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 1ecd4429b
+
+### Task p07-t04: (review) Close final review findings M1, L1, L2, L3, L5
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -659,6 +664,20 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
 - Phase p07 outcome: complete; 3/3 tasks; one root review round, one passing
   gate.
 
+### Final Review
+
+- Final verification (Step 12) at `44efc6224`: `pnpm test`, `pnpm lint`,
+  `pnpm type-check`, `pnpm build` exit 0 (no cache replays).
+- Gate `IMPLEMENT-11`: final review routed to the configured reviewer ceiling
+  (`oat-reviewer-claude-claude-opus-5-5-high`, native Claude variant,
+  independent context from every phase implementer). Request
+  `bw4-final-review-1`: accepted; reconnaissance not-attempted;
+  `reviews/archived/final-review-2026-10-02T232314Z.md`: 0 Critical, 0 High, 1 Medium,
+  5 Low. Receive (auto, final scope): M1, L1, L2, L3, L5 converted to
+  `p07-t04`; L4 (`DR-260720` question missing from PR-facing artifacts) fixed
+  by the root in plan.md PR Requirements and the Final Summary.
+  `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
@@ -694,6 +713,13 @@ plan was revised accordingly (24 tasks); every phase remains gated.
 Chronological execution is recorded per phase under Orchestration Runs above.
 
 ## Deferred Findings (Medium)
+
+Final review (`reviews/archived/final-review-2026-10-02T232314Z.md`) resurfaced all three:
+the p05 archive-resume item stays Medium and the p02 and p06 items drop to Low;
+all three are addressed in `p07-t04` (honest recovery routing plus a backlog
+item for the full resume fix; a cautionary doc sentence plus a backlog item for
+the claim race; the HiLL parsing fix). The entries below are retained as
+history.
 
 - p06 gate M1 (`reviews/archived/p06-review-2026-10-02T224700Z.md`): the dashboard's HiLL
   membership check (`generate.ts` `phaseInHillList`) recognizes only the
@@ -806,6 +832,10 @@ closed by operator override after simplification).
 destination rule at the review cap (operator decision); the idle kill and
 early complexity trigger left the wave at the plan-gate escalation; see
 Deviations and Deferred Findings.
+
+**Operator question:** amend `DR-260720` (autonomous closeout) to the shipped
+design: a standing `workflow.autonomousComplete` opt-in, per-wave completion
+with a recorded pre-merge exception, and batch mode at program close.
 
 ## References
 

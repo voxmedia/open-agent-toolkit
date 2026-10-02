@@ -1581,6 +1581,52 @@ In CI order, each captured as `pnpm <gate> > <log> 2>&1; echo "exit=$?"`:
 
 ---
 
+### Task p07-t04: (review) Close final review findings M1, L1, L2, L3, L5
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete-auto/SKILL.md`,
+  `.agents/skills/oat-wave-execute/SKILL.md`,
+  `.agents/skills/oat-wave-program/SKILL.md`
+- Modify: `packages/cli/src/commands/state/generate.ts` and its test
+- Modify: `packages/cli/src/commands/config/index.ts` (describe text),
+  `apps/oat-docs/docs/cli-utilities/configuration.md`,
+  `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: the matching contract tests and pins
+- Create: two backlog items with the branch CLI
+
+**Step 1: Failing pins and tests first** for each change below.
+
+**Step 2: Implement**
+
+- M1: the companion no longer promises archive-resume recovery it cannot
+  reach; a missing project directory gets its own refusal reason that names
+  `oat-project-complete` as the recovery owner, and wave-execute's boundary
+  report names `oat-project-complete` as the next owner. File a backlog item
+  for routing validated archive receipts to the interactive resume tail.
+- L1: one cautionary sentence in `workflow-gates.md` about concurrent
+  stale-claim recovery; file a backlog item for serializing it.
+- L2: the dashboard's HiLL membership check accepts single-quoted, bare, and
+  block YAML arrays (the parsed-state forms the router accepts), with tests.
+- L3: config help, `configuration.md`, and the companion description stop
+  advertising the `OAT_AUTONOMOUS` lifecycle route as a working activation
+  until a lifecycle skill names the companion.
+- L5: at program close, a wrapper refused for a deferrable reason names its
+  next step (`oat-project-complete`).
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state src/commands/config src/commands/init/tools/shared src/validation`,
+`pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`,
+and the docs check.
+Expected: exit 0.
+
+**Step 4: Commit**
+
+`fix(p07-t04): close final review findings M1, L1, L2, L3, L5`
+
+---
+
 ## Parallelism
 
 The plan is fully sequential (`oat_plan_parallel_groups: []`).
@@ -1674,6 +1720,10 @@ rewrites the four inventory rows last.
   `BL-260711-add-activity-aware-gate` left the wave) and what stays open.
 - Verification evidence: Definition of Done exit codes and the review and gate
   outcomes.
+- Operator question in the PR body: amend `DR-260720` (autonomous closeout)
+  to the shipped design (standing `workflow.autonomousComplete` opt-in,
+  per-wave completion with a recorded pre-merge exception, batch mode at
+  program close)? Repository policy records decisions only on operator request.
 
 ---
 
@@ -1688,7 +1738,7 @@ rewrites the four inventory rows last.
 | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
 | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final  | code     | fixes_added     | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
@@ -1722,9 +1772,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 3 tasks - Release fan-in
+- Phase 7: 4 tasks - Release fan-in
 
-**Total: 38 tasks**
+**Total: 39 tasks**
 
 Ready for code review and merge.
 
