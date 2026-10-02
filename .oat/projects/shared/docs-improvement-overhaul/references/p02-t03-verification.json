@@ -1,0 +1,818 @@
+{
+  "head": "2588944d1718c49f26ea7d180653cc1024118636",
+  "baseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "logs": [
+    {
+      "file": "/tmp/docs-p02-t03-format.log",
+      "exit": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-validate.log",
+      "exit": 0,
+      "sha256": "ea1a28b1736b3290befbb5809b0c481123dc307e97deb1982f0702378a816524"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-tests.log",
+      "exit": 0,
+      "sha256": "a7f7b9e0e789dc999462992ce5ce651cf6bf6da51465c65796e04b413bd37e60"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-types.log",
+      "exit": 0,
+      "sha256": "a80e12a629d5c9215656b3c66a6fbae5b2e64f1dda70df4b9d010ff06f36caf6"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-check.log",
+      "exit": 0,
+      "sha256": "82f0ea029abb44f655ab9f8f7e89177b1bf67609a7d61d86a8f3971f7aa174cf"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-cli-tests.log",
+      "exit": 0,
+      "sha256": "b6d2adff3350de7cd13a335bc68adf64eeff64af1f7691e028e5e5a8a1227d23"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-lint.log",
+      "exit": 0,
+      "sha256": "1251bc02799b3718a64e218b637b58cc64d0a7da2c31227c32443c21beabaa8c"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-global-format.log",
+      "exit": 0,
+      "sha256": "7097aa51c9c2a8df3d03d3e4db043c4b14745fdc43a4b77d359a1d4a44a0e01c"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-bundle.log",
+      "exit": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-build.log",
+      "exit": 0,
+      "sha256": "74132afb57c39373683d9cb786f26edb952c7b0e64eea651db51826b5c48583a"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-evidence-lint-final.log",
+      "exit": 0,
+      "sha256": "603e059b9cef9ade24959f1368ffcbe6d56d4117f17ea43a4b361a66d0edb7fa"
+    }
+  ],
+  "sourceTests": {
+    "executed": 12,
+    "passed": 12,
+    "cached": false
+  },
+  "cliConsumerTests": {
+    "executed": 386,
+    "passed": 386,
+    "files": [
+      "packages/cli/src/commands/docs/nav/fumadocs.test.ts",
+      "packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts",
+      "packages/cli/src/commands/init/tools/shared/retro-skill-contracts.test.ts",
+      "packages/cli/src/release/git-support-contract.test.ts",
+      "packages/cli/src/validation/skills.test.ts"
+    ],
+    "cached": false
+  },
+  "build": {
+    "command": "pnpm build:docs",
+    "exit": 0,
+    "totalTasks": 6,
+    "cachedDependencies": 5,
+    "executedAppBuilds": 1
+  },
+  "conservation": {
+    "protectedUnits": 816,
+    "routerSections": 24,
+    "cliGuidance": 42,
+    "routerEntries": 70,
+    "guideItems": 13,
+    "unchangedT02ProtectedHashesAndAccounting": true,
+    "fullActualOutputSha256": "598535c8c2fa6ba5292251a3e7b25535d4c774c0cc0f9523a1936fc57a38b830",
+    "mapSha256": "ff02a3ebec2373f88cb47917bd6aeafeb35149b7e9680e768d0a4e0a5674a438"
+  },
+  "bundleDocs": [
+    {
+      "source": "apps/oat-docs/docs/contributing/code.md",
+      "bundled": "packages/cli/assets/docs/contributing/code.md",
+      "sha256": "616e02ec6e53240ccc47199b1cc1791e442954c8e2337d956411c7423e377a74"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/commit-conventions.md",
+      "bundled": "packages/cli/assets/docs/contributing/commit-conventions.md",
+      "sha256": "bf3774da89f698962a5024d6da7e9c9665b3688d4514eacb3f25fdd7028c94ab"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/design-principles.md",
+      "bundled": "packages/cli/assets/docs/contributing/design-principles.md",
+      "sha256": "509e9dde88bcb8687f9d610109f2dc06af49c82b4a665c0a413b4289ec661e9a"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/documentation.md",
+      "bundled": "packages/cli/assets/docs/contributing/documentation.md",
+      "sha256": "bf350f29741650694e8d62eef8d5150007f7c0a6e7bcdb13765ceaee85957acb"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/hooks-and-safety.md",
+      "bundled": "packages/cli/assets/docs/contributing/hooks-and-safety.md",
+      "sha256": "4817360be38ab412959bdaf3fbb115e35b1fc82232b4f550fd15c52bbdfbe322"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/index.md",
+      "bundled": "packages/cli/assets/docs/contributing/index.md",
+      "sha256": "2ee48ebc918fdcb0b552956c6bb8df841e15559b27fe2264fecd74988da8a583"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/markdown-features.md",
+      "bundled": "packages/cli/assets/docs/contributing/markdown-features.md",
+      "sha256": "3db64c2c0cf71feb669b4cbef5128072182018a38e67adda27d4b5b2470d4864"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/skills.md",
+      "bundled": "packages/cli/assets/docs/contributing/skills.md",
+      "sha256": "b8f192c4f9388bca3059b7b396a042d78fbe54ff1fbb2a347c54e36d7b1e5c50"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/smoke-testing.md",
+      "bundled": "packages/cli/assets/docs/contributing/smoke-testing.md",
+      "sha256": "d381dea6c3f9744761e920d8da8b2c3691416cb77cadac1e64f81eeb94debe6e"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/updating-model-guidance.md",
+      "bundled": "packages/cli/assets/docs/contributing/updating-model-guidance.md",
+      "sha256": "9e2209f213887f827cf4fa09f1f7dd2b69977a73397c5b30e0f5f3fc265dcbd3"
+    },
+    {
+      "source": "apps/oat-docs/docs/contributing/verifying-cursor-pins.md",
+      "bundled": "packages/cli/assets/docs/contributing/verifying-cursor-pins.md",
+      "sha256": "97aa720cbae4e38c44e87ca6f861cb000e41ed5544bda1d6d3cc0254da8af813"
+    },
+    {
+      "source": "apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md",
+      "bundled": "packages/cli/assets/docs/docs-tooling/add-docs-to-a-repo.md",
+      "sha256": "e7f6e117e857508d85ef9e68ee85deff85c303982a5fd7c3956c796f08bba8dc"
+    },
+    {
+      "source": "apps/oat-docs/docs/docs-tooling/commands.md",
+      "bundled": "packages/cli/assets/docs/docs-tooling/commands.md",
+      "sha256": "cc8d4a71c55da00fd0905607d0945f05cfd48571954bb0df998ae05a012be387"
+    },
+    {
+      "source": "apps/oat-docs/docs/docs-tooling/index.md",
+      "bundled": "packages/cli/assets/docs/docs-tooling/index.md",
+      "sha256": "1dcf77fc3352c9c8e2587ce6d2f7607fbeaaaf7e095883ac37f5374f21228b37"
+    },
+    {
+      "source": "apps/oat-docs/docs/docs-tooling/workflows.md",
+      "bundled": "packages/cli/assets/docs/docs-tooling/workflows.md",
+      "sha256": "1aa7b0ab10e31e9957ed32dbf9577824f74dcb41423afe1efedb46ddc84c5503"
+    },
+    {
+      "source": "apps/oat-docs/docs/getting-started/bootstrap.md",
+      "bundled": "packages/cli/assets/docs/getting-started/bootstrap.md",
+      "sha256": "26c5daef3b90fbd090fc190a29a6d3626fa9de160dba7a43ac6eb6918aee7042"
+    },
+    {
+      "source": "apps/oat-docs/docs/getting-started/concepts.md",
+      "bundled": "packages/cli/assets/docs/getting-started/concepts.md",
+      "sha256": "8cdb0a0f32d50afc6f26f8a6ef0ab6f16452c6c24347d92958124f1c1ed8649d"
+    },
+    {
+      "source": "apps/oat-docs/docs/getting-started/index.md",
+      "bundled": "packages/cli/assets/docs/getting-started/index.md",
+      "sha256": "e0a3a32ebaffa6a35c8dfed7ccda39b11f0a405241ef81c9098264d68edad97d"
+    },
+    {
+      "source": "apps/oat-docs/docs/getting-started/quickstart.md",
+      "bundled": "packages/cli/assets/docs/getting-started/quickstart.md",
+      "sha256": "bee2bc314f7487d94550d6d05851be6f0e290fa6155e77b902206faf0fa63e12"
+    },
+    {
+      "source": "apps/oat-docs/docs/getting-started/tool-packs.md",
+      "bundled": "packages/cli/assets/docs/getting-started/tool-packs.md",
+      "sha256": "ce9d9a9afdab9118b682d258bc71abd2abce186459272f10f60734cdc12d5af2"
+    },
+    {
+      "source": "apps/oat-docs/docs/index.md",
+      "bundled": "packages/cli/assets/docs/index.md",
+      "sha256": "a11ee0a26b814f5928f8e4f1072665b3f622d5400747642b88d1ade1f5c0bfb6"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/commands.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/commands.md",
+      "sha256": "62be43d9b4d0db7f7dc0fd4763075118f5d8ec8b3960b677ed5b1c8568e45591"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/config.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/config.md",
+      "sha256": "7fbc711d211af5f2164259475becbcc12d267e58929ce78556c3cff1949c24c1"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/index.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/index.md",
+      "sha256": "82e2ed2c85339305602ede77d1a1333aba2c2035326d6e46191763da9ff83a22"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/instruction-sync.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/instruction-sync.md",
+      "sha256": "2ccdffc45c627b74a23376ee218000f27da816a8178ac7dd2df4b6f95516bfa0"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/manifest-and-drift.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/manifest-and-drift.md",
+      "sha256": "b687965f8ae820e4aaae5c23b54d7c6175bf6ea79f68aef3eab7f9241e64c121"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/providers.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/providers.md",
+      "sha256": "414259da5757e1076db97ec82c68566cb9a788d7c6253fdfbba13f7f955651b0"
+    },
+    {
+      "source": "apps/oat-docs/docs/provider-sync/scope-and-surface.md",
+      "bundled": "packages/cli/assets/docs/provider-sync/scope-and-surface.md",
+      "sha256": "c07ec6bba7a54ef1642006018621fd243e4de59d0efa4482a86a6b50f04f30fa"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/cli-reference.md",
+      "bundled": "packages/cli/assets/docs/reference/cli-reference.md",
+      "sha256": "ece5cd5d53296943c4aa6838f10062f2a60693ce58987d38f0772ca6b7a56932"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/config-and-local-state.md",
+      "bundled": "packages/cli/assets/docs/reference/config-and-local-state.md",
+      "sha256": "9410f4f5a7e214a8200f2a6967a87bb867c6b17c8b9e7625ad98ddc5202ada7a"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/configuration.md",
+      "bundled": "packages/cli/assets/docs/reference/configuration.md",
+      "sha256": "42f09576d6ce6aea1d8c6ba4e3582e2ecf4272158f0973870d20e85659b56872"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/docs-index-contract.md",
+      "bundled": "packages/cli/assets/docs/reference/docs-index-contract.md",
+      "sha256": "0e80077424d6396e900bbdbd4052ffccc9b1c17c6f3e33b6246e583b7e3deb0c"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/file-locations.md",
+      "bundled": "packages/cli/assets/docs/reference/file-locations.md",
+      "sha256": "40184fb0d5d0231354cf5486e05eed55c9c1f81cf59cee79b7729193add27704"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/index.md",
+      "bundled": "packages/cli/assets/docs/reference/index.md",
+      "sha256": "7c9b4c296939423cb140f2c92c4a286b6da8d1d4b5760d021b9064818ca006a6"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/oat-directory-structure.md",
+      "bundled": "packages/cli/assets/docs/reference/oat-directory-structure.md",
+      "sha256": "c40d3c41efdae1cec0655bdc3ae715354cc0ca3c7bfe831f191df1d0996547b2"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/project-artifacts.md",
+      "bundled": "packages/cli/assets/docs/reference/project-artifacts.md",
+      "sha256": "1d843e4754e3033187618c126d49f854637d8b107b8aab87d925f1f3a9173b48"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/project-state-machine.md",
+      "bundled": "packages/cli/assets/docs/reference/project-state-machine.md",
+      "sha256": "0222f7ccb78ac6847c6ce0a751c85364fb113f5611ee559055be1eddc2779b8d"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/repository-pr-comments.md",
+      "bundled": "packages/cli/assets/docs/reference/repository-pr-comments.md",
+      "sha256": "5c06a482b3abc5e9a9a05a73a3fef378007651b587de768f5490fefc447fd996"
+    },
+    {
+      "source": "apps/oat-docs/docs/reference/troubleshooting.md",
+      "bundled": "packages/cli/assets/docs/reference/troubleshooting.md",
+      "sha256": "d89d8f002d3a96919859e346ef2af3a07e30e174d9e83a1d604be6898a93bcd1"
+    },
+    {
+      "source": "apps/oat-docs/docs/skills/explainer-kit.md",
+      "bundled": "packages/cli/assets/docs/skills/explainer-kit.md",
+      "sha256": "37abbbd47845203fb3a7c3a964e98324b080e74020622421d2ee41be10bf2ddf"
+    },
+    {
+      "source": "apps/oat-docs/docs/skills/index.md",
+      "bundled": "packages/cli/assets/docs/skills/index.md",
+      "sha256": "f3e03154d108dd132a41ad6b4226c6376966b86d7b5e3bef09a3dd8e8ca92132"
+    },
+    {
+      "source": "apps/oat-docs/docs/skills/recon.md",
+      "bundled": "packages/cli/assets/docs/skills/recon.md",
+      "sha256": "40cea489289d650f758958e62e7c81ddd80981c314325808d01ac8aa6b1b4f3e"
+    },
+    {
+      "source": "apps/oat-docs/docs/skills/repo-improve.md",
+      "bundled": "packages/cli/assets/docs/skills/repo-improve.md",
+      "sha256": "cb258b732fbac337811077fe8a87346c171fa339e8ae9f3003cac7c3c416c9ca"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/autonomy.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/autonomy.md",
+      "sha256": "59e455b38dfb24d0d1509d3e9627bdecb55643ec3797ad0c7818932b7601c7ab"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/cursor-cloud.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/cursor-cloud.md",
+      "sha256": "de38a3cf55848e6d1ee7122f2f6fb0302990aca8dda160156b20c99f3d5493d2"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/dispatch-ceiling.md",
+      "sha256": "e0ab4c2da1734a51e98f8a3ada635b6e209d3df6c0343cf22335c6599395ac17"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/evidence-layers.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/evidence-layers.md",
+      "sha256": "51973b41a2d6a1bafa92e694eb739c0b3eecd641ba44ec0c87d305c38aa8a3be"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/index.md",
+      "sha256": "6353dc555b60911f053bc4d751b1ace2c53abc8ba5e2d3c013699d8f444befe7"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/orchestration-model.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/orchestration-model.md",
+      "sha256": "ba74cad6d509ba29832339f14672c13206491e32a6b16599ef5326144a3a161f"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/programmatic-execution.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/programmatic-execution.md",
+      "sha256": "610181f5937b99d962d49639be47199921de13b939dce13b9e99c94e886dbe51"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/advanced/workflow-gates.md",
+      "bundled": "packages/cli/assets/docs/workflows/advanced/workflow-gates.md",
+      "sha256": "5a21a7f25a69b404f3601797fd1e252bebd304e1c592c9900787b3cdb6f895a3"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/backlog-and-planning/backlog-lifecycle.md",
+      "bundled": "packages/cli/assets/docs/workflows/backlog-and-planning/backlog-lifecycle.md",
+      "sha256": "e6628ffc571fb3864254e00f0426e58f5f9e41d766a2c0fa76134f342e5f701c"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/backlog-and-planning/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/backlog-and-planning/index.md",
+      "sha256": "7c97f4981e3bebe56622cfcd2df9e959684344249b3869589b34dd8f4f4c936b"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/backlog-and-planning/remote-project-management.md",
+      "bundled": "packages/cli/assets/docs/workflows/backlog-and-planning/remote-project-management.md",
+      "sha256": "3d648b23987421c6ec429955f44b36719f7b2ec437ff8ea4874a553b820140a2"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/choose-workflow.md",
+      "bundled": "packages/cli/assets/docs/workflows/choose-workflow.md",
+      "sha256": "db8369aaf7052279ade244e3acce98abc473b5b69bbeb438b4f220793b5b04cb"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/ideas/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/ideas/index.md",
+      "sha256": "a204be6bd160875f83e08643b4511b3486ba15c50212be95b81f62d64944654b"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/ideas/lifecycle.md",
+      "bundled": "packages/cli/assets/docs/workflows/ideas/lifecycle.md",
+      "sha256": "9f30d992dcd4028111763f4eb852fad9fd509d2f65b6cb99ca29388f00e6dbef"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/index.md",
+      "sha256": "58327d769d0fc4b8aa194cccd029a494f553279053872a4222fb77d38c2c62df"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/closeout/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/closeout/index.md",
+      "sha256": "d2aadf9a43897d740c09fef5aadb8ec91ffa7b10c712607d99f39e86f4d11f91"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/closeout/pr-flow.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/closeout/pr-flow.md",
+      "sha256": "ebc4b0ea4270973247a65898bb3a1eff43e5dedb855e8013e01f6cbc8279af92"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/closeout/retro.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/closeout/retro.md",
+      "sha256": "1a69b411c49d4f220d0d77032d3fc1e94fa5309dfac498cc6dbf5116255e9ad5"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/execution/implementation-execution.md",
+      "sha256": "bbe98bfb9cf57a7b8b15225d275567720d9c8cb600e6018c3af1826d0a760a7d"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/execution/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/execution/index.md",
+      "sha256": "c903de61ad0779bb7c895bf58029da4286ba8d7cd6c5ba67cfc176881d5e2a73"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/execution/picking-up-projects.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/execution/picking-up-projects.md",
+      "sha256": "6764fdb1beea92f25c184c4ae74cb2941198da5b5716929e76a3389904dd70c4"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/execution/project-log.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/execution/project-log.md",
+      "sha256": "e7b21fcc47d294d4e65d22008e38e2538fd8f9f945adcbf9e87d79258aabd90a"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/index.md",
+      "sha256": "0f211f85776b0245b14cedfe2c206020e5775a32279cdeb2d29c9e6a29efe44a"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/lifecycle.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/lifecycle.md",
+      "sha256": "b0d40caf6ba1431d45f062eaba63e82a09d2702d431047fb24717d026192f27a"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/planning/design-modes.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/planning/design-modes.md",
+      "sha256": "bcf45677806a7250c220ba9583fa5c2e390711b102a1b7263968892af943200e"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/planning/hill-checkpoints.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/planning/hill-checkpoints.md",
+      "sha256": "a00844a861110dee0ab864038d5aa26070863127ffc1b9a484598ff71ae5e692"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/planning/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/planning/index.md",
+      "sha256": "288a0c5a5094de4e456e385bb1c28753524ba9dd09789007e4e38c675372c468"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/planning/splitting.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/planning/splitting.md",
+      "sha256": "01d7aed25f8e8ffefbf5fc216d40f975a1f4bdc931a842de261f13935e69a01a"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/reviews/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/reviews/index.md",
+      "sha256": "a6bd685f33e3d87e591c95c7aef940a09a777a49882577211e24845c445972b9"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/reviews/review-flavors.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/reviews/review-flavors.md",
+      "sha256": "4805f274edb3f2641ee33f5dc3692d72c9aff9912b7a47e49e345e60983ede6a"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/projects/reviews/reviewing-oat-prs.md",
+      "bundled": "packages/cli/assets/docs/workflows/projects/reviews/reviewing-oat-prs.md",
+      "sha256": "247699301c4f33342d15c98a6aa2b546b973316b321197f440fd752336a564eb"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/waves/index.md",
+      "bundled": "packages/cli/assets/docs/workflows/waves/index.md",
+      "sha256": "1dbfe1f5c6deeca134d650dffce4a0a9535bc64d58470266ffc196e2d5bb6e6d"
+    },
+    {
+      "source": "apps/oat-docs/docs/workflows/waves/wave-workflows.md",
+      "bundled": "packages/cli/assets/docs/workflows/waves/wave-workflows.md",
+      "sha256": "312dc1c62e328b8affaca0c36b6fc48376cde0a964a6baac5ff821e303e5e9ca"
+    }
+  ],
+  "bundleSkills": [
+    {
+      "skill": "authoring-docs",
+      "sha256": "43b1152178fc7614ba147657b1102c7a8c02cfae078db0f3fd2a7532ad1a4800"
+    },
+    {
+      "skill": "create-agnostic-skill",
+      "sha256": "5aa1d3530207c631ac92de624b2786d3910895c09bc61da59e0eb4d38a1e094d"
+    },
+    {
+      "skill": "explainer-kit",
+      "sha256": "5eb3e7886d676430f2bbea60395cb72ef1125c77cf6e773062f187a287c44930"
+    },
+    {
+      "skill": "oat-dispatch-subagents",
+      "sha256": "e7045579d23bcb51d6517d432087e024e2b29a61d421e65c9cd795b81b2c97f0"
+    },
+    {
+      "skill": "subagent-orchestration",
+      "sha256": "e52aa0f561addc4aacb59b5d785b3c197c896fbad8eb7a6e17ff42d25b48aac0"
+    },
+    {
+      "skill": "oat-agent-instructions-analyze",
+      "sha256": "1d424f8e8b89f41435065c671805b56398d99249d4c908c3dc7fe513ab044c0d"
+    },
+    {
+      "skill": "oat-agent-instructions-apply",
+      "sha256": "9e317c58f4ceb91d15eceea7bc52daac92fba6c07f5a19f1278553bc4fef4ddf"
+    },
+    {
+      "skill": "oat-brainstorm",
+      "sha256": "6aced9ff935c34c8f0466b00e10006fde50d82e3a53246d63c6b69cdb8c4d189"
+    },
+    {
+      "skill": "oat-docs",
+      "sha256": "4ded2417c163c9145ce673f3dfb98a09c4bcce61cf851ed177ff71c3a276bbba"
+    },
+    {
+      "skill": "oat-docs-analyze",
+      "sha256": "5eeb03d92d9e6cea470f8230ce6d278b95ca4192463e54c6e1e80ea088f810ac"
+    },
+    {
+      "skill": "oat-docs-apply",
+      "sha256": "95ee5f974cd338465e2458c396bdac7cc0f96aa91b5912d6545965287cea483a"
+    },
+    {
+      "skill": "oat-docs-authoring",
+      "sha256": "d1c92b609bf30dadf616e90b8c8a8b2da0a8ec78aceeebb2a752519a9408d519"
+    },
+    {
+      "skill": "oat-docs-bootstrap",
+      "sha256": "0ff0f3970531f90b3415c94710530942a262b11116ba9349f42b75cc0cbb7378"
+    },
+    {
+      "skill": "oat-doctor",
+      "sha256": "28bdd3341e1707989a8e8da2f2f10872f8a9ece6b0bab320566fc6ea0360d4ea"
+    },
+    {
+      "skill": "oat-explainer-kit",
+      "sha256": "3572893258c8310b315d4a803cea0411880f1babdda341f39d306094c796e556"
+    },
+    {
+      "skill": "oat-repo-improve",
+      "sha256": "7d3d0291151af8c9aa596053ad21fdd03730ba79f42a245118427e3d89b528db"
+    },
+    {
+      "skill": "oat-repo-maintainability-review",
+      "sha256": "947c13a297ad1e9a1276d759195e3e52548b472a709859b484116768f7401b7c"
+    },
+    {
+      "skill": "oat-idea-ideate",
+      "sha256": "8e3157ca017481ca32f3b6e5b0722c029f566c759d6ad9d159d0fb1fcee9ea03"
+    },
+    {
+      "skill": "oat-idea-new",
+      "sha256": "0de2a09bba0735eb7988086137d0d5e50dabea6b3fd49b00051c8d0a66707685"
+    },
+    {
+      "skill": "oat-idea-scratchpad",
+      "sha256": "af77e5abb5a1dcdcf9e3b93b2da812e0a2de379d05b1f9a6dbd236e093287ab3"
+    },
+    {
+      "skill": "oat-idea-summarize",
+      "sha256": "178b63be9021b8a93ca4fd0c4c0453893a5f17df295d28d099f3e1710db77649"
+    },
+    {
+      "skill": "oat-pjm-add-backlog-item",
+      "sha256": "69a0bac1f5937ac78e8a217988b63c2c2c6ddcf4f58054d18b7bbff1a69a617f"
+    },
+    {
+      "skill": "oat-pjm-decision",
+      "sha256": "1d9b942d620c766ea2a14097ea0cd32e303976d6cea06fb13cdb79525928feb9"
+    },
+    {
+      "skill": "oat-pjm-remote",
+      "sha256": "63aedc388bf741c1633538f268153f41eb25ffa4e219cafa43db35c7bf44ee6f"
+    },
+    {
+      "skill": "oat-pjm-review-backlog",
+      "sha256": "215ebf99429b04d53826c0ee6c04a60dc7c1d6d68b9e15c101e3ca28305db5bb"
+    },
+    {
+      "skill": "oat-pjm-update-repo-reference",
+      "sha256": "037f0ac44fc8fa4693e944ac583ab0b6fbdd34f8889ce0831de27135e310696f"
+    },
+    {
+      "skill": "oat-cursor-cloud-projects",
+      "sha256": "a447d189fb74b1a5f4ed8ed95fde712b495b7dbf84585f45e13d5a748f534232"
+    },
+    {
+      "skill": "oat-project-autonomous",
+      "sha256": "378dde0e6f68842eb1ae0dc4b63061253add13753d60420a5265eb6af3c0ce29"
+    },
+    {
+      "skill": "oat-project-capture",
+      "sha256": "2242da2b6c399b5dc9407b027f37b655ee71d6548baaee5a900a0cea84232976"
+    },
+    {
+      "skill": "oat-project-clear-active",
+      "sha256": "061b48065d2ac8865586ae258c0b74334c1cb1533846cc4de8ed3892d7fa6495"
+    },
+    {
+      "skill": "oat-project-complete",
+      "sha256": "0963f8dd57b4faea5770a28d2bf7ac8df79a092868ba65a43e06cd7554329523"
+    },
+    {
+      "skill": "oat-project-design",
+      "sha256": "eaf35c79bb4474aec6c9baf109df49bb688322c3356b27d7b724b5c9a5077e36"
+    },
+    {
+      "skill": "oat-project-dispatch-subagents",
+      "sha256": "ae259adeb1cbf3ae3ded3602c1c4d0318893bd4238e3c1236a07aa5e080716a7"
+    },
+    {
+      "skill": "oat-project-discover",
+      "sha256": "78935055b6059222a896512230ed11fa2bcc1982b44a7e5f05ff0ea03353fc3c"
+    },
+    {
+      "skill": "oat-project-document",
+      "sha256": "0c1ed4b793235cd8c51e4d26137801b2752de94d8c202e8e9ac101a443de7aa8"
+    },
+    {
+      "skill": "oat-project-implement",
+      "sha256": "80e9294b25c12619370eea42790542a0a2ac8c322289816789983ba64332c628"
+    },
+    {
+      "skill": "oat-project-import-plan",
+      "sha256": "334b1317e8b823bb09e2063d1ff342d99075061369cddb2f39f02faa8cbc4699"
+    },
+    {
+      "skill": "oat-project-lite",
+      "sha256": "8fe6173f055bf79a36071a702af54d529133dd7ad1b95632ca4bbb4fe208e4b5"
+    },
+    {
+      "skill": "oat-project-new",
+      "sha256": "2645713cddc4b0ff81cb51025df2978b252b2bed77088aa6909aa503ff53d224"
+    },
+    {
+      "skill": "oat-project-next",
+      "sha256": "3ee3484d29a575aaba3b5ad7a04a133fb1f67d438443d4dc7bdbed6d228b1f1a"
+    },
+    {
+      "skill": "oat-project-open",
+      "sha256": "c72265d9afd344da0e208889825d7f762b7304c33eb833ba5f5eb84588035eec"
+    },
+    {
+      "skill": "oat-project-plan",
+      "sha256": "d0f7b369357e1f01df4bce8b8f1ceb4012c1282c329ab0fdaaeb427ff1fde614"
+    },
+    {
+      "skill": "oat-project-plan-writing",
+      "sha256": "1036777af6ae46f0429e16d2a93485997c6decac47acb79294ec2323ea08c92a"
+    },
+    {
+      "skill": "oat-project-pr-final",
+      "sha256": "e6e62ba9617e08ec4fc7b4aefed81c69216c3458c9370a8a036e26bea1ceb354"
+    },
+    {
+      "skill": "oat-project-pr-progress",
+      "sha256": "8227294be14a9d8022c41910bc5cfd93fac7b471ad07298585a065097da9367f"
+    },
+    {
+      "skill": "oat-project-progress",
+      "sha256": "86dcda00b7c51062130ec505fae0f5d6f13800cfd69257fe07b671e81f7426d4"
+    },
+    {
+      "skill": "oat-project-promote-spec-driven",
+      "sha256": "5e9549528f50297d2a3999f4908614fc6d2cb4c8aaa7ef2b1835a84a39dd9462"
+    },
+    {
+      "skill": "oat-project-quick-start",
+      "sha256": "d14fe80ecde14b4169598bf85101d617c9cb5af5f7521bea2487cbe12f269999"
+    },
+    {
+      "skill": "oat-project-reconcile",
+      "sha256": "93ecc5e2b37351d580e053e094f54f8f0d05beef62ff9875961a428ed39dd5a8"
+    },
+    {
+      "skill": "oat-project-retro",
+      "sha256": "b121488c232324c8fe00caa03af5364d68b6c44d2a20686f4a7f246680534f82"
+    },
+    {
+      "skill": "oat-project-retro-file",
+      "sha256": "a70d6c09c2000ca7d2af175afe3315a8fd1fe6d7e53e9b5ea12407e134cbe5a0"
+    },
+    {
+      "skill": "oat-project-revise",
+      "sha256": "3a3c45a105cf75e40fa9186a0be4bd2a96be7f1075b5fd5fc6f5546e56cf2b17"
+    },
+    {
+      "skill": "oat-project-review-provide",
+      "sha256": "94ea95a1efcaff9e606e2b46a0ec07b2be4b82977f58fea52a521b5c033063e4"
+    },
+    {
+      "skill": "oat-project-review-provide-remote",
+      "sha256": "eed874e0647674a69b4035bdf4ed12f1153b9ce3bc5b124a976eebf4edc42cdd"
+    },
+    {
+      "skill": "oat-project-review-receive",
+      "sha256": "09c688e7a6fc601f1536661fcce85d362e1d25a746edfc8cafd99938dda7804b"
+    },
+    {
+      "skill": "oat-project-review-receive-remote",
+      "sha256": "878364d0c973761da3f485cd47e4d50515ea9549e0eb38f6345f4162bdacc6d6"
+    },
+    {
+      "skill": "oat-project-spec",
+      "sha256": "b473c59c15d81fec286e46572493844a9239321395d76e32fffba53f43e72a7c"
+    },
+    {
+      "skill": "oat-project-split",
+      "sha256": "d7f63e83e443bfc75fea738f72ab01898ca1b516a643697a4dfc611a5faa09b8"
+    },
+    {
+      "skill": "oat-project-summary",
+      "sha256": "861f4b6b5814fa843b50eabc2523368159ea5cc9b7ca161bc0e102cd7e061355"
+    },
+    {
+      "skill": "oat-repo-knowledge-index",
+      "sha256": "9e9b5e5ac24f81ea0586cc3823815850014ef16819ba27dfc06f9b25b0a42e4f"
+    },
+    {
+      "skill": "oat-review-provide",
+      "sha256": "74b20c7a31ee437e40045af9395aeef2be8258bc0a30eeff02fc5bceeb9315d1"
+    },
+    {
+      "skill": "oat-review-provide-remote",
+      "sha256": "0d459f1f8a5b8fff976109ed352b6ca7a53ec8308c8d8914c1c8ca9e95285548"
+    },
+    {
+      "skill": "oat-review-receive",
+      "sha256": "30ba3cdb67637ef443651b909ca1ec546fb98a14beee1e001908fae494e32093"
+    },
+    {
+      "skill": "oat-review-receive-remote",
+      "sha256": "cdf7764a4a89d53368d028374979cc275a0e30eff2ea93fd65bb81afd5745b33"
+    },
+    {
+      "skill": "oat-worktree-bootstrap",
+      "sha256": "8182f150251bd649774eb1305117bf789ae9b32fa59612469e8463303d49564f"
+    },
+    {
+      "skill": "oat-worktree-bootstrap-auto",
+      "sha256": "cba3694dd2a90d7c4565b3e1f44cf14fd4f874f926448afea2f94700fe764df1"
+    },
+    {
+      "skill": "oat-wave-execute",
+      "sha256": "14d49c45a10dbb61cface2b928b4a41f91f706e98cec190b828dfbc42aaaa76c"
+    },
+    {
+      "skill": "oat-wave-program",
+      "sha256": "9c0df4b734686c85d7e77425eae4e4be1ff5cf7894f7e2b2b2e7f6d287784b4f"
+    },
+    {
+      "skill": "oat-wrap-up",
+      "sha256": "e60d362021ad6108e0e57295d507a6d0c612ba98568b7e2933d433a227e1fa8b"
+    },
+    {
+      "skill": "analyze",
+      "sha256": "566a2b103072f3a7c30a9e3a111f5bec648161ff4c50ca5f95c97695722217f0"
+    },
+    {
+      "skill": "compare",
+      "sha256": "f403caccf3313593a6c1592635f7d020c95d2309901726e4fe420b3456409605"
+    },
+    {
+      "skill": "deep-research",
+      "sha256": "9b4075f92aeea2cc1d1f27c00e11ad521f8ce627a5d5a58f7165b6282b094164"
+    },
+    {
+      "skill": "recon",
+      "sha256": "a4ac093f6531bf4cc660cbce28f11701cc98e3aafdea466828ae6a892c6d0121"
+    },
+    {
+      "skill": "skeptic",
+      "sha256": "b9c5e5ee4800fb03551fede126102aa88ab58f8d4d53e2ea6189af985fa2b988"
+    },
+    {
+      "skill": "synthesize",
+      "sha256": "f03cc0f979806e9d2ec37be05806ccbd3f623b4886c93f1cabc9276ffef8d84a"
+    }
+  ],
+  "agentIndex": {
+    "command": "Branch cli:source docs generate-index in executed app prebuild",
+    "sha256": "b35f3598f4005af19dbd634e729c7d540112ca9bcb937635ff8f3e0f7cf8e382",
+    "changed": false
+  },
+  "publicVersions": {
+    "cli": "0.3.14",
+    "control-plane": "0.3.14",
+    "docs-config": "0.3.14",
+    "docs-theme": "0.3.14",
+    "docs-transforms": "0.3.14"
+  },
+  "phaseEvidenceScripts": [
+    {
+      "file": ".oat/projects/shared/docs-improvement-overhaul/references/p02-t03-consumer-controls.mjs",
+      "sha256": "95d69f374586b3f76c7d07e155e7c33df29aa7f2db1c7d54cf7eec2ab829fb4b"
+    },
+    {
+      "file": ".oat/projects/shared/docs-improvement-overhaul/references/p02-t03-pristine-control.mjs",
+      "sha256": "0f12ae0b7e501b5624163922252768f7ee667dde41d657d0c165b2bc15c37a77"
+    }
+  ],
+  "finalFocusedReruns": [
+    {
+      "file": "/tmp/docs-p02-t03-check-final.log",
+      "exit": 0,
+      "sha256": "4a611008e82d5ec8bd8b1760f8ba151a543df0c0d501930b66070c0acea4a78f"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-types-final.log",
+      "exit": 0,
+      "sha256": "a80e12a629d5c9215656b3c66a6fbae5b2e64f1dda70df4b9d010ff06f36caf6"
+    },
+    {
+      "file": "/tmp/docs-p02-t03-tests-final.log",
+      "exit": 0,
+      "sha256": "bcaa0bf8f2cfaff61effaaf60875619cccff8342014a7398af0f1c014a0cee1b"
+    }
+  ]
+}

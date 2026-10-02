@@ -71,7 +71,7 @@ Use these commands when you want structured runtime/project state out of the CLI
 ## Docs
 
 - [Docs Home](https://voxmedia.github.io/open-agent-toolkit/)
-- [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/cli-utilities)
+- [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/reference#general-cli-adoption-guidance)
 - [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync)
 - [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync)
 - [Reference](https://voxmedia.github.io/open-agent-toolkit/reference)

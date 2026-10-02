@@ -51,12 +51,12 @@ required when a change touches `tools/smoke` or `.agents/skills`.
 Full documentation lives on the docs site:
 
 - [Docs Home](https://voxmedia.github.io/open-agent-toolkit/)
-- [Start Here](https://voxmedia.github.io/open-agent-toolkit/quickstart)
+- [Start Here](https://voxmedia.github.io/open-agent-toolkit/getting-started/quickstart)
 - [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync)
 - [Instruction Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync/instruction-sync)
-- [Agentic Workflows](https://voxmedia.github.io/open-agent-toolkit/workflows)
+- [Agentic Workflows](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow)
 - [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling)
-- [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/cli-utilities)
+- [CLI Utilities](https://voxmedia.github.io/open-agent-toolkit/reference#general-cli-adoption-guidance)
 - [Reference](https://voxmedia.github.io/open-agent-toolkit/reference)
 - [Contributing](https://voxmedia.github.io/open-agent-toolkit/contributing)
 

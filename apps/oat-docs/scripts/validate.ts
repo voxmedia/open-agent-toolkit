@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { dirname, extname, join, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
@@ -127,12 +127,118 @@ export async function validateSourceTargets(
   if (errors.length) throw new Error(errors.join('\n'));
 }
 
+export async function validateTopicMap(
+  docsRoot: string,
+  skillPath: string,
+): Promise<number> {
+  const markdown = await readFile(skillPath, 'utf8');
+  const lines = sourceText(markdown).split('\n');
+  const header = lines.findIndex((line) =>
+    /^\|\s*Topic Area\s*\|\s*Docs Path\s*\|/.test(line),
+  );
+  if (header < 0) throw new Error(`${skillPath}: missing docs topic table`);
+  const targets: Array<{ source: string; href: string }> = [];
+  for (const line of lines.slice(header + 2)) {
+    if (!line.startsWith('|')) break;
+    const cell = line.split('|')[2] ?? '';
+    const paths = [...cell.matchAll(/`([^`]+)`/g)].map((match) => match[1]!);
+    if (!paths.length)
+      throw new Error(`${skillPath}: missing topic path in ${line}`);
+    for (const path of paths) {
+      if (
+        path.startsWith('/') ||
+        path.split('/').includes('..') ||
+        !/^(?:[^?#]+\.md(?:#[^?]+)?|[^?#]+\/)$/.test(path)
+      )
+        throw new Error(`${skillPath}: unsupported topic path ${path}`);
+      targets.push({ source: join(docsRoot, 'index.md'), href: path });
+    }
+  }
+  if (!targets.length) throw new Error(`${skillPath}: empty docs topic table`);
+  await validateSourceTargets(docsRoot, targets);
+  return targets.length;
+}
+
+export async function validateHostedReadmes(
+  docsRoot: string,
+  readmes: readonly string[],
+): Promise<Array<{ source: string; url: string; target: string }>> {
+  const targets: Array<{ source: string; url: string; target: string }> = [];
+  for (const source of readmes) {
+    const markdown = sourceText(await readFile(source, 'utf8')).replace(
+      /(`+)[\s\S]*?\1/g,
+      '',
+    );
+    const pattern =
+      /!?\[[^\]\n]*\]\((?:<([^>\n]+)>|([^\s)]+))(?:\s+"[^"]*")?\)|^\s{0,3}\[[^\]\n]+\]:\s*(?:<([^>\n]+)>|(\S+))|<(https?:\/\/[^>\n]+)>/gm;
+    for (const match of markdown.matchAll(pattern)) {
+      const href = match.slice(1).find((value) => value !== undefined)!;
+      if (!href.startsWith('https://voxmedia.github.io/')) continue;
+      const url = new URL(href);
+      if (
+        url.origin !== 'https://voxmedia.github.io' ||
+        !/^\/open-agent-toolkit(?:\/|$)/.test(url.pathname)
+      )
+        continue;
+      const route = decodeURIComponent(
+        url.pathname.slice('/open-agent-toolkit'.length),
+      ).replace(/\/$/, '');
+      if (
+        route.includes('\\') ||
+        route.split('/').some((part) => part === '..')
+      )
+        throw new Error(`${source}: unsupported hosted route ${href}`);
+      const candidates = route
+        ? [join(docsRoot, `${route}.md`), join(docsRoot, route, 'index.md')]
+        : [join(docsRoot, 'index.md')];
+      const present: string[] = [];
+      for (const candidate of candidates)
+        if ((await stat(candidate).catch(() => undefined))?.isFile())
+          present.push(candidate);
+      if (present.length !== 1)
+        throw new Error(
+          `${source}: unresolved or ambiguous hosted route ${href}`,
+        );
+      await validateSourceTargets(docsRoot, [
+        {
+          source,
+          href: `${relative(dirname(source), present[0]!)}${url.hash}`,
+        },
+      ]);
+      targets.push({ source, url: href, target: `${present[0]}${url.hash}` });
+    }
+  }
+  return targets;
+}
+
+export async function validateLiveConsumers(root: string): Promise<void> {
+  const docsRoot = join(root, 'apps/oat-docs/docs');
+  const topics = await validateTopicMap(
+    docsRoot,
+    join(root, '.agents/skills/oat-docs/SKILL.md'),
+  );
+  const hosted = await validateHostedReadmes(
+    docsRoot,
+    [
+      'README.md',
+      'packages/cli/README.md',
+      'packages/docs-config/README.md',
+      'packages/docs-theme/README.md',
+      'packages/docs-transforms/README.md',
+    ].map((path) => join(root, path)),
+  );
+  process.stdout.write(
+    `Live docs consumers validated: ${topics} topic paths, ${hosted.length} hosted README occurrences.\n`,
+  );
+}
+
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   runNavigation(appRoot);
   await validateSourceRoutes(join(appRoot, 'docs'));
+  await validateLiveConsumers(repoRoot);
   process.stdout.write(
     'Source navigation, routes and anchors validated (no generated output required).\n',
   );

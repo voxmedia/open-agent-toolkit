@@ -59,7 +59,7 @@ flowchart TD
 ## Documentation
 
 - **OAT overview:** [`apps/oat-docs/docs/index.md`](../apps/oat-docs/docs/index.md)
-- **Quickstart:** [`apps/oat-docs/docs/quickstart.md`](../apps/oat-docs/docs/quickstart.md)
+- **Quickstart:** [`apps/oat-docs/docs/getting-started/quickstart.md`](../apps/oat-docs/docs/getting-started/quickstart.md)
 - **CLI reference:** [`apps/oat-docs/docs/cli/index.md`](../apps/oat-docs/docs/cli/index.md)
 - **Skills index:** [`apps/oat-docs/docs/skills/index.md`](../apps/oat-docs/docs/skills/index.md)
 - **Agent instruction guide:** [`.agents/docs/agent-instruction.md`](docs/agent-instruction.md)

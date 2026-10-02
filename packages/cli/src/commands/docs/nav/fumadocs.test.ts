@@ -83,14 +83,13 @@ describe('Fumadocs navigation compiler', () => {
       'utf8',
     );
     expect(parseIndexContents(source).map((entry) => entry.href)).toEqual([
-      'quickstart.md',
-      'guide/index.md',
-      'provider-sync/index.md',
+      'getting-started/index.md',
+      'skills/index.md',
       'workflows/index.md',
+      'provider-sync/index.md',
       'docs-tooling/index.md',
-      'cli-utilities/index.md',
-      'contributing/index.md',
       'reference/index.md',
+      'contributing/index.md',
     ]);
     expect(
       parseIndexContents(

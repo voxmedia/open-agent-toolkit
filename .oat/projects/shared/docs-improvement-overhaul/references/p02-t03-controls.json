@@ -1,0 +1,76 @@
+{
+  "liveSourceSha256": "16fe9fceec626dc5330f887f0d1e718e7acdb17f391d5e36c3ebd89e4ab8d5ba",
+  "controls": [
+    {
+      "name": "guarded-valid-and-negative-controls",
+      "sourceSha256": "16fe9fceec626dc5330f887f0d1e718e7acdb17f391d5e36c3ebd89e4ab8d5ba",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts"
+      ],
+      "exit": 0,
+      "output": "✔ consumer targets resolve from live source paths without generated output or project artifacts (10.59025ms)\n✔ a stale pre-move consumer target is rejected while the canonical target passes (1.06825ms)\n✔ a moved-page fragment is checked against its actual target heading (1.237584ms)\n✔ live skill topic paths reject stale file and directory owners without project inputs (2.45325ms)\n✔ hosted README links resolve leaf, landing and real fragments from source only (2.094875ms)\n✔ hosted README stale routes and fragments reject while canonical links pass (1.700667ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 295.898708\n"
+    },
+    {
+      "name": "neutralized-topic-target-guard",
+      "sourceSha256": "8712ad6c2d5e76e6696b165b27d6dd8c88ac5e955f4c959607dec56ea68ebcf7",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "--test-name-pattern",
+        "live skill topic paths",
+        "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts"
+      ],
+      "exit": 1,
+      "output": "✖ live skill topic paths reject stale file and directory owners without project inputs (5.78075ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 185.048625\n\n✖ failing tests:\n\ntest at ../../../../../../private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:1:2046\n✖ live skill topic paths reject stale file and directory owners without project inputs (5.78075ms)\n  AssertionError [ERR_ASSERTION]: Missing expected rejection.\n      at async TestContext.<anonymous> (/private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:88:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: /unresolved source link/,\n    operator: 'rejects',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "neutralized-hosted-route-guard",
+      "sourceSha256": "4d8d31d3d3ee7eed42984b996aebfab88fe019ace663dd4a8a88647708581750",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "--test-name-pattern",
+        "hosted README stale routes",
+        "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts"
+      ],
+      "exit": 1,
+      "output": "✖ hosted README stale routes and fragments reject while canonical links pass (5.780083ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 185.572167\n\n✖ failing tests:\n\ntest at ../../../../../../private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:6:1730\n✖ hosted README stale routes and fragments reject while canonical links pass (5.780083ms)\n  AssertionError [ERR_ASSERTION]: Missing expected rejection.\n      at async TestContext.<anonymous> (/private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:129:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: /unresolved.*hosted route/,\n    operator: 'rejects',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "neutralized-fragment-guard",
+      "sourceSha256": "2f2446125d9ec15ea21f40e0b1f53f4afba43ba34070cff5bc58fe4d79c531de",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "--test-name-pattern",
+        "hosted README stale routes",
+        "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts"
+      ],
+      "exit": 1,
+      "output": "✖ hosted README stale routes and fragments reject while canonical links pass (6.923875ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 182.558541\n\n✖ failing tests:\n\ntest at ../../../../../../private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:6:1730\n✖ hosted README stale routes and fragments reject while canonical links pass (6.923875ms)\n  AssertionError [ERR_ASSERTION]: Missing expected rejection.\n      at async TestContext.<anonymous> (/private/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts:137:3)\n      at async Test.run (node:internal/test_runner/test:1208:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: /unresolved source fragment/,\n    operator: 'rejects',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "name": "restored-valid-and-negative-controls",
+      "sourceSha256": "16fe9fceec626dc5330f887f0d1e718e7acdb17f391d5e36c3ebd89e4ab8d5ba",
+      "command": [
+        "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+        "--import",
+        "tsx",
+        "--test",
+        "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-live-consumer-controls-tCfqah/migration.test.ts"
+      ],
+      "exit": 0,
+      "output": "✔ consumer targets resolve from live source paths without generated output or project artifacts (9.822125ms)\n✔ a stale pre-move consumer target is rejected while the canonical target passes (0.82625ms)\n✔ a moved-page fragment is checked against its actual target heading (1.246084ms)\n✔ live skill topic paths reject stale file and directory owners without project inputs (2.533167ms)\n✔ hosted README links resolve leaf, landing and real fragments from source only (2.060125ms)\n✔ hosted README stale routes and fragments reject while canonical links pass (1.636583ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 192.069833\n"
+    }
+  ]
+}

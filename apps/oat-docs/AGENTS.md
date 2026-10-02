@@ -1,6 +1,6 @@
 # AGENTS — OAT Documentation
 
-This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. It is not bootstrap documentation. If you're looking for how this app was scaffolded, see `docs/quickstart.md` or the root-level `AGENTS.md`.
+This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. It is not bootstrap documentation. If you're looking for how this app was scaffolded, see `docs/getting-started/quickstart.md` or the root-level `AGENTS.md`.
 
 ## Purpose and scope
 
@@ -66,7 +66,7 @@ Format authored Markdown with `pnpm --filter oat-docs docs:format` or a `docs/**
 
 ## Reference
 
-- `docs/quickstart.md` — first-run setup instructions for contributors joining this docs app.
+- `docs/getting-started/quickstart.md` — first-run setup instructions for contributors joining this docs app.
 - `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
 - Root `AGENTS.md` in `open-agent-toolkit` — repo-wide pointer and shared conventions. For scaffolded docs apps, this file typically includes a `## Documentation` section listing docs root, framework, and index file; add one if it's missing.
 - `oat-docs-analyze` — read-only audit command.

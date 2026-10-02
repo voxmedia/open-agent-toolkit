@@ -1751,7 +1751,7 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       readFileSync(
         join(
           import.meta.dirname,
-          '../../../../../../../apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+          '../../../../../../../apps/oat-docs/docs/workflows/projects/execution/implementation-execution.md',
         ),
         'utf8',
       ),

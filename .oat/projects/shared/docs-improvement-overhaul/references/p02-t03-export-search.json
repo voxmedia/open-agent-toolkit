@@ -1,0 +1,508 @@
+{
+  "sourceBaseline": "8b78d9a935b31ef50e65713b03a022a5d022aa59",
+  "mapSha256": "ff02a3ebec2373f88cb47917bd6aeafeb35149b7e9680e768d0a4e0a5674a438",
+  "exportedRoutes": [
+    {
+      "route": "/",
+      "htmlSha256": "db3b3667b07d549d09cd0b63b9d3c090936dbf7fbb00ee726e90de4fe8ac6ecc"
+    },
+    {
+      "route": "/contributing",
+      "htmlSha256": "daa700d031ea40b6b8536b07a52c10f7a32f73b4222fd68f42845210679f1e03"
+    },
+    {
+      "route": "/contributing/code",
+      "htmlSha256": "aa708f6378a43dbb432e6ede47383c72cfd5ddccc4815278a9112003f4c1bdda"
+    },
+    {
+      "route": "/contributing/commit-conventions",
+      "htmlSha256": "7b8e1a1aa69b7aed281c7be139650900680a6c1a230a83edc0c1a958abe294cf"
+    },
+    {
+      "route": "/contributing/design-principles",
+      "htmlSha256": "8d6b7a643ac472dc4305e63ae3967d7c59bf666325187aec8b3ad49edd8b3477"
+    },
+    {
+      "route": "/contributing/documentation",
+      "htmlSha256": "eeb76efa63554fd32a57fe10e8492260e1e64a7dc9b5f3f9d976be20d7fb906d"
+    },
+    {
+      "route": "/contributing/hooks-and-safety",
+      "htmlSha256": "3ec7c3f2ecc5da637c8d961061746bb692a0ca1c800017d2ea7f37829902f38f"
+    },
+    {
+      "route": "/contributing/markdown-features",
+      "htmlSha256": "c095f840ef8545f080f1053747e6adfbb9e71f0edc40370fe2324701ae817c39"
+    },
+    {
+      "route": "/contributing/skills",
+      "htmlSha256": "4ba9d72cfb2d320eb37975cf71abf1c6408ff6e7cd590a948324e1caf6588ccf"
+    },
+    {
+      "route": "/contributing/smoke-testing",
+      "htmlSha256": "6914ddcbc42d036cb387fb0c5c6d2fb34c2587507621bda34408bbf5e686a8c7"
+    },
+    {
+      "route": "/contributing/updating-model-guidance",
+      "htmlSha256": "1d07211458701badb160235c53b7b22010a9df259ef18b401919db614c483ad3"
+    },
+    {
+      "route": "/contributing/verifying-cursor-pins",
+      "htmlSha256": "21622ffdd1dc244104b4e2059c5bf0d9b4aa5284ae877388d00bb248311a2566"
+    },
+    {
+      "route": "/docs-tooling",
+      "htmlSha256": "9fbd45a8db91e111907bf938f2a5391223ae421e765f8e9babfcb13c417f6a76"
+    },
+    {
+      "route": "/docs-tooling/add-docs-to-a-repo",
+      "htmlSha256": "693ff5e1b8bdda793000e0d5ebc9e7f842a4920668cbcfd6d5590cb32161f4d0"
+    },
+    {
+      "route": "/docs-tooling/commands",
+      "htmlSha256": "1b44bf6cda8b9fba5c187ba46b5c8f68106740612965f32dcf366b7bf05ecaf8"
+    },
+    {
+      "route": "/docs-tooling/workflows",
+      "htmlSha256": "d67ccfe06d5dec135b9bf246e8897f41093f38b9dcf26d4ed1880c6cd5ebf2e4"
+    },
+    {
+      "route": "/getting-started",
+      "htmlSha256": "4eacbca4f95d6aa1f0633d7526a18cb48bdda5530dbc3743bb2b69cb6f6c027e"
+    },
+    {
+      "route": "/getting-started/bootstrap",
+      "htmlSha256": "275a09f6f507368dba677a77fe6fc25864dd4a38e99af6d66a540431ea030299"
+    },
+    {
+      "route": "/getting-started/concepts",
+      "htmlSha256": "b38c11fdc80a2c58d8345d82b5a56a15de889673a21d38b8bcf0bb44c31a292a"
+    },
+    {
+      "route": "/getting-started/quickstart",
+      "htmlSha256": "e7ccef1840881ddac6428bc706271fdc34d4d5c900b929db82013527500382fc"
+    },
+    {
+      "route": "/getting-started/tool-packs",
+      "htmlSha256": "623ca06f37b2cd60eb7b325b6f37aafe273814daaa61ea089f50c9cdffce3dc2"
+    },
+    {
+      "route": "/provider-sync",
+      "htmlSha256": "2c25f56f57d71cdb4361bf48d87c000470d210b303eaa8a3e842a15c682667c3"
+    },
+    {
+      "route": "/provider-sync/commands",
+      "htmlSha256": "106fe58908b43e3b55de85c705cc6b52b2574a365c1b891e2ee238b9f2f8ae9c"
+    },
+    {
+      "route": "/provider-sync/config",
+      "htmlSha256": "fa54c00d255c61b8dbe92280e22a35df16d571c92fa86e8a0cca26c73243c771"
+    },
+    {
+      "route": "/provider-sync/instruction-sync",
+      "htmlSha256": "6483c7b3c757de2a504aadc8d99eece394a570522dd732a11be59909ca8b2293"
+    },
+    {
+      "route": "/provider-sync/manifest-and-drift",
+      "htmlSha256": "a71717e0ff23b485c0a208d700fa4f6399ac0814831e882086c3adaee7f70ba4"
+    },
+    {
+      "route": "/provider-sync/providers",
+      "htmlSha256": "4ca591eed8ebbd39419e5d7e9fde912f7ae7276c4efe552230ff45f0e6f9a34f"
+    },
+    {
+      "route": "/provider-sync/scope-and-surface",
+      "htmlSha256": "7304d10945f6d4c579191d7edc54380989efd3e277b0167f82a86dea925b8cb6"
+    },
+    {
+      "route": "/reference",
+      "htmlSha256": "afd607601903bee4bbcd5c323f88c09570e14e004f7346dbedbce530480c4c4b"
+    },
+    {
+      "route": "/reference/cli-reference",
+      "htmlSha256": "ff685d33f4b93cadfbced951d9ab71a38ef22a156463c166a50346b6ae303cfa"
+    },
+    {
+      "route": "/reference/config-and-local-state",
+      "htmlSha256": "b936780f16a7401c1f8c75ff01dfbf7da41d34627253c6f63b8536a7fb7d4251"
+    },
+    {
+      "route": "/reference/configuration",
+      "htmlSha256": "433539d8317b0ebf8932355ebaa1c1a3aa04056e23278cafa6031fdef9cea4ca"
+    },
+    {
+      "route": "/reference/docs-index-contract",
+      "htmlSha256": "43e71eda0976687921e9c4f3c92b1ab7764034c55864416f524c73312d2a0078"
+    },
+    {
+      "route": "/reference/file-locations",
+      "htmlSha256": "1125f3718e72c8a3c7a97e83ac43045888bb470ba82de2749f6619be5a6428b4"
+    },
+    {
+      "route": "/reference/oat-directory-structure",
+      "htmlSha256": "0df963ee9970d61d55f0082ac64c1cd8891ef88a2865eed613f844a0ff62077d"
+    },
+    {
+      "route": "/reference/project-artifacts",
+      "htmlSha256": "0f140978dd16bfa3f87cf1612987ac167413b3a1e8bb40351a6d1c2d3f8be83c"
+    },
+    {
+      "route": "/reference/project-state-machine",
+      "htmlSha256": "1c58a1ae2dd90ccb18d983aecbda3627dac5e7da9297291affe3557ec302c008"
+    },
+    {
+      "route": "/reference/repository-pr-comments",
+      "htmlSha256": "cbbf4bd8f77a7b469596777e566709246be96e5ea9a72b7c36726e409f5e3471"
+    },
+    {
+      "route": "/reference/troubleshooting",
+      "htmlSha256": "1907281a2ddb15a2c32171cba9a13d7cac0e2c3be72e605ccc7db05b8f690c77"
+    },
+    {
+      "route": "/skills",
+      "htmlSha256": "75f6cd79247cad3cc50c24541a94ea8984836dc521a8e7ec2cffa327601006ee"
+    },
+    {
+      "route": "/skills/explainer-kit",
+      "htmlSha256": "11806bef4a3f594b2678f94ab0a33bc5048e60f54f939db2bca2847203b04150"
+    },
+    {
+      "route": "/skills/recon",
+      "htmlSha256": "58e30978e9c880910bcd93ae6d8a8f5576f130364bef200c7eb43d5112deb926"
+    },
+    {
+      "route": "/skills/repo-improve",
+      "htmlSha256": "b844d17587d64116b9ea2c00b0010c86267137a5da1eaf10b735058f2a9c1080"
+    },
+    {
+      "route": "/workflows",
+      "htmlSha256": "ca5f20d29608f075ebbcffe6822c94763061ed36f8a012589fdc5c2ae1d47d02"
+    },
+    {
+      "route": "/workflows/advanced",
+      "htmlSha256": "d4657e717bde59442628bc40e2a703d343c8319c00d93cbaaba20bc6d8989970"
+    },
+    {
+      "route": "/workflows/advanced/autonomy",
+      "htmlSha256": "6df5a49a96ba966e3d9e2dd8e8d88d5bc469f3596f56a71fcb8648d0bae75a3b"
+    },
+    {
+      "route": "/workflows/advanced/cursor-cloud",
+      "htmlSha256": "8f2134011a53baf9d29419ae88538cad4d26bb43affd9380c18e1be8a92419e4"
+    },
+    {
+      "route": "/workflows/advanced/dispatch-ceiling",
+      "htmlSha256": "fb1c47b07e50c16be739b8f9381aa957e418a287914701c409c84703e3a5c701"
+    },
+    {
+      "route": "/workflows/advanced/evidence-layers",
+      "htmlSha256": "8cac13024b3eb59e6fc779c68d5166db0d1e63959804864a8a8a306d91fb7e6f"
+    },
+    {
+      "route": "/workflows/advanced/orchestration-model",
+      "htmlSha256": "313bf82eb43db39ae5e927c46d82aa15503f6247e2d388214f59a308508eb10f"
+    },
+    {
+      "route": "/workflows/advanced/programmatic-execution",
+      "htmlSha256": "bfad5c99df9387dedeb9b227614dcf9ca11aa30825ce7a443835dfea7640421d"
+    },
+    {
+      "route": "/workflows/advanced/workflow-gates",
+      "htmlSha256": "e96eaf7c249c1f8ddc4da3b116b5153988c25970b2645b8df2853ce862cc4f4e"
+    },
+    {
+      "route": "/workflows/backlog-and-planning",
+      "htmlSha256": "32960f086fff39191952b0ff2b2bbb59f7a319ee19400d606d2f6d3e0994e261"
+    },
+    {
+      "route": "/workflows/backlog-and-planning/backlog-lifecycle",
+      "htmlSha256": "6380c3f3a3832dcc83d13ea77ecf55de0db504aba0011a99608d1a4564f10aa7"
+    },
+    {
+      "route": "/workflows/backlog-and-planning/remote-project-management",
+      "htmlSha256": "331a1e4100f816545fa6b0a9db062af96660d786e01898755e132c8269d38af9"
+    },
+    {
+      "route": "/workflows/choose-workflow",
+      "htmlSha256": "73081db5e2bcd0428b461f6ad38c8eacb932210ce10d1e503994e1e5e087af84"
+    },
+    {
+      "route": "/workflows/ideas",
+      "htmlSha256": "367253466f8a7b8da75f6f90594c46a2717243aba4887ee49167a550a290a909"
+    },
+    {
+      "route": "/workflows/ideas/lifecycle",
+      "htmlSha256": "f75b903e94f5812802cb759f72605aed72313964dfcf787ce6dd23f56479f5a4"
+    },
+    {
+      "route": "/workflows/projects",
+      "htmlSha256": "c573a2ab75a6c233d8305a9287a658382974e75fc3b6c3e42e84f6e9e3137751"
+    },
+    {
+      "route": "/workflows/projects/closeout",
+      "htmlSha256": "7febd68f1a2f0831d691574b6b8c3d8a0d8ff7fca9795b0aa53f434a6419b09c"
+    },
+    {
+      "route": "/workflows/projects/closeout/pr-flow",
+      "htmlSha256": "fc2d2eed17fbfc1ccbea2cfea2b88ccef1a4ac4e546d4d76c7e53c57a9e06bee"
+    },
+    {
+      "route": "/workflows/projects/closeout/retro",
+      "htmlSha256": "073cea0220583d8e01a47104910d0996d39a467b2d6858d4747982b3a5893609"
+    },
+    {
+      "route": "/workflows/projects/execution",
+      "htmlSha256": "23d28b9bf8c5a52cdb0ab8aa9df4ffce54e2dc1f9639b7c283bf064865e2ff5c"
+    },
+    {
+      "route": "/workflows/projects/execution/implementation-execution",
+      "htmlSha256": "5e39a5a3b1104fb8004d5a3326f7fd534c3381ec06317579a2d70bb02b9455c0"
+    },
+    {
+      "route": "/workflows/projects/execution/picking-up-projects",
+      "htmlSha256": "75ba8f5fa409c64412788ebd8e0320ec1dd12134b3dca1edf29c33d2dc55cbd1"
+    },
+    {
+      "route": "/workflows/projects/execution/project-log",
+      "htmlSha256": "87a8e3f599c0dbc76c6a3143b1d38856bf3e3e1ab0569d6a43a35c6ac4ef7750"
+    },
+    {
+      "route": "/workflows/projects/lifecycle",
+      "htmlSha256": "a410975c26e715c09e759b6ae929613ace2f0967219e12ba15ecaa468fcfafa4"
+    },
+    {
+      "route": "/workflows/projects/planning",
+      "htmlSha256": "b5b02bae4a6cc4ba6845cbb1eb583a1926af8fa269e6e6f59f961e5fc3a28a10"
+    },
+    {
+      "route": "/workflows/projects/planning/design-modes",
+      "htmlSha256": "d6aa42d44a778ac6ed0f0cceadf8bfad92f456a1eaff0daf0e65177b3ad6cdef"
+    },
+    {
+      "route": "/workflows/projects/planning/hill-checkpoints",
+      "htmlSha256": "7ee4f905227a83197d86e28d8620215d884e469a1f77a4cacc801ec0ca9591d7"
+    },
+    {
+      "route": "/workflows/projects/planning/splitting",
+      "htmlSha256": "54aac9423c088061e99a11e1ca75d706f1c0f9ea1b47ef380f32c053bbc33058"
+    },
+    {
+      "route": "/workflows/projects/reviews",
+      "htmlSha256": "65bf5cb1d3b698509461dcd06809208097414e516e3786a8948b6b57ea12be99"
+    },
+    {
+      "route": "/workflows/projects/reviews/review-flavors",
+      "htmlSha256": "199bb6b522f6ef58534df5df0b068958dbc1efe530d5151d1fb2c8c492f2e873"
+    },
+    {
+      "route": "/workflows/projects/reviews/reviewing-oat-prs",
+      "htmlSha256": "eac093f9a14866cebfb207480611114d5b0e79dc555129a5d0f85d6a5036c416"
+    },
+    {
+      "route": "/workflows/waves",
+      "htmlSha256": "a3c0058c6ee43ae5b32804322dddb4315dccf35605f23c96a139d1cf9589b2d0"
+    },
+    {
+      "route": "/workflows/waves/wave-workflows",
+      "htmlSha256": "99ba5521887b73a9c262c2d4d3c545574e55d9f296dfd18f7924b1309e5bcadb"
+    }
+  ],
+  "search": {
+    "file": "apps/oat-docs/out/api/search",
+    "sha256": "36add3b415d36521116fa9e3d9c944da1c3943c7f3d10bf6496bd559c73b4a78",
+    "records": 6288,
+    "uniquePageRoutes": 76,
+    "exactlyCurrentRoutes": true
+  },
+  "removed": [
+    {
+      "source": "cli-utilities/backlog-lifecycle.md",
+      "oldRoute": "/cli-utilities/backlog-lifecycle",
+      "destination": "/workflows/backlog-and-planning/backlog-lifecycle"
+    },
+    {
+      "source": "cli-utilities/bootstrap.md",
+      "oldRoute": "/cli-utilities/bootstrap",
+      "destination": "/getting-started/bootstrap"
+    },
+    {
+      "source": "cli-utilities/config-and-local-state.md",
+      "oldRoute": "/cli-utilities/config-and-local-state",
+      "destination": "/reference/config-and-local-state"
+    },
+    {
+      "source": "cli-utilities/configuration.md",
+      "oldRoute": "/cli-utilities/configuration",
+      "destination": "/reference/configuration"
+    },
+    {
+      "source": "cli-utilities/index.md",
+      "oldRoute": "/cli-utilities",
+      "destination": "/getting-started"
+    },
+    {
+      "source": "cli-utilities/project-log.md",
+      "oldRoute": "/cli-utilities/project-log",
+      "destination": "/workflows/projects/execution/project-log"
+    },
+    {
+      "source": "cli-utilities/remote-project-management.md",
+      "oldRoute": "/cli-utilities/remote-project-management",
+      "destination": "/workflows/backlog-and-planning/remote-project-management"
+    },
+    {
+      "source": "cli-utilities/tool-packs.md",
+      "oldRoute": "/cli-utilities/tool-packs",
+      "destination": "/getting-started/tool-packs"
+    },
+    {
+      "source": "cli-utilities/workflow-gates.md",
+      "oldRoute": "/cli-utilities/workflow-gates",
+      "destination": "/workflows/advanced/workflow-gates"
+    },
+    {
+      "source": "guide/concepts.md",
+      "oldRoute": "/guide/concepts",
+      "destination": "/getting-started/concepts"
+    },
+    {
+      "source": "guide/index.md",
+      "oldRoute": "/guide",
+      "destination": "/"
+    },
+    {
+      "source": "quickstart.md",
+      "oldRoute": "/quickstart",
+      "destination": "/getting-started/quickstart"
+    },
+    {
+      "source": "workflows/projects/artifacts.md",
+      "oldRoute": "/workflows/projects/artifacts",
+      "destination": "/reference/project-artifacts"
+    },
+    {
+      "source": "workflows/projects/autonomy.md",
+      "oldRoute": "/workflows/projects/autonomy",
+      "destination": "/workflows/advanced/autonomy"
+    },
+    {
+      "source": "workflows/projects/cursor-cloud.md",
+      "oldRoute": "/workflows/projects/cursor-cloud",
+      "destination": "/workflows/advanced/cursor-cloud"
+    },
+    {
+      "source": "workflows/projects/design-modes.md",
+      "oldRoute": "/workflows/projects/design-modes",
+      "destination": "/workflows/projects/planning/design-modes"
+    },
+    {
+      "source": "workflows/projects/dispatch-ceiling.md",
+      "oldRoute": "/workflows/projects/dispatch-ceiling",
+      "destination": "/workflows/advanced/dispatch-ceiling"
+    },
+    {
+      "source": "workflows/projects/evidence-layers.md",
+      "oldRoute": "/workflows/projects/evidence-layers",
+      "destination": "/workflows/advanced/evidence-layers"
+    },
+    {
+      "source": "workflows/projects/hill-checkpoints.md",
+      "oldRoute": "/workflows/projects/hill-checkpoints",
+      "destination": "/workflows/projects/planning/hill-checkpoints"
+    },
+    {
+      "source": "workflows/projects/implementation-execution.md",
+      "oldRoute": "/workflows/projects/implementation-execution",
+      "destination": "/workflows/projects/execution/implementation-execution"
+    },
+    {
+      "source": "workflows/projects/orchestration-model.md",
+      "oldRoute": "/workflows/projects/orchestration-model",
+      "destination": "/workflows/advanced/orchestration-model"
+    },
+    {
+      "source": "workflows/projects/picking-up-projects.md",
+      "oldRoute": "/workflows/projects/picking-up-projects",
+      "destination": "/workflows/projects/execution/picking-up-projects"
+    },
+    {
+      "source": "workflows/projects/pr-flow.md",
+      "oldRoute": "/workflows/projects/pr-flow",
+      "destination": "/workflows/projects/closeout/pr-flow"
+    },
+    {
+      "source": "workflows/projects/programmatic-execution.md",
+      "oldRoute": "/workflows/projects/programmatic-execution",
+      "destination": "/workflows/advanced/programmatic-execution"
+    },
+    {
+      "source": "workflows/projects/repo-analysis.md",
+      "oldRoute": "/workflows/projects/repo-analysis",
+      "destination": "/reference/repository-pr-comments"
+    },
+    {
+      "source": "workflows/projects/retro.md",
+      "oldRoute": "/workflows/projects/retro",
+      "destination": "/workflows/projects/closeout/retro"
+    },
+    {
+      "source": "workflows/projects/review-flavors.md",
+      "oldRoute": "/workflows/projects/review-flavors",
+      "destination": "/workflows/projects/reviews/review-flavors"
+    },
+    {
+      "source": "workflows/projects/reviewing-oat-prs.md",
+      "oldRoute": "/workflows/projects/reviewing-oat-prs",
+      "destination": "/workflows/projects/reviews/reviewing-oat-prs"
+    },
+    {
+      "source": "workflows/projects/splitting.md",
+      "oldRoute": "/workflows/projects/splitting",
+      "destination": "/workflows/projects/planning/splitting"
+    },
+    {
+      "source": "workflows/projects/state-machine.md",
+      "oldRoute": "/workflows/projects/state-machine",
+      "destination": "/reference/project-state-machine"
+    },
+    {
+      "source": "workflows/skills/explainer-kit.md",
+      "oldRoute": "/workflows/skills/explainer-kit",
+      "destination": "/skills/explainer-kit"
+    },
+    {
+      "source": "workflows/skills/index.md",
+      "oldRoute": "/workflows/skills",
+      "destination": "/skills"
+    },
+    {
+      "source": "workflows/skills/recon.md",
+      "oldRoute": "/workflows/skills/recon",
+      "destination": "/skills/recon"
+    },
+    {
+      "source": "workflows/skills/repo-improve.md",
+      "oldRoute": "/workflows/skills/repo-improve",
+      "destination": "/skills/repo-improve"
+    },
+    {
+      "source": "workflows/wave-workflows.md",
+      "oldRoute": "/workflows/wave-workflows",
+      "destination": "/workflows/waves/wave-workflows"
+    }
+  ],
+  "repurposed": [
+    {
+      "source": "workflows/index.md",
+      "route": "/workflows",
+      "currentOwner": "workflows/index.md"
+    },
+    {
+      "source": "workflows/projects/reviews.md",
+      "route": "/workflows/projects/reviews",
+      "currentOwner": "workflows/projects/reviews/index.md"
+    }
+  ],
+  "missingRouteRecovery": "Home link and existing search button present in built 404; runtime browser action remains separate proof.",
+  "outcome": "pass"
+}

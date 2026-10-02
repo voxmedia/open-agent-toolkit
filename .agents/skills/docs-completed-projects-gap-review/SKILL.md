@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
 user-invocable: true
 metadata:
-  version: 1.2.1
+  version: 1.2.2
 ---
 
 # Docs Completed-Projects Gap Review
@@ -61,10 +61,10 @@ Scan for completed OAT project artifacts:
 
 Catalog the current documentation surface:
 
-1. **CLI docs:** `apps/oat-docs/docs/cli/index.md`, `apps/oat-docs/docs/cli/**/*.md`
+1. **CLI docs:** `apps/oat-docs/docs/reference/cli-reference.md` and its linked owning sections
 2. **Skills index:** `apps/oat-docs/docs/skills/index.md`
 3. **Reference docs:** `apps/oat-docs/docs/reference/**/*.md`
-4. **Quickstart:** `apps/oat-docs/docs/quickstart.md`
+4. **Quickstart:** `apps/oat-docs/docs/getting-started/quickstart.md`
 5. **README files:** `.agents/README.md`, `apps/oat-docs/docs/index.md`
 6. **Skill SKILL.md files:** `.agents/skills/*/SKILL.md` (as authoritative source for skill descriptions)
 
@@ -78,10 +78,10 @@ For each doc file, extract:
 
 For each completed project's shipped capabilities:
 
-1. **Check CLI coverage:** Are new or modified CLI commands documented in `apps/oat-docs/docs/cli/`?
+1. **Check CLI coverage:** Are new or modified CLI commands documented in `apps/oat-docs/docs/reference/cli-reference.md` and its linked owning sections?
 2. **Check skills coverage:** Are new or modified skills listed in `apps/oat-docs/docs/skills/index.md` with accurate descriptions?
 3. **Check reference coverage:** Are new config keys, directory structures, or conventions documented in `apps/oat-docs/docs/reference/`?
-4. **Check quickstart coverage:** Are new user-facing workflows mentioned in `apps/oat-docs/docs/quickstart.md`?
+4. **Check quickstart coverage:** Are new user-facing workflows mentioned in `apps/oat-docs/docs/getting-started/quickstart.md`?
 5. **Check for stale references:** Do existing docs reference files, commands, or patterns that no longer exist?
 
 ### Step 5: Classify and Prioritize
