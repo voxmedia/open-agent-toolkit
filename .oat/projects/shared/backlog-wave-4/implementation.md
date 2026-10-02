@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p06-t01
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | pending  | 3     | 0/3       |
-| Phase 7 | pending  | 3     | 0/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | in_progress | 3     | 3/3       |
+| Phase 7 | pending     | 3     | 0/3       |
 
-**Total:** 31/37 tasks completed
+**Total:** 34/37 tasks completed
 
 ---
 
@@ -225,22 +225,22 @@ oat_generated: false
 
 ## Phase 6: Small fixes
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p06-t01: Downgrade claims that thorough-profile reviews leave undisposed
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4e74872a0
 
 ### Task p06-t02: Resolve oat-wrap-up's summary template through the CLI
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 82bc4f5a9
 
 ### Task p06-t03: Route quick plans on the dashboard by readiness
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** fee4b4c73
 
 ---
 
@@ -585,6 +585,22 @@ oat_generated: false
 - Phase p05 outcome: complete; 6/6 tasks (4 planned, 2 review-fix); one root
   review round, one passing gate (one Medium addressed now, one deferred to
   final, one Low held for the operator).
+
+### Phase p06 dispatch
+
+- Request `bw4-p06-impl-1`: accepted and returned `DONE`; target
+  `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+  `4e74872a0..fee4b4c73` (p06-t01..t03); phase verification pass (`pnpm
+check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
+  uncached, test:smoke, test:skills, validate-skills, check:skill-bumps);
+  recovery 0/10. recon 1.1.8, oat-wrap-up 1.0.4. The reconciler shares the
+  publication rule through `requiredReviewKindsForProfile`; the renderer lists
+  claims outside a required brief; the dashboard uses the router's exported
+  `quickPlanNotReadyReason`. Implementer concern: a quick project at
+  `plan:complete` with a not-ready plan still differs between dashboard and
+  router (outside the item's `plan:in_progress` scope). Root spot-check: recon
+  suite passes.
+  `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
 <!-- orchestration-runs-end -->
 
