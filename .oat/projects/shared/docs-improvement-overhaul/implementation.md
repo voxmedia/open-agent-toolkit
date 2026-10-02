@@ -233,10 +233,25 @@ Generic dispatch record (launcher-owned; runtime identity not reported):
   "deadline_seconds": 14400,
   "retry_limit": 2,
   "launch_status": "accepted",
-  "child_outcome": null,
+  "child_outcome": "completed",
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "event_id": "cont-docs-overhaul-p01-fix-1",
+      "original_request_id": "docs-overhaul-run1-p01-implementation",
+      "action": "fix",
+      "round": 1,
+      "agent_handle": "/root/phase01",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "launch_status": "accepted",
+      "base_head": "d054882593181f5a3e727db7ac281607ec707825",
+      "artifact": "reviews/p01-code-review-2026-10-02T045526Z.md",
+      "authority": "root accepted H1/M1-M3/L1 and Fable P1/P2/P4; exact-byte ownership design amendment committed",
+      "child_outcome": null,
+      "dispatch_stamp": "Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high"
+    }
+  ],
   "payload": {
     "task_name": "phase01",
     "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
