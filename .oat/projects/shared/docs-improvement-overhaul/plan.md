@@ -12,19 +12,21 @@ oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
 oat_template: false
-oat_plan_hill_phases: ['p05']
+oat_plan_hill_phases: ['p06']
 oat_auto_review_at_hill_checkpoints: true
 ---
 
 # Implementation Plan: docs-improvement-overhaul
 
-**Goal:** Enforce reader-first navigation, cover every supported skill, and improve the README and five bounded visual treatments.
+**Goal:** Enforce reader-first navigation, cover every supported skill with concrete scenarios, improve the README and five bounded visual treatments, and make the whole site clear, helpful and compelling for onboarding developers and adoption decision-makers without losing documented content or capabilities.
 
 **Architecture:** Contents determines membership/order; frontmatter determines owned labels. The shipped CLI generates ignored Fumadocs metadata with sidecar ownership tracking. A repo-specific script generates a committed, bundled skill catalog from canonical metadata and audited guide/applicability mappings. No aliases.
 
 **Stack:** Existing TypeScript CLI, Fumadocs/Next static export, Markdown, Mermaid and one original theme-neutral SVG. No framework replacement or new visual pipeline.
 
-**Authority:** The user invoked oat-project-implement after the reviewed planning handoff, authorizing execution of this plan with High dispatch and continuing autonomous collaboration. Publication and merge remain separate actions. Five separately mergeable phases do not imply automatic PR creation.
+**Authority:** The user invoked oat-project-implement after the reviewed planning handoff, authorizing execution with High dispatch and autonomous collaboration. During p01, Fable relayed the user's additions: phase 6 whole-site persona/editorial evaluation, universal skill scenarios, configuration choice guidance, and Codex/Fable consensus triage without waiting for the user. Publication and merge remain separate actions. Six separately mergeable phases do not imply automatic PR creation.
+
+**Amendment boundary:** Review this amendment with Fable before p06 starts. Capture the conservation baseline in p02-t01 before any moves; apply the stronger scenario contract when p04 is authored. p01 scope is unchanged. Final independent visual QA moves from p05-t03 to p06-t05; intermediate smokes remain. Consensus cannot authorize removal or narrowing of documented content or capabilities. Such an item requires explicit user approval; otherwise keep it. Disagreement selects preserved content and the smaller rewrite, with both positions recorded.
 
 ## Planning Checklist
 
@@ -37,11 +39,11 @@ oat_auto_review_at_hill_checkpoints: true
 
 ## Parallelism and Reviews
 
-Keep all phases sequential. p02 needs the compiler, p03 needs stable routes, p04 needs migrated owners, and p05 needs the catalog/anchors. Although README and catalog are conceptually independent after p02, their integration/release surfaces overlap; no parallel phase worktrees. Within p04/p05, independent read-only audits and file-disjoint family drafts may run concurrently. Root owns shared indexes, mapping integration and version bumps.
+Keep all phases sequential. p02 needs the compiler, p03 needs stable routes, p04 needs migrated owners, p05 needs the catalog/anchors, and p06 evaluates the complete post-p05 reader experience. Although README and catalog are conceptually independent after p02, their integration/release surfaces overlap; no parallel phase worktrees. Within p04/p05/p06, bounded read-only audits and file-disjoint drafts may run concurrently; browser control of a display is exclusive. Root owns shared indexes, mapping integration and version bumps.
 
 Fable reviews design, plan and phase diffs. Built-in per-phase/final reviews remain required. Under the user's autonomous planning direction, optional additional cross-runtime phase gate remains unconfigured (documented non-interactive default); configured lifecycle gates remain enabled. These are separate from final visual QA. Artifact-review retry limit is two rewrites; configured quick-start gate retains two attempts. Exhaustion/operational failures are reported, never represented as passes.
 
-Recommend considering implementation HiLL after p02 (visible IA) and p04-t02 (audited mapping before bulk prose; implementer uses a task-level pause if supported or splits the phase at that boundary), but do not prefill it as user-approved. All implementation tasks remain pending.
+Autonomous final checkpoint follows the last phase, now p06. p06-t03 is explicitly a Codex/Fable consensus checkpoint, not user HiLL. Optional earlier checkpoints remain absent. Preservation-removal decisions and publication authority remain separate boundaries. Current task completion is tracked in implementation.md, not reset by this amendment.
 
 ## Common Verification and Release Closeout
 
@@ -51,7 +53,9 @@ New script names below are deliverables: p01 creates `docs:validate` and `docs:t
 
 Enrollment is phased: p01-p03 validate navigation and source routes only; p04 adds mapping validation and committed catalog parity as those artifacts land. Earlier phases must not require the not-yet-created mapping or catalog block.
 
-Each shipped phase closes with canonical bundle regeneration, applicable skill metadata bumps and lockstep public versions in CLI, control-plane, docs-config, docs-theme and docs-transforms, including lockfile changes. Root coordinates these once per final phase PR diff, not per task. Choose versions against current integration/main. README-only p03 needs no artificial package bump unless its actual diff touches shipped package/bundled content; the other four phases necessarily do.
+Each shipped phase closes with canonical bundle regeneration, applicable skill metadata bumps and lockstep public versions in CLI, control-plane, docs-config, docs-theme and docs-transforms, including lockfile changes. Root coordinates these once per final phase PR diff, not per task. Choose versions against current integration/main. README-only p03 needs no artificial package bump unless its actual diff touches shipped package/bundled content; the other five phases necessarily do.
+
+**All-phase conservation:** p02-t01 captures exact pre-move sources plus initial implementation-base provenance, accounting for p01 changes. Inventory the real registered CLI command tree and flags, supported configuration keys, shipped skills, and all page headings/content units. Mechanical section/paragraph/list/code inventories are not proof of distinct-fact completeness: a non-author verifies the fact ledger and ambiguous units. Every baseline fact/capability must finish present at a named route/anchor, retained unchanged, or explicitly removed with user approval. Additions are tracked too. This is one-time project evidence, not a frozen-prose CI rule; permanent validators never read project artifacts. Undocumented CLI/config capabilities form an explicit gap list, not permission to delete them from the baseline.
 
 At phase closeout run the eight AGENTS gates in order: `pnpm check`; `pnpm type-check`; `pnpm test`; `pnpm build`; `pnpm run check:skill-bumps`; fetch `origin/main` then `pnpm release:check-versions`; `pnpm release:validate`; `pnpm build:docs`. Record each actual exit code. Also run `pnpm lint` and `pnpm format` when `.agents/skills` or `tools/smoke` changes. Distinguish cached logs from executed tests, using the documented isolated-HOME forced path when necessary. Surface unrelated failures without expanding scope.
 
@@ -126,9 +130,11 @@ The two prebuild command strings intentionally differ: this repository invokes t
 
 ### Task p02-t01: Review the complete migration map
 
-**Files:** project `references/route-migration.json`, `references/migration-review.md`; analysis artifact resolved by `oat-docs-analyze`; reusable path checks in `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts`.
+**Files:** project `references/route-migration.json`, `references/migration-review.md`, `references/capability-baseline.json`, `references/content-baseline.md`; analysis artifact resolved by `oat-docs-analyze`; reusable path checks in `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/migration.test.ts`.
 
 **Work:** Run bounded docs analysis on the actual app and tie approved recommendations to this plan; do not claim earlier recon was a formal analyze run. Use the repository-canonical `.agents/skills/oat-docs-analyze/SKILL.md` and later apply skill changed in p01, loaded explicitly; do not rely on a stale installed user-scope copy. At an exact baseline SHA, inventory every page, heading, asset, source/hosted link and live consumer. Account for the initial 70 pages or explain baseline drift. Declare exact destinations and section-level accounting for consolidated router indexes. Fable reviews the map before moves. Normalization permits only identified link/frontmatter/router changes, not arbitrary paragraph stripping.
+
+Capture the all-phase conservation baseline now, not retrospectively after p05. Record CLI commands, aliases and flags from the real registered command tree without executing operational actions; configuration keys/defaults from supported schemas/loaders with source provenance; eligible skills from real pack membership; every page heading and substantive content/fact unit. Preserve original implementation-base evidence and explain p01 additions/normalizations. A non-author verifies fact extraction and any unresolved semantic unit before moves. Initial CLI/config coverage gaps stay explicit for p06. The per-page map gives every baseline unit a destination; semantic conservation continues through later authoring.
 
 **Destination rules:** quickstart/bootstrap/tool-packs/concepts → Getting Started; existing Skills plus repository analysis → top-level Skills; configuration/local state and artifact/state contracts → Reference; project-log → Workflows Projects execution; backlog/remote planning → Workflows Backlog and planning; waves → Workflows Waves; Projects → lifecycle plus planning/execution/reviews/closeout; dispatch/autonomy/Cursor Cloud/programmatic execution/orchestration/evidence-layers/gates → Advanced. Preserve Provider Sync, Docs Tooling and Contributing owners. Per-page map resolves all filenames before moving. Confirm repo-analysis.md is repo-wide PR-comment analysis rather than a knowledge-index guide; place its actual capability deliberately, not by the ambiguous filename.
 
@@ -228,9 +234,9 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 
 **Files:** owner pages from reviewed mapping under docs `skills/`, `workflows/`, `docs-tooling/`, `contributing/`; affected index Contents.
 
-**Work:** Give every eligible skill a meaningful stable anchor, invocation, verified prerequisite and outcome/next step. Shared when-to-use context belongs once per family. Link to generated source descriptions instead of copying them everywhere. No empty-anchor coverage or whole SKILL.md duplication. This is an explicit substantial authoring task; file-disjoint family batches may be delegated, root integrates indexes.
+**Work:** Give every eligible skill a meaningful stable anchor, invocation, verified prerequisite, concrete example scenario/use case and outcome/next step. A scenario states a realistic situation and what this skill does for it, not just a command or paraphrased description. Use the consistent `**Example scenario:**` marker inside every mapped anchor section. A shared family scenario must name which variant applies and why, with each anchor's scenario marker linking to that explanation. Add example invocations for arguments, modes or non-obvious phrasing; near-identical variants may share an example only with explicit variant selection. Shared when-to-use context belongs once per family. Link to generated source descriptions instead of copying them everywhere. No empty-anchor coverage or whole SKILL.md duplication. This is an explicit substantial authoring task; file-disjoint family batches may be delegated, root integrates indexes.
 
-**Verify:** Run `pnpm docs:skills:validate` without the pending flag; all mapped anchors exist with minimum useful fields. Review every family against sources; examples promise no nonexistent flags. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
+**Verify:** Run `pnpm docs:skills:validate` without the pending flag; all mapped anchors exist with minimum useful fields and a scenario marker inside the correct section, not elsewhere on the page. Add this marker check and self-contained missing/wrong-section controls to the p04 validator/tests. A non-author verifies every scenario/example invocation against SKILL.md and records file:line evidence; markers alone cannot prove usefulness or accuracy. Examples promise no nonexistent flags/behaviors. `pnpm docs:validate`; `pnpm build:docs`. Minimum guides remain subject to review even when p05 will deepen them.
 
 **Format:** `pnpm --filter oat-docs docs:format`.
 
@@ -248,7 +254,7 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 
 **Commit:** `feat(p04-t04): enforce generated bundled skill discovery`.
 
-## Phase 5: Fill Named Gaps and Accept the Rendered Site
+## Phase 5: Fill Named Gaps and Verify the Rendered Site
 
 ### Task p05-t01: Deepen the named thin and missing guides
 
@@ -274,39 +280,95 @@ Paths named in p04/p05 express the agreed destination intent. Resolve and rechec
 
 **Commit:** `docs(p05-t02): illustrate four core reader journeys`.
 
-### Task p05-t03: Execute independent final visual QA and release validation
+### Task p05-t03: Verify phase visuals and release readiness
 
-**Files:** project `reviews/final-visual-qa.md`, durable screenshots/evidence and `references/final-validation.md`; bounded accepted fixes; bundle/release files.
+**Files:** project `reviews/p05-browser-smoke.md`, durable screenshots/evidence and phase validation record; bounded accepted fixes; bundle/release files.
 
-**Work:** Independent reviewer, preferably Fable with verified browser access, actually operates the built site through computer-use controls. Verify browser/display host, server host, URL and SHA. Complete seven journeys: provider-sync-only install; project-free research; choose/start workflow; named reconcile lookup; docs bootstrap/maintenance; remote backlog planning; old-route absence with useful Home/search recovery. Use sidebar, search, links and anchors, not only direct navigation. Inspect all five visuals and actual GitHub README when publication is authorized.
+**Work:** Implementer performs a focused Mini-display smoke of the four docs visual treatments and affected guides after hydration, with desktop/narrow layouts and both themes. Verify host, URL and build provenance. Final independent seven-journey acceptance is deliberately deferred to p06-t05 after editorial changes, not performed twice or claimed complete here.
 
-**Acceptance:** Desktop and narrow/mobile, light/dark, keyboard focus/navigation, readable headings/diagrams, no unintended overflow/clipping, correct active navigation/breadcrumb/previous-next and page-error observations when exposed. Save screenshots and URL/SHA/viewport/theme/actions/expected/actual outcomes. Unsupported telemetry is explicitly unavailable, not zero errors. Crawls, source review and build success do not substitute. Missing browser or authorized GitHub access leaves that acceptance pending/blocked, not passed.
+**Acceptance:** Readable hydrated diagrams and adjacent text, no clipping, canonical links and honest screenshot/action evidence. Unsupported telemetry is unavailable, not zero errors. This phase smoke is not independent final acceptance.
 
-**Verify:** `pnpm docs:validate`; `pnpm docs:test`; `pnpm docs:skills:check`; local exported-site crawl; shared release gates and applicable lint/format. Reviewer records all seven journeys/five visuals, resolves high-impact defects and rechecks affected journeys. Final source/code review and configured implementation exit gate remain distinct. Append review fixes with new task IDs rather than hiding them in completed tasks or exceeding retries.
+**Verify:** `pnpm docs:validate`; `pnpm docs:test`; `pnpm docs:skills:check`; local exported-site crawl; shared release gates and applicable lint/format. Fable phase diff and native independent code review remain required. Preserve conservation accounting for changed guides and diagrams.
 
-**Format:** `pnpm exec oxfmt --write .oat/projects/shared/docs-improvement-overhaul/reviews/final-visual-qa.md .oat/projects/shared/docs-improvement-overhaul/references/final-validation.md` plus exact accepted-fix/release files.
+**Format:** Exact phase evidence and accepted-fix/release files; docs Markdown only, never generated metadata.
 
-**Commit:** `docs(p05-t03): record independent visual acceptance and validation`.
+**Commit:** `docs(p05-t03): verify phase visuals and release readiness`.
+
+## Phase 6: Evaluate and Improve the Whole Reader Experience
+
+### Task p06-t01: Reconcile whole-site coverage and capabilities
+
+**Files:** project `references/capability-baseline.json`, `references/content-baseline.md`, new `references/whole-site-coverage.md` and `references/config-choice-map.md`; no automatic content removals.
+
+**Work:** Reconcile the p02 pre-move baseline against the post-p05 site and README. Account for every CLI command/flag, supported config key, shipped skill, heading and distinct documented fact by canonical destination. Report undocumented and thin CLI/config/general guidance as named gaps with evidence. Inventory meaningful configuration alternatives: workflow modes/HiLL, dispatch tiers, provider enablement/scope, instruction sync, gates, docs framework, remote PJM bindings, tool-pack selection/scope, and local/shared/user configuration. Resolve actual owner pages from the migration map. Optional permanent CLI-reference completeness checks require a bounded named test design, not automatic scope expansion.
+
+**Verify:** Non-author review of ledger extraction/reconciliation, exact baseline SHA/provenance, no missing or silently narrowed baseline items. Mark uncertain semantic mappings unresolved rather than claiming mechanical proof. Project evidence remains outside permanent CI inputs.
+
+**Commit:** `docs(p06-t01): reconcile whole-site coverage and configuration choices`.
+
+### Task p06-t02: Run two fresh reader-persona reviews
+
+**Files:** project `reviews/persona-developer-01.md` and `reviews/persona-adoption-01.md` with reader-visible evidence/screenshots.
+
+**Work:** Dispatch two fresh-context, non-author reviewers: a junior-to-mid developer onboarding to OAT, and an Engineering Manager/Tech Lead evaluating adoption. Prefer different qualifying models within the configured policy when available; disclose actual route and any same-model fallback. Reviewers see only rendered site and root README, not source, SKILL.md or project/design artifacts. Give concrete tasks: explain OAT and first success, pick a skill from a realistic scenario, choose configurations and tradeoffs; adoption lens also assesses independent adoption, workflow/team fit, governance/cost and credible limitations. They navigate actual visible pages/links/search, not a source-only audit. Serialize control of the same display.
+
+**Verify:** Each reports where they got lost, undefined jargon, missing why, unsupported/unconvincing claims, and explicit clear/well-written/helpful/compelling verdicts, with page/anchor, short quoted evidence, actions and expected/actual outcomes. Record browser/build provenance and source-blindness limits. Do not prime them with author explanations or count the author's own tour as a persona review.
+
+**Commit:** `docs(p06-t02): record onboarding and adoption persona evaluations`.
+
+### Task p06-t03: Converge on a bounded editorial list
+
+**Files:** project `references/editorial-consensus.md` and exact approved page/task list; evidence links to persona findings and coverage gaps.
+
+**Work:** Codex proposes priorities and named edits; Fable challenges evidence, conservation and scope; record both positions and the agreed bounded list. No user HiLL or wait for routine triage. If unresolved, preserve content, choose the smaller rewrite and record disagreement. Configuration decision guidance below is mandatory scope, not optional if personas overlook it. Consensus never authorizes dropping/narrowing content or capabilities; absent explicit user removal approval, retain the item. Avoid unbounded polish and feature/code redesign.
+
+**Verify:** Every accepted edit names an owner page, reader question, baseline facts to preserve, evidence and acceptance check. Rejected/deferred findings get explicit reasons. Approval must be durable before prose changes.
+
+**Commit:** `docs(p06-t03): agree bounded editorial improvements with Fable`.
+
+### Task p06-t04: Apply evidence-backed editorial improvements
+
+**Files:** Only pages/README named in the consensus list, their canonical indexes and necessary link consumers; project `references/editorial-fact-audit.md`; bundle/release files. Dense dispatch, lifecycle and implementation guidance are candidates, not blanket rewrite authority.
+
+**Work:** Rewrite for clarity on the agreed list, preserving per-page facts/capabilities and useful examples. Add configuration decision guidance at named owners for all meaningful choices in config-choice-map: when to choose each option, tradeoffs, verified default and rationale, and a concise which-should-I-pick summary. Complete key reference remains; guidance adds to it, never substitutes. When historical default rationale is not evidenced, distinguish the verified default from an explicitly labelled recommendation/inference instead of inventing intent. Keep universal skill scenarios and useful invocation examples intact.
+
+**Verify:** Non-author checks each changed page against its baseline fact ledger and real source, including defaults, option semantics, tradeoff claims and examples. No missing baseline facts, invented flags, unsafe capability claims or stale catalog. `pnpm docs:validate`; `pnpm docs:test`; `pnpm docs:skills:check`; build/export checks. Regenerate catalog/index/bundles only through canonical generators.
+
+**Commit:** `docs(p06-t04): improve whole-site clarity and configuration decisions`.
+
+### Task p06-t05: Re-evaluate readers and execute independent final acceptance
+
+**Files:** project `reviews/persona-developer-02.md`, `reviews/persona-adoption-02.md`, `reviews/final-visual-qa.md`, durable screenshots, `references/conservation-closeout.md`, `references/final-validation.md`; bounded accepted fixes and release files.
+
+**Work:** Fresh non-author/source-blind reviewers rerun both persona lenses on changed pages and their end-to-end journeys. Close every baseline ledger item and meaningful config-choice gap. Then an independent reviewer, preferably Fable with verified browser access, actually operates the final committed built export. Fable reports user permission for final-only dedicated Zen on laptop; verify reachability/display ownership/window isolation at execution, not now. Mini phase smokes remain separate. If Fable is blocked, use a non-author Codex reviewer tour plus Fable's labelled artifact/HTTP/exported-HTML review; never claim Fable performed computer use when he did not.
+
+Complete seven journeys using sidebar/search/links/anchors: provider-sync-only install; project-free research; choose/start workflow; named reconcile lookup; docs bootstrap/maintenance; remote backlog planning; old-route absence with useful Home/search recovery. Inspect all five visuals and actual GitHub README on an authorized published branch. Record exact built SHA, URL, server/display hosts, desktop/narrow viewports, both themes, keyboard navigation, headings/anchors, readable diagrams, clipping/overflow, breadcrumbs/previous-next and available page-error observations. Screenshots/actions/expected/actual outcomes are mandatory; unavailable telemetry is not zero errors. HTTP/crawl/source checks do not substitute for visual QA.
+
+**Verify:** Both reader verdicts and differences from initial review, non-author fact conservation/source audit, seven journeys/five visuals, strict validators/catalog parity, exported-site crawl and all eight release gates plus applicable lint/format. Recheck affected journeys after bounded fixes. Missing browser or authorized GitHub publication leaves that acceptance pending/blocked, not passed. Final code review and configured implementation exit gate remain distinct; preserve their retries and evidence contracts.
+
+**Commit:** `docs(p06-t05): record reader outcomes and independent final acceptance`.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
-| p01    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
-| design | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan   | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                             | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
-| plan   | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
-| design | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
-| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T031625Z.md | 2e5e8e5374b101b90c5b72fde9c702d328743b38 | gate       | claude-opus-5-5-high |
-| plan   | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
-| plan   | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | auto       | -                    |
-| design | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | manual     | -                    |
+| Scope          | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
+| -------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p02            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| final          | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| spec           | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
+| design         | artifact | fixes_completed | 2026-10-01 | reviews/fable-design-01.md                                  | -                                        | manual     | -                    |
+| p03            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p04            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p05            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p06            | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| plan-amendment | artifact | pending         | 2026-10-02 | reviews/phase06-plan-amendment.md                           | -                                        | manual     | -                    |
+| plan           | artifact | fixes_completed | 2026-10-01 | reviews/plan-review-round-01.md                             | 86aa78523952ec8e324d44dc4b61dfa961414e5e | auto       | -                    |
+| plan           | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | auto       | -                    |
+| design         | artifact | passed          | 2026-10-01 | reviews/plan-review-round-02.md                             | 884b56d80769cb4d94fa289f34e027973137e410 | manual     | -                    |
+| plan           | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T031625Z.md | 2e5e8e5374b101b90c5b72fde9c702d328743b38 | gate       | claude-opus-5-5-high |
+| plan           | artifact | passed          | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T032232Z.md | fdf2953acacced6d6703763ef0c50624ad4755ef | gate       | claude-opus-5-5-high |
+| plan           | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | auto       | -                    |
+| design         | artifact | passed          | 2026-10-02 | reviews/plan-review-round-03.md                             | -                                        | manual     | -                    |
 
 Preserved spec row is not applicable in quick mode; no spec.md required. Events are append-ordered and bound to artifact filenames; never overwrite a bound event with a different review. No code/browser review is claimed in planning.
 
@@ -320,9 +382,10 @@ Planned scope only: zero implementation tasks complete.
 - Phase 2: 3 tasks — preserve information, migrate and repair consumers.
 - Phase 3: 2 tasks — evaluator README and render review.
 - Phase 4: 4 tasks — mapping, independent applicability audit, coverage and catalog.
-- Phase 5: 3 tasks — named gaps, four docs visuals and final acceptance.
+- Phase 5: 3 tasks — named gaps, four docs visuals and focused phase verification.
+- Phase 6: 5 tasks — conservation, fresh personas, consensus, editorial improvements and final independent acceptance.
 
-**Total: 15 tasks, 5 sequential phases.** First task is p01-t01 after separate implementation authorization and HiLL setup.
+**Total: 20 tasks, 6 sequential phases.** Implementation is authorized and underway; p01 completion/review is tracked in implementation.md. Phase 6 amendment review remains separate from the earlier plan gate and must finish before p06 execution.
 
 ## References
 

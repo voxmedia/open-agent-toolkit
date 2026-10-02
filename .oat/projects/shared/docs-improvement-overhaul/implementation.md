@@ -13,20 +13,21 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 3     | 2/3       |
-| Phase 2 | pending     | 3     | 0/3       |
-| Phase 3 | pending     | 2     | 0/2       |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 3     | 0/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | in_review | 3     | 3/3       |
+| Phase 2 | pending   | 3     | 0/3       |
+| Phase 3 | pending   | 2     | 0/2       |
+| Phase 4 | pending   | 4     | 0/4       |
+| Phase 5 | pending   | 3     | 0/3       |
+| Phase 6 | pending   | 5     | 0/5       |
 
-**Total:** 2/15 tasks completed.
+**Total:** 3/20 tasks completed.
 
 ## Phase 1: Make the Current Sidebar Enforceable
 
-**Status:** in_progress
-**Started:** Not started
+**Status:** in_review; root full gates and independent review pending
+**Started:** 2026-10-02
 
 ### Task p01-t01: Compile safe Fumadocs metadata
 
@@ -42,9 +43,9 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 ### Task p01-t03: Align authoring instructions and verify foundation
 
-**Status:** pending
-**Commit:** -
-**Verification:** Not run.
+**Status:** completed
+**Commit:** 52190849b5dfbb023e8c0dc93cb10e27d62ad3b4
+**Verification:** Four changed skill versions bumped once; public 0.3.13 manifest/index regenerated. Source checks, app types, four actual app tests, 660 actual skill tests, canonical skill validation, lint/format/output check and forced six-task docs build passed. Actual native Mini Zen smoke retained at reviews/p01-browser-smoke.md with five cropped screenshots; 70-page/848-link crawl has zero broken links; home200/missing404. Proof is bounded implementer desktop/dark smoke on parent4973e8c37 plus task working tree, not independent final QA. Original task commit and post-commit checks verified; root eight-gate closure remains pending.
 
 ## Phase 2: Migrate Information Without Rewriting It
 
@@ -132,7 +133,42 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 **Commit:** -
 **Verification:** Not run.
 
-### Task p05-t03: Execute independent final visual QA and release validation
+### Task p05-t03: Verify phase visuals and release readiness
+
+**Status:** pending
+**Commit:** -
+**Verification:** Not run.
+
+## Phase 6: Evaluate and Improve the Whole Reader Experience
+
+**Status:** pending amendment review
+**Started:** Not started
+
+### Task p06-t01: Reconcile whole-site coverage and capabilities
+
+**Status:** pending
+**Commit:** -
+**Verification:** Not run.
+
+### Task p06-t02: Run two fresh reader-persona reviews
+
+**Status:** pending
+**Commit:** -
+**Verification:** Not run.
+
+### Task p06-t03: Converge on a bounded editorial list
+
+**Status:** pending
+**Commit:** -
+**Verification:** Not run.
+
+### Task p06-t04: Apply evidence-backed editorial improvements
+
+**Status:** pending
+**Commit:** -
+**Verification:** Not run.
+
+### Task p06-t05: Re-evaluate readers and execute independent final acceptance
 
 **Status:** pending
 **Commit:** -
@@ -142,13 +178,13 @@ The user invoked oat-project-implement after the reviewed plan handoff. Implemen
 
 <!-- orchestration-runs-start -->
 
-### Run 1: five-phase implementation
+### Run 1: six-phase implementation (amended during p01)
 
-Authorization: user invoked oat-project-implement; prior autonomous collaboration and High dispatch direction retained. IMPLEMENT-08 covers phase implementer and phase reviewer across this bounded plan. IMPLEMENT-03 selects p05 as the absent first-run checkpoint default; IMPLEMENT-04 enables checkpoint auto-review. No active autonomy environment signal is persisted. Optional extra phase gates remain absent; configured lifecycle gates remain enabled. Tier 1, exact native phase roles, fresh context. Host tstang-mini.local; shared worktree /Users/tstang/orca/workspaces/open-agent-toolkit/amphipod, branch amphipod. All five phases sequential; no parallel worktrees.
+Authorization: user invoked oat-project-implement; prior autonomy and High dispatch retained. IMPLEMENT-08 covers phase implementers/reviewers. IMPLEMENT-03 initially selected p05 as absent first-run final checkpoint; the user-directed phase 6 amendment shifts that final checkpoint to p06, with IMPLEMENT-04 auto-review unchanged. Fable relayed explicit consensus triage/no user wait; removal/narrowing still needs explicit user approval. No autonomy environment signal persisted. Optional extra gates absent; configured lifecycle gates enabled. Tier1 exact native phase roles, fresh context. Host tstang-mini.local; shared OAT worktree /Users/tstang/orca/workspaces/open-agent-toolkit/amphipod, branch amphipod. Six phases sequential; separately authorized Orc guidance helper has its own Mini Orca-managed worktree, never writes this one.
 
 Phase recovery limit: default 10, no prior usage or pending attempt. Phase implementers may execute narrowly authorized recovery without changing target. No nested workers are required by default. Required computer-use proof must be performed before its task is committed.
 
-Phase outcomes: p01 pending; p02 pending; p03 pending; p04 pending; p05 pending.
+Phase outcomes: p01 implementation complete, gates/review pending; p02-p06 pending. Phase 6 amendment review pending before its execution; baseline capture is moved forward into p02-t01.
 
 <!-- orchestration-runs-end -->
 
@@ -223,6 +259,8 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
 
 Acceptance: /root/phase01 (Ptolemy); holding before work until root supplies clean committed base. No project log append while child owns worktree.
 
+Phase implementation return: DONE_WITH_CONCERNS, three planned task commits in order, final source head52190849b5dfbb023e8c0dc93cb10e27d62ad3b4, original request/target/stamp unchanged, zero recovery attempts and no nested agents. The source-free output stop was resolved by root and remains disclosed. Full CI closure and independent review are not claimed passed. Same handle is retained for bounded findings.
+
 ## Implementation Log
 
 Task p01-t01 implemented and independently reconciled against HEAD; root task bookkeeping committed before the same phase handle continues. Phase review and release closure remain pending.
@@ -258,11 +296,11 @@ The p01-t02 formatter command recursively touched ignored metadata. Root narrowe
 
 ## Test Results
 
-No implementation tests or browser acceptance runs performed during planning. Planning artifact formatting and CLI state validation are separate evidence.
+Planning-only checks remain historical evidence. p01 focused tests, real-loader/pristine/installed-consumer/cache controls and Mini browser smoke are recorded per task above. Root full CI gate results will be recorded separately with actual exits/cache evidence before phase acceptance.
 
 ## Final Summary (for PR/docs)
 
-Nothing shipped. Await implementation authorization, configured HiLL setup, phase execution and independent final acceptance.
+Implementation is underway, not published or merged. p01 source foundation is committed with implementer proof; phase acceptance awaits root gates/review. Reader-facing migration, catalog/scenarios, persona/editorial work and final independent acceptance remain pending.
 
 ## References
 
