@@ -438,9 +438,21 @@ archive anything first.
    tracked wave PR in the wrapper's `implementation.md`, and then runs the full
    completion process. Record its run-report outcome in the wave ledger.
 
-   When the companion stops with `interactive completion required` or refuses
-   the wrapper, the wave MUST still run `oat project complete-state` and its
-   then-current project bookkeeping, and the archive tail —
+   Fall back to the deferral below only when the run report's `refused_check`
+   is `opt-in` (`interactive completion required`), `preflight:4` (the PR
+   precondition), or `preflight:7` (a completion question with no recorded
+   answer). Any other refusal — an objective preflight failure, namely
+   `preflight:1` (post-implement sequence incomplete), `preflight:2`
+   (incomplete tasks), `preflight:3` (final review not passed), `preflight:5`
+   (unresolved blockers), or `preflight:6` (project-log gate unsatisfied), or
+   an `activation` refusal — stops wave closeout at a boundary: report the
+   failing check and run neither `oat project complete-state` nor the merge
+   handoff. `oat project complete-state` checks only the closeout snapshot, so
+   running it after an objective refusal would mark an unhealthy wrapper
+   complete.
+
+   On a deferrable stop, the wave MUST still run `oat project complete-state`
+   and its then-current project bookkeeping, and the archive tail —
    `oat project archive` (including configured S3 sync) → active-project
    pointer clear → completion bookkeeping commit — MAY be deferred to the
    program boundary so the wave can merge and execution can continue. Record

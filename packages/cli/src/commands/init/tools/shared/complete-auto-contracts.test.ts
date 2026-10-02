@@ -1,7 +1,15 @@
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import { WORKFLOW_SKILLS } from './skill-manifest';
 
@@ -142,17 +150,101 @@ function recognizedStep(
   });
 }
 
-function decide(scenario: Scenario): Outcome {
-  if (!scenario.optIn) {
+const stubDirs: string[] = [];
+
+afterAll(() => {
+  for (const dir of stubDirs.splice(0)) {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+/** The skill's own Step 1 opt-in block, run against a stub `oat`. */
+function runOptInGuard(configured: string | null): {
+  status: number | null;
+  stderr: string;
+} {
+  const section = sliceBetween(
+    readRepoFile(SKILL_PATH),
+    '### Step 1: Opt-in Guard',
+    '### Step 2: Activation Contract',
+  );
+  const block = section.match(/```bash\n([\s\S]*?)\n```/);
+  if (!block) {
+    throw new Error('Missing the Step 1 opt-in block');
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'complete-auto-opt-in-'));
+  stubDirs.push(dir);
+  const stub = join(dir, 'oat');
+  writeFileSync(
+    stub,
+    configured === null
+      ? '#!/bin/sh\nexit 1\n'
+      : `#!/bin/sh\nprintf '%s\\n' '${configured}'\n`,
+  );
+  chmodSync(stub, 0o755);
+  const result = spawnSync('bash', ['-c', block[1]!], {
+    env: { ...process.env, PATH: `${dir}:${process.env.PATH ?? ''}` },
+    encoding: 'utf8',
+  });
+  return { status: result.status, stderr: result.stderr };
+}
+
+/**
+ * The literal a lifecycle skill must carry to name the companion as a step,
+ * read from the companion's own Step 2 rule.
+ */
+function lifecycleNamingLiteral(skillName: string): string {
+  const activation = normalize(
+    sliceBetween(
+      readRepoFile(SKILL_PATH),
+      '### Step 2: Activation Contract',
+      '### Step 3: Objective Preflight (Per Project)',
+    ),
+  );
+  const rule = activation.match(
+    /refuse unless that skill's current `SKILL\.md` contains the exact invocation `([^`]+)`/,
+  );
+  if (!rule) {
+    throw new Error('Missing the lifecycle naming rule in Step 2');
+  }
+  return rule[1]!.replace('<skill-name>', skillName);
+}
+
+type SkillReader = (skillName: string) => string | null;
+
+const readRepoSkill: SkillReader = (skillName) => {
+  try {
+    return readRepoFile(`.agents/skills/${skillName}/SKILL.md`);
+  } catch {
+    return null;
+  }
+};
+
+function decide(
+  scenario: Scenario,
+  readSkill: SkillReader = readRepoSkill,
+): Outcome {
+  const optIn = runOptInGuard(scenario.optIn ? 'true' : 'false');
+  if (optIn.status !== 0) {
+    if (!optIn.stderr.includes('interactive completion required')) {
+      throw new Error(`Opt-in guard failed unexpectedly: ${optIn.stderr}`);
+    }
     return { kind: 'interactive completion required' };
   }
   const { steps, rows } = readContract();
   const step = recognizedStep(steps, scenario.requestedBy);
+  const lifecycle = step?.value.startsWith('oat-autonomous-lifecycle:');
+  const lifecycleSkill = scenario.requestedBy.slice(
+    'oat-autonomous-lifecycle:'.length,
+  );
   if (
     !step ||
     (scenario.completionBeforeMerge && !step.beforeMerge) ||
-    (step.value.startsWith('oat-autonomous-lifecycle:') &&
-      !scenario.autonomousEnv)
+    (lifecycle &&
+      (!scenario.autonomousEnv ||
+        !(readSkill(lifecycleSkill) ?? '').includes(
+          lifecycleNamingLiteral(lifecycleSkill),
+        )))
   ) {
     return { kind: 'refused', layer: 'activation' };
   }
@@ -459,17 +551,45 @@ describe('oat-project-complete-auto composed controls', () => {
     }
   });
 
-  it('admits an autonomous lifecycle run only under OAT_AUTONOMOUS=1', () => {
+  it('refuses an autonomous lifecycle run whose skill does not name the companion', () => {
+    // oat-project-autonomous does not name the companion as a step, so a run
+    // claiming it is self-initiated, even under OAT_AUTONOMOUS=1.
+    for (const skillName of ['oat-project-autonomous', 'oat-anything']) {
+      expect(
+        decide({
+          ...MERGED_BATCH_MEMBER,
+          requestedBy: `oat-autonomous-lifecycle:${skillName}`,
+        }),
+      ).toEqual({ kind: 'refused', layer: 'activation' });
+    }
+  });
+
+  it('admits a lifecycle skill that names the companion, only under OAT_AUTONOMOUS=1', () => {
     const lifecycle: Scenario = {
       ...MERGED_BATCH_MEMBER,
-      requestedBy: 'oat-autonomous-lifecycle:oat-project-autonomous',
+      requestedBy: 'oat-autonomous-lifecycle:oat-example-lifecycle',
     };
+    const namingSkill: SkillReader = (skillName) =>
+      skillName === 'oat-example-lifecycle'
+        ? `Run \`oat-project-complete-auto\` with \`${lifecycleNamingLiteral(skillName)}\`.`
+        : null;
 
-    expect(decide(lifecycle)).toEqual({ kind: 'completed', exception: false });
-    expect(decide({ ...lifecycle, autonomousEnv: false })).toEqual({
-      kind: 'refused',
-      layer: 'activation',
+    expect(decide(lifecycle, namingSkill)).toEqual({
+      kind: 'completed',
+      exception: false,
     });
+    expect(decide({ ...lifecycle, autonomousEnv: false }, namingSkill)).toEqual(
+      { kind: 'refused', layer: 'activation' },
+    );
+  });
+
+  it('runs the skill opt-in block: only a configured true passes', () => {
+    for (const configured of ['false', '', null]) {
+      const result = runOptInGuard(configured);
+      expect(result.status, String(configured)).toBe(1);
+      expect(result.stderr).toContain('interactive completion required');
+    }
+    expect(runOptInGuard('true').status).toBe(0);
   });
 
   it('stops without the opt-in regardless of the request', () => {
@@ -478,6 +598,25 @@ describe('oat-project-complete-auto composed controls', () => {
         kind: 'interactive completion required',
       });
     }
+  });
+
+  it('resolves its own and the interactive skill directory before any write', () => {
+    const skill = readRepoFile(SKILL_PATH);
+    const flat = normalize(skill);
+    const ownDir = flat.indexOf(
+      'Set `SKILL_DIR` to the absolute physical (`cd -P`) directory containing this loaded `SKILL.md`',
+    );
+    const resolve = flat.indexOf('COMPLETE_SKILL_DIR=');
+    const exception = flat.indexOf(
+      '### Step 4: Record a Completion-Before-Merge Exception',
+    );
+
+    expect(ownDir).toBeGreaterThanOrEqual(0);
+    expect(resolve).toBeGreaterThan(ownDir);
+    expect(exception).toBeGreaterThan(resolve);
+    expect(skill).toContain('[ -d "$CANDIDATE/scripts" ]');
+    expect(flat).toContain('`SKILL_DIR="$COMPLETE_SKILL_DIR"`');
+    expect(flat).toContain('oat-project-complete unavailable');
   });
 });
 
@@ -522,6 +661,43 @@ describe('wave closeout invokes the companion', () => {
     );
     expect(step).not.toContain('as a document');
     expect(step).not.toContain('until an `oat-project-complete-auto`');
+  });
+
+  it('wave-execute step 8 defers only benign stops and stops at a boundary on objective preflight failures', () => {
+    const step = waveExecuteStep8();
+    const companion = readRepoFile(SKILL_PATH);
+    const checks = new Map(
+      [...companion.matchAll(/^(\d)\. \*\*(.+?):\*\*/gm)].map((match) => [
+        `preflight:${match[1]}`,
+        match[2]!,
+      ]),
+    );
+    expect(checks.get('preflight:4')).toBe('PR precondition unmet');
+    expect(checks.get('preflight:7')).toBe(
+      'A completion question has no recorded answer',
+    );
+    expect(companion).toContain(
+      "refused_check: '{opt-in | activation | preflight:<n> | -}'",
+    );
+
+    const deferral = step.match(
+      /only when the run report's `refused_check` is (.+?)\./,
+    );
+    expect(deferral).not.toBeNull();
+    const deferred = [...deferral![1]!.matchAll(/`([^`]+)`/g)]
+      .map((match) => match[1]!)
+      .filter((token) => /^(?:opt-in|activation|preflight:\d)$/.test(token));
+    expect(deferred).toEqual(['opt-in', 'preflight:4', 'preflight:7']);
+
+    const boundary = step.slice(step.indexOf('Any other refusal'));
+    expect(boundary).toContain(
+      'stops wave closeout at a boundary: report the failing check and run neither `oat project complete-state` nor the merge handoff',
+    );
+    for (const check of checks.keys()) {
+      if (deferred.includes(check)) continue;
+      expect(boundary, check).toContain(`\`${check}\``);
+    }
+    expect(boundary).toContain('`activation`');
   });
 
   it('the provenance wave-execute step 8 passes completes a reviewed wave with an open tracked PR', () => {

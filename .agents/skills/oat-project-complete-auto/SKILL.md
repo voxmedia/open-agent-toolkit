@@ -68,16 +68,19 @@ When this skill is executed, provide concise status updates:
 
 ### Recognized requesting steps
 
-| `--requested-by` value                           | Requesting step                                                                    | Completion before merge |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------- |
-| `oat-wave-execute:closeout-step-8`               | `oat-wave-execute` closeout step 8, completing a wave before its merge handoff     | yes                     |
-| `oat-wave-program:program-completion-checkpoint` | `oat-wave-program` `wave-close` step 6, after the operator's yes, with `--batch`   | no                      |
-| `oat-autonomous-lifecycle:<skill-name>`          | A lifecycle skill running under `OAT_AUTONOMOUS=1` that names this skill as a step | no                      |
+| `--requested-by` value                           | Requesting step                                                                                             | Completion before merge |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `oat-wave-execute:closeout-step-8`               | `oat-wave-execute` closeout step 8, completing a wave before its merge handoff                              | yes                     |
+| `oat-wave-program:program-completion-checkpoint` | `oat-wave-program` `wave-close` step 6, after the operator's yes, with `--batch`                            | no                      |
+| `oat-autonomous-lifecycle:<skill-name>`          | A lifecycle skill under `OAT_AUTONOMOUS=1` whose `SKILL.md` names this skill as a step (verified in Step 2) | no                      |
 
 `--completion-before-merge` is accepted only with a value whose "Completion
 before merge" column is `yes`.
 
 ## Process
+
+Set `SKILL_DIR` to the absolute physical (`cd -P`) directory containing this
+loaded `SKILL.md` before Step 1; Step 2 resolves sibling skills relative to it.
 
 Steps 1 through 3 are read-only. Nothing is written — no exception record,
 active-project pointer, summary, retro, project-log entry, review move, or
@@ -105,7 +108,14 @@ Run only when the invocation carries a recognized `--requested-by` value:
   `oat-wave-program:program-completion-checkpoint` are steps that name this
   skill.
 - `oat-autonomous-lifecycle:<skill-name>` additionally requires
-  `OAT_AUTONOMOUS=1` in the environment of this run.
+  `OAT_AUTONOMOUS=1` in the environment of this run and a lifecycle skill that
+  names this skill as a step. `<skill-name>` must match `oat-[a-z0-9-]+`;
+  resolve its `SKILL.md` through the same sibling, user, then repository probe
+  as the interactive skill below, and refuse unless that skill's current
+  `SKILL.md` contains the exact invocation
+  `--requested-by oat-autonomous-lifecycle:<skill-name>`. Running under
+  `OAT_AUTONOMOUS=1` is not itself a request: until a lifecycle skill carries
+  that invocation, this route refuses every claim.
 
 Refuse, writing nothing, when `--requested-by` is missing or unrecognized, when
 `--completion-before-merge` comes from a step whose column above is `no`, or
@@ -115,6 +125,33 @@ initiative: noticing a finished, unarchived, or lingering project is not a
 request, and self-initiated cleanup is refused. The requesting step is the
 provenance recorded in the run report (Step 6) and in the completion commit
 body (Step 5).
+
+Before any project is preflighted, resolve the interactive skill this run will
+follow. A candidate must carry both `SKILL.md` and the `scripts/` directory its
+steps call, so a partial install stops here instead of after the Step 4
+exception write:
+
+```bash
+COMPLETE_SKILL_DIR=""
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
+for CANDIDATE in \
+  "$(dirname "$SKILL_DIR")/oat-project-complete" \
+  "${HOME}/.agents/skills/oat-project-complete" \
+  "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-complete}"; do
+  [ -n "$CANDIDATE" ] || continue
+  if [ -f "$CANDIDATE/SKILL.md" ] && [ -d "$CANDIDATE/scripts" ]; then
+    COMPLETE_SKILL_DIR=$(cd -P "$CANDIDATE" && pwd -P)
+    break
+  fi
+done
+if [ -z "$COMPLETE_SKILL_DIR" ]; then
+  echo "oat-project-complete unavailable: no installed copy with SKILL.md and scripts/" >&2
+  exit 1
+fi
+```
+
+An unavailable interactive skill stops the run as an `activation` refusal,
+writing nothing.
 
 ### Step 3: Objective Preflight (Per Project)
 
@@ -228,11 +265,9 @@ For each project that passed Steps 3 and 4, in the order given:
 2. Export `OAT_AUTONOMOUS=1` and `OAT_NON_INTERACTIVE=1` for the completion
    steps so their autonomous branches apply (`closeout-check --autonomous`,
    `complete-state --autonomous`, the recap retry, and the retirement sweep).
-3. Resolve `oat-project-complete/SKILL.md` from the sibling skill directory
-   (`$(dirname "$SKILL_DIR")/oat-project-complete`), then
-   `${HOME}/.agents/skills`, then `<repo-root>/.agents/skills`, and bind
-   `SKILL_DIR` to the directory that matched. If none matches, refuse the
-   project with `oat-project-complete unavailable`.
+3. Bind `SKILL_DIR="$COMPLETE_SKILL_DIR"` (resolved in Step 2) only while
+   following the interactive steps, so their `$SKILL_DIR/scripts/*.mjs`
+   references resolve, and restore this skill's own directory afterwards.
 4. Load the current `oat-project-complete/SKILL.md` and follow its Steps 1
    through 12, supplying the answer table above wherever it would ask. Never
    complete from a remembered version of that skill. Its own guards still run,
@@ -276,6 +311,7 @@ oat_project_complete_auto:
   projects:
     - path: '{project path}'
       status: completed | refused | failed
+      refused_check: '{opt-in | activation | preflight:<n> | -}'
       reason: '{failing check, or -}'
       pr: '{oat_pr_url} ({GitHub state})'
       exception: '{requesting workflow; PR URL; reason} | none'
@@ -283,5 +319,8 @@ oat_project_complete_auto:
       completion_commit: '{sha or -}'
 ```
 
-A refused or failed project lists the check that stopped it. The caller records
+A refused or failed project lists the check that stopped it. `refused_check`
+names the guard: `opt-in` (Step 1), `activation` (Step 2, including an
+unavailable interactive skill), or `preflight:<n>` for check `<n>` of Step 3,
+so a caller can tell a deferrable stop from an objective failure. The caller records
 the outcome in its own ledger; a refused wave wrapper stays deferred.
