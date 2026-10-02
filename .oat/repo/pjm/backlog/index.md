@@ -390,6 +390,7 @@
 | BL-261001-run-a-complexity-review-when   | Run a complexity review when a review or gate budget is exhausted                                        | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                              | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                            | open   | high     | feature    | L        |
+| BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                             | open   | high     | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                          | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                       | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                        | open   | medium   | feature    | L        |
@@ -421,6 +422,8 @@
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                   | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                       | open   | medium   | feature    | M        |
+| BL-261002-let-plans-declare-an-evidence  | Let plans declare an evidence tier per phase and reconcile tracking on driver takeover                   | open   | medium   | feature    | L        |
+| BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                            | open   | medium   | feature    | M        |
 | BL-261002-make-explainer-kit-accept-or   | Make explainer-kit accept or reject source-code inputs explicitly                                        | open   | medium   | task       | S        |
@@ -433,6 +436,7 @@
 | BL-261002-provide-a-complete-oat         | Provide a complete OAT uninstall path and make pack removal clean up after itself                        | open   | medium   | feature    | L        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                   | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                        | open   | medium   | feature    | L        |
+| BL-261002-re-review-a-phase-only-after   | Re-review a phase only after Critical or High findings                                                   | open   | medium   | feature    | M        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete        | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags    | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                             | open   | medium   | task       | S        |
@@ -472,6 +476,7 @@
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                 | open   | low      | task       | S        |
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                        | open   | low      | task       | S        |
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                   | open   | low      | task       | XS       |
+| BL-261002-let-skills-declare-their-side  | Let skills declare their side effects in metadata                                                        | open   | low      | feature    | M        |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                         | open   | low      | task       | S        |
 | BL-261001-make-recon-controller-setup    | Make recon controller setup and preflight self-serve                                                     | open   | low      | feature    | M        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                            | open   | low      | task       | S        |
