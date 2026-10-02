@@ -104,10 +104,13 @@ oat_implement_exit_gate:
     scope: final
     type: code
     source_filename: final-review-2026-10-02T030210Z.md
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_source_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/final-review-2026-10-02T030210Z.md
+  receive_archived_artifact: .oat/projects/shared/markdown-docs-bootstrap/reviews/archived/final-review-2026-10-02T030210Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-02T030210Z.md
+  receive_pre_head: 3af7e752d4d361c94b52067f6933a6e1b92687d0
   receive_commit: null
   failure: null
   status: pending
@@ -124,10 +127,10 @@ oat_implement_exit_gate:
   freshness_head: f76820de4d43d899a047ca5ef340393f78d59859
   freshness_fingerprint: sha256:effective-delta-v2:5ee2ff6fe19135b2d5a1b33605d02a6d1f1a56dec291083e7ca0f9dd942c01ff
   launch_state: result_persisted
-  receive_state: not_started
+  receive_state: intent_persisted
   receive_eligible: true
   receive_completed: false
-  updated_at: '2026-10-02T03:03:20Z'
+  updated_at: '2026-10-02T03:04:44Z'
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
 oat_project_recap:
   decision: skip
