@@ -2405,6 +2405,44 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('states the pr-final ledger scan boundary and the escaped-pipe stop the guard implements', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const anchor = prFinal.indexOf(LEDGER_GUARD_ANCHOR);
+    const paragraph = prFinal
+      .slice(anchor, prFinal.indexOf('\n', anchor))
+      .replace(/\s+/g, ' ');
+    const guard = extractLedgerPathGuard(prFinal);
+
+    expect(paragraph).toContain(
+      'the scan starts at the first exact `## Reviews` heading and ends at the next level-two heading other than `## Reviews` itself; `###` and deeper subsections and level-one headings inside the section do not end it and are still scanned, exactly as Step 2 reads the ledger',
+    );
+    expect(paragraph).toContain(
+      'The escaped-pipe stop stands until a real review ledger contains an escaped pipe',
+    );
+    // The prose describes the block it introduces: a repeated `## Reviews`
+    // heading re-enters the section before the level-two exit rule runs, and
+    // only a level-two heading exits.
+    const reEnter = guard.indexOf('/^## Reviews[[:space:]]*$/ {');
+    const exitRule = guard.indexOf('/^##[[:space:]]/ { exit }');
+    expect(reEnter).toBeGreaterThanOrEqual(0);
+    expect(exitRule).toBeGreaterThan(reEnter);
+    expect(guard).toContain(
+      '/^#+[[:space:]]/ { at_table_start = 1; in_ledger_table = 0; next }',
+    );
+
+    const stepTwo = prFinal
+      .slice(
+        prFinal.indexOf('`REVIEWS_SECTION` is strictly'),
+        prFinal.indexOf('If `FINAL_ROW` is missing'),
+      )
+      .replace(/\s+/g, ' ');
+    expect(stepTwo).toContain(
+      'through the next level-two heading other than `## Reviews` itself; `###` and level-one headings do not end it.',
+    );
+  });
+
   it('stops pr-final at PRFINAL-05 when a Reviews ledger artifact path does not resolve', () => {
     const prFinal = readRepoFile(
       '.agents/skills/oat-project-pr-final/SKILL.md',
