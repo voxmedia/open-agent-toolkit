@@ -147,6 +147,10 @@ export const BUNDLE_INPUTS = Object.freeze({
     'turbo.json',
   ]),
   docsRoot: 'apps/oat-docs/docs',
+  docsGeneratedFileNames: Object.freeze([
+    'meta.json',
+    '.oat-fumadocs-nav.json',
+  ]),
   migrationPrompt: 'packages/cli/config/pjm-restructure.md',
   dispatchMatrix: 'packages/cli/config/dispatch-matrix-recommendation.json',
 });

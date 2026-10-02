@@ -17,7 +17,7 @@ If the thought is still pre-shape — you don't know whether it should land as a
 
 ## Contents
 
-- [Lifecycle](lifecycle.md) - Capture, ideate, refine, and summarize an idea before promotion or discard.
+- [Ideas Lifecycle](lifecycle.md) - Capture, ideate, refine, and summarize an idea before promotion or discard.
 
 ## When Ideas Fit Better Than Projects
 

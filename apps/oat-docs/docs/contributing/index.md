@@ -10,7 +10,7 @@ Use this section when you are changing OAT itself rather than consuming it as a 
 ## Contents
 
 - [Contributing Code](code.md) - Repo setup, monorepo structure, quality gates, and PR expectations.
-- [Contributing Docs](documentation.md) - Docs contract, local docs workflow, and docs-specific authoring guidance.
+- [Contributing to OAT Docs](documentation.md) - Docs contract, local docs workflow, and docs-specific authoring guidance.
 - [Markdown Features](markdown-features.md) - Supported docs syntax for callouts, tabs, Mermaid, and code blocks.
 - [Writing Skills](skills.md) - Skill authoring guidance, runtime contracts, and governance.
 - [CLI Design Principles](design-principles.md) - Cross-cutting CLI architecture and UX principles.

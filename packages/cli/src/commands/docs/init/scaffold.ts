@@ -255,6 +255,12 @@ function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   return 'oat docs generate-index --docs-dir docs --output index.md';
 }
 
+function buildGenerateNavCmd(isOatRepo: boolean, targetDir: string): string {
+  return isOatRepo
+    ? `pnpm -w run cli:source -- docs nav sync --framework fumadocs --target-dir ${targetDir}`
+    : 'oat docs nav sync --framework fumadocs --target-dir .';
+}
+
 function oatDepVersion(depContext: OatDepContext, packageName: string): string {
   if (depContext.localPackages.has(packageName)) {
     return 'workspace:*';
@@ -386,6 +392,10 @@ function renderTemplate(
     '{{REPO_NAME}}': repoName,
     '{{APP_DIR}}': options.targetDir,
     '{{GENERATE_INDEX_CMD}}': buildGenerateIndexCmd(
+      depContext.isOatRepo,
+      options.targetDir,
+    ),
+    '{{GENERATE_NAV_CMD}}': buildGenerateNavCmd(
       depContext.isOatRepo,
       options.targetDir,
     ),

@@ -55,6 +55,15 @@ describe('scaffold integration', () => {
     { timeout: 30_000 },
     async () => {
       assetsRoot = await bundleAssets();
+      const bundledDocs = await collectFiles(join(assetsRoot, 'docs'));
+      expect(bundledDocs).toContain(join(assetsRoot, 'docs', 'index.md'));
+      expect(
+        bundledDocs.some(
+          (path) =>
+            path.endsWith('/meta.json') ||
+            path.endsWith('/.oat-fumadocs-nav.json'),
+        ),
+      ).toBe(false);
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
       createdRoots.push(root);
       await mkdir(join(root, 'apps'), { recursive: true });
@@ -321,10 +330,10 @@ describe('scaffold integration', () => {
 
       // Verify oat CLI with app-relative paths — no || true suppression
       expect(packageJson.scripts['predev']).toBe(
-        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'oat docs nav sync --framework fumadocs --target-dir . && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
     },
   );

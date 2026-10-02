@@ -162,14 +162,6 @@ export async function syncFumadocsNavigation(
         identifiers.push(
           child ? basename(dirname(target)) : basename(target, '.md'),
         );
-      } else {
-        const route = relative(docsRoot, target)
-          .replaceAll(sep, '/')
-          .replace(/(?:^|\/)index\.md$/, '')
-          .replace(/\.md$/, '');
-        identifiers.push(
-          `[${entry.title}](/${route}${encodedFragment === undefined ? '' : `#${encodedFragment}`})`,
-        );
       }
     }
     output.set(

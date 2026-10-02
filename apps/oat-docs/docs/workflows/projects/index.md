@@ -16,7 +16,7 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 - [Autonomous Project Execution](autonomy.md) - Session-scoped autonomy signals, gate boundaries, review requirements, and execution learnings.
 - [OAT in Cursor Cloud](cursor-cloud.md) - Project-home, provisioning, asset-precedence, and execution-surface guidance for cloud agents.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
-- [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
+- [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, and provider-specific enforcement.
 - [Orchestration Model](orchestration-model.md) - The layered dispatch model: roles, selection flow, and per-harness topology.
 - [Review Flavors](review-flavors.md) - The four review flavors and who resolves each one's target.

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "types": ["node"],
+    "paths": {
+      "@docs-tools/*": ["./scripts/*"],
+      "@oat-repo/pack-manifest": [
+        "../../packages/cli/src/commands/tools/shared/pack-manifest.ts"
+      ],
+      "@shared/types": ["../../packages/cli/src/shared/types.ts"]
+    }
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "../../packages/cli/src/commands/tools/shared/pack-manifest.ts"
+  ],
+  "exclude": ["node_modules", ".next", ".source", "out"]
+}

@@ -10,3 +10,7 @@ out/
 
 # Next.js generated types
 next-env.d.ts
+
+# Owned build-only Fumadocs navigation
+docs/**/meta.json
+.oat-fumadocs-nav.json

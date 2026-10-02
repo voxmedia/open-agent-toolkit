@@ -5,9 +5,9 @@
   "version": "0.1.0"{{PACKAGE_MANAGER_FIELD}},
   "description": "{{SITE_DESCRIPTION}}",
   "scripts": {
-    "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "predev": "{{GENERATE_NAV_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "prebuild": "{{GENERATE_NAV_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "start": "next start",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",

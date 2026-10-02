@@ -17,6 +17,8 @@
     "dev": "turbo run dev",
     "dev:docs": "pnpm --filter oat-docs dev",
     "docs:check-links": "tsx tools/docs/check-links.ts",
+    "docs:validate": "pnpm --filter oat-docs docs:validate",
+    "docs:test": "pnpm --filter oat-docs test",
     "format": "turbo run format && pnpm format:root",
     "format:fix": "turbo run format:fix && pnpm format:root:fix",
     "format:root": "pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}' 'apps/oat-docs/docs/**/*.md' 'tools/smoke/**/*.{mjs,md,json}'",

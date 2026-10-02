@@ -101,7 +101,7 @@ describe('Fumadocs navigation compiler', () => {
     ]);
   });
 
-  it('keeps native ownership, landings once and explicit nonrecursive cross-links', async () => {
+  it('keeps native ownership and landings once, validating cross-links without duplicating sidebar traversal', async () => {
     const root = await fixture();
     await sync(root);
     expect(
@@ -111,7 +111,7 @@ describe('Fumadocs navigation compiler', () => {
       JSON.parse(await readFile(join(root, 'docs/skills/meta.json'), 'utf8')),
     ).toEqual({
       title: 'Skills',
-      pages: ['research', '[Projects](/workflows#contents)'],
+      pages: ['research'],
     });
     expect(
       JSON.parse(

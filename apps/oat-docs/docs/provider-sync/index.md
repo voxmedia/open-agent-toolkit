@@ -19,7 +19,7 @@ surfaces visible.
 ## Contents
 
 - [Provider Interop Commands](commands.md) - `oat status`, `oat sync`, and `oat providers ...` behavior.
-- [Sync Config](config.md) - Provider config model, enablement, and scope semantics.
+- [Sync Config (`.oat/sync/config.json`)](config.md) - Provider config model, enablement, and scope semantics.
 - [Instruction Sync](instruction-sync.md) - Project-scoped `AGENTS.md` / `CLAUDE.md` validation, repair, and Claude-only adoption.
 - [Manifest and Drift](manifest-and-drift.md) - How OAT tracks synced state, stray files, and adoption decisions.
 - [Providers](providers.md) - Provider-specific mappings, capabilities, and path conventions.

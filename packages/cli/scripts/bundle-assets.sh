@@ -105,6 +105,9 @@ EOF
 # Bundle OAT documentation for core pack (oat-docs skill)
 if [ -d "${DOCS_SOURCE}" ]; then
   cp -R "${DOCS_SOURCE}/." "${STAGING}/docs/"
+  while IFS= read -r generated_name; do
+    find "${STAGING}/docs" -type f -name "${generated_name}" -delete
+  done < <(node "${INVENTORY}" --list docsGeneratedFileNames)
 fi
 
 while IFS= read -r script; do
