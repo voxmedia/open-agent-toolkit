@@ -9,24 +9,24 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Implementation has not started. Required plan reviews are received; next task is p01-t01.
+Implementation preflight complete. Phase 1 dispatch prepared; no code task completed yet.
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 3     | 0/3       |
-| Phase 4 | pending | 3     | 0/3       |
-| Phase 5 | pending | 3     | 0/3       |
-| Phase 6 | pending | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 4     | 0/4       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
 **Total:** 0/16 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p01-t01: Require version bumps for shared-doc vendors
 
@@ -262,3 +262,102 @@ The four received corrections preserve all 16 implementation tasks and 40 accept
 - Complexity review: deletion-rule compliant. Keep the single shared commit primitive/recovery identity, metadata-based knowledge refresh script, verified flat recap producer/consumers/migration, focused existing validators/negative controls, and required sequential review lifecycle. Each serves an explicit acceptance requirement or observed defect; no new harness, manifest, coordinator or report system. No material changes and no further gate rerun needed.
 - Quick gate core now allowed/passed, carrying the unchanged resolved fingerprint and actual reviewed baseline. Original failed run remains invalid history, never a pass.
 - Readiness: plan complete / ready_for oat-project-implement / template false; discovery complete; 16 pending tasks across six phases. Product implementation not yet started.
+
+### Run 1 — Wave 5 sequential implementation
+
+- Gate IMPLEMENT-03: first implementation run; six sequential phases, final p06 checkpoint, automatic checkpoint review/receive enabled. Existing explicit all-phase code gate remains unchanged.
+- Gate IMPLEMENT-08: scope-bound autonomous delegation authorization; native exact phase implementer and root reviewer available. Tier 1, available without additional host authorization; no inline fallback selected.
+- Recovery: existing default 10 attempts per phase, no override, durable usage 0 and no pending attempt for every phase. Review-fix/gate retries use default 2 separately; failed-attempt terminality and eligibility boundaries remain binding.
+- Route: native exact `oat-phase-implementer-gpt-6-1-sol-high`; selected GPT-6.1 Sol/high, managed high project-state policy. Classified consequential because Phase 1 changes assurance-bearing review/autonomy contracts; native accepted payload supplies configured invocation evidence, runtime identity not reported.
+- Independent gates: resolved configured Opus 5.5 high plan/all-phase/final route; no runtime target injection or durable config changes.
+- Main drift: fetch confirmed no new main commits in planned phase paths. Ownership: phase worker owns four p01 tasks, root owns lifecycle tracking, reviews and publication. Separate per-task bookkeeping commits use a clean worker/root handoff before the next task’s mutations.
+
+#### Dispatch wave5-p01-implement-r1
+
+Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p01-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Implement all four approved Phase 1 tasks and focused preservation/probe evidence; return verified task commits and phase report.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-03T22:18:41.277168Z"
+  },
+  "authority": "phase-scoped-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase1"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Phase changes assurance-bearing review evidence and autonomous terminal-stop contracts; high route plus independent review preserves the accepted class floor.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:a9c0b0be772025a6115005b6870ea9d5de4cb9e07c23790ff94dfac07fe6e005",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```

@@ -11,6 +11,8 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_template: false
+oat_plan_hill_phases: ['p06']
+oat_auto_review_at_hill_checkpoints: true
 oat_phase_review_gate:
   enabled: true
   phases: []

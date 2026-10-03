@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current lifecycle phase
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current lifecycle phase
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -98,6 +98,28 @@ oat_quick_start_gate:
   config_fingerprint: '88fb6a53c33aabb45f8ac7441bbb99f66460afa281e7a5e1f347537080cfa853'
   reviewed_head: 'fdafcfd4bbb2512aa1bcdaf59553ecd414ec89bf'
   decided_at: '2026-10-03T22:17:13.080Z'
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
+    p02:
+      used_attempts: 0
+      pending_attempt: null
+    p03:
+      used_attempts: 0
+      pending_attempt: null
+    p04:
+      used_attempts: 0
+      pending_attempt: null
+    p05:
+      used_attempts: 0
+      pending_attempt: null
+    p06:
+      used_attempts: 0
+      pending_attempt: null
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -107,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** Plan complete; implementation next
+**Status:** Implementing — Phase 1
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-03
 
 ## Current Phase
 
-Plan complete - Required reviews received and complexity review complete
+Implement - p01-t01 next; plan accepted, Phase 1 dispatch prepared
 
 ## Artifacts
 
@@ -121,7 +143,7 @@ Plan complete - Required reviews received and complexity review complete
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete, ready for implementation)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (initialized; 0/16 tasks complete)
 
 ## Progress
 
