@@ -798,6 +798,10 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   final head.
 - Phase p07 outcome: complete; 8/8 tasks.
 
+- Exit gate generation 2 (`effective-delta-v2`, same resolved configuration,
+  attempts completed 1 of 2): `reviewed_head` `23577fd16`; intent persisted
+  for attempt `bw4-exit-gate-g2-2-20261003T002927Z`.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
