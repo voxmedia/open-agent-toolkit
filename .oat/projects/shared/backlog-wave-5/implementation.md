@@ -435,7 +435,7 @@ Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown
     "task_name": "wave5_phase1_review"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -481,3 +481,5 @@ Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown
 ```
 
 Accepted native reviewer handle `/root/wave5_phase1_review`; configured exact role/model/effort, runtime identity not reported. Independent artifact review of complete p01 range `325dbad2a3f26feca361cefc50855893c9349442..e586535587644cd6faf2a5c221650710fa6bd726`; product readonly plus one timestamped artifact. Review-outcome bookkeeping excluded, task ledger included. Current branch canonical role supplies changed probe contract; version/projection integration remains p06.
+
+Root reviewer p01/r1 returned exactly one valid not-attempted reconnaissance signal; no orchestration section. Root read the full artifact and validated bound head/range, timestamp, scope and counts: 0 Critical, 0 High, 1 Medium, 1 Low. Artifact `reviews/p01-review-2026-10-03T225737Z.md` is preserved before receive; receive dispositions/fix tasks are pending.
