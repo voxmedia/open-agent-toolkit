@@ -1860,6 +1860,34 @@ rewrites the four inventory rows last.
 
 ---
 
+### Task p07-t09: (review) Serialize stale gate recovery with acquisition
+
+**Files:** packages/cli/src/commands/gate/index.ts and index.test.ts
+
+**Step 1: Analyze** — Reproduce the remote finding and inspect existing coverage.
+
+**Step 2: Implement** — Apply a bounded fix preserving unrelated behavior.
+
+**Step 3: Verify** — Deterministic three-contender real-filesystem regression fails before fix, passes after; valid acquisition and stale recovery remain accepted. Run the full Definition of Done in repository order.
+
+**Step 4: Commit** — `fix(p07-t09): serialize stale gate recovery with acquisition`
+
+---
+
+### Task p07-t10: (review) Resolve complexity-review dispatch from loaded sibling skills
+
+**Files:** .agents/docs/complexity-review-fallback.md, its vendored consumers, and complexity-review-contracts.test.ts
+
+**Step 1: Analyze** — Reproduce the remote finding and inspect existing coverage.
+
+**Step 2: Implement** — Apply a bounded fix preserving unrelated behavior.
+
+**Step 3: Verify** — Host-loaded sibling tier precedes user and repository tiers; regression fails before and passes after; vendored parity holds. Run the full Definition of Done in repository order.
+
+**Step 4: Commit** — `fix(p07-t10): resolve complexity-review dispatch from loaded sibling skills`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1893,6 +1921,8 @@ rewrites the four inventory rows last.
 | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
 | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+
+| remote-pr-351 | code | fixes_added | 2026-10-03 | reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md | - | - | - |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 

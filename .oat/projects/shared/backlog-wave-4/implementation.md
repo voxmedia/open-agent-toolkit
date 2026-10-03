@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: null
+oat_current_task_id: p07-t09
 oat_generated: false
 ---
 
@@ -987,3 +987,7 @@ with a recorded pre-merge exception, and batch mode at program close.
 - Plan: `plan.md`
 - Discovery: `discovery.md`
 - Execution learnings: `oat-execution-learnings.md`
+
+## Remote Review Received (2026-10-03T15:11:15Z)
+
+PR #351: 1 High and 1 Medium converted to p07-t09 and p07-t10; no deferrals or dismissals. Artifact: `reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md`.
