@@ -86,7 +86,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-10-03T00:01:02Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
@@ -95,7 +95,7 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: f4b387694aa73912c3735855773b165f70a95c70
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:10556062df5b59e89730b59d66858ef56c33fb2531180feaad85672114f52061'
@@ -111,17 +111,17 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=c945efcf-73f2-4528-b3b3-f8f7d365c776; handoff=receive; source=reviews/final-review-2026-10-03T000713Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md'
   receive_archived_artifact: '.oat/projects/shared/backlog-wave-4/reviews/archived/final-review-2026-10-03T000713Z.md'
   receive_event_identity: 'final | code | final-review-2026-10-03T000713Z.md'
   receive_pre_head: 54f4e722ecd65c2dff933c9f4726828cae1bd3be
-  receive_commit: null
+  receive_commit: 64619c2f8c6f420bd4ebc20edffba3cafcd11d98
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-10-03T00:11:55Z'
+  updated_at: '2026-10-03T00:12:26Z'
 oat_project_recap:
   decision: generate
   source: autonomous_policy
