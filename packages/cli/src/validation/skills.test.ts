@@ -3688,6 +3688,74 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('requires proportional changed-boundary review evidence with blocking and accepted controls', async () => {
+    const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const start = reviewer.indexOf(
+      '### Step 3.5: Probe Changed Consequential Boundaries',
+    );
+    expect(start, 'changed-boundary contract is live').toBeGreaterThan(-1);
+    const rule = reviewer
+      .slice(start, reviewer.indexOf('### Step 4:', start))
+      .replace(/\s+/g, ' ');
+    const required = [
+      /changed trust.*input.*size.*limit boundaries/i,
+      /credible failure.*focused probe/i,
+      /categorical result.*concrete execution limitation/i,
+      /missing consequential evidence.*blocking finding/i,
+      /independently.*inspect.*failing.*accepted controls/i,
+      /exact commands.*artifact provenance.*limitation/i,
+      /unsupported.*assertion.*insufficient/i,
+      /docs-only.*no credible changed boundary.*no manufactured probe/i,
+      /containment.*independence/i,
+      /no.*new harness.*broad.*campaign/i,
+    ];
+    for (const clause of required) expect(rule, clause.source).toMatch(clause);
+    // Contract-text controls: deleting the stop cannot preserve acceptance;
+    // independently inspected controls remain eligible despite execution limits.
+    const outcomes = [
+      ['Consequential guarantee, absent evidence', 'Blocking finding'],
+      [
+        'Inspected failing + accepted controls, reviewer cannot execute',
+        'Eligible evidence',
+      ],
+      ['Unsupported implementer assertion', 'Blocking finding'],
+      [
+        'Docs-only, no credible changed boundary',
+        'No manufactured probe obligation',
+      ],
+    ];
+    for (const [scenario, outcome] of outcomes) {
+      const row = rule
+        .slice(rule.indexOf(`| ${scenario}`))
+        .split('|')
+        .slice(0, 4)
+        .join('|');
+      expect(row, scenario).toContain(outcome);
+    }
+    const withoutStop = rule.replace(
+      /Missing consequential evidence[^.]+\./i,
+      '',
+    );
+    expect(withoutStop).not.toBe(rule);
+    expect(withoutStop).not.toMatch(required[3]!);
+    for (const path of [
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    ]) {
+      const brief = (await readRepoFile(path)).replace(/\s+/g, ' ');
+      expect(brief, path).toMatch(/changed.boundary.*probe/i);
+      expect(brief, path).toMatch(/failing.*accepted controls/i);
+      expect(brief, path).toMatch(/execution limitation/i);
+      expect(brief, path).toMatch(
+        /missing consequential evidence.*blocking finding/i,
+      );
+    }
+    expect(reviewer.replace(/\s+/g, ' ')).toMatch(
+      /Verification Commands[\s\S]*categorical outcomes.*limitations/i,
+    );
+    expect(reviewer).toMatch(/summary.*finding bodies.*results.*limitations/i);
+  });
+
   it('discloses resolved autonomous recovery capacity and owning hard stops at kickoff', async () => {
     const autonomous = await readRepoFile(
       '.agents/skills/oat-project-autonomous/SKILL.md',

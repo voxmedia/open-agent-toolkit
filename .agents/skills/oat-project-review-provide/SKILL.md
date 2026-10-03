@@ -622,6 +622,20 @@ Build the "Review Scope" metadata for the reviewer:
 - Deferred Low count: {DEFERRED_LOW_COUNT}
   {DEFERRED_LEDGER}
 
+**Changed-Boundary Probe Guidance (code review only):**
+
+- Apply the reviewer's proportional changed-boundary probe contract to changed
+  trust/input/size/limit boundaries with credible failure modes.
+- Record exact commands, input/artifact provenance, categorical results and
+  any concrete execution limitation. Independently inspected implementer
+  failing and accepted controls may count when the reviewer cannot execute;
+  unsupported assertions cannot count.
+- Missing consequential evidence requires an existing blocking finding, with
+  the unresolved guarantee and smallest missing proof. Docs-only changes with
+  no credible changed boundary require no manufactured probes.
+- Preserve containment, independence, dispatch policy, severity and output
+  schemas; do not start a broad campaign or create a harness.
+
 **Design Drift Review Guidance:**
 
 - If implementation differs from `spec.md`, `design.md`, or `plan.md`, decide whether the code should change or whether the artifact is stale.
