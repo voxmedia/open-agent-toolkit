@@ -1120,10 +1120,14 @@ gate for the scope it is reviewing, a second orchestrator launch for a scope
 already under review, and simultaneous launches. Wait for the live run to
 finish; remove the named claim only when that process is not a gate. A claim
 whose owner process is dead, or whose content cannot be parsed, is replaced
-once and the run proceeds. Replacing a stale claim is not serialized against
-other launches, so concurrent recovery of one orphaned claim can, rarely, admit
-two runs (it takes an orphaned claim plus three simultaneous launches for the
-same project, type, and scope). Liveness is a process-ID check, so a stale claim
+once and the run proceeds. Recovery and release serialize destructive claim
+changes with an exclusive `<claim-path>.mutation` directory. Recovery checks
+ownership again under that guard before removing a stale claim, so a
+replacement live owner remains protected even when three launches compete.
+If another mutation holds the guard, the new run refuses to start; retry after
+it finishes. An interrupted mutation can leave the guard behind. Remove that
+exact guard directory only after verifying that no gate is still using it;
+OAT does not automatically reclaim it. Liveness is a process-ID check, so a stale claim
 whose process ID was reused by an unrelated process still blocks until it is
 removed.
 
@@ -1138,8 +1142,10 @@ The `ok`/`blocked` envelope and the `review_did_not_complete` envelope (child
 failure, timeout, refusal, or duplicate rejection) record the decision as
 `recursion`: `{ "decision": "none" }`,
 `{ "decision": "rejected", "matchedRunId": "<runId>" }`, or
-`{ "decision": "unchecked" }` when the claim could not be written (the gate
-warns and continues without duplicate-run detection). Other envelopes keep
+`{ "decision": "unchecked" }` when claim acquisition fails (including an
+unreadable claim or a held mutation guard). The gate warns, exits nonzero with
+`status: review_failed` and `outcome: review_did_not_complete`, and does not
+launch a reviewer, write a run marker, or append a project-log entry. Other envelopes keep
 their existing shape. JSON mode also writes a `gate-recursion` diagnostic line
 beside the `gate-run-marker` line; a rejection adds `matchedPid` and
 `claimPath`.

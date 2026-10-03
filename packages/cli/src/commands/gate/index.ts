@@ -6,7 +6,7 @@ import {
   readdir,
   readFile,
   realpath,
-  rename,
+  rmdir,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -679,9 +679,11 @@ async function readGateRunClaim(
  * `wx`, then hard-linked to the shared claim path; `link` fails with EEXIST
  * when another run holds the slot, so two simultaneous gates can never both
  * acquire it and a reader never sees a half-written claim. A claim whose
- * owner is dead, or which cannot be parsed, is replaced once: it is renamed
- * aside first, so a claim that a faster run has just taken is restored rather
- * than deleted.
+ * owner is dead, or which cannot be parsed, is replaced once. Destructive
+ * recovery and release share an exclusive mutation directory; recovery reads
+ * ownership again under that guard before removing anything. A crashed guard
+ * is deliberately not reclaimed automatically: competing cleanup cannot safely
+ * remove a replacement owner of the guard itself.
  */
 async function acquireGateRunClaim(input: {
   dir: string;
@@ -725,26 +727,31 @@ async function acquireGateRunClaim(input: {
     if (attempt > 0) {
       break;
     }
-    const aside = join(input.dir, `.claim-${input.runId}.stale`);
+    const mutationPath = `${path}.mutation`;
     try {
-      await rename(path, aside);
+      await mkdir(mutationPath);
     } catch (error) {
-      if (isErrorCode(error, 'ENOENT')) {
-        continue;
+      if (isErrorCode(error, 'EEXIST')) {
+        throw new Error(
+          `Gate claim mutation is in progress at ${mutationPath}. Retry after it finishes; remove this guard only after verifying no gate is still using it.`,
+          { cause: error },
+        );
       }
       throw error;
     }
-    const moved = await readGateRunClaim(aside);
-    if (moved && moved.text !== existing.text) {
-      // Another run claimed the slot after the stale read; put it back.
-      await link(aside, path).catch(() => undefined);
-      await rm(aside, { force: true });
-      if (moved.holder) {
-        return { status: 'held', holder: moved.holder };
+    try {
+      // A faster recovery may have replaced the stale claim before we took
+      // the guard. Never move the shared path aside to discover its owner.
+      const current = await readGateRunClaim(path);
+      if (current?.holder && input.isProcessAlive(current.holder.pid)) {
+        return { status: 'held', holder: current.holder };
       }
-      break;
+      if (current) {
+        await rm(path);
+      }
+    } finally {
+      await rmdir(mutationPath);
     }
-    await rm(aside, { force: true });
   }
   const final = await readGateRunClaim(path);
   return {
@@ -759,10 +766,16 @@ async function releaseGateRunClaim(
   runId: string,
   warn: (message: string) => void,
 ): Promise<void> {
+  const mutationPath = `${path}.mutation`;
   try {
-    const existing = await readGateRunClaim(path);
-    if (existing?.holder?.runId === runId) {
-      await rm(path, { force: true });
+    await mkdir(mutationPath);
+    try {
+      const existing = await readGateRunClaim(path);
+      if (existing?.holder?.runId === runId) {
+        await rm(path);
+      }
+    } finally {
+      await rmdir(mutationPath);
     }
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
@@ -2914,19 +2927,22 @@ function writeReviewGateExecutionFailure(
     refusal?: string;
     activityEvidence?: GateActivityEvidence;
     duplicateRun?: GateRunClaimHolder & { reviewType: string; scope: string };
+    claimFailure?: string;
     recursion?: GateRecursionDecision;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
-  const message = payload.duplicateRun
-    ? `Review did not start: gate run ${payload.duplicateRun.runId} (pid ${payload.duplicateRun.pid}) is already reviewing ${payload.project} (${payload.duplicateRun.reviewType} review, scope ${payload.duplicateRun.scope}). Wait for it to finish, or remove its claim ${payload.duplicateRun.path} if that process is not a gate.`
-    : payload.refusal
-      ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
-      : payload.timedOut
-        ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
-        : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  const message = payload.claimFailure
+    ? `Review did not start: duplicate-run exclusion could not be established (${payload.claimFailure}).`
+    : payload.duplicateRun
+      ? `Review did not start: gate run ${payload.duplicateRun.runId} (pid ${payload.duplicateRun.pid}) is already reviewing ${payload.project} (${payload.duplicateRun.reviewType} review, scope ${payload.duplicateRun.scope}). Wait for it to finish, or remove its claim ${payload.duplicateRun.path} if that process is not a gate.`
+      : payload.refusal
+        ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
+        : payload.timedOut
+          ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
+          : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -4380,6 +4396,7 @@ async function runReviewGate(
     const runMarkerDir = gateRunMarkerDir(dependencies.processEnv);
     const projectRoot = await resolveGateProjectRoot(repoRoot, projectPath);
     let duplicateRun: GateRunClaimHolder | null = null;
+    let claimFailure: string | undefined;
     try {
       const claim = await acquireGateRunClaim({
         dir: runMarkerDir,
@@ -4399,9 +4416,10 @@ async function runReviewGate(
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       context.logger.warn(
-        `Unable to claim this gate run in ${runMarkerDir}: ${detail}; continuing without duplicate-run detection.`,
+        `Unable to claim this gate run in ${runMarkerDir}: ${detail}; review will not start.`,
       );
       recursion = { decision: 'unchecked' };
+      claimFailure = detail;
     }
     if (context.json) {
       dependencies.writeDiagnostic(
@@ -4415,18 +4433,23 @@ async function runReviewGate(
         })}\n`,
       );
     }
-    if (duplicateRun) {
+    if (duplicateRun || claimFailure) {
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
         project: projectPath,
         projectResolutionSource: reviewProject.source,
         exitCode: 1,
-        duplicateRun: {
-          ...duplicateRun,
-          reviewType: options.reviewType?.trim() || 'untyped',
-          scope: options.reviewScope?.trim() || 'none',
-        },
+        ...(duplicateRun
+          ? {
+              duplicateRun: {
+                ...duplicateRun,
+                reviewType: options.reviewType?.trim() || 'untyped',
+                scope: options.reviewScope?.trim() || 'none',
+              },
+            }
+          : {}),
+        claimFailure,
         gateInvocation,
         dispatchReport,
         recursion,

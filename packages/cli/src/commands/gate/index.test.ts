@@ -1,4 +1,5 @@
 import { execFileSync, spawn as spawnProcess } from 'node:child_process';
+import * as claimFs from 'node:fs/promises';
 import {
   mkdir,
   mkdtemp,
@@ -39,6 +40,9 @@ import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { extractStructuredRefusal } from './child-process';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
+
+// Keep real filesystem effects while allowing deterministic concurrent-call scheduling.
+vi.mock('node:fs/promises', { spy: true });
 
 interface HarnessOptions {
   cwd: string;
@@ -6939,6 +6943,7 @@ describe('oat gate', () => {
       home: string;
       projectPath: string;
       dir: string;
+      isProcessAlive?: (pid: number) => boolean;
     }): Promise<{
       runId: () => string | undefined;
       claimPath: () => Promise<string>;
@@ -6971,7 +6976,7 @@ describe('oat gate', () => {
         home: options.home,
         processEnv: { OAT_GATE_RUN_MARKER_DIR: options.dir },
         runProcess: runner.runProcess,
-        isProcessAlive: () => true,
+        isProcessAlive: options.isProcessAlive ?? (() => true),
         args: reviewArgs,
       });
       // Fail fast, with the gate's output, if it ends without launching.
@@ -7131,6 +7136,135 @@ describe('oat gate', () => {
       expect(await claimFiles(dir)).toEqual([]);
     });
 
+    it('preserves the replacement owner across a three-contender stale recovery race', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const probe = await holdClaim({ root, home, projectPath, dir });
+      const path = await probe.claimPath();
+      probe.release();
+      await probe.done;
+      const stale = JSON.stringify({ runId: 'dead-run', pid: 5151 });
+      await writeFile(path, stale, 'utf8');
+
+      const deferred = () => {
+        let resolve = (): void => {};
+        const promise = new Promise<void>((settle) => {
+          resolve = settle;
+        });
+        return { promise, resolve };
+      };
+      const staleRead = deferred();
+      const continueRead = deferred();
+      const movedClaim = deferred();
+      const continueMove = deferred();
+      const releaseThird = deferred();
+      const thirdStarted = deferred();
+      const actualFs =
+        await vi.importActual<typeof claimFs>('node:fs/promises');
+      const realRead = actualFs.readFile;
+      const realRename = actualFs.rename;
+      let interceptedRead = false;
+      // Schedule filesystem calls, retaining their actual on-disk behavior.
+      // A observes stale; B replaces it; A tries to move B aside; C competes.
+      const readSpy = vi
+        .spyOn(claimFs, 'readFile')
+        .mockImplementation(async (...args) => {
+          const result = await realRead(...args);
+          if (args[0] === path && result === stale && !interceptedRead) {
+            interceptedRead = true;
+            staleRead.resolve();
+            await continueRead.promise;
+          }
+          return result;
+        });
+      const renameSpy = vi
+        .spyOn(claimFs, 'rename')
+        .mockImplementation(async (...args) => {
+          await realRename(...args);
+          if (args[0] === path && (await realRead(args[1], 'utf8')) !== stale) {
+            movedClaim.resolve();
+            await continueMove.promise;
+          }
+        });
+      const runner = createProcessRunner();
+      const first = runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: (pid) => pid !== 5151,
+        args: reviewArgs,
+      });
+      let second: Awaited<ReturnType<typeof holdClaim>> | undefined;
+      let third: Promise<LoggerCapture> | undefined;
+      const thirdRunner = createProcessRunner({
+        onExecute: async () => {
+          thirdStarted.resolve();
+          await releaseThird.promise;
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      let firstCapture: LoggerCapture | undefined;
+      let thirdCapture: LoggerCapture | undefined;
+      let ownerWhileContending: string | undefined;
+      try {
+        await staleRead.promise;
+        second = await holdClaim({
+          root,
+          home,
+          projectPath,
+          dir,
+          isProcessAlive: (pid) => pid !== 5151,
+        });
+        continueRead.resolve();
+        // Fixed recovery leaves B in place and A ends. The old implementation
+        // instead opens an empty shared path by moving B's live claim aside.
+        await Promise.race([movedClaim.promise, first]);
+        third = runReviewGate({
+          root,
+          home,
+          processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+          runProcess: thirdRunner.runProcess,
+          isProcessAlive: () => true,
+          args: reviewArgs,
+        });
+        await Promise.race([thirdStarted.promise, third]);
+        continueMove.resolve();
+        firstCapture = await first;
+        ownerWhileContending = (
+          JSON.parse(await realRead(path, 'utf8')) as { runId: string }
+        ).runId;
+      } finally {
+        continueRead.resolve();
+        continueMove.resolve();
+        releaseThird.resolve();
+        if (third) thirdCapture = await third;
+        second?.release();
+        if (second) await second.done;
+        await first;
+        readSpy.mockRestore();
+        renameSpy.mockRestore();
+      }
+      expect(
+        thirdRunner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(ownerWhileContending).toBe(second?.runId());
+      expect(firstCapture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'rejected', matchedRunId: second?.runId() },
+      });
+      expect(thirdCapture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'rejected', matchedRunId: second?.runId() },
+      });
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
     it.each([
       ['a dead owner', { runId: 'dead-run', pid: 5151 }],
       ['an unparseable claim', '{"runId":'],
@@ -7168,7 +7302,9 @@ describe('oat gate', () => {
         args: reviewArgs,
       });
 
-      expect(livenessChecks).toEqual(typeof claim === 'string' ? [] : [5151]);
+      expect(livenessChecks).toEqual(
+        typeof claim === 'string' ? [] : [5151, 5151],
+      );
       expect(
         runner.calls.filter((call) => call.purpose === 'execute'),
       ).toHaveLength(1);
@@ -7266,7 +7402,110 @@ describe('oat gate', () => {
       ).toMatchObject({ OAT_GATE_RUN_MARKER_DIR: dir });
     });
 
-    it('records an unchecked decision and continues when the claim cannot be written', async () => {
+    it('refuses launch when a live claim cannot be read', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const owner = await holdClaim({ root, home, projectPath, dir });
+      const path = await owner.claimPath();
+      const ownerText = await readFile(path, 'utf8');
+      const actualFs =
+        await vi.importActual<typeof claimFs>('node:fs/promises');
+      const readSpy = vi
+        .spyOn(claimFs, 'readFile')
+        .mockImplementation(async (...args) => {
+          if (args[0] === path) {
+            throw Object.assign(new Error('claim read denied'), {
+              code: 'EACCES',
+            });
+          }
+          return actualFs.readFile(...args);
+        });
+      const diagnostics: string[] = [];
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      let capture: LoggerCapture | undefined;
+      let retainedClaim: string | undefined;
+      try {
+        capture = await runReviewGate({
+          root,
+          home,
+          processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+          runProcess: runner.runProcess,
+          isProcessAlive: () => true,
+          writeDiagnostic: (message) => diagnostics.push(message),
+          args: reviewArgs,
+        });
+        retainedClaim = await actualFs.readFile(path, 'utf8');
+      } finally {
+        readSpy.mockRestore();
+        owner.release();
+        await owner.done;
+      }
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(retainedClaim).toBe(ownerText);
+      expect(capture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        exitCode: 1,
+        recursion: { decision: 'unchecked' },
+        message: expect.stringContaining('claim read denied'),
+      });
+      expect(
+        diagnostics
+          .map((line) => JSON.parse(line))
+          .filter((entry) => entry.type === 'gate-recursion'),
+      ).toEqual([
+        {
+          type: 'gate-recursion',
+          runId: expect.any(String),
+          decision: 'unchecked',
+        },
+      ]);
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it('refuses stale recovery while its mutation guard is occupied', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const probe = await holdClaim({ root, home, projectPath, dir });
+      const path = await probe.claimPath();
+      probe.release();
+      await probe.done;
+      const stale = JSON.stringify({ runId: 'dead-run', pid: 5151 });
+      await writeFile(path, stale, 'utf8');
+      const mutationPath = `${path}.mutation`;
+      await mkdir(mutationPath);
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: () => false,
+        args: reviewArgs,
+      });
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(await readFile(path, 'utf8')).toBe(stale);
+      expect(await readdir(mutationPath)).toEqual([]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'unchecked' },
+        message: expect.stringContaining(mutationPath),
+      });
+    });
+
+    it('records an unchecked decision and refuses launch when the claim cannot be written', async () => {
       const { root, home } = await setup();
       const projectPath = await writeProject(root);
       await writeActiveProject(root, projectPath);
@@ -7293,9 +7532,14 @@ describe('oat gate', () => {
       ]);
       expect(
         runner.calls.filter((call) => call.purpose === 'execute'),
-      ).toHaveLength(1);
+      ).toHaveLength(0);
       expect(capture.jsonPayloads[0]).toMatchObject({
-        status: 'ok',
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        exitCode: 1,
+        message: expect.stringContaining(
+          'duplicate-run exclusion could not be established',
+        ),
         recursion: { decision: 'unchecked' },
       });
     });
