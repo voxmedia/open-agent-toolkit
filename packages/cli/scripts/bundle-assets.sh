@@ -113,7 +113,9 @@ if [ -n "${OAT_ASSETS_DIR:-}" ] && { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; }
     # Print one fixed byte per entry rather than any filename: a textual
     # listing captured by command substitution loses trailing newlines, so a
     # directory whose only entry is named with newlines would read as empty.
-    assets_has_entry="$(find "${ASSETS}" -mindepth 1 -maxdepth 1 -exec printf x \; -quit)" ||
+    # -H follows ASSETS itself when it is a symlink, so a link to a populated
+    # directory is checked through, not read as an empty starting point.
+    assets_has_entry="$(find -H "${ASSETS}" -mindepth 1 -maxdepth 1 -exec printf x \; -quit)" ||
       fail_bundle "refusing to build: the assets destination (${ASSETS}) cannot be listed; remove it or choose an empty directory."
     if [ -n "${assets_has_entry}" ]; then
       fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."

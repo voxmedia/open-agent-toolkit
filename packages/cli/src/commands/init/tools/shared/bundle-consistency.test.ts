@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -1243,6 +1244,59 @@ describe('bundle-assets fail-closed guards', () => {
         });
       } finally {
         chmodSync(locked, 0o755);
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // `find` does not follow a symlink given as its starting path, so the
+  // emptiness check must, or a link to a populated directory reads as empty.
+  it(
+    'rejects an OAT_ASSETS_DIR symlinked to a populated directory, leaving link and contents intact',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const target = join(tree.scratch, 'populated-target');
+        writeTreeFile(join(target, 'user-data.txt'), 'keep\n');
+        const link = join(tree.scratch, 'linked-out');
+        symlinkSync(target, link);
+        const before = snapshotPath(target);
+
+        const run = runStubBundle(tree, { assetsDir: link, mode: 'refuse' });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /neither an empty directory nor a previous bundle/,
+        );
+        expect(lstatSync(link).isSymbolicLink()).toBe(true);
+        expect(readlinkSync(link)).toBe(target);
+        expect(snapshotPath(target)).toEqual(before);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into an OAT_ASSETS_DIR symlinked to an empty directory',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const target = join(tree.scratch, 'empty-target');
+        mkdirSync(target);
+        const link = join(tree.scratch, 'linked-out');
+        symlinkSync(target, link);
+
+        const run = runStubBundle(tree, { assetsDir: link, mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(readFileSync(join(link, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+      } finally {
         rmSync(tree.scratch, { recursive: true, force: true });
       }
     },
