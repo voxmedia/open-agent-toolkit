@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t07
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four original tasks and two review corrections committed; composed continuation verification passed; fresh reviews pending.
+Implementation preflight complete. Phase 1 active; four original tasks and three review corrections committed; root review passed its threshold and dispositions are settled; independent phase gate pending.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 7     | 6/7       |
+| Phase 1 | in_progress | 7     | 7/7       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 6/19 tasks completed
+**Total:** 7/19 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -86,8 +86,12 @@ Implementation preflight complete. Phase 1 active; four original tasks and two r
 
 ### Task p01-t07: (review) Route state progress to the authoritative ledger
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cd47b726debb70f9922ee38fa26cae557e1c9436
+
+**Outcome:** State routes to the authoritative task/verification ledger without duplicating counts.
+
+**Verification:** Root proved the committed diff changes only the one stale prose entry, with all other bytes conserved; scoped format and diff checks passed, clean worktree. No product/test change. Root GPT-6.1 Sol/high executed this recorded artifact-alignment task.
 
 ## Phase 2: Preserve PJM settings and structured state
 
@@ -649,3 +653,7 @@ L1 — Stale state count: agreed, Task Scope: Negligible, artifact_alignment_req
 ### Root-inline phase: p01 artifact alignment
 
 Root GPT-6.1 Sol/high owns only p01-t07, the root-owned state prose, as a recorded bounded deviation from phase-worker task ownership. Reason: this is lifecycle tracking alignment, within existing root authority, and avoids delegating another state/progress edit. No product implementation, target substitution, fallback or recovery. The original native six-task report remains accepted unchanged. The independently configured gate will review the corrected committed state before Phase 1 can complete.
+
+### Phase p01 root review outcome
+
+Root review rounds: 2; Critical/High fix-loop iterations: 0. Original M1 and L1 resolved by native tasks p01-t05/t06 and independently confirmed in r2; r2 Low state prose resolved by root-owned p01-t07. All dispositions settled, none deferred. Latest standard reviewer passed 0 Critical/High threshold; its bound artifact event is fixes_completed after the alignment, not falsely promoted into a new reviewed-head pass. Six native task outcomes plus the explicit root artifact task account for all seven current p01 tasks. The fresh configured independent gate sees this committed correction and both Step 7 halves. Phase remains in_progress until that gate passes; no recovery attempts.
