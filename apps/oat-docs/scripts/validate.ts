@@ -83,7 +83,7 @@ export async function validateDocumentHeadings(
     for (const entry of await readdir(directory, { withFileTypes: true })) {
       const path = join(directory, entry.name);
       if (entry.isDirectory()) await scan(path);
-      else if (entry.name.endsWith('.md')) {
+      else if (entry.name.endsWith('.md') || entry.name.endsWith('.mdx')) {
         const count = markdownH1Count(await readFile(path, 'utf8'));
         if (count !== 1)
           errors.push(`${path}: expected exactly one H1; found ${count}`);
