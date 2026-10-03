@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -15,14 +15,14 @@ Implementation preflight complete. Phase 1 dispatch prepared; no code task compl
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 0/4       |
+| Phase 1 | in_progress | 4     | 1/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 0/16 tasks completed
+**Total:** 1/16 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -30,8 +30,12 @@ Implementation preflight complete. Phase 1 dispatch prepared; no code task compl
 
 ### Task p01-t01: Require version bumps for shared-doc vendors
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c039803635d9ce773a79fd662510b89a486c4669
+
+**Outcome:** Changed shared documents now require bumps for every detected vendoring skill, including directory links; the autonomy-only pin was reduced after its general regression passed.
+
+**Verification:** 255 skills tests, scoped lint, CLI type-check and CLI build executed/passed. Real Git baseline missed vendors (expected failing regression exit 1); fixed branch command rejected unbumped exit 1 and accepted bumped exit 0. Root independently reran the actual command probe and checked exact two-file commit scope and clean worktree. Repeatable evidence: `analysis/p01/t01-command-probe.mjs`, `t01-command.log`, `t01-baseline.log`, `t01-tests.log`. No recovery attempt.
 
 ### Task p01-t02: Require exactly one document H1
 
@@ -363,3 +367,5 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
 ```
 
 Accepted native handle: `/root/wave5_phase1`. Exact materialized-role payload accepted; runtime identity not reported. Child holds mutations until root releases the clean bookkeeping baseline. Dispatch policy: high; selected=high; cap=high (codex, enforced — pinned-variant oat-phase-implementer-gpt-6-1-sol-high).
+
+Phase p01 actual clean execution base after dispatch acceptance bookkeeping: `325dbad2a3f26feca361cefc50855893c9349442`. Task p01-t01 completion received; root bookkeeping occurs before releasing p01-t02.
