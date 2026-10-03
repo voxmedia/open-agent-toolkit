@@ -86,9 +86,9 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-10-03T00:29:10Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -99,7 +99,7 @@ oat_implement_exit_gate:
   reviewed_head: 23577fd166c96355497417ff4a35942514a56c8b
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:91ac65b6427378cc9e0e9c802067eea66f20e4403e861b70cc6d16d57c9e9913'
-  freshness_head: 23577fd166c96355497417ff4a35942514a56c8b
+  freshness_head: f63b3e109dcdb4cd12e838f4f1d207e39dd890d4
   freshness_fingerprint: 'sha256:effective-delta-v2:91ac65b6427378cc9e0e9c802067eea66f20e4403e861b70cc6d16d57c9e9913'
   waivers: []
   launch_state: result_persisted
@@ -111,17 +111,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=7c263e05-5c9b-4a15-a476-8ce39ee033b4; handoff=receive; source=reviews/final-review-2026-10-03T003215Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md'
   receive_archived_artifact: '.oat/projects/shared/backlog-wave-4/reviews/archived/final-review-2026-10-03T003215Z.md'
   receive_event_identity: 'final | code | final-review-2026-10-03T003215Z.md'
   receive_pre_head: cd477c38238b0fd2660721bbc1856229ae9e48e8
-  receive_commit: null
+  receive_commit: f63b3e109dcdb4cd12e838f4f1d207e39dd890d4
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-10-03T00:35:48Z'
+  updated_at: '2026-10-03T00:35:54Z'
 oat_project_recap:
   decision: generate
   source: autonomous_policy
