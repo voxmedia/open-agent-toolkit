@@ -5,12 +5,17 @@ oat_blockers: []
 oat_last_updated: 2026-10-03
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported | lite
+oat_plan_source: quick
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
+oat_template: true
+oat_phase_review_gate:
+  enabled: true
+  phases: []
+  review_type: code
+  exit_nonzero_on: high
 oat_generated: false
 ---
 

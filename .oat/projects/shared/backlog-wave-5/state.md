@@ -88,7 +88,15 @@ oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_generated: false
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-10-03T20:51:11.414Z'
 ---
 
 # Project State: backlog-wave-5
