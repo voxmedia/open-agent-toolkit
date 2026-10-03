@@ -1033,3 +1033,11 @@ Full `pnpm check` found that the new completion exception push needs registratio
 ### p07-t09 documentation-test correction (root inline)
 
 The forced full test run found one historical documentation assertion requiring the now-retired concurrent-recovery caveat. Root updated that public operator-guidance assertion to require serialized recovery, verified manual cleanup, and fail-closed acquisition instead; no behavior coverage was deleted. Actual exclusion remains covered by the gate command regressions. The skills validator suite passes 255/255 tests. Full checks restart after this test-only correction.
+
+### Final feedback-fix gate, first review (received)
+
+Gate `05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c`, Codex GPT-6.1 Sol xhigh, reviewed immutable head `6ac0f47d081154dec8b3a251d9bdbf7e5188869f` and returned blocked (2 High). Root read the complete artifact. H1 is already fixed by `84cde0bdd` (synced writer inventory), H2 by `47e5a56ec` (documentation contract); independent reviewer separately confirmed both correction controls pass. Neither finding is deferred, waived or duplicated into a new task. The earlier artifact is now `reviews/archived/final-review-2026-10-03T154305Z.md` with status fixes_completed. The final reviewer independently reproduced pre-fix failures and passed 334 focused tests. No additional core behavior finding was reported.
+
+Full Definition of Done plus lint/format passes at `513012d520cdac0915445b8d044b6da8669f5805`, uncached with TURBO_FORCE=true. One configured-gate integration test timed out at 15 seconds on the first run, passed in isolation in 2.1 seconds, and then passed in the complete rerun without a timeout change. Logs and explicit exits: `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/results.json`.
+
+The earlier gate was launched while checks ran and reviewed the starting commit rather than the subsequently corrected integration head. The follow-up final gate is limited to `6ac0f47d..513012d520cdac0915445b8d044b6da8669f5805` and H1/H2, composing with the independently reviewed three-fix range. Root owns bookkeeping and publication. New exit-gate generation below is based on the corrected code fingerprint; prior receipts remain in the review ledger.

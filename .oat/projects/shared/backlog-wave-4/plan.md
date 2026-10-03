@@ -1904,39 +1904,39 @@ rewrites the four inventory rows last.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
-| p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
-| p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
-| p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
-| p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
-| p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
-| p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
-| final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
-| final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
-| final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
-| plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
-| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
-| p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
-| p02    | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
-| p03    | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
-| p04    | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
-| p05    | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
-| p06    | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
-| p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
-| final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
-| final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
-| final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
-
-| remote-pr-351 | code | fixes_added | 2026-10-03 | reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md | - | - | - |
+| Scope         | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ------------- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
+| p02           | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
+| p03           | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
+| p04           | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
+| p05           | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
+| p06           | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
+| p07           | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
+| final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+| final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
+| final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
+| spec          | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| design        | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan          | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
+| plan          | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| plan          | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
+| p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
+| p02           | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
+| p03           | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
+| p04           | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
+| p05           | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
+| p06           | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
+| p07           | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
+| final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
+| final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
+| final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+| remote-pr-351 | code     | fixes_added     | 2026-10-03 | reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md | -                                        | -          | -                 |
+| final         | code     | fixes_completed | 2026-10-03 | reviews/archived/final-review-2026-10-03T154305Z.md         | 6ac0f47d081154dec8b3a251d9bdbf7e5188869f | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
