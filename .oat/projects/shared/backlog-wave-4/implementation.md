@@ -1041,3 +1041,5 @@ Gate `05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c`, Codex GPT-6.1 Sol xhigh, reviewed i
 Full Definition of Done plus lint/format passes at `513012d520cdac0915445b8d044b6da8669f5805`, uncached with TURBO_FORCE=true. One configured-gate integration test timed out at 15 seconds on the first run, passed in isolation in 2.1 seconds, and then passed in the complete rerun without a timeout change. Logs and explicit exits: `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/results.json`.
 
 The earlier gate was launched while checks ran and reviewed the starting commit rather than the subsequently corrected integration head. The follow-up final gate is limited to `6ac0f47d..513012d520cdac0915445b8d044b6da8669f5805` and H1/H2, composing with the independently reviewed three-fix range. Root owns bookkeeping and publication. New exit-gate generation below is based on the corrected code fingerprint; prior receipts remain in the review ledger.
+
+Follow-up gate accepted: `f555cc8b-558a-40da-8117-0d7debc0f261`, target `codex-6-sol-xhigh`, Codex GPT-6.1 Sol xhigh, branch-built CLI, bounded H1/H2 correction range. Launch is persisted in state; no replacement route.

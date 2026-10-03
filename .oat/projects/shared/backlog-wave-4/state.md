@@ -113,12 +113,12 @@ oat_implement_exit_gate:
   freshness_head: 513012d520cdac0915445b8d044b6da8669f5805
   freshness_fingerprint: 'sha256:effective-delta-v2:e00aeb0d443a4841d02e5552a84604d6d9743eb8162399f1e13c91b7f6033a89'
   waivers: []
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'bw4-pr351-feedback-followup-1'
   launch_started_at: '2026-10-03T15:49:45Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-4/review-fixes/followup-gate.json'
   gate_run_marker: null
-  gate_run_id: null
+  gate_run_id: f555cc8b-558a-40da-8117-0d7debc0f261
   envelope_status: null
   artifact: null
   handoff: null
