@@ -127,6 +127,20 @@ Optional third-tier readiness is not a preflight blocker. Codex depth two may be
 provisioned as capability, but default phase execution requires only the root →
 phase-agent depth.
 
+#### Disclose Resolved Phase Capacity
+
+Before dispatch and on resume, report the effective project default and phase
+limit, source/override, prior durable `used_attempts`, remaining capacity
+`max(0, phase_recovery_limit - used_attempts)`, and reconciled `pending_attempt`.
+Use the owning policy resolution above; do not introduce another default.
+Refresh the autonomous kickoff disclosure with these values and every
+applicable recovery, dispatch, review and repository stop.
+
+Capacity is not permission: a failed-attempt remains terminal even when
+allowance remains. Separate route retries, recovery events, consumed attempts,
+review-fix rounds and gate attempts; the warning at three recovery events
+changes none of their limits or eligibility rules.
+
 #### Dedicated Phase Recovery Contract
 
 This contract covers only a post-commit defect discovered by declared task,

@@ -147,6 +147,18 @@ closed. A nonzero project-push exit stops bookkeeping until the reported
 recovery is resolved and the push is retried. Planned code task commits such as
 `feat(pNN-tNN)` are unchanged.
 
+## Recovery Capacity Disclosure
+
+Report the supplied effective phase limit, prior durable usage, remaining
+capacity and reconciled pending attempt in phase progress and boundary reports.
+The root owns policy resolution and its source/override disclosure; use the
+brief and authoritative `state.md` ledger, never a guessed local counter.
+Capacity is not permission: failed-attempt terminality, eligibility/proof,
+exact-target continuity and repository authority still apply when allowance
+remains. Recovery events, warnings and route retries are distinct from reserved
+attempt usage. Do not interpret remaining capacity as continue-after-failure
+authority.
+
 ## Prevention and Post-Commit Recovery
 
 Prevention is the first recovery control. Before every planned task commit:

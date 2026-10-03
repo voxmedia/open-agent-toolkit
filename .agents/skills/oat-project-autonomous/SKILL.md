@@ -233,6 +233,55 @@ Select the earliest incomplete lifecycle owner:
 An approved plan enters at implementation. Never replay completed phases solely
 because this is a new session.
 
+### Step 1.5: Disclose Effective Limits and Hard Stops
+
+Before lifecycle execution, read the owning contracts: the vendored autonomy
+contract/gate inventory, `oat-project-implement/references/phase-execution.md`
+and `oat-phase-implementer` recovery contract, the current project dispatch
+adapter and generic dispatch contract, and each applicable lifecycle gate's
+configuration and failure policy. Do not infer permission from an allowance.
+
+For an existing project, resolve `oat_phase_recovery_policy` from `state.md`:
+use `phase_attempt_limits.<pNN>` when present, otherwise
+`default_attempt_limit` (default `10`); require integer limits from `0` through
+`20`. Read prior durable `used_attempts` and `pending_attempt` from
+`phase_attempt_usage.<pNN>` and reconcile pending identities before work. Report
+remaining capacity as `max(0, effective limit - used_attempts)`, the source and
+any phase override. A fully reconciled pending attempt completes the same
+reserved attempt, even at the limit; it receives no new reservation.
+
+Print the effective project default and every known phase's values at kickoff:
+
+```text
+Recovery: project default={limit}; source={state.md | owning default 10}
+Phase {pNN}: effective={limit}; source={phase override | project default | owning default}
+  prior durable usage={used}; remaining capacity={remaining}; pending={none | reconciled attempt/status}
+Dispatch/review: {resolved route retry limit, review-cycle cap, gate maxAttempts and their sources}
+Stops: {applicable owning stop conditions and evidence/next action}
+```
+
+For a new project, disclose the owning defaults and mark phase-specific values
+unresolved until scaffolding/planning supplies them; refresh the report before
+implementation and on resume or a configured limit change. Never invent phase
+usage. An unavailable or malformed policy/ledger stops before dispatch.
+
+Capacity is not permission. A `failed-attempt` disposition is terminal even
+with remaining capacity. Applicable hard stops include recovery eligibility or
+proof failure; budget exhaustion for a new attempt; malformed ledger or
+unresolved pending attempt; exact-target loss or accepted-launch failure after
+its owning identical-target continuation is exhausted; blocking review policy;
+missing credentials; repository authority or ownership limits; unresolved
+product judgment; unauthorized destructive risk; and inventory gaps. Apply the
+owning gate's validated `block`/`prompt`/`warn` semantics without weakening its
+operational or provenance stops. Name the exact inventory boundary and its
+owner when reporting a stop.
+
+Route retries, implementation recovery events, reserved recovery attempts,
+review-fix rounds and gate attempts are separate counters. The elevated warning
+at three recovery events does not grant recovery permission or change a limit.
+Remaining allowance covers separate eligible events. Continue-after-failure is
+a separate future policy choice, not authority supplied by this kickoff.
+
 ### Step 2: Select Workflow Mode by Review Density
 
 For a new goal, choose mode as a rigor selector:

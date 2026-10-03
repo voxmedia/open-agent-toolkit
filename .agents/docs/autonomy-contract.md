@@ -65,6 +65,25 @@ Operational, validation, correlation, malformed or contradictory envelope,
 launch, and receive failures are boundary stops regardless of `onFailure`.
 None can continue under `warn` or produce an allowed disposition.
 
+## Kickoff disclosure
+
+The autonomous caller must read the owning recovery, gate and dispatch
+contracts before execution and disclose effective project/phase limits, their
+source/override, prior durable usage, remaining capacity and reconciled pending
+attempts. `oat-project-autonomous` owns the kickoff report; phase dispatch and
+resume refresh it from `state.md` using the phase-execution contract.
+
+Capacity is not permission. A failed recovery attempt is terminal even when
+allowance remains; continuing after failure requires a separate future policy.
+Report all applicable owning stops: eligibility/proof failure, new-attempt
+budget exhaustion, malformed ledger or unresolved pending attempt, exact-target
+or accepted-launch failure, configured blocking reviews, missing credentials,
+repository authority, product judgment, destructive risk and inventory gaps.
+Route retries, recovery events/attempts, warnings and review/gate budgets have
+separate meanings. Neither a counter nor a warning overrides a stop or grants
+recovery permission. Existing failure dispositions and gate policies remain
+authoritative.
+
 ## Boundary classes
 
 | Class                          | Required behavior                                                                                                                                                                   |

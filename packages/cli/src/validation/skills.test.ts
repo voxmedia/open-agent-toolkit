@@ -3688,6 +3688,60 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('discloses resolved autonomous recovery capacity and owning hard stops at kickoff', async () => {
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const start = autonomous.indexOf(
+      '### Step 1.5: Disclose Effective Limits and Hard Stops',
+    );
+    expect(start, 'kickoff disclosure is live guidance').toBeGreaterThan(-1);
+    const kickoff = autonomous
+      .slice(start, autonomous.indexOf('### Step 2:', start))
+      .replace(/\s+/g, ' ');
+    for (const clause of [
+      /phase_attempt_limits\.<pNN>/,
+      /default_attempt_limit/,
+      /used_attempts/,
+      /pending_attempt/,
+      /remaining capacity/i,
+      /source.*override/i,
+      /capacity is not permission/i,
+      /failed-attempt.*terminal/i,
+      /eligibility.*proof/i,
+      /budget exhaustion/i,
+      /malformed ledger.*unresolved pending/i,
+      /exact-target.*accepted-launch/i,
+      /blocking review policy/i,
+      /missing credentials/i,
+      /repository authority/i,
+      /product judgment/i,
+      /destructive.*inventory gaps/i,
+    ])
+      expect(kickoff, clause.source).toMatch(clause);
+    expect(kickoff).not.toMatch(/may continue after a failed recovery/i);
+    const guide = await readRepoFile(
+      'apps/oat-docs/docs/workflows/advanced/autonomy.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    expect(phase).toMatch(/default_attempt_limit: 10/);
+    expect(guide).toContain('Default control: limit 10, used 3, remaining 7');
+    expect(guide).toContain(
+      'Phase override control: limit 2, used 1, remaining 1',
+    );
+    expect(guide).toMatch(/failed attempt.*terminal.*remaining capacity/i);
+    for (const path of [
+      '.agents/docs/autonomy-contract.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+      '.agents/agents/oat-phase-implementer.md',
+    ])
+      expect(await readRepoFile(path), path).toMatch(
+        /capacity is not permission/i,
+      );
+  });
+
   it('defines dedicated bounded phase recovery and zero-limit behavior', async () => {
     const implement = await readRawRepoFile(implementSkillPath);
     const phase = await readRawRepoFile(
