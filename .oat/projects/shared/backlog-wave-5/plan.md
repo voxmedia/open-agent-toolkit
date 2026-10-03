@@ -137,6 +137,34 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `docs(review): require evidence at changed consequential boundaries`
 
+### Task p01-t05: (review) Include supported MDX pages in H1 validation
+
+**Files:** Modify `apps/oat-docs/scripts/validate.ts` and `apps/oat-docs/tests/headings.test.ts` only.
+
+**Dependencies:** p01-t04.
+
+**Change:** Resolve M1 from `reviews/archived/p01-review-2026-10-03T225737Z.md`: include both supported .md and .mdx page extensions in the existing H1 scan. Extend existing self-contained zero/one/two and relevant frontmatter/code cases to MDX. Preserve recursive AST counting and filename/count diagnostics; no parser or validator rewrite.
+
+**Verification:** Run the existing heading fixture command and `pnpm docs:validate`. Reproduce pre-fix zero/two MDX acceptance with the review's exact disposable probe; fixed cases reject while valid MDX and Markdown controls pass. Neutralizing the new extension coverage must break the MDX keeper. Retain categorical evidence locally under analysis/p01; no tracked corpus changes.
+
+**Format:** Scoped documented formatter on the two files.
+
+**Commit:** `fix(docs): include mdx in document h1 validation`.
+
+### Task p01-t06: (review) Align the executed test summary
+
+**Files:** Modify only the `## Test Results` prose in this project's `implementation.md`; root retains all other lifecycle sections.
+
+**Dependencies:** p01-t05 and its committed root tracking.
+
+**Change:** Resolve L1 from the same review: replace the obsolete planning-only placeholder with a concise Phase 1 actual results/evidence pointer. Preserve executed versus cached evidence, guidance-only limitations and pending final gates. This is a bounded review-generated artifact task on the original phase handle; no product changes or new test.
+
+**Verification:** Conservation/readback against committed phase/task evidence; scoped formatting and diff check only.
+
+**Format:** Documented scoped Markdown formatter.
+
+**Commit:** `docs(oat): align wave 5 test results with phase evidence`.
+
 ## Phase 2: Preserve PJM settings and structured state
 
 ### Task p02-t01: Preserve unowned PJM settings through real command reruns
@@ -446,7 +474,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | plan   | artifact | passed          | 2026-10-03 | implementation.md#revised-plan-artifact-self-review         | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -                                        | -          | -           |
-| p01    | code     | received        | 2026-10-03 | reviews/p01-review-2026-10-03T225737Z.md                    | e586535587644cd6faf2a5c221650710fa6bd726 | auto       | -           |
+| p01    | code     | fixes_added     | 2026-10-03 | reviews/archived/p01-review-2026-10-03T225737Z.md           | e586535587644cd6faf2a5c221650710fa6bd726 | auto       | -           |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -456,14 +484,14 @@ Planning recovery: the original findings were reformatted without content/proven
 
 **Planned task totals:**
 
-- Phase 1: 4 tasks — validators and bounded autonomy/review guidance.
+- Phase 1: 6 tasks — four original tasks plus two bounded p01/r1 review corrections.
 - Phase 2: 2 tasks — PJM settings and structured blockers.
 - Phase 3: 3 tasks — shared primitive and CLI/skill lifecycle adoption.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 16 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 18 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

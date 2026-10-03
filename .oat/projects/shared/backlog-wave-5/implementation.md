@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -15,14 +15,14 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 4/4       |
+| Phase 1 | in_progress | 6     | 4/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 4/16 tasks completed
+**Total:** 4/18 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -65,6 +65,16 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 **Outcome:** Reviewer/local/remote contracts now require proportional changed-boundary probes, categorical evidence/provenance/limitations and blocking findings for unsupported consequential guarantees, preserving existing schemas and containment.
 
 **Verification:** Missing-contract baseline failed, full 257 skill tests passed with four categorical guidance controls and stop-clause deletion guard. Skills validation, lint (10 executed, zero cache plus root pass), format and scoped diff checks passed. Evidence is executable-guidance validation, not live reviewer/model efficacy. Root inspected exact four-file commit, source/evidence agreement and clean worktree. Evidence: `analysis/p01/t04-contract-evidence.md` and t04 logs. No conditional template change because the embedded role section owns it. No recovery.
+
+### Task p01-t05: (review) Include supported MDX pages in H1 validation
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: (review) Align the executed test summary
+
+**Status:** pending
+**Commit:** -
 
 ## Phase 2: Preserve PJM settings and structured state
 
@@ -483,3 +493,12 @@ Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown
 Accepted native reviewer handle `/root/wave5_phase1_review`; configured exact role/model/effort, runtime identity not reported. Independent artifact review of complete p01 range `325dbad2a3f26feca361cefc50855893c9349442..e586535587644cd6faf2a5c221650710fa6bd726`; product readonly plus one timestamped artifact. Review-outcome bookkeeping excluded, task ledger included. Current branch canonical role supplies changed probe contract; version/projection integration remains p06.
 
 Root reviewer p01/r1 returned exactly one valid not-attempted reconnaissance signal; no orchestration section. Root read the full artifact and validated bound head/range, timestamp, scope and counts: 0 Critical, 0 High, 1 Medium, 1 Low. Artifact `reviews/p01-review-2026-10-03T225737Z.md` is preserved before receive; receive dispositions/fix tasks are pending.
+
+### Review Received: p01/r1
+
+**Artifact:** reviews/archived/p01-review-2026-10-03T225737Z.md; immutable original preserved in commit 2528ebf95109f5b9ed58a6be90e8e60a3c9bad38. Bound reviewed head e586535587644cd6faf2a5c221650710fa6bd726, invocation auto. Findings: 0 Critical, 0 High, 1 Medium, 1 Low. Auto-disposition, no deferral.
+
+- M1 — Include supported MDX: agreed; actual supported extension is omitted by the scan and the six-case disposable review probe demonstrates the bypass. Task Scope: Minor. Converted to p01-t05; original phase handle owns two exact source/test files.
+- L1 — Test-summary alignment: agreed; planning placeholder contradicts executed evidence. Task Scope: Negligible. Artifact alignment required, converted to p01-t06. Original handle may edit only Test Results prose; root retains ledger/state/reviews and performs separate per-task bookkeeping.
+
+Original completed phase handle continues newly added ordered tasks without replaying the four original tasks. Canonical Critical/High-only Mode Fix is not used for these Medium/Low review-generated implementation tasks. This is ordinary review closure, not a recovery attempt or changed route; p01 recovery remains 0/null. Review event stays fixes_added until both tasks finish; fresh root review and configured independent gate remain required. Phase stays in_progress.
