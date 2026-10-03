@@ -56,6 +56,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 wave5-p01-root-review-outcome-r2-23d54bef: Root review passed 0 Critical/High threshold; three bounded review tasks settled, no deferred findings, zero Critical/High fix loops; independent phase gate pending. Evidence: implementation.md and reviews/archived/p01-review-2026-10-03T231742Z.md.
 
+### 2026-10-03 · structural · oat gate review · p01
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:5 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p01-review-2026-10-03T232906Z.md run=3e2d6cf2-58a6-4a21-81b9-bb660e92f21f
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
