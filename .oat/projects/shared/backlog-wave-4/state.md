@@ -86,7 +86,7 @@ oat_project_completed: null # ISO 8601 UTC timestamp — set when project is com
 oat_project_state_updated: '2026-10-03T00:48:16Z'
 oat_generated: false
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   source: configured
   final_phase: p07
   pre_approval: [summary, document, pr]
