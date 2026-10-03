@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 7     | 6/7       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 7     | 7/7       |
 
-**Total:** 41/42 tasks completed
+**Total:** 42/42 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -285,8 +285,8 @@ oat_generated: false
 
 ### Task p07-t07: (review) Close exit gate attempt 1 findings H1, M1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2ceff7a83
 
 ---
 
@@ -764,6 +764,15 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   recorded deferrals (archive-resume tail, stale-claim race). Policy `block`:
   attempt 1 of 2 consumed; remediate, re-run final verification and a final
   re-review for the new basis, then gate attempt 2.
+
+- Continuation `cont-backlog-wave-4-p07-fix-4`: `2ceff7a83` (p07-t07):
+  filename-safe destination emptiness check (`find ... -exec printf x \; -quit`,
+  fail-closed on error) with newline-name regressions; gate integration
+  fixtures default their own marker directory (case 11 proves an inherited
+  directory stays empty). Bundle and gate suites 73/73 normally and under an
+  inherited marker directory; CLI build, check, type-check exit 0. The exit
+  gate generation 1 basis is now stale; Steps 12-13 rerun for the new basis
+  before gate attempt 2.
 
 <!-- orchestration-runs-end -->
 
