@@ -2,9 +2,9 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-02
+oat_last_updated: 2026-10-03
 oat_generated: true
-oat_summary_last_task: p07-t08
+oat_summary_last_task: p07-t11
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -24,7 +24,7 @@ plan-gate escalation, eleven closed, and one shipped partially.
 
 ## What Was Implemented
 
-43 tasks across seven sequential phases (24 planned, the rest review fixes).
+46 tasks across seven sequential phases (24 planned, the rest review fixes).
 The lockstep public packages end at 0.3.16 because `main` advanced three times
 during the wave (#335, #342, #350).
 
@@ -62,6 +62,10 @@ during the wave (#335, #342, #350).
   thorough-profile review leaves it undisposed; `oat-wrap-up` resolves its
   summary template through `oat template resolve`; the dashboard routes quick
   plans exactly as the router does and reads parsed HiLL arrays.
+- **Feedback fixes (p07-t09–p07-t11):** serialize gate ownership mutation,
+  refuse claim I/O errors, resolve dispatch from loaded siblings, and preserve
+  synced completion scope/pull/publication guards. Independent core and
+  integration reviews pass with no new deferrals or waivers.
 - **Release fan-in (p07):** lockstep bump, backlog closeout (11 closed, 1
   won't-do, 3 rewritten, follow-ups filed), docs ported into the #342
   reader-first docs site, full Definition of Done exit 0.
@@ -93,7 +97,8 @@ Closed: `BL-261001-fail-closed-when-bundle-assets`,
 - **Full-surface gate budget and duplicate rejection:** artifact gate reviews
   default to 1,800,000 ms, and a live duplicate gate for the same project,
   review type, and scope is rejected (not reused) through an atomic
-  hard-linked claim file, released in `finally`.
+  hard-linked claim file, released in `finally`. Stale recovery and release
+  share a mutation guard; I/O failures refuse reviewer launch.
 - **Report quick-start gate record without routing:** next and progress
   validate and report `oat_quick_start_gate`, but quick plan readiness stays
   the single routing rule for quick plans, defined once in quick-start and
@@ -115,10 +120,15 @@ Closed: `BL-261001-fail-closed-when-bundle-assets`,
   review-receive cycle count skips `complexity-*`; progress also reports the
   implement exit-gate record.
 - **New output values:** the gate envelope gained `recursion: unchecked` for
-  an unreadable marker directory, and `oat sync --json` gained an `error`
-  operation for marker-less directories.
+  claim I/O failures; these now refuse reviewer launch rather than bypassing
+  exclusion. `oat sync --json` gained an `error` operation for marker-less directories.
 
 ## Notable Challenges
+
+- Latest GitHub CI at `d3781e47e` timed out the existing all-scope review-ledger
+  contract at 30 seconds (8,207 tests passed, one timeout). The exact case passed
+  independently in 3.3 seconds; no assertion defect was reproduced. Local full
+  gates passed and Bugbot passed. Completion publication will rerun CI.
 
 - **p01 did not converge under review.** Three root rounds and two Codex gate
   attempts each found the next unlisted path an `OAT_ASSETS_DIR` override could
@@ -192,15 +202,12 @@ Closed: `BL-261001-fail-closed-when-bundle-assets`,
 
 ## Follow-up Items
 
-- **Operator question:** amend `DR-260720` (autonomous closeout) to the
-  shipped design — a standing `workflow.autonomousComplete` opt-in, per-wave
-  completion with a recorded pre-merge exception, and batch mode at program
-  close. Held for the operator; repository policy records decisions only on
-  request.
+- `DR-260720` was amended following operator approval through
+  `DR-261003-autonomous-completion-uses`; this decision is complete.
 - `BL-261002-route-validated-archive` — route validated archive receipts from
   `oat-project-complete-auto` to the interactive resume tail (p05 gate M1).
-- `BL-261002-serialize-stale-gate-claim` — serialize stale gate-claim recovery
-  with acquisition (p02 gate M1).
+- `BL-261002-serialize-stale-gate-claim` is closed: stale recovery and release
+  serialize through a shared mutation guard, with three-contender proof.
 - `BL-261002-wire-the-complexity-review` — the sibling gate-capable skills
   (plan, import-plan, design, discover, lite).
 - `BL-261002-port-the-complexity-review` — port the `complexity-review` skill
@@ -301,6 +308,22 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:
 ### 2026-10-03 · structural · oat gate review · final
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
+
+### 2026-10-03 · structural · oat-project-review-provide · final
+
+Completed two awaited read-only reconnaissance lanes and root reconciliation for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md (gate run 05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c).
+
+### 2026-10-03 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md run=05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c
+
+### 2026-10-03 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md run=f555cc8b-558a-40da-8117-0d7debc0f261
+
+### 2026-10-03 · structural · oat-project-complete · retirement-sweep
+
+Retirement sweep: no absorbed projects recorded.
 
 ## PR #351 feedback follow-up
 

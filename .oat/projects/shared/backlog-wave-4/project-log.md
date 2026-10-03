@@ -140,6 +140,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md run=f555cc8b-558a-40da-8117-0d7debc0f261
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-10-03 · structural · oat-project-complete · retirement-sweep
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Retirement sweep: no absorbed projects recorded.
+
+## End-of-run synthesis
+
+Seven-phase wave completed with 46 tasks and three PR feedback fixes. Independent review plus negative controls established exclusion and synced completion guards. Main integration required reconciled docs and lockstep versions. Full local gates passed; latest CI timeout was reproduced as a passing isolated 3.3-second test, with no assertion defect. Review-loop complexity escalation led to operator-approved simplification; further expansion remains in separately scoped backlog items.
