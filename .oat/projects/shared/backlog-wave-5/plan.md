@@ -165,6 +165,20 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `docs(oat): align wave 5 test results with phase evidence`.
 
+### Task p01-t07: (review) Route state progress to the authoritative ledger
+
+**Files:** Root-owned `state.md` Current Artifacts implementation entry only.
+
+**Dependencies:** p01-t06.
+
+**Change:** Resolve L1 from p01/r2: replace the stale duplicated progress count with a pointer to implementation.md's task ledger and verification evidence. Preserve the phase's in-progress state and pending independent gate; no product change.
+
+**Verification:** Readback and conservation diff show only the stale prose entry changes. Scoped formatting/diff check; no automated test needed for this artifact alignment.
+
+**Format:** Documented scoped Markdown formatter.
+
+**Commit:** `docs(oat): route wave progress to its task ledger`.
+
 ## Phase 2: Preserve PJM settings and structured state
 
 ### Task p02-t01: Preserve unowned PJM settings through real command reruns
@@ -475,7 +489,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -                                        | -          | -           |
 | p01    | code     | fixes_completed | 2026-10-03 | reviews/archived/p01-review-2026-10-03T225737Z.md           | e586535587644cd6faf2a5c221650710fa6bd726 | auto       | -           |
-| p01    | code     | received        | 2026-10-03 | reviews/p01-review-2026-10-03T231742Z.md                    | d116bf47814081a4d8784f637ada4a5854e154b0 | auto       | -           |
+| p01    | code     | fixes_added     | 2026-10-03 | reviews/archived/p01-review-2026-10-03T231742Z.md           | d116bf47814081a4d8784f637ada4a5854e154b0 | auto       | -           |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -485,14 +499,14 @@ Planning recovery: the original findings were reformatted without content/proven
 
 **Planned task totals:**
 
-- Phase 1: 6 tasks — four original tasks plus two bounded p01/r1 review corrections.
+- Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 2 tasks — PJM settings and structured blockers.
 - Phase 3: 3 tasks — shared primitive and CLI/skill lifecycle adoption.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 18 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 19 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
