@@ -300,3 +300,14 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
   ]
 }
 ```
+
+## Plan review received: 7e5ea925-786c-4298-9cc7-575ab6a4ee09
+
+- Source event: `artifact-plan-review-2026-10-03T220910Z.md`; archived identity: `reviews/archived/artifact-plan-review-2026-10-03T220910Z.md`.
+- Valid envelope: `ok`, exit 0, receiveEligible true, nonnull handoff; project/run/invocation all matched. Exact configured route Claude Opus 5.5 high; reviewed baseline `bf69d27bc715fd688892eca26b645629efc62f9d`. Gate passed its configured threshold, but the Medium finding prevents a clean plan-review pass until re-review.
+- M1 / Moderate / resolve_in_artifact: agree; PATH CLI and installed completion consumer would use the old export/report shape. Pin this wave’s completion to branch canonical skill/scripts and freshly built branch CLI, then assert tracked contents, hashes, links and final gate freshness after the wave’s own export and before publication.
+- L1 / Negligible / resolve_in_artifact: agree; replace removed p06-t03 acceptance reference with root verification/post-completion check.
+- L2 / Negligible / resolve_in_artifact: agree; join the detached self-review event row to the Reviews table, preserving every event.
+- L3 / Minor / resolve_in_artifact: agree; source CLI bookkeeping avoids stale dist; any dist invocation requires rebuild after the latest CLI changes.
+- All four edits applied directly to canonical plan; no implementation fix tasks or scope expansion. Consumed artifact archived only after event references were updated. Event status fixes_completed awaits a clean re-review.
+- Remediation cycles used: 1 of maximum 2. Independent configured gate is rerun unchanged; readiness remains false. Complexity review follows clean disposition.

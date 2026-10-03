@@ -44,7 +44,7 @@ oat_generated: false
 
 ## Parallelism
 
-`oat_plan_parallel_groups: []` intentionally selects six sequential phases. H1 validation can be owned separately from skill-bump validation, but p01's guidance changes touch the same skill validator and shared contracts. p02 changes two separate producers, but shared public types and docs integration require a composed review. p03 owns one Git-index boundary; p04 consumes it; p05 touches completion skills already changed by p03/p04; p06 owns all generated/version/backlog outputs. No adjacent full phase pair has a useful proven file-disjoint implementation contract. Do not manufacture worktrees or a wave program. If root later proposes parallelism, first prove exact disjoint files/dependencies and integration-base readiness, then amend this plan; never exceed two isolated implementation lanes or run competing Git-index/bookkeeping writers in one checkout.
+`oat_plan_parallel_groups: []` intentionally selects six sequential phases. H1 validation can be owned separately from skill-bump validation, but p01's guidance changes touch the same skill validator and shared contracts. p02 changes two separate producers, but shared public types and docs integration require a composed review. p03 owns one Git-index boundary; p04 consumes it; p05 touches completion skills already changed by p03/p04; p06 owns generated/version outputs; root owns backlog closeout. No adjacent full phase pair has a useful proven file-disjoint implementation contract. Do not manufacture worktrees or a wave program. If root later proposes parallelism, first prove exact disjoint files/dependencies and integration-base readiness, then amend this plan; never exceed two isolated implementation lanes or run competing Git-index/bookkeeping writers in one checkout.
 
 ## Execution and Review Contract
 
@@ -202,7 +202,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Dependencies:** p03-t02. All skill writes are serial with p01 and later p04/p05; versions finalized once per skill in p06.
 
-**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. From p03-t03 onward this wave’s root and workers invoke the branch-built CLI (`node packages/cli/dist/index.js internal commit-paths ...`) for lifecycle bookkeeping until the new command ships. Shipped guidance fails closed with update guidance when the command is unavailable, never falls back to a broad staged-index commit. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
+**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. From p03-t03 onward this wave’s root and workers invoke the branch CLI directly from source (`pnpm run cli -- internal commit-paths ...`) for lifecycle bookkeeping until the new command ships. Any branch-built `dist` invocation requires a fresh `pnpm build` after the latest CLI source changes. Shipped guidance fails closed with update guidance when the command is unavailable, never falls back to a broad staged-index commit. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm oat:validate-skills`; `pnpm test:skills`. Exercise a representative shared scaffold/bookkeeping snippet in a disposable repo through the real internal command with unrelated staged data and the real index-managing hook; synced snippets must still route to project push and fail closed on scope errors. The executable text is the public skill contract; validator tests protect loss of path ownership, not internal wording trivia.
 
@@ -359,6 +359,12 @@ Also run `pnpm lint`, `pnpm format`, `pnpm docs:validate`, `pnpm docs:skills:che
 
 **Root closeout commit:** `chore(backlog): close verified wave 5 items`
 
+### Root completion export and publication check
+
+After required reviews and verified ticket closeout, execute this wave’s completion with the branch’s canonical `.agents/skills/oat-project-complete/SKILL.md` and its branch-owned scripts, not an older installed consumer. Run `pnpm build` after the final CLI changes and route completion’s `oat project archive` call through `node packages/cli/dist/index.js`; preserve the completion skill’s exact arguments and receipt/resume contract. This pins both the exporter and the report consumers to the reviewed implementation.
+
+After this wave’s own recap export and before PR publication, repeat the tracked-recap contents assertion from p05-t03: all historical exports plus this wave’s export are single `.html` files; no recap support directories, manifests, sidecars, QA/source files or stray fact-base file remain tracked. Verify the new page’s original/exported hashes through the new report and retained immutable run, and its links/assets. Run relevant checks for the completion delta and require the implementation exit gate’s final freshness/receive contract before publication. Do not format hashed HTML or rewrite original evidence. Root records these post-completion results alongside the final acceptance evidence.
+
 ## Scope and Acceptance Matrix
 
 Each alias below names one authoritative item. AC numbers follow the current ticket bullet order; evidence is required for every row, not inferred from suite green. Archive rewrites will update these source links through the owning command at closeout.
@@ -376,69 +382,68 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 | B     | [BL-261003-preserve-documented-structured — Preserve documented structured blockers in project status output](../../../repo/pjm/backlog/items/BL-261003-preserve-documented-structured.md)                             |
 | S     | [BL-261003-leave-backlog-archive-staging — Leave backlog archive staging to callers and report complete result paths](../../../repo/pjm/backlog/items/BL-261003-leave-backlog-archive-staging.md)                      |
 
-| AC  | Required outcome                                                                | Task and verification boundary                                                                    |
-| --- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| R1  | Exactly one dated HTML, no tracked evidence/sidecar, report/summary identity    | p05-t01/t02/t03: actual archive export inventory and report fields                                |
-| R2  | All source hashes verified, full original run retained locally/synced           | p05-t01/t03: QA/fact-base tamper rejects; per-file preserved bytes; offline sync archive contract |
-| R3  | Matching retry idempotent; mismatch rejects; rollback owns writes               | p05-t01/t03: existing export, retry, failure and concurrent replacement controls                  |
-| R4  | No broken exported relative href/src; valid tracked/external targets allowed    | p05-t01/t03: destination-relative target and fragment checks                                      |
-| R5  | Report, printing, completion/resume, summary/PR links compatible; skill bump    | p05-t02, p06-t01: real producer JSON through consumers; owner version gate                        |
-| R6  | Docs explain page versus archived evidence                                      | p05-t02: project-artifacts/CLI conservation review and docs checks                                |
-| R7  | Every current package migrated; stray handled; refs fixed; size recorded        | p05-t03: fresh tracked inventory, preserved archives, before/after bytes, maintained refs         |
-| R8  | Durable decision states tracked page/archive-only QA source split               | p05-t02: amended DR and owner-generated decision index                                            |
-| R9  | Lockstep/full DoD; full-package negative export control/new page accepted       | p05-t01, p06-t01/t03: contents rejection, valid control, versions and eight gates                 |
-| C1  | One exact-path helper for CLI and skill commits, hooks enabled                  | p03-t01/t02/t03: caller adoption table and real CLI/skill probe                                   |
-| C2  | Unrelated staged/unstaged intact; hook-owned paths clean                        | p03-t01/t02: real index-managing hook, literal blobs/bytes/HEAD/status                            |
-| C3  | Inspected bounded locks, no deletion, structured resumable exhaustion           | p03-t01/t02: contention/exhaustion/receipt controls                                               |
-| C4  | Matching prior success deduplicates                                             | p03-t01/t02: committed identity and retry/no duplicate operation                                  |
-| C5  | Scaffold/gate hook and concurrent writer tests                                  | p03-t01/t02: real process tests using shared primitive                                            |
-| K1  | Only generated files removed/overwritten; manual note survives                  | p04-t03: actual refresh fixture with marker/manual collision                                      |
-| K2  | Commit only knowledge paths; unrelated staging survives                         | p04-t03: shared helper with seeded staged blob                                                    |
-| K3  | Probe fails if broad deletion or commit returns                                 | p04-t03: intentional broad-operation negative control                                             |
-| K4  | Skill bump; obsolete docs warning removed                                       | p04-t03, p06-t01: docs conservation and bump gate                                                 |
-| P1  | Init/migrate preserve all unowned pjm.\*                                        | p02-t01: both real scratch command paths including unknown key                                    |
-| P2  | Literal seeded remote unchanged; merge-neutralized regression fails             | p02-t01: serialized remote bytes and guard removal control                                        |
-| P3  | Any remote rewrite announced before write                                       | p02-t01: current operation preserves remote; contract explicitly retains pre-write disclosure     |
-| P4  | All obsolete docs warnings and dependent refs removed                           | p02-t01, p06-t01: five named pages, matching note inventory and docs checks                       |
-| V1  | Every changed shared-doc symlink vendor requires bump                           | p01-t01: real changed target/vendor gate fixture                                                  |
-| V2  | Unbumped rejects; bumped passes; pre-fix miss proved                            | p01-t01: failed/accepted pair at actual validator                                                 |
-| V3  | Autonomy-only pin reduced only after general keeper exists                      | p01-t01: changed arbitrary-doc keeper and direct gate-inventory link                              |
-| H1  | Zero/multiple H1 fails naming file                                              | p01-t02: actual docs validator fixtures                                                           |
-| H2  | Zero/one/two self-contained fixture; neutralization fails                       | p01-t02: headings test and restored guard evidence                                                |
-| H3  | All current pages pass                                                          | p01-t02, root final verification: real corpus docs:validate                                       |
-| A1  | Effective limits/all owning stops shown; capacity distinct                      | p01-t03: kickoff contract and default/override dry controls                                       |
-| A2  | Failed-attempt terminality preserved                                            | p01-t03: existing terminal controls and no contradictory guidance                                 |
-| A3  | Continue-after-failure remains deferred choice                                  | p01-t03: unchanged policy, explicit out-of-scope disclosure                                       |
-| Q1  | Focused probes for changed trust/input-limit failure modes                      | p01-t04: reviewer boundary inventory and changed-contract case                                    |
-| Q2  | Results or concrete execution limitations                                       | p01-t04: report/structured-mode evidence requirements                                             |
-| Q3  | Consequential missing evidence blocks; scope/containment/independence preserved | p01-t04: missing-evidence blocking control and conservation review                                |
-| Q4  | No harness/campaign/model-efficacy claim                                        | p01-t04: bounded final guidance diff                                                              |
-| Q5  | Independently verified implementer failing/accepted controls can count          | p01-t04: executable limitation plus inspected evidence case                                       |
-| Q6  | Unsupported assertion insufficient; existing blocking model                     | p01-t04: unsupported-assertion blocking control, unchanged severity/output schema                 |
-| B1  | task_id/reason/since preserved; string/human consumers deliberate               | p02-t02: documented real YAML → parser/project → CLI JSON/field/shell/human boundary              |
-| S1  | Archive no staging, complete source/destination/ledger/index/refs report        | p04-t01: real index equality and exact affected-path report                                       |
-| S2  | Caller commits entire operation via helper; unrelated staged work intact        | p04-t02, root backlog closeout: real archive/helper composition and actual closeout paths         |
+| AC  | Required outcome                                                                | Task and verification boundary                                                                                                          |
+| --- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Exactly one dated HTML, no tracked evidence/sidecar, report/summary identity    | p05-t01/t02/t03: actual archive export inventory and report fields                                                                      |
+| R2  | All source hashes verified, full original run retained locally/synced           | p05-t01/t03: QA/fact-base tamper rejects; per-file preserved bytes; offline sync archive contract                                       |
+| R3  | Matching retry idempotent; mismatch rejects; rollback owns writes               | p05-t01/t03: existing export, retry, failure and concurrent replacement controls                                                        |
+| R4  | No broken exported relative href/src; valid tracked/external targets allowed    | p05-t01/t03: destination-relative target and fragment checks                                                                            |
+| R5  | Report, printing, completion/resume, summary/PR links compatible; skill bump    | p05-t02, p06-t01: real producer JSON through consumers; owner version gate                                                              |
+| R6  | Docs explain page versus archived evidence                                      | p05-t02: project-artifacts/CLI conservation review and docs checks                                                                      |
+| R7  | Every current package migrated; stray handled; refs fixed; size recorded        | p05-t03: fresh tracked inventory, preserved archives, before/after bytes, maintained refs                                               |
+| R8  | Durable decision states tracked page/archive-only QA source split               | p05-t02: amended DR and owner-generated decision index                                                                                  |
+| R9  | Lockstep/full DoD; full-package negative export control/new page accepted       | p05-t01, p06-t01, root final verification and post-completion export check: contents rejection, valid control, versions and eight gates |
+| C1  | One exact-path helper for CLI and skill commits, hooks enabled                  | p03-t01/t02/t03: caller adoption table and real CLI/skill probe                                                                         |
+| C2  | Unrelated staged/unstaged intact; hook-owned paths clean                        | p03-t01/t02: real index-managing hook, literal blobs/bytes/HEAD/status                                                                  |
+| C3  | Inspected bounded locks, no deletion, structured resumable exhaustion           | p03-t01/t02: contention/exhaustion/receipt controls                                                                                     |
+| C4  | Matching prior success deduplicates                                             | p03-t01/t02: committed identity and retry/no duplicate operation                                                                        |
+| C5  | Scaffold/gate hook and concurrent writer tests                                  | p03-t01/t02: real process tests using shared primitive                                                                                  |
+| K1  | Only generated files removed/overwritten; manual note survives                  | p04-t03: actual refresh fixture with marker/manual collision                                                                            |
+| K2  | Commit only knowledge paths; unrelated staging survives                         | p04-t03: shared helper with seeded staged blob                                                                                          |
+| K3  | Probe fails if broad deletion or commit returns                                 | p04-t03: intentional broad-operation negative control                                                                                   |
+| K4  | Skill bump; obsolete docs warning removed                                       | p04-t03, p06-t01: docs conservation and bump gate                                                                                       |
+| P1  | Init/migrate preserve all unowned pjm.\*                                        | p02-t01: both real scratch command paths including unknown key                                                                          |
+| P2  | Literal seeded remote unchanged; merge-neutralized regression fails             | p02-t01: serialized remote bytes and guard removal control                                                                              |
+| P3  | Any remote rewrite announced before write                                       | p02-t01: current operation preserves remote; contract explicitly retains pre-write disclosure                                           |
+| P4  | All obsolete docs warnings and dependent refs removed                           | p02-t01, p06-t01: five named pages, matching note inventory and docs checks                                                             |
+| V1  | Every changed shared-doc symlink vendor requires bump                           | p01-t01: real changed target/vendor gate fixture                                                                                        |
+| V2  | Unbumped rejects; bumped passes; pre-fix miss proved                            | p01-t01: failed/accepted pair at actual validator                                                                                       |
+| V3  | Autonomy-only pin reduced only after general keeper exists                      | p01-t01: changed arbitrary-doc keeper and direct gate-inventory link                                                                    |
+| H1  | Zero/multiple H1 fails naming file                                              | p01-t02: actual docs validator fixtures                                                                                                 |
+| H2  | Zero/one/two self-contained fixture; neutralization fails                       | p01-t02: headings test and restored guard evidence                                                                                      |
+| H3  | All current pages pass                                                          | p01-t02, root final verification: real corpus docs:validate                                                                             |
+| A1  | Effective limits/all owning stops shown; capacity distinct                      | p01-t03: kickoff contract and default/override dry controls                                                                             |
+| A2  | Failed-attempt terminality preserved                                            | p01-t03: existing terminal controls and no contradictory guidance                                                                       |
+| A3  | Continue-after-failure remains deferred choice                                  | p01-t03: unchanged policy, explicit out-of-scope disclosure                                                                             |
+| Q1  | Focused probes for changed trust/input-limit failure modes                      | p01-t04: reviewer boundary inventory and changed-contract case                                                                          |
+| Q2  | Results or concrete execution limitations                                       | p01-t04: report/structured-mode evidence requirements                                                                                   |
+| Q3  | Consequential missing evidence blocks; scope/containment/independence preserved | p01-t04: missing-evidence blocking control and conservation review                                                                      |
+| Q4  | No harness/campaign/model-efficacy claim                                        | p01-t04: bounded final guidance diff                                                                                                    |
+| Q5  | Independently verified implementer failing/accepted controls can count          | p01-t04: executable limitation plus inspected evidence case                                                                             |
+| Q6  | Unsupported assertion insufficient; existing blocking model                     | p01-t04: unsupported-assertion blocking control, unchanged severity/output schema                                                       |
+| B1  | task_id/reason/since preserved; string/human consumers deliberate               | p02-t02: documented real YAML → parser/project → CLI JSON/field/shell/human boundary                                                    |
+| S1  | Archive no staging, complete source/destination/ledger/index/refs report        | p04-t01: real index equality and exact affected-path report                                                                             |
+| S2  | Caller commits entire operation via helper; unrelated staged work intact        | p04-t02, root backlog closeout: real archive/helper composition and actual closeout paths                                               |
 
 ## Reviews
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | passed   | 2026-10-03 | implementation.md#plan-artifact-self-review        | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md | -             | -          | -           |
-
-| plan | artifact | passed | 2026-10-03 | implementation.md#revised-plan-artifact-self-review | - | - | - |
-| plan | artifact | received | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T220910Z.md | - | - | - |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed          | 2026-10-03 | implementation.md#plan-artifact-self-review                 | -             | -          | -           |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p05    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p06    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | received        | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md          | -             | -          | -           |
+| plan   | artifact | passed          | 2026-10-03 | implementation.md#revised-plan-artifact-self-review         | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -             | -          | -           |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; implementation readiness remains false.
 
