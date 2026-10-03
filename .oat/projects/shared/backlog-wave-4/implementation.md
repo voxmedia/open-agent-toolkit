@@ -32,9 +32,9 @@ oat_generated: false
 | Phase 4 | complete    | 9     | 9/9       |
 | Phase 5 | complete    | 6     | 6/6       |
 | Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 11    | 9/11      |
+| Phase 7 | in_progress | 11    | 10/11     |
 
-**Total:** 44/46 tasks completed
+**Total:** 45/46 tasks completed
 
 ---
 
@@ -1011,3 +1011,9 @@ Acquisition failures currently bypass duplicate protection via unchecked-and-lau
 **Verification:** Pre-fix loaded-sibling regression exits 1; fixed contract suites 49 tests exit 0; generated bundle parity, formatting, lint and skill validation exit 0. Evidence: `.oat/repo/analysis/backlog-wave-4/review-fixes/dispatch-tier/evidence.md`.
 
 Disjoint review-fix helpers ran concurrently under root coordination; the bounded dispatch-tier task completed before p07-t09. Root retained per-task commits and verification ownership.
+
+### Task p07-t11: Preserve synced autonomous completion guards
+
+**Status:** completed
+**Commit:** 8d6ba0aa6
+**Verification:** Shipped shell instructions executed against a fake external `oat`: original skill fails 9 regression controls; fixed skill passes 43 tests including failed/unknown scope, failed pull, absent checkout recovery, successful publication before a delegated pull, and failed push refusal. Formatting and focused lint exit 0. No live synced project or vault writes; live transport acceptance is outside this fix.
