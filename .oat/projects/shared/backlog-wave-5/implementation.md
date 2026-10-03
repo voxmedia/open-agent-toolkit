@@ -345,7 +345,7 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
     "task_name": "wave5_phase1"
   },
   "launch_status": "accepted",
-  "child_outcome": "completed",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -357,7 +357,17 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p01-review-task-continuation-r1",
+      "original_request_id": "wave5-p01-implement-r1",
+      "phase": "p01",
+      "task_ids": ["p01-t05", "p01-t06"],
+      "review_artifact": "reviews/archived/p01-review-2026-10-03T225737Z.md",
+      "status": "accepted",
+      "reason": "Auto-received Medium and Low converted to ordered implementation tasks; original exact handle, no phase replay."
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
@@ -502,3 +512,5 @@ Root reviewer p01/r1 returned exactly one valid not-attempted reconnaissance sig
 - L1 — Test-summary alignment: agreed; planning placeholder contradicts executed evidence. Task Scope: Negligible. Artifact alignment required, converted to p01-t06. Original handle may edit only Test Results prose; root retains ledger/state/reviews and performs separate per-task bookkeeping.
 
 Original completed phase handle continues newly added ordered tasks without replaying the four original tasks. Canonical Critical/High-only Mode Fix is not used for these Medium/Low review-generated implementation tasks. This is ordinary review closure, not a recovery attempt or changed route; p01 recovery remains 0/null. Review event stays fixes_added until both tasks finish; fresh root review and configured independent gate remain required. Phase stays in_progress.
+
+Continuation `wave5-p01-review-task-continuation-r1` accepted through original `/root/wave5_phase1` handle via followup_task. No new launch/target or recovery. The original four-task DONE report remains accepted; current child turn executes only p01-t05/t06 with per-task clean tracking handoffs. Worker holds mutations pending explicit START from this durable baseline.
