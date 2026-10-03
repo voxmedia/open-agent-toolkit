@@ -1,0 +1,36 @@
+{
+  "artifactSha256": "sha256:70c27a1eb30c390e63ce0c2d12c4b3d5f7fd4e5d30647a7bbe6da9558c86ebfe",
+  "checks": {
+    "parse": {
+      "status": "pass"
+    },
+    "requiredNarrative": {
+      "status": "pass"
+    },
+    "structure": {
+      "status": "pass"
+    },
+    "sourceDumping": {
+      "status": "pass"
+    },
+    "shellScripts": {
+      "status": "pass"
+    },
+    "ledgerToPage": {
+      "status": "pass"
+    },
+    "pageToLedger": {
+      "status": "pass"
+    }
+  },
+  "rung": "host",
+  "screenshots": [
+    "qa/320.png",
+    "qa/768.png",
+    "qa/1440.png"
+  ],
+  "visual": {
+    "verdict": "pass",
+    "notes": "Headless Chrome over CDP with device metrics at 320, 768, and 1440 pixels, inspected in viewport slices covering the whole page (the 320 capture keeps the top 16000 pixels to stay within the PNG decoder limit). No horizontal page overflow (scrollWidth equals clientWidth at each width); all six required sections visible; headings readable at 320 pixels; no overlapping text. The diagram and wide tables scroll inside bounded containers at 320 and 768 pixels, and the section nav scrolls horizontally at 320 pixels."
+  }
+}

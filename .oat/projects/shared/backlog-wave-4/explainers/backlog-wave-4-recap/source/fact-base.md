@@ -1,0 +1,2476 @@
+# Fact base
+
+- oat_status: complete
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-10-02
+- oat_generated: true
+- oat_summary_last_task: p07-t08
+- oat_summary_revision_count: 0
+- oat_summary_includes_revisions: []
+- Summary: backlog-wave-4
+- Wave 4 of the repository backlog, delivered as one PR on
+- `wave/2026-10-02-backlog-wave-4`. It targeted gate and build reliability (the
+- Wave 3 disk fill from `bundle-assets.sh`, a 15-minute budget too short for
+- full-surface gate reviews, duplicate nested gates) and the review-loop and
+- completion follow-ups Wave 3 surfaced, led by the operator's request that an
+- exhausted review or gate budget trigger a complexity review presented with the
+- reasons the loop stopped. Of thirteen approved items, one left at the
+- plan-gate escalation, eleven closed, and one shipped partially.
+- 43 tasks across seven sequential phases (24 planned, the rest review fixes).
+- The lockstep public packages end at 0.3.16 because `main` advanced three times
+- during the wave (#335, #342, #350).
+- - **Build assets (p01):** `bundle-assets.sh` fails closed on an empty,
+- absolute, escaping, or repository-root inventory lookup; staging can never
+- sit inside a recursively copied source; an `OAT_ASSETS_DIR` override is
+- accepted only when it is absent, empty, or an existing bundle (the emptiness
+- check is filename-safe and follows a symlinked destination). The Wave 3 root
+- cause is fixed: `bundle-inputs.mjs` compared its real module path with the
+- invoked path, so a symlinked checkout printed nothing. Asset-root read
+- failures now report their errno.
+- - **Gate timeouts (p02):** artifact (full-surface) gate reviews default to
+- 30 minutes; a second gate for the same project, review type, and scope is
+- rejected through an atomic claim, reported as `recursion` in the JSON
+- envelope, with the claim directory passed explicitly to children.
+- - **Sync correctness (p03):** `oat sync` restamps stale copy-strategy hashes
+- (only when the manifest row tracks the checked path), bridges legacy digests
+- when retiring obsolete copies, and reports a marker-less skill or agent
+- directory as an `error` entry instead of rewriting it on every run.
+- `oat:validate-skills` reports a missing `SKILL.md` in any skill directory.
+- - **Review-loop skills (p04):** implement, quick-start, and review-receive run
+- a read-only complexity review at every budget-exhaustion point (installed
+- `complexity-review` skill, or a condensed fallback in
+- `.agents/docs/complexity-review-fallback.md`) and present it with the stop
+- reasons and a **simplify** option. Quick-start persists
+- `oat_quick_start_gate` (shape defined once in
+- `.agents/docs/gate-approval-record.md`); next and progress report it. Root
+- agents log judgment entries to the project log.
+- - **Completion (p05):** a `workflow.autonomousComplete` opt-in (default off)
+- and the model-invocable `oat-project-complete-auto` companion skill
+- (three-layer guard, recorded pre-merge exception for wave-execute, batch
+- mode, never creates a PR); wave-execute and wave-program point at it.
+- pr-final's ledger scan boundary prose is precise.
+- - **Small fixes (p06):** recon reconciliation keeps a claim `unresolved` when a
+- thorough-profile review leaves it undisposed; `oat-wrap-up` resolves its
+- summary template through `oat template resolve`; the dashboard routes quick
+- plans exactly as the router does and reads parsed HiLL arrays.
+- - **Release fan-in (p07):** lockstep bump, backlog closeout (11 closed, 1
+- won't-do, 3 rewritten, follow-ups filed), docs ported into the #342
+- reader-first docs site, full Definition of Done exit 0.
+- Closed: `BL-261001-fail-closed-when-bundle-assets`,
+- `BL-260906-report-errno-for-asset-root`, `BL-260718-harden-full-surface-gate`,
+- `BL-260927-persist-quick-start-prompt`, `BL-261001-run-a-complexity-review-when`,
+- `BL-260713-root-agent-judgment-logging`, `BL-260720-add-oat-project-complete-auto`,
+- `BL-260908-tighten-the-pr-final-ledger`, `BL-261001-downgrade-claims-that-thorough`,
+- `BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`;
+- `BL-260908-retire-the-top-level-skill` archived as won't-do (superseded).
+- - **Complexity review at budget exhaustion:** every review or gate
+- budget-exhaustion point (root review cap, configured gate attempts, final
+- review cap, review-receive cycle cap, quick-start plan gate) dispatches one
+- read-only complexity review before the decision message. It probes for the
+- installed `complexity-review` skill and falls back to a condensed OAT
+- reference. The operator chooses the disposition, including simplify; agents
+- never self-select it, also under `OAT_AUTONOMOUS=1`, where it is a boundary
+- report. No automatic early trigger ships; the operator can request the
+- review at any time.
+- - **Assets override destination rule:** an `OAT_ASSETS_DIR` override publishes
+- only to an absent or empty directory or an existing bundle, replacing a
+- per-path denylist that grew one entry per review round. The default
+- destination is exempt because a fresh clone tracks four files under
+- `packages/cli/assets` while its bundle metadata is gitignored.
+- - **Full-surface gate budget and duplicate rejection:** artifact gate reviews
+- default to 1,800,000 ms, and a live duplicate gate for the same project,
+- review type, and scope is rejected (not reused) through an atomic
+- hard-linked claim file, released in `finally`.
+- - **Report quick-start gate record without routing:** next and progress
+- validate and report `oat_quick_start_gate`, but quick plan readiness stays
+- the single routing rule for quick plans, defined once in quick-start and
+- mirrored by the router and dashboard.
+- - **p01 destination guard:** the planned per-path denylist was replaced at the
+- review cap by the destination rule above (operator disposition: simplify),
+- dissolving six of nine p01 findings and cutting `bundle-assets.sh` by 36
+- lines net. The rule applies only to an override, not the default
+- destination (Deviations table, p01-t07).
+- - **Scope left at the plan-gate escalation:** the gate idle kill
+- (`BL-260711-add-activity-aware-gate`) and the early complexity-review config
+- key were dropped; an idle kill cannot serve Codex gates whose activity is not
+- attributable to the gate child.
+- - **p04 placements:** complexity reports live under `reviews/archived/`
+- because top-level `reviews/` files read as unprocessed reviews; the
+- review-receive cycle count skips `complexity-*`; progress also reports the
+- implement exit-gate record.
+- - **New output values:** the gate envelope gained `recursion: unchecked` for
+- an unreadable marker directory, and `oat sync --json` gained an `error`
+- operation for marker-less directories.
+- - **p01 did not converge under review.** Three root rounds and two Codex gate
+- attempts each found the next unlisted path an `OAT_ASSETS_DIR` override could
+- overwrite. The complexity review at the cap classified the findings as one
+- family; the operator chose simplify plus the root-cause fix and closed the
+- p01 gate by override. The exit gate later found two more edge cases in the
+- new rule (a newline-only filename and a symlinked destination), both fixed.
+- - **`main` moved three times.** #335 moved the target to 0.3.14 during
+- planning; #342 (docs restructure, deleting two pages this wave edited) and
+- #350 landed during closeout, requiring two merges, a docs port, and a bump
+- to 0.3.16.
+- - `BL-260909-restamp-a-stale-copy-strategy` shipped everything except retiring
+- the compatibility bridge and legacy encoder, which must wait until field
+- installs restamp; the item stays open with that scope.
+- - Three Medium findings were deferred rather than fixed in place because each
+- needed a non-contained change; the final review resurfaced them and
+- `p07-t04` shipped honest recovery routing, a caution, and the HiLL parsing
+- fix, filing the remainder as backlog items.
+- - The updated skills need `oat` 0.3.16 or later for the new config keys.
+- - The dashboard HiLL fix affects every workflow mode: projects whose
+- `oat_hill_checkpoints` use single-quoted, bare, or block arrays now show and
+- route pending HiLL gates on the dashboard, as the router already did.
+- - Gate integration fixtures default their own `OAT_GATE_RUN_MARKER_DIR`; an
+- inherited marker directory otherwise leaks claims across tests.
+- - Keep the explicit "exactly one `**Reconnaissance:**` line in the artifact
+- body (required)" sentence in every reviewer brief — one artifact omitted it
+- and cost a round trip
+- ([2026-10-02T20:20Z — gotcha — Reviewer artifact missing the reconnaissance signal](oat-execution-learnings.md)).
+- - Entry-point guards comparing a module URL with `argv[1]` should compare real
+- paths — the mismatch under a symlinked checkout caused the Wave 3 disk fill
+- ([2026-10-02T20:20Z — candidate-skill-content — Root cause of the Wave 3 disk fill](oat-execution-learnings.md)).
+- - Update the global `oat` CLI and user-scope skills between waves — gates and
+- lifecycle skills ran 0.3.10 behavior, not the repository's (not authorized
+- this wave)
+- ([2026-10-02T12:33Z — environment-limited — Installed CLI and user skills lag main](oat-execution-learnings.md)).
+- - Gitignore project review artifacts instead of committing them
+- (`BL-261002-gitignore-project-review`, high) — operator-requested, sized as a
+- separate PR across four skills, `oat init`, and a migration
+- ([2026-10-02T13:40Z — decision — Operator request mid-run kept out of the wave](oat-execution-learnings.md)).
+- - When a guard grows one entry per review round, stop and ask for the general
+- rule before the next fix — the per-path denylist cost two extra review
+- cycles; the complexity review at the cap is the backstop
+- ([2026-10-02T20:20Z — gotcha — A per-path denylist did not converge under review](oat-execution-learnings.md)).
+- - Re-fetch and compare `origin/main` versions at plan-gate time, and rebuild
+- the branch CLI right after any merge from `main` — a stale build refused PJM
+- writes with a bundled-assets version mismatch
+- ([2026-10-02T13:40Z — gotcha — Main moved during planning; the branch CLI build went stale](oat-execution-learnings.md)).
+- - Rename the `codex-6-sol-xhigh` gate target id when user gate config is next
+- edited, so receipts name the model they ran (`gpt-6.1-sol`)
+- ([2026-10-02T12:33Z — decision — Reviewer target name is stale but resolves Sol 6.1](oat-execution-learnings.md)).
+- - **Operator question:** amend `DR-260720` (autonomous closeout) to the
+- shipped design — a standing `workflow.autonomousComplete` opt-in, per-wave
+- completion with a recorded pre-merge exception, and batch mode at program
+- close. Held for the operator; repository policy records decisions only on
+- request.
+- - `BL-261002-route-validated-archive` — route validated archive receipts from
+- `oat-project-complete-auto` to the interactive resume tail (p05 gate M1).
+- - `BL-261002-serialize-stale-gate-claim` — serialize stale gate-claim recovery
+- with acquisition (p02 gate M1).
+- - `BL-261002-wire-the-complexity-review` — the sibling gate-capable skills
+- (plan, import-plan, design, discover, lite).
+- - `BL-261002-port-the-complexity-review` — port the `complexity-review` skill
+- into an OAT pack (the condensed fallback is interim).
+- - `BL-261002-teach-check-skill-bumps` — follow vendored `.agents/docs`
+- symlinks.
+- - Still open: `BL-260909-restamp-a-stale-copy-strategy` (bridge retirement),
+- `BL-260711-add-activity-aware-gate` (needs Codex activity attribution), and
+- `BL-260818-distinguish-operator-directed` (rewritten to exclude the shipped
+- complexity slice).
+- 2026-10-02 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/artifact-plan-review-2026-10-02T144731Z.md run=cf4607a4-0bbe-47fd-8299-da416f48f4c0
+- 2026-10-02 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/artifact-plan-review-2026-10-02T145801Z.md run=fe6bbe0a-bc0a-498f-b29d-6255948827bf
+- 2026-10-02 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/p01-review-2026-10-02T174337Z.md run=79f6824b-3a1a-496b-adcb-b7591c75abc1
+- 2026-10-02 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/p01-review-2026-10-02T180245Z.md run=2546dc45-ffcf-4b2f-952c-9b70848a7771
+- 2026-10-02 · structural · oat-project-implement · p01
+- Phase p01 complete (8/8 tasks): bundle-assets fail-closed and asset-root errno. Root review rounds 4, Codex gate attempts 2 (blocked on the destructive-publish family), complexity review at the cap; operator chose simplify plus the symlinked-checkout root-cause fix and closed the p01 gate by override.
+- 2026-10-02 · structural · oat gate review · p02
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p02-review-2026-10-02T192954Z.md run=75d9dbb7-8438-4c6b-8893-a7e95ea44cdf
+- 2026-10-02 · structural · oat-project-implement · p02
+- Phase p02 complete (3/3 tasks): 30-minute artifact gate default and atomic duplicate-gate claim. One root review round (1 Medium, 3 Low fixed), Codex gate passed with 1 Medium (stale-recovery race) deferred to final.
+- 2026-10-02 · structural · oat gate review · p03
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p03-review-2026-10-02T200622Z.md run=b2f32273-4392-4f7b-a573-b7be724d9ad6
+- 2026-10-02 · structural · oat-project-implement · p03
+- Phase p03 complete (5/5 tasks): sync restamps stale copy hashes, legacy retirement bridge, missing SKILL.md for every skill dir, marker-less directories report an error. One root review round (1 Medium, 2 Low fixed), Codex gate passed with 1 Medium addressed now.
+- 2026-10-02 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p04-review-2026-10-02T213839Z.md run=e9d83e79-99bf-4c5f-9ade-babb2cc0a746
+- 2026-10-02 · structural · oat-project-implement · p04
+- Phase p04 complete (9/9 tasks): complexity review at review and gate budget exhaustion (probe plus condensed fallback), persisted quick-start gate record read by next and progress, root judgment logging. One root review round (3 Medium, 3 Low fixed), interrupted gate run (findings fixed), clean Codex gate.
+- 2026-10-02 · structural · oat-project-review-provide · p05
+- Review reconnaissance cda6fb19-ae51-463d-b84c-b7340ab122fd-review-recon completed in two read-only intelligent-recon lanes, reconciled by the primary reviewer; artifact=.oat/projects/shared/backlog-wave-4/reviews/p05-review-2026-10-02T221406Z.md.
+- 2026-10-02 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p05-review-2026-10-02T221406Z.md run=cda6fb19-ae51-463d-b84c-b7340ab122fd
+- 2026-10-02 · structural · oat-project-implement · p05
+- Phase p05 complete (6/6 tasks): workflow.autonomousComplete opt-in, oat-project-complete-auto companion skill with three-layer guard and batch mode, wave closeout repoint, pr-final ledger prose. One root review round (2 Medium, 2 Low fixed), Codex gate passed (1 Medium addressed now, 1 Medium deferred to final, stale DR-260720 held for the operator).
+- 2026-10-02 · structural · oat-project-review-provide · p06
+- Review reconnaissance completed: one intelligent-recon scout (gpt-6.1-sol medium), root verified evidence and retained 1 Medium; artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md; b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd-recon
+- 2026-10-02 · structural · oat gate review · p06
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md run=b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd
+- 2026-10-02 · structural · oat-project-implement · p06
+- Phase p06 complete (4/4 tasks): recon reconciler downgrades thorough-review omissions, oat-wrap-up resolves its summary template, dashboard quick-plan routing matches the router. One root review round (1 Medium, 1 Low fixed), Codex gate passed with 1 Medium (textual HiLL array parsing) deferred to final.
+- 2026-10-02 · structural · oat gate review · p07
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p07-review-2026-10-02T230925Z.md run=28bb7ade-a4f7-4d76-b713-187601ff7864
+- 2026-10-02 · structural · oat-project-implement · p07
+- Phase p07 complete (3/3 tasks): lockstep 0.3.14, backlog closeout (11 closed, 1 won't-do, 3 rewritten, 2 filed), full Definition of Done exit 0. Root review and Codex gate passed with Lows only; two moved-item links repointed.
+- 2026-10-03 · structural · oat-project-review-provide · final
+- Final gate review used three awaited consequential reconnaissance lanes with gpt-6.1-sol/high; primary independently reproduced 1 High and 1 Medium. Artifact: reviews/final-review-2026-10-03T000713Z.md. Run c945efcf-73f2-4528-b3b3-f8f7d365c776
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md run=c945efcf-73f2-4528-b3b3-f8f7d365c776
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
+- oat_status: in_progress
+- oat_ready_for: null
+- oat_blockers: []
+- oat_last_updated: 2026-10-02
+- oat_current_task_id: null
+- oat_generated: false
+- Implementation: backlog-wave-4
+- **Started:** 2026-10-02
+- **Last Updated:** 2026-10-02
+- > This document is used to resume interrupted implementation sessions.
+- >
+- > Conventions:
+- >
+- > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+- > - When all plan tasks are complete, set `oat_current_task_id: null`.
+- > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+- > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
+- > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
+- | Phase   | Status   | Tasks | Completed |
+- | Phase 1 | complete | 8     | 8/8       |
+- | Phase 2 | complete | 3     | 3/3       |
+- | Phase 3 | complete | 5     | 5/5       |
+- | Phase 4 | complete | 9     | 9/9       |
+- | Phase 5 | complete | 6     | 6/6       |
+- | Phase 6 | complete | 4     | 4/4       |
+- | Phase 7 | complete | 8     | 8/8       |
+- **Total:** 43/43 tasks completed
+- Phase 1: Build assets
+- **Status:** complete
+- Task p01-t01: Fail closed on empty bundle-inputs lookups
+- **Status:** completed
+- **Commit:** 01993f36e
+- **Status:** completed
+- **Commit:** 0cf8c6492
+- **Status:** completed
+- **Commit:** 1a1732d77
+- **Status:** completed
+- **Commit:** 8ef15f758
+- **Status:** completed
+- **Commit:** 062e8bf24
+- **Status:** completed
+- **Commit:** 05c71e7c8
+- **Status:** completed
+- **Commit:** a57968edd
+- **Status:** completed
+- **Commit:** fbb3711c7
+- Phase 2: Gate timeouts
+- **Status:** complete
+- Task p02-t01: Give full-surface artifact reviews a 30-minute default
+- **Status:** completed
+- **Commit:** e1b753e7a
+- **Status:** completed
+- **Commit:** cdd6d0eed
+- **Status:** completed
+- **Commit:** 4fa3c6e13
+- Phase 3: Sync correctness
+- **Status:** complete
+- **Status:** completed
+- **Commit:** 5d0fe8865
+- **Status:** completed
+- **Commit:** c1b01ccaa
+- **Status:** completed
+- **Commit:** d53936682
+- **Status:** completed
+- **Commit:** 5313d24ec
+- **Status:** completed
+- **Commit:** 078a140cc
+- Phase 4: Review-loop skills
+- **Status:** complete
+- **Status:** completed
+- **Commit:** 664e2e297
+- **Status:** completed
+- **Commit:** 5bcca212e
+- **Status:** completed
+- **Commit:** 32ac81088
+- **Status:** completed
+- **Commit:** 0999bc975
+- Task p04-t06: Persist quick-start gate outcomes and run the complexity review at QS-12
+- **Status:** completed
+- **Commit:** 0f325be20
+- **Status:** completed
+- **Commit:** 1bb2e7020
+- **Status:** completed
+- **Commit:** 03933c299
+- **Status:** completed
+- **Commit:** ac01c3144
+- **Status:** completed
+- **Commit:** 4873e85e5
+- Phase 5: Completion
+- **Status:** complete
+- **Status:** completed
+- **Commit:** 026f57881
+- **Status:** completed
+- **Commit:** ba58a81c2
+- **Status:** completed
+- **Commit:** 1c1e38b09
+- **Status:** completed
+- **Commit:** 6edfc11b9
+- **Status:** completed
+- **Commit:** cc5d5da8b
+- **Status:** completed
+- **Commit:** 566a04f8e
+- Phase 6: Small fixes
+- **Status:** complete
+- **Status:** completed
+- **Commit:** 4e74872a0
+- **Status:** completed
+- **Commit:** 82bc4f5a9
+- **Status:** completed
+- **Commit:** fee4b4c73
+- **Status:** completed
+- **Commit:** 712f8f05f
+- Phase 7: Release fan-in
+- **Status:** complete
+- Task p07-t01: Bump the lockstep public packages to 0.3.14
+- **Status:** completed
+- **Commit:** afc2fd95a
+- **Status:** completed
+- **Commit:** 59390951b
+- **Status:** completed
+- **Commit:** 1ecd4429b
+- **Status:** completed
+- **Commit:** c44417bb4
+- Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.16
+- **Status:** completed
+- **Commit:** 596e1dba0
+- Task p07-t06: (review) Close final review round 3 docs findings L1, L2
+- **Status:** completed
+- **Commit:** 6780b3400
+- Task p07-t07: (review) Close exit gate attempt 1 findings H1, M1
+- **Status:** completed
+- **Commit:** 2ceff7a83
+- **Status:** completed
+- **Commit:** 7449b5efc
+- <!-- orchestration-runs-start -->
+- Run 1
+- - Started: 2026-10-02; autonomous (`oat-project-autonomous`), Tier 1 subagents.
+- - Implement contract: installed user-scope `oat-project-implement` 2.3.15 (the branch edits the canonical skill in p04).
+- - Gate `IMPLEMENT-03`: HiLL checkpoints resolved to `["p07"]` (final phase, first run, field absent) with `oat_auto_review_at_hill_checkpoints: true`.
+- - Gate `IMPLEMENT-08`: not needed; Claude Code Task-tool dispatch of the generated `oat-phase-implementer` and `oat-reviewer` variants is available without extra authorization.
+- - Phase review gate: `oat_phase_review_gate` enabled for every phase (`review_type: code`, `exit_nonzero_on: high`); the configured target resolves to `codex-6-sol-xhigh` (`gpt-6.1-sol` xhigh) through cross-family exclusion with `OAT_GATE_PRODUCER_IDENTITY=claude-opus-5-5:declared`.
+- - Dispatch policy: managed `high` from project state; implementer and reviewer launches use the resolver-returned Claude variants after a validation-only `oat project dispatch record` with the branch CLI.
+- - Request `bw4-p01-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `01993f36e..0cf8c6492` (p01-t01..t02); phase verification pass (scoped vitest
+- 128 tests; CLI build with real HOME; isolated-HOME `turbo run test --force`
+- for the CLI, cache bypass, 8049 tests); recovery 0/10; no skills changed.
+- Failing-first and neutralize-and-restore recorded in both commit bodies.
+- Root spot-check: `src/fs/assets.test.ts` 50/50 at `0cf8c6492`.
+- `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Implementer concern (non-blocking, outside the item): an `OAT_ASSETS_DIR`
+- inside a directory copied file by file (`.agents/agents`, `.oat/scripts`) is
+- not rejected; candidate follow-up at the fan-in.
+- - Request `bw4-p01-review-1`: accepted; target
+- `oat-reviewer-claude-claude-opus-5-5-high`; reconnaissance not-attempted;
+- reviewed head `0b6b62319` (Step 7a ledger commit; ledger confirmed current);
+- `reviews/archived/p01-review-2026-10-02T172532Z.md`: 0 Critical, 0 High,
+- 1 Medium, 2 Low (passes). Auto-review receive converted M1, L1, L2 to
+- `p01-t03` (symlink-plus-`..` containment bypass; untested physical
+- repository-root branch; destination equal to a file-copied source directory).
+- `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p01-fix-1` (same handle, fix mode):
+- `1a1732d77` closed M1 (`cd -P`), L1 (repository-root symlink case), and L2
+- (containment over every copied source directory, including agents, scripts,
+- and the config folder); also fixed the lexical repository-root comparison,
+- which never matched under macOS bash 3.2. Neutralize-and-restore per guard;
+- 28/28 guard cases; uncached CLI tests 8057 pass. Root spot-check:
+- `bundle-consistency.test.ts` 57/57.
+- - Phase gate attempt 1 (`codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh, run
+- `79f6824b`, `exit_nonzero_on: high`) at `eafd73d19`:
+- `reviews/archived/p01-review-2026-10-02T174337Z.md` status `blocked`, receive-eligible,
+- 1 High (an `OAT_ASSETS_DIR` equal to the individually copied `NOTICES.md`
+- passes containment and publication replaces the file). Converted to
+- `p01-t04`; routed to the original phase handle, then root review and the gate
+- re-run (gate retry 1 of 2).
+- - Continuation `cont-backlog-wave-4-p01-fix-2` (same handle, fix mode):
+- `8ef15f758` closed gate H1 (non-directory destination refused;
+- `NOTICES.md` protected by physical path); three bounded cases with
+- per-guard neutralization; uncached CLI tests 8060 pass. Root spot-check:
+- `bundle-consistency.test.ts` passes.
+- - Request `bw4-p01-review-2` (re-review narrowed to `eafd73d19..66212d970`):
+- accepted; reconnaissance not-attempted;
+- `reviews/archived/p01-review-2026-10-02T175407Z.md`: 0 Critical, 0 High, 0 Medium,
+- 1 Low (passes; gate H1 confirmed fixed with reviewer-run neutralization).
+- L1 split: the inaccurate guard comment converted to `p01-t05`; replacing an
+- arbitrary existing destination directory is pre-existing behavior outside
+- the item, deferred to a follow-up backlog item at the fan-in.
+- - Continuation `cont-backlog-wave-4-p01-fix-3`: `062e8bf24` comment-only (p01-t05); bundle-consistency 60/60.
+- - Phase gate retry 1 (run `2546dc45`) at `e1194eea7`:
+- `reviews/archived/p01-review-2026-10-02T180245Z.md` `blocked`, receive-eligible, 1 High
+- (a symlinked `NOTICES.md` leaves its target unprotected; non-default layout).
+- Previous gate H1 confirmed fixed. Converted to `p01-t06` (refuse a linked
+- individually copied source); gate retry 2 of 2 follows.
+- - Continuation `cont-backlog-wave-4-p01-fix-4`: `05c71e7c8` refuses a symlinked individually copied source (p01-t06); failing-first and neutralization recorded; uncached CLI tests 8061 pass; root spot-check bundle-consistency passes.
+- - Request `bw4-p01-review-3` (narrowed to `e1194eea7..360099ac8`): accepted;
+- reconnaissance not-attempted; `reviews/archived/p01-review-2026-10-02T181434Z.md`:
+- 0 Critical, 1 High, 0 Medium, 2 Low. Gate retry H1 confirmed fixed; new H1:
+- `.agents/docs`, reached through skill symlinks by `cp -RL`, is an
+- unprotected destination in the real layout. L1: arbitrary-existing-directory
+- follow-up untracked. L2: a symlinked checkout path makes inventory lookups
+- print nothing (verified at `bundle-inputs.mjs` entry check; likely the Wave 3
+- incident trigger).
+- - Review cap reached for p01 (three root rounds, two gate attempts). Complexity
+- review `reviews/archived/complexity-p01-2026-10-02T1830Z.md`: partially
+- compliant; family B (destructive publish through `OAT_ASSETS_DIR`) holds 6
+- of 9 findings and every High, each fix adding one denylist entry; recommended
+- disposition **simplify**.
+- - **Operator disposition (2026-10-02):** simplify plus the root-cause fix
+- (`p01-t07`), one targeted root re-review, and no further phase-gate cycles
+- for the destructive-publish family (the p01 phase gate is closed by operator
+- override once the targeted re-review passes). R3 H1 and L1 are dissolved by
+- the destination rule; L2 is fixed in `p01-t07`.
+- - Continuation `cont-backlog-wave-4-p01-fix-5`: `a57968edd` (p01-t07,
+- `DONE_WITH_CONCERNS`): destination denylist replaced by the
+- absent/empty/bundle rule for `OAT_ASSETS_DIR` overrides; recursion guard on
+- `STAGING` vs skills, templates, docs; lexical root check dropped; symlinked
+- checkout fixed (`pwd -P` plus real-path entry check). `bundle-assets.sh`
+- net -36 lines; per-guard neutralization table recorded; uncached CLI tests
+- 8058 pass. Root spot-check: bundle-consistency 58/58; tracked default-asset
+- files confirmed (`git ls-files packages/cli/assets`: four files).
+- - Request `bw4-p01-review-4` (operator-authorized targeted round,
+- `360099ac8..9d0d66157`): accepted; reconnaissance not-attempted (signal
+- line initially missing from the artifact; the same reviewer handle added it
+- before receive); `reviews/archived/p01-review-2026-10-02T184328Z.md`: 0 Critical,
+- 0 High, 0 Medium, 2 Low (passes; simplification verified on the real tree, a
+- fresh-clone archive, and a symlinked checkout). L1 (unreadable destination
+- counts as empty) and L2 (root check depends on `pwd -P`, untested) converted
+- to `p01-t08`, applied without a further p01 review round per the operator
+- disposition; the final review and exit gate cover it.
+- - Continuation `cont-backlog-wave-4-p01-fix-6`: `fbb3711c7` (p01-t08) closed
+- L1 (unreadable destination refused) and L2 (repository-root check normalizes
+- both sides; `pwd -P` claim corrected); uncached CLI tests 8060 pass; root
+- spot-check bundle-consistency 60/60.
+- - Phase p01 gate: closed by operator override at the review cap (two Codex
+- gate attempts blocked on the destructive-publish family; the operator chose
+- simplify with one targeted re-review and no further gate cycles). The final
+- review and exit gate cover the whole p01 diff.
+- - Phase p01 outcome: complete; 8/8 tasks (2 planned, 6 review-fix); root
+- review rounds 4 (one operator-authorized past the cap), gate attempts 2,
+- complexity review 1.
+- - Request `bw4-p02-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `e1b753e7a..cdd6d0eed` (p02-t01..t02); phase verification pass (CLI check,
+- type-check, docs check, build, isolated-HOME CLI vitest 8070); recovery
+- 0/10. Design notes: duplicate match on an absolute `projectRoot` added to
+- the marker; legacy markers never block; an unreadable marker directory
+- records `recursion: unchecked` (deviation, beyond `none`/`rejected`); pid
+- reuse after a SIGKILL can block falsely (message names the marker).
+- Root spot-check: gate-hardening integration 9/9.
+- `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `d7f496827` before the review.
+- - Request `bw4-p02-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p02-review-2026-10-02T191106Z.md`: 0 Critical, 0 High, 1 Medium,
+- 3 Low (passes). Converted to `p02-t03`: M1 simultaneous duplicate launches
+- both run (check before claim); L1 docs examples restore 900000; L2 nested
+- detection depends on an inherited `TMPDIR`; L3 no real-first-gate test.
+- `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p02-fix-1`: `4fa3c6e13` (p02-t03): the
+- directory scan was replaced by an atomic claim (private `wx` file hard-linked
+- to a per project/type/scope claim path; dead holder replaced once; released
+- in `finally`); `OAT_GATE_RUN_MARKER_DIR` passed to children; docs examples
+- and duplicate-run docs updated; integration cases 8-10 (real first gate,
+- simultaneous launch, differing `TMPDIR`). Gate suites 285/285; root
+- spot-check gate-hardening integration passes.
+- - Phase gate (`codex-6-sol-xhigh`, run `75d9dbb7`) at `6a67d877d`:
+- `reviews/archived/p02-review-2026-10-02T192954Z.md` status `ok`, receive-eligible,
+- 0 Critical/High, 1 Medium. Judgment sweep: M1 (stale-recovery race) deferred
+- to final (Deferred Findings (Medium)).
+- - Phase p02 outcome: complete; 3/3 tasks (2 planned, 1 review-fix); one root
+- review round, one passing gate.
+- - Request `bw4-p03-impl-1`: accepted and returned `DONE_WITH_CONCERNS`
+- (validated success: concerns are mechanical file widening and a new
+- operation value); target `oat-phase-implementer-claude-claude-opus-5-5-high`;
+- commits `5d0fe8865..d53936682` (p03-t01..t03); phase verification pass
+- (engine/drift/sync/validation 645; isolated-HOME CLI vitest 8104; check,
+- type-check, lint, validate-skills, build exit 0; real-CLI probe of the
+- marker-less loop and restamp); recovery 0/10. Restamp is a
+- `restampContentHash` flag on `skip`; marker-less directories plan a new
+- `error` operation (now in `oat sync --json`; PR behavior change). Mechanical
+- widening accepted: `sync.utils.ts`, `ui/output.ts`, `engine.types.test.ts`,
+- comment-only corrections in `drift/detector.ts`, `manifest/hash.ts`,
+- `drift/detector.test.ts`, `managed-copy-hash.ts` (root verified no
+- non-comment change in detector and hash). Root spot-check: drift and sync
+- 165/165.
+- `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `2f98690d8` before the review.
+- - Request `bw4-p03-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p03-review-2026-10-02T195441Z.md`: 0 Critical, 0 High, 1 Medium,
+- 2 Low (passes; criteria 1-4 met, criterion 5 untouched). Converted to
+- `p03-t04`: M1 restamp on a row whose provider path differs from the checked
+- path creates a drift sync never clears; L1 dry-run summary misses `error`
+- entries and the partial-failure message drops the restamp count; L2 sync
+- docs page.
+- `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p03-fix-1`: `5313d24ec` (p03-t04)
+- restamps only when the row tracks the checked provider path (planner and
+- execute), counts `error` entries in dry-run `summary.failed`, keeps the
+- restamp count on partial failure, and documents both in
+- `provider-sync/commands.md`; engine/drift/sync 398 pass; root spot-check
+- engine and sync pass.
+- - Phase gate (`codex-6-sol-xhigh`, run `b2f32273`) at `2fae69e03`:
+- `reviews/archived/p03-review-2026-10-02T200622Z.md` status `ok`, receive-eligible,
+- 0 Critical/High, 1 Medium. Judgment sweep: M1 (executor path guard compares
+- raw text while the planner normalizes) addressed now as `p03-t05` (small,
+- contained); no re-review or re-gate for an address-now fix.
+- - Continuation `cont-backlog-wave-4-p03-fix-2`: `078a140cc` (p03-t05)
+- normalizes the executor path guard like the planner; failing-first through
+- the real manifest schema; engine and sync 326 pass; root spot-check engine
+- passes.
+- - Phase p03 outcome: complete; 5/5 tasks (3 planned, 2 review-fix); one root
+- review round, one passing gate (Medium addressed now).
+- - Request `bw4-p04-impl-1`: accepted and returned `DONE_WITH_CONCERNS`
+- (validated success; deliberate deviations recorded); target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `664e2e297..03933c299` (p04-t01, t03-t08; no t02 by operator decision);
+- phase verification pass (build; isolated-HOME validation and shared
+- contracts 970; full CLI vitest 8130; check, type-check, lint,
+- validate-skills, check:skill-bumps (8 skills), format:root, docs check);
+- recovery 0/10. Skills bumped: implement 2.3.17, quick-start 2.3.18,
+- review-receive 1.6.8, document 1.8.7, lite 1.1.7, pr-final 1.6.8, next
+- 1.1.5, progress 1.4.4. Deviations: complexity reports saved under
+- `reviews/archived/` (top-level `reviews/` files read as unprocessed reviews
+- by next and the control-plane scanner); receive cycle count skips
+- `complexity-*`; implement SKILL.md line cap 246 to 251; progress also
+- reports the implement exit-gate record. Root spot-check: symlinks, bundle
+- `linkedFiles`, `NOTICES.md` entry, contract and inventory pins 59/59,
+- check:skill-bumps OK.
+- `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `ca1e002ac` before the review.
+- - Request `bw4-p04-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p04-review-2026-10-02T204339Z.md`: 0 Critical, 0 High, 3 Medium,
+- 3 Low (passes; the four implementer deviations judged correct). Converted to
+- `p04-t09`: M1 unrecomputable quick-start fingerprint comparison; M2
+- quick-start and review-receive lack the dispatch skill and `Task`; M3
+- `oat-project-autonomous` not bumped though its inventory links the changed
+- contract; L1 repeated complexity dispatch on re-entry; L2 absent-record and
+- legacy-record wording. L3 (plan text still named top-level `reviews/`)
+- fixed by the root in plan.md.
+- `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p04-fix-1`: `ac01c3144` (p04-t09):
+- records reported as recorded (fingerprint as provenance); quick-start and
+- review-receive load the dispatch skill and grant `Task`, with routing
+- outside implement; `oat-project-autonomous` 1.0.18 plus a vendor pin that
+- finds every skill vendoring the autonomy contract; complexity report reuse
+- rule; absent-record and legacy-record wording. Validation and shared
+- contracts 973; validate-skills, check:skill-bumps (9), format:root exit 0.
+- Root spot-check: complexity, gate-record, and inventory pins pass.
+- - Phase gate attempt (run `67e865c1`) at `fe2bd44b4` was interrupted by a
+- host restart: it wrote `reviews/archived/p04-review-2026-10-02T205659Z.md` (0 Critical,
+- 0 High, 1 Medium, 1 Low) but returned no structured envelope, so it is not a
+- receivable gate result and does not consume a gate attempt. The root
+- verified both findings (M1: quick-start's project-disabled branch skips the
+- record write; L1: minute-precision complexity report timestamps break the
+- reuse rule) and added `p04-t10`; the p04 gate runs again afterward.
+- - Continuation `cont-backlog-wave-4-p04-fix-2`: `4873e85e5` (p04-t10): the
+- project-disabled branch writes `allowed/project_disabled` before its jump
+- (branch-specific pin); complexity reports use UTC seconds timestamps with a
+- collision suffix. Validation and shared contracts 975; root spot-check of
+- both contract files passes.
+- - Phase gate (`codex-6-sol-xhigh`, run `e9d83e79`) at `f5e4289f5`:
+- `reviews/archived/p04-review-2026-10-02T213839Z.md` status `ok`, 0 findings.
+- - Phase p04 outcome: complete; 9/9 tasks (7 planned, 2 review-fix); one root
+- review round, one interrupted gate run (findings addressed), one clean gate.
+- - Request `bw4-p05-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `026f57881..6edfc11b9` (p05-t01..t04); phase verification pass (build;
+- config 623; isolated-HOME validation, shared contracts, tools 1531;
+- validate-skills 66 skills; check:skill-bumps; format:root; docs check;
+- type-check; check; root oxlint); recovery 0/10. New skill
+- `oat-project-complete-auto` 1.0.0; wave-execute 1.9.6; wave-program 1.5.4;
+- pr-final not re-bumped. Branch-CLI `sync --scope project` restamped the
+- manifest `oatVersion` (committed with p05-t02). Root spot-check:
+- complete-auto contracts pass.
+- `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `31b6ce71d` before the review.
+- - Request `bw4-p05-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p05-review-2026-10-02T220250Z.md`: 0 Critical, 0 High, 2 Medium,
+- 3 Low (passes). Converted to `p05-t05`: M1 wave-execute step 8 fallback runs
+- `complete-state` after objective refusals; M2 the autonomous-lifecycle
+- activation route admits any skill name; L2 Step 5.3 `SKILL_DIR` misuse; L3
+- an opt-in control that cannot fail. L1 (`DR-260720` is stale versus the
+- shipped standing opt-in and per-wave firing) needs an amending decision
+- record, which repository policy reserves for an operator request or
+- confirmation; carried to the PR as an operator question.
+- `Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p05-fix-1`: `cc5d5da8b` (p05-t05): step 8
+- defers only on opt-in, PR-precondition, or unanswered-question stops
+- (`refused_check` in the run report) and stops at a boundary otherwise; the
+- autonomous-lifecycle route admits only a skill whose SKILL.md carries the
+- exact invocation (none today); `SKILL_DIR` / `COMPLETE_SKILL_DIR` fixed; the
+- opt-in control runs the skill's own Step 1 block. Shared contracts and
+- validation 1000; build, validate-skills, check:skill-bumps, format:root,
+- root oxlint, type-check exit 0. Root spot-check: complete-auto contracts pass.
+- - Phase gate (`codex-6-sol-xhigh`, run `cda6fb19`) at `fad16c301`:
+- `reviews/archived/p05-review-2026-10-02T221406Z.md` status `ok`, receive-eligible,
+- 0 Critical/High, 2 Medium, 1 Low. Judgment sweep: M2 (interactive
+- `createPrOnComplete` branch could create a PR the companion promises never to
+- create) addressed now as `p05-t06`; M1 (archive-resume recovery blocked by
+- preflight) deferred to final; L1 is the stale `DR-260720` already held for
+- the operator.
+- - Continuation `cont-backlog-wave-4-p05-fix-2`: `566a04f8e` (p05-t06): the
+- companion forces `SHOULD_OPEN_PR=false` after interactive Step 2 and before
+- Step 11; composed controls read the real interactive rules; complete-auto
+- 27/27; shared contracts and validation 1003. Root spot-check passes.
+- - Phase p05 outcome: complete; 6/6 tasks (4 planned, 2 review-fix); one root
+- review round, one passing gate (one Medium addressed now, one deferred to
+- final, one Low held for the operator).
+- - Request `bw4-p06-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `4e74872a0..fee4b4c73` (p06-t01..t03); phase verification pass (`pnpm
+- check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
+- uncached, test:smoke, test:skills, validate-skills, check:skill-bumps);
+- recovery 0/10. recon 1.1.8, oat-wrap-up 1.0.4. The reconciler shares the
+- publication rule through `requiredReviewKindsForProfile`; the renderer lists
+- claims outside a required brief; the dashboard uses the router's exported
+- `quickPlanNotReadyReason`. Implementer concern: a quick project at
+- `plan:complete` with a not-ready plan still differs between dashboard and
+- router (outside the item's `plan:in_progress` scope). Root spot-check: recon
+- suite passes.
+- `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `64f04c1b4` before the review.
+- - Request `bw4-p06-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p06-review-2026-10-02T223808Z.md`: 0 Critical, 0 High, 1 Medium,
+- 1 Low (passes). Converted to `p06-t04`: M1 dashboard `plan:complete` with a
+- not-ready quick plan differs from the router; L1 pending plan HiLL ordering
+- differs at `plan:in_progress`.
+- `Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p06-fix-1`: `712f8f05f` (p06-t04): the
+- dashboard applies the quick readiness gate at every plan-phase status and
+- checks a pending HiLL first, as the router does; generate 30/30, router
+- 45/45. Root spot-check: generate passes.
+- - Phase gate (`codex-6-sol-xhigh`, run `b55e726f`) at `420660c21`:
+- `reviews/archived/p06-review-2026-10-02T224700Z.md` status `ok`, receive-eligible,
+- 0 Critical/High, 1 Medium. Judgment sweep: M1 (textual HiLL array parsing in
+- the dashboard) deferred to final.
+- - Phase p06 outcome: complete; 4/4 tasks (3 planned, 1 review-fix); one root
+- review round, one passing gate.
+- - Request `bw4-p07-impl-1`: accepted and returned `DONE`; target
+- `oat-phase-implementer-claude-claude-opus-5-5-high`; commits
+- `afc2fd95a..1ecd4429b` (p07-t01..t03): lockstep 0.3.14; 11 items archived
+- `closed`, `BL-260908-retire-the-top-level-skill` archived `wont_do`; three
+- items rewritten (BL-260711, BL-260909, BL-260818); two filed
+- (`BL-261002-wire-the-complexity-review`,
+- `BL-261002-teach-check-skill-bumps`); full Definition of Done exit 0 at
+- `59390951b` (uncached tests: CLI 8172, control-plane 153). Recovery 0/10.
+- Note: `oat pjm doctor` reports a pre-existing `backlog_completed_unarchived`
+- warning class.
+- `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- - Step 7a ledger commit `7d2b28957` before the review.
+- - Request `bw4-p07-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/p07-review-2026-10-02T230322Z.md`: 0 Critical, 0 High, 0 Medium,
+- 2 Low (passes; narrowed and partial item summaries verified against shipped
+- code). L1 (plan References and PR wording) fixed by the root in plan.md. L2
+- (two links in the active `review-gate-integrity` project's `discovery.md`
+- still point at moved item paths) left unchanged as another project's
+- artifact; noted for the PR.
+- `Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Phase gate (`codex-6-sol-xhigh`, run `28bb7ade`) at `622ee0012`:
+- `reviews/archived/p07-review-2026-10-02T230925Z.md` status `ok`, 0 Critical/High/Medium,
+- 1 Low (the same two moved-item links). Judgment sweep: addressed now by the
+- root as a mechanical link repoint in `review-gate-integrity/discovery.md`
+- (`e3ab48088`), scoped to the two links this wave's archive step broke.
+- - Phase p07 outcome: complete; 3/3 tasks; one root review round, one passing
+- gate.
+- - Final verification (Step 12) at `44efc6224`: `pnpm test`, `pnpm lint`,
+- `pnpm type-check`, `pnpm build` exit 0 (no cache replays).
+- - Gate `IMPLEMENT-11`: final review routed to the configured reviewer ceiling
+- (`oat-reviewer-claude-claude-opus-5-5-high`, native Claude variant,
+- independent context from every phase implementer). Request
+- `bw4-final-review-1`: accepted; reconnaissance not-attempted;
+- `reviews/archived/final-review-2026-10-02T232314Z.md`: 0 Critical, 0 High, 1 Medium,
+- 5 Low. Receive (auto, final scope): M1, L1, L2, L3, L5 converted to
+- `p07-t04`; L4 (`DR-260720` question missing from PR-facing artifacts) fixed
+- by the root in plan.md PR Requirements and the Final Summary.
+- `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high`
+- - Continuation `cont-backlog-wave-4-p07-fix-1`: `c44417bb4` (p07-t04) closed
+- final M1 (honest recovery routing to `oat-project-complete`), L1 (claim-race
+- caution), L2 (dashboard reads parsed HiLL arrays), L3 (lifecycle route
+- advertised as inactive), L5 (program-close next step); filed
+- `BL-261002-route-validated-archive` and `BL-261002-serialize-stale-gate-claim`.
+- Build, scoped vitest 1326, gate 440, validate-skills, check:skill-bumps,
+- format:root, docs check, type-check, test:skills exit 0.
+- - Request `bw4-final-review-2` (narrowed `44efc6224..5bdf154cc`): accepted;
+- reconnaissance not-attempted;
+- `reviews/archived/final-review-2026-10-02T233616Z.md`: 0 Critical, 0 High,
+- 0 Medium, 2 Low (passes; all round-1 findings resolved). L1 (Definition of
+- Done predates p07-t04) and L2 (HiLL fix affects every workflow mode) are
+- root-owned closeout evidence.
+- - The Definition of Done rerun at `5bdf154cc` exited 0 for every gate except
+- `release:check-versions`: `main` merged #342 (reader-first docs site,
+- lockstep 0.3.14) during closeout. Merged `origin/main` at `30526fef9`:
+- resolved `reference/cli-reference.md` (kept the 30-minute artifact default,
+- took #342's link path), corrected #342's new budget sentence in
+- `workflows/advanced/workflow-gates.md`, regenerated the backlog index, and
+- accepted #342's deletion of `workflows/projects/autonomy.md` and
+- `workflows/skills/index.md`. Wave 4's edits to renamed pages merged
+- automatically. Porting the two deleted pages' content and the 0.3.15 bump
+- is `p07-t05`; the final review then re-reviews the merge and port.
+- - Continuation `cont-backlog-wave-4-p07-fix-2`: `4221e5a6a` (p07-t05) ported
+- the autonomy paragraph, added the `oat-project-complete-auto` guide section
+- (excluded in `skill-docs.json` because it is not user-invocable), updated
+- the wave docs and repointed links and tests; it stopped `BLOCKED` when
+- `main` merged #350 (0.3.15) during its Definition of Done. The root merged
+- `origin/main` again at `1e6372906` (clean) and bumped the lockstep to 0.3.16
+- (`596e1dba0`, pushed).
+- - Definition of Done at `596e1dba0`: every gate exit 0 (the forced test run
+- first failed only because #350's new `docs-theme` vitest dependency was not
+- installed; after `pnpm install --frozen-lockfile` the forced run passed
+- 12/12 tasks, 0 cached).
+- - Request `bw4-final-review-3` (narrowed `5bdf154cc..596e1dba0`, merges and
+- port): accepted; reconnaissance not-attempted;
+- `reviews/archived/final-review-2026-10-02T235758Z.md`: 0 Critical, 0 High, 1 Medium,
+- 3 Low; no wave 4 behavior or docs lost in either merge. M1 (plan PR lines
+- said 0.3.15) and L3 (stale p07-t05 plan text) fixed by the root in plan.md;
+- L1 and L2 (two docs wording fixes) converted to `p07-t06`. This is the third
+- final-review round (the cycle cap): with 0 Critical/High and only wording
+- findings, the root records the final review as passed once `p07-t06` lands
+- and its docs checks pass; the configured Codex exit gate independently
+- reviews the final head.
+- - Continuation `cont-backlog-wave-4-p07-fix-3`: `6780b3400` (p07-t06) closed
+- final round 3 L1 (configuration note: the companion never creates a PR) and
+- L2 (review cost table counts the complexity review); oat-docs check,
+- build:docs, format:root exit 0.
+- - Final review recorded `passed` (rounds 1-3 dispositioned; round 3 at the
+- cycle cap with 0 Critical/High and only wording findings, all fixed).
+- - Phase p07 outcome: complete; 6/6 tasks.
+- - Generation 1 (`effective-delta-v2`): resolved `configured` (`block`, 2
+- attempts); `reviewed_head` `f4b387694` against `origin/main`; intent
+- persisted for attempt `bw4-exit-gate-g1-1-20261003T000142Z` before launch.
+- - Exit gate attempt 1 (run `c945efcf`, `codex-6-sol-xhigh`): envelope
+- `blocked`, receive-eligible, 1 High, 1 Medium
+- (`reviews/archived/final-review-2026-10-03T000713Z.md`; reconnaissance attempted with
+- a `## Review Orchestration` record). Received: H1 (a destination whose only
+- entry has a newline-only name passes the `ls -A` emptiness test and is
+- deleted on publish) and M1 (gate integration fixtures inherit the caller's
+- `OAT_GATE_RUN_MARKER_DIR`) converted to `p07-t07`. The reviewer accepted the
+- recorded deferrals (archive-resume tail, stale-claim race). Policy `block`:
+- attempt 1 of 2 consumed; remediate, re-run final verification and a final
+- re-review for the new basis, then gate attempt 2.
+- - Continuation `cont-backlog-wave-4-p07-fix-4`: `2ceff7a83` (p07-t07):
+- filename-safe destination emptiness check (`find ... -exec printf x \; -quit`,
+- fail-closed on error) with newline-name regressions; gate integration
+- fixtures default their own marker directory (case 11 proves an inherited
+- directory stays empty). Bundle and gate suites 73/73 normally and under an
+- inherited marker directory; CLI build, check, type-check exit 0. The exit
+- gate generation 1 basis is now stale; Steps 12-13 rerun for the new basis
+- before gate attempt 2.
+- - Step 12 for the new basis at `c44e899db`: test, lint, type-check, build exit
+- 0 (no cache replays).
+- - Request `bw4-final-review-4` (narrowed `596e1dba0..c44e899db`): accepted;
+- reconnaissance not-attempted; `reviews/archived/final-review-2026-10-03T002316Z.md`:
+- 0 Critical, 0 High, 1 Medium, 0 Low. Exit gate H1 and M1 confirmed fixed;
+- new M1: the `find` emptiness check does not follow a symlinked destination,
+- so a symlink to a populated directory is accepted (no data loss). Converted
+- to `p07-t08` (`find -H`).
+- - Continuation `cont-backlog-wave-4-p07-fix-5`: `7449b5efc` (p07-t08):
+- `find -H` follows a symlinked destination; populated-symlink refusal and
+- empty-symlink control, with neutralize-and-restore. Step 12 at `7449b5efc`:
+- test, lint, type-check, build exit 0 (no replays).
+- - Final review recorded `passed` for this basis: round 4's single Medium was
+- fixed exactly as the reviewer prescribed, with failing-first and
+- neutralization evidence; exit gate attempt 2 independently reviews the full
+- final head.
+- - Phase p07 outcome: complete; 8/8 tasks.
+- - Exit gate generation 2 (`effective-delta-v2`, same resolved configuration,
+- attempts completed 1 of 2): `reviewed_head` `23577fd16`; intent persisted
+- for attempt `bw4-exit-gate-g2-2-20261003T002927Z`.
+- - Exit gate attempt 2 (run `7c263e05`, `codex-6-sol-xhigh`): envelope `ok`,
+- receive-eligible, 0 findings (`reviews/archived/final-review-2026-10-03T003215Z.md`).
+- Received with no fix tasks; disposition `allowed/passed`.
+- <!-- orchestration-runs-end -->
+- Plan Gate Feedback (quick-start, QS-12)
+- The configured quick-start gate (`onFailure: block`, `maxAttempts: 2`,
+- target `codex-6-sol-xhigh`, `gpt-6.1-sol` xhigh) blocked on both attempts:
+- - Attempt 1 (run `cf4607a4`): 2 High. H1, quick-start completion with no
+- configured gate; H2, the complete-auto PR-merge guard against
+- wave-execute's completion-before-merge step. Both were resolved in the plan
+- (p04-t06, p05-t02, p05-t03).
+- - Attempt 2 (run `fe6bbe0a`): 1 High. p01-t01 guarded only the docs tree,
+- while staging must stay outside every recursively copied source (skills,
+- templates, docs). Resolved in p01-t01 after the attempt; not re-gated.
+- Attempts are exhausted, so this is a `QS-12` repository-policy boundary under
+- `OAT_AUTONOMOUS=1`: the operator decides how to proceed. Each round found a
+- real but narrower contract gap (round 1: two composition gaps; round 2: one
+- scoped safety invariant), and no finding was rejected.
+- **Operator disposition (2026-10-02, `QS-12` boundary):** After the
+- complexity review (`reviews/archived/complexity-plan-2026-10-02T1520Z.md`,
+- verdict partially compliant, recommended disposition **simplify**), the
+- operator chose **simplify, then implement** without another plan-gate cycle;
+- next and progress report the quick-start record only; the recorded pre-merge
+- exception stays. On the operator's request for a recommendation, the agent
+- kept batch completion mode and dropped the idle kill
+- (`BL-260711-add-activity-aware-gate`) and the early-trigger config key. The
+- plan was revised accordingly (24 tasks); every phase remains gated.
+- Chronological execution is recorded per phase under Orchestration Runs above.
+- Deferred Findings (Medium)
+- Final review (`reviews/archived/final-review-2026-10-02T232314Z.md`) resurfaced all three:
+- the p05 archive-resume item stays Medium and the p02 and p06 items drop to Low;
+- all three are addressed in `p07-t04` (honest recovery routing plus a backlog
+- item for the full resume fix; a cautionary doc sentence plus a backlog item for
+- the claim race; the HiLL parsing fix). The entries below are retained as
+- history.
+- - p06 gate M1 (`reviews/archived/p06-review-2026-10-02T224700Z.md`): the dashboard's HiLL
+- membership check (`generate.ts` `phaseInHillList`) recognizes only the
+- double-quoted array spelling, so a quick project with
+- `oat_hill_checkpoints: ['plan']` or `[plan]` and a ready plan gets implement
+- on the dashboard but `oat-project-plan` from the router. The textual parser
+- predates this wave; quick projects carry no HiLL checkpoints by default.
+- Fixing it means reading the shared parsed state in the dashboard; deferred
+- to final with this rationale.
+- - p05 gate M1 (`reviews/archived/p05-review-2026-10-02T221406Z.md`): the companion's
+- active-directory preflight refuses before the interactive archive-resume
+- recovery can run, so autonomous closeout cannot finish after a synced
+- archive succeeds and a later push or PR update fails. Fixing it means routing
+- validated archive receipts to the interactive resume tail before preflight,
+- which is not a small contained change; deferred to final with this
+- rationale.
+- - p02 gate M1 (`reviews/archived/p02-review-2026-10-02T192954Z.md`): competing stale-claim
+- recovery can remove a live claim and admit a duplicate run. Needs an
+- orphaned claim plus concurrent recovery; ordinary nested and simultaneous
+- launches are protected. The fix serializes recovery with acquisition, which
+- is not a small contained change; deferred to final with this rationale.
+- Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+- | Task / Review | Source Artifact | Planned / Documented                               | Actual / Accepted                                                                    | Reason                                                                                                                                                                                                   | Source of Truth | Follow-up |
+- | p01-t07       | plan.md p01-t07 | Destination rule applies to the assets destination | Rule applies only to an `OAT_ASSETS_DIR` override; the default destination is exempt | A fresh clone tracks four files under `packages/cli/assets` while `bundle-metadata.json` is gitignored, so the rule would refuse every CI build; the exemption has its own test and neutralization proof | Implementation  | None      |
+- Full Definition of Done (p07-t03), 2026-10-02, at head
+- `59390951b9237d52c635cab2f34db28cf7bb7480` (after p07-t02; the p07-t03 commit
+- changes only this section). Each gate ran as `<gate> > <log> 2>&1` with its
+- exit code captured explicitly; logs are under
+- `.oat/repo/analysis/backlog-wave-4/dod/` (gitignored, machine-local).
+- `release:check-versions` ran after `git fetch origin main` (exit 0; `origin/main`
+- at 0.3.13).
+- | Order | Gate                                                 | Exit | Notes                                                                                                                  |
+- | 0     | `pnpm build` (real `HOME`)                           | 0    | 0 cached, 5 total                                                                                                      |
+- | 1     | `pnpm check`                                         | 0    | 0 cached, 11 total                                                                                                     |
+- | 2     | `pnpm type-check`                                    | 0    | 0 cached, 10 total                                                                                                     |
+- | 3     | `HOME=$(mktemp -d) pnpm exec turbo run test --force` | 0    | 0 cached, 10 total; no cache replay; CLI 8172 tests / 406 files, control-plane 153, docs-config 10, docs-transforms 31 |
+- | 4     | `pnpm build`                                         | 0    | 0 cached, 5 total                                                                                                      |
+- | 5     | `pnpm run check:skill-bumps`                         | 0    | 14 changed skill and agent role bump checks against `origin/main`                                                      |
+- | 6     | `pnpm release:check-versions`                        | 0    | lockstep 0.3.14 above `origin/main` 0.3.13                                                                             |
+- | 7     | `pnpm release:validate`                              | 0    | five 0.3.14 tarballs validated                                                                                         |
+- | 8     | `pnpm build:docs`                                    | 0    | 0 cached, 6 total                                                                                                      |
+- | -     | `pnpm test:smoke`                                    | 0    | 163 pass, 0 fail                                                                                                       |
+- | -     | `pnpm test:skills`                                   | 0    | 693 pass, 0 fail                                                                                                       |
+- | -     | `pnpm test:scripts`                                  | 0    | 1 pass, 0 fail                                                                                                         |
+- | -     | `pnpm lint`                                          | 0    | includes root `oxlint tools/smoke .agents/skills`                                                                      |
+- | -     | `pnpm format`                                        | 0    |                                                                                                                        |
+- **What shipped (behavior):**
+- - `bundle-assets.sh` fails closed: an empty, absolute, escaping, or
+- repository-root inventory lookup stops the build before any copy; staging can
+- never sit inside the skills, templates, or docs source; an
+- `OAT_ASSETS_DIR` override is accepted only when it is absent, an empty
+- directory, or an existing bundle. A checkout reached through a symlinked
+- path now resolves inventory lookups (the likely trigger of the Wave 3 disk
+- fill). Asset-root read failures report their errno.
+- - Artifact gate reviews default to 30 minutes. A second gate for the same
+- project, review type, and scope is rejected through an atomic claim
+- (`recursion` in the JSON envelope); nested gates receive the claim directory
+- explicitly.
+- - `oat sync` restamps stale copy-strategy hashes (visible in dry-run and JSON,
+- only when the manifest row tracks the checked path), bridges legacy digests
+- when retiring obsolete copies, and reports a marker-less skill or agent
+- directory as an `error` entry instead of rewriting it forever.
+- `oat:validate-skills` reports a missing `SKILL.md` in any skill directory.
+- - When a review cycle or gate attempt budget runs out, implement, quick-start,
+- and review-receive run a read-only complexity review (the installed
+- `complexity-review` skill, or OAT's condensed fallback) and present it with
+- the stop reasons and a **simplify** option; agents never pick the
+- disposition, including under `OAT_AUTONOMOUS=1`.
+- - Quick-start persists its gate outcome as `oat_quick_start_gate`, defined
+- once in a shared gate-record doc; next and progress report it. Root agents
+- log judgment entries to the project log.
+- - New `workflow.autonomousComplete` opt-in and the `oat-project-complete-auto`
+- companion skill (three-layer guard, recorded pre-merge exception for
+- wave-execute, batch mode, never creates a PR); wave-execute and
+- wave-program point at it.
+- - Recon reconciliation downgrades claims a thorough-profile review leaves
+- undisposed; `oat-wrap-up` resolves its summary template through
+- `oat template resolve`; the dashboard routes quick plans exactly as the
+- router does; pr-final's ledger scan prose is precise.
+- **Key files:** `packages/cli/scripts/bundle-{assets.sh,inputs.mjs}`,
+- `packages/cli/src/fs/assets.ts`, `packages/cli/src/commands/gate/index.ts`,
+- `packages/cli/src/engine/{compute,execute}-plan.ts`,
+- `packages/cli/src/commands/sync/*`, `packages/cli/src/validation/skills.ts`,
+- `packages/cli/src/config/*`, `packages/cli/src/commands/state/generate.ts`,
+- `packages/control-plane/src/{index.ts,recommender/router.ts}`,
+- `.agents/docs/{complexity-review-fallback,gate-approval-record}.md`,
+- `.agents/skills/oat-project-{implement,quick-start,review-receive,next,progress,complete-auto,pr-final}/`,
+- `.agents/skills/{oat-wave-execute,oat-wave-program,recon,oat-wrap-up}/`.
+- **Verification:** full Definition of Done exit 0 (see Test Results); every
+- phase passed a root review and a Codex GPT-6.1 Sol phase gate (p01's gate
+- closed by operator override after simplification).
+- **Note:** the dashboard HiLL fix applies to every workflow mode, not only quick
+- plans: existing projects whose `oat_hill_checkpoints` use single-quoted, bare,
+- or block YAML arrays (for example the spec-driven scaffold default) now show
+- and route their pending HiLL gates on the dashboard, as the router already did.
+- **Design deltas:** p01 replaced its per-path destination denylist with one
+- destination rule at the review cap (operator decision); the idle kill and
+- early complexity trigger left the wave at the plan-gate escalation; see
+- Deviations and Deferred Findings.
+- **Operator question:** amend `DR-260720` (autonomous closeout) to the shipped
+- design: a standing `workflow.autonomousComplete` opt-in, per-wave completion
+- with a recorded pre-merge exception, and batch mode at program close.
+- - Plan: `plan.md`
+- - Discovery: `discovery.md`
+- - Execution learnings: `oat-execution-learnings.md`
+- oat_generated: false
+- purpose: project-observations
+- oat_last_updated: 2026-10-02
+- Project Log: backlog-wave-4
+- This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+- Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+- Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- ```text
+- Observation: What happened and the supporting evidence.
+- Impact: Why it mattered or what workaround was required.
+- Recommendation: What should change or be preserved.
+- ```
+- Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- Judgment entries:
+- ```text
+- 2026-10-02 · <project|general> · <bug|friction|worked-well|feedback> · <area>
+- ```
+- Structural entries:
+- ```text
+- 2026-10-02 · structural · <producer> · <ref>
+- ```
+- Entries are chronological and append-only.
+- 2026-10-02 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/artifact-plan-review-2026-10-02T144731Z.md run=cf4607a4-0bbe-47fd-8299-da416f48f4c0
+- 2026-10-02 · structural · oat gate review · plan
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/artifact-plan-review-2026-10-02T145801Z.md run=fe6bbe0a-bc0a-498f-b29d-6255948827bf
+- 2026-10-02 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/p01-review-2026-10-02T174337Z.md run=79f6824b-3a1a-496b-adcb-b7591c75abc1
+- 2026-10-02 · structural · oat gate review · p01
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/p01-review-2026-10-02T180245Z.md run=2546dc45-ffcf-4b2f-952c-9b70848a7771
+- 2026-10-02 · structural · oat-project-implement · p01
+- Phase p01 complete (8/8 tasks): bundle-assets fail-closed and asset-root errno. Root review rounds 4, Codex gate attempts 2 (blocked on the destructive-publish family), complexity review at the cap; operator chose simplify plus the symlinked-checkout root-cause fix and closed the p01 gate by override.
+- 2026-10-02 · structural · oat gate review · p02
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p02-review-2026-10-02T192954Z.md run=75d9dbb7-8438-4c6b-8893-a7e95ea44cdf
+- 2026-10-02 · structural · oat-project-implement · p02
+- Phase p02 complete (3/3 tasks): 30-minute artifact gate default and atomic duplicate-gate claim. One root review round (1 Medium, 3 Low fixed), Codex gate passed with 1 Medium (stale-recovery race) deferred to final.
+- 2026-10-02 · structural · oat gate review · p03
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p03-review-2026-10-02T200622Z.md run=b2f32273-4392-4f7b-a573-b7be724d9ad6
+- 2026-10-02 · structural · oat-project-implement · p03
+- Phase p03 complete (5/5 tasks): sync restamps stale copy hashes, legacy retirement bridge, missing SKILL.md for every skill dir, marker-less directories report an error. One root review round (1 Medium, 2 Low fixed), Codex gate passed with 1 Medium addressed now.
+- 2026-10-02 · structural · oat gate review · p04
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p04-review-2026-10-02T213839Z.md run=e9d83e79-99bf-4c5f-9ade-babb2cc0a746
+- 2026-10-02 · structural · oat-project-implement · p04
+- Phase p04 complete (9/9 tasks): complexity review at review and gate budget exhaustion (probe plus condensed fallback), persisted quick-start gate record read by next and progress, root judgment logging. One root review round (3 Medium, 3 Low fixed), interrupted gate run (findings fixed), clean Codex gate.
+- 2026-10-02 · structural · oat-project-review-provide · p05
+- Review reconnaissance cda6fb19-ae51-463d-b84c-b7340ab122fd-review-recon completed in two read-only intelligent-recon lanes, reconciled by the primary reviewer; artifact=.oat/projects/shared/backlog-wave-4/reviews/p05-review-2026-10-02T221406Z.md.
+- 2026-10-02 · structural · oat gate review · p05
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:2,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p05-review-2026-10-02T221406Z.md run=cda6fb19-ae51-463d-b84c-b7340ab122fd
+- 2026-10-02 · structural · oat-project-implement · p05
+- Phase p05 complete (6/6 tasks): workflow.autonomousComplete opt-in, oat-project-complete-auto companion skill with three-layer guard and batch mode, wave closeout repoint, pr-final ledger prose. One root review round (2 Medium, 2 Low fixed), Codex gate passed (1 Medium addressed now, 1 Medium deferred to final, stale DR-260720 held for the operator).
+- 2026-10-02 · structural · oat-project-review-provide · p06
+- Review reconnaissance completed: one intelligent-recon scout (gpt-6.1-sol medium), root verified evidence and retained 1 Medium; artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md; b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd-recon
+- 2026-10-02 · structural · oat gate review · p06
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p06-review-2026-10-02T224700Z.md run=b55e726f-ec7f-49f1-ae85-67ac7b5ac0dd
+- 2026-10-02 · structural · oat-project-implement · p06
+- Phase p06 complete (4/4 tasks): recon reconciler downgrades thorough-review omissions, oat-wrap-up resolves its summary template, dashboard quick-plan routing matches the router. One root review round (1 Medium, 1 Low fixed), Codex gate passed with 1 Medium (textual HiLL array parsing) deferred to final.
+- 2026-10-02 · structural · oat gate review · p07
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/p07-review-2026-10-02T230925Z.md run=28bb7ade-a4f7-4d76-b713-187601ff7864
+- 2026-10-02 · structural · oat-project-implement · p07
+- Phase p07 complete (3/3 tasks): lockstep 0.3.14, backlog closeout (11 closed, 1 won't-do, 3 rewritten, 2 filed), full Definition of Done exit 0. Root review and Codex gate passed with Lows only; two moved-item links repointed.
+- 2026-10-03 · structural · oat-project-review-provide · final
+- Final gate review used three awaited consequential reconnaissance lanes with gpt-6.1-sol/high; primary independently reproduced 1 High and 1 Medium. Artifact: reviews/final-review-2026-10-03T000713Z.md. Run c945efcf-73f2-4528-b3b3-f8f7d365c776
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md run=c945efcf-73f2-4528-b3b3-f8f7d365c776
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
+- Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+- oat_status: complete
+- oat_ready_for: oat-project-implement
+- oat_blockers: []
+- oat_last_updated: 2026-10-02
+- oat_phase: plan
+- oat_phase_status: complete
+- oat_plan_hill_phases: ['p07']
+- oat_plan_parallel_groups: []
+- oat_plan_source: quick
+- oat_import_reference: null
+- oat_import_source_path: null
+- oat_import_provider: null
+- oat_template: false
+- oat_generated: false
+- oat_phase_review_gate:
+- enabled: true
+- phases: []
+- review_type: code
+- exit_nonzero_on: high
+- oat_auto_review_at_hill_checkpoints: true
+- Implementation Plan: backlog-wave-4
+- > Execute this plan using `oat-project-implement`. The seven phases run
+- > sequentially on branch `wave/2026-10-02-backlog-wave-4`.
+- **Goal:** Ship Wave 4 of the backlog as one PR: close or advance twelve
+- backlog items with evidence (bundle and asset-root hardening, gate budgets,
+- nested-gate rejection, sync restamping, a complexity review at
+- every review and gate budget exhaustion, persisted quick-start approvals,
+- root judgment logging, an opt-in autonomous completion skill, and four small
+- fixes) and bump the lockstep packages to 0.3.16 (`main` reached 0.3.13
+- through #335 during planning, 0.3.14 through #342 and 0.3.15 through #350
+- during closeout; the branch merged `origin/main` each time).
+- **Architecture:** Six sequential phases plus a release fan-in (seven in
+- total), grouped by write set: build assets
+- (p01), gate timeouts (p02), sync correctness (p03), review-loop skills (p04),
+- completion (p05), small fixes (p06), and a release fan-in (p07).
+- **Tech Stack:** TypeScript ESM CLI (`packages/cli`, vitest), control-plane
+- (`packages/control-plane`), Bash build scripts, bundled skills under
+- `.agents/skills` (canonical; `packages/cli/assets` is a generated copy that is never edited
+- by hand, except the tracked `public-package-versions.json`, which the lockstep
+- bump changes) with shared docs under `.agents/docs`, `node --test`
+- skill suites, Fumadocs docs app (`apps/oat-docs`), oxfmt and oxlint.
+- **Commit Convention:** `{type}({task-id}): {description}`, for example
+- `fix(p01-t01): fail closed on empty bundle-inputs lookups`. Commit bodies stay
+- within commitlint's 100-character line limit; check `git commit`'s exit code
+- explicitly, never through a pipe.
+- **Format command (every artifact-writing task):**
+- `pnpm exec oxfmt --write <changed files>` from the repository root for
+- Markdown, JSON, and JS/TS files. Never run oxfmt on any `state.md`.
+- **Scoped test commands:** CLI tests run with
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run <path relative to packages/cli>`;
+- control-plane tests with
+- `pnpm --filter @open-agent-toolkit/control-plane exec vitest run <path>`; skill
+- suites with `node --test .agents/skills/<name>/tests/*.test.mjs`. Anything that
+- imports `@open-agent-toolkit/control-plane` or reads `packages/cli/assets`
+- needs `pnpm build` first.
+- **Worker rules (every task):**
+- - Behavior changes get a failing-first test; guards get a neutralize-and-restore
+- proof (disable the guard, show the test fails, restore). Record both in the
+- commit body.
+- - Tests that exercise template resolution or anything reading `~/.oat` inject
+- an isolated `HOME` (`HOME=$(mktemp -d)`).
+- - Version bumps: every task bumps each skill whose bundled files it changes
+- (including a vendored shared doc under `references/docs/`), and each agent
+- role it changes, unless the branch already bumped it: check with
+- `git fetch origin main && git diff origin/main...HEAD -- <skill dir>`
+- (three dots, so changes that landed on `main` are not mistaken for this
+- branch's bump). Update every pin of that version in
+- `packages/cli/src/validation/skills.test.ts` or the skill's own contract test
+- in the same commit. Run `pnpm run check:skill-bumps` before committing.
+- - A changed shared doc under `.agents/docs/` counts as a change to every skill
+- that vendors it through `references/docs/`. `autonomy-contract.md` is
+- vendored by `oat-project-document`, `oat-project-implement`,
+- `oat-project-lite`, `oat-project-pr-final`, and `oat-project-quick-start`,
+- so the first task that edits it bumps all five (unless already bumped).
+- - New prompt-like prose in lifecycle skills can trip
+- `packages/cli/src/validation/autonomy-gate-inventory.test.ts`; add the
+- printed `sha12 -> GATE-ID|NG` key to the "HEAD prompt-site coverage" table in
+- `.agents/docs/autonomy-contract.md` in the same task's commit (p04-t08 only
+- rewrites the four inventory rows). New sentences that name an
+- `oat-project-*` skill with an execution verb need a row in
+- `packages/cli/src/validation/named-skill-load-contract.test.ts`.
+- - Never `rm -rf` a variable path; use `mktemp -d` scratch directories.
+- - Use `node packages/cli/dist/index.js` (after `pnpm build`) for branch-CLI
+- probes; the `oat` on PATH is the released 0.3.10 CLI.
+- - Lanes regenerate provider views with `oat sync --scope project` only.
+- Phase 1: Build assets
+- Task p01-t01: Fail closed on empty bundle-inputs lookups
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh` (lines 8-10 build
+- `"${REPO_ROOT}/$(node "${INVENTORY}" --get <key>)"`; staging is created by
+- the `mkdir -p` at line 42; the directory copy is at line 107)
+- - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`printValue`, around line 182)
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing test first**
+- In `bundle-consistency.test.ts`, add a case that copies `bundle-assets.sh` and
+- a stub `bundle-inputs.mjs` (its `--get` prints an empty line) into
+- `<mktemp>/packages/cli/scripts/`, so the temporary directory is the script's
+- `REPO_ROOT`, and runs it with `OAT_ASSETS_DIR` pointing at another temporary
+- directory. Assert a non-zero exit and a stderr message naming the empty key;
+- that message is the discriminating assertion (the current script also exits
+- non-zero on the stub, and its EXIT trap removes staging), so also assert the
+- guard fires before the `mkdir -p` at line 42 (for example, no staging
+- directory is ever created, checked with a trap-proof marker). Add bounded
+- destination controls in the same tiny tree, with valid inventory values:
+- `OAT_ASSETS_DIR` inside a bundled skill directory, inside a copied template
+- directory, inside the docs source, and through a symlink alias to one of those
+- are each rejected before any copy (use a copy-invocation marker or stub so the
+- test never runs an unbounded self-copy); a disjoint destination and the
+- default destination still build. Add a second case
+- for a lookup that resolves to the repository root (for example `.`). Reuse the
+- existing `getBundleScriptPath`, `execFileSync('bash', ...)`, and
+- `BUNDLE_ASSETS_TEST_TIMEOUT_MS` patterns. Confirm both fail against the
+- current script without filling the disk (the stub tree must be tiny, and the
+- test must assert before any recursion can grow).
+- **Step 2: Implement**
+- Add a `require_inventory_path <key>` helper to `bundle-assets.sh`, used for all
+- three lookups before any `mkdir` or `cp`. It exits 1 with a clear message when
+- the lookup prints nothing, is absolute, contains a `..` segment, or resolves to
+- `REPO_ROOT`. Then, before the `rm -rf` and `mkdir -p` at lines 40-42, resolve
+- physical paths (`pwd -P` of the nearest existing ancestor, so a symlink alias
+- cannot bypass the check) and refuse when the assets destination, `STAGING`, or
+- `PREVIOUS` is inside any recursively copied source root: the canonical skills
+- root `.agents/skills` (copied with `cp -RL` at line 48), the templates root
+- `.oat/templates` (template directories copied with `cp -R` at line 64), and
+- the docs source (line 107); refuse also when any of those roots is inside the
+- assets destination. In
+- `bundle-inputs.mjs`, make `printValue` reject an empty string, an absolute
+- path, and a `..` segment with a non-zero exit.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build`.
+- Expected: exit 0 (the real bundle still builds). Neutralize the guard, show the
+- new test fails, restore.
+- **Step 4: Commit**
+- `fix(p01-t01): fail closed on empty bundle-inputs lookups`
+- **Files:**
+- - Modify: `packages/cli/src/fs/assets.ts` (`resolveAssetsRoot` catch, around
+- lines 266-277; reuse `isMissingPathError` and `errorCode`)
+- - Modify: `packages/cli/src/fs/assets.test.ts`
+- **Step 1: Failing test first**
+- In `describe('resolveAssetsRoot')`, add a case with a self-referential symlink
+- as `OAT_ASSETS_DIR` (ELOOP, as in the existing symlink test around lines
+- 425-447). Assert the message contains `(ELOOP)`, does not say "not found", and
+- the exit code is 2. Add the packaged-root variant through `statRedirects`.
+- Add a file-level `afterEach(() => statRedirects.clear())`.
+- **Step 2: Implement**
+- Keep the "Assets directory not found" message for ENOENT; report
+- `Assets directory could not be read (<errno>): <path>` plus the existing remedy
+- for other errors, mirroring `validateBundleStructure`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/fs/assets.test.ts`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p01-t02): report the errno when the assets root cannot be read`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh`
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing tests first**
+- - M1: a destination written as `<symlink>/../x` that resolves inside a copied
+- source is rejected (today `physical_path` uses a logical `cd`, so `..` trims
+- text instead of following the symlink).
+- - L1: an inventory value that is a symlink to the repository root is rejected
+- by the physical half of `require_inventory_path` (lines 77-78); show the test
+- fails when that half is removed.
+- - L2: an `OAT_ASSETS_DIR` equal to (or inside) any directory the bundle copies
+- from, including `.agents/agents` and `.oat/scripts`, is rejected before any
+- copy or publish step.
+- **Step 2: Implement**
+- Resolve physical paths with `cd -P`, extend the containment roots to every
+- source directory the bundle copies from (skills, agents, templates, scripts,
+- docs), and make the guard comment match what is checked.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize each new guard, show its test fails, restore.
+- **Step 4: Commit**
+- `fix(p01-t03): close p01 review findings M1, L1, L2`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh`
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing test first**
+- A bounded case with `OAT_ASSETS_DIR` set to the repository's `NOTICES.md` (an
+- individually copied source file) is refused with a clear message before any
+- mutation command runs, and the file's contents are unchanged.
+- **Step 2: Implement**
+- Before the cleanup trap or any mutation, reject an existing non-directory
+- assets destination, and protect the physical path of every individually copied
+- source file (`NOTICES.md`). Disjoint and default directory destinations still
+- build.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize the guard, show the new case fails, restore.
+- **Step 4: Commit**
+- `fix(p01-t04): close p01 gate finding H1`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh` (comment around lines 101-103)
+- **Step 1: Implement**
+- Reword the comment so it states what the code checks: an existing destination
+- must be a directory and must not be or contain a protected source. Do not
+- change behavior; replacing an arbitrary existing directory is a pre-existing
+- behavior tracked as a follow-up backlog item at the fan-in.
+- **Step 2: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Expected: exit 0.
+- **Step 3: Commit**
+- `docs(p01-t05): correct the bundle destination guard comment`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh`
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing test first**
+- A bounded case where `NOTICES.md` is a symlink to a regular file and
+- `OAT_ASSETS_DIR` is that target's parent directory is refused with a clear
+- message before any mutation, and both the link and its target are unchanged.
+- **Step 2: Implement**
+- Before the cleanup trap or any mutation, refuse an individually copied source
+- that is a symlink (the simplest fail-closed rule; the repository's
+- `NOTICES.md` is a regular file). Disjoint and default builds still pass.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize the guard, show the new case fails, restore.
+- **Step 4: Commit**
+- `fix(p01-t06): refuse a linked individually copied bundle source`
+- Operator disposition at the p01 review cap (complexity review
+- `reviews/archived/complexity-p01-2026-10-02T1830Z.md`): simplify, plus the
+- root-cause fix; one targeted re-review; no further gate cycles for the
+- destructive-publish family.
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh`, `packages/cli/scripts/bundle-inputs.mjs`
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing tests first**
+- - An existing, populated `OAT_ASSETS_DIR` without `bundle-metadata.json` (for
+- example a copy of `.agents/docs`) is refused before the cleanup trap, with
+- its contents intact.
+- - An existing bundle (a directory holding `bundle-metadata.json`) and an empty
+- directory still rebuild; an absent destination still builds.
+- - A build run through a symlinked checkout path (a symlink to the repository
+- root) resolves inventory lookups and succeeds.
+- **Step 2: Implement**
+- - Keep: the lookup guard (empty, absolute, `..`, physical repository root),
+- `physical_path` with `cd -P`, and the recursion guard that refuses a staging
+- directory at or inside the skills, templates, or docs source roots.
+- - Replace with one pre-trap rule: publish only when the assets destination is
+- absent, an empty directory, or a directory holding `bundle-metadata.json`;
+- otherwise refuse with "remove it or choose an empty directory". Delete the
+- per-path destination denylist that this rule covers (agents, scripts, config
+- folders, the `NOTICES.md` entry and linked-file refusal, the non-directory
+- check, the reverse containment check, and the `PREVIOUS` loop variants).
+- - Simplify: check only `STAGING` against the three recursion roots; drop the
+- lexical half of the repository-root check (the physical half covers it).
+- - Root cause: resolve `SCRIPT_DIR` and `REPO_ROOT` with `pwd -P` and make the
+- `bundle-inputs.mjs` entry check compare real paths, so a symlinked checkout
+- path no longer makes every lookup print nothing.
+- - Replace the denylist test rows with the cases in Step 1; keep the
+- empty-lookup, root, symlink-alias, `<link>/..`, disjoint, and default cases.
+- - Rewrite the guard comment to state exactly these rules.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize each kept or new guard, show its case fails,
+- restore.
+- **Step 4: Commit**
+- `fix(p01-t07): replace the destination denylist and fix symlinked checkouts`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh`
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing tests first**
+- - L1: an `OAT_ASSETS_DIR` directory whose listing fails (unreadable) is
+- refused, not treated as empty.
+- - L2: the repository-root check normalizes both sides, so a `.` docs lookup is
+- refused by that check even without `pwd -P` (neutralize `pwd -P` and show the
+- root-check case still refuses; restore).
+- **Step 2: Implement** both, and correct any comment claim that `pwd -P` is
+- redundant.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/release/public-package-contract.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0. No further p01 review round (operator disposition); the
+- final review and exit gate cover it.
+- **Step 4: Commit**
+- `fix(p01-t08): close p01 targeted re-review findings L1, L2`
+- Phase 2: Gate timeouts
+- Task p02-t01: Give full-surface artifact reviews a 30-minute default
+- **Files:**
+- - Modify: `packages/cli/src/commands/gate/index.ts` (`resolveGateExecTimeout`,
+- around lines 909-1016; the artifact branch at about 999-1001 returns 900_000)
+- - Modify: `packages/cli/src/commands/gate/index.test.ts` (scope-default
+- `it.each` around 8413-8470; the info-string pin around 8519)
+- - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (budgets, around
+- 925-940) and `apps/oat-docs/docs/reference/cli-reference.md` (around 165)
+- **Step 1: Failing test first**
+- Add artifact cases (scopes `plan`, `design`, `discovery`) to the scope-default
+- table expecting 1_800_000 with source `scope-default`, and a case showing that
+- CLI, target, `workflow.gateTimeouts`, and env overrides still take precedence.
+- **Step 2: Implement**
+- Return 1_800_000 for every artifact review (operator decision: full-surface
+- artifact and plan reviews default to 30 minutes). Leave task-scoped code
+- reviews at 900_000. Update the pinned info string and the docs.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p02-t01): give full-surface artifact reviews a 30-minute default`
+- **Files:**
+- - Modify: `packages/cli/src/commands/gate/index.ts` (`GateRunMarker` around
+- 235-245; `writeGateRunMarker` around 482 and its call around 4193-4210; the
+- dependency seam around 151-158 and 430; failure envelope
+- `writeReviewGateExecutionFailure` around 2675-2725; success envelope)
+- - Modify: `packages/cli/src/commands/gate/index.test.ts`,
+- `packages/cli/src/commands/gate/gate-hardening.integration.test.ts` (the exact
+- `gate-start` object in case 3, around 143, if the diagnostic changes)
+- - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (marker fields
+- around 1017-1019; a short "Nested and duplicate runs" section; incident table
+- around 1046)
+- **Step 1: Failing test first**
+- Through injected dependencies (no real processes), seed a live marker for the
+- same project, review type, and scope, and assert that a second `gate review`
+- launches nothing and returns a structured, non-zero envelope whose JSON
+- records the recursion decision (`recursion: { decision: "rejected",
+- matchedRunId }`). Add controls: a marker with a dead pid, an unparseable marker
+- file, a marker for a different scope, and a run-ID shim directory are all
+- ignored and the launch proceeds with `recursion: { decision: "none" }`.
+- **Step 2: Implement**
+- Add `pid` to `GateRunMarker`. Before writing the marker, scan the
+- `oat-gate-runs` directory for `*.json` markers through an injected scan and
+- pid-alive check (`process.kill(pid, 0)` in production), match on project,
+- review type, and scope, and reject a live match without launching. Record the
+- recursion decision in the marker-adjacent diagnostics and in both success and
+- failure JSON envelopes. The scan must stay injectable so tests never see real
+- markers from other processes; the integration test uses a unique `TMPDIR`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+- Expected: exit 0. Neutralize the rejection, show the duplicate test fails,
+- restore.
+- **Step 4: Commit**
+- `feat(p02-t02): reject a duplicate live gate for the same project and scope`
+- **Files:**
+- - Modify: `packages/cli/src/commands/gate/index.ts`
+- - Modify: `packages/cli/src/commands/gate/index.test.ts`,
+- `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`,
+- `apps/oat-docs/docs/cli-utilities/configuration.md`
+- **Step 1: Failing tests first**
+- - M1: two gates for the same project root, review type, and scope launched
+- at the same moment: exactly one runs and the other is rejected
+- (`recursion.decision: rejected`).
+- - L2: a nested gate whose `TMPDIR` differs from its parent's still detects
+- the parent run (the parent passes its marker directory to the child
+- explicitly).
+- - L3: an integration case where a real first gate (fake runtime with a delay)
+- is running and a second identical gate is rejected.
+- **Step 2: Implement**
+- Make the duplicate claim atomic: an exclusive-create claim file keyed by
+- project root, review type, and scope, taken before launch and released at the
+- end of the run; a claim held by a dead pid is replaced once. Keep run markers
+- for observability, and simplify or drop the directory scan if the claim makes
+- it redundant. Pass the marker directory to child processes through an
+- environment variable and prefer it when set. Change the docs examples that set
+- `"artifact": 900000` (L1) so they do not silently restore the old budget, and
+- make the duplicate-run docs match the implemented guarantee.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+- Expected: exit 0; neutralize the exclusive claim and show the simultaneous
+- case fails, restore.
+- **Step 4: Commit**
+- `fix(p02-t03): make the duplicate gate claim atomic and close p02 review lows`
+- Phase 3: Sync correctness
+- **Files:**
+- - Modify: `packages/cli/src/engine/compute-plan.ts` (`classifyOperation` around
+- 385-470; `classifyObsoleteMappingRetirement` 281-373, directory-copy branch
+- 340-365)
+- - Modify: `packages/cli/src/engine/execute-plan.ts` (`ensureSkipEntryManaged`
+- 379-395; `toManifestEntry` 173-196)
+- - Modify: `packages/cli/src/engine/engine.types.ts` (`SyncPlanEntry`,
+- `SyncOperationType`) and the renderers in
+- `packages/cli/src/commands/sync/dry-run.ts` and `apply.ts`, so the restamp is
+- visible in dry-run and JSON output
+- - Modify: `packages/cli/src/engine/compute-plan.test.ts`,
+- `packages/cli/src/engine/execute-plan.test.ts`, an end-to-end case in
+- `packages/cli/src/engine/engine.integration.test.ts` (or `edge-cases.test.ts`),
+- and the `commands/sync` tests for the rendered restamp
+- **Step 1: Failing tests first**
+- - A faithful copy-strategy tree whose manifest `contentHash` is legacy or
+- tampered: the plan reports a restamp on the skip entry (visible in dry-run
+- and JSON output), sync writes the framed digest, and a second run changes
+- nothing (`lastUpdated` unchanged). Control: a matching hash is left
+- untouched.
+- - An obsolete copy mapping with a legacy manifest digest classifies `remove`
+- when the provider tree matches canonical, and `detach` when the provider body
+- is tampered or the stored hash is forged (copy the fixture style of the test
+- around 405-446; derive the legacy digest with `computeDirectoryDigests`, as
+- `drift/detector.test.ts` around 455 does).
+- **Step 2: Implement**
+- Mark skip entries whose recorded hash differs from the framed digest for
+- restamp in the plan, and write the framed digest in `ensureSkipEntryManaged`
+- only then. In `classifyObsoleteMappingRetirement`, accept a stored legacy
+- digest through `computeDirectoryDigests(canonicalPath)` (guarded with
+- `.catch(() => null)`, as the detector does). Do not change the detector bridge
+- or the legacy encoder; their retirement stays open.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/drift src/commands/sync`
+- Expected: exit 0, including the detector's fused-forgery controls.
+- **Step 4: Commit**
+- `fix(p03-t01): restamp stale copy hashes and bridge legacy retirement`
+- **Files:**
+- - Modify: `packages/cli/src/validation/skills.ts` (around 1562-1574; keep
+- `validatedSkillCount` at around 1702 unchanged)
+- - Modify: `packages/cli/src/validation/skills.test.ts` (beside 272-287)
+- **Step 1: Failing test first**
+- A non-`oat-` skill directory (for example `custom-skill`) with no `SKILL.md`
+- is reported as missing.
+- **Step 2: Implement**
+- Run the missing-`SKILL.md` check over every canonical skill directory; keep
+- the `oat-*`-specific checks as they are.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- and `pnpm oat:validate-skills`.
+- Expected: exit 0 (every current directory has a `SKILL.md`).
+- **Step 4: Commit**
+- `fix(p03-t02): report a missing SKILL.md for every canonical skill directory`
+- **Files:**
+- - Modify: `packages/cli/src/engine/compute-plan.ts` (and, if needed,
+- `packages/cli/src/engine/execute-plan.ts` `applyCopyMarker` around 222-233),
+- `packages/cli/src/engine/engine.types.ts`, and the renderers in
+- `packages/cli/src/commands/sync/dry-run.ts` and `apply.ts` for the new
+- entry-level error
+- - Modify: the matching engine and `commands/sync` tests
+- **Step 1: Failing test first**
+- A canonical skill directory without `SKILL.md` (and an agent directory without
+- its role file) under copy strategy: two consecutive syncs produce the same
+- single, clear configuration error naming the missing marker file and no
+- `update_copy`; other entries still sync.
+- **Step 2: Implement**
+- Detect the missing marker while planning and report it as a loud entry-level
+- error instead of planning `update_copy` on every run.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/commands/sync`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p03-t03): stop marker-less skill and agent directories from looping`
+- **Files:**
+- - Modify: `packages/cli/src/engine/compute-plan.ts`, `packages/cli/src/engine/execute-plan.ts`
+- - Modify: `packages/cli/src/commands/sync/dry-run.ts`, `packages/cli/src/commands/sync/apply.ts`
+- - Modify: the matching engine and `commands/sync` tests
+- - Modify: `apps/oat-docs/docs/provider-sync/commands.md`
+- **Step 1: Failing tests first**
+- - M1: a manifest row whose provider path differs from the path sync checked is
+- not restamped (planner and `ensureSkipEntryManaged`), so `oat status` does
+- not turn a previously `in_sync` row into a drift that sync never clears.
+- - L1: dry-run JSON `summary.failed` counts `error` entries; the partial-failure
+- apply message keeps the restamp count.
+- **Step 2: Implement** the path-match guard, the summary counts, and document the
+- `error` operation and restamp messages in `provider-sync/commands.md` (L2).
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/drift src/commands/sync`
+- Expected: exit 0; neutralize the path-match guard and show its test fails,
+- restore.
+- **Step 4: Commit**
+- `fix(p03-t04): close p03 review findings M1, L1, L2`
+- **Files:**
+- - Modify: `packages/cli/src/engine/execute-plan.ts` (guard around line 405)
+- - Modify: `packages/cli/src/engine/execute-plan.test.ts` or `engine.integration.test.ts`
+- **Step 1: Failing test first**
+- A faithful copy whose manifest row stores an equivalent provider path spelling
+- (`./.claude/skills/<skill>`) and a stale hash is restamped by apply, and the
+- next plan carries no restamp; the existing different-path control still holds.
+- **Step 2: Implement** the same normalized, scope-relative path comparison the
+- planner uses (`compute-plan.ts` around line 1022); keep the stored path
+- unchanged.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine src/commands/sync`
+- Expected: exit 0. Address-now judgment-sweep fix: no re-review or re-gate.
+- **Step 4: Commit**
+- `fix(p03-t05): normalize the executor provider-path restamp guard`
+- Phase 4: Review-loop skills
+- **Files:**
+- - Create: `.agents/docs/complexity-review-fallback.md`
+- - Create: symlinks `references/docs/complexity-review-fallback.md` in
+- `.agents/skills/oat-project-implement`, `.agents/skills/oat-project-quick-start`,
+- and `.agents/skills/oat-project-review-receive` (relative links to
+- `../../../../docs/complexity-review-fallback.md`, matching how
+- `autonomy-contract.md` is vendored; `oat-project-review-receive` has no
+- `references/docs/` directory yet, so create it)
+- - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`linkedFiles`, around
+- 121-128)
+- - Modify: `NOTICES.md` (the doc adapts prose from the `complexity-review` skill
+- in `tkstang/skills`)
+- **Step 1: Write the doc**
+- One doc, read by the root and by the reviewer subagent:
+- - **When:** every budget-exhaustion point (listed with the owning skill and
+- step). The operator can also ask for the same review at any time; there is
+- no automatic early trigger in this wave.
+- - **Probe:** look for an installed `complexity-review/SKILL.md` in
+- `~/.agents/skills`, `~/.claude/skills`, then `<repo>/.agents/skills`. When
+- found, the subagent reads and follows it as a document (it is not
+- model-invocable), with interactive questions forbidden. Otherwise it follows
+- the condensed method below.
+- - **Dispatch:** one read-only reviewer-class subagent through
+- `oat-project-dispatch-subagents` at the resolved reviewer ceiling. It writes
+- nothing and launches nothing, reads committed content when another writer may
+- own the worktree, and returns the report inline. Scope: the reviewed target
+- (phase commit range or plan bundle), the contract sources (backlog items,
+- discovery, spec, design, decision records), and every review artifact of the
+- exhausted loop.
+- - **Condensed method:** contract restated from independent sources (labeled
+- inferred and the verdict provisional when missing); simplest viable
+- baseline; machinery inventory with the deletion test; ledger columns Item,
+- Claimed value, Evidence, Lifecycle cost, Recommendation (Keep, Simplify,
+- Defer with a reintroduction trigger, or Delete); evidence scale; verdict
+- scale (`Deletion-rule compliant`, `Partially compliant`, `Not compliant`);
+- report sections; skeptical-not-minimalist stance; correctness findings go
+- out of lane.
+- - **OAT additions:** REQUIRES-OPERATOR markers for rows only the operator can
+- settle; open findings classified as accepted-requirement, regression, or
+- new-hardening with recurring families called out; which open findings a
+- recommended simplification would dissolve; a recommended disposition from
+- extra cycles, proceed with override, corrective revision, or **simplify**.
+- - **Decision message and record:** the root saves the report beside the review
+- artifacts (`reviews/archived/complexity-<scope>-<timestamp>.md`; top-level `reviews/` files are read as unprocessed reviews), shows one decision
+- message (why the loop stopped, the verdict and ledger highlights, dissolvable
+- findings, REQUIRES-OPERATOR items in plain terms, the recommended
+- disposition), and records the operator's choice with the report path in
+- `implementation.md`. Agents never select the disposition; under
+- `OAT_AUTONOMOUS=1` the run stops at its boundary report, which includes the
+- same content.
+- **Step 2: Wire the bundle**
+- Add the doc to `linkedFiles`, create the three symlinks, and add the
+- `NOTICES.md` entry.
+- **Step 3: Verify**
+- Run: `pnpm build` and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Expected: exit 0; the bundled copies resolve.
+- **Step 4: Commit**
+- `feat(p04-t01): add condensed complexity-review guidance`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- (root review cap and bounded fix loop around 778-811; phase gate exhaustion
+- around 822-845)
+- - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- (final review cap around 199-206 and 295; exit gate `maxAttempts` around
+- 536-543 and 773-795)
+- - Modify: `.agents/skills/oat-project-implement/SKILL.md` ("Project Log Append
+- Points", around 42-76)
+- - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- (project-log pin around 725-760) and the implement version pins in
+- `packages/cli/src/validation/skills.test.ts`
+- **Step 1: Failing pins first**
+- Add a table-driven contract test (in `review-skill-contracts.test.ts` or a new
+- `complexity-review-contracts.test.ts` beside it) with one row per implement
+- exhaustion point (root review cap, phase gate exhaustion, final review cap,
+- exit gate `maxAttempts`): each site points to
+- `references/docs/complexity-review-fallback.md`, dispatches the review before
+- the decision message or boundary report, and says agents never select the
+- disposition. Add a pin for the root-judgment logging guidance.
+- **Step 2: Implement**
+- At each implement exhaustion point add the one-paragraph pointer: dispatch the
+- complexity review per the shared doc, then present the decision message (or,
+- under `OAT_AUTONOMOUS=1`, include it in the boundary report), and record the
+- operator's choice with the report path in `implementation.md`. In "Project Log Append Points",
+- add root-judgment entries through `oat project log append` when breaks,
+- surprises, workarounds, or notable successes surface, including observations
+- relayed from subagent reports (queued and appended at the next bookkeeping
+- boundary, never while a child owns the worktree); say that phase implementers
+- and dispatched subagents have no logging duties; defer the entry format to the
+- helper's `--help`; keep the existing "the helper no-ops when the feature is
+- off" wording. Bump `oat-project-implement`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p04-t03): run the complexity review at implement's exhaustion points`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-review-receive/SKILL.md` (Step 8, around
+- 604-630)
+- - Modify: the contract test from p04-t03 (add the receive row) and the
+- review-receive version pins in `packages/cli/src/validation/skills.test.ts`
+- **Step 1: Failing pin first** for the receive cycle-cap row.
+- **Step 2: Implement**
+- At the "limit reached" point, dispatch the complexity review per the shared
+- doc before the menu, add **simplify** to the offered dispositions, and record
+- the choice with the report path. Keep the three-cycle count and the exclusion
+- of gate-originated artifacts unchanged. Bump `oat-project-review-receive`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p04-t04): run the complexity review at review-receive's cycle cap`
+- **Files:**
+- - Create: `.agents/docs/gate-approval-record.md`
+- - Create: symlinks `references/docs/gate-approval-record.md` in
+- `.agents/skills/oat-project-quick-start`, `.agents/skills/oat-project-implement`,
+- `.agents/skills/oat-project-next`, and `.agents/skills/oat-project-progress`
+- (next and progress have no `references/docs/` directory yet; create it)
+- - Modify: `packages/cli/scripts/bundle-inputs.mjs` (`linkedFiles`)
+- - Modify: `packages/cli/src/commands/shared/frontmatter.ts`
+- (`PROJECT_STATE_FRONTMATTER_FIELDS`, around 41) and
+- `packages/cli/src/commands/shared/frontmatter.test.ts` (around 488-520)
+- - Modify: `.oat/templates/state.md` (commented `oat_quick_start_gate` block next
+- to `oat_implement_exit_gate`, around 39-48)
+- - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- (the `oat_implement_exit_gate` shape around 314-341 and the write rule around
+- 549-551 reference the shared doc and add `decided_at`)
+- **Step 1: Write the doc**
+- Define the shared lifecycle-gate record carried in project `state.md`. The
+- common core, used by both carriers: `status` (`allowed` | `blocked`),
+- `disposition` (`passed` | `warned` | `prompt_approved` | `project_disabled`,
+- or `null` when blocked), `config_fingerprint`, `reviewed_head` (the commit the
+- gate reviewed, recorded as provenance), and `decided_at` (ISO 8601 UTC). The
+- doc defines only this core; implement's `oat_implement_exit_gate` keeps its
+- additional values and fields in `completion-and-closeout.md` and points to the
+- doc for the core. An
+- explicit operator continuation after a `prompt` failure writes
+- `allowed/prompt_approved`; declining or deferring writes `blocked`, never
+- anything that reads as approval. Name the two carriers:
+- `oat_implement_exit_gate` (implement, which keeps its additional fields) and
+- `oat_quick_start_gate` (quick-start). Describe how readers validate a quick-start record: its
+- `config_fingerprint` matches the currently resolved quick-start gate
+- declaration. `reviewed_head` is not compared with `HEAD`, because Step 3.7
+- commits after the gate; implement's record keeps its own effective-delta
+- freshness rule.
+- **Step 2: Wire it**
+- Add the doc to `linkedFiles` and the four symlinks; add `oat_quick_start_gate`
+- to the state frontmatter fields and template; make implement's shape reference
+- the doc and write `decided_at` (update any field-by-field pins in
+- `post-implement-sequence-contracts.test.ts`, around 279-300).
+- **Step 3: Verify**
+- Run: `pnpm build` and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts src/commands/init/tools/shared`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p04-t05): define the gate approval record once`
+- Task p04-t06: Persist quick-start gate outcomes and run the complexity review at QS-12
+- **Files:**
+- - Modify: `.agents/skills/oat-project-quick-start/SKILL.md` (Gate Execution
+- steps 5-6 around 878-892; the block/prompt paragraph around 900-906; Step 3.7
+- around 904-932)
+- - Modify: the contract test from p04-t03 (quick-start row) and a new pin that
+- fails when quick-start's approval write is removed; quick-start version pins
+- in `packages/cli/src/validation/skills.test.ts` (including the gate-text regex
+- around 2193)
+- **Step 1: Failing pins first**
+- Pin that quick-start writes `oat_quick_start_gate` per
+- `references/docs/gate-approval-record.md` for configured gate outcomes:
+- passed or `warn` writes `allowed/passed` or `allowed/warned`; a `prompt`
+- continuation writes `allowed/prompt_approved`; a decline, deferral, or
+- exhausted `block` writes `blocked`; a project-disabled gate writes
+- `allowed/project_disabled` without a launch; and `not_configured` writes no
+- record. Step 3.7 stays gated by the existing control flow and does not read
+- the record back. Exhausted `block` attempts dispatch the complexity review
+- before escalation.
+- **Step 2: Implement**
+- Add the record write to the gate steps and the complexity-review pointer at `maxAttempts` exhaustion only (a single
+- `prompt` failure is not a budget exhaustion). Bump `oat-project-quick-start`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+- Expected: exit 0. Remove the approval write, show the pin fails, restore.
+- **Step 4: Commit**
+- `feat(p04-t06): persist quick-start gate outcomes and review complexity at QS-12`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-next/SKILL.md` (Step 5.0 around 331-373)
+- - Modify: `.agents/skills/oat-project-progress/SKILL.md` (gate posture
+- reporting around 180-203)
+- - Modify: pins for next and progress in `packages/cli/src/validation/skills.test.ts`
+- **Step 1: Failing pins first**
+- Next and progress read `oat_quick_start_gate` through the shared doc's
+- validation rule, alongside the implement record they already handle. The
+- quick plan readiness predicate stays the single routing rule for quick plans
+- (it is defined once in quick-start and mirrored by the control-plane router
+- and, after p06-t03, the dashboard), so the record adds no route and no
+- conditional warning: next and progress report the quick-start record's
+- status, disposition, and fingerprint match when a record exists, as progress
+- does for implement's. A pin fails when quick-start's
+- approval write (p04-t06) is removed, because the readers' documented record
+- no longer has a writer.
+- **Step 2: Implement** the read paths, and bump `oat-project-next` and
+- `oat-project-progress`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p04-t07): read both gate records in next and progress`
+- **Files:**
+- - Modify: `.agents/docs/autonomy-contract.md` (rows QS-12, IMPLEMENT-12,
+- IMPLEMENT-18, REVIEWRECEIVE-02: dispatch the complexity review and include it
+- in the boundary report; never self-select a disposition; the "HEAD
+- prompt-site coverage" table for every new prompt-like line)
+- - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`,
+- `apps/oat-docs/docs/workflows/projects/implementation-execution.md`,
+- `apps/oat-docs/docs/workflows/projects/reviews.md`,
+- `apps/oat-docs/docs/workflows/projects/autonomy.md`,
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md`,
+- `apps/oat-docs/docs/cli-utilities/project-log.md`
+- **Step 1: Implement**
+- Update the four inventory rows and add every coverage key the drift test
+- prints. Document the complexity review at budget exhaustion (probe, condensed
+- fallback, decision message), the persisted quick-start
+- approval, and root judgment logging. Apply any version bumps
+- `check:skill-bumps` requires for skills that vendor the changed contract.
+- **Step 2: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts src/validation/named-skill-load-contract.test.ts src/validation/skills.test.ts`,
+- `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, and
+- `pnpm format:root`.
+- Expected: exit 0.
+- **Step 3: Commit**
+- `docs(p04-t08): document the review-loop complexity review and gate records`
+- **Files:**
+- - Modify: `.agents/docs/gate-approval-record.md`,
+- `.agents/skills/oat-project-next/SKILL.md`,
+- `.agents/skills/oat-project-progress/SKILL.md`,
+- `.agents/skills/oat-project-quick-start/SKILL.md`,
+- `.agents/skills/oat-project-review-receive/SKILL.md`,
+- `.agents/docs/complexity-review-fallback.md`,
+- `.agents/skills/oat-project-autonomous/SKILL.md` (version only)
+- - Modify: the p04 contract tests and version pins
+- **Step 1: Failing pins first** for each change below.
+- **Step 2: Implement**
+- - M1: readers report the quick-start record as recorded (status,
+- disposition, `decided_at`, `config_fingerprint` as provenance) and do not
+- claim a freshness comparison the CLI cannot recompute; the doc says so.
+- - M2: quick-start and review-receive load `oat-project-dispatch-subagents`
+- (and its engine) before dispatching the complexity review and grant `Task`
+- in `allowed-tools`; a review-receive run outside implement resolves the
+- reviewer route with `oat project dispatch-ceiling resolve --role reviewer`.
+- - M3: bump `oat-project-autonomous` (its gate inventory links the changed
+- autonomy contract).
+- - L1: a re-entered receive at the cap does not dispatch a second complexity
+- review for the same exhausted loop when its report already exists.
+- - L2: next's note for an absent record does not imply "no gate configured";
+- the shared doc says implement writes `allowed/no_gate` when no gate is
+- configured and that older records without `decided_at` remain valid.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p04-t09): close p04 review findings M1, M2, M3, L1, L2`
+- The p04 gate run `67e865c1` was interrupted by a host restart after it wrote
+- its artifact but before it returned a structured result, so it is not a
+- receivable gate outcome. Its two findings were checked by the root and are
+- addressed here; the p04 gate then runs normally.
+- **Files:**
+- - Modify: `.agents/skills/oat-project-quick-start/SKILL.md` (Gate Execution
+- step 1 around line 849; record write around 919-934)
+- - Modify: `.agents/docs/complexity-review-fallback.md` (save path around line
+- 222; reuse rule around lines 30-34)
+- - Modify: `packages/cli/src/commands/init/tools/shared/gate-approval-record-contracts.test.ts`,
+- `packages/cli/src/commands/init/tools/shared/complexity-review-contracts.test.ts`
+- **Step 1: Failing pins first**
+- - M1: the `configured_disabled_by_project` branch writes the
+- `allowed/project_disabled` record before it jumps to Step 3.7 (a
+- branch-specific pin, not a whole-section text match).
+- - L1: complexity reports are saved with a UTC seconds timestamp, the reuse
+- rule compares at seconds precision, and same-second collisions get a suffix.
+- **Step 2: Implement** both.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`,
+- `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p04-t10): persist the disabled gate record and use seconds for report timestamps`
+- Phase 5: Completion
+- **Files:**
+- - Modify: `packages/cli/src/config/oat-config.ts` (type around 281-282, parse
+- around 730-735), `packages/cli/src/config/resolve.ts`
+- (`DEFAULT_WORKFLOW_CONFIG` around 117-118),
+- `packages/cli/src/commands/config/index.ts` (key union around 165-170, key
+- list around 346-347, describe entries around 870-890,
+- `WORKFLOW_BOOLEAN_KEYS` around 1463-1464), following the
+- `workflow.archiveOnComplete` pattern, and their tests
+- (`oat-config.test.ts`, `resolve.test.ts`, `commands/config/index.test.ts`)
+- - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md` (including the
+- cross-repository note for a `--user` opt-in around 842-846) and
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- **Step 1: Failing test first**
+- `workflow.autonomousComplete` parses as a boolean, defaults to `false`, and is
+- accepted by `oat config get`, `set`, and `describe`.
+- **Step 2: Implement** the key and docs.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config src/commands/config`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p05-t01): add the workflow.autonomousComplete opt-in`
+- **Files:**
+- - Create: `.agents/skills/oat-project-complete-auto/SKILL.md` (model on
+- `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`: model-invocable,
+- `user-invocable: false`, no interactive questions; initial
+- `metadata.version: 1.0.0`)
+- - Modify: `packages/cli/scripts/bundle-inputs.mjs` (skills list, around 72),
+- `packages/cli/src/commands/tools/shared/pack-manifest.ts`
+- (`WORKFLOW_SKILL_NAMES`, around 162), `apps/oat-docs/docs/workflows/skills/index.md`,
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md` (if it enumerates the pack)
+- - Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts` rows
+- for any new `oat-project-*` execution sentences; the guard pins go in a new
+- `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+- - Modify (only if the skill has fenced project-artifact `git add` or
+- `git commit` lines): `packages/cli/src/validation/synced-bookkeeping-sites.json`
+- (`validateOatSkills` requires entries, `skills.ts` around 490-500)
+- - Generated: `.claude/skills/oat-project-complete-auto` symlink and
+- `.oat/sync/manifest.json` entry via `oat sync --scope project` (branch CLI)
+- **Step 1: Failing pins first**
+- A contract test pins the three-layer guard: (1) without
+- `workflow.autonomousComplete: true` the skill stops with "interactive
+- completion required"; (2) the objective preflight runs
+- `oat project closeout-check <path> --json --autonomous` and hard-fails on
+- incomplete tasks, a non-passed final review row, an unmerged PR without a
+- recorded exception, an incomplete post-implement sequence, unresolved
+- blockers, or an unsatisfied project-log gate, never assuming an answer; (3)
+- it runs only when a workflow names it as a step or under an `OAT_AUTONOMOUS`
+- lifecycle run, refuses self-initiated cleanup, and records the requesting
+- workflow in its run report and the completion commit body. Batch mode: it
+- accepts several wave-wrapper projects at program close behind the program-end
+- operator checkpoint, preflighting each project individually and stopping that
+- project on any failure.
+- The PR-merge precondition composes with OAT's supported
+- complete-before-merge ordering (`oat-project-complete`; `oat-wave-execute`
+- Step 8 completes each wave before its merge handoff,
+- `.agents/skills/oat-wave-execute/SKILL.md` around 419-450). A merged PR
+- passes. An open PR passes only through a recorded exception: the invoking
+- workflow names a completion-before-merge step (wave-execute Step 8 passes its
+- provenance), the project tracks the PR (`oat_pr_status: open` with
+- `oat_pr_url`), and the final review row passed; the companion writes the
+- exception (requesting workflow, PR URL, reason) into the project's
+- `implementation.md` before any completion write, and its run report repeats
+- it. Any other open or untracked PR is refused. Composed controls in the same
+- test file: an opted-in, reviewed wave with an open tracked PR invoked from
+- wave-execute Step 8 completes with the exception recorded; the same project
+- invoked without a naming workflow is refused; a merged program-end batch
+- completes with no exception.
+- **Step 2: Implement**
+- Write the skill so it resolves archive and PR choices from config
+- (`workflow.archiveOnComplete`, `workflow.createPrOnComplete`) and points to
+- the interactive skill's steps instead of copying them; `oat-project-complete`
+- is unchanged. Register the skill in the bundle, the workflows pack, and the
+- skill catalog; regenerate provider views with the branch CLI
+- (`node packages/cli/dist/index.js sync --scope project`) and confirm a clean
+- status afterward. After p03-t01 the branch CLI may restamp unrelated stale
+- manifest entries; commit that churn with the skill and say so in the commit
+- body.
+- **Step 3: Verify**
+- Run: `pnpm build`, `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/commands/tools src/validation`,
+- and `pnpm oat:validate-skills`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p05-t02): add the oat-project-complete-auto companion skill`
+- **Files:**
+- - Modify: `.agents/skills/oat-wave-execute/SKILL.md` (closeout step 8, around
+- 419-446: remove the interim execute-as-a-document guidance)
+- - Modify: `.agents/skills/oat-wave-program/SKILL.md` (around 128-129)
+- - Modify: a contract pin for the repointed step
+- **Step 1: Failing pin first** (in `complete-auto-contracts.test.ts` from
+- p05-t02) that wave-execute's autonomous closeout step 8 passes its
+- completion-before-merge provenance to the companion and that step 8
+- invokes `oat-project-complete-auto` and no longer offers the as-document path.
+- **Step 2: Implement** the repoint; bump `oat-wave-execute` and
+- `oat-wave-program`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared`
+- (`oat-wave-execute` has no `node --test` suite).
+- Expected: exit 0.
+- **Step 4: Commit**
+- `feat(p05-t03): point wave closeout at the companion skill`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (the "Ledger-path
+- guard" paragraph around 423; optionally the Step 2 wording around 196)
+- - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- and the pr-final version pins in `packages/cli/src/validation/skills.test.ts`
+- **Step 1: Failing pin first** for the new wording.
+- **Step 2: Implement**
+- Say the scan ends at the next level-two heading other than `## Reviews`
+- itself, and that `###` and level-one headings do not end it. Document that the
+- escaped-pipe stop stands until a real ledger contains an escaped pipe. Bump
+- `oat-project-pr-final`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`
+- Expected: exit 0.
+- **Step 4: Commit**
+- `docs(p05-t04): tighten the pr-final ledger scan boundary prose`
+- **Files:**
+- - Modify: `.agents/skills/oat-wave-execute/SKILL.md` (step 8 fallback around
+- line 441), `.agents/skills/oat-project-complete-auto/SKILL.md` (activation
+- rows around 75 and 107-108; Step 5.3)
+- - Modify: `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+- **Step 1: Failing tests first**
+- - M1: wave-execute step 8 falls back to the deferred path only when the
+- companion stops for a missing opt-in, a PR-precondition refusal, or a
+- question with no recorded answer; an objective preflight failure (incomplete
+- tasks, final review not passed, unresolved blockers, project-log gate)
+- stops at a boundary and never runs `oat project complete-state`.
+- - M2: the `oat-autonomous-lifecycle:<skill-name>` activation route admits only
+- a skill that actually names the companion as a step (or the route is
+- removed); the composed control that admitted `oat-project-autonomous` now
+- expects a refusal.
+- - L3: the opt-in composed control reads the skill's own opt-in rule so it can
+- fail when that rule is removed.
+- **Step 2: Implement** the three fixes plus L2 (set `SKILL_DIR` before use, use a
+- separate variable for the interactive skill directory, and probe its
+- `scripts/` folder). Bump `oat-project-complete-auto` only if
+- `check:skill-bumps` requires it (it is new on this branch).
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`,
+- `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`.
+- Expected: exit 0; neutralize each guard and show its control fails, restore.
+- **Step 4: Commit**
+- `fix(p05-t05): close p05 review findings M1, M2, L2, L3`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-complete-auto/SKILL.md` (answer table
+- around line 232; Step 5 delegation around 271)
+- - Modify: `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+- **Step 1: Failing test first**
+- A composed control: a merged project with `workflow.createPrOnComplete: true`
+- run through the companion never reaches a PR-create step; the tracked-open
+- path still updates the existing PR.
+- **Step 2: Implement** an explicit override in the companion: `SHOULD_OPEN_PR`
+- stays `false` regardless of config or tracked status, while updates to an
+- existing tracked PR proceed as the interactive flow requires.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+- Expected: exit 0. Address-now judgment-sweep fix: no re-review or re-gate.
+- **Step 4: Commit**
+- `fix(p05-t06): never create a PR from the autonomous completion companion`
+- Phase 6: Small fixes
+- **Files:**
+- - Modify: `.agents/skills/recon/scripts/reconcile-ledger.mjs` (around 28-39,
+- 247-279)
+- - Modify: `.agents/skills/recon/references/packet-contract.md` (around 396-398)
+- - Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs` and
+- `.agents/skills/recon/tests/two-source-publication.test.mjs`; recon version
+- pins in `.agents/skills/recon/tests/skill-contract.test.mjs` and
+- `packages/cli/src/validation/skills.test.ts`
+- - Modify: `apps/oat-docs/docs/workflows/skills/recon.md` if it states the rule
+- **Step 1: Failing test first**
+- With the production helpers, a thorough-profile packet whose
+- redundant-verification review omits a claim reconciles that claim to
+- `unresolved`, renders it under Review Downgrades with a reason, and publishes
+- as `partial` instead of failing with `MISSING_INDEPENDENT_REVIEW`. Cover a
+- claim outside the redundant review's brief: reconciliation and publication
+- must agree on it, and the renderer lists a reason.
+- **Step 2: Implement**
+- Make reconciliation require a disposition from every review kind publication
+- requires for the achieved profile (read the rule from `validate-packet.mjs`
+- around 2085-2228 and share it rather than restating it), and state the rule
+- for every review kind in `packet-contract.md`. Bump `recon`.
+- **Step 3: Verify**
+- Run: `node --test .agents/skills/recon/tests/*.test.mjs` and
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p06-t01): downgrade claims that thorough-profile reviews leave undisposed`
+- **Files:**
+- - Modify: `.agents/skills/oat-wrap-up/SKILL.md` (around 368 and 397) and
+- `.agents/skills/oat-wrap-up/references/report-template.md` (around 66)
+- - Modify: a pin in `packages/cli/src/validation/skills.test.ts`
+- **Step 1: Failing pin first** that wrap-up resolves the summary template with
+- `oat template resolve summary` (`--json`, or `--output` for the bundle tier,
+- whose `path` is null) and no longer names `.oat/templates/summary.md` as a
+- direct path.
+- **Step 2: Implement**; bump `oat-wrap-up`.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+- and `pnpm oat:validate-skills`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p06-t02): resolve oat-wrap-up's summary template through the CLI`
+- **Files:**
+- - Modify: `packages/control-plane/src/index.ts` (export
+- `evaluateQuickPlanReadiness` from `src/state/quick-plan-readiness.ts`)
+- - Modify: `packages/cli/src/commands/state/generate.ts` (`computeNextStep`
+- around 298; the shared `plan:in_progress` map around 430)
+- - Modify: `packages/cli/src/commands/state/generate.test.ts` (copy the lite
+- routing test style around 318-364)
+- **Step 1: Failing test first**
+- A quick-mode project at `plan:in_progress` with a not-ready `plan.md` routes to
+- `oat-project-quick-start` on the dashboard, and a ready plan routes to
+- `oat-project-implement`, with the same reason wording as the router. Add a
+- parity assertion against `recommendSkill` for the same fixture.
+- **Step 2: Implement** the export and the dashboard branch that reads the
+- quick plan readiness through it.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/control-plane build`,
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`,
+- and `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p06-t03): route quick plans on the dashboard by readiness`
+- **Files:**
+- - Modify: `packages/cli/src/commands/state/generate.ts` (around 406-409 and
+- 482-484)
+- - Modify: `packages/cli/src/commands/state/generate.test.ts`
+- **Step 1: Failing tests first**
+- - M1: a quick project at `plan:complete` with a not-ready plan routes to
+- `oat-project-quick-start` on the dashboard, matching `recommendSkill`; a
+- ready plan still routes to `oat-project-implement` (two parity cases).
+- - L1: a quick project at `plan:in_progress` with a pending `plan` HiLL
+- checkpoint gets the same route from the dashboard as from the router.
+- **Step 2: Implement** by applying the readiness gate to every quick plan-phase
+- status and ordering the HiLL check as the router does.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/control-plane build`,
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`,
+- and `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p06-t04): align dashboard quick-plan routing with the router`
+- Phase 7: Release fan-in
+- Task p07-t01: Bump the lockstep public packages to 0.3.14
+- **Files:**
+- - Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`
+- and `packages/cli/assets/public-package-versions.json`, following the file
+- set of the 0.3.12 bump
+- (`git show --stat 202dd1465` filtered to version files)
+- **Step 1: Verify**
+- Run: `git fetch origin main && pnpm release:check-versions` and
+- `pnpm release:validate`.
+- Expected: exit 0.
+- **Step 2: Commit**
+- `chore(p07-t01): bump lockstep public packages to 0.3.14`
+- **Step 1: Archive completed items with the branch CLI**
+- Run `oat pjm doctor --json` and confirm `adoption.state` is `declared` before
+- any PJM write. After `pnpm build`, run `node packages/cli/dist/index.js backlog archive <id>
+- --summary "<outcome>"` for each item whose in-scope criteria all pass:
+- `BL-261001-fail-closed-when-bundle-assets`,
+- `BL-260906-report-errno-for-asset-root`, `BL-260718-harden-full-surface-gate`,
+- `BL-260927-persist-quick-start-prompt` (its archive summary states that next
+- and progress report the quick-start record without routing on it, per
+- discovery decision 8), `BL-261001-run-a-complexity-review-when` (its
+- summary states that the optional early trigger was not shipped: the operator
+- can request the review at any time),
+- `BL-260713-root-agent-judgment-logging`, `BL-260720-add-oat-project-complete-auto`
+- (strip its `{Outcome}` placeholders first), `BL-260908-tighten-the-pr-final-ledger`,
+- `BL-261001-downgrade-claims-that-thorough`,
+- `BL-261001-resolve-the-summary-template`, `BL-261001-route-quick-mode-plan`
+- (narrow its criteria to the dashboard first, citing the router and skill
+- tables that already agree). Archive `BL-260908-retire-the-top-level-skill` with `--wont-do` and a
+- summary saying it is superseded by `BL-260908-remove-the-top-level-skill`.
+- **Step 2: Rewrite partial items in place**
+- - `BL-260711-add-activity-aware-gate` (not implemented this wave): add a
+- note that an idle kill cannot serve Codex gates until Codex transcript
+- activity can be attributed to the gate child (`activity-probes.ts` labels
+- it `ambient-runtime`), which is the precondition for the idle slice.
+- - `BL-260909-restamp-a-stale-copy-strategy`: record the shipped parts; keep
+- only the bridge and legacy-encoder retirement open.
+- - Add the Wave 4 complexity-review slice to
+- `BL-260818-distinguish-operator-directed`, so its remaining criteria do not
+- duplicate shipped behavior.
+- **Step 3: File the follow-up**
+- With `node packages/cli/dist/index.js backlog new`, create a backlog item to
+- wire the complexity review into the sibling
+- gate-capable skills (`oat-project-plan`, `oat-project-import-plan`,
+- `oat-project-design`, `oat-project-discover`, `oat-project-lite`), then run
+- `backlog regenerate-index`.
+- **Step 4: Commit**
+- `chore(p07-t02): close out the wave 4 backlog items`
+- **Step 1: Run every gate with explicit exit codes**
+- In CI order, each captured as `pnpm <gate> > <log> 2>&1; echo "exit=$?"`:
+- `pnpm build` first with the real `HOME`, then `pnpm check`, `pnpm type-check`,
+- `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`,
+- `pnpm run check:skill-bumps`, `pnpm release:check-versions` (after
+- `git fetch origin main`), `pnpm release:validate`, `pnpm build:docs`; then
+- `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`, `pnpm lint`, and
+- `pnpm format`. Confirm the test runs were not cache replays.
+- **Step 2: Record** each exit code and the head SHA in `implementation.md`.
+- **Step 3: Commit**
+- `chore(p07-t03): record wave 4 definition-of-done evidence`
+- **Files:**
+- - Modify: `.agents/skills/oat-project-complete-auto/SKILL.md`,
+- `.agents/skills/oat-wave-execute/SKILL.md`,
+- `.agents/skills/oat-wave-program/SKILL.md`
+- - Modify: `packages/cli/src/commands/state/generate.ts` and its test
+- - Modify: `packages/cli/src/commands/config/index.ts` (describe text),
+- `apps/oat-docs/docs/cli-utilities/configuration.md`,
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- - Modify: the matching contract tests and pins
+- - Create: two backlog items with the branch CLI
+- **Step 1: Failing pins and tests first** for each change below.
+- **Step 2: Implement**
+- - M1: the companion no longer promises archive-resume recovery it cannot
+- reach; a missing project directory gets its own refusal reason that names
+- `oat-project-complete` as the recovery owner, and wave-execute's boundary
+- report names `oat-project-complete` as the next owner. File a backlog item
+- for routing validated archive receipts to the interactive resume tail.
+- - L1: one cautionary sentence in `workflow-gates.md` about concurrent
+- stale-claim recovery; file a backlog item for serializing it.
+- - L2: the dashboard's HiLL membership check accepts single-quoted, bare, and
+- block YAML arrays (the parsed-state forms the router accepts), with tests.
+- - L3: config help, `configuration.md`, and the companion description stop
+- advertising the `OAT_AUTONOMOUS` lifecycle route as a working activation
+- until a lifecycle skill names the companion.
+- - L5: at program close, a wrapper refused for a deferrable reason names its
+- next step (`oat-project-complete`).
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state src/commands/config src/commands/init/tools/shared src/validation`,
+- `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`, `pnpm format:root`,
+- and the docs check.
+- Expected: exit 0.
+- **Step 4: Commit**
+- `fix(p07-t04): close final review findings M1, L1, L2, L3, L5`
+- Task p07-t05: Port wave 4 docs into the #342 docs restructure and bump to 0.3.16
+- `main` merged #342 (reader-first docs site, lockstep 0.3.14) after p07-t01;
+- the branch merged `origin/main` at `30526fef9`, accepting #342's deletion of
+- `workflows/projects/autonomy.md` and `workflows/skills/index.md`.
+- **Files:**
+- - Modify: `apps/oat-docs/docs/workflows/advanced/autonomy.md` (port the wave 4
+- paragraph on the complexity review at budget exhaustion and the persisted
+- quick-start gate outcome, with links to the moved pages)
+- - Modify: `apps/oat-docs/skill-docs.json` (exclude `oat-project-complete-auto`:
+- the mapping validator rejects a guide entry for a skill that is not
+- user-invocable), `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+- (an `## oat-project-complete-auto` guide section), and the hand-written Full
+- Catalog in `apps/oat-docs/docs/skills/index.md`
+- - Modify: the five lockstep `package.json` files and
+- `packages/cli/assets/public-package-versions.json` (0.3.16 after `main` reached 0.3.15 through #350)
+- - Modify: any skill version that `check:skill-bumps` reports as not above
+- `origin/main` after the merge, with its pins
+- **Step 1: Port** the two deleted pages' wave 4 content into their #342
+- locations, fix every link this wave added that points at a moved page, and add
+- the new skill to the mapping, guide, and catalog.
+- **Step 2: Bump** the lockstep packages to 0.3.16.
+- **Step 3: Verify**
+- Run the full Definition of Done in CI order with explicit exit codes (as
+- p07-t03), including `pnpm docs:skills:check` and `pnpm build:docs`, and update
+- `## Test Results` in `implementation.md` with the new head.
+- **Step 4: Commit**
+- `chore(p07-t05): port wave 4 docs into the restructured site and bump to 0.3.15` (version commit: `chore(p07-t05): bump lockstep public packages to 0.3.16 after merging main`)
+- Task p07-t06: (review) Close final review round 3 docs findings L1, L2
+- **Files:**
+- - Modify: `apps/oat-docs/docs/reference/configuration.md` (around line 893)
+- - Modify: `apps/oat-docs/docs/workflows/approvals-and-automation.md` (cost
+- table around lines 77-92)
+- **Step 1: Implement**
+- - L1: the `workflow.autonomousComplete` text no longer says the companion
+- takes PR choices from `workflow.createPrOnComplete`; it never creates a PR.
+- - L2: the cost table counts the read-only complexity-review run that happens
+- when a review or gate budget runs out.
+- **Step 2: Verify**
+- Run: `pnpm --filter oat-docs check` and `pnpm build:docs`.
+- Expected: exit 0.
+- **Step 3: Commit**
+- `docs(p07-t06): correct the autonomous completion PR note and review costs`
+- Task p07-t07: (review) Close exit gate attempt 1 findings H1, M1
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh` (emptiness check around line 113)
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- - Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- **Step 1: Failing tests first**
+- - H1: an `OAT_ASSETS_DIR` override whose only entry is named with newline
+- characters is refused and preserved; a genuinely empty directory and an
+- existing bundle are still accepted.
+- - M1: the gate integration suite passes with an inherited absolute
+- `OAT_GATE_RUN_MARKER_DIR` in the caller's environment, and ordinary
+- fixtures leave that inherited directory untouched.
+- **Step 2: Implement**
+- - H1: replace the textual `ls -A` emptiness test with filename-safe
+- enumeration (for example `find "$dir" -mindepth 1 -maxdepth 1 -print -quit`
+- with its exit status checked), keeping enumeration errors fail-closed.
+- - M1: default each fixture's `OAT_GATE_RUN_MARKER_DIR` to
+- `join(fixture.tmp, 'oat-gate-runs')` before applying `options.env`, keeping
+- case 10's deliberate override.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+- (also with `OAT_GATE_RUN_MARKER_DIR` set to a fresh absolute directory) and
+- `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize the H1 guard and show the newline case fails,
+- restore.
+- **Step 4: Commit**
+- `fix(p07-t07): close exit gate findings H1, M1`
+- **Files:**
+- - Modify: `packages/cli/scripts/bundle-assets.sh` (around line 116)
+- - Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- **Step 1: Failing test first**
+- An `OAT_ASSETS_DIR` that is a symlink to a populated directory is refused
+- before any mutation; a symlink to an empty directory is still accepted.
+- **Step 2: Implement** `find -H "${ASSETS}" -mindepth 1 -maxdepth 1 ...` so the
+- starting path is followed, keeping the fail-closed exit-status check.
+- **Step 3: Verify**
+- Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+- and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+- Expected: exit 0; neutralize `-H` and show the symlink case fails, restore.
+- **Step 4: Commit**
+- `fix(p07-t08): follow a symlinked assets destination in the emptiness check`
+- The plan is fully sequential (`oat_plan_parallel_groups: []`).
+- - p01, p02, and p03 have disjoint source write sets, but p01 changes
+- `bundle-assets.sh`, which generates the `packages/cli/assets` bundle that
+- every later phase's build and tests consume. Running p02 or p03 in a
+- parallel worktree would verify against a bundle produced without p01's
+- change, so they share a generated artifact and stay sequential.
+- - p02 and p04 both edit `apps/oat-docs/docs/cli-utilities/workflow-gates.md`.
+- - p03 edits `packages/cli/src/validation/skills.ts` and `skills.test.ts`; p04,
+- p05, and p06 extend `skills.test.ts` with version pins and change the
+- branch's skill-bump state that `check:skill-bumps` evaluates at each phase
+- head.
+- - p06-t03 needs a control-plane build that later CLI test runs consume.
+- - p07 is the fan-in: the lockstep bump and backlog close-out need every
+- earlier phase.
+- Within p04, tasks edit the same skills in order (implement in t03 and t05,
+- quick-start in t05 and t06); coverage keys land with each task, and t08
+- rewrites the four inventory rows last.
+- | Item                                       | Criterion                                                                    | Task                      |
+- | `BL-261001-fail-closed-when-bundle-assets` | Clear error on an empty or repository-root lookup, no copy                   | p01-t01                   |
+- |                                            | Staging never inside any recursively copied source (skills, templates, docs) | p01-t01                   |
+- |                                            | Test reproduces the empty lookup and fails closed                            | p01-t01                   |
+- | `BL-260906-report-errno-for-asset-root`    | Errno reported for non-ENOENT failures, with a failing-if-dropped test       | p01-t02                   |
+- |                                            | `statRedirects` reset in `afterEach`                                         | p01-t02                   |
+- | `BL-260718-harden-full-surface-gate`       | Full-surface budget not silently 900 seconds                                 | p02-t01                   |
+- |                                            | Matching in-flight run rejected, not relaunched                              | p02-t02                   |
+- |                                            | Tests: precedence, long envelope, nested invocation                          | p02-t01, p02-t02          |
+- |                                            | Markers and JSON show budget and recursion decision                          | p02-t01, p02-t02          |
+- | `BL-260909-restamp-a-stale-copy-strategy`  | Stale hash restamped; second run no-op                                       | p03-t01                   |
+- |                                            | Legacy obsolete mapping: `remove` when matching, `detach` otherwise          | p03-t01                   |
+- |                                            | Missing `SKILL.md` reported for every canonical skill directory              | p03-t02                   |
+- |                                            | Marker-less directory does not loop                                          | p03-t03                   |
+- |                                            | Bridge and legacy encoder retirement                                         | open (p07-t02 rewrite)    |
+- | `BL-261001-run-a-complexity-review-when`   | Complexity review at every exhaustion point, pinned per point                | p04-t03, p04-t04, p04-t06 |
+- |                                            | Decision message content including **simplify**                              | p04-t01, p04-t03-t04      |
+- |                                            | Choice recorded with report path; never self-selected (autonomy too)         | p04-t01, p04-t08          |
+- |                                            | Dependency resolved (probe plus condensed fallback); subagent writes nothing | p04-t01                   |
+- |                                            | Optional early trigger: not shipped (operator can request any time)          | p07-t02                   |
+- |                                            | Version bumps and docs                                                       | p04-t03-t08               |
+- | `BL-260927-persist-quick-start-prompt`     | Continuation persists `allowed/prompt_approved` in state                     | p04-t05, p04-t06          |
+- |                                            | Decline or deferral persists nothing that reads as approval                  | p04-t05, p04-t06          |
+- |                                            | Next and progress read and report it; readiness predicate unchanged; pin     | p04-t06, p04-t07          |
+- |                                            | Version bump; shape defined once                                             | p04-t05, p04-t06          |
+- | `BL-260713-root-agent-judgment-logging`    | Root guidance logs judgment entries, including relayed observations          | p04-t03                   |
+- |                                            | Subagents have no logging duties                                             | p04-t03                   |
+- |                                            | Trigger stated; format deferred to `--help`; no-op preserved                 | p04-t03                   |
+- | `BL-260720-add-oat-project-complete-auto`  | Three-layer guard                                                            | p05-t01, p05-t02          |
+- |                                            | Interactive skill unchanged                                                  | p05-t02                   |
+- |                                            | Wave-execute step 8 repointed                                                | p05-t03                   |
+- |                                            | Batch mode with per-project preflight                                        | p05-t02                   |
+- | `BL-260908-tighten-the-pr-final-ledger`    | Scan-boundary prose; escaped-pipe stop documented                            | p05-t04                   |
+- | `BL-261001-downgrade-claims-that-thorough` | Missing disposition from any required kind keeps the claim `unresolved`      | p06-t01                   |
+- |                                            | Reconciliation and publication agree; production-helper test; contract text  | p06-t01                   |
+- | `BL-261001-resolve-the-summary-template`   | Wrap-up resolves through `oat template resolve`; bump                        | p06-t02                   |
+- | `BL-261001-route-quick-mode-plan`          | Router, dashboard, and skill tables agree; readiness stated once             | p06-t03                   |
+- |                                            | Router and dashboard tests pin the route                                     | p06-t03                   |
+- | `BL-260908-retire-the-top-level-skill`     | Closed as superseded                                                         | p07-t02                   |
+- - Title: `feat: gate budgets and duplicate-gate rejection, complexity review at review caps, autonomous completion skill (wave 4, lockstep 0.3.16)`.
+- - The body opens with a **Behavior changes** callout:
+- - artifact gate reviews default to 30 minutes (was 15);
+- - a second gate for the same project, review type, and scope is rejected
+- while one is running;
+- - `bundle-assets.sh` and `bundle-inputs.mjs` fail on empty, absolute, or
+- escaping inventory paths;
+- - `oat sync` restamps stale copy hashes and reports a marker-less skill or
+- agent directory as an error instead of rewriting it on every run;
+- `oat:validate-skills` reports a missing `SKILL.md` in any skill directory;
+- - lifecycle skills run a complexity review when a review or gate budget is
+- exhausted and offer **simplify**; quick-start persists its gate outcome as
+- `oat_quick_start_gate`;
+- - a new `workflow.autonomousComplete` config key (default off) and the
+- `oat-project-complete-auto` skill;
+- - the updated skills need `oat` 0.3.16 or later for the new config keys.
+- - After the behavior callout, a shipped summary: one plain-language problem
+- statement per closed backlog item, plus the two items that stay open
+- (`BL-260909-restamp-a-stale-copy-strategy` partially shipped;
+- `BL-260711-add-activity-aware-gate` left the wave) and what stays open.
+- - Verification evidence: Definition of Done exit codes and the review and gate
+- outcomes.
+- - Operator question in the PR body: amend `DR-260720` (autonomous closeout)
+- to the shipped design (standing `workflow.autonomousComplete` opt-in,
+- per-wave completion with a recorded pre-merge exception, batch mode at
+- program close)? Repository policy records decisions only on operator request.
+- | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
+- | p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
+- | p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
+- | p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
+- | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
+- | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
+- | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
+- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
+- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
+- | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
+- | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
+- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
+- | p02    | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
+- | p03    | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
+- | p04    | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
+- | p05    | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
+- | p06    | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
+- | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
+- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
+- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+- Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
+- Quick-start plan gate (`QS-12`, attempt 1 of 2, run `cf4607a4`, `codex-6-sol-xhigh` / `gpt-6.1-sol` xhigh, inline route): `blocked`, receive-eligible, 2 High. Received in this session (artifact review, `REVIEWRECEIVE-01`): H1 (quick-start completion with no configured gate) and H2 (complete-auto PR-merge guard versus wave-execute's completion-before-merge step) resolved in p04-t06, p05-t02, and p05-t03; no rejections. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T144731Z.md`.
+- Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligible, 1 High (p01-t01 guarded only the docs tree; staging must stay outside every recursively copied source). Resolved in p01-t01 and the Acceptance Mapping. `maxAttempts` is exhausted, so the configured `block` policy escalates to the operator (`QS-12` boundary); see `implementation.md`, Quick-start Gate Escalation. Operator disposition at that boundary: simplify, then implement without another gate cycle (complexity report `reviews/archived/complexity-plan-2026-10-02T1520Z.md`); the plan was simplified to 24 tasks. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T145801Z.md`.
+- Implementation Complete
+- **Summary:**
+- - Phase 1: 8 tasks - Build assets
+- - Phase 2: 3 tasks - Gate timeouts
+- - Phase 3: 5 tasks - Sync correctness
+- - Phase 4: 9 tasks - Review-loop skills
+- - Phase 5: 6 tasks - Completion
+- - Phase 6: 4 tasks - Small fixes
+- - Phase 7: 8 tasks - Release fan-in
+- **Total: 43 tasks**
+- Ready for code review and merge.
+- - Discovery: `discovery.md`
+- - Approved batch (machine-local): `.oat/repo/analysis/backlog-wave-4/approved-batch.md`
+- - Backlog items listed in the Acceptance Mapping
+- - Follow-ups filed this wave: `BL-261002-port-the-complexity-review` (discovery),
+- `BL-261002-gitignore-project-review` (operator request),
+- `BL-261002-wire-the-complexity-review` and `BL-261002-teach-check-skill-bumps` (p07-t02)
+- oat_status: complete
+- oat_ready_for: oat-project-quick-start
+- oat_blockers: []
+- oat_last_updated: 2026-10-02
+- oat_generated: false
+- Discovery: backlog-wave-4
+- Discovery is for requirements and decisions, not implementation details.
+- - Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
+- - If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- Deliver Wave 4 of the backlog as one PR, selected through `tackle-backlog` on
+- 2026-10-02 and approved by the operator ("Approve as proposed"). The wave
+- targets gate and build reliability plus the review-loop and completion
+- follow-ups that Wave 3 surfaced. It leads with the operator's workflow change
+- from Wave 3: when a review or gate budget runs out, run a complexity review
+- and present it with the reasons the loop stopped.
+- Approved batch (13 backlog items; 12 after the plan-gate escalation, see Question 5):
+- - `BL-261001-fail-closed-when-bundle-assets` — bundle-assets fails closed on an empty lookup
+- - `BL-260906-report-errno-for-asset-root` — asset-root errors report their errno
+- - `BL-260718-harden-full-surface-gate` — longer full-surface gate budget, nested-gate rejection
+- - `BL-260711-add-activity-aware-gate` — idle-kill slice only (dropped, Question 5)
+- - `BL-260909-restamp-a-stale-copy-strategy` — restamp on skip and related sync fixes (no bridge retirement)
+- - `BL-260927-persist-quick-start-prompt` — persist quick-start prompt approvals
+- - `BL-261001-run-a-complexity-review-when` — complexity review at budget exhaustion
+- - `BL-260713-root-agent-judgment-logging` — root judgment entries in the project log
+- - `BL-260720-add-oat-project-complete-auto` — opt-in autonomous completion companion skill
+- - `BL-260908-tighten-the-pr-final-ledger` — pr-final ledger scan boundary
+- - `BL-261001-downgrade-claims-that-thorough` — recon reconciler covers thorough-profile reviews
+- - `BL-261001-resolve-the-summary-template` — oat-wrap-up resolves its summary template
+- - `BL-261001-route-quick-mode-plan` — dashboard routes quick plans by readiness
+- Housekeeping: close `BL-260908-retire-the-top-level-skill` as superseded by
+- `BL-260908-remove-the-top-level-skill`.
+- Question 1: Batch and topology
+- **Q:** Approve the 13-item batch as phases p01–p07, one PR, lockstep 0.3.13?
+- **A:** Approve as proposed.
+- **Decision:** One branch (`wave/2026-10-02-backlog-wave-4`), one PR, no merge.
+- PR #335 merged to `main` at 0.3.13 during planning, so the branch merged
+- `origin/main` and the lockstep target moved to 0.3.14.
+- Question 2: complexity-review dependency
+- **Q:** `complexity-review` lives only in the operator's personal
+- `tkstang/skills` repository. Probe and degrade, or bundle it into OAT?
+- **A:** Probe for it and include a condensed version of the guidance in the
+- skill references for now; backlog an item to port it into OAT properly.
+- **Decision:** Exhaustion points probe for an installed `complexity-review`
+- skill and use it when present; otherwise the reviewer subagent follows a
+- condensed OAT reference. The port is `BL-261002-port-the-complexity-review`
+- (filed, out of scope). The condensed reference adapts external prose, so
+- `NOTICES.md` gains an entry.
+- Question 3: Gate budget
+- **Q:** Full-surface (artifact and plan) gate reviews default to 30 minutes
+- (now 15), and a second gate for the same project and scope is rejected while
+- one is running?
+- **A:** Yes (30 min, reject duplicates).
+- **Decision:** Default 1,800,000 ms for full-surface reviews; a live duplicate
+- launch is rejected, not reused.
+- Question 4: Setup
+- **Q:** Same routes as Waves 2–3, and update the global CLI first?
+- **A:** Same setup except the reviewer is GPT-6.1 Sol. The CLI update was not
+- authorized.
+- **Decision:** Claude Opus 5.5 high phase implementers; Codex GPT-6.1 Sol xhigh
+- reviewer through the configured gate target (which already invokes
+- `gpt-6.1-sol`); gates on the quick-start plan, every phase, and the final and
+- exit gates; dispatch policy managed/high. The global CLI stays at 0.3.10.
+- Question 5: Plan-gate escalation (QS-12 exhausted)
+- **Q:** The Codex plan gate blocked on both attempts (2 High, then 1 High, all
+- resolved in the plan, the last one not re-gated). A complexity review rated
+- the plan partially compliant and recommended simplifying the quick-start
+- record conditionals. Proceed how, and settle its five operator questions?
+- **A:** Simplify, then implement. Next and progress report the quick-start
+- record only. Keep the recorded pre-merge exception for autonomous wave
+- completion. For the optional slices the operator asked for the agent's
+- recommendation; the agent kept batch completion mode and dropped the idle
+- kill and the early-trigger config key.
+- **Decision:** Step 3.7 stays gated by control flow and does not read the
+- record back; the shared record doc defines only the five-field core;
+- `BL-260711-add-activity-aware-gate` leaves the wave (an idle kill cannot serve
+- the operator's Codex gates, whose activity is not attributable to the gate
+- child); there is no `workflow.complexityReviewEarlyTrigger` key (the operator
+- can request the review at any time). Complexity report:
+- `reviews/archived/complexity-plan-2026-10-02T1520Z.md`.
+- The approach is fixed by the approved batch: implement each item against its
+- acceptance criteria and the decisions above. The only structural choices were
+- phase grouping and the two partial-scope items, covered under Key Decisions.
+- 1. **Sequencing:** Six sequential phases plus a fan-in, grouped by write set:
+- build assets, gate timeouts, sync correctness, review-loop skills,
+- completion, small fixes, then release. Phases share skill version pins,
+- help snapshots, and docs pages, so none run in parallel.
+- 2. **Versions:** Each skill gets one `metadata.version` bump in the final PR
+- diff, made by the first phase that changes it. The fan-in owns the
+- five-package lockstep bump from 0.3.13 to 0.3.14.
+- 3. **Partial-scope item:** `BL-260909-restamp-a-stale-copy-strategy` ships
+- everything except retiring the compatibility bridge, which needs field
+- installs restamped first; the item is rewritten to that remaining scope and
+- stays open. `BL-260711-add-activity-aware-gate` left the wave at the
+- plan-gate escalation (Question 5) and gains a note about Codex activity
+- attribution.
+- 4. **Narrowed item:** `BL-261001-route-quick-mode-plan` is narrowed to the
+- dashboard map; the router and the progress and next skills already gate on
+- quick plan readiness.
+- 5. **Complexity-review trigger:** Runs at every budget-exhaustion point (root
+- review cap, configured gate attempt exhaustion, final review cap,
+- review-receive cycle cap, quick-start plan gate). One read-only subagent;
+- it writes nothing and launches nothing. The operator still chooses the
+- disposition, including **simplify**; agents never self-select it, also
+- under `OAT_AUTONOMOUS=1`, where it is a boundary report. The optional early
+- trigger is not shipped (Question 5).
+- 6. **Autonomous completion:** A new model-invocable, non-user-invocable
+- companion skill that hard-fails unless `workflow.autonomousComplete` is
+- enabled, runs the existing closeout check in autonomous mode plus the
+- recorded objective preconditions, and then the completion tail. Batch mode
+- (several wave-wrapper projects at program close, each preflighted
+- individually) is in scope because it is one of the item's criteria and is
+- skill prose only. `oat-wave-execute` and `oat-wave-program` point at it.
+- 7. **Design depth (QS-04):** Straight to plan. Every item has acceptance
+- criteria or a recorded decision, reconnaissance mapped the code, and no
+- open architecture or component-boundary question remains.
+- 8. **Planning calls (QS-03, from reconnaissance evidence):**
+- - The quick-start approval record and the condensed complexity-review
+- guidance are each defined once in a shared doc that the consuming skills
+- vendor by symlink, following the existing autonomy-contract pattern.
+- - Next and progress report the persisted quick-start gate record without
+- routing on it: quick plan readiness stays the single routing rule for
+- quick plans (defined once in quick-start and mirrored by the router and
+- dashboard), so `BL-260927-persist-quick-start-prompt`'s "read it the
+- same way" is met by validating and reporting the record.
+- - Sibling gate-capable skills outside the item's list (plan, import-plan,
+- design, discover, lite) are a follow-up, filed at the fan-in.
+- - Gates and lifecycle skills run the installed 0.3.10 CLI and user-scope
+- skills. New gate and lifecycle behavior is probed with the branch build
+- (`node packages/cli/dist/index.js`) where feasible.
+- - `bundle-assets.sh` must never copy a source tree into its own staging
+- directory; tests of the empty-lookup case run in isolation and fail closed,
+- never filling the disk.
+- - Tests that exercise the template bundle tier inject an isolated `HOME`.
+- - Open PR #335 (another session) owns the docs-bootstrap skills; this wave
+- does not edit them.
+- - Repository Definition of Done (`AGENTS.md`) gates the PR, with explicit exit
+- codes and uncached test runs.
+- - Every in-scope acceptance criterion of the 12 items passes, with
+- failing-first evidence for behavior changes and neutralize-and-restore
+- proofs for guards.
+- - An empty bundle-inputs lookup makes `bundle-assets.sh` exit non-zero without
+- copying.
+- - A full-surface gate review gets a 30-minute default, and a duplicate live
+- gate is rejected.
+- - A second `oat sync` after a skipped stale entry is a no-op.
+- - Every exhaustion point dispatches the complexity review before the decision
+- message, with a contract pin per point.
+- - `oat-project-complete-auto` refuses to run unless opted in.
+- - The full Definition of Done passes, and the PR opens at lockstep 0.3.14 with
+- completed items archived and the partial item rewritten.
+- - `BL-260818-distinguish-operator-directed` (consolidated budget-exhausted
+- decision point; needs this wave's complexity slice and
+- `BL-260927-mark-gate-findings-as-new-or` first).
+- - `BL-260711-skip-re-review-for-bookkeeping`, `BL-260927-export-only-the-recap-page`,
+- `BL-260711-add-activity-aware-gate` (dropped at the plan-gate escalation).
+- - Decision-gated: `BL-260907-recognize-phase-level`,
+- `BL-260908-date-decision-record-ids`, `BL-260908-remove-the-top-level-skill`,
+- `BL-260904-make-quick-the-default-oat`.
+- - Live action: `BL-260928-settle-codex-read-authority`,
+- `BL-260708-verify-cursor-gpt-5-6-subagent`, `BL-260906-harden-dispatch-launch`.
+- - `BL-261002-port-the-complexity-review` (filed this wave).
+- - Docs-bootstrap items owned by open PR #335.
+- Deferred Ideas
+- - An idle kill for gate children, once Codex activity can be attributed.
+- - An automatic early complexity-review trigger.
+- - Retiring the copy-strategy compatibility bridge once field installs restamp.
+- Open Questions
+- None.
+- - The 2026-09-26 backlog ratings still hold for unchanged items; the 13 new
+- or changed items and the shortlist were re-verified against `main` at
+- `4f0be26d2` on 2026-10-02 (three read-only reconnaissance lanes, with the
+- load-bearing claims spot-checked).
+- - The installed `complexity-review` skill (from `tkstang/skills`) is the
+- source for the condensed reference; its behavior is taken from the installed
+- copy, not re-verified upstream.
+- - External integrations are limited to the Codex and Claude CLIs that gates
+- already run; no third-party service is involved.
