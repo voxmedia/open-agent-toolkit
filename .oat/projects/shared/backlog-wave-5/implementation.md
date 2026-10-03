@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; two code tasks committed and verified, next p01-t03.
+Implementation preflight complete. Phase 1 active; three code tasks committed and verified, next p01-t04.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 2/4       |
+| Phase 1 | in_progress | 4     | 3/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 2/16 tasks completed
+**Total:** 3/16 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -50,8 +50,12 @@ Implementation preflight complete. Phase 1 active; two code tasks committed and 
 
 ### Task p01-t03: Disclose autonomous effective limits and hard stops
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1e257e692a717d90765c6c52f34a7e6e656a006f
+
+**Outcome:** Kickoff now discloses effective project/phase limits, source/override, durable usage, capacity and pending status, with owning hard stops and unchanged failed-attempt terminality. Autonomy/shared contract/root phase/phase role/docs agree.
+
+**Verification:** Baseline missing-disclosure test failed, changed contract passed; full 256-test skill validator passed including existing terminal controls. Skills validation (66), lint (10 tasks executed, no cache plus root pass), format and docs validation passed. Dry default and override examples match source arithmetic and are explicitly guidance-only, not live provider evidence. Root checked exact six-file commit, disclosure/source consistency and clean status. Evidence: `analysis/p01/t03-dry-kickoff.md` and t03 logs. No recovery. Provider views intentionally remain p06-owned; version bumps remain PR-scoped p06 work.
 
 ### Task p01-t04: Require proportional changed-boundary probes in reviews
 
