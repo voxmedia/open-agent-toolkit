@@ -85,6 +85,43 @@ oat_project_created: '2026-10-02T11:57:57.955Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-03T00:01:02Z'
 oat_generated: false
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: f4b387694aa73912c3735855773b165f70a95c70
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v2:10556062df5b59e89730b59d66858ef56c33fb2531180feaad85672114f52061'
+  freshness_head: f4b387694aa73912c3735855773b165f70a95c70
+  freshness_fingerprint: 'sha256:effective-delta-v2:10556062df5b59e89730b59d66858ef56c33fb2531180feaad85672114f52061'
+  waivers: []
+  launch_state: intent_persisted
+  launch_attempt_id: 'bw4-exit-gate-g1-1-20261003T000142Z'
+  launch_started_at: '2026-10-03T00:01:42Z'
+  launch_result_receipt: '.oat/repo/analysis/backlog-wave-4/exit-gate-1.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-10-03T00:01:42Z'
 oat_project_recap:
   decision: generate
   source: autonomous_policy

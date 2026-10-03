@@ -1805,6 +1805,7 @@ rewrites the four inventory rows last.
 | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
 | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+| final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
 | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |

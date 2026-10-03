@@ -743,6 +743,12 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   cycle cap with 0 Critical/High and only wording findings, all fixed).
 - Phase p07 outcome: complete; 6/6 tasks.
 
+### Implementation exit gate
+
+- Generation 1 (`effective-delta-v2`): resolved `configured` (`block`, 2
+  attempts); `reviewed_head` `f4b387694` against `origin/main`; intent
+  persisted for attempt `bw4-exit-gate-g1-1-20261003T000142Z` before launch.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)
