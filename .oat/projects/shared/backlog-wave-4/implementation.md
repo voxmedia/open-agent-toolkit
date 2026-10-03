@@ -991,3 +991,15 @@ with a recorded pre-merge exception, and batch mode at program close.
 ## Remote Review Received (2026-10-03T15:11:15Z)
 
 PR #351: 1 High and 1 Medium converted to p07-t09 and p07-t10; no deferrals or dismissals. Artifact: `reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md`.
+
+### Remote review correction and dispatch
+
+The remotely resolved synced-I/O finding remains present at the reviewed head, so p07-t11 addresses it alongside the two unresolved findings. Final disposition: 2 High and 1 Medium converted; none deferred or dismissed.
+
+Bounded same-provider native workers share this existing checkout and have disjoint file ownership. Root owns Git commits, project state, publication, and final judgment. No worker may commit or push. All routes use Codex `gpt-6.1-sol`, effort `high`, service tier inherited, no alternate route and no automatic retry; provider guidance verified 2026-10-01, policy `high`, live catalogue checked before launch.
+
+- `gate_claim_fix` (native handle `/root/gate_claim_fix`): p07-t09, hard-reasoning; gate source/tests only; accepted, pending. Budget 20 minutes. Regression must demonstrate three-contender exclusion, plus negative error controls and valid stale recovery.
+- `dispatch_tier_fix` (native handle `/root/dispatch_tier_fix`): p07-t10, default-implementation; complexity-review source/vendored docs and contract test only; accepted, pending. Budget 15 minutes. Ordered-tier contract and bundled parity required.
+- `completion_sync_fix` (native handle `/root/completion_sync_fix`): p07-t11, consequential; completion-auto skill and contract test only; accepted, pending. Budget 20 minutes. Scope/pull/push refusal controls required, independent root review follows.
+
+Acquisition failures currently bypass duplicate protection via unchecked-and-launch. p07-t09 intentionally changes them to refusal to preserve mutual exclusion; docs and PR callout will reflect the stricter behavior.

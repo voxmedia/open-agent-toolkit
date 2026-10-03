@@ -1888,6 +1888,20 @@ rewrites the four inventory rows last.
 
 ---
 
+### Task p07-t11: (review) Preserve synced I/O guards in autonomous completion
+
+**Files:** `.agents/skills/oat-project-complete-auto/SKILL.md` and `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`.
+
+**Step 1: Analyze** — Verify the resolved remote finding against current source.
+
+**Step 2: Implement** — Fail closed on unknown scope; pull synced state before preflight; publish any completion exception before delegated completion.
+
+**Step 3: Verify** — Execute the shipped shell instructions with a fake external CLI: failed scope, pull, and push must stop; valid shared/local/synced controls pass. Run the repository Definition of Done.
+
+**Step 4: Commit** — `fix(p07-t11): preserve synced autonomous completion guards`.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
@@ -1940,9 +1954,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 8 tasks - Release fan-in
+- Phase 7: 11 tasks - Release fan-in and remote review fixes
 
-**Total: 43 tasks**
+**Total: 46 tasks**
 
 Ready for code review and merge.
 
