@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -15,14 +15,14 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 4/6       |
+| Phase 1 | in_progress | 6     | 5/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 4/18 tasks completed
+**Total:** 5/18 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -68,8 +68,12 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 
 ### Task p01-t05: (review) Include supported MDX pages in H1 validation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 876bedd3282cce0b54caeda62a9b3866b23c7c93
+
+**Outcome:** Supported MDX participates in the same recursive H1 boundary. Only declared validator and existing fixture family changed.
+
+**Verification:** All 14 fixtures, actual docs validation, scoped lint/format/diff and docs type-check executed/pass. Exact consumed six-case probe reproduced pre-fix zero/two MDX acceptance, then post-fix rejected invalid cases with valid controls accepted. Extension neutralization broke the keeper; restored guard passed. Root checked exact two-file commit, source/probe agreement and clean status. Evidence: local ignored analysis/p01/t05-\* logs and t05-review-probe.sh. No recovery.
 
 ### Task p01-t06: (review) Align the executed test summary
 
