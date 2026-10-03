@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | complete | 8     | 8/8       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 11    | 9/11      |
 
-**Total:** 43/43 tasks completed
+**Total:** 44/46 tasks completed
 
 ---
 
@@ -1003,3 +1003,11 @@ Bounded same-provider native workers share this existing checkout and have disjo
 - `completion_sync_fix` (native handle `/root/completion_sync_fix`): p07-t11, consequential; completion-auto skill and contract test only; accepted, pending. Budget 20 minutes. Scope/pull/push refusal controls required, independent root review follows.
 
 Acquisition failures currently bypass duplicate protection via unchecked-and-launch. p07-t09 intentionally changes them to refusal to preserve mutual exclusion; docs and PR callout will reflect the stricter behavior.
+
+### Task p07-t10: Resolve complexity dispatch from loaded siblings
+
+**Status:** completed
+**Commit:** 2f7664c83
+**Verification:** Pre-fix loaded-sibling regression exits 1; fixed contract suites 49 tests exit 0; generated bundle parity, formatting, lint and skill validation exit 0. Evidence: `.oat/repo/analysis/backlog-wave-4/review-fixes/dispatch-tier/evidence.md`.
+
+Disjoint review-fix helpers ran concurrently under root coordination; the bounded dispatch-tier task completed before p07-t09. Root retained per-task commits and verification ownership.
