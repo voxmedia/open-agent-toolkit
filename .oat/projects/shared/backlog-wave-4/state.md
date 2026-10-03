@@ -90,7 +90,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p07
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -110,7 +110,7 @@ oat_implement_exit_gate:
   reviewed_head: 23577fd166c96355497417ff4a35942514a56c8b
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:91ac65b6427378cc9e0e9c802067eea66f20e4403e861b70cc6d16d57c9e9913'
-  freshness_head: 1d5110d7a
+  freshness_head: 9abe2c2e6
   freshness_fingerprint: 'sha256:effective-delta-v2:385f2cc2ade7c70c2d087f28cb42c0ccbbe2b83d8091120679fa8a778bdf00ff'
   waivers: []
   launch_state: result_persisted
@@ -132,7 +132,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-10-03T00:44:47Z'
+  updated_at: '2026-10-03T00:49:17Z'
 oat_project_recap:
   decision: generate
   source: autonomous_policy
