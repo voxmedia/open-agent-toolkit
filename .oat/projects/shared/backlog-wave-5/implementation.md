@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 dispatch prepared; no code task completed yet.
+Implementation preflight complete. Phase 1 active; two code tasks committed and verified, next p01-t03.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 1/4       |
+| Phase 1 | in_progress | 4     | 2/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 1/16 tasks completed
+**Total:** 2/16 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -39,8 +39,14 @@ Implementation preflight complete. Phase 1 dispatch prepared; no code task compl
 
 ### Task p01-t02: Require exactly one document H1
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cc7699cd5e1e7de4a3b36bd17a37f0bff214de82
+
+**Outcome:** docs:validate now requires exactly one document H1 through the existing Markdown AST, including real nested headings and excluding frontmatter/code. All 89 current pages passed unchanged.
+
+**Verification:** Seven heading fixtures passed, neutralizing the guard made invalid fixtures fail, then the guard was restored. Real docs:validate rejected zero/nested-second H1s (exit 1 naming the page/count), then accepted restored corpus (exit 0 with exact bytes preserved). Root independently repeated that command probe. Scoped formatting, docs check and docs type-check passed; all executed, no Turbo cache. Evidence: `analysis/p01/t02-command-probe.mjs`, `t02-command.log`, `t02-neutralized.log`, `t02-tests.log`, `t02-corpus.log`. No recovery attempt.
+
+**Technical interpretation:** Ticket H1 criterion counts actual heading-depth-1 nodes recursively, so a second rendered heading inside a blockquote/list cannot bypass validation. Reuses existing parser; no additional subsystem.
 
 ### Task p01-t03: Disclose autonomous effective limits and hard stops
 
