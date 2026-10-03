@@ -418,18 +418,18 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| p05    | code     | pending | -    | -        | -             | -          | -           |
-| p06    | code     | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                    | Reviewed Head                            | Invocation                       | Gate Target            |
+| ------ | -------- | ------- | ---------- | ------------------------------------------- | ---------------------------------------- | -------------------------------- | ---------------------- |
+| p01    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| p02    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| final  | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| spec   | artifact | pending | -          | -                                           | -                                        | -                                | -                      |
+| design | artifact | pending | -          | -                                           | -                                        | -                                | -                      |
+| plan   | artifact | passed  | 2026-10-03 | implementation.md#plan-artifact-self-review | 96c470bc2b67137b420d082dfbd263749b76260e | auto / inherited planning parent | codex:gpt-6.1-sol:high |
+| p03    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| p04    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| p05    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
+| p06    | code     | pending | -          | -                                           | -                                        | -                                | -                      |
 
 ## Implementation Complete
 

@@ -231,3 +231,25 @@ Track test execution during implementation.
 The drafting worker cannot mark the plan ready. Automatic artifact review, the configured independent gate and complexity-review remain pending.
 
 Plan author verification: current-source validate-plan, file-scoped formatting and diff checks passed. Root verified all 40 acceptance rows against the ten current tickets and corrected a Markdown table delimiter before the reviewed baseline.
+
+## Plan artifact self-review
+
+- Target/type/scope: plan / artifact / plan; structured-output route.
+- Artifacts used: discovery.md, plan.md, implementation.md, and the ten authoritative ticket acceptance sets.
+- Planning parent: launcher-declared Codex GPT-6.1 Sol high, equal to resolved managed reviewer ceiling. Deliberate parent inheritance per current Quick contract; no child launched.
+- Reviewed head: 96c470bc2b67137b420d082dfbd263749b76260e.
+- Review scope: completeness, upstream alignment, stable IDs/task atomicity, verification commands, preservation boundaries, role/phase gates, parallelism and unnecessary machinery.
+- Structured outcome: no findings; plan metadata validator, scoped formatting and diff check passed. Product checks remain planned, not claimed executed.
+- Rewrite cycles: 0 of configured default bound 2. Independent configured plan gate and complexity-review remain pending.
+
+```json
+{
+  "summary": "The Quick discovery and canonical plan cover the approved ten tickets and all 40 acceptance criteria, with bounded tasks, exact review routes and preservation controls.",
+  "findings": [],
+  "verification_commands": [
+    "node packages/cli/dist/index.js --json project validate-plan --project-path .oat/projects/shared/backlog-wave-5",
+    "pnpm exec oxfmt --check .oat/projects/shared/backlog-wave-5/discovery.md .oat/projects/shared/backlog-wave-5/plan.md",
+    "git diff --check"
+  ]
+}
+```
