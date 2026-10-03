@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   decodeMarkdownFragment,
   markdownAnchors,
+  markdownH1Count,
   markdownInlineCode,
   markdownLinkTargets,
 } from '@docs-tools/markdown';
@@ -72,6 +73,25 @@ function sourceText(markdown: string): string {
       return line;
     })
     .join('\n');
+}
+
+export async function validateDocumentHeadings(
+  docsRoot: string,
+): Promise<void> {
+  const errors: string[] = [];
+  async function scan(directory: string): Promise<void> {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) await scan(path);
+      else if (entry.name.endsWith('.md')) {
+        const count = markdownH1Count(await readFile(path, 'utf8'));
+        if (count !== 1)
+          errors.push(`${path}: expected exactly one H1; found ${count}`);
+      }
+    }
+  }
+  await scan(docsRoot);
+  if (errors.length) throw new Error(errors.join('\n'));
 }
 
 export async function validateSourceRoutes(docsRoot: string): Promise<void> {
@@ -241,9 +261,10 @@ if (
   import.meta.url === pathToFileURL(resolve(process.argv[1])).href
 ) {
   runNavigation(appRoot);
+  await validateDocumentHeadings(join(appRoot, 'docs'));
   await validateSourceRoutes(join(appRoot, 'docs'));
   await validateLiveConsumers(repoRoot);
   process.stdout.write(
-    'Committed navigation freshness and source routes/anchors validated.\n',
+    'Committed navigation freshness, document H1s and source routes/anchors validated.\n',
   );
 }
