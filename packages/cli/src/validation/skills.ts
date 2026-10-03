@@ -1,6 +1,6 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readdir, readFile, realpath, stat } from 'node:fs/promises';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 import {
@@ -1138,9 +1138,69 @@ async function resolveOwningVersionedFiles(
   return [];
 }
 
+/** Follow vendored file and directory links without escaping the repo or cycles. */
+async function sharedDocConsumers(
+  repoRoot: string,
+  changedPaths: readonly string[],
+): Promise<Map<string, string[]>> {
+  const consumers = new Map<string, string[]>();
+  const sharedPaths = changedPaths.filter((path) =>
+    path.startsWith('.agents/docs/'),
+  );
+  if (sharedPaths.length === 0) return consumers;
+  const root = await realpath(repoRoot);
+  const withinRepo = (path: string): boolean => {
+    const local = relative(root, path);
+    return (
+      local !== '..' && !local.startsWith(`..${sep}`) && !isAbsolute(local)
+    );
+  };
+  const targets = new Map<string, string[]>();
+  for (const path of sharedPaths) {
+    const target = await realpath(join(root, path)).catch(() => null);
+    if (target === null || !withinRepo(target)) continue;
+    targets.set(target, [...(targets.get(target) ?? []), path]);
+  }
+  const skillsRoot = join(root, '.agents/skills');
+  const skills = await readdir(skillsRoot, { withFileTypes: true }).catch(
+    () => [],
+  );
+  for (const skill of skills) {
+    if (!skill.isDirectory()) continue;
+    const owner = `${SKILLS_PATH_PREFIX}${skill.name}/SKILL.md`;
+    if (!(await isFile(join(root, owner)))) continue;
+    const skillRoot = join(skillsRoot, skill.name);
+    const owned = new Set<string>();
+    async function visit(
+      path: string,
+      ancestors: ReadonlySet<string>,
+    ): Promise<void> {
+      // realpath rejects missing targets and symlink loops. An ancestor set also
+      // catches directory links back into an already visited directory.
+      const target = await realpath(path).catch(() => null);
+      if (target === null || !withinRepo(target) || ancestors.has(target))
+        return;
+      const info = await stat(target);
+      if (info.isFile()) {
+        for (const changed of targets.get(target) ?? []) owned.add(changed);
+      } else if (info.isDirectory()) {
+        const next = new Set([...ancestors, target]);
+        for (const entry of await readdir(path, { withFileTypes: true })) {
+          // Test fixtures are not shipped skill content, including linked docs.
+          if (path !== skillRoot || entry.name !== 'tests')
+            await visit(join(path, entry.name), next);
+        }
+      }
+    }
+    await visit(skillRoot, new Set());
+    if (owned.size) consumers.set(owner, [...owned]);
+  }
+  return consumers;
+}
+
 /**
  * List the canonical files whose version must move, given everything that
- * changed under `.agents/skills` and `.agents/agents`.
+ * changed under `.agents/skills`, `.agents/agents`, and vendored `.agents/docs`.
  *
  * The pathspec is deliberately wider than the files that carry a version: a
  * skill's `scripts/` and `references/` ship to every `oat tools install`
@@ -1172,6 +1232,7 @@ async function listChangedVersionedFiles(
       '--',
       '.agents/skills',
       '.agents/agents/*.md',
+      '.agents/docs',
     ],
     {
       cwd: repoRoot,
@@ -1184,7 +1245,7 @@ async function listChangedVersionedFiles(
   // final NUL is what the length filter removes.
   const changedPaths = stdout.split('\0').filter((entry) => entry.length > 0);
 
-  const grouped = new Map<string, string[]>();
+  const grouped = await sharedDocConsumers(repoRoot, changedPaths);
   for (const changedPath of changedPaths) {
     const owningFiles = await resolveOwningVersionedFiles(
       repoRoot,

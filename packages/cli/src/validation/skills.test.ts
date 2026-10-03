@@ -5,8 +5,8 @@ import {
   mkdtemp,
   readdir,
   readFile,
-  realpath,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -6120,49 +6120,6 @@ describe('validateOatSkills', () => {
     expect(readDeclaredVersion(next)).toBe('1.1.5');
   });
 
-  it('bumps every skill that ships the autonomy contract', async () => {
-    // check:skill-bumps diffs only paths under .agents/skills, so a change to
-    // the shared contract reaches its vendors through symlinks it never sees.
-    // Pin each vendor's version, and fail when a new vendor goes unlisted.
-    const root = join(process.cwd(), '..', '..');
-    const contract = await realpath(
-      join(root, '.agents/docs/autonomy-contract.md'),
-    );
-    const vendors = new Set<string>();
-    for (const skill of await readdir(join(root, '.agents/skills'))) {
-      const references = join(root, '.agents/skills', skill, 'references');
-      if (!existsSync(references)) continue;
-      const files = await readdir(references, {
-        recursive: true,
-        encoding: 'utf8',
-      });
-      for (const file of files.filter((name) => name.endsWith('.md'))) {
-        const target = await realpath(join(references, file)).catch(() => '');
-        if (target === contract) vendors.add(skill);
-      }
-    }
-    const expectedVersions = [
-      ['oat-project-autonomous', '1.0.18'],
-      ['oat-project-document', '1.8.7'],
-      ['oat-project-implement', '2.3.17'],
-      ['oat-project-lite', '1.1.7'],
-      ['oat-project-pr-final', '1.6.8'],
-      ['oat-project-quick-start', '2.3.18'],
-    ] as const;
-
-    expect([...vendors].sort()).toEqual(
-      expectedVersions.map(([skill]) => skill),
-    );
-    for (const [skill, version] of expectedVersions) {
-      expect(
-        readDeclaredVersion(
-          await readRawRepoFile(`.agents/skills/${skill}/SKILL.md`),
-        ),
-        skill,
-      ).toBe(version);
-    }
-  });
-
   it('reports both lifecycle gate records in next and progress without routing on them', async () => {
     const quickStart = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -9839,6 +9796,7 @@ describe('skill version resolution across both validators', () => {
     expect(args).toContain('--diff-filter=ACMR');
     expect(args).toContain('.agents/skills');
     expect(args).toContain('.agents/agents/*.md');
+    expect(args).toContain('.agents/docs');
   }
 
   function changedSkillGit(skillName: string, baseContent: string) {
@@ -9915,6 +9873,128 @@ describe('skill version resolution across both validators', () => {
       },
     };
   }
+
+  it('requires every shared-doc symlink vendor to bump through real Git diffs', async () => {
+    const root = await createRoot();
+    const git = (args: string[]) =>
+      execFileAsync('git', args, {
+        cwd: root,
+        env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1' },
+      });
+    await git(['init', '-q']);
+    await git(['config', 'user.email', 'fixture@example.invalid']);
+    await git(['config', 'user.name', 'Fixture']);
+    const doc = '.agents/docs/vendor/shared café\tcontract.md';
+    await mkdir(join(root, '.agents/docs/vendor'), { recursive: true });
+    await writeFile(join(root, doc), '# Shared contract\n');
+    for (const name of ['oat-direct', 'oat-directory']) {
+      await createSkillFile(
+        root,
+        name,
+        skillContent(name, ['metadata:', '  version: 1.2.3']),
+      );
+      await mkdir(join(root, '.agents/skills', name, 'references'), {
+        recursive: true,
+      });
+    }
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-direct/references/gate-inventory.md'),
+    );
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-direct/references/duplicate.md'),
+    );
+    await symlink(
+      '../../../docs/vendor',
+      join(root, '.agents/skills/oat-directory/references/docs'),
+    );
+    // Missing, cyclic and escaping links must not hang traversal or fabricate owners.
+    await symlink(
+      'missing.md',
+      join(root, '.agents/skills/oat-direct/references/missing.md'),
+    );
+    await symlink(
+      '.',
+      join(root, '.agents/skills/oat-direct/references/cycle'),
+    );
+    await symlink(
+      tmpdir(),
+      join(root, '.agents/skills/oat-direct/references/outside'),
+    );
+    await git(['add', '.']);
+    await git(['-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'Base']);
+    const { stdout: base } = await git(['rev-parse', 'HEAD']);
+    const check = () =>
+      validateChangedSkillVersionBumps(root, { baseRef: base.trim() });
+    await writeFile(join(root, doc), '# Changed contract\n');
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Shared change',
+    ]);
+    const unbumped = await check();
+    expect(unbumped.validatedSkillCount).toBe(2);
+    expect(unbumped.findings.map((finding) => finding.file)).toEqual([
+      join(root, '.agents/skills/oat-direct/SKILL.md'),
+      join(root, '.agents/skills/oat-directory/SKILL.md'),
+    ]);
+    expect(
+      unbumped.findings.every((finding) => finding.message.includes(doc)),
+    ).toBe(true);
+    await createSkillFile(
+      root,
+      'oat-direct',
+      skillContent('oat-direct', ['metadata:', '  version: 1.2.4']),
+    );
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'First bump',
+    ]);
+    expect((await check()).findings.map((finding) => finding.file)).toEqual([
+      join(root, '.agents/skills/oat-directory/SKILL.md'),
+    ]);
+    await createSkillFile(
+      root,
+      'oat-directory',
+      skillContent('oat-directory', ['metadata:', '  version: 1.2.4']),
+    );
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Second bump',
+    ]);
+    expect((await check()).findings).toEqual([]);
+    const { stdout: bumped } = await git(['rev-parse', 'HEAD']);
+    await writeFile(
+      join(root, '.agents/docs/unvendored.md'),
+      '# No consumer\n',
+    );
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Unvendored doc',
+    ]);
+    expect(
+      await validateChangedSkillVersionBumps(root, { baseRef: bumped.trim() }),
+    ).toEqual({
+      validatedSkillCount: 0,
+      findings: [],
+    });
+  });
 
   it('accepts a metadata-only skill with no alias warning', async () => {
     const root = await createRoot();
