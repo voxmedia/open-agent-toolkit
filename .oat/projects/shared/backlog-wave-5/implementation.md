@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t06
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four code tasks committed and individually verified; composed phase checks passed; required reviews pending.
+Implementation preflight complete. Phase 1 active; four original tasks and two review corrections committed; composed continuation verification and fresh reviews pending.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 5/6       |
+| Phase 1 | in_progress | 6     | 6/6       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 5/18 tasks completed
+**Total:** 6/18 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -77,8 +77,12 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 
 ### Task p01-t06: (review) Align the executed test summary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6bcde30867c3fc33265c14ec7e1eb5d80aff5084
+
+**Outcome:** Test Results now reflects actual Phase 1 execution, MDX correction, cached-build distinction, guidance limitations and pending final gates.
+
+**Verification:** Exact bytes outside the authorized section conserved; scoped formatting/readback/diff passed. Root inspected committed diff and conservation log, clean status. No new product test; evidence analysis/p01/t06-conservation.log. No recovery.
 
 ## Phase 2: Preserve PJM settings and structured state
 
