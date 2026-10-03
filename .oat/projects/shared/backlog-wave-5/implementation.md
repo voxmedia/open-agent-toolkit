@@ -311,3 +311,7 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
 - L3 / Minor / resolve_in_artifact: agree; source CLI bookkeeping avoids stale dist; any dist invocation requires rebuild after the latest CLI changes.
 - All four edits applied directly to canonical plan; no implementation fix tasks or scope expansion. Consumed artifact archived only after event references were updated. Event status fixes_completed awaits a clean re-review.
 - Remediation cycles used: 1 of maximum 2. Independent configured gate is rerun unchanged; readiness remains false. Complexity review follows clean disposition.
+
+### Root self-review after received artifact edits
+
+The four received corrections preserve all 16 implementation tasks and 40 acceptance rows. Root checked completion’s actual PATH archive/manifest consumer and corrected the source/build route, post-export checks, removed-task citation and table adjacency. Structured findings: `[]`. Branch validate-plan, scoped formatter and diff checks passed. The consumed review remains local-only history by repository convention, with its original tracked version retained in commit `63f82ef5b`; archival is not loss of the original event.

@@ -2,7 +2,7 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers:
-  - 'Plan review artifact failed gate count validation; receive ineligible.'
+  - 'Plan re-review pending after accepted artifact corrections.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -133,7 +133,7 @@ Plan - Approved requirements captured; required plan reviews pending
 
 ## Blockers
 
-None
+Independent plan re-review pending after accepted corrections; implementation not started.
 
 ## Next Milestone
 

@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - 'Independent plan gate blocked: review artifact count-format validation failed.'
+  - 'Independent plan re-review pending after artifact corrections.'
 oat_last_updated: 2026-10-03
 oat_phase: plan
 oat_phase_status: in_progress
