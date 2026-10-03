@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four original tasks and two review corrections committed; composed continuation verification and fresh reviews pending.
+Implementation preflight complete. Phase 1 active; four original tasks and two review corrections committed; composed continuation verification passed; fresh reviews pending.
 
 ## Progress Overview
 
@@ -368,7 +368,7 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
     "task_name": "wave5_phase1"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -387,8 +387,9 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
       "phase": "p01",
       "task_ids": ["p01-t05", "p01-t06"],
       "review_artifact": "reviews/archived/p01-review-2026-10-03T225737Z.md",
-      "status": "accepted",
-      "reason": "Auto-received Medium and Low converted to ordered implementation tasks; original exact handle, no phase replay."
+      "status": "completed",
+      "reason": "Auto-received Medium and Low converted to ordered implementation tasks; original exact handle, no phase replay.",
+      "outcome": "DONE; two append-only task commits, focused composition pass, recovery 0/null"
     }
   ],
   "task_class": "consequential",
@@ -537,3 +538,5 @@ Root reviewer p01/r1 returned exactly one valid not-attempted reconnaissance sig
 Original completed phase handle continues newly added ordered tasks without replaying the four original tasks. Canonical Critical/High-only Mode Fix is not used for these Medium/Low review-generated implementation tasks. This is ordinary review closure, not a recovery attempt or changed route; p01 recovery remains 0/null. Review event stays fixes_added until both tasks finish; fresh root review and configured independent gate remain required. Phase stays in_progress.
 
 Continuation `wave5-p01-review-task-continuation-r1` accepted through original `/root/wave5_phase1` handle via followup_task. No new launch/target or recovery. The original four-task DONE report remains accepted; current child turn executes only p01-t05/t06 with per-task clean tracking handoffs. Worker holds mutations pending explicit START from this durable baseline.
+
+Validated continuation DONE from original handle: base `62acff22d348289cefb596a6781fd0d9e2e259ea` through handoff `9ba6555697d67c2f2848106b091c04090f7b9ee2`, exactly two append-only task commits plus their root tracking, all original task commits preserved, clean worktree, recovery 0/null. All focused checks directly executed/pass: 14 heading fixtures, docs validation, exact six-case consumed-review probe, scoped formatting/range diff and committed Test Results conservation. Local evidence `analysis/p01/continuation-verification.md`. All six task rows current; phase remains in_progress for fresh root review and independent gate.
