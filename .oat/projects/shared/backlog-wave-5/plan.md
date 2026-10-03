@@ -475,6 +475,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -                                        | -          | -           |
 | p01    | code     | fixes_completed | 2026-10-03 | reviews/archived/p01-review-2026-10-03T225737Z.md           | e586535587644cd6faf2a5c221650710fa6bd726 | auto       | -           |
+| p01    | code     | received        | 2026-10-03 | reviews/p01-review-2026-10-03T231742Z.md                    | d116bf47814081a4d8784f637ada4a5854e154b0 | auto       | -           |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

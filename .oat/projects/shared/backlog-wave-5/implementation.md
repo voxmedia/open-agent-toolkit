@@ -586,7 +586,7 @@ Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown
     "task_name": "wave5_phase1_review_r2"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -632,3 +632,5 @@ Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown
 ```
 
 Accepted fresh native reviewer `/root/wave5_phase1_review_r2`; exact configured role/model/effort, runtime identity not reported. Full six-task p01 range `325dbad2a3f26feca361cefc50855893c9349442..d116bf47814081a4d8784f637ada4a5854e154b0`, prior M1/L1 and their corrections supplied. No narrowed inherited coverage claim. This round owns only artifact review; root retains dispositions and pending configured phase gate.
+
+Root p01/r2 returned one valid not-attempted signal and no Review Orchestration section. Root read complete artifact and validated timestamp/scope/full range/head/counts: 0 Critical, 0 High, 0 Medium, 1 Low. Both original M1/L1 are independently resolved; new Low stale state prose awaits auto-receive alignment. Original artifact preserved before archival.
