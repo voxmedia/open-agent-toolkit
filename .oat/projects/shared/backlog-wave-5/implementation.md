@@ -173,7 +173,22 @@ Implementation preflight complete. Phase 1 active; four code tasks committed and
 
 ## Test Results
 
-No product tests have run yet. Planning validation and command-output checks are recorded below.
+Phase 1 directly executed 267 CLI validator/command tests, 78 docs tests and
+693 skill tests. The MDX review correction expanded the heading keeper to
+14 passing Markdown/MDX fixtures; its six-case probe now rejects zero/two H1s
+and accepts valid controls for both extensions. Current-corpus `docs:validate`
+passes. Exact commands, controls and logs are recorded in
+[Phase 1 verification](analysis/p01/phase-verification.md) and the
+`analysis/p01/t05-*` continuation evidence.
+
+Repository check/type-check tasks executed successfully; their dependency
+builds replayed cached results. The workspace build was fully cached and was
+followed by a fresh direct CLI build. Autonomy/review checks verify the shipped
+guidance contract; they make no live provider or model-efficacy claim.
+
+Final version bumps, provider projections and the complete CI/release/docs-build
+gate set remain Phase 6/root closeout work. Phase results do not claim those
+final gates have passed.
 
 ## Final Summary (for PR/docs)
 
