@@ -143,7 +143,7 @@ Implement - Phase 1 composed verification/reviews next; next product task p02-t0
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete, ready for implementation)
-- **Implementation:** `implementation.md` (initialized; 4/16 tasks complete)
+- **Implementation:** `implementation.md` (authoritative task ledger and verification evidence)
 
 ## Progress
 
