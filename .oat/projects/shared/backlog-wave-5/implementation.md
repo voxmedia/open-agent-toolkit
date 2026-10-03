@@ -208,3 +208,24 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+## Planning dispatch
+
+- Request: wave5-plan-author-r1
+- Caller: tackle-backlog / oat-project-quick-start
+- Scope: discovery and plan artifacts for the approved ten-item wave
+- Objective: draft the canonical artifacts from ticket requirements and current source
+- Authority: write only discovery.md and plan.md; no product edits or Git mutations
+- Task class: hard-reasoning (reconcile safety contracts and cross-surface dependencies)
+- Dispatch: codex/gpt-6.1-sol/high (role: worker; exact native selection)
+- Selection source: native-default; reason: native-catalog
+- Policy source: project-state, managed high; complete configured ladder verified
+- Guidance: subagent-orchestration/references/provider-codex.md, 2026-10-01, fresh
+- Deadline: 1200 seconds; retry limit: 0; fallback: none
+- Launch status: accepted
+- Handle: /root/wave5_plan_author
+- Terminal outcome: pending
+- Runtime confirmation: not-reported; configured invocation accepted by native host
+- Expected handoff: two formatted artifacts, phase/task counts, source evidence and unresolved risks
+
+The drafting worker cannot mark the plan ready. Automatic artifact review, the configured independent gate and complexity-review remain pending.
