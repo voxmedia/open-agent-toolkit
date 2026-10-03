@@ -1693,6 +1693,46 @@ Expected: exit 0.
 
 ---
 
+### Task p07-t07: (review) Close exit gate attempt 1 findings H1, M1
+
+**Files:**
+
+- Modify: `packages/cli/scripts/bundle-assets.sh` (emptiness check around line 113)
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+
+**Step 1: Failing tests first**
+
+- H1: an `OAT_ASSETS_DIR` override whose only entry is named with newline
+  characters is refused and preserved; a genuinely empty directory and an
+  existing bundle are still accepted.
+- M1: the gate integration suite passes with an inherited absolute
+  `OAT_GATE_RUN_MARKER_DIR` in the caller's environment, and ordinary
+  fixtures leave that inherited directory untouched.
+
+**Step 2: Implement**
+
+- H1: replace the textual `ls -A` emptiness test with filename-safe
+  enumeration (for example `find "$dir" -mindepth 1 -maxdepth 1 -print -quit`
+  with its exit status checked), keeping enumeration errors fail-closed.
+- M1: default each fixture's `OAT_GATE_RUN_MARKER_DIR` to
+  `join(fixture.tmp, 'oat-gate-runs')` before applying `options.env`, keeping
+  case 10's deliberate override.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+(also with `OAT_GATE_RUN_MARKER_DIR` set to a fresh absolute directory) and
+`pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+Expected: exit 0; neutralize the H1 guard and show the newline case fails,
+restore.
+
+**Step 4: Commit**
+
+`fix(p07-t07): close exit gate findings H1, M1`
+
+---
+
 ## Parallelism
 
 The plan is fully sequential (`oat_plan_parallel_groups: []`).
@@ -1823,7 +1863,7 @@ rewrites the four inventory rows last.
 | p05    | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
 | p06    | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
-| final  | code     | received        | 2026-10-03 | reviews/final-review-2026-10-03T000713Z.md                  | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
+| final  | code     | fixes_added     | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1841,9 +1881,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 6 tasks - Release fan-in
+- Phase 7: 7 tasks - Release fan-in
 
-**Total: 41 tasks**
+**Total: 42 tasks**
 
 Ready for code review and merge.
 

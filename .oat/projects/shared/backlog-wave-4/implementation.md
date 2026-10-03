@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: null
+oat_current_task_id: p07-t07
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | complete | 6     | 6/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 7     | 6/7       |
 
-**Total:** 41/41 tasks completed
+**Total:** 41/42 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** complete
+**Status:** in_progress
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -282,6 +282,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6780b3400
+
+### Task p07-t07: (review) Close exit gate attempt 1 findings H1, M1
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -748,6 +753,17 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
 - Generation 1 (`effective-delta-v2`): resolved `configured` (`block`, 2
   attempts); `reviewed_head` `f4b387694` against `origin/main`; intent
   persisted for attempt `bw4-exit-gate-g1-1-20261003T000142Z` before launch.
+
+- Exit gate attempt 1 (run `c945efcf`, `codex-6-sol-xhigh`): envelope
+  `blocked`, receive-eligible, 1 High, 1 Medium
+  (`reviews/archived/final-review-2026-10-03T000713Z.md`; reconnaissance attempted with
+  a `## Review Orchestration` record). Received: H1 (a destination whose only
+  entry has a newline-only name passes the `ls -A` emptiness test and is
+  deleted on publish) and M1 (gate integration fixtures inherit the caller's
+  `OAT_GATE_RUN_MARKER_DIR`) converted to `p07-t07`. The reviewer accepted the
+  recorded deferrals (archive-resume tail, stale-claim race). Policy `block`:
+  attempt 1 of 2 consumed; remediate, re-run final verification and a final
+  re-review for the new basis, then gate attempt 2.
 
 <!-- orchestration-runs-end -->
 
