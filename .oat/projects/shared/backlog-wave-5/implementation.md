@@ -679,3 +679,95 @@ All five are non-blocking for this phase and must be resurfaced. No Medium defer
 ### Phase p02 preflight
 
 Fresh origin/main remains 6ec5313b91e2595893eb89bb6372c028c0284ab4, with no main commits in planned CLI PJM/control-plane/status/progress/docs paths since the branch base. Native exact implementer resolves to GPT-6.1 Sol/high under managed high project-state policy. Phase owns two preservation tasks, consequential because adopted authority settings and workflow blocker data must not silently disappear. Recovery default 10, usage 0, pending null; no phase override. Root owns tracking/reviews/publication; per-task commit handshakes remain mandatory. Task subjects from p02 onward include canonical (pNN-tNN) markers so configured phase review can resolve its intended range rather than falling back to all post-plan commits; contracts and task order unchanged.
+
+#### Dispatch wave5-p02-implement-r1
+
+Dispatch stamp: Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p02-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Implement two approved Phase 2 preservation tasks with real command/producer controls, per-task commits and verified composition.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-03T23:38:57.077540Z"
+  },
+  "authority": "phase-scoped-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase2"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Adopted authority settings and structured workflow blocker data must not silently disappear; preservation is assurance-bearing.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:2db1e0c63c9a76c912e59cb8b3a3ccf29e0d9860293f6551b1dedcb63dde2fa9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native handle `/root/wave5_phase2`; exact configured role/model/effort, runtime identity not reported. Two bounded preservation tasks, per-task commit/tracking handshakes, no nested launches. Current branch canonical role governs source behavior; projections/versions deferred to p06. Root owns all tracking, deferred p01 Low dispositions, reviews and publication. Child holds mutations until explicit START from this committed acceptance baseline.
