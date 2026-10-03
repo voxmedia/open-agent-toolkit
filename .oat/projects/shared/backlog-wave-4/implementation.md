@@ -1029,3 +1029,7 @@ The workflow documentation removes the concurrent-recovery caveat and describes 
 ### p07-t11 validation correction (root inline)
 
 Full `pnpm check` found that the new completion exception push needs registration in `synced-bookkeeping-sites.json`. Root (Codex GPT-6.1 Sol high) added the guarded writer site as a bounded p07-t11 integration correction; skill validation passes for all 66 OAT skills. The first full-check failure and logs are retained under `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/`; the complete gate sequence restarts after this fix.
+
+### p07-t09 documentation-test correction (root inline)
+
+The forced full test run found one historical documentation assertion requiring the now-retired concurrent-recovery caveat. Root updated that public operator-guidance assertion to require serialized recovery, verified manual cleanup, and fail-closed acquisition instead; no behavior coverage was deleted. Actual exclusion remains covered by the gate command regressions. The skills validator suite passes 255/255 tests. Full checks restart after this test-only correction.
