@@ -11,6 +11,7 @@
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
 | DR-261003-assets-override-destination    | 2026-10-03 | accepted   | Assets override destination rule                                                                       | -       |
+| DR-261003-autonomous-completion-uses     | 2026-10-03 | accepted   | Autonomous completion uses a standing opt-in and named requesting steps                                | -       |
 | DR-261003-complexity-review-at-budget    | 2026-10-03 | accepted   | Complexity review at budget exhaustion                                                                 | -       |
 | DR-261003-full-surface-gate-budget       | 2026-10-03 | accepted   | Full-surface gate budget and duplicate rejection                                                       | -       |
 | DR-261003-report-quick-start-gate-record | 2026-10-03 | accepted   | Report quick-start gate record without routing                                                         | -       |
