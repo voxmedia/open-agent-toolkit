@@ -8,10 +8,12 @@ scope_estimate: L
 labels: [reviews, orchestration, gates, efficiency]
 assignee: null
 created: '2026-07-11T15:29:00Z'
-updated: 2026-09-28T01:42:28Z
+updated: 2026-10-03T19:13:37.625699+00:00
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/233
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/344
 ---
 
 ## Description
@@ -100,3 +102,19 @@ review-outcome bookkeeping as out of scope. That prevents the recurring
 stale-ledger finding at its source, so this item should cover only residual
 bookkeeping-only findings that still reach a reviewer or gate — it no longer
 needs to absorb the per-phase stale-ledger class.
+
+## Approved operational recovery refinement (2026-10-03)
+
+Source: [GitHub #344](https://github.com/voxmedia/open-agent-toolkit/issues/344); [approved triage ledger](../../triage/2026-10-02-untriaged-issues.md#gh-344--skip-re-review-for-bookkeeping-only-review-findings).
+
+Keep the existing finding-disposition criteria above. Add a distinct invalid-artifact recovery slice under the same owner, with separate recovery evidence and explicit updates to the owning autonomous boundary contracts. Neither slice fabricates a reviewer pass.
+
+### Additional acceptance criteria
+
+- Grant bounded standing authority for defined, mechanically verified artifact-formatting repairs and unambiguous ledger/reference corrections to uniquely identifiable existing evidence.
+- Preserve originals and canonical findings/counts, verdict, status, scope and provenance.
+- Each repair category requires an equivalence verifier, exact-validator success, and a distinct recorded recovery.
+- Reversibility alone is insufficient; ambiguity or failed repair stops execution under existing recovery limits.
+- No fabricated reviewer pass or new reviewer evidence.
+- Exclude workflow mode, phase, task identity, plan structure, review status changes and anchor stripping from bookkeeping repair.
+- Bind reference corrections to the same scope/type/run evidence, including archived files; filename uniqueness alone is insufficient.

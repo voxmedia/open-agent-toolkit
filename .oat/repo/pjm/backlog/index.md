@@ -4,6 +4,8 @@
 
 ## Curated Overview
 
+- 2026-10-03: The [approved issue triage](../triage/2026-10-02-untriaged-issues.md) captures nine new items and refines bookkeeping-only recovery for GitHub #339–#341 and #343–#349. Policy interviews and an Opus 5.5 medium second opinion are complete; items are ready for planning, with focused technical design retained in their acceptance criteria. The receipt and archive defects are separate slices linked to the broader provenance-envelope and exact-path commit owners.
+
 - 2026-10-02: the `backlog-wave-4` project (lockstep 0.3.16) closed eleven
   items: `BL-261001-fail-closed-when-bundle-assets` and
   `BL-260906-report-errno-for-asset-root` (build assets);
@@ -437,7 +439,9 @@
 | BL-260927-derive-current-lifecycle-state | Derive current lifecycle state from one authority for review, phase, and publication status              | open   | medium   | feature    | L        |
 | BL-260818-distinguish-operator-directed  | Design the budget-exhausted decision point for reviews and gates review-cycle cap                        | open   | medium   | task       | L        |
 | BL-260927-detect-unfilled-placeholders   | Detect unfilled placeholders and frontmatter-body drift at PR-final and completion                       | open   | medium   | task       | M        |
+| BL-261003-diagnose-review-finding        | Diagnose review finding overcounts and revalidate format-only repairs without relaunch                   | open   | medium   | bug        | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                               | open   | medium   | feature    | M        |
+| BL-261003-enforce-reconnaissance         | Enforce reconnaissance evidence and reconcile original-run review receipts                               | open   | medium   | bug        | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset                  | open   | medium   | task       | M        |
 | BL-260927-export-only-the-recap-page     | Export only the recap page to project-recaps and fix its broken source links                             | open   | medium   | feature    | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                               | open   | medium   | feature    | M        |
@@ -448,6 +452,7 @@
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                   | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                       | open   | medium   | feature    | M        |
+| BL-261003-leave-backlog-archive-staging  | Leave backlog archive staging to callers and report complete result paths                                | open   | medium   | bug        | S        |
 | BL-261002-let-plans-declare-an-evidence  | Let plans declare an evidence tier per phase and reconcile tracking on driver takeover                   | open   | medium   | feature    | L        |
 | BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |
@@ -458,20 +463,26 @@
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions     | open   | medium   | task       | S        |
 | BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                               | open   | medium   | feature    | M        |
 | BL-261002-offer-a-strict-gate-reviewer   | Offer a strict gate-reviewer independence mode and align gate skill wording and decision records         | open   | medium   | feature    | M        |
+| BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                              | open   | medium   | bug        | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                        | open   | medium   | task       | M        |
+| BL-261003-preserve-documented-structured | Preserve documented structured blockers in project status output                                         | open   | medium   | bug        | S        |
 | BL-261002-provide-a-complete-oat         | Provide a complete OAT uninstall path and make pack removal clean up after itself                        | open   | medium   | feature    | L        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                   | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                        | open   | medium   | feature    | L        |
 | BL-261002-re-review-a-phase-only-after   | Re-review a phase only after Critical or High findings                                                   | open   | medium   | feature    | M        |
+| BL-261003-reassess-lite-execution-scope  | Reassess Lite execution scope and preserve completed work on promotion                                   | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete        | open   | medium   | task       | S        |
+| BL-261003-reconcile-oat-tracking-commit  | Reconcile OAT tracking commit cadence with resumable phase/group batching                                | open   | medium   | bug        | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags    | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                             | open   | medium   | task       | S        |
 | BL-261002-require-exactly-one-h1-per     | Require exactly one H1 per docs page in docs:validate                                                    | open   | medium   | task       | S        |
+| BL-261003-require-proportional           | Require proportional adversarial probes at changed review boundaries                                     | open   | medium   | task       | M        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge               | open   | medium   | task       | M        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                            | open   | medium   | feature    | M        |
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail           | open   | medium   | task       | M        |
 | BL-261002-settle-dispatch-policy         | Settle dispatch policy precedence and stop legacy presets overwriting ladder columns                     | open   | medium   | task       | M        |
 | BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                   | open   | medium   | feature    | L        |
+| BL-261003-show-autonomous-hard-stop      | Show autonomous hard-stop conditions and effective recovery limits at kickoff                            | open   | medium   | task       | S        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests      | open   | medium   | task       | S        |
 | BL-261002-stop-oat-sync-from-changing    | Stop oat sync from changing user values in .codex/config.toml                                            | open   | medium   | task       | S        |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                    | open   | medium   | task       | S        |
