@@ -82,9 +82,11 @@ before merge" column is `yes`.
 Set `SKILL_DIR` to the absolute physical (`cd -P`) directory containing this
 loaded `SKILL.md` before Step 1; Step 2 resolves sibling skills relative to it.
 
-Steps 1 through 3 are read-only. Nothing is written — no exception record,
-active-project pointer, summary, retro, project-log entry, review move, or
-lifecycle state — until every guard for that project has passed.
+Steps 1 through 3 are read-only with respect to lifecycle decisions and
+mutations. Step 3 may refresh a synced checkout with `oat project pull`, which
+must succeed before any authoritative project artifact is read. No exception
+record, active-project pointer, summary, retro, project-log entry, review move,
+or lifecycle state is written until every guard for that project has passed.
 
 ### Step 1: Opt-in Guard
 
@@ -160,13 +162,40 @@ Preflight each project on its own. Any failed check refuses that project with
 the failing check named; never assume an answer, and never repair the state
 to make a check pass.
 
+Resolve scope first and accept only `shared`, `local`, or `synced`. For a
+synced project, pull before `closeout-check`, status, log, review-ledger reads,
+or any other authoritative artifact read or answer resolution. A failed scope
+lookup, an unknown scope, or a failed pull refuses the project as
+`preflight:1`; never continue from stale local state. If the pull fails and
+the project directory is absent, report the archive-resume reason below and
+leave recovery to `oat-project-complete`.
+
 ```bash
 PROJECT_PATH="<project path>"
+PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+  echo "preflight:1: cannot resolve project scope for $PROJECT_PATH; refusing completion" >&2
+  exit 1
+}
+case "$PROJECT_SCOPE" in
+  shared|local|synced) ;;
+  *)
+    echo "preflight:1: unknown project scope '$PROJECT_SCOPE' for $PROJECT_PATH; refusing completion" >&2
+    exit 1
+    ;;
+esac
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  oat project pull "$PROJECT_PATH" || {
+    echo "preflight:1: project pull failed for $PROJECT_PATH; refusing completion" >&2
+    if [[ ! -d "$PROJECT_PATH" ]]; then
+      echo "project directory absent (archived?); resume with oat-project-complete" >&2
+    fi
+    exit 1
+  }
+fi
 CLOSEOUT_CHECK_EXIT=0
 CLOSEOUT_CHECK_JSON=$(oat project closeout-check "$PROJECT_PATH" --json --autonomous) || CLOSEOUT_CHECK_EXIT=$?
 PROJECT_STATUS_JSON=$(oat project status --project-path "$PROJECT_PATH" --json)
 PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
-PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)
 ```
 
 Hard-fail the project when any of these holds:
@@ -259,8 +288,26 @@ and requesting step:
 - Recorded by: oat-project-complete-auto
 ```
 
-The completion bookkeeping commit carries this file with the rest of the
-completion changes.
+For `PROJECT_SCOPE="synced"`, publish the exception before Step 5 or any
+further completion step: the delegated interactive skill's arrival pull must
+not overwrite an unpublished exception. Run this even when the matching
+exception already exists, so a retry publishes an earlier failed push without
+duplicating the block:
+
+```bash
+if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+  oat project push "$PROJECT_PATH" \
+    --message "chore(oat): record completion-before-merge exception" --json || {
+    echo "completion-before-merge exception push failed for $PROJECT_PATH; stopping before completion" >&2
+    exit 1
+  }
+fi
+```
+
+A push failure stops the whole run. Report Step 4 as failed and the exception
+left in the local checkout; do not point the active project, delegate completion,
+or start further projects. For shared and local projects, the completion
+bookkeeping commit carries this file with the rest of the completion changes.
 
 ### Step 5: Complete the Project
 

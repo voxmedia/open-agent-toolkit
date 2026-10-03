@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -187,6 +188,108 @@ function runOptInGuard(configured: string | null): {
     encoding: 'utf8',
   });
   return { status: result.status, stderr: result.stderr };
+}
+
+/** Run the shipped shell instructions at the external `oat` CLI boundary. */
+function runSyncGuard(
+  phase: 'preflight' | 'exception',
+  options: {
+    scope: string;
+    scopeExit?: number;
+    pullExit?: number;
+    pushExit?: number;
+    checkoutAbsent?: boolean;
+  },
+): {
+  status: number | null;
+  stderr: string;
+  calls: string[];
+  artifact: string;
+} {
+  const skill = readRepoFile(SKILL_PATH);
+  const section =
+    phase === 'preflight'
+      ? sliceBetween(
+          skill,
+          '### Step 3: Objective Preflight (Per Project)',
+          '#### PR-merge precondition',
+        )
+      : sliceBetween(skill, '### Step 4:', '### Step 5:');
+  const blocks = [...section.matchAll(/```bash\n([\s\S]*?)\n```/g)].map(
+    (match) => match[1]!,
+  );
+  const dir = mkdtempSync(join(tmpdir(), 'complete-auto-sync-'));
+  stubDirs.push(dir);
+  if (!options.checkoutAbsent) mkdirSync(join(dir, 'fixture-project'));
+  const artifactPath = join(dir, 'implementation.md');
+  const remotePath = join(dir, 'remote-implementation.md');
+  const callsPath = join(dir, 'calls');
+  writeFileSync(artifactPath, 'recorded exception\n');
+  writeFileSync(remotePath, 'remote before exception\n');
+  writeFileSync(callsPath, '');
+  const stub = join(dir, 'oat');
+  writeFileSync(
+    stub,
+    `#!/bin/sh
+printf '%s\\n' "$*" >> "$TEST_CALLS"
+case "$1 $2" in
+  'project scope')
+    printf '%s\\n' "$TEST_SCOPE"
+    exit "$TEST_SCOPE_EXIT"
+    ;;
+  'project pull')
+    [ "$TEST_PULL_EXIT" = 0 ] || exit "$TEST_PULL_EXIT"
+    cp "$TEST_REMOTE" "$TEST_ARTIFACT"
+    ;;
+  'project push')
+    [ "$TEST_PUSH_EXIT" = 0 ] || exit "$TEST_PUSH_EXIT"
+    cp "$TEST_ARTIFACT" "$TEST_REMOTE"
+    ;;
+  'project closeout-check') printf '%s\\n' '{"status":"complete"}' ;;
+  'project status') printf '%s\\n' '{"project":{"progress":{"total":1,"completed":1}}}' ;;
+  'project log') printf '%s\\n' '{"status":"present","sealed":true}' ;;
+  *) exit 99 ;;
+esac
+`,
+  );
+  chmodSync(stub, 0o755);
+  const script = blocks
+    .join('\n')
+    .replace(
+      'PROJECT_PATH="<project path>"',
+      'PROJECT_PATH="$TEST_PROJECT_PATH"',
+    );
+  // The interactive completion entry pulls a synced project. This tail is
+  // deliberately outside the tested block: it models the external overwrite
+  // that the companion's publication must survive before delegating.
+  const delegated =
+    phase === 'exception'
+      ? '\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then oat project pull "$PROJECT_PATH" || exit 1; fi\nprintf "delegated\\n"\n'
+      : '';
+  const result = spawnSync('bash', ['-c', script + delegated], {
+    cwd: dir,
+    env: {
+      ...process.env,
+      PATH: `${dir}:${process.env.PATH ?? ''}`,
+      PROJECT_PATH: 'fixture-project',
+      PROJECT_SCOPE: options.scope,
+      TEST_PROJECT_PATH: 'fixture-project',
+      TEST_SCOPE: options.scope,
+      TEST_SCOPE_EXIT: String(options.scopeExit ?? 0),
+      TEST_PULL_EXIT: String(options.pullExit ?? 0),
+      TEST_PUSH_EXIT: String(options.pushExit ?? 0),
+      TEST_CALLS: callsPath,
+      TEST_ARTIFACT: artifactPath,
+      TEST_REMOTE: remotePath,
+    },
+    encoding: 'utf8',
+  });
+  return {
+    status: result.status,
+    stderr: result.stderr,
+    calls: readFileSync(callsPath, 'utf8').trim().split('\n').filter(Boolean),
+    artifact: readFileSync(artifactPath, 'utf8'),
+  };
 }
 
 /**
@@ -482,7 +585,7 @@ describe('oat-project-complete-auto three-layer guard', () => {
     );
 
     expect(normalize(skill)).toContain(
-      'Steps 1 through 3 are read-only. Nothing is written',
+      'Steps 1 through 3 are read-only with respect to lifecycle decisions and mutations.',
     );
     expect(exception).toBeGreaterThan(
       skill.indexOf('#### PR-merge precondition'),
@@ -683,6 +786,103 @@ describe('oat-project-complete-auto composed controls', () => {
     expect(flat).toContain('`SKILL_DIR="$COMPLETE_SKILL_DIR"`');
     expect(flat).toContain('oat-project-complete unavailable');
   });
+});
+
+describe('oat-project-complete-auto synced arrival and exception publication', () => {
+  it.each([
+    { scope: 'synced', scopeExit: 2 },
+    { scope: '' },
+    { scope: 'unexpected' },
+  ])(
+    'refuses unresolved or unknown scope before artifact reads: %j',
+    (options) => {
+      const result = runSyncGuard('preflight', options);
+
+      expect(result.calls).toEqual([
+        'project scope fixture-project --format value',
+      ]);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toMatch(/scope.*refusing completion/);
+    },
+  );
+
+  it('refuses a failed synced pull before any authoritative artifact read', () => {
+    const result = runSyncGuard('preflight', { scope: 'synced', pullExit: 3 });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('project pull failed');
+    expect(result.calls).toEqual([
+      'project scope fixture-project --format value',
+      'project pull fixture-project',
+    ]);
+    expect(result.stderr).not.toContain('project directory absent');
+  });
+
+  it('keeps the interactive archive-resume owner when a pull refuses an absent checkout', () => {
+    const result = runSyncGuard('preflight', {
+      scope: 'synced',
+      pullExit: 1,
+      checkoutAbsent: true,
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      'project directory absent (archived?); resume with oat-project-complete',
+    );
+    expect(result.calls).toEqual([
+      'project scope fixture-project --format value',
+      'project pull fixture-project',
+    ]);
+  });
+
+  it.each(['shared', 'local', 'synced'])(
+    'accepts %s and pulls synced state before authoritative artifact reads',
+    (scope) => {
+      const result = runSyncGuard('preflight', { scope });
+
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([
+        'project scope fixture-project --format value',
+        ...(scope === 'synced' ? ['project pull fixture-project'] : []),
+        'project closeout-check fixture-project --json --autonomous',
+        'project status --project-path fixture-project --json',
+        'project log check --project fixture-project --json',
+      ]);
+    },
+  );
+
+  it('publishes a synced exception before the delegated pull can overwrite it', () => {
+    const result = runSyncGuard('exception', { scope: 'synced' });
+
+    expect(result.status).toBe(0);
+    expect(result.calls).toEqual([
+      'project push fixture-project --message chore(oat): record completion-before-merge exception --json',
+      'project pull fixture-project',
+    ]);
+    expect(result.artifact).toBe('recorded exception\n');
+  });
+
+  it('stops on exception publication failure before delegating completion', () => {
+    const result = runSyncGuard('exception', { scope: 'synced', pushExit: 4 });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('exception push failed');
+    expect(result.calls).toEqual([
+      'project push fixture-project --message chore(oat): record completion-before-merge exception --json',
+    ]);
+    expect(result.artifact).toBe('recorded exception\n');
+  });
+
+  it.each(['shared', 'local'])(
+    'does not publish a %s exception through synced project storage',
+    (scope) => {
+      const result = runSyncGuard('exception', { scope });
+
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([]);
+      expect(result.artifact).toBe('recorded exception\n');
+    },
+  );
 });
 
 describe('wave closeout invokes the companion', () => {
