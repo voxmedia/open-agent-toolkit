@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four code tasks committed and individually verified; composed phase checks and required reviews pending.
+Implementation preflight complete. Phase 1 active; four code tasks committed and individually verified; composed phase checks passed; required reviews pending.
 
 ## Progress Overview
 
@@ -335,7 +335,7 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
     "task_name": "wave5_phase1"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -383,3 +383,9 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
 Accepted native handle: `/root/wave5_phase1`. Exact materialized-role payload accepted; runtime identity not reported. Child holds mutations until root releases the clean bookkeeping baseline. Dispatch policy: high; selected=high; cap=high (codex, enforced — pinned-variant oat-phase-implementer-gpt-6-1-sol-high).
 
 Phase p01 actual clean execution base after dispatch acceptance bookkeeping: `325dbad2a3f26feca361cefc50855893c9349442`. Task p01-t01 completion received; root bookkeeping occurs before releasing p01-t02.
+
+### Phase p01 composed handoff
+
+Validated original native report `wave5-p01-implement-r1`: DONE, 4/4 planned append-only task commits in order and within exact declared paths; base `325dbad2a3f26feca361cefc50855893c9349442`, verified handoff HEAD `2bd95bfc46d50ce28ef9902ddfc9f384984d907b`, clean worktree. The full base-to-head range includes the four mandatory root tracking commits; product range runs c0398036 through dc536f30. No recovery or nested dispatch; p01 usage 0/10 and pending null.
+
+Composed verification passed: six check and six type-check tasks executed (dependency builds cached), direct CLI tests 267, docs tests 78, skill tests 693, actual docs validation 89 pages. Workspace build replayed five cached results; fresh direct CLI build and final branch-built rejected/accepted vendor controls passed. Exact commands, outcomes and limitations are retained in local ignored `analysis/p01/phase-verification.md` and logs; guidance controls do not claim live model efficacy. All CI/version/release gates remain final-tail/p06 owned. Phase stays in_progress until root review, dispositions and configured independent gate settle.
