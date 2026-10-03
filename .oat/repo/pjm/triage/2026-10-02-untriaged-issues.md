@@ -1,10 +1,10 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: approved
+status: pr_open
 scope: Ten untriaged open GitHub issues (#339–#341, #343–#349)
 baseline_sha: be168345ef4f586731c13fe849da03eb87b526ec
-triage_pr: null
+triage_pr: https://github.com/voxmedia/open-agent-toolkit/pull/352
 created: 2026-10-02
 updated: 2026-10-03
 ---
@@ -20,7 +20,7 @@ updated: 2026-10-03
 
 ## Evidence baseline
 
-- 2026-10-03 final refresh: all ten issues remain OPEN with no labels or comments; PR #351 remains OPEN/unmerged; fetched main has no changes in the relevant paths since the evidence baseline.
+- 2026-10-03 pre-rebase refresh: all ten issues remain OPEN with no labels or comments; PR #351 remains OPEN/unmerged; fetched main has no changes in the relevant paths since the evidence baseline.
 - Fetched origin/main: `be168345ef4f586731c13fe849da03eb87b526ec`; dedicated worktree HEAD verified equal before this record was created.
 - Worktree: `/Users/tstang/Code/open-agent-toolkit/.worktrees/triage-2026-10-02`; branch: `triage/2026-10-02-untriaged-issues`; execution host: `tstang-mini.local`.
 - GitHub CLI authenticated as tkstang; origin points to voxmedia/open-agent-toolkit.
@@ -34,7 +34,7 @@ updated: 2026-10-03
 
 ## Disposition ledger
 
-All rows were approved by the user on 2026-10-03, including repository changes and exact post-merge GitHub actions. All ten issues remain open. Issue type is separate from the OAT `scope` field (idea/task/bug/feature/initiative). Add `bug` to #339, #341, #345, #347, #348 and #349; add `enhancement` to #340, #343, #344 and #346. #349 is a current contradictory-instructions defect; resumable phase/group batching is the selected policy. After merge, also add `tracked-in-backlog` to each; remove no labels, change no titles, and close none. Comment text below is exact except `{backlog-url}` and `{triage-pr-url}`, which bind to the created/refined item and this PR. Backlog URLs are now resolved in every comment; only the PR URL remains to bind. No issue mutations occur before merge.
+All rows were approved by the user on 2026-10-03, including repository changes and exact post-merge GitHub actions. All ten issues remain open. Issue type is separate from the OAT `scope` field (idea/task/bug/feature/initiative). Add `bug` to #339, #341, #345, #347, #348 and #349; add `enhancement` to #340, #343, #344 and #346. #349 is a current contradictory-instructions defect; resumable phase/group batching is the selected policy. After merge, also add `tracked-in-backlog` to each; remove no labels, change no titles, and close none. Comment text below is exact: all backlog URLs and the triage PR URL are resolved. No issue mutations occur before merge.
 
 | Issue | Issue type  | Verification                                                                      | Backlog action and exact title                                                                 | Priority / scope / size | GitHub action after merge                               |
 | ----- | ----------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------- |
@@ -69,7 +69,7 @@ All rows were approved by the user on 2026-10-03, including repository changes a
 
 Proposed post-merge comment:
 
-> Confirmed on current main: bold titles with unindented detail bullets produce a 6/6 section tally against declared 2/3. Correct nesting preserves 2/3. The current hint describes the undercount case; a public rerun starts a new reviewer run, while same-run recovery checks an immutable snapshot. The reviewer template already contains nested-list examples. Track focused diagnostics and artifact-only revalidation in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-diagnose-review-finding.md, with recovery authority coordinated with #344/#233. Triage PR: {triage-pr-url}.
+> Confirmed on current main: bold titles with unindented detail bullets produce a 6/6 section tally against declared 2/3. Correct nesting preserves 2/3. The current hint describes the undercount case; a public rerun starts a new reviewer run, while same-run recovery checks an immutable snapshot. The reviewer template already contains nested-list examples. Track focused diagnostics and artifact-only revalidation in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-diagnose-review-finding.md, with recovery authority coordinated with #344/#233. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-340 — Reassess Lite execution scope and preserve completed work on promotion
 
@@ -78,7 +78,7 @@ Proposed post-merge comment:
 - Claim: original issue title/body retained in GitHub; private retrospective observations are treated as reported evidence.
 - Verification: **Enhancement or UX improvement.** Lite startup promotion is mandatory already. Missing: a persisted execution envelope and reassessment during implementation growth. Current planning-oriented promotion archives the Lite plan and scaffolds a Quick plan; it does not prove conservation of partially completed task identities.
 - Confidence: high for current public mechanism/policy; private runtime anecdote unverified.
-- Evidence: .agents/skills/oat-project-lite/SKILL.md:291; .agents/docs/autonomy-contract.md:123; .oat/templates/plan-lite.md:21; packages/cli/src/commands/project/promote/promote.ts:286,439; promote.test.ts:406. Merged PR #264 delivered planning promotion. Open PR #351 covers budget exhaustion, not proactive growth.
+- Evidence: .agents/skills/oat-project-lite/SKILL.md:291; .agents/docs/autonomy-contract.md:123; .oat/templates/plan-lite.md:21; packages/cli/src/commands/project/promote/promote.ts:286,439; promote.test.ts:406. Merged PR #264 delivered planning promotion. PR #351, now merged, covers budget exhaustion rather than general proactive growth.
 - Existing coverage: No matching active/archived backlog item. Complexity-review-at-exhaustion work is related, not execution-envelope reassessment.
 - Proposed GitHub action: after merge, add `enhancement` and `tracked-in-backlog`, remove none, post the exact comment below, retain OPEN. Do not auto-close via PR keywords.
 - Backlog action: **create** “Reassess Lite execution scope and preserve completed work on promotion” — medium, feature, L. New ID is assigned by the supported backlog workflow after approval.
@@ -91,7 +91,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Lite already requires startup promotion when its authored plan cannot fit one sitting. Track scope-growth reassessment and conservation-safe mid-execution promotion in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-reassess-lite-execution-scope.md. Interactive promotion requires confirmation; autonomous promotion requires explicit kickoff authority and verified preservation of completed tasks, commits, reviews and remaining work. Preserve completed Lite reviews; apply Quick reviews to new work and require a final full-range review. A recorded promotion grant survives resume within its explicit scope without enabling autonomy. Triage PR: {triage-pr-url}.
+> Lite already requires startup promotion when its authored plan cannot fit one sitting. Track scope-growth reassessment and conservation-safe mid-execution promotion in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-reassess-lite-execution-scope.md. Interactive promotion requires confirmation; autonomous promotion requires explicit kickoff authority and verified preservation of completed tasks, commits, reviews and remaining work. Preserve completed Lite reviews; apply Quick reviews to new work and require a final full-range review. A recorded promotion grant survives resume within its explicit scope without enabling autonomy. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-341 — Enforce reconnaissance evidence and reconcile original-run review receipts
 
@@ -113,7 +113,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed a machine-validation gap: optional delegated reconnaissance requires an attempted/not-attempted signal and supporting orchestration evidence when attempted, but the gate handoff can omit it. Track https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-enforce-reconnaissance.md with that existing contract and idempotent same-run reconciliation using only original recorded evidence, preserving timing and attempt history. Missing evidence remains blocked. #295 and #307 retain pre-launch and portability ownership. Triage PR: {triage-pr-url}.
+> Confirmed a machine-validation gap: optional delegated reconnaissance requires an attempted/not-attempted signal and supporting orchestration evidence when attempted, but the gate handoff can omit it. Track https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-enforce-reconnaissance.md with that existing contract and idempotent same-run reconciliation using only original recorded evidence, preserving timing and attempt history. Missing evidence remains blocked. #295 and #307 retain pre-launch and portability ownership. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-343 — Show autonomous hard-stop conditions and effective recovery limits at kickoff
 
@@ -123,7 +123,7 @@ Proposed post-merge comment:
 - Verification: **Enhancement or UX improvement; reported stop is intended behavior.** Failed recovery terminality is explicitly required and tested; remaining allowance covers separate eligible events and does not promise continuation after a failed correction. Kickoff does not require disclosure of every applicable hard stop.
 - Confidence: high for current public mechanism/policy; private runtime anecdote unverified.
 - Evidence: .agents/skills/oat-project-implement/references/phase-execution.md:613; .agents/agents/oat-phase-implementer.md:215; packages/cli/src/validation/skills.test.ts:4330; .agents/skills/oat-project-autonomous/SKILL.md:110,448. Merged PR #189 introduced terminality.
-- Existing coverage: No matching active/archived disclosure item. Open PR #351 does not change failed-attempt disposition.
+- Existing coverage: No matching active/archived disclosure item. Merged PR #351 does not change failed-attempt disposition.
 - Proposed GitHub action: after merge, add `enhancement` and `tracked-in-backlog`, remove none, post the exact comment below, retain OPEN. Do not auto-close via PR keywords.
 - Backlog action: **create** “Show autonomous hard-stop conditions and effective recovery limits at kickoff” — medium, task, S. New ID is assigned by the supported backlog workflow after approval.
 - Selected behavior / acceptance proposal: Show effective limits and all applicable hard-stop conditions at kickoff from owning contracts; distinguish capacity from permission. Preserve terminal failed-attempt policy. A continue-after-failure policy remains a separate future choice.
@@ -135,7 +135,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed as current documented behavior: a validated failed-attempt stops even when recovery allowance remains. This rule shipped in PR #189 and is pinned by contract tests. Tracking kickoff disclosure of effective limits and hard stops in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-show-autonomous-hard-stop.md, preserving existing terminal recovery behavior. A continue-after-failure policy remains a separate authorization decision; private overnight timing was not reproduced. Triage PR: {triage-pr-url}.
+> Confirmed as current documented behavior: a validated failed-attempt stops even when recovery allowance remains. This rule shipped in PR #189 and is pinned by contract tests. Tracking kickoff disclosure of effective limits and hard stops in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-show-autonomous-hard-stop.md, preserving existing terminal recovery behavior. A continue-after-failure policy remains a separate authorization decision; private overnight timing was not reproduced. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-344 — Skip re-review for bookkeeping-only review findings
 
@@ -157,7 +157,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Refine the existing bookkeeping-only owner https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md (#233) with bounded standing authority for verified artifact formatting and unambiguous ledger/reference corrections. Preserve originals, findings/counts, verdict, status, scope and provenance; require category-specific equivalence proof, exact-validator success and a recorded recovery. Ambiguous or failed repairs stop; no reviewer pass may be fabricated. #339/#345 own concrete mechanisms. Triage PR: {triage-pr-url}.
+> Refine the existing bookkeeping-only owner https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md (#233) with bounded standing authority for verified artifact formatting and unambiguous ledger/reference corrections. Preserve originals, findings/counts, verdict, status, scope and provenance; require category-specific equivalence proof, exact-validator success and a recorded recovery. Ambiguous or failed repairs stop; no reviewer pass may be fabricated. #339/#345 own concrete mechanisms. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-345 — Persist separate review artifacts and validate plain-file ledger references
 
@@ -179,7 +179,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed that PRFINAL-05 rejects implementation.md#section as a filename; a canonical anchor-producing writer was not verified. The selected contract requires separate durable review files and plain file references, including planning reviews returned in memory. Track writer/template/guard alignment and safe legacy-reference handling in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-persist-separate-review.md, preserving path containment and refusing to invent missing evidence. Triage PR: {triage-pr-url}.
+> Confirmed that PRFINAL-05 rejects implementation.md#section as a filename; a canonical anchor-producing writer was not verified. The selected contract requires separate durable review files and plain file references, including planning reviews returned in memory. Track writer/template/guard alignment and safe legacy-reference handling in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-persist-separate-review.md, preserving path containment and refusing to invent missing evidence. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-346 — Require proportional adversarial probes at changed review boundaries
 
@@ -201,7 +201,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Current policy requires negative controls for assurance contracts, but review prompts do not consistently enumerate and probe changed trust/input-limit boundaries. Track focused applicable probes and explicit limitations in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-require-proportional.md; missing evidence for a consequential guarantee blocks acceptance. Keep scope proportional. Reviewer family selection remains with the strict-independence owner; private method-efficacy anecdotes are unverified. Independently verified implementer failure/control evidence may satisfy the obligation when a reviewer cannot run the probe personally. Triage PR: {triage-pr-url}.
+> Current policy requires negative controls for assurance contracts, but review prompts do not consistently enumerate and probe changed trust/input-limit boundaries. Track focused applicable probes and explicit limitations in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-require-proportional.md; missing evidence for a consequential guarantee blocks acceptance. Keep scope proportional. Reviewer family selection remains with the strict-independence owner; private method-efficacy anecdotes are unverified. Independently verified implementer failure/control evidence may satisfy the obligation when a reviewer cannot run the probe personally. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-347 — Preserve documented structured blockers in project status output
 
@@ -223,7 +223,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Reproduced on the baseline build: a documented task_id/reason/since blocker becomes [object Object] in project status JSON; a string blocker retains its reason. The source state still contains the data. Track compatible shared-parser and status serialization in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-preserve-documented-structured.md, including the documented producer shape and string control. Triage PR: {triage-pr-url}.
+> Reproduced on the baseline build: a documented task_id/reason/since blocker becomes [object Object] in project status JSON; a string blocker retains its reason. The source state still contains the data. Track compatible shared-parser and status serialization in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-preserve-documented-structured.md, including the documented producer shape and string control. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-348 — Leave backlog archive staging to callers and report complete result paths
 
@@ -245,7 +245,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Archive intentionally uses git mv today, but a disposable probe shows a staged rename with follow-up content unstaged and failure when staging the removed path. The selected contract makes staging caller-owned: archive reports every affected path without staging, and the lifecycle commit step stages the complete operation while preserving unrelated staged work. Track this bounded archive defect in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-leave-backlog-archive-staging.md, linked to the broader exact-path owner (#306/#312); no downstream partial commit was inspected. Triage PR: {triage-pr-url}.
+> Archive intentionally uses git mv today, but a disposable probe shows a staged rename with follow-up content unstaged and failure when staging the removed path. The selected contract makes staging caller-owned: archive reports every affected path without staging, and the lifecycle commit step stages the complete operation while preserving unrelated staged work. Track this bounded archive defect in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-leave-backlog-archive-staging.md, linked to the broader exact-path owner (#306/#312); no downstream partial commit was inspected. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ### GH-349 — Reconcile OAT tracking commit cadence with resumable phase/group batching
 
@@ -267,7 +267,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Current instructions conflict between per-code tracking commits and phase/group batching. Track resumable phase/group batching in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-reconcile-oat-tracking-commit.md: keep source task commits separate, save task outcomes as work proceeds, and flush tracking before reviews, PR publication, handoffs, pauses and closeout. Preserve audit history and crash/resume reconciliation. Private commit counts are unverified; exact-path correctness remains a separate owner. Recovery covers process/session crashes in the retained worktree; transfer worker outcomes before cleanup. Worktree-loss resilience is excluded. Triage PR: {triage-pr-url}.
+> Current instructions conflict between per-code tracking commits and phase/group batching. Track resumable phase/group batching in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261003-reconcile-oat-tracking-commit.md: keep source task commits separate, save task outcomes as work proceeds, and flush tracking before reviews, PR publication, handoffs, pauses and closeout. Preserve audit history and crash/resume reconciliation. Private commit counts are unverified; exact-path correctness remains a separate owner. Recovery covers process/session crashes in the retained worktree; transfer worker outcomes before cleanup. Worktree-loss resilience is excluded. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/352.
 
 ## Interview decisions (2026-10-03)
 
@@ -313,15 +313,15 @@ All ten issues are ready to enter planning with their selected behavior. #339, #
 - #343 proposal is kickoff visibility only. A changed continuation policy requires a separate explicit decision; this ledger does not authorize it.
 - #344 byte reversibility is necessary but insufficient; semantic/provenance equivalence and exact validator success are required. Concrete format work belongs to #339/#345.
 - #340 is L because existing planning promotion does not prove preservation of partially implemented work.
-- Open PR #351 changes nearby lifecycle contracts. It is unmerged at verification; reconcile overlapping paths before approved changes if main advances. It does not supply the missing contracts in this ledger.
+- PR #351 was open at the evidence baseline and is now merged. This branch was rebased onto `4a85d2eda772ada5136376ca5d22f018a88df981`; the sole conflict was the backlog index. Both curated overview entries were preserved and its managed table regenerated. Original source citations and gate results remain qualified by the original evidence baseline.
 - PJM doctor exit 1 reports existing completed-ledger path warnings while adoption remains declared. Those warnings are outside this run.
 
 ## Applied repository changes and validation
 
 - Created the nine approved items and refined the existing bookkeeping-only recovery owner; each has its approved title, priority, scope, estimate, issue association and acceptance criteria. Broader feature owners retain their existing scopes.
-- Regenerated the index: all 129 existing entries remain, with exactly nine new entries. Validation checked all ten item identities, metadata, source associations, acceptance content and local links.
+- Before rebase, the regenerated index preserved all 129 baseline entries and added nine. After rebase onto merged PR #351, it preserves all 122 current-main entries and adds the same nine, for 131 total; current main’s archived-item removals and follow-ups are retained. All ten item identities, metadata, associations, acceptance content and links were verified.
 - Staged scope: 12 files, all within the approved triage record and backlog. The existing completed-ledger warnings remain unchanged.
-- Gates ran in repository order; every exit code below was captured directly. No Turbo cache replay was observed. Logs remain in ignored local analysis. These checks validate the triage artifacts and baseline repository; they are not evidence that the proposed fixes have been implemented.
+- Before rebase, gates ran in repository order; every exit code below was captured directly. No Turbo cache replay was observed. Logs remain in ignored local analysis. These checks validate the triage artifacts and baseline repository; they are not evidence that the proposed fixes have been implemented.
 
 | Gate                          | Exit code |
 | ----------------------------- | --------- |
@@ -334,10 +334,16 @@ All ten issues are ready to enter planning with their selected behavior. #339, #
 | `pnpm release:validate`       | 0         |
 | `pnpm build:docs`             | 0         |
 
+- Rebase validation: canonical index regeneration returned 131 entries and no warnings; current-main index rows and curated prose were conserved, all nine new entries remain, and formatting and conflict-marker checks passed. Per the user’s instruction, CI is not awaited before squash merge.
+
 ## Resume instructions
 
-After the user approval recorded above: apply only the approved backlog changes using supported OAT workflow, regenerate indexes, check and open the dedicated triage PR using the two-commit PR-binding handshake. Keep all issue mutations deferred until merge.
+The approved repository changes are applied in [PR #352](https://github.com/voxmedia/open-agent-toolkit/pull/352). The PR-binding commit records this exact PR reference. Keep all issue mutations deferred until merge.
 
-After that PR merges, invoke `/triage-oat-issues resume post-merge PR #<number>`.
+After PR #352 merges, invoke:
+
+```text
+/triage-oat-issues resume post-merge PR #352
+```
 
 On resume verify merged record and backlog links, re-read live issues, apply unchanged actions idempotently, and post completion receipt on the merged triage PR. Any changed action needs row-specific approval.
