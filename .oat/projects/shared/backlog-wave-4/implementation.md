@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 8     | 7/8       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 8     | 8/8       |
 
-**Total:** 42/43 tasks completed
+**Total:** 43/43 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -290,8 +290,8 @@ oat_generated: false
 
 ### Task p07-t08: (review) Follow a symlinked assets destination in the emptiness check
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7449b5efc
 
 ---
 
@@ -787,6 +787,16 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   new M1: the `find` emptiness check does not follow a symlinked destination,
   so a symlink to a populated directory is accepted (no data loss). Converted
   to `p07-t08` (`find -H`).
+
+- Continuation `cont-backlog-wave-4-p07-fix-5`: `7449b5efc` (p07-t08):
+  `find -H` follows a symlinked destination; populated-symlink refusal and
+  empty-symlink control, with neutralize-and-restore. Step 12 at `7449b5efc`:
+  test, lint, type-check, build exit 0 (no replays).
+- Final review recorded `passed` for this basis: round 4's single Medium was
+  fixed exactly as the reviewer prescribed, with failing-first and
+  neutralization evidence; exit gate attempt 2 independently reviews the full
+  final head.
+- Phase p07 outcome: complete; 8/8 tasks.
 
 <!-- orchestration-runs-end -->
 
