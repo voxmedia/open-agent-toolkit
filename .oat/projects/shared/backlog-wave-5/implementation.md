@@ -316,8 +316,8 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
     "fork_turns": "none",
     "task_name": "wave5_phase1"
   },
-  "launch_status": "planned",
-  "child_outcome": null,
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -361,3 +361,5 @@ Dispatch stamp: Dispatch: scope=p01 action=implementation role=implementer produ
   }
 }
 ```
+
+Accepted native handle: `/root/wave5_phase1`. Exact materialized-role payload accepted; runtime identity not reported. Child holds mutations until root releases the clean bookkeeping baseline. Dispatch policy: high; selected=high; cap=high (codex, enforced — pinned-variant oat-phase-implementer-gpt-6-1-sol-high).
