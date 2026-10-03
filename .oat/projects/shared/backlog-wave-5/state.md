@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-03T23:24:08.287752Z'
+oat_project_state_updated: '2026-10-03T23:35:26.693712Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 1 root review/dispositions settled; independent gate pending; next product task p02-t01
+Implement - Phase 1 complete; Phase 2 preservation work is next (p02-t01)
 
 ## Artifacts
 
@@ -158,4 +158,4 @@ None.
 
 ## Next Milestone
 
-Pass the configured Phase 1 independent gate before starting Phase 2
+Implement and independently review Phase 2 PJM settings and structured blockers

@@ -9,24 +9,24 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four original tasks and three review corrections committed; root review passed its threshold and dispositions are settled; independent phase gate pending.
+Implementation preflight complete. Phase 1 active; four original tasks and three review corrections committed; root and independent phase reviews passed, with five Low findings durably deferred to final. Phase 2 is next.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 7     | 7/7       |
-| Phase 2 | pending     | 2     | 0/2       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 3     | 0/3       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | pending  | 2     | 0/2       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 3     | 0/3       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 7/19 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p01-t01: Require version bumps for shared-doc vendors
 
@@ -657,3 +657,21 @@ Root GPT-6.1 Sol/high owns only p01-t07, the root-owned state prose, as a record
 ### Phase p01 root review outcome
 
 Root review rounds: 2; Critical/High fix-loop iterations: 0. Original M1 and L1 resolved by native tasks p01-t05/t06 and independently confirmed in r2; r2 Low state prose resolved by root-owned p01-t07. All dispositions settled, none deferred. Latest standard reviewer passed 0 Critical/High threshold; its bound artifact event is fixes_completed after the alignment, not falsely promoted into a new reviewed-head pass. Six native task outcomes plus the explicit root artifact task account for all seven current p01 tasks. The fresh configured independent gate sees this committed correction and both Step 7 halves. Phase remains in_progress until that gate passes; no recovery attempts.
+
+### Review Received: p01 configured independent gate
+
+Valid matched gate run `3e2d6cf2-58a6-4a21-81b9-bb660e92f21f`, status ok / receiveEligible true / non-null handoff / exit 0. Configured Claude Opus 5.5 high, target claude-opus-5-5-high; immutable invocation source exec-target-config, all run/project/invocation corroboration matched. Reviewed head `2a173c4ab68e02fdf02ed2777dfd36958f86ca80`. Source `reviews/archived/p01-review-2026-10-03T232906Z.md`; original artifact persisted by gate producer in e7527131c. Counts 0 Critical, 0 High, 0 Medium, 5 Low. Root read complete artifact and applied non-pausing passing-gate judgment sweep; no blocking tasks added or phase re-gate. All five explicit deferrals are registered below and must resurface before final acceptance. Phase 1 complete: seven tasks settled, root review threshold passed, independent gate passed, no recovery use.
+
+The initial parent command exited 127 before any gate/reviewer process started because a non-login Bash environment could not resolve node. Original stderr/exit preserved in analysis/p01-opus-gate-r1._. Corrected executable path under the normal shell launched the sole accepted gate run above, evidence in p01-opus-gate-r1b._. No target fallback or accepted-run replacement.
+
+## Deferred Findings
+
+Source for every item: p01 gate artifact `reviews/archived/p01-review-2026-10-03T232906Z.md`, run 3e2d6cf2-58a6-4a21-81b9-bb660e92f21f, reviewed head 2a173c4ab68e02fdf02ed2777dfd36958f86ca80. Passing-gate deferral is a phase disposition, not final acceptance. Trigger: address or explicitly re-disposition each item before final review/PR acceptance; retain existing source authority and scoped tests.
+
+- **p01-gate-L1 / Low / Task Scope: Negligible:** Exact-target stop wording. Agreed: split immediate exact-target loss from accepted-launch continuation failure, using owning same-handle/same-exact-target terms. Deferred to final because owner stop semantics are unchanged and explicitly binding across the other surfaces; prose correction remains within the kickoff ticket.
+- **p01-gate-L2 / Low / Task Scope: Negligible:** Existing blocking finding wording. Agreed: role and local/remote briefs should say raise a blocking finding under the existing severity model. Deferred to final as small consistency cleanup; surrounding role sentence preserves meaning and no output/severity contract changes.
+- **p01-gate-L3 / Low / Task Scope: Negligible:** Bare instruction in fenced artifact template. Agreed: move operational instruction out of template or use a placeholder. Deferred to final; probe/result requirements remain in owning Step 3.5 and existing fields, with no schema change required.
+- **p01-gate-L4 / Low / Task Scope: Minor:** Tautological withoutStop check and narrowly phrased negative promise assertion. Agreed: delete the self-string regex control, replace or remove brittle negative wording guard while retaining real positive source-contract keepers. Deferred to final test cleanup. Correction to earlier evidence: the reported local-string stop-clause deletion block is NOT accepted as proof that a shipped guard can fail; the independently inspected missing-contract baseline and actual positive shipped-text assertions remain valid. Do not repeat the stronger old claim in final summaries.
+- **p01-gate-L5 / Low / Task Scope: Minor:** Chained-link and tests-only vendor fixtures, deletion limitation. Agreed that independently executed chained/tests-only/alias probes work; add proportional keeper coverage in the existing real-Git family before final acceptance if useful. Deferred fixture closure to final. Deleted-document handling matches existing skill-directory ACMR filtering and the ticket's parity requirement; record that limitation without changing deletion policy in this wave. Any broader deletion-policy change is separate follow-up scope, not an added product requirement here.
+
+All five are non-blocking for this phase and must be resurfaced. No Medium deferrals exist. The independent reviewer executed 257 validator tests, 14 heading fixtures, actual docs validation and skill validation; actual bump gate rejected expected unbumped consumers pending p06. Its chained/tests/alias and diverse heading probes support the changed boundaries. Guidance remains contract evidence, not live model-efficacy proof.
