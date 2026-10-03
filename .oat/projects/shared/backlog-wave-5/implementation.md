@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 preservation work is active.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 tasks are committed; composed verification and root/independent reviews remain pending.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | in_progress | 2     | 1/2       |
+| Phase 2 | in_progress | 2     | 2/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 8/19 tasks completed
+**Total:** 9/19 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -110,8 +110,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p02-t02: Preserve documented structured blockers end to end
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 44c9be2e963f4709c42330a2df4a52888c406a94
+
+**Outcome:** Public ProjectBlocker union preserves literal task_id/reason/since records alongside legacy strings. Human status renders fields; field/shell selectors retain JSON. Malformed entries are skipped deliberately. Actual consumer inventory required no outside-scope code changes; raw refresh and recommender semantics unchanged. Package README mechanically aligned as required.
+
+**Verification:** Real parser/project baseline fails three controls and real reader status baseline fails one with object coercion. Neutralized blocker route fails three keepers; restored 47 control-plane and 21 status tests pass. Fresh control-plane then CLI builds execute the exact canonical completion YAML producer through parser/project JSON/status JSON/field/shell/human for documented, legacy, empty and mixed-malformed inputs. Root independently repeated all four probes and inspected exact nine-file commit and clean worktree. Both direct checks/type-checks/builds, docs validation, scoped Markdown lint/format/diff executed/pass. Full lint executed all 10 tasks; full format replayed five unaffected package tasks while edited surfaces/root checks executed. Evidence: analysis/p02/t02-command-probe.mjs, t02-consumers.log and t02-\*.log. No recovery; used0/pendingnull.
 
 ## Phase 3: Shared hook-safe exact-path commits
 
