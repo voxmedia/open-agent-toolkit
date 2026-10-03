@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 6     | 5/6       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 6     | 6/6       |
 
-**Total:** 40/41 tasks completed
+**Total:** 41/41 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -280,8 +280,8 @@ oat_generated: false
 
 ### Task p07-t06: (review) Close final review round 3 docs findings L1, L2
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6780b3400
 
 ---
 
@@ -734,6 +734,14 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   findings, the root records the final review as passed once `p07-t06` lands
   and its docs checks pass; the configured Codex exit gate independently
   reviews the final head.
+
+- Continuation `cont-backlog-wave-4-p07-fix-3`: `6780b3400` (p07-t06) closed
+  final round 3 L1 (configuration note: the companion never creates a PR) and
+  L2 (review cost table counts the complexity review); oat-docs check,
+  build:docs, format:root exit 0.
+- Final review recorded `passed` (rounds 1-3 dispositioned; round 3 at the
+  cycle cap with 0 Critical/High and only wording findings, all fixed).
+- Phase p07 outcome: complete; 6/6 tasks.
 
 <!-- orchestration-runs-end -->
 
