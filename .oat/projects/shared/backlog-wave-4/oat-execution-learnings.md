@@ -47,3 +47,15 @@ Append-only log of reusable observations from the autonomous run.
 **Observation:** One `oat-reviewer` artifact (`bw4-p01-review-4`) omitted the required `**Reconnaissance:**` line although its report named the signal. The root failed closed, and the same reviewer handle added the line before receive.
 **Impact:** One extra round trip; no bookkeeping was written from the incomplete artifact.
 **Recommendation:** Keep the explicit "exactly one `**Reconnaissance:**` line in the artifact body (required)" sentence in every reviewer brief.
+
+## 2026-10-03T01:00Z - gotcha - Main moved three times during one wave
+
+**Observation:** `main` published 0.3.13 (#335) during planning, 0.3.14 (#342, a docs restructure that deleted two pages this wave edited) during closeout, and 0.3.15 (#350) while the post-merge Definition of Done was running. Each collision surfaced only at `release:check-versions`, and #350 also needed `pnpm install` before its new test suite could run.
+**Impact:** Two extra merges, a docs port task (p07-t05), a re-bump to 0.3.16, and repeated full Definition of Done runs.
+**Recommendation:** For long waves, fetch `origin/main` and compare versions at every phase boundary, run `pnpm install --frozen-lockfile` after every merge from `main`, and push immediately after the final bump.
+
+## 2026-10-03T01:00Z - efficiency - The destination-safety family kept producing findings until the end
+
+**Observation:** After p01's simplification, the exit gate still found two edge cases in the new destination rule (a newline-only filename defeating `ls -A`, and `find` not following a symlinked start path). Both were real and each was a one-line fix.
+**Impact:** One exit gate attempt and one extra final re-review round.
+**Recommendation:** For shell guards over user-supplied paths, test filename-safe enumeration and symlinked starting paths from the first implementation.
