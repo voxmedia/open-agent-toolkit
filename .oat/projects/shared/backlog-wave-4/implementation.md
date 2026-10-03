@@ -802,6 +802,10 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   attempts completed 1 of 2): `reviewed_head` `23577fd16`; intent persisted
   for attempt `bw4-exit-gate-g2-2-20261003T002927Z`.
 
+- Exit gate attempt 2 (run `7c263e05`, `codex-6-sol-xhigh`): envelope `ok`,
+  receive-eligible, 0 findings (`reviews/archived/final-review-2026-10-03T003215Z.md`).
+  Received with no fix tasks; disposition `allowed/passed`.
+
 <!-- orchestration-runs-end -->
 
 ## Plan Gate Feedback (quick-start, QS-12)

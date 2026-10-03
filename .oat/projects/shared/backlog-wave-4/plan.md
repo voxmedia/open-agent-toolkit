@@ -1892,7 +1892,7 @@ rewrites the four inventory rows last.
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
-| final  | code     | received        | 2026-10-03 | reviews/final-review-2026-10-03T003215Z.md                  | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+| final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
