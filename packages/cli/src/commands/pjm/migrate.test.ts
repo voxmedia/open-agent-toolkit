@@ -10,11 +10,16 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 
+import { createProgram } from '@app/create-program';
 import { initializeBacklog } from '@commands/backlog/init';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { runPjmDoctorChecks } from './doctor';
-import { CANONICAL_REPO_REFERENCE_PATHS } from './init';
+import { createPjmCommand } from './index';
+import {
+  CANONICAL_REPO_REFERENCE_PATHS,
+  initializeRepoReference,
+} from './init';
 import { migratePjmRepo } from './migrate';
 
 const TEMPLATE_NAMES = [
@@ -165,6 +170,77 @@ describe('migratePjmRepo', () => {
       tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
     );
     tempDirs.length = 0;
+  });
+
+  it('preserves serialized unowned PJM settings through the real migrate --apply command', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-pjm-preserve-'));
+    tempDirs.push(root);
+    const assetsRoot = join(root, 'assets');
+    const repoRoot = join(root, '.oat', 'repo');
+    await mkdir(join(root, '.git'), { recursive: true });
+    for (const templateName of TEMPLATE_NAMES)
+      await seedTemplate(join(assetsRoot, 'templates'), templateName);
+    await initializeRepoReference({ assetsRoot, repoRoot, home: root });
+    await writeFile(
+      join(repoRoot, 'reference', 'current-state.md'),
+      '# Legacy current state\n',
+      'utf8',
+    );
+    const remote = {
+      schemaVersion: 1,
+      storage: { state: 'shared' },
+      policy: {
+        description: 'managed-section',
+        authority: {
+          default: 'user-approved',
+          operations: { 'update-fields': 'read-only' },
+        },
+        providers: {
+          github: {
+            description: 'none',
+            authority: { default: 'user-authorized' },
+          },
+        },
+      },
+    };
+    const unowned = {
+      remote,
+      futureSetting: { values: ['literal', 7, false] },
+    };
+    const configPath = join(root, '.oat', 'config.json');
+    // Raw on-disk input is the oracle: normalized config readers cannot assert
+    // preservation of fields they do not recognize.
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        version: 1,
+        pjm: { initialized: true, schemaVersion: 9, ...unowned },
+      }),
+      'utf8',
+    );
+    const before = JSON.stringify(unowned);
+    const program = createProgram();
+    program.addCommand(
+      createPjmCommand({ resolveAssetsRoot: async () => assetsRoot }),
+    );
+    const previousExitCode = process.exitCode;
+    try {
+      await program.parseAsync(
+        ['--cwd', root, '--json', 'pjm', 'migrate', '--apply'],
+        { from: 'user' },
+      );
+      expect(process.exitCode ?? 0).toBe(0);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+    const persisted = JSON.parse(await readFile(configPath, 'utf8'));
+    const { initialized, schemaVersion, ...after } = persisted.pjm;
+    expect(initialized).toBe(true);
+    expect(schemaVersion).toBe(1);
+    expect(JSON.stringify(after)).toBe(before);
+    const adoptedBytes = await readFile(configPath, 'utf8');
+    await initializeRepoReference({ assetsRoot, repoRoot, home: root });
+    expect(await readFile(configPath, 'utf8')).toBe(adoptedBytes);
   });
 
   it('reports a no-op when repository adoption is incomplete', async () => {

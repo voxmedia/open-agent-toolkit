@@ -21,15 +21,6 @@ mutations write nothing and return an error naming the repository path and
 `oat pjm init` as the recovery. Check the current state with
 `oat pjm doctor --json` and read its `adoption.state` field.
 
-> [!WARNING]
-> Running `oat pjm init` again, or running `oat pjm migrate --apply`,
-> currently replaces the `pjm` section of `.oat/config.json` and deletes any
-> `pjm.remote` settings (your remote project management policy). Several
-> skills below tell you to rerun `oat pjm init` to repair a partial setup or
-> missing index markers. Before you do, back up `.oat/config.json`;
-> afterwards, check `git diff .oat/config.json` and restore `pjm.remote` if
-> it was removed.
-
 ## Where a backlog item lives
 
 - **`items/<id>.md`** - active, file-backed records. Each carries frontmatter with a `status` and an `updated` timestamp.
@@ -101,8 +92,7 @@ work. Like every PJM skill that writes files on this page, it refuses to
 write until the repository has adopted PJM with `oat pjm init`. The skill
 first runs `oat pjm doctor --json` and inspects `adoption.state`; only
 `declared` or `inferred-legacy` permits writes. For `none` or
-`partial-initialization` it stops and tells you to run `oat pjm init` (read
-the [warning about rerunning it](#adoption-comes-first) first). Installed
+`partial-initialization` it stops and tells you to run `oat pjm init`. Installed
 tools alone do not establish adoption. No active OAT project is required.
 
 **Example scenario:** A support incident exposed uncertainty about duplicate
@@ -145,7 +135,7 @@ the living review.
 `oat pjm doctor --json` before writes, and accessible backlog items. A
 roadmap is optional alignment evidence; an active OAT project is not
 required. The skill stops and tells you to run `oat pjm init` if adoption
-is absent or partial (see the [warning about rerunning it](#adoption-comes-first)).
+is absent or partial.
 
 **Example scenario:** Your team has time for one maintenance initiative, but
 the backlog mixes isolated fixes with work blocked on shared infrastructure.
@@ -211,8 +201,7 @@ Context, Decision, and Consequences sections and reruns
 `oat decision regenerate-index` if it changed the status or title. Its
 workflow has no commit or push step. If the decision index markers are
 missing, it stops and tells you to repair the repository with
-`oat pjm init`; that is a rerun, so read the
-[warning about rerunning it](#adoption-comes-first) first.
+`oat pjm init`.
 
 **Next step:** Review the record and link relevant work to it. If later
 evidence changes the choice, preserve history through the appropriate
@@ -249,9 +238,7 @@ sanitized description of which connector or provider CLI it can use for
 that tracker. The skill gathers that evidence for you.
 
 **Prerequisites:** PJM adoption verified by `oat pjm doctor --json` (the
-skill stops and points you to `oat pjm init` otherwise; rerunning init
-deletes `pjm.remote`, as the [warning above](#adoption-comes-first)
-explains), applicable local
+skill stops and points you to `oat pjm init` otherwise), applicable local
 policy, and an available host capability matching the provider, operation,
 and exact account, workspace, site, or repository. No active OAT project is
 required. Remote mutation authority defaults to `read-only`, so `publish`
@@ -340,8 +327,7 @@ judges applicable, with no separate approval step. It runs
 records with `oat decision new`. Its workflow has no commit or push step,
 so review the working-tree diff afterwards. If the backlog index markers
 are missing, it stops and tells you to repair the repository with
-`oat pjm init`; that is a rerun, so read the
-[warning about rerunning it](#adoption-comes-first) first.
+`oat pjm init`.
 
 **Next step:** Review the changes against the implementation evidence and
 rerun diagnostics for lifecycle consistency. Start deferred work separately;

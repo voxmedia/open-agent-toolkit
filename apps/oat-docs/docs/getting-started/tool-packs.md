@@ -1294,10 +1294,3 @@ that: later pack updates and `oat tools remove` leave them alone.
   loads; OAT does not resolve that for you.
 
 Installing any pack never gives OAT permission to publish to an issue tracker.
-
-> [!WARNING]
-> Rerunning `oat pjm init` or `oat pjm migrate --apply` deletes the `pjm.remote`
-> settings from `.oat/config.json`, so every remote setting silently returns to
-> its default. Afterwards, check `git diff .oat/config.json` and restore the
-> settings you need with `oat config set` (shared remote storage is restored
-> with `oat pjm remote storage shared`) before doing more remote work.
