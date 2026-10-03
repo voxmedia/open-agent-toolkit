@@ -77,6 +77,7 @@ No gate is configured by default.
 | Final review              | 1 reviewer                                                 | At most 3 review cycles, then the agent stops and asks you how to proceed                                                                                              |
 | Review at checkpoints     | 1 extra review at each checkpoint before the last, when on | Off unless you answer yes to the auto-review question on the first implementation run or set `workflow.autoReviewAtHillCheckpoints`; autonomous runs always turn it on |
 | Gate (optional)           | 1 reviewer run per gate                                    | `maxAttempts`, 2 runs in total by default                                                                                                                              |
+| Budget exhausted          | 1 read-only complexity review                              | Runs once when a review cycle cap, the retry limit, or a gate's `maxAttempts` runs out, before the agent asks you how to proceed                                       |
 
 OAT does not estimate prices. Cost depends on your provider's pricing and on
 your _dispatch policy_: the highest model tier OAT may use for subagents.
@@ -92,7 +93,8 @@ or High finding adds 2 runs, a fix and a new review, at most twice per phase, so
 the phases alone can reach 18. Not counted: the summary, documentation, and pull
 request steps, the project explainer and project recap, and the optional phase
 gate review (one extra reviewer run per selected phase). A blocked
-implementation gate also reruns the final review before the gate runs again.
+implementation gate also reruns the final review before the gate runs again,
+and any budget that runs out adds one read-only complexity-review run.
 
 ## What OAT does without asking
 
