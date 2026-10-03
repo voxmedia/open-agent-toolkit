@@ -12,7 +12,7 @@ labels:
   - oat-project-complete
 assignee: null
 created: 2026-09-27T12:50:13.379Z
-updated: 2026-09-27T12:50:13.379Z
+updated: 2026-10-03T19:47:01.720Z
 associated_issues: []
 external_plans: []
 ---
@@ -37,12 +37,13 @@ Design constraint: re-running archive treats an existing export as already prese
 - The exported page has no broken relative links. Either the authoring contract stops emitting `../../../*.md` links to project artifacts, or the export rewrites/strips them, and a test fails when an exported page contains a relative `href`/`src` that does not resolve from the export location. Links to tracked targets (the summary export under `.oat/repo/reference/project-summaries/`, decision records, PR URLs) are allowed and resolve.
 - The `projectRecapExport` report contract (archive JSON, `push-runner.ts` printing) no longer requires `manifest.relativePath === "manifest.json"`; `oat-project-complete` Steps 8, 8.5, and 12 (`SKILL.md` ~1058, 1196-1204, 1229, 1244) and the synced-archive scripts (`resolve-synced-archive-entry.mjs`, `finalize-synced-archive.mjs`) consume the new contract, and the summary export's `Explainer Outcome` link and PR References point at the exported page path. The skill's `metadata.version` is bumped.
 - Docs describe the new split: `apps/oat-docs/docs/reference/project-artifacts.md` (~101-110) and `apps/oat-docs/docs/reference/cli-reference.md` say the tracked export is the page and the evidence stays with the archived project.
-- The four existing exports are migrated in the same PR: `.oat/repo/reference/project-recaps/{20260721-explainer-kit,20260722-wave-skills-promotion,20260914-agent-authored-recap,20260927-triage-correctness-wave}/` each become one `<YYYYMMDD>-<project>.html` file, inbound links (summary exports' `Explainer Outcome`, docs) are rewritten to the new paths, the broken relative links in `20260927-triage-correctness-wave/site/index.html` are fixed, and the stray `2026-08-19-defect-wave-program.fact-base.json` is removed or moved to where its consumer expects it. Record before/after tracked size (about 8.6 MB before).
+- All existing tracked recap packages are migrated in the same follow-up PR. Inventory `.oat/repo/reference/project-recaps/` at implementation start rather than limiting migration to the original four exports. As of 2026-10-03, this includes `20260721-explainer-kit`, `20260722-wave-skills-promotion`, `20260914-agent-authored-recap`, `20260927-triage-correctness-wave`, `20260928-backlog-wave-2`, `20261001-backlog-wave-3`, and `20261003-backlog-wave-4`. Each becomes one `<YYYYMMDD>-<project>.html` file; tracked supporting files and per-project directories are removed after evidence preservation is verified. Rewrite inbound links (summary exports' `Explainer Outcome`, docs, and maintained PR references) to the new paths, fix broken relative links in every migrated page, and remove the stray `2026-08-19-defect-wave-program.fact-base.json` or move it to where its consumer expects it. Record current before/after tracked size; the original four-export baseline was about 8.6 MB.
 - Either `DR-260911-explainers-are-agent-authored` is amended or a new decision record states that the durable tracked recap is the rendered page and QA/source evidence is archive-only.
 - Lockstep public package versions are bumped (bundled skill and docs changes), and the full Definition of Done passes, with a negative control showing the pre-fix export (full package) is rejected by the new export-contents test and the new export passes.
 
 ## Notes
 
+- Operator direction 2026-10-03: merge Wave 4 PR #351 without delaying it for recap export cleanup. Deliver this backlog item's exporter fix and conversion of every existing tracked recap, including Wave 4, in a separate follow-up PR. The published references mirror `project-summaries`: one dated HTML file per recap, with no tracked evidence sidecars. Preserve source/QA evidence in the project archive rather than the tracked reference directory.
 - Status 2026-09-27: deferred out of the Wave 2 batch by the operator; the single-file layout above is the chosen direction.
 - Evidence (2026-09-27): `du -sh` on `20260927-triage-correctness-wave` is 6.1 MB, of which `qa/*.png` is about 5.3 MB (about 4.0 MB, 3.9 MB, 2.6 MB at 1440/768/320 widths); `site/index.html` is about 52 KB and has 6 relative links (`../../../discovery.md`, `implementation.md`, `plan.md`, `project-log.md`, `summary.md`, `references/project-retro.md`) that are broken at the export location. The three older exports have 0 relative links.
 - Git history keeps every byte already committed, so slimming the existing exports reduces checkout size and future diffs, not clone size. Do not rewrite history.

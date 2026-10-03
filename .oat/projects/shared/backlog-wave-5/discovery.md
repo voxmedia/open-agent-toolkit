@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-10-03
 oat_generated: false
@@ -8,135 +8,80 @@ oat_generated: false
 
 # Discovery: backlog-wave-5
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Deliver the approved ten-ticket Wave 5 as one Quick project and one PR. Execute autonomously through a mergeable PR, with Codex GPT-6.1 Sol at high effort implementing and independent Claude Opus 5.5 at high effort reviewing the plan, every phase, and final integration. Merge and release are not authorized.
+
+The scope combines two validators, two lifecycle/review guidance changes, PJM configuration preservation, structured blocker preservation, one shared exact-path commit primitive, its archive and knowledge-refresh consumers, and single-page recap export plus migration. Requirements are settled in the ten authoritative backlog items; this project records bounded technical choices in its canonical plan.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+**Workflow and topology:** The user approved one ten-ticket Quick wave and one PR; no extra spec, design, imported plan, or program artifact is needed.
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Recap layout:** The approved edit to the recap ticket requires one dated, self-contained HTML file per project, mirroring project summaries. Preserve the complete original run and QA/source evidence in the project archive; no tracked replacement sidecar.
+
+**Execution and review:** Exact implementer/reviewer routes are user constraints, not permission to substitute targets. Normal planning self-review remains separate from the independent Claude review. Root owns commits, lifecycle state, review launches, backlog closeout, and publication.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+The request is well-understood. Keep the existing CLI and lifecycle boundaries, repair their specific contracts, and test their actual producers and consumers. A broad Git framework, new test harness, recap-authoring replacement, and generic review campaign would widen the approved scope.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **QS-04 — straight to plan:** Resolve the design-depth gate noninteractively from the approved Quick scope. The tickets settle product behavior and contain bounded compatibility constraints. Record implementation choices in `plan.md`; do not add `design.md` or `spec.md`.
+2. **QS-05 — requirements confirmed:** Auto-confirm from the user's approved ten-ticket slate and the current item acceptance criteria, including the approved recap amendment. No unresolved material product question prevents task generation. The acceptance matrix in the plan maps every criterion to tasks and evidence.
+3. **Commit ownership:** One narrow exact-path primitive serves existing CLI callers and skill lifecycle commits. Hooks remain enabled; unrelated staged and unstaged work survives, bounded lock retry never deletes another writer's lock, and retries identify already-completed work.
+4. **Dependency order:** Build the commit primitive before archive/knowledge adoption. Change recap export and report together with completion/resume/summary consumers before migrating existing exports.
+5. **Preservation before cleanup:** Verify source hashes and preserve original archived evidence before removing tracked recap support files. Rewrite only exported pages and maintained references; never rewrite original archived source evidence.
+6. **Parallelism:** Evaluate disjoint validator work, then prefer sequential phases because lifecycle skills, shared validators, Git index/bookkeeping, release assets, and final integration overlap. At most two isolated implementation lanes would be permissible after root proves disjoint ownership; this plan declares none.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Workspace: `/Users/tstang/Code/open-agent-toolkit`; branch: `wave/2026-10-03-backlog-wave-5`; planning entry HEAD: `91e5fb0c6`; current integration base: `6ec5313b91e2595893eb89bb6372c028c0284ab4`. Revalidate main before implementation and each phase.
+- No prior active-project pointer existed before root scaffolded this project. Do not retire or absorb another project.
+- Preserve the approved dirty recap ticket and `.oat/sync/manifest.json`; do not include unrelated work in commits.
+- Keep the explicit phase review gate unchanged: enabled, all phases, code review, blocking at High. No model-target YAML, no new HiLL key during drafting.
+- Use current canonical Quick and plan-writing contracts, repository/PJM guidance, docs-app conventions, and deliberate-testing author guidance.
+- One PR, exact ten-ticket closure, handoff deletion when present, all repository gates, documentation, version bumps, generated projections, and independent reviews. No live provider or credential calls are needed for feature probes.
+- Assurance evidence is reproduction-grade and proportional. Keep machine logs and baselines in ignored `.oat/**/analysis/`; tracked artifacts retain short evidence summaries.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Every acceptance criterion in the plan's ten-ticket matrix has evidence from its named public boundary.
+- Init and migrate preserve unowned PJM settings; structured blocker fields reach JSON consumers without breaking legacy strings or human output.
+- Validators reject unbumped shared-doc vendors and invalid H1 counts while valid controls pass.
+- Kickoff discloses effective recovery limits and owning hard stops without changing failed-attempt terminality; changed consequential review boundaries require credible probes or a blocking finding.
+- Shared lifecycle commits protect unrelated Git state with real index-managing hooks and concurrent writers. Archive reports complete affected paths without staging. Knowledge refresh preserves manual notes.
+- Future and existing recap exports contain one dated HTML page per project, have resolvable links, preserve all original evidence in the archive, and support idempotent recovery and attempt-owned rollback.
+- All eight CI gates and additional applicable lint/format/docs checks pass on the reviewed head; one PR is mergeable with no merge or release performed.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Fresh issues #339, #341, #345, #349 and deferred #340, #344; unrelated backlog closures.
+- Continue-after-failed-recovery policy, model efficacy claims, new review harnesses or broad testing campaigns.
+- Recap authoring replacement, changing whether completion generates recaps, Git history rewrites, provider integration changes, or credential setup.
+- Manually invented versions, duplicated generated provider assets, or tracked machine evidence packages.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+No unresolved material product questions. Implementation must escalate unexpected ownership collisions, unavailable source artifacts, mismatched archive evidence, or preservation that cannot be proved before deletion. These are execution proof boundaries rather than permission to change scope.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The authoritative ticket files reflect the approved requirements. Re-read them before their tasks; do not replace them with this summary.
+- Seven tracked recap packages are present at planning time, plus the stray fact-base JSON. Re-inventory at migration start because the approved criterion covers every current package.
+- Existing local project archives can provide the original run evidence. Existence alone is not integrity proof; migration verifies every file and preserves missing evidence before removal.
+- Feature probes use disposable repositories and real local Git/hooks; external archive synchronization is tested through existing offline seams, without new live S3 or provider operations.
 
 ## Risks
 
-{Potential risks identified during discovery}
+- **Git hook/index interference:** Formatting hooks can change both temporary and real index state; test the actual index-managing hook and compare unrelated staged blobs, unstaged bytes, committed content, and final status.
+- **Contract drift:** Main or current installed tooling may differ from the branch. Fetch before phases; probe changed behavior through the branch CLI build and real consumers.
+- **Recap data loss:** Legacy and v2 packages differ. Inventory each manifest, preserve all existing bytes, and stop before cleanup if any source/evidence integrity claim is unresolved.
+- **Review overreach:** Probe obligations must follow changed boundaries and credible failures. Preserve containment, accepted launch policy, independent review, and existing severity/blocking models.
 
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+## Sources and Next Steps
 
-## Next Steps
+Authoritative requirements are the ten item files under `.oat/repo/pjm/backlog/items/` listed with titles in `plan.md`. Current source inspected includes shared skill-bump validation, docs Markdown parser/validator, PJM init/migrate, control-plane parser/status consumers, project-log commit recovery, scaffold/promote/ref-sync, backlog archive, knowledge refresh, recap export/report, completion scripts, autonomy and reviewer contracts, and decision `DR-260911-explainers-are-agent-authored`.
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Root completes discovery through the owning CLI, reviews the canonical plan with normal Sol-high self-review and independent Opus-high review, records results without deleting review rows, and only then marks the plan implementation-ready. This artifact remains `in_progress` until that lifecycle transition.
