@@ -106,17 +106,20 @@ contract and resolved the reviewer route, and both apply here. When the
 exhausted loop belongs to `oat-project-quick-start` or to a standalone
 `oat-project-review-receive` run, resolve them before the launch:
 
-1. Probe `oat-project-dispatch-subagents/SKILL.md` and
-   `oat-dispatch-subagents/SKILL.md`, each first in `${HOME}/.agents/skills`
-   and then in `<repo-root>/.agents/skills`, and bind each first match; never
-   rely on ambient discovery. On a miss, name the skill and give its recovery
+1. Independently probe each required `<name>/SKILL.md` in order:
+   `${SKILL_DIR}/..` from this loaded owning skill, `${HOME}/.agents/skills`,
+   then `<repo-root>/.agents/skills`. Bind each first match to its own root:
+   `${PROJECT_DISPATCH_SKILLS_ROOT}` for `oat-project-dispatch-subagents` and
+   `${DISPATCH_SKILLS_ROOT}` for `oat-dispatch-subagents`; never rely on ambient
+   discovery. On a miss, name the skill and give its recovery
    command, then continue with
    `Complexity review unavailable: <skill> not installed`:
    - `oat-project-dispatch-subagents`:
      `oat tools install workflows --scope <user|project>`;
    - `oat-dispatch-subagents`:
      `oat tools install utility --scope <user|project>`.
-2. Read the project dispatch skill, then the engine, and follow them.
+2. Read `${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md`,
+   then `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`, and follow them.
 3. When no reviewer ceiling was resolved for this loop, resolve one with
    `oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --json`
    and launch at that ceiling.

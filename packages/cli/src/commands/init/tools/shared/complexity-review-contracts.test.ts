@@ -218,6 +218,41 @@ describe('complexity review at budget exhaustion', () => {
     }
   });
 
+  it('probes loaded siblings before user and repository dispatch skills independently', () => {
+    // Skill instructions are the routing contract. A host-loaded workflow pack
+    // can supply the adapter even when the utility engine resolves elsewhere.
+    const routing = sliceBetween(
+      readRepoFile(SHARED_DOC),
+      '### Routing outside implement',
+      '## Condensed method',
+    ).replace(/\s+/g, ' ');
+    const probe = routing.slice(0, routing.indexOf('On a miss'));
+
+    const tiers = [
+      '${SKILL_DIR}/..',
+      '${HOME}/.agents/skills',
+      '<repo-root>/.agents/skills',
+    ].map((tier) => {
+      const index = probe.indexOf(tier);
+      expect(index, `dispatch probe includes the ${tier} tier`).toBeGreaterThan(
+        -1,
+      );
+      return index;
+    });
+    expect(tiers[0]).toBeLessThan(tiers[1]!);
+    expect(tiers[1]).toBeLessThan(tiers[2]!);
+    expect(probe).toMatch(/independently probe/i);
+    expect(probe).toMatch(/bind each first match to its own root/i);
+
+    const reads = [
+      '${PROJECT_DISPATCH_SKILLS_ROOT}/oat-project-dispatch-subagents/SKILL.md',
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    ].map((path) => routing.indexOf(path));
+    expect(reads.every((index) => index > -1)).toBe(true);
+    expect(reads[0]).toBeLessThan(reads[1]!);
+    expect(probe).toMatch(/never rely on ambient discovery/i);
+  });
+
   it('dispatches one complexity review per exhausted loop', () => {
     const doc = readRepoFile(SHARED_DOC).replace(/\s+/g, ' ');
     expect(doc).toMatch(
