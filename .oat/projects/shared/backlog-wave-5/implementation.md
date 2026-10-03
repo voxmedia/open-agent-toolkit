@@ -777,3 +777,7 @@ Dispatch stamp: Dispatch: scope=p02 action=implementation role=implementer produ
 ```
 
 Accepted native handle `/root/wave5_phase2`; exact configured role/model/effort, runtime identity not reported. Two bounded preservation tasks, per-task commit/tracking handshakes, no nested launches. Current branch canonical role governs source behavior; projections/versions deferred to p06. Root owns all tracking, deferred p01 Low dispositions, reviews and publication. Child holds mutations until explicit START from this committed acceptance baseline.
+
+### Phase p02 mechanical API documentation scope
+
+Package AGENTS requires README reflection for public API changes. Root verified that contract and added only the blocker-union documentation at packages/control-plane/README.md to p02-t02 ownership before continuation. This is a mechanically derived same-boundary documentation addition, with no new requirement, task, model or recovery. Consumer inventory otherwise requires no outside-file code changes.

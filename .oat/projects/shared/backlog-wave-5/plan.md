@@ -197,7 +197,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p02-t02: Preserve documented structured blockers end to end
 
-**Files:** Modify `packages/control-plane/src/types.ts`, `state/parser.ts`, `state/parser.test.ts`, `project.test.ts`; modify `packages/cli/src/commands/project/status.ts`, `status.test.ts` only as compatibility requires; update `.agents/skills/oat-project-progress/SKILL.md` and `apps/oat-docs/docs/reference/project-artifacts.md` for deliberate display/type documentation.
+**Files:** Modify `packages/control-plane/src/types.ts`, `state/parser.ts`, `state/parser.test.ts`, `project.test.ts`; update `packages/control-plane/README.md` only to reflect this public blocker union as required by package AGENTS; modify `packages/cli/src/commands/project/status.ts`, `status.test.ts` only as compatibility requires; update `.agents/skills/oat-project-progress/SKILL.md` and `apps/oat-docs/docs/reference/project-artifacts.md` for deliberate display/type documentation.
 
 **Dependencies:** p02-t01.
 
