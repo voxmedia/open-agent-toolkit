@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; three code tasks committed and verified, next p01-t04.
+Implementation preflight complete. Phase 1 active; four code tasks committed and individually verified; composed phase checks and required reviews pending.
 
 ## Progress Overview
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 3/4       |
+| Phase 1 | in_progress | 4     | 4/4       |
 | Phase 2 | pending     | 2     | 0/2       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 3/16 tasks completed
+**Total:** 4/16 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -59,8 +59,12 @@ Implementation preflight complete. Phase 1 active; three code tasks committed an
 
 ### Task p01-t04: Require proportional changed-boundary probes in reviews
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** dc536f30556ad32559d86996a96f8e13255d9121
+
+**Outcome:** Reviewer/local/remote contracts now require proportional changed-boundary probes, categorical evidence/provenance/limitations and blocking findings for unsupported consequential guarantees, preserving existing schemas and containment.
+
+**Verification:** Missing-contract baseline failed, full 257 skill tests passed with four categorical guidance controls and stop-clause deletion guard. Skills validation, lint (10 executed, zero cache plus root pass), format and scoped diff checks passed. Evidence is executable-guidance validation, not live reviewer/model efficacy. Root inspected exact four-file commit, source/evidence agreement and clean worktree. Evidence: `analysis/p01/t04-contract-evidence.md` and t04 logs. No conditional template change because the embedded role section owns it. No recovery.
 
 ## Phase 2: Preserve PJM settings and structured state
 
