@@ -193,7 +193,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Format:** Scoped formatter on named source/tests and the five docs pages.
 
-**Commit:** `fix(pjm): preserve existing settings on adoption reruns`
+**Commit:** `fix(pjm): preserve existing settings on adoption reruns (p02-t01)`
 
 ### Task p02-t02: Preserve documented structured blockers end to end
 
@@ -207,7 +207,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Format:** Scoped formatter on actual touched files listed above.
 
-**Commit:** `fix(state): preserve structured project blockers`
+**Commit:** `fix(state): preserve structured project blockers (p02-t02)`
 
 ## Phase 3: Shared hook-safe exact-path commits
 

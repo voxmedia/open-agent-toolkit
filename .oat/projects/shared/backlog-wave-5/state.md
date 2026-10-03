@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-03T23:35:26.693712Z'
+oat_project_state_updated: '2026-10-03T23:38:57.076685Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 1 complete; Phase 2 preservation work is next (p02-t01)
+Implement - Phase 2 preservation work active; current task p02-t01
 
 ## Artifacts
 

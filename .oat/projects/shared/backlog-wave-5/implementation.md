@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Implementation preflight complete. Phase 1 active; four original tasks and three review corrections committed; root and independent phase reviews passed, with five Low findings durably deferred to final. Phase 2 is next.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 preservation work is active.
 
 ## Progress Overview
 
@@ -95,7 +95,7 @@ Implementation preflight complete. Phase 1 active; four original tasks and three
 
 ## Phase 2: Preserve PJM settings and structured state
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p02-t01: Preserve unowned PJM settings through real command reruns
 
@@ -675,3 +675,7 @@ Source for every item: p01 gate artifact `reviews/archived/p01-review-2026-10-03
 - **p01-gate-L5 / Low / Task Scope: Minor:** Chained-link and tests-only vendor fixtures, deletion limitation. Agreed that independently executed chained/tests-only/alias probes work; add proportional keeper coverage in the existing real-Git family before final acceptance if useful. Deferred fixture closure to final. Deleted-document handling matches existing skill-directory ACMR filtering and the ticket's parity requirement; record that limitation without changing deletion policy in this wave. Any broader deletion-policy change is separate follow-up scope, not an added product requirement here.
 
 All five are non-blocking for this phase and must be resurfaced. No Medium deferrals exist. The independent reviewer executed 257 validator tests, 14 heading fixtures, actual docs validation and skill validation; actual bump gate rejected expected unbumped consumers pending p06. Its chained/tests/alias and diverse heading probes support the changed boundaries. Guidance remains contract evidence, not live model-efficacy proof.
+
+### Phase p02 preflight
+
+Fresh origin/main remains 6ec5313b91e2595893eb89bb6372c028c0284ab4, with no main commits in planned CLI PJM/control-plane/status/progress/docs paths since the branch base. Native exact implementer resolves to GPT-6.1 Sol/high under managed high project-state policy. Phase owns two preservation tasks, consequential because adopted authority settings and workflow blocker data must not silently disappear. Recovery default 10, usage 0, pending null; no phase override. Root owns tracking/reviews/publication; per-task commit handshakes remain mandatory. Task subjects from p02 onward include canonical (pNN-tNN) markers so configured phase review can resolve its intended range rather than falling back to all post-plan commits; contracts and task order unchanged.
