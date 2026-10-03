@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: p07-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 8     | 8/8       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 5     | 5/5       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | complete    | 6     | 6/6       |
-| Phase 6 | complete    | 4     | 4/4       |
-| Phase 7 | in_progress | 11    | 10/11     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 8     | 8/8       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 5     | 5/5       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | complete | 6     | 6/6       |
+| Phase 6 | complete | 4     | 4/4       |
+| Phase 7 | complete | 11    | 11/11     |
 
-**Total:** 45/46 tasks completed
+**Total:** 46/46 tasks completed
 
 ---
 
@@ -1017,3 +1017,11 @@ Disjoint review-fix helpers ran concurrently under root coordination; the bounde
 **Status:** completed
 **Commit:** 8d6ba0aa6
 **Verification:** Shipped shell instructions executed against a fake external `oat`: original skill fails 9 regression controls; fixed skill passes 43 tests including failed/unknown scope, failed pull, absent checkout recovery, successful publication before a delegated pull, and failed push refusal. Formatting and focused lint exit 0. No live synced project or vault writes; live transport acceptance is outside this fix.
+
+### Task p07-t09: Serialize destructive gate claim changes
+
+**Status:** completed
+**Commit:** 84020fb4c
+**Verification:** Three-contender race and unreadable-live-claim regressions both execute a forbidden contender on the old code and fail; fixed gate suite passes 278/278 tests. Valid nested/simultaneous/dead/unparseable controls and occupied-guard refusal pass. CLI lint/type-check, scoped format and diff checks exit 0. Proof: `.oat/repo/analysis/backlog-wave-4/review-fixes/claim-proof.md`.
+
+The workflow documentation removes the concurrent-recovery caveat and describes fail-closed unchecked outcomes plus manual interrupted-guard recovery. `BL-261002-serialize-stale-gate-claim` is closed and archived through the CLI. All three worker handles returned successfully; root reviewed their source changes and recorded baseline proof. Full gates and independent final review are pending.

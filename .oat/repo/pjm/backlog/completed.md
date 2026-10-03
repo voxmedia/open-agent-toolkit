@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-10-03 — BL-261002-serialize-stale-gate-claim — Serialize stale gate-claim recovery — PR #351 serializes stale recovery and release under a per-claim mutation guard, refuses claim I/O failures, and proves exclusion with a three-contender regression.
 - 2026-10-02 — BL-260908-retire-the-top-level-skill — Retire the top-level skill version alias on the recorded schedule — Superseded by BL-260908-remove-the-top-level-skill, which owns removing the top-level skill.
 - 2026-10-02 — BL-261001-route-quick-mode-plan — Route quick-mode plan in-progress consistently across the router, dashboard, and skill tables — Backlog wave 4 p06-t03/t04: the state dashboard now sends a quick-mode plan in progress to the same place as the router and the next and progress tables, decided by quick plan readiness, with dashboard tests pinning the route.
 - 2026-10-02 — BL-261001-resolve-the-summary-template — Resolve the summary template in oat-wrap-up through oat template resolve — Backlog wave 4 p06-t02: oat-wrap-up finds its summary template through oat template resolve instead of a fixed path.

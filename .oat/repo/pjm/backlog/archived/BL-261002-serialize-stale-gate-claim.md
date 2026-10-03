@@ -1,7 +1,7 @@
 ---
 id: BL-261002-serialize-stale-gate-claim
 title: Serialize stale gate-claim recovery
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-10-02T23:29:11.674Z
-updated: 2026-10-02T23:29:11.674Z
+updated: '2026-10-03T15:22:51Z'
 associated_issues: []
 external_plans: []
 ---
