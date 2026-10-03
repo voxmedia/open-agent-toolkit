@@ -4,6 +4,35 @@
 
 ## Curated Overview
 
+- 2026-10-02: the `backlog-wave-4` project (lockstep 0.3.16) closed eleven
+  items: `BL-261001-fail-closed-when-bundle-assets` and
+  `BL-260906-report-errno-for-asset-root` (build assets);
+  `BL-260718-harden-full-surface-gate` (30-minute artifact gate default and
+  duplicate-gate rejection); `BL-261001-run-a-complexity-review-when`,
+  `BL-260927-persist-quick-start-prompt`, and
+  `BL-260713-root-agent-judgment-logging` (review-loop skills);
+  `BL-260720-add-oat-project-complete-auto` and
+  `BL-260908-tighten-the-pr-final-ledger` (completion); and
+  `BL-261001-downgrade-claims-that-thorough`,
+  `BL-261001-resolve-the-summary-template`, and
+  `BL-261001-route-quick-mode-plan` (small fixes).
+  `BL-260908-retire-the-top-level-skill` closed as won't-do, superseded by
+  `BL-260908-remove-the-top-level-skill`.
+  `BL-260909-restamp-a-stale-copy-strategy` shipped everything except the
+  compatibility-bridge retirement and stays open for it;
+  `BL-260711-add-activity-aware-gate` left the wave at the plan-gate
+  escalation and now records the Codex activity-attribution precondition;
+  `BL-260818-distinguish-operator-directed` was rewritten to exclude the
+  shipped complexity slice. Follow-ups filed:
+  `BL-261002-gitignore-project-review`,
+  `BL-261002-port-the-complexity-review`,
+  `BL-261002-route-validated-archive`,
+  `BL-261002-serialize-stale-gate-claim`,
+  `BL-261002-teach-check-skill-bumps`, and
+  `BL-261002-wire-the-complexity-review`. Amending `DR-260720` (autonomous
+  closeout) to the shipped `workflow.autonomousComplete` design is an open
+  operator question.
+
 - 2026-10-01: **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a
   front door for existing docs and support the docs-directory convention**
   remains open. Its [Markdown slice](../../reference/project-summaries/20261002-markdown-docs-bootstrap.md)
@@ -323,9 +352,9 @@
   non-human workflows silent.
 - Project log (feedback-driven): v1 has shipped the `oat project log` append,
   check, synthesize, and roll-up helpers plus core structural appends.
-  `BL-260713-root-agent-judgment-logging` remains the planned fast-follow:
-  root-agent role guidance takes over judgment-entry logging while subagents
-  report observations to the root.
+  `BL-260713-root-agent-judgment-logging` shipped in backlog wave 4
+  (0.3.16): root-agent role guidance owns judgment-entry logging while
+  subagents report observations to the root.
 - Build reliability: the 2026-07-12 concurrent-bundling race class (five incidents, one silent bundle corruption) is closed — `BL-260712-serialize-cli-asset-bundling` shipped atomic staged-rename publishing in explainer-improvements-v2. CLI `0.2.35` subsequently closed the residual reader-side rename window through `BL-260817-let-resolveassetsroot-honor`.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
 - Review lifecycle bookkeeping now preserves distinct append-ordered events,

@@ -37,6 +37,29 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.3.16` (`backlog-wave-4`, branch `wave/2026-10-02-backlog-wave-4`)
+  closes eleven backlog items. `bundle-assets.sh` fails closed on an empty,
+  absolute, escaping, or repository-root inventory lookup, and an
+  `OAT_ASSETS_DIR` override publishes only to an absent, empty, or existing
+  bundle directory (`DR-261003-assets-override-destination`); the Wave 3
+  disk fill's root cause (a symlinked checkout made `bundle-inputs.mjs` print
+  nothing) is fixed. Artifact gate reviews default to 30 minutes, and a live
+  duplicate gate for the same project, review type, and scope is rejected
+  (`recursion` in the JSON envelope; `DR-261003-full-surface-gate-budget`).
+  `oat sync` restamps stale copy-strategy hashes and reports a marker-less
+  skill or agent directory as an `error` entry. Every review or gate
+  budget-exhaustion point in implement, quick-start, and review-receive runs a
+  read-only complexity review and offers **simplify**; the operator always
+  chooses (`DR-261003-complexity-review-at-budget`). Quick-start persists
+  `oat_quick_start_gate`, which next and progress report without routing on
+  it (`DR-261003-report-quick-start-gate-record`), and root agents own
+  judgment entries in the project log. The opt-in
+  `workflow.autonomousComplete` key (default off) gates the new
+  `oat-project-complete-auto` companion skill, which wave closeout now points
+  at. The dashboard routes quick plans and parses HiLL arrays as the router
+  does. The updated skills need `oat` 0.3.16 or later. Amending `DR-260720`
+  to the shipped autonomous-completion design is an open operator question.
+
 - Documentation overhaul (`docs-improvement-overhaul`, branch `amphipod`;
   five public packages prepared at `0.3.14`, not published) is implemented
   locally with reader-first navigation, canonical guides and a generated
@@ -46,7 +69,7 @@ copying their content here. -->
   implementation. Source-route validation now resolves reference-style
   Markdown links and images. The configured implementation exit gate passed;
   summary is complete. The user approved final implementation closeout and
-  the project lifecycle is complete; PR #342 remains open, not merged.
+  the project lifecycle is complete; PR #342 has since merged to `main`.
   Coverage gaps and product follow-ups remain unresolved. Lifecycle completion
   does not publish packages or authorize release. See the durable
   [project record](../reference/project-summaries/20261002-docs-improvement-overhaul.md).
@@ -761,9 +784,8 @@ interactive smoke matrix when operator capacity allows. Active backlog work
 also covers adaptive idle-kill and early-artifact semantics beyond the shipped
 gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
-eligibility by 2026-08-08, optional root-owned exact dispatch, root-agent
-judgment logging for project observations, and avoiding redundant
-bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
+eligibility by 2026-08-08, optional root-owned exact dispatch, and avoiding
+redundant bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
 reusable pinned recon-role contract for review and non-review orchestration if
 observed value justifies the additional provider role matrix.
 

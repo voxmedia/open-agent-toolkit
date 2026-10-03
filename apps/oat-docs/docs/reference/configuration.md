@@ -272,7 +272,13 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   required bundle directory is empty in the packed tarball.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
-  honors the variable as its destination).
+  honors the variable as its destination). Because publishing replaces the
+  destination, the script accepts an override destination only when it is
+  absent, an empty directory, or a previous bundle (a directory holding
+  `bundle-metadata.json`); it refuses anything else, including a directory it
+  cannot list. The default `packages/cli/assets` destination is exempt. The
+  script also stops before copying when an inventory lookup comes back empty,
+  absolute, climbing with `..`, or naming the repository root.
 
 This is primarily a test-isolation and packaging seam; day-to-day use of the CLI
 does not need it.
