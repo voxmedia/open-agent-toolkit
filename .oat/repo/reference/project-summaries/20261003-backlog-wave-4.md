@@ -167,38 +167,38 @@ Closed: `BL-261001-fail-closed-when-bundle-assets`,
 - Keep the explicit "exactly one `**Reconnaissance:**` line in the artifact
   body (required)" sentence in every reviewer brief — one artifact omitted it
   and cost a round trip
-  ([2026-10-02T20:20Z — gotcha — Reviewer artifact missing the reconnaissance signal](oat-execution-learnings.md)).
+  ([2026-10-02T20:20Z — gotcha — Reviewer artifact missing the reconnaissance signal](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 - Entry-point guards comparing a module URL with `argv[1]` should compare real
   paths — the mismatch under a symlinked checkout caused the Wave 3 disk fill
-  ([2026-10-02T20:20Z — candidate-skill-content — Root cause of the Wave 3 disk fill](oat-execution-learnings.md)).
+  ([2026-10-02T20:20Z — candidate-skill-content — Root cause of the Wave 3 disk fill](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 
 ### Cloud-environment improvements
 
 - Update the global `oat` CLI and user-scope skills between waves — gates and
   lifecycle skills ran 0.3.10 behavior, not the repository's (not authorized
   this wave)
-  ([2026-10-02T12:33Z — environment-limited — Installed CLI and user skills lag main](oat-execution-learnings.md)).
+  ([2026-10-02T12:33Z — environment-limited — Installed CLI and user skills lag main](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 
 ### Code follow-ups
 
 - Gitignore project review artifacts instead of committing them
   (`BL-261002-gitignore-project-review`, high) — operator-requested, sized as a
   separate PR across four skills, `oat init`, and a migration
-  ([2026-10-02T13:40Z — decision — Operator request mid-run kept out of the wave](oat-execution-learnings.md)).
+  ([2026-10-02T13:40Z — decision — Operator request mid-run kept out of the wave](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 
 ### Workflow issues
 
 - When a guard grows one entry per review round, stop and ask for the general
   rule before the next fix — the per-path denylist cost two extra review
   cycles; the complexity review at the cap is the backstop
-  ([2026-10-02T20:20Z — gotcha — A per-path denylist did not converge under review](oat-execution-learnings.md)).
+  ([2026-10-02T20:20Z — gotcha — A per-path denylist did not converge under review](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 - Re-fetch and compare `origin/main` versions at plan-gate time, and rebuild
   the branch CLI right after any merge from `main` — a stale build refused PJM
   writes with a bundled-assets version mismatch
-  ([2026-10-02T13:40Z — gotcha — Main moved during planning; the branch CLI build went stale](oat-execution-learnings.md)).
+  ([2026-10-02T13:40Z — gotcha — Main moved during planning; the branch CLI build went stale](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 - Rename the `codex-6-sol-xhigh` gate target id when user gate config is next
   edited, so receipts name the model they ran (`gpt-6.1-sol`)
-  ([2026-10-02T12:33Z — decision — Reviewer target name is stale but resolves Sol 6.1](oat-execution-learnings.md)).
+  ([2026-10-02T12:33Z — decision — Reviewer target name is stale but resolves Sol 6.1](https://github.com/voxmedia/open-agent-toolkit/blob/96d7131ffc3f22144c2c86fd68a6d5b150919471/.oat/projects/shared/backlog-wave-4/oat-execution-learnings.md)).
 
 ## Follow-up Items
 
@@ -328,3 +328,7 @@ Retirement sweep: no absorbed projects recorded.
 ## PR #351 feedback follow-up
 
 Three additional fix tasks (46 total) address stale gate recovery/release races and fail-closed I/O errors, loaded-sibling dispatch discovery, and synced autonomous-completion arrival/publication guards. `BL-261002-serialize-stale-gate-claim` is now closed. Mandatory checks and lint/format pass; CLI tests: 8,208 passing with no cache replay. Independent core review and bounded integration follow-up are complete; the final follow-up gate has zero findings. Regression controls reject the pre-fix states. No finding was deferred or waived.
+
+## Explainer Outcome
+
+Final [project recap](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-02-backlog-wave-4/.oat/repo/reference/project-recaps/20261003-backlog-wave-4/site/index.html) recorded as `built-needs-review`: all seven content checks and full package validation pass; browser inspection at 320, 768, and 1440 pixels remains outstanding because T3 preview and the browser driver were unavailable.

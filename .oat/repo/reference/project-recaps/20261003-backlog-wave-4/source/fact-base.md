@@ -3,9 +3,9 @@
 - oat_status: complete
 - oat_ready_for: null
 - oat_blockers: []
-- oat_last_updated: 2026-10-02
+- oat_last_updated: 2026-10-03
 - oat_generated: true
-- oat_summary_last_task: p07-t08
+- oat_summary_last_task: p07-t11
 - oat_summary_revision_count: 0
 - oat_summary_includes_revisions: []
 - Summary: backlog-wave-4
@@ -17,7 +17,7 @@
 - exhausted review or gate budget trigger a complexity review presented with the
 - reasons the loop stopped. Of thirteen approved items, one left at the
 - plan-gate escalation, eleven closed, and one shipped partially.
-- 43 tasks across seven sequential phases (24 planned, the rest review fixes).
+- 46 tasks across seven sequential phases (24 planned, the rest review fixes).
 - The lockstep public packages end at 0.3.16 because `main` advanced three times
 - during the wave (#335, #342, #350).
 - - **Build assets (p01):** `bundle-assets.sh` fails closed on an empty,
@@ -54,6 +54,10 @@
 - thorough-profile review leaves it undisposed; `oat-wrap-up` resolves its
 - summary template through `oat template resolve`; the dashboard routes quick
 - plans exactly as the router does and reads parsed HiLL arrays.
+- - **Feedback fixes (p07-t09–p07-t11):** serialize gate ownership mutation,
+- refuse claim I/O errors, resolve dispatch from loaded siblings, and preserve
+- synced completion scope/pull/publication guards. Independent core and
+- integration reviews pass with no new deferrals or waivers.
 - - **Release fan-in (p07):** lockstep bump, backlog closeout (11 closed, 1
 - won't-do, 3 rewritten, follow-ups filed), docs ported into the #342
 - reader-first docs site, full Definition of Done exit 0.
@@ -81,7 +85,8 @@
 - - **Full-surface gate budget and duplicate rejection:** artifact gate reviews
 - default to 1,800,000 ms, and a live duplicate gate for the same project,
 - review type, and scope is rejected (not reused) through an atomic
-- hard-linked claim file, released in `finally`.
+- hard-linked claim file, released in `finally`. Stale recovery and release
+- share a mutation guard; I/O failures refuse reviewer launch.
 - - **Report quick-start gate record without routing:** next and progress
 - validate and report `oat_quick_start_gate`, but quick plan readiness stays
 - the single routing rule for quick plans, defined once in quick-start and
@@ -100,8 +105,12 @@
 - review-receive cycle count skips `complexity-*`; progress also reports the
 - implement exit-gate record.
 - - **New output values:** the gate envelope gained `recursion: unchecked` for
-- an unreadable marker directory, and `oat sync --json` gained an `error`
-- operation for marker-less directories.
+- claim I/O failures; these now refuse reviewer launch rather than bypassing
+- exclusion. `oat sync --json` gained an `error` operation for marker-less directories.
+- - Latest GitHub CI at `d3781e47e` timed out the existing all-scope review-ledger
+- contract at 30 seconds (8,207 tests passed, one timeout). The exact case passed
+- independently in 3.3 seconds; no assertion defect was reproduced. Local full
+- gates passed and Bugbot passed. Completion publication will rerun CI.
 - - **p01 did not converge under review.** Three root rounds and two Codex gate
 - attempts each found the next unlisted path an `OAT_ASSETS_DIR` override could
 - overwrite. The complexity review at the cap classified the findings as one
@@ -151,15 +160,12 @@
 - - Rename the `codex-6-sol-xhigh` gate target id when user gate config is next
 - edited, so receipts name the model they ran (`gpt-6.1-sol`)
 - ([2026-10-02T12:33Z — decision — Reviewer target name is stale but resolves Sol 6.1](oat-execution-learnings.md)).
-- - **Operator question:** amend `DR-260720` (autonomous closeout) to the
-- shipped design — a standing `workflow.autonomousComplete` opt-in, per-wave
-- completion with a recorded pre-merge exception, and batch mode at program
-- close. Held for the operator; repository policy records decisions only on
-- request.
+- - `DR-260720` was amended following operator approval through
+- `DR-261003-autonomous-completion-uses`; this decision is complete.
 - - `BL-261002-route-validated-archive` — route validated archive receipts from
 - `oat-project-complete-auto` to the interactive resume tail (p05 gate M1).
-- - `BL-261002-serialize-stale-gate-claim` — serialize stale gate-claim recovery
-- with acquisition (p02 gate M1).
+- - `BL-261002-serialize-stale-gate-claim` is closed: stale recovery and release
+- serialize through a shared mutation guard, with three-contender proof.
 - - `BL-261002-wire-the-complexity-review` — the sibling gate-capable skills
 - (plan, import-plan, design, discover, lite).
 - - `BL-261002-port-the-complexity-review` — port the `complexity-review` skill
@@ -214,10 +220,20 @@
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md run=c945efcf-73f2-4528-b3b3-f8f7d365c776
 - 2026-10-03 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
-- oat_status: in_progress
+- 2026-10-03 · structural · oat-project-review-provide · final
+- Completed two awaited read-only reconnaissance lanes and root reconciliation for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md (gate run 05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c).
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md run=05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md run=f555cc8b-558a-40da-8117-0d7debc0f261
+- 2026-10-03 · structural · oat-project-complete · retirement-sweep
+- Retirement sweep: no absorbed projects recorded.
+- PR #351 feedback follow-up
+- Three additional fix tasks (46 total) address stale gate recovery/release races and fail-closed I/O errors, loaded-sibling dispatch discovery, and synced autonomous-completion arrival/publication guards. `BL-261002-serialize-stale-gate-claim` is now closed. Mandatory checks and lint/format pass; CLI tests: 8,208 passing with no cache replay. Independent core review and bounded integration follow-up are complete; the final follow-up gate has zero findings. Regression controls reject the pre-fix states. No finding was deferred or waived.
+- oat_status: complete
 - oat_ready_for: null
 - oat_blockers: []
-- oat_last_updated: 2026-10-02
+- oat_last_updated: 2026-10-03
 - oat_current_task_id: null
 - oat_generated: false
 - Implementation: backlog-wave-4
@@ -239,8 +255,8 @@
 - | Phase 4 | complete | 9     | 9/9       |
 - | Phase 5 | complete | 6     | 6/6       |
 - | Phase 6 | complete | 4     | 4/4       |
-- | Phase 7 | complete | 8     | 8/8       |
-- **Total:** 43/43 tasks completed
+- | Phase 7 | complete | 11    | 11/11     |
+- **Total:** 46/46 tasks completed
 - Phase 1: Build assets
 - **Status:** complete
 - Task p01-t01: Fail closed on empty bundle-inputs lookups
@@ -784,6 +800,15 @@
 - - Exit gate attempt 2 (run `7c263e05`, `codex-6-sol-xhigh`): envelope `ok`,
 - receive-eligible, 0 findings (`reviews/archived/final-review-2026-10-03T003215Z.md`).
 - Received with no fix tasks; disposition `allowed/passed`.
+- - Project recap: `oat-explainer-kit` `project-recap`, unattended, outcome
+- `built` (run `explainers/backlog-wave-4-recap/`, manifest
+- `explainers/backlog-wave-4-recap/manifest.json`, commit `b7d096ba5`);
+- terminal-outcome guard `ok`.
+- - Gate `IMPLEMENT-16`: pre-approval steps summary, document, pr complete; the
+- final review row is `passed` (`reviews/archived/final-review-2026-10-03T002316Z.md`
+- plus earlier rounds) and the implementation exit gate is `allowed/passed`
+- (attempt 2, run `7c263e05`). Approval recorded as `approved` with
+- `approval_source: oat-autonomous`; no post-approval steps are configured.
 - <!-- orchestration-runs-end -->
 - Plan Gate Feedback (quick-start, QS-12)
 - The configured quick-start gate (`onFailure: block`, `maxAttempts: 2`,
@@ -920,6 +945,34 @@
 - - Plan: `plan.md`
 - - Discovery: `discovery.md`
 - - Execution learnings: `oat-execution-learnings.md`
+- Remote Review Received (2026-10-03T15:11:15Z)
+- PR #351: 1 High and 1 Medium converted to p07-t09 and p07-t10; no deferrals or dismissals. Artifact: `reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md`.
+- The remotely resolved synced-I/O finding remains present at the reviewed head, so p07-t11 addresses it alongside the two unresolved findings. Final disposition: 2 High and 1 Medium converted; none deferred or dismissed.
+- Bounded same-provider native workers share this existing checkout and have disjoint file ownership. Root owns Git commits, project state, publication, and final judgment. No worker may commit or push. All routes use Codex `gpt-6.1-sol`, effort `high`, service tier inherited, no alternate route and no automatic retry; provider guidance verified 2026-10-01, policy `high`, live catalogue checked before launch.
+- - `gate_claim_fix` (native handle `/root/gate_claim_fix`): p07-t09, hard-reasoning; gate source/tests only; accepted, pending. Budget 20 minutes. Regression must demonstrate three-contender exclusion, plus negative error controls and valid stale recovery.
+- - `dispatch_tier_fix` (native handle `/root/dispatch_tier_fix`): p07-t10, default-implementation; complexity-review source/vendored docs and contract test only; accepted, pending. Budget 15 minutes. Ordered-tier contract and bundled parity required.
+- - `completion_sync_fix` (native handle `/root/completion_sync_fix`): p07-t11, consequential; completion-auto skill and contract test only; accepted, pending. Budget 20 minutes. Scope/pull/push refusal controls required, independent root review follows.
+- Acquisition failures currently bypass duplicate protection via unchecked-and-launch. p07-t09 intentionally changes them to refusal to preserve mutual exclusion; docs and PR callout will reflect the stricter behavior.
+- **Status:** completed
+- **Commit:** 2f7664c83
+- **Verification:** Pre-fix loaded-sibling regression exits 1; fixed contract suites 49 tests exit 0; generated bundle parity, formatting, lint and skill validation exit 0. Evidence: `.oat/repo/analysis/backlog-wave-4/review-fixes/dispatch-tier/evidence.md`.
+- Disjoint review-fix helpers ran concurrently under root coordination; the bounded dispatch-tier task completed before p07-t09. Root retained per-task commits and verification ownership.
+- **Status:** completed
+- **Commit:** 8d6ba0aa6
+- **Verification:** Shipped shell instructions executed against a fake external `oat`: original skill fails 9 regression controls; fixed skill passes 43 tests including failed/unknown scope, failed pull, absent checkout recovery, successful publication before a delegated pull, and failed push refusal. Formatting and focused lint exit 0. No live synced project or vault writes; live transport acceptance is outside this fix.
+- **Status:** completed
+- **Commit:** 84020fb4c
+- **Verification:** Three-contender race and unreadable-live-claim regressions both execute a forbidden contender on the old code and fail; fixed gate suite passes 278/278 tests. Valid nested/simultaneous/dead/unparseable controls and occupied-guard refusal pass. CLI lint/type-check, scoped format and diff checks exit 0. Proof: `.oat/repo/analysis/backlog-wave-4/review-fixes/claim-proof.md`.
+- The workflow documentation removes the concurrent-recovery caveat and describes fail-closed unchecked outcomes plus manual interrupted-guard recovery. `BL-261002-serialize-stale-gate-claim` is closed and archived through the CLI. All three worker handles returned successfully; root reviewed their source changes and recorded baseline proof. Full gates and independent final review are pending.
+- Full `pnpm check` found that the new completion exception push needs registration in `synced-bookkeeping-sites.json`. Root (Codex GPT-6.1 Sol high) added the guarded writer site as a bounded p07-t11 integration correction; skill validation passes for all 66 OAT skills. The first full-check failure and logs are retained under `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/`; the complete gate sequence restarts after this fix.
+- The forced full test run found one historical documentation assertion requiring the now-retired concurrent-recovery caveat. Root updated that public operator-guidance assertion to require serialized recovery, verified manual cleanup, and fail-closed acquisition instead; no behavior coverage was deleted. Actual exclusion remains covered by the gate command regressions. The skills validator suite passes 255/255 tests. Full checks restart after this test-only correction.
+- Gate `05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c`, Codex GPT-6.1 Sol xhigh, reviewed immutable head `6ac0f47d081154dec8b3a251d9bdbf7e5188869f` and returned blocked (2 High). Root read the complete artifact. H1 is already fixed by `84cde0bdd` (synced writer inventory), H2 by `47e5a56ec` (documentation contract); independent reviewer separately confirmed both correction controls pass. Neither finding is deferred, waived or duplicated into a new task. The earlier artifact is now `reviews/archived/final-review-2026-10-03T154305Z.md` with status fixes_completed. The final reviewer independently reproduced pre-fix failures and passed 334 focused tests. No additional core behavior finding was reported.
+- Full Definition of Done plus lint/format passes at `513012d520cdac0915445b8d044b6da8669f5805`, uncached with TURBO_FORCE=true. One configured-gate integration test timed out at 15 seconds on the first run, passed in isolation in 2.1 seconds, and then passed in the complete rerun without a timeout change. Logs and explicit exits: `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/results.json`.
+- The earlier gate was launched while checks ran and reviewed the starting commit rather than the subsequently corrected integration head. The follow-up final gate is limited to `6ac0f47d..513012d520cdac0915445b8d044b6da8669f5805` and H1/H2, composing with the independently reviewed three-fix range. Root owns bookkeeping and publication. New exit-gate generation below is based on the corrected code fingerprint; prior receipts remain in the review ledger.
+- Follow-up gate accepted: `f555cc8b-558a-40da-8117-0d7debc0f261`, target `codex-6-sol-xhigh`, Codex GPT-6.1 Sol xhigh, branch-built CLI, bounded H1/H2 correction range. Launch is persisted in state; no replacement route.
+- Feedback fixes complete (2026-10-03T16:00:53Z)
+- All three remote findings are fixed in p07-t09/p07-t10/p07-t11, with no deferrals or waivers. Full required checks plus lint/format pass, including 8,208 CLI tests with zero Turbo cache hits. The baseline negative controls independently fail and valid controls remain accepted. First gate's H1/H2 are fixed by existing commits; follow-up gate `f555cc8b-558a-40da-8117-0d7debc0f261` at `513012d520cdac0915445b8d044b6da8669f5805` returned `ok/review_completed_gate_passed`, 0 Critical/High/Medium/Low. Root read the complete artifact and archived it to `reviews/archived/final-review-2026-10-03T155452Z.md`. The independent initial core-fix review plus bounded correction review covers the feedback-fix changes; original wave assurance remains inherited.
+- Task ledger: 46/46 complete. PR #351 remains open. The existing post-implementation summary/docs/PR sequence remains complete; this follow-up updates summary and PR description. No live transport acceptance is claimed. Interrupted mutation guards require verified manual recovery as documented. These are recorded limits, not deferred findings.
 - oat_generated: false
 - purpose: project-observations
 - oat_last_updated: 2026-10-02
@@ -986,7 +1039,15 @@
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T000713Z.md run=c945efcf-73f2-4528-b3b3-f8f7d365c776
 - 2026-10-03 · structural · oat gate review · final
 - target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
-- Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+- 2026-10-03 · structural · oat-project-review-provide · final
+- Completed two awaited read-only reconnaissance lanes and root reconciliation for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md (gate run 05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c).
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T154305Z.md run=05d91a99-0ee2-4c7e-bc7e-21d7d5c1013c
+- 2026-10-03 · structural · oat gate review · final
+- target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md run=f555cc8b-558a-40da-8117-0d7debc0f261
+- 2026-10-03 · structural · oat-project-complete · retirement-sweep
+- Retirement sweep: no absorbed projects recorded.
+- Seven-phase wave completed with 46 tasks and three PR feedback fixes. Independent review plus negative controls established exclusion and synced completion guards. Main integration required reconciled docs and lockstep versions. Full local gates passed; latest CI timeout was reproduced as a passing isolated 3.3-second test, with no assertion defect. Review-loop complexity escalation led to operator-approved simplification; further expansion remains in separately scoped backlog items.
 - oat_status: complete
 - oat_ready_for: oat-project-implement
 - oat_blockers: []
@@ -2247,36 +2308,54 @@
 - to the shipped design (standing `workflow.autonomousComplete` opt-in,
 - per-wave completion with a recorded pre-merge exception, batch mode at
 - program close)? Repository policy records decisions only on operator request.
-- | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
-- | p02    | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
-- | p03    | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
-- | p04    | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
-- | p05    | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
-- | p06    | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
-- | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
-- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
-- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
-- | final  | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
-- | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
-- | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
-- | plan   | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
-- | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
-- | plan   | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
-- | p01    | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
-- | p02    | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
-- | p03    | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
-- | p04    | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
-- | p05    | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
-- | p06    | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
-- | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
-- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
-- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
-- | final  | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+- **Files:** packages/cli/src/commands/gate/index.ts and index.test.ts
+- **Step 1: Analyze** — Reproduce the remote finding and inspect existing coverage.
+- **Step 2: Implement** — Apply a bounded fix preserving unrelated behavior.
+- **Step 3: Verify** — Deterministic three-contender real-filesystem regression fails before fix, passes after; valid acquisition and stale recovery remain accepted. Run the full Definition of Done in repository order.
+- **Step 4: Commit** — `fix(p07-t09): serialize stale gate recovery with acquisition`
+- **Files:** .agents/docs/complexity-review-fallback.md, its vendored consumers, and complexity-review-contracts.test.ts
+- **Step 1: Analyze** — Reproduce the remote finding and inspect existing coverage.
+- **Step 2: Implement** — Apply a bounded fix preserving unrelated behavior.
+- **Step 3: Verify** — Host-loaded sibling tier precedes user and repository tiers; regression fails before and passes after; vendored parity holds. Run the full Definition of Done in repository order.
+- **Step 4: Commit** — `fix(p07-t10): resolve complexity-review dispatch from loaded sibling skills`
+- **Files:** `.agents/skills/oat-project-complete-auto/SKILL.md` and `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`.
+- **Step 1: Analyze** — Verify the resolved remote finding against current source.
+- **Step 2: Implement** — Fail closed on unknown scope; pull synced state before preflight; publish any completion exception before delegated completion.
+- **Step 3: Verify** — Execute the shipped shell instructions with a fake external CLI: failed scope, pull, and push must stop; valid shared/local/synced controls pass. Run the repository Definition of Done.
+- **Step 4: Commit** — `fix(p07-t11): preserve synced autonomous completion guards`.
+- | Scope         | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T172532Z.md           | 0b6b623199310aeb93ed7c4a5c9f6e8842a3f20a | auto       | -                 |
+- | p02           | code     | fixes_completed | 2026-10-02 | reviews/archived/p02-review-2026-10-02T191106Z.md           | d7f496827a4c3f624e14e0ae19b00f25df37f5d4 | auto       | -                 |
+- | p03           | code     | fixes_completed | 2026-10-02 | reviews/archived/p03-review-2026-10-02T195441Z.md           | 2f98690d8461effb013ee934efda7c8aab9f56eb | auto       | -                 |
+- | p04           | code     | fixes_completed | 2026-10-02 | reviews/archived/p04-review-2026-10-02T204339Z.md           | ca1e002ac341e2553bc716b9338ea65daa251a79 | auto       | -                 |
+- | p05           | code     | fixes_completed | 2026-10-02 | reviews/archived/p05-review-2026-10-02T220250Z.md           | 31b6ce71ddea67274a508334395454e00cb2935a | auto       | -                 |
+- | p06           | code     | fixes_completed | 2026-10-02 | reviews/archived/p06-review-2026-10-02T223808Z.md           | 64f04c1b42b5b202acdca4a4a8019f92a845104a | auto       | -                 |
+- | p07           | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230322Z.md           | 7d2b28957080760af8843b477654f759734bfc07 | auto       | -                 |
+- | final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T232314Z.md         | 44efc62242f5189fe466ec18967abeb64c8b5d94 | auto       | -                 |
+- | final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T233616Z.md         | 5bdf154ccd24c8a938399bbdc92d0494696c75d1 | auto       | -                 |
+- | final         | code     | passed          | 2026-10-02 | reviews/archived/final-review-2026-10-02T235758Z.md         | 596e1dba070472918ed701de3437024fc17b563f | auto       | -                 |
+- | spec          | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | design        | artifact | pending         | -          | -                                                           | -                                        | -          | -                 |
+- | plan          | artifact | passed          | 2026-10-02 | -                                                           | -                                        | auto       | -                 |
+- | plan          | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T144731Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | plan          | artifact | fixes_completed | 2026-10-02 | reviews/archived/artifact-plan-review-2026-10-02T145801Z.md | -                                        | gate       | codex-6-sol-xhigh |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T174337Z.md           | eafd73d19afde547adf41b164943620acf2de60b | gate       | codex-6-sol-xhigh |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T175407Z.md           | 66212d9708672d44f111d4d42c86df38414cec62 | auto       | -                 |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T180245Z.md           | e1194eea7e7768495a88d6207290b3860379c346 | gate       | codex-6-sol-xhigh |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T181434Z.md           | 360099ac8e940404c9476e45f122f45f6cc01bb8 | auto       | -                 |
+- | p01           | code     | fixes_completed | 2026-10-02 | reviews/archived/p01-review-2026-10-02T184328Z.md           | 9d0d661573e4520d90a95bb48fd6b20f3bbe09ce | auto       | -                 |
+- | p02           | code     | passed          | 2026-10-02 | reviews/archived/p02-review-2026-10-02T192954Z.md           | 6a67d877deb4a37ea8d74151d2256cdde278f6ae | gate       | codex-6-sol-xhigh |
+- | p03           | code     | passed          | 2026-10-02 | reviews/archived/p03-review-2026-10-02T200622Z.md           | 2fae69e039f3516a326ad77bd6a325cd5d8fafb4 | gate       | codex-6-sol-xhigh |
+- | p04           | code     | passed          | 2026-10-02 | reviews/archived/p04-review-2026-10-02T213839Z.md           | f5e4289f5cb2eeb1cff025d9d55bed18ac48cfcc | gate       | codex-6-sol-xhigh |
+- | p05           | code     | passed          | 2026-10-02 | reviews/archived/p05-review-2026-10-02T221406Z.md           | fad16c3018699bb9e623fea611fe05d97fe97d2e | gate       | codex-6-sol-xhigh |
+- | p06           | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
+- | p07           | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
+- | final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
+- | final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
+- | final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T003215Z.md         | aaa424ca85b18dd42394b9fd6e142a81ed1cb41d | gate       | codex-6-sol-xhigh |
+- | remote-pr-351 | code     | fixes_completed | 2026-10-03 | reviews/archived/remote-pr-351-review-2026-10-03T151115Z.md | -                                        | -          | -                 |
+- | final         | code     | fixes_completed | 2026-10-03 | reviews/archived/final-review-2026-10-03T154305Z.md         | 6ac0f47d081154dec8b3a251d9bdbf7e5188869f | gate       | codex-6-sol-xhigh |
+- | final         | code     | passed          | 2026-10-03 | reviews/archived/final-review-2026-10-03T155452Z.md         | 513012d520cdac0915445b8d044b6da8669f5805 | gate       | codex-6-sol-xhigh |
 - Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 - Quick-start plan gate (`QS-12`, attempt 1 of 2, run `cf4607a4`, `codex-6-sol-xhigh` / `gpt-6.1-sol` xhigh, inline route): `blocked`, receive-eligible, 2 High. Received in this session (artifact review, `REVIEWRECEIVE-01`): H1 (quick-start completion with no configured gate) and H2 (complete-auto PR-merge guard versus wave-execute's completion-before-merge step) resolved in p04-t06, p05-t02, and p05-t03; no rejections. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T144731Z.md`.
 - Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligible, 1 High (p01-t01 guarded only the docs tree; staging must stay outside every recursively copied source). Resolved in p01-t01 and the Acceptance Mapping. `maxAttempts` is exhausted, so the configured `block` policy escalates to the operator (`QS-12` boundary); see `implementation.md`, Quick-start Gate Escalation. Operator disposition at that boundary: simplify, then implement without another gate cycle (complexity report `reviews/archived/complexity-plan-2026-10-02T1520Z.md`); the plan was simplified to 24 tasks. Artifact archived to `reviews/archived/artifact-plan-review-2026-10-02T145801Z.md`.
@@ -2288,8 +2367,8 @@
 - - Phase 4: 9 tasks - Review-loop skills
 - - Phase 5: 6 tasks - Completion
 - - Phase 6: 4 tasks - Small fixes
-- - Phase 7: 8 tasks - Release fan-in
-- **Total: 43 tasks**
+- - Phase 7: 11 tasks - Release fan-in and remote review fixes
+- **Total: 46 tasks**
 - Ready for code review and merge.
 - - Discovery: `discovery.md`
 - - Approved batch (machine-local): `.oat/repo/analysis/backlog-wave-4/approved-batch.md`
