@@ -110,9 +110,12 @@ if [ -n "${OAT_ASSETS_DIR:-}" ] && { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; }
     fail_bundle "refusing to build: the assets destination (${ASSETS}) is not a directory; remove it or choose an empty directory."
   fi
   if [ ! -f "${ASSETS}/bundle-metadata.json" ]; then
-    assets_entries="$(ls -A "${ASSETS}")" ||
+    # Print one fixed byte per entry rather than any filename: a textual
+    # listing captured by command substitution loses trailing newlines, so a
+    # directory whose only entry is named with newlines would read as empty.
+    assets_has_entry="$(find "${ASSETS}" -mindepth 1 -maxdepth 1 -exec printf x \; -quit)" ||
       fail_bundle "refusing to build: the assets destination (${ASSETS}) cannot be listed; remove it or choose an empty directory."
-    if [ -n "${assets_entries}" ]; then
+    if [ -n "${assets_has_entry}" ]; then
       fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."
     fi
   fi

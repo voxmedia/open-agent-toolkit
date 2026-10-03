@@ -128,6 +128,9 @@ async function runGate(
         ...process.env,
         HOME: fixture.home,
         TMPDIR: fixture.tmp,
+        // A gate prefers an inherited absolute marker directory over TMPDIR,
+        // so pin each fixture to its own; case 10 overrides it on purpose.
+        OAT_GATE_RUN_MARKER_DIR: join(fixture.tmp, 'oat-gate-runs'),
         NO_UPDATE_NOTIFIER: '1',
         OAT_GATE_LIVENESS_INTERVAL_MS: '100',
         FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME: 'cursor',
@@ -449,6 +452,33 @@ describe(
           matchedRunId: winner?.payload?.runId,
         },
       });
+    });
+
+    it('case 11: an inherited caller marker directory is left untouched', async () => {
+      // Inside a gate reviewer, the parent gate exports its absolute marker
+      // directory. Ordinary fixtures must claim and mark under their own tmp,
+      // where waitForClaim looks, and never write into the parent's area.
+      const inherited = await mkdtemp(
+        join(tmpdir(), 'oat-gate-hardening-inherited-'),
+      );
+      tempRoots.push(inherited);
+      const previous = process.env.OAT_GATE_RUN_MARKER_DIR;
+      process.env.OAT_GATE_RUN_MARKER_DIR = inherited;
+      try {
+        const fixture = await setupFixture();
+        const first = runGate(fixture, {
+          env: { FAKE_GATE_ARTIFACT: 'correlated', FAKE_GATE_DELAY_MS: '2000' },
+        });
+        await waitForClaim(fixture.tmp);
+        const result = await first;
+
+        // waitForClaim above proved the claim was taken under fixture.tmp.
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(await readdir(inherited)).toEqual([]);
+      } finally {
+        if (previous === undefined) delete process.env.OAT_GATE_RUN_MARKER_DIR;
+        else process.env.OAT_GATE_RUN_MARKER_DIR = previous;
+      }
     });
 
     it('case 10: a nested gate with a different TMPDIR finds the exported claim directory', async () => {

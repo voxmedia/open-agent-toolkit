@@ -1186,6 +1186,41 @@ describe('bundle-assets fail-closed guards', () => {
     BUNDLE_ASSETS_TEST_TIMEOUT_MS,
   );
 
+  // A textual listing captured by command substitution loses trailing
+  // newlines, so a directory whose only entry is named with newlines would
+  // read as empty and be renamed away. Emptiness must not depend on names.
+  it.each([
+    ['a single newline', '\n'],
+    ['two newlines', '\n\n'],
+  ])(
+    'rejects an OAT_ASSETS_DIR whose only entry is named %s, with its contents intact',
+    (_label, name) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const destination = join(tree.scratch, 'newline-entry');
+        mkdirSync(destination);
+        writeFileSync(join(destination, name), 'keep\n');
+        const before = snapshotPath(destination);
+
+        const run = runStubBundle(tree, {
+          assetsDir: destination,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /neither an empty directory nor a previous bundle/,
+        );
+        expect(snapshotPath(destination)).toEqual(before);
+        expect(readFileSync(join(destination, name), 'utf8')).toBe('keep\n');
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
   // A directory that cannot be listed is not known to be empty, so it is
   // refused rather than renamed away. Root can list any directory, so the
   // case only discriminates for an unprivileged user.
