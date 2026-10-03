@@ -9,163 +9,131 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-**Started:** 2026-10-03
-**Last Updated:** 2026-10-03
-
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
+Implementation has not started. Required plan reviews are received; next task is p01-t01.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
+| Phase 2 | pending | 2     | 0/2       |
+| Phase 3 | pending | 3     | 0/3       |
+| Phase 4 | pending | 3     | 0/3       |
+| Phase 5 | pending | 3     | 0/3       |
+| Phase 6 | pending | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/16 tasks completed
 
----
+## Phase 1: Validators and bounded lifecycle guidance
 
-## Phase 1: {Phase Name}
+**Status:** pending
 
-**Status:** in_progress
-**Started:** 2026-10-03
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Require version bumps for shared-doc vendors
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
+### Task p01-t02: Require exactly one document H1
 
 **Status:** pending
 **Commit:** -
 
----
+### Task p01-t03: Disclose autonomous effective limits and hard stops
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Require proportional changed-boundary probes in reviews
+
+**Status:** pending
+**Commit:** -
+
+## Phase 2: Preserve PJM settings and structured state
+
+**Status:** pending
+
+### Task p02-t01: Preserve unowned PJM settings through real command reruns
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Preserve documented structured blockers end to end
+
+**Status:** pending
+**Commit:** -
+
+## Phase 3: Shared hook-safe exact-path commits
+
+**Status:** pending
+
+### Task p03-t01: Implement the narrow shared primitive and skill entry
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Adopt the primitive in current CLI lifecycle callers
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Adopt exact-path commits across skill lifecycle owners
+
+**Status:** pending
+**Commit:** -
+
+## Phase 4: Archive and knowledge-refresh consumers
+
+**Status:** pending
+
+### Task p04-t01: Make backlog archive mutations staging-neutral
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Commit complete archive operations in lifecycle callers
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: Preserve manual knowledge and staged user work
+
+**Status:** pending
+**Commit:** -
+
+## Phase 5: Flat recap export and complete historical migration
+
+**Status:** pending
+
+### Task p05-t01: Export one page while verifying the full source package
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Compose report, completion/resume, summary and documentation
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t03: Migrate every tracked recap after evidence preservation
+
+**Status:** pending
+**Commit:** -
+
+## Phase 6: Versions and generated integration
+
+**Status:** pending
+
+### Task p06-t01: Finalize versions, generated projections and docs
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
-
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
-
 <!-- orchestration-runs-end -->
 
----
-
-## Implementation Log
-
-Chronological log of implementation progress.
-
-### 2026-10-03
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-10-03
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,41 +141,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+No product tests have run yet. Planning validation and command-output checks are recorded below.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
-
-## References
-
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+Pending implementation and verified closeout.
 
 ## Planning dispatch
 
@@ -315,3 +253,12 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
 ### Root self-review after received artifact edits
 
 The four received corrections preserve all 16 implementation tasks and 40 acceptance rows. Root checked completion’s actual PATH archive/manifest consumer and corrected the source/build route, post-export checks, removed-task citation and table adjacency. Structured findings: `[]`. Branch validate-plan, scoped formatter and diff checks passed. The consumed review remains local-only history by repository convention, with its original tracked version retained in commit `63f82ef5b`; archival is not loss of the original event.
+
+## Independent plan pass and complexity disposition
+
+- Gate run: `4fc38012-9f90-4a0a-b665-853396e48d9f`, exact Claude Opus 5.5 high configured invocation; reviewed baseline `fdafcfd4bbb2512aa1bcdaf59553ecd414ec89bf`.
+- Envelope: ok / exit 0 / receiveEligible true / nonnull handoff; project, run and invocation matched. Received source event `artifact-plan-review-2026-10-03T221441Z.md`, archived as `reviews/archived/artifact-plan-review-2026-10-03T221441Z.md`.
+- Findings: 0 Critical, 0 High, 0 Medium, 1 Low. L1 / Minor / resolve_in_artifact: agree; add pnpm `--silent` for JSON parsing. Real source CLI version probe emitted only `0.3.16`; change applied without altering scope or semantics. Nonfinal review passes after this Low disposition; no implementation fix tasks.
+- Complexity review: deletion-rule compliant. Keep the single shared commit primitive/recovery identity, metadata-based knowledge refresh script, verified flat recap producer/consumers/migration, focused existing validators/negative controls, and required sequential review lifecycle. Each serves an explicit acceptance requirement or observed defect; no new harness, manifest, coordinator or report system. No material changes and no further gate rerun needed.
+- Quick gate core now allowed/passed, carrying the unchanged resolved fingerprint and actual reviewed baseline. Original failed run remains invalid history, never a pass.
+- Readiness: plan complete / ready_for oat-project-implement / template false; discovery complete; 16 pending tasks across six phases. Product implementation not yet started.

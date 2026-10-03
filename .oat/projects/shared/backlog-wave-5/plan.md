@@ -1,17 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - 'Independent plan re-review pending after artifact corrections.'
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-10-03
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_template: true
+oat_template: false
 oat_phase_review_gate:
   enabled: true
   phases: []
@@ -22,7 +21,7 @@ oat_generated: false
 
 # Implementation Plan: backlog-wave-5
 
-> Execute with `oat-project-implement`. This draft is not implementation-ready until root records both planning reviews and completes the owning lifecycle transitions.
+> Execute with `oat-project-implement`. Required planning reviews are received, findings resolved, and complexity review complete.
 
 **Goal:** Deliver the approved ten maintenance tickets in one PR with preserved user Git state and archived evidence, compatible producers/consumers, proportional verification, and no merge or release.
 
@@ -39,8 +38,8 @@ oat_generated: false
 - [x] Actual source and authoritative acceptance criteria inspected.
 - [x] Parallel ownership evaluated; sequential execution declared.
 - [x] Explicit phase review gate preserved losslessly.
-- [ ] Normal Sol-high planning self-review and independent Opus-high planning review received and reconciled by root.
-- [ ] Discovery is complete through the owning CLI. Root marks the reviewed plan ready; implementation confirms its execution checkpoint policy. No HiLL key is added by this draft.
+- [x] Normal Sol-high planning self-review and independent Opus-high planning review received and reconciled by root.
+- [x] Discovery is complete through the owning CLI. Root marks the reviewed plan ready; implementation confirms its execution checkpoint policy. No HiLL key is added by this draft.
 
 ## Parallelism
 
@@ -202,7 +201,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Dependencies:** p03-t02. All skill writes are serial with p01 and later p04/p05; versions finalized once per skill in p06.
 
-**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. From p03-t03 onward this wave’s root and workers invoke the branch CLI directly from source (`pnpm run cli -- internal commit-paths ...`) for lifecycle bookkeeping until the new command ships. Any branch-built `dist` invocation requires a fresh `pnpm build` after the latest CLI source changes. Shipped guidance fails closed with update guidance when the command is unavailable, never falls back to a broad staged-index commit. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
+**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. From p03-t03 onward this wave’s root and workers invoke the branch CLI directly from source (`pnpm --silent run cli -- internal commit-paths ...`) for lifecycle bookkeeping until the new command ships. Any branch-built `dist` invocation requires a fresh `pnpm build` after the latest CLI source changes. Shipped guidance fails closed with update guidance when the command is unavailable, never falls back to a broad staged-index commit. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm oat:validate-skills`; `pnpm test:skills`. Exercise a representative shared scaffold/bookkeeping snippet in a disposable repo through the real internal command with unrelated staged data and the real index-managing hook; synced snippets must still route to project push and fail closed on scope errors. The executable text is the public skill contract; validator tests protect loss of path ownership, not internal wording trivia.
 
@@ -444,11 +443,11 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | plan   | artifact | received        | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md          | -             | -          | -           |
 | plan   | artifact | passed          | 2026-10-03 | implementation.md#revised-plan-artifact-self-review         | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T221441Z.md          | -             | -          | -           |
+| plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -             | -          | -           |
 
-Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; implementation readiness remains false.
+Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
-Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass.
+Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass. Fresh run `4fc38012-9f90-4a0a-b665-853396e48d9f` returned a valid matched envelope, was received with its Low formatting correction resolved, and establishes the independent plan pass; complexity review found no further changes.
 
 ## Implementation Complete
 

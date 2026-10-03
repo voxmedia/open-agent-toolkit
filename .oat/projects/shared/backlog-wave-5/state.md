@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers:
-  - 'Plan re-review pending after accepted artifact corrections.'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -13,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current lifecycle phase
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -88,17 +87,17 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-03T21:23:09.420Z'
+oat_project_state_updated: '2026-10-03T22:17:13.080Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
 oat_quick_start_gate:
-  status: blocked
-  disposition: null
+  status: allowed
+  disposition: passed
   config_fingerprint: '88fb6a53c33aabb45f8ac7441bbb99f66460afa281e7a5e1f347537080cfa853'
-  reviewed_head: 'abba835844724079a86ff23122fa0f2027f78e2e'
-  decided_at: '2026-10-03T21:23:09.420Z'
+  reviewed_head: 'fdafcfd4bbb2512aa1bcdaf59553ecd414ec89bf'
+  decided_at: '2026-10-03T22:17:13.080Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -108,20 +107,20 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** Planning
+**Status:** Plan complete; implementation next
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-03
 
 ## Current Phase
 
-Plan - Approved requirements captured; required plan reviews pending
+Plan complete - Required reviews received and complexity review complete
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (draft complete, reviews pending)
+- **Plan:** `plan.md` (complete, ready for implementation)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -129,12 +128,12 @@ Plan - Approved requirements captured; required plan reviews pending
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Approved ten-ticket requirements captured
-- ⧗ Required plan reviews pending
+- ✓ Required plan reviews received; complexity check complete
 
 ## Blockers
 
-Independent plan re-review pending after accepted corrections; implementation not started.
+None. Implementation has not started.
 
 ## Next Milestone
 
-Resolve the ineligible plan-review artifact through the owning gate recovery contract, then complete reviews and complexity check before implementation
+Start Phase 1 through oat-project-implement with the approved exact dispatch route
