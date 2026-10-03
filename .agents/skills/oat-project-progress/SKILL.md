@@ -182,6 +182,16 @@ Read `{project}/state.md` frontmatter:
 - `oat_implement_exit_gate` - The implementation exit gate record
 - `oat_quick_start_gate` - The quick-start plan gate record
 
+Blockers may be legacy reason strings or structured `{task_id, reason, since}`
+records. Display strings as their reason; display records as
+`{task_id}: {reason} (since {since})`, reading each field deliberately rather
+than coercing the object to text. `oat project status --json` preserves those
+three literal string fields; `--field project.blockers` and
+`--shell BLOCKERS=project.blockers` serialize the list as JSON. Empty lists mean
+no blockers; mixed lists retain valid strings and records in order. Records
+missing any nonempty string field and other malformed entries are ignored by
+the shared parser. Do not change state or routing merely to render blockers.
+
 **Display format:**
 
 ```

@@ -39,7 +39,11 @@ describe('project state integration', () => {
         `---
 oat_current_task: p02-t01
 oat_last_commit: abc1234
-oat_blockers: []
+oat_blockers:
+  - task_id: p01-t03
+    reason: Waiting on API contract
+    since: '2026-10-03'
+  - waiting on review
 oat_hill_checkpoints: ["design"]
 oat_hill_completed: []
 oat_parallel_execution: false
@@ -129,6 +133,17 @@ oat_template: false
 
     const projectState = await getProjectState(projectDir);
 
+    expect(projectState.blockers).toEqual([
+      {
+        task_id: 'p01-t03',
+        reason: 'Waiting on API contract',
+        since: '2026-10-03',
+      },
+      'waiting on review',
+    ]);
+    expect(JSON.parse(JSON.stringify(projectState)).blockers).toEqual(
+      projectState.blockers,
+    );
     expect(projectState.name).toBe(basename(projectDir));
     expect(projectState.path).toBe('.oat/projects/shared/demo');
     expect(projectState.phase).toBe('plan');

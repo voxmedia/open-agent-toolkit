@@ -42,6 +42,13 @@ Reads one OAT project directory and returns a full `ProjectState` snapshot, incl
 - blocker and HiLL metadata
 - PR/docs timestamps and recommendation output
 
+`ProjectState.blockers` uses the exported `ProjectBlocker` union: a legacy
+reason string or `{ task_id: string, reason: string, since: string }`. Structured
+records retain their literal fields in parsed state and JSON. Empty lists stay
+empty; mixed lists retain valid entries in order. Records missing a nonempty
+string field and other malformed entries are ignored rather than coerced into
+`[object Object]`. Legacy string normalization remains unchanged.
+
 Review ledger entries in `ProjectState.reviews` expose the stable five-column
 event identity (`scope`, `type`, `status`, `date`, and `artifact`) plus optional
 provenance:

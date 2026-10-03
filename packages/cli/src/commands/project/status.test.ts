@@ -1,6 +1,7 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -174,6 +175,93 @@ describe('oat project status', () => {
 
   afterEach(() => {
     process.exitCode = originalExitCode;
+  });
+
+  it('carries the documented completion blocker through the real reader and all status outputs', async () => {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-status-blockers-'));
+    try {
+      // Provenance: use the canonical producer's YAML, substituting only its
+      // three documented placeholders with literal acceptance values.
+      const producer = await readFile(
+        fileURLToPath(
+          new URL(
+            '../../../../../.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+            import.meta.url,
+          ),
+        ),
+        'utf8',
+      );
+      const yaml = producer.match(/```yaml\n(oat_blockers:[\s\S]*?)\n```/)?.[1];
+      expect(yaml).toBeDefined();
+      const blockers = yaml!
+        .replace('{ task_id }', 'p01-t03')
+        .replace("'{description}'", "'Waiting on API contract'")
+        .replace('{ date }', "'2026-10-03'");
+      await writeFile(
+        join(projectPath, 'state.md'),
+        `---\noat_phase: implement\noat_phase_status: in_progress\noat_workflow_mode: quick\n${blockers}\n  - waiting on review\n---\n`,
+        'utf8',
+      );
+      const expected = [
+        {
+          task_id: 'p01-t03',
+          reason: 'Waiting on API contract',
+          since: '2026-10-03',
+        },
+        'waiting on review',
+      ];
+      const capture = createLoggerCapture();
+      const createCommand = () =>
+        createProjectStatusCommand({
+          buildCommandContext: (globalOptions) => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: globalOptions.json ?? false,
+            cwd: projectPath,
+            home: projectPath,
+            interactive: false,
+            logger: capture.logger,
+          }),
+        });
+      await runCommand(
+        createCommand(),
+        ['--project-path', projectPath],
+        ['--json'],
+      );
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        project: {
+          blockers: expected,
+          recommendation: { skill: 'oat-project-implement' },
+        },
+      });
+      await runCommand(createCommand(), [
+        '--project-path',
+        projectPath,
+        '--field',
+        'project.blockers',
+      ]);
+      expect(capture.info.at(-1)).toBe(JSON.stringify(expected));
+      await runCommand(createCommand(), [
+        '--project-path',
+        projectPath,
+        '--shell',
+        'BLOCKERS=project.blockers',
+      ]);
+      expect(capture.info.at(-1)).toBe(
+        `BLOCKERS='${JSON.stringify(expected)}'`,
+      );
+      await runCommand(createCommand(), ['--project-path', projectPath]);
+      expect(capture.info).toContain(
+        'Blocker: p01-t03: Waiting on API contract (since 2026-10-03)',
+      );
+      expect(capture.info).toContain('Blocker: waiting on review');
+      expect(capture.info.join('\n')).not.toContain('[object Object]');
+      expect(process.exitCode).toBe(0);
+    } finally {
+      await rm(projectPath, { recursive: true, force: true });
+    }
   });
 
   it('outputs full project state as json for the active project', async () => {
