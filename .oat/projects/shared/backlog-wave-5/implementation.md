@@ -271,3 +271,32 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
 - Stop: validation boundary under autonomy contract Resolution rules. Plan remains in_progress / ready_for null.
 - Resume prerequisite: resolve original-artifact formatting through the owning gate recovery contract and obtain a receive-eligible gate envelope; do not synthesize a successful receipt. Then receive/disposition, complexity-review and readiness completion may proceed.
 - Resume workflow: oat-project-autonomous backlog-wave-5, earliest incomplete owner oat-project-quick-start.
+
+## Planning recovery and authoring corrections
+
+- Original run remains `artifact_validation_failed`, receive-ineligible, unreceived. Its original bytes remain in commit `3e2adcc62` and ignored `analysis/plan-gate-r1-original.md`; original SHA-256 is recorded above.
+- Formatting-only repair committed as `1798010c2`: ten finding headers converted to list items and their paragraphs indented. Reversing those exact changes reconstructs the original bytes. Branch parser now verifies six Medium / four Low findings and the unchanged invocation fields (`analysis/plan-gate-r1-format-parse.json`). This is a parser check, not a successful gate receipt.
+- Root checked the source directly and corrected actual archive callers/templates, omitted executable lifecycle commit owners, recap HTML formatter exclusion, project-only branch sync, branch-built command availability, and the autonomy guide path.
+- Root clarified hook/index strategy evidence and partially staged preservation escalation, committed setup state, completed discovery, and artifact-review provenance columns. Prior event rows remain present.
+- Final verification/review and ticket archival belong to root’s existing implementation lifecycle tail. Moving those two steps out of worker Phase 6 yields 16 implementation tasks across six phases, with all ten tickets and 40 acceptance rows unchanged. Ticket archival follows passing final verification and required reviews.
+- No product code changed. The blocked Quick readiness record remains blocked pending a fresh unchanged configured gate invocation and valid receive disposition.
+
+## Revised plan artifact self-review
+
+- Target/type/scope: plan / artifact / plan; structured-output route, inherited planning parent Codex GPT-6.1 Sol high, equal to managed ceiling; no extra child.
+- Reviewed source: current revised plan/discovery plus original ten ticket acceptance sets, directly checked against real lifecycle commit/archive owners, formatter exclusions, sync scope and branch command availability.
+- Structured outcome: no outstanding findings after root corrections; six sequential phases and 16 tasks, all 40 acceptance criteria preserved. Final verification and archive are root workflow work after the required reviews, not phase-worker assignments.
+- Verification: branch `project validate-plan` accepted; scoped oxfmt and `git diff --check` passed. Product checks have not run and implementation has not started.
+- Independent gate and subsequent complexity review remain required before readiness. Original invalid run is never promoted to a pass.
+
+```json
+{
+  "summary": "Revised Quick plan preserves ten-ticket scope and acceptance while correcting actual callers, hash preservation and phase/root ownership.",
+  "findings": [],
+  "verification_commands": [
+    "node packages/cli/dist/index.js --json project validate-plan --project-path .oat/projects/shared/backlog-wave-5",
+    "pnpm exec oxfmt --check .oat/projects/shared/backlog-wave-5/plan.md .oat/projects/shared/backlog-wave-5/discovery.md",
+    "git diff --check"
+  ]
+}
+```

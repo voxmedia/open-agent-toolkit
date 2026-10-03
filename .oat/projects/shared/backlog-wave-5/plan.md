@@ -40,7 +40,7 @@ oat_generated: false
 - [x] Parallel ownership evaluated; sequential execution declared.
 - [x] Explicit phase review gate preserved losslessly.
 - [ ] Normal Sol-high planning self-review and independent Opus-high planning review received and reconciled by root.
-- [ ] Root completes discovery and marks the reviewed plan ready; implementation confirms its execution checkpoint policy. No HiLL key is added by this draft.
+- [ ] Discovery is complete through the owning CLI. Root marks the reviewed plan ready; implementation confirms its execution checkpoint policy. No HiLL key is added by this draft.
 
 ## Parallelism
 
@@ -49,15 +49,15 @@ oat_generated: false
 ## Execution and Review Contract
 
 - Approved implementer: Codex GPT-6.1 Sol, high effort, for every phase. Independent reviewer: Claude Opus 5.5, high effort, for plan, all phases, and final. Normal planning self-review is a separate Sol-high event. These are explicit user constraints; no route/model/effort substitution after accepted dispatch. Root loads current dispatch contracts and verifies the invocation evidence. Do not copy compiled targets into YAML or misuse a named ceiling as an exact model pin.
-- Preserve the existing `oat_phase_review_gate` exactly. Built-in root review, independent phase gate, final review, and HiLL are separate contracts; review events are not plan tasks. Record full reviewed SHA, invocation, artifact and gate target in append-only review rows. On p06 use the lifecycle's final-review boundary rather than inventing a duplicate final-only phase review; the configured all-phase independent gate remains applicable.
+- Preserve the existing `oat_phase_review_gate` exactly. Phase workers own p01 through p06 implementation tasks; final verification, ticket archival and project publication belong to the implementation root’s lifecycle tail, outside dispatched phase tasks. Built-in root review, independent phase gate, final review, and HiLL are separate contracts; review events are not plan tasks. Record full reviewed SHA, invocation, artifact and gate target in append-only review rows. On p06 use the lifecycle's final-review boundary rather than inventing a duplicate final-only phase review; the configured all-phase independent gate remains applicable.
 - Before implementation, each phase, and any parallel launch: `git fetch origin main`, then `git log --oneline "$(git merge-base HEAD origin/main)..origin/main" -- <that phase's owned paths>`. Record changed paths and reconcile integration drift before dispatch. Finish open merges before running branch CLI probes. Planning entry: workspace `/Users/tstang/Code/open-agent-toolkit`, branch `wave/2026-10-03-backlog-wave-5`, HEAD `91e5fb0c6`, integration base `6ec5313b91e2595893eb89bb6372c028c0284ab4`.
-- Preserve the approved dirty recap item and `.oat/sync/manifest.json`. Root handles their authorized persistence; implementations must not discard or sweep them into task commits. Every writer owns an explicit file list. Preserve unrelated staged and unstaged content, and inspect final status after hooks.
+- The approved recap-ticket amendment and worktree-init sync-manifest update were persisted in setup commit `96c470bc2b67137b420d082dfbd263749b76260e`. Preserve that committed content; implementations must not discard or sweep them into task commits. Every writer owns an explicit file list. Preserve unrelated staged and unstaged content, and inspect final status after hooks.
 - Continue through tasks/phases and the implementation-owned lifecycle tail unless a configured checkpoint, real blocker, or required external input applies. Autonomous allowance is capacity, not permission to ignore terminal recovery or review/authority boundaries.
 - Feature probes use local disposable repositories, real hooks and branch-built CLI. No live provider, S3, credential or production calls are required. Root retains publication and destructive-operation authorization.
 
 ## Formatting and Evidence
 
-The documented root formatter is oxfmt's write mode. For **every task**, build the shell array `TASK_OWNED_FILES` from that task's explicit Files list, including only created/modified text files and actual newly reported references; do not include removed files, symlink targets outside ownership, binary evidence, or unrelated dirty paths. The concrete file-scoped command is `pnpm exec oxfmt --write "${TASK_OWNED_FILES[@]}"`, followed by `git diff --check -- "${TASK_OWNED_FILES[@]}"`. This is task ownership resolution, not formatter rediscovery. For generated files use their owning generator first, then format the actual produced text paths. After a commit, reread any file before exact-text edits because hooks can re-pad tables and change quoting.
+The documented root formatter is oxfmt's write mode. For **every task**, build the shell array `TASK_OWNED_FILES` from that task's explicit Files list, including only created/modified format-supported text files and actual newly reported references; exported recap HTML and immutable archived evidence are excluded because their recorded hashes attest exact bytes; do not include removed files, symlink targets outside ownership, binary evidence, or unrelated dirty paths. The concrete file-scoped command is `pnpm exec oxfmt --write "${TASK_OWNED_FILES[@]}"`, followed by `git diff --check -- "${TASK_OWNED_FILES[@]}"`. This is task ownership resolution, not formatter rediscovery. For generated files use their owning generator first, then format the actual produced text paths. After a commit, reread any file before exact-text edits because hooks can re-pad tables and change quoting.
 
 Use deliberate-testing author guidance: test the named public boundaries below, with requirements/literal seeded bytes as the oracle and real internal collaborators. Extend existing test families where they already own the failure. Do not add test-only production hooks, broad snapshots, copied machine baselines, or repeated tests of the same failure at several layers.
 
@@ -110,7 +110,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p01-t03: Disclose autonomous effective limits and hard stops
 
-**Files:** Modify `.agents/skills/oat-project-autonomous/SKILL.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-implement/references/phase-execution.md`, `.agents/agents/oat-phase-implementer.md`, `packages/cli/src/validation/skills.test.ts`; update the corresponding autonomous guide under `apps/oat-docs/docs/workflows/projects/execution/` after locating its current source.
+**Files:** Modify `.agents/skills/oat-project-autonomous/SKILL.md`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-implement/references/phase-execution.md`, `.agents/agents/oat-phase-implementer.md`, `packages/cli/src/validation/skills.test.ts`; update `apps/oat-docs/docs/workflows/advanced/autonomy.md`.
 
 **Dependencies:** p01-t01.
 
@@ -174,7 +174,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Dependencies:** p02 complete.
 
-**Change:** Accept an explicit exact file-path list and message, with a caller-supplied operation/artifact identity for recovery. Expose `oat internal commit-paths` for skill lifecycle callers. Validate repository containment and literal paths; permit tracked removals/renames by carrying both old and new names, never wildcard/directory expansion. Hooks stay enabled. Snapshot and preserve unrelated staged blobs and unstaged bytes; successful hook-formatted owned paths match committed final bytes and are clean. Detect concurrent index changes rather than overwriting another writer's snapshot. Reuse bounded inspected lock classification/retry semantics; never delete index locks. Return structured committed/already-matching/nothing/blocked/failed outcomes with attempts and resumable diagnostics, using ignored receipt state where persistence is required. A matching prior success is positively verified, not guessed from message or exit code.
+**Change:** Accept an explicit exact file-path list and message, with a caller-supplied operation/artifact identity for recovery. Expose `oat internal commit-paths` for skill lifecycle callers. Validate repository containment and literal paths; permit tracked removals/renames by carrying both old and new names, never wildcard/directory expansion. Hooks stay enabled. Snapshot and preserve unrelated staged blobs and unstaged bytes; successful hook-formatted owned paths match committed final bytes and are clean. Detect concurrent index changes rather than overwriting another writer's snapshot. Reuse bounded inspected lock classification/retry semantics; never delete index locks. Return structured committed/already-matching/nothing/blocked/failed outcomes with attempts and resumable diagnostics, using ignored receipt state where persistence is required. A matching prior success is positively verified, not guessed from message or exit code. Record the selected real/temporary index strategy and its interaction with hooks in implementation tracking before adoption; escalate if hook cleanliness and preservation cannot both hold for a partially staged unrelated file.
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/exact-path-commit.test.ts src/commands/internal/commit-paths.test.ts`. Real temp Git repo with index-managing lint-staged-style hook, staged+unstaged versions of an unrelated file, owned create/modify/delete/rename, hook formatting, hook failure, bounded lock contention/exhaustion and concurrent writers. Compare exact unrelated index blobs and worktree bytes, HEAD path set, final owned status and matching identity. Reproduce baseline hook-dirty/broad staged leakage and post-fix rejection; unchanged valid operation passes. Concurrent-writer fixture protects index-loss behavior absent from mock runner tests; use real processes and no test-only product flags.
 
@@ -198,11 +198,11 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p03-t03: Adopt exact-path commits across skill lifecycle owners
 
-**Files:** Modify canonical commit instructions in these skills only: `oat-project-autonomous`, `oat-project-complete`, `oat-project-discover`, `oat-project-document`, `oat-project-new`, `oat-project-implement`, `oat-project-capture`, `oat-project-design`, `oat-project-lite`, `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-revise`, `oat-project-promote-spec-driven`, `oat-project-plan`, `oat-project-review-receive-remote`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-spec`, `oat-project-retro-file`, `oat-project-review-receive`, `oat-project-summary`, `oat-worktree-bootstrap-auto`, `oat-wave-execute`, `oat-brainstorm`. Include only their direct commit-bearing `SKILL.md`/reference files (currently implement phase-execution, completion-and-closeout, plan-and-resume; retro apply-procedure) and `.agents/docs/autonomy-contract.md` when its vendored inventory is affected. Modify `packages/cli/src/validation/skills.ts`/`skills.test.ts` only to preserve existing safety validation for the new helper form. Update `apps/oat-docs/docs/reference/cli-reference.md` for the narrow maintenance command.
+**Files:** Modify canonical commit instructions in these skills only: `oat-project-autonomous`, `oat-project-complete`, `oat-project-discover`, `oat-project-document`, `oat-project-new`, `oat-project-implement`, `oat-project-capture`, `oat-project-design`, `oat-project-lite`, `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-revise`, `oat-project-promote-spec-driven`, `oat-project-plan`, `oat-project-review-receive-remote`, `oat-project-review-provide`, `oat-project-reconcile`, `oat-project-spec`, `oat-project-retro-file`, `oat-project-review-receive`, `oat-project-summary`, `oat-worktree-bootstrap-auto`, `oat-wave-execute`, `oat-brainstorm`, `oat-project-retro`, `oat-agent-instructions-apply`, `oat-docs-apply`, `oat-review-provide`, `oat-review-receive-remote`. Include only their direct commit-bearing `SKILL.md`/reference files (currently implement phase-execution and completion-and-closeout; retro apply-procedure) plus `oat-wave-execute/assets/wrapper-plan-template.md` and `.agents/agents/oat-phase-implementer.md` for their direct task-commit instructions; include `.agents/docs/autonomy-contract.md` when its vendored inventory is affected. The wrapper and role adopt the same primitive; do not leave a separate weaker task-commit route. Modify `packages/cli/src/validation/skills.ts`/`skills.test.ts` only to preserve existing safety validation for the new helper form. Update `apps/oat-docs/docs/reference/cli-reference.md` for the narrow maintenance command.
 
 **Dependencies:** p03-t02. All skill writes are serial with p01 and later p04/p05; versions finalized once per skill in p06.
 
-**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
+**Change:** Inventory executable lifecycle commit snippets and replace broad staged-index commits and weaker pathspec-only variants with the shared entry plus exact owned paths. Preserve synced `oat project push` routing, scope failures, conditional created-file sets, error propagation, hook enablement, resumable diagnostics and bookkeeping ownership. From p03-t03 onward this wave’s root and workers invoke the branch-built CLI (`node packages/cli/dist/index.js internal commit-paths ...`) for lifecycle bookkeeping until the new command ships. Shipped guidance fails closed with update guidance when the command is unavailable, never falls back to a broad staged-index commit. Text explaining historical evidence is not an executable caller. Report every adopted or intentionally excluded site; do not sweep all skill text blindly. Archive and knowledge-specific adoption remain p04 responsibilities.
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`; `pnpm oat:validate-skills`; `pnpm test:skills`. Exercise a representative shared scaffold/bookkeeping snippet in a disposable repo through the real internal command with unrelated staged data and the real index-managing hook; synced snippets must still route to project push and fail closed on scope errors. The executable text is the public skill contract; validator tests protect loss of path ownership, not internal wording trivia.
 
@@ -228,7 +228,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p04-t02: Commit complete archive operations in lifecycle callers
 
-**Files:** Modify `.oat/repo/pjm/AGENTS.md`, the canonical source that generates the same PJM guidance if applicable, `.agents/skills/oat-project-complete/SKILL.md`, `.agents/skills/oat-project-retro-file/SKILL.md` and other actual `oat backlog archive` lifecycle call sites located by scoped inventory; update `apps/oat-docs/docs/workflows/backlog-and-planning/backlog-lifecycle.md`, `reference/config-and-local-state.md`, and `reference/cli-reference.md`. Extend existing CLI/skill integration tests that own archive closeout; create one scoped skill probe only if none reaches the consumer.
+**Files:** Modify `.oat/repo/pjm/AGENTS.md`, the canonical guidance templates `.oat/templates/pjm-agents.md`, `repo-agents.md`, `repo-readme.md`, `.agents/skills/oat-pjm-update-repo-reference/SKILL.md`, `oat-pjm-review-backlog/SKILL.md`, `oat-doctor/SKILL.md`, `oat-wave-execute/SKILL.md` and its `assets/wrapper-plan-template.md` and other actual `oat backlog archive` lifecycle call sites located by scoped inventory; update `apps/oat-docs/docs/workflows/backlog-and-planning/backlog-lifecycle.md`, `reference/config-and-local-state.md`, and `reference/cli-reference.md`. Extend existing CLI/skill integration tests that own archive closeout; create one scoped skill probe only if none reaches the consumer.
 
 **Dependencies:** p04-t01 and p03-t03.
 
@@ -266,7 +266,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/push-runner.test.ts src/commands/project/archive/index.test.ts`. Extend existing export/hash/collision family: tampered QA/fact base rejects despite page-only output; full-package tracked export violates contents control; matching retry passes without duplication; different page rejects; injected failure removes only attempt-owned writes; concurrent replacement survives; exported relative href/src resolve including fragments. Valid source+page passes. Run against captured v2 and real legacy package before requesting review; keep fixture provenance and archive/S3 seam tests offline.
 
-**Format:** Scoped formatter on actual owned source/tests/fixture text files.
+**Format:** Scoped formatter on actual owned source/tests/fixture text files. Never format exported HTML after hashing; preserve the recap ignore rule.
 
 **Commit:** `fix(archive): export verified recaps as single html pages`
 
@@ -296,11 +296,11 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Verification:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts`; `pnpm docs:validate`; `git diff --check`. Repeat exact tracked inventory and byte count; assert seven (or newly inventoried additional) flat pages, zero tracked support directories/sidecars, all relative href/src resolvable, no maintained old-path refs, and byte/hash equality of every original package file with its preserved archive copy. Perform a rollback/retry local scratch migration before the real removals; a conflicting archive byte blocks deletion while matching retry passes. Review conservation of original HTML content except intentional link/asset transformations. Do not claim preservation from directory existence alone or claim live S3 upload without evidence.
 
-**Format:** Scoped formatter on flat HTML and actual rewritten text references; never format immutable archived originals.
+**Format:** Format only actual rewritten Markdown references; never format the flat exported HTML or immutable archived originals. Preserve `.oxfmtrc.jsonc`’s recap ignore rule, which also covers flat pages.
 
 **Commit:** `refactor(recaps): migrate tracked packages to flat pages`
 
-## Phase 6: Versions, exact closeout and final integration
+## Phase 6: Versions and generated integration
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -308,33 +308,23 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Dependencies:** p01–p05 complete.
 
-**Change:** Fetch origin/main and inspect current versions before choosing one common next public version strictly greater than main; do not pre-invent a version. Bump each changed skill/agent once per final PR diff, including all symlink vendors identified by the strengthened gate. Inventory final changed bundled paths, regenerate provider views via `oat sync --scope all`, bundled assets via build, docs catalog via `pnpm docs:skills:generate`, root docs index and nav via owning CLI only when changed. Preserve the initial dirty manifest's unrelated content under root ownership; do not overwrite projections by hand. Remove only obsolete warnings proven fixed by p02/p04, including warning links/anchors. Produce the exact ten-ticket docs coverage check.
+**Change:** Fetch origin/main and inspect current versions before choosing one common next public version strictly greater than main; do not pre-invent a version. Bump each changed skill/agent once per final PR diff, including all symlink vendors identified by the strengthened gate. Inventory final changed bundled paths, regenerate project provider views via the branch command `pnpm run cli -- sync --scope project` (user-scope refresh remains operator-owned), bundled assets via build, docs catalog via `pnpm docs:skills:generate`, root docs index and nav via owning CLI only when changed. Preserve setup’s committed sync-manifest content; do not overwrite projections by hand. Remove only obsolete warnings proven fixed by p02/p04, including warning links/anchors. Produce the exact ten-ticket docs coverage check.
 
-**Verification:** `pnpm run check:skill-bumps`; `pnpm release:check-versions`; `pnpm release:validate`; `pnpm docs:skills:check`; `pnpm docs:validate`; `pnpm lint`; `pnpm format`. Inspect the final diff to ensure one bump per changed owner, five-package lockstep, every vendor covered, no generated drift, no unrelated scope. Gate runs here are early feedback; p06-t03 runs the full ordered final sequence.
+**Verification:** `pnpm run check:skill-bumps`; `pnpm release:check-versions`; `pnpm release:validate`; `pnpm docs:skills:check`; `pnpm docs:validate`; `pnpm lint`; `pnpm format`. Inspect the final diff to ensure one bump per changed owner, five-package lockstep, every vendor covered, no generated drift, no unrelated scope. Gate runs here are early feedback; the root lifecycle tail runs the full ordered final sequence.
 
 **Format:** Scoped formatter after generation on actual owned manifests, skill/agent files, projections and docs outputs.
 
 **Commit:** `chore(release): bump wave 5 bundled contracts`
 
-### Task p06-t02: Archive exactly the ten completed backlog items
+## Root Lifecycle Tail
 
-**Files:** The exact ten source/destination item paths in the Scope table, `.oat/repo/pjm/backlog/completed.md`, `backlog/index.md`, rewritten references actually reported by archive, existing matching `.oat/repo/pjm/handoffs/<ID>.md` deletions, and `current-state.md` only if shipping changes its operating picture. Root owns canonical plan/state/tracking rewrites.
+These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
 
-**Dependencies:** p06-t01; every acceptance row below has verified evidence. Root executes closeout after applicable reviews, without marking unverified items complete.
-
-**Change:** Run `oat pjm doctor --json`, inspect full adoption, then use the branch archive command for each exact ID with a nonblank outcome summary. Archive terminal states/ledger/index/refs as one complete caller-owned operation, format reported paths and stage old/new names with the shared helper; delete only existing corresponding kickoff handoffs. Preserve the approved recap ticket amendment in the archived record. Do not close deferred issues/items. Reconcile rewrite overlap serially, then regenerate the backlog index with its owner and refresh current state only where necessary.
-
-**Verification:** Branch CLI `backlog archive <each exact ID> --summary <verified outcome> --json`, then `oat pjm doctor --json`; inspect all ten in `archived/`, none left in `items/`, newest-first ledger outcomes, no old inbound item paths, zero matching handoff files and unrelated staged work unchanged. Compare affected-path lists with commit path sets. This also live-tests the newly fixed archive consumer without a remote service.
-
-**Format:** Scoped formatter on exact reported surviving text paths and root-owned rewritten lifecycle artifacts.
-
-**Commit:** `chore(backlog): close verified wave 5 items`
-
-### Task p06-t03: Run ordered final gates and record integration evidence
+### Root final verification and review boundary
 
 **Files:** Root-owned `.oat/projects/shared/backlog-wave-5/implementation.md`, `plan.md`, `state.md`, `project-log.md` when present; gate logs only in ignored `analysis/`. Fixes found by gates or review receive new tasks with their actual bounded files; do not silently append product changes to this verification task.
 
-**Dependencies:** p06-t02. Root owns final code review, independent review, closeout snapshot and PR lifecycle after these checks.
+**Prerequisites:** p06-t01 and all earlier implementation tasks complete. Root owns the final checks, final independent reviews, subsequent backlog closeout, completion snapshot and PR lifecycle. This is workflow-owned work, not an implementer-dispatched task.
 
 **Change:** Confirm final ten-ticket acceptance mapping and producer/consumer composition, including new validator on all actual changed vendors, shared primitive on actual callers, complete archive paths, structured status shape, original recap evidence and flat report/resume contracts. Run all eight repository gates in CI order with explicit exit codes; record executed versus cached evidence. Each command writes its own ignored log, captures `$?` immediately and fails on nonzero; never infer success from tail/pager/filter. Extra lint/format are required because skills changed. Build first before bare smoke suites; evidence-grade reruns use isolated HOME and forced Turbo with safe task-specific environment values, avoiding maintainer templates.
 
@@ -353,7 +343,21 @@ Also run `pnpm lint`, `pnpm format`, `pnpm docs:validate`, `pnpm docs:skills:che
 
 **Format:** Scoped formatter on root-owned changed lifecycle text before its bookkeeping commit; formatter-induced changes require affected checks again.
 
-**Commit:** `chore(oat): record wave 5 integration verification`
+**Root evidence commit:** `chore(oat): record wave 5 integration verification`
+
+### Root backlog closeout: Archive exactly the ten completed items
+
+**Files:** The exact ten source/destination item paths in the Scope table, `.oat/repo/pjm/backlog/completed.md`, `backlog/index.md`, rewritten references actually reported by archive, existing matching `.oat/repo/pjm/handoffs/<ID>.md` deletions, and `current-state.md` only if shipping changes its operating picture. Root owns canonical plan/state/tracking rewrites.
+
+**Prerequisites:** All implementation phases, final verification and required code/gate reviews passed; all 40 acceptance rows have verified evidence. Root executes closeout in the owning lifecycle tail after review fixes, without marking unverified items complete. Any later finding that invalidates acceptance stops publication and requires the same item’s completion record to be reconciled; it cannot remain falsely complete.
+
+**Change:** Run `oat pjm doctor --json`, inspect full adoption, then use the branch archive command for each exact ID with a nonblank outcome summary. Archive terminal states/ledger/index/refs as one complete caller-owned operation, format reported paths and stage old/new names with the shared helper; delete only existing corresponding kickoff handoffs. Preserve the approved recap ticket amendment in the archived record. Do not close deferred issues/items. Reconcile rewrite overlap serially, then regenerate the backlog index with its owner and refresh current state only where necessary.
+
+**Verification:** Branch CLI `backlog archive <each exact ID> --summary <verified outcome> --json`, then `oat pjm doctor --json`; inspect all ten in `archived/`, none left in `items/`, newest-first ledger outcomes, no old inbound item paths, zero matching handoff files and unrelated staged work unchanged. Compare affected-path lists with commit path sets. This also live-tests the newly fixed archive consumer without a remote service.
+
+**Format:** Scoped formatter on exact reported surviving text paths and root-owned rewritten lifecycle artifacts.
+
+**Root closeout commit:** `chore(backlog): close verified wave 5 items`
 
 ## Scope and Acceptance Matrix
 
@@ -401,7 +405,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 | V3  | Autonomy-only pin reduced only after general keeper exists                      | p01-t01: changed arbitrary-doc keeper and direct gate-inventory link                              |
 | H1  | Zero/multiple H1 fails naming file                                              | p01-t02: actual docs validator fixtures                                                           |
 | H2  | Zero/one/two self-contained fixture; neutralization fails                       | p01-t02: headings test and restored guard evidence                                                |
-| H3  | All current pages pass                                                          | p01-t02, p06-t03: real corpus docs:validate                                                       |
+| H3  | All current pages pass                                                          | p01-t02, root final verification: real corpus docs:validate                                       |
 | A1  | Effective limits/all owning stops shown; capacity distinct                      | p01-t03: kickoff contract and default/override dry controls                                       |
 | A2  | Failed-attempt terminality preserved                                            | p01-t03: existing terminal controls and no contradictory guidance                                 |
 | A3  | Continue-after-failure remains deferred choice                                  | p01-t03: unchanged policy, explicit out-of-scope disclosure                                       |
@@ -413,27 +417,31 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 | Q6  | Unsupported assertion insufficient; existing blocking model                     | p01-t04: unsupported-assertion blocking control, unchanged severity/output schema                 |
 | B1  | task_id/reason/since preserved; string/human consumers deliberate               | p02-t02: documented real YAML → parser/project → CLI JSON/field/shell/human boundary              |
 | S1  | Archive no staging, complete source/destination/ledger/index/refs report        | p04-t01: real index equality and exact affected-path report                                       |
-| S2  | Caller commits entire operation via helper; unrelated staged work intact        | p04-t02, p06-t02: real archive/helper composition and actual closeout paths                       |
+| S2  | Caller commits entire operation via helper; unrelated staged work intact        | p04-t02, root backlog closeout: real archive/helper composition and actual closeout paths         |
 
 ## Reviews
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head                            | Invocation                       | Gate Target            |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ---------------------------------------- | -------------------------------- | ---------------------- |
-| p01    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| p02    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| final  | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| spec   | artifact | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| design | artifact | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| plan   | artifact | passed   | 2026-10-03 | implementation.md#plan-artifact-self-review        | 96c470bc2b67137b420d082dfbd263749b76260e | auto / inherited planning parent | codex:gpt-6.1-sol:high |
-| p03    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| p04    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| p05    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| p06    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
-| plan   | artifact | received | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md | -                                        | -                                | -                      |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | passed   | 2026-10-03 | implementation.md#plan-artifact-self-review        | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md | -             | -          | -           |
 
-Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its artifact declares 0 Critical, 0 High, 6 Medium and 4 Low findings, but writes them as bold paragraphs; the current validator counts list items and rejects the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; implementation readiness remains false.
+| plan | artifact | passed | 2026-10-03 | implementation.md#revised-plan-artifact-self-review | - | - | - |
+
+Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; implementation readiness remains false.
+
+Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass.
 
 ## Implementation Complete
 
@@ -444,9 +452,9 @@ Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_vali
 - Phase 3: 3 tasks — shared primitive and CLI/skill lifecycle adoption.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
-- Phase 6: 3 tasks — versions/generated outputs, exact backlog closeout and final gates.
+- Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 18 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 16 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

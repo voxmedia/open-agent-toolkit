@@ -39,7 +39,7 @@ The request is well-understood. Keep the existing CLI and lifecycle boundaries, 
 
 - Workspace: `/Users/tstang/Code/open-agent-toolkit`; branch: `wave/2026-10-03-backlog-wave-5`; planning entry HEAD: `91e5fb0c6`; current integration base: `6ec5313b91e2595893eb89bb6372c028c0284ab4`. Revalidate main before implementation and each phase.
 - No prior active-project pointer existed before root scaffolded this project. Do not retire or absorb another project.
-- Preserve the approved dirty recap ticket and `.oat/sync/manifest.json`; do not include unrelated work in commits.
+- Preserve the recap-ticket amendment and worktree-init sync-manifest update committed in setup; do not include unrelated work in commits.
 - Keep the explicit phase review gate unchanged: enabled, all phases, code review, blocking at High. No model-target YAML, no new HiLL key during drafting.
 - Use current canonical Quick and plan-writing contracts, repository/PJM guidance, docs-app conventions, and deliberate-testing author guidance.
 - One PR, exact ten-ticket closure, handoff deletion when present, all repository gates, documentation, version bumps, generated projections, and independent reviews. No live provider or credential calls are needed for feature probes.
@@ -84,4 +84,4 @@ No unresolved material product questions. Implementation must escalate unexpecte
 
 Authoritative requirements are the ten item files under `.oat/repo/pjm/backlog/items/` listed with titles in `plan.md`. Current source inspected includes shared skill-bump validation, docs Markdown parser/validator, PJM init/migrate, control-plane parser/status consumers, project-log commit recovery, scaffold/promote/ref-sync, backlog archive, knowledge refresh, recap export/report, completion scripts, autonomy and reviewer contracts, and decision `DR-260911-explainers-are-agent-authored`.
 
-Root completes discovery through the owning CLI, reviews the canonical plan with normal Sol-high self-review and independent Opus-high review, records results without deleting review rows, and only then marks the plan implementation-ready. This artifact remains `in_progress` until that lifecycle transition.
+Root has completed discovery through the owning CLI and reviews the canonical plan with normal Sol-high self-review and independent Opus-high review, records results without deleting review rows, and only then marks the plan implementation-ready. Discovery has been marked complete through the owning CLI; the plan remains in progress until its review/readiness transition.
