@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -13,16 +13,16 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | pending  | 2     | 0/2       |
-| Phase 3 | pending  | 3     | 0/3       |
-| Phase 4 | pending  | 3     | 0/3       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | in_progress | 2     | 1/2       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 7/19 tasks completed
+**Total:** 8/19 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -99,8 +99,14 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p02-t01: Preserve unowned PJM settings through real command reruns
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4b64efd22066de1e47112ab7bf70ed089d66e895
+
+**Outcome:** Init and migrate preserve all unowned raw persisted PJM fields, including literal remote policy, provider/default authority, storage and unknown future keys. Only initialized/schemaVersion change; obsolete destructive-rerun warnings and their references removed, adoption guidance conserved.
+
+**Verification:** Both actual command regressions fail on baseline and with raw-PJM preservation neutralized; restored 33 tests pass. Fresh branch CLI init/migrate scratch probes preserve serialized literal settings and repeat reruns without changing bytes. Root independently reran that exact probe, inspected eight-file commit and docs conservation, and confirmed clean status. CLI check/type-check/build, docs validation, scoped Markdown lint/format/diff executed/pass, no cache. Evidence: analysis/p02/t01-command-probe.py and t01-\*.log. Recovery 0/10, pending null.
+
+**Technical interpretation:** Normal config read/write rebuild known PJM keys and discard unknown fields, so spreading normalized config cannot satisfy preservation. Keep current validation, then use the established raw parse/atomic-write seam to overlay only the two adoption markers within init.ts; no config-module expansion.
 
 ### Task p02-t02: Preserve documented structured blockers end to end
 

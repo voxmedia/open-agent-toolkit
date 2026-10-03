@@ -64,6 +64,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 wave5-p01-complete-3e2d6cf2: Phase 1 complete after root review and configured independent gate passed; 7 tasks complete, recovery 0/null, zero Critical/High fix loops. Five Low gate findings deferred to final in implementation.md; review artifact reviews/archived/p01-review-2026-10-03T232906Z.md.
 
+### 2026-10-03 · project · bug · PJM raw-setting preservation
+
+Normalized config readers/writers discard unknown PJM keys, so spreading the normalized object cannot preserve all unowned settings. Task p02-t01 validates normally and overlays only adoption markers onto raw persisted JSON; real init/migrate probes preserve literal remote and future settings. Evidence: implementation.md p02-t01; wave5-p02-raw-preservation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
