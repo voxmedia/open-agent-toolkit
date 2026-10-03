@@ -389,3 +389,95 @@ Phase p01 actual clean execution base after dispatch acceptance bookkeeping: `32
 Validated original native report `wave5-p01-implement-r1`: DONE, 4/4 planned append-only task commits in order and within exact declared paths; base `325dbad2a3f26feca361cefc50855893c9349442`, verified handoff HEAD `2bd95bfc46d50ce28ef9902ddfc9f384984d907b`, clean worktree. The full base-to-head range includes the four mandatory root tracking commits; product range runs c0398036 through dc536f30. No recovery or nested dispatch; p01 usage 0/10 and pending null.
 
 Composed verification passed: six check and six type-check tasks executed (dependency builds cached), direct CLI tests 267, docs tests 78, skill tests 693, actual docs validation 89 pages. Workspace build replayed five cached results; fresh direct CLI build and final branch-built rejected/accepted vendor controls passed. Exact commands, outcomes and limitations are retained in local ignored `analysis/p01/phase-verification.md` and logs; guidance controls do not claim live model efficacy. All CI/version/release gates remain final-tail/p06 owned. Phase stays in_progress until root review, dispositions and configured independent gate settle.
+
+#### Dispatch wave5-p01-review-r1
+
+Dispatch stamp: Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p01-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "p01",
+  "objective": "Independently review the complete approved Phase 1 diff, requirements and actual changed-boundary evidence; write one timestamped artifact.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-03T22:50:14.394004Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase1_review"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of assurance-bearing autonomous stop and changed-boundary evidence contracts plus validation boundaries.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native reviewer handle `/root/wave5_phase1_review`; configured exact role/model/effort, runtime identity not reported. Independent artifact review of complete p01 range `325dbad2a3f26feca361cefc50855893c9349442..e586535587644cd6faf2a5c221650710fa6bd726`; product readonly plus one timestamped artifact. Review-outcome bookkeeping excluded, task ledger included. Current branch canonical role supplies changed probe contract; version/projection integration remains p06.
