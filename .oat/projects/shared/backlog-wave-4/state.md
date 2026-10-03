@@ -102,26 +102,26 @@ oat_implement_exit_gate:
   freshness_head: 23577fd166c96355497417ff4a35942514a56c8b
   freshness_fingerprint: 'sha256:effective-delta-v2:91ac65b6427378cc9e0e9c802067eea66f20e4403e861b70cc6d16d57c9e9913'
   waivers: []
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: 'bw4-exit-gate-g2-2-20261003T002927Z'
   launch_started_at: '2026-10-03T00:29:27Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-4/exit-gate-2.json'
   gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  gate_run_id: 7c263e05-5c9b-4a15-a476-8ce39ee033b4
+  envelope_status: ok
+  artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md before treating this gate review as consumed.'
+  receive_state: intent_persisted
+  receive_correlation: 'run=7c263e05-5c9b-4a15-a476-8ce39ee033b4; handoff=receive; source=reviews/final-review-2026-10-03T003215Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md'
+  receive_archived_artifact: '.oat/projects/shared/backlog-wave-4/reviews/archived/final-review-2026-10-03T003215Z.md'
+  receive_event_identity: 'final | code | final-review-2026-10-03T003215Z.md'
+  receive_pre_head: cd477c38238b0fd2660721bbc1856229ae9e48e8
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-03T00:29:27Z'
+  updated_at: '2026-10-03T00:35:48Z'
 oat_project_recap:
   decision: generate
   source: autonomous_policy
