@@ -2609,9 +2609,9 @@ describe('validateOatSkills', () => {
     );
   });
 
-  it('documents that stale gate-claim recovery is not serialized', async () => {
-    // The gate renames a stale claim aside without a recovery lock, so the
-    // docs must not promise more than at-most-one live run in that window.
+  it('documents serialized claim recovery and fail-closed acquisition', async () => {
+    // Operator recovery guidance must describe the serialized protocol and
+    // its refusal behavior; gate command regressions prove actual exclusion.
     const workflowGates = (
       await readRepoFile(
         'apps/oat-docs/docs/workflows/advanced/workflow-gates.md',
@@ -2619,7 +2619,13 @@ describe('validateOatSkills', () => {
     ).replace(/\s+/g, ' ');
 
     expect(workflowGates).toContain(
-      'Replacing a stale claim is not serialized against other launches, so concurrent recovery of one orphaned claim can, rarely, admit two runs',
+      'Recovery and release serialize destructive claim changes with an exclusive `<claim-path>.mutation` directory',
+    );
+    expect(workflowGates).toContain(
+      'Remove that exact guard directory only after verifying that no gate is still using it',
+    );
+    expect(workflowGates).toContain(
+      'The gate warns, exits nonzero with `status: review_failed` and `outcome: review_did_not_complete`, and does not launch a reviewer',
     );
   });
 
