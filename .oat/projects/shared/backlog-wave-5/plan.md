@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - 'Independent plan gate blocked: review artifact count-format validation failed.'
 oat_last_updated: 2026-10-03
 oat_phase: plan
 oat_phase_status: in_progress
@@ -431,6 +432,8 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p05    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
 | p06    | code     | pending  | -          | -                                                  | -                                        | -                                | -                      |
 | plan   | artifact | received | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md | -                                        | -                                | -                      |
+
+Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its artifact declares 0 Critical, 0 High, 6 Medium and 4 Low findings, but writes them as bold paragraphs; the current validator counts list items and rejects the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; implementation readiness remains false.
 
 ## Implementation Complete
 

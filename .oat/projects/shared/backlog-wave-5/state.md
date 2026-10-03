@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - 'Plan review artifact failed gate count validation; receive ineligible.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,11 +88,17 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-03T21:13:24.609630Z'
+oat_project_state_updated: '2026-10-03T21:23:09.420Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_quick_start_gate:
+  status: blocked
+  disposition: null
+  config_fingerprint: '88fb6a53c33aabb45f8ac7441bbb99f66460afa281e7a5e1f347537080cfa853'
+  reviewed_head: 'abba835844724079a86ff23122fa0f2027f78e2e'
+  decided_at: '2026-10-03T21:23:09.420Z'
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -130,4 +137,4 @@ None
 
 ## Next Milestone
 
-Pass plan reviews and complexity check before implementation
+Resolve the ineligible plan-review artifact through the owning gate recovery contract, then complete reviews and complexity check before implementation

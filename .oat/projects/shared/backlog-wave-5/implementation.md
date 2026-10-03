@@ -253,3 +253,21 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
   ]
 }
 ```
+
+## Independent planning gate boundary
+
+- Run: 7abeb986-214b-460e-8ec3-ccbb4cae81a1.
+- Configured invocation: claude-opus-5-5-high / claude / claude-opus-5-5 / high, exec-target-config.
+- Reviewed plan baseline: abba835844724079a86ff23122fa0f2027f78e2e.
+- CLI runner: branch build 0.3.16; PATH CLI observed 0.3.13. Configured command executed unchanged through branch-built runner, without target injection.
+- Gate result: artifact_validation_failed; process exit 1; receiveEligible false; handoff null.
+- Raw artifact: reviews/artifact-plan-review-2026-10-03T211958Z.md; sha256 60ec6dbe944a8694664909adb72126d90f6837bee049077c55cf802c4c26e894. Artifact retained unmodified, not received or archived.
+- Declared findings: 0 Critical, 0 High, 6 Medium, 4 Low. These are unreceived reviewer claims, not accepted dispositions.
+- Confirmed validation failure: findings use bold paragraphs instead of list items, so the parser tallies zero and rejects counts. Invocation fields are present in the artifact; missing corroboration in the envelope is a downstream result of verdict-parse failure.
+- Gate output and stderr: ignored analysis/plan-gate-r1.json and plan-gate-r1.stderr.log; exit recorded separately.
+- Receive: not started; no plan corrections applied from this ineligible artifact.
+- Remediation attempts consumed: 0 of max 2; operational validation failure is a boundary, not a validated blocking finding.
+- Complexity-review: not run yet; OAT-mode sequencing runs it after validated planning review disposition.
+- Stop: validation boundary under autonomy contract Resolution rules. Plan remains in_progress / ready_for null.
+- Resume prerequisite: resolve original-artifact formatting through the owning gate recovery contract and obtain a receive-eligible gate envelope; do not synthesize a successful receipt. Then receive/disposition, complexity-review and readiness completion may proceed.
+- Resume workflow: oat-project-autonomous backlog-wave-5, earliest incomplete owner oat-project-quick-start.
