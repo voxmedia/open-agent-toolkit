@@ -301,3 +301,7 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:1,low:
 ### 2026-10-03 · structural · oat gate review · final
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T003215Z.md run=7c263e05-5c9b-4a15-a476-8ce39ee033b4
+
+## PR #351 feedback follow-up
+
+Three additional fix tasks (46 total) address stale gate recovery/release races and fail-closed I/O errors, loaded-sibling dispatch discovery, and synced autonomous-completion arrival/publication guards. `BL-261002-serialize-stale-gate-claim` is now closed. Mandatory checks and lint/format pass; CLI tests: 8,208 passing with no cache replay. Independent core review and bounded integration follow-up are complete; the final follow-up gate has zero findings. Regression controls reject the pre-fix states. No finding was deferred or waived.

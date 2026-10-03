@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -83,7 +83,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/351' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-02T11:57:57.955Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-03T15:11:15Z'
+oat_project_state_updated: '2026-10-03T16:00:53Z'
 oat_generated: false
 oat_post_implement_sequence:
   status: complete
@@ -97,7 +97,7 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:76eaea5d632f8612107755e2770d20d1331e61ca9d7d4859dfd20a64932869f2'
@@ -106,33 +106,33 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 513012d520cdac0915445b8d044b6da8669f5805
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:e00aeb0d443a4841d02e5552a84604d6d9743eb8162399f1e13c91b7f6033a89'
   freshness_head: 513012d520cdac0915445b8d044b6da8669f5805
   freshness_fingerprint: 'sha256:effective-delta-v2:e00aeb0d443a4841d02e5552a84604d6d9743eb8162399f1e13c91b7f6033a89'
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'bw4-pr351-feedback-followup-1'
   launch_started_at: '2026-10-03T15:49:45Z'
   launch_result_receipt: '.oat/repo/analysis/backlog-wave-4/review-fixes/followup-gate.json'
   gate_run_marker: null
   gate_run_id: f555cc8b-558a-40da-8117-0d7debc0f261
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md before treating this gate review as consumed.'
+  receive_state: intent_persisted
+  receive_correlation: 'run=f555cc8b-558a-40da-8117-0d7debc0f261; handoff=receive; source=reviews/final-review-2026-10-03T155452Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/backlog-wave-4/reviews/final-review-2026-10-03T155452Z.md'
+  receive_archived_artifact: '.oat/projects/shared/backlog-wave-4/reviews/archived/final-review-2026-10-03T155452Z.md'
+  receive_event_identity: 'final | code | final-review-2026-10-03T155452Z.md'
+  receive_pre_head: 11ea99493ba12f41f038158aabf01100fecf9fe5
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-03T15:49:45Z'
+  updated_at: '2026-10-03T16:00:53Z'
 
 oat_project_recap:
   decision: generate

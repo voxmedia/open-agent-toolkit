@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-02
+oat_last_updated: 2026-10-03
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -1043,3 +1043,9 @@ Full Definition of Done plus lint/format passes at `513012d520cdac0915445b8d044b
 The earlier gate was launched while checks ran and reviewed the starting commit rather than the subsequently corrected integration head. The follow-up final gate is limited to `6ac0f47d..513012d520cdac0915445b8d044b6da8669f5805` and H1/H2, composing with the independently reviewed three-fix range. Root owns bookkeeping and publication. New exit-gate generation below is based on the corrected code fingerprint; prior receipts remain in the review ledger.
 
 Follow-up gate accepted: `f555cc8b-558a-40da-8117-0d7debc0f261`, target `codex-6-sol-xhigh`, Codex GPT-6.1 Sol xhigh, branch-built CLI, bounded H1/H2 correction range. Launch is persisted in state; no replacement route.
+
+### Feedback fixes complete (2026-10-03T16:00:53Z)
+
+All three remote findings are fixed in p07-t09/p07-t10/p07-t11, with no deferrals or waivers. Full required checks plus lint/format pass, including 8,208 CLI tests with zero Turbo cache hits. The baseline negative controls independently fail and valid controls remain accepted. First gate's H1/H2 are fixed by existing commits; follow-up gate `f555cc8b-558a-40da-8117-0d7debc0f261` at `513012d520cdac0915445b8d044b6da8669f5805` returned `ok/review_completed_gate_passed`, 0 Critical/High/Medium/Low. Root read the complete artifact and archived it to `reviews/archived/final-review-2026-10-03T155452Z.md`. The independent initial core-fix review plus bounded correction review covers the feedback-fix changes; original wave assurance remains inherited.
+
+Task ledger: 46/46 complete. PR #351 remains open. The existing post-implementation summary/docs/PR sequence remains complete; this follow-up updates summary and PR description. No live transport acceptance is claimed. Interrupted mutation guards require verified manual recovery as documented. These are recorded limits, not deferred findings.
