@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261003-assets-override-destination    | 2026-10-03 | accepted   | Assets override destination rule                                                                       | -       |
+| DR-261003-complexity-review-at-budget    | 2026-10-03 | accepted   | Complexity review at budget exhaustion                                                                 | -       |
+| DR-261003-full-surface-gate-budget       | 2026-10-03 | accepted   | Full-surface gate budget and duplicate rejection                                                       | -       |
+| DR-261003-report-quick-start-gate-record | 2026-10-03 | accepted   | Report quick-start gate record without routing                                                         | -       |
 | DR-261002-canonical-supported-skill      | 2026-10-02 | accepted   | Canonical supported-skill guides                                                                       | -       |
 | DR-261002-reader-first-documentation     | 2026-10-02 | accepted   | Reader-first documentation ownership                                                                   | -       |
 | DR-261002-retire-moved-documentation     | 2026-10-02 | accepted   | Retire moved documentation URLs                                                                        | -       |
