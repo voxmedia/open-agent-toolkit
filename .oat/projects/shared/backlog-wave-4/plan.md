@@ -1733,6 +1733,33 @@ restore.
 
 ---
 
+### Task p07-t08: (review) Follow a symlinked assets destination in the emptiness check
+
+**Files:**
+
+- Modify: `packages/cli/scripts/bundle-assets.sh` (around line 116)
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`
+
+**Step 1: Failing test first**
+
+An `OAT_ASSETS_DIR` that is a symlink to a populated directory is refused
+before any mutation; a symlink to an empty directory is still accepted.
+
+**Step 2: Implement** `find -H "${ASSETS}" -mindepth 1 -maxdepth 1 ...` so the
+starting path is followed, keeping the fail-closed exit-status check.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+and `pnpm --filter @open-agent-toolkit/cli build` (real `HOME`).
+Expected: exit 0; neutralize `-H` and show the symlink case fails, restore.
+
+**Step 4: Commit**
+
+`fix(p07-t08): follow a symlinked assets destination in the emptiness check`
+
+---
+
 ## Parallelism
 
 The plan is fully sequential (`oat_plan_parallel_groups: []`).
@@ -1864,6 +1891,7 @@ rewrites the four inventory rows last.
 | p06    | code     | passed          | 2026-10-02 | reviews/archived/p06-review-2026-10-02T224700Z.md           | 420660c213f8b120c5e362b46eec04e0204ab760 | gate       | codex-6-sol-xhigh |
 | p07    | code     | passed          | 2026-10-02 | reviews/archived/p07-review-2026-10-02T230925Z.md           | 622ee00127d4c84ecdde2e7e70b08cbcc1ad14bb | gate       | codex-6-sol-xhigh |
 | final  | code     | fixes_completed | 2026-10-03 | reviews/archived/final-review-2026-10-03T000713Z.md         | c80b32615ca5560bfe8d8c19941f89daf3c24d54 | gate       | codex-6-sol-xhigh |
+| final  | code     | fixes_added     | 2026-10-03 | reviews/archived/final-review-2026-10-03T002316Z.md         | c44e899dba4af7be0286232a7b3c20e331bdaef2 | auto       | -                 |
 
 ## Plan artifact review (`QS-11`): structured review by `oat-reviewer-claude-claude-opus-5-5-high` (exact reviewer ceiling; planning-parent effort unknown), three attempts within `oat_orchestration_retry_limit` 2: attempt 1 returned 3 High, 4 Medium, 5 Low; attempt 2 returned 2 Medium, 2 Low; attempt 3 clean. All findings were applied in plan.md and discovery.md (commits 6bae4002b, ff8d23485); no residual findings.
 
@@ -1881,9 +1909,9 @@ Quick-start plan gate attempt 2 of 2 (run `fe6bbe0a`): `blocked`, receive-eligib
 - Phase 4: 9 tasks - Review-loop skills
 - Phase 5: 6 tasks - Completion
 - Phase 6: 4 tasks - Small fixes
-- Phase 7: 7 tasks - Release fan-in
+- Phase 7: 8 tasks - Release fan-in
 
-**Total: 42 tasks**
+**Total: 43 tasks**
 
 Ready for code review and merge.
 

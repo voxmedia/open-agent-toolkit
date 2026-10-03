@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-02
-oat_current_task_id: null
+oat_current_task_id: p07-t08
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 8     | 8/8       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 5     | 5/5       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | complete | 6     | 6/6       |
-| Phase 6 | complete | 4     | 4/4       |
-| Phase 7 | complete | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 8     | 8/8       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 5     | 5/5       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | complete    | 6     | 6/6       |
+| Phase 6 | complete    | 4     | 4/4       |
+| Phase 7 | in_progress | 8     | 7/8       |
 
-**Total:** 42/42 tasks completed
+**Total:** 42/43 tasks completed
 
 ---
 
@@ -251,7 +251,7 @@ oat_generated: false
 
 ## Phase 7: Release fan-in
 
-**Status:** complete
+**Status:** in_progress
 
 ### Task p07-t01: Bump the lockstep public packages to 0.3.14
 
@@ -287,6 +287,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 2ceff7a83
+
+### Task p07-t08: (review) Follow a symlinked assets destination in the emptiness check
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -773,6 +778,15 @@ check`, lint, build, type-check, isolated-HOME `turbo run test --force` 10/10
   inherited marker directory; CLI build, check, type-check exit 0. The exit
   gate generation 1 basis is now stale; Steps 12-13 rerun for the new basis
   before gate attempt 2.
+
+- Step 12 for the new basis at `c44e899db`: test, lint, type-check, build exit
+  0 (no cache replays).
+- Request `bw4-final-review-4` (narrowed `596e1dba0..c44e899db`): accepted;
+  reconnaissance not-attempted; `reviews/archived/final-review-2026-10-03T002316Z.md`:
+  0 Critical, 0 High, 1 Medium, 0 Low. Exit gate H1 and M1 confirmed fixed;
+  new M1: the `find` emptiness check does not follow a symlinked destination,
+  so a symlink to a populated directory is accepted (no data loss). Converted
+  to `p07-t08` (`find -H`).
 
 <!-- orchestration-runs-end -->
 
