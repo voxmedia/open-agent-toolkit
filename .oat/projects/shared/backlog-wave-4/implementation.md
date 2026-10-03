@@ -1025,3 +1025,7 @@ Disjoint review-fix helpers ran concurrently under root coordination; the bounde
 **Verification:** Three-contender race and unreadable-live-claim regressions both execute a forbidden contender on the old code and fail; fixed gate suite passes 278/278 tests. Valid nested/simultaneous/dead/unparseable controls and occupied-guard refusal pass. CLI lint/type-check, scoped format and diff checks exit 0. Proof: `.oat/repo/analysis/backlog-wave-4/review-fixes/claim-proof.md`.
 
 The workflow documentation removes the concurrent-recovery caveat and describes fail-closed unchecked outcomes plus manual interrupted-guard recovery. `BL-261002-serialize-stale-gate-claim` is closed and archived through the CLI. All three worker handles returned successfully; root reviewed their source changes and recorded baseline proof. Full gates and independent final review are pending.
+
+### p07-t11 validation correction (root inline)
+
+Full `pnpm check` found that the new completion exception push needs registration in `synced-bookkeeping-sites.json`. Root (Codex GPT-6.1 Sol high) added the guarded writer site as a bounded p07-t11 integration correction; skill validation passes for all 66 OAT skills. The first full-check failure and logs are retained under `.oat/repo/analysis/backlog-wave-4/review-fixes/dod/`; the complete gate sequence restarts after this fix.
