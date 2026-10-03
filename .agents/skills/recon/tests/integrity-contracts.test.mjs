@@ -1554,6 +1554,59 @@ test('thorough-only assurance passes use claim-bearing typed results', async () 
   assert.equal(validation.achievedProfile, 'thorough');
 });
 
+test('production reconciliation requires every review kind publication requires for the achieved profile', async () => {
+  const packet = await fixture('thorough');
+  const priorReference = packet.manifest.artifacts.find(
+    (item) => item.path === 'raw/drafts/claims-v1.json',
+  );
+  const priorLedger = await readJson(
+    join(packet.packetRoot, priorReference.path),
+  );
+  const relative = 'reviews/redundant-verification.json';
+  const redundant = {
+    ...(await readJson(join(packet.packetRoot, relative))),
+    artifactReference: {
+      ...packet.manifest.artifacts.find((item) => item.path === relative),
+    },
+  };
+  const claimOne = (reviewResults) =>
+    reconcileLedger({
+      priorLedger,
+      reviewResults,
+      priorReference,
+    }).ledger.claims.find((claim) => claim.id === 'claim-1').status;
+  const core = await coreReviewResults(packet);
+
+  // Every review disposes of claim-1: it is verified.
+  assert.equal(claimOne([...core, redundant]), 'verified');
+  // A complete redundant-verification result makes the thorough profile
+  // achievable, so publication requires its disposition: leaving claim-1
+  // without one keeps it unresolved, like an uncertain disposition.
+  assert.equal(
+    claimOne([
+      ...core,
+      {
+        ...redundant,
+        dispositions: [{ claimId: 'claim-2', disposition: 'affirmed' }],
+      },
+    ]),
+    'unresolved',
+  );
+  // A failed redundant-verification pass cannot achieve thorough, so
+  // publication requires only the core reviews and so does reconciliation.
+  assert.equal(
+    claimOne([
+      ...core,
+      {
+        ...redundant,
+        status: 'failed',
+        dispositions: [{ claimId: 'claim-2', disposition: 'affirmed' }],
+      },
+    ]),
+    'verified',
+  );
+});
+
 test('standard reconciliation cannot reset the canonical ledger to revision one', async () => {
   const packet = await fixture();
   packet.ledger.revision = 1;

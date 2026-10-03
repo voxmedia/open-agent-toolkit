@@ -63,7 +63,7 @@ generated_at: YYYY-MM-DDTHH:MM:SSZ
 
 ## Section omission rule
 
-Apply the same rule as `.oat/templates/summary.md`: **omit any section with no content**. Do not leave empty sections or "None" placeholders. The minimum viable wrap-up is `# Wrap-up` + `## TL;DR` + one of (`Features introduced` | `Bug fixes` | `Shipped via OAT projects` | `Other merged PRs`) + `Included summaries (provenance)`.
+Apply the same rule as the `summary` template (resolve it with `oat template resolve summary`, as in the skill's Reference section): **omit any section with no content**. Do not leave empty sections or "None" placeholders. The minimum viable wrap-up is `# Wrap-up` + `## TL;DR` + one of (`Features introduced` | `Bug fixes` | `Shipped via OAT projects` | `Other merged PRs`) + `Included summaries (provenance)`.
 
 If the window is completely empty (no summaries, no merged PRs), still write the file (or stdout) with:
 

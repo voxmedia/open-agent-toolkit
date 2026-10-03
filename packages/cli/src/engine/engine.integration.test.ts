@@ -1,4 +1,5 @@
 import {
+  cp,
   lstat,
   mkdir,
   mkdtemp,
@@ -16,7 +17,9 @@ import {
   DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG,
   type SyncConfig,
 } from '@config/sync-config';
+import { detectDrift } from '@drift/detector';
 import { createSymlink, createSymlinkNoClobber } from '@fs/io';
+import { computeDirectoryDigests } from '@manifest/hash';
 import {
   createEmptyManifest,
   loadManifest,
@@ -1386,6 +1389,299 @@ describe('sync engine integration', () => {
     expect(sentinelContent).toContain('Source:');
     expect(skillEntry?.strategy).toBe('copy');
     expect(skillEntry?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it.each(['legacy', 'tampered'] as const)(
+    'copy mode: restamps a %s recorded hash once, then the next sync is a no-op',
+    async (recorded) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+      tempDirs.push(root);
+      const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root);
+      const canonicalSkill = join(root, '.agents', 'skills', 'skill-one');
+
+      async function sync() {
+        const manifest = await loadManifest(manifestPath);
+        const plan = await computeSyncPlan({
+          canonical: await scanCanonical(root, 'project'),
+          adapters: [adapter],
+          manifest,
+          scope: 'project',
+          config: COPY_SYNC_CONFIG,
+          scopeRoot: root,
+        });
+        await executeSyncPlan(plan, manifest, manifestPath);
+        return plan;
+      }
+
+      await sync();
+      const synced = await loadManifest(manifestPath);
+      const { framed, legacy } = await computeDirectoryDigests(canonicalSkill);
+      const staleHash = recorded === 'legacy' ? legacy : 'c'.repeat(64);
+      const staleLastUpdated = '2026-01-01T00:00:00.000Z';
+      await saveManifest(manifestPath, {
+        ...synced,
+        lastUpdated: staleLastUpdated,
+        entries: synced.entries.map((entry) =>
+          entry.canonicalPath === '.agents/skills/skill-one'
+            ? { ...entry, contentHash: staleHash }
+            : entry,
+        ),
+      });
+
+      const restampPlan = await sync();
+      const restampedSkill = restampPlan.entries.find(
+        (entry) => entry.canonical.name === 'skill-one',
+      );
+      expect(restampedSkill).toMatchObject({
+        operation: 'skip',
+        restampContentHash: framed,
+      });
+      expect(
+        restampPlan.entries.every((entry) => entry.operation === 'skip'),
+      ).toBe(true);
+      const restamped = await loadManifest(manifestPath);
+      expect(
+        restamped.entries.find(
+          (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+        )?.contentHash,
+      ).toBe(framed);
+      expect(restamped.lastUpdated).not.toBe(staleLastUpdated);
+
+      const settledBytes = await readFile(manifestPath, 'utf8');
+      const settledPlan = await sync();
+      expect(
+        settledPlan.entries.some(
+          (entry) => entry.restampContentHash !== undefined,
+        ),
+      ).toBe(false);
+      expect(
+        settledPlan.entries.every((entry) => entry.operation === 'skip'),
+      ).toBe(true);
+      expect(await readFile(manifestPath, 'utf8')).toBe(settledBytes);
+      expect((await loadManifest(manifestPath)).lastUpdated).toBe(
+        restamped.lastUpdated,
+      );
+    },
+  );
+
+  it('copy mode: restamps a row that spells the checked provider path differently', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+    const canonicalSkill = join(root, '.agents', 'skills', 'skill-one');
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(plan, manifest, manifestPath);
+      return plan;
+    }
+
+    await sync();
+    // Written as raw JSON and read back through `loadManifest`, so the
+    // equivalent `./` spelling passes the real manifest schema.
+    const synced = JSON.parse(
+      await readFile(manifestPath, 'utf8'),
+    ) as ManifestV2;
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify(
+        {
+          ...synced,
+          entries: synced.entries.map((entry) =>
+            entry.canonicalPath === '.agents/skills/skill-one'
+              ? {
+                  ...entry,
+                  providerPath: './.claude/skills/skill-one',
+                  contentHash: 'c'.repeat(64),
+                }
+              : entry,
+          ),
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+    const { framed } = await computeDirectoryDigests(canonicalSkill);
+
+    const restampPlan = await sync();
+    expect(
+      restampPlan.entries.find((entry) => entry.canonical.name === 'skill-one'),
+    ).toMatchObject({ operation: 'skip', restampContentHash: framed });
+    const restamped = (await loadManifest(manifestPath)).entries.find(
+      (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+    );
+    expect(restamped).toMatchObject({
+      providerPath: './.claude/skills/skill-one',
+      contentHash: framed,
+    });
+
+    const settledPlan = await sync();
+    expect(
+      settledPlan.entries.some(
+        (entry) => entry.restampContentHash !== undefined,
+      ),
+    ).toBe(false);
+  });
+
+  it('copy mode: never restamps a row whose provider path differs from the checked path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const skill = join(root, '.agents', 'skills', 'skill-one');
+    await mkdir(skill, { recursive: true });
+    await writeFile(join(skill, 'SKILL.md'), '# skill v1\n', 'utf8');
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      await executeSyncPlan(plan, manifest, manifestPath);
+      return plan;
+    }
+
+    // An older layout: snapshot the v1 copy at a path the adapter no longer
+    // maps, then let the expected path move on to v2.
+    await sync();
+    const v1 = (await loadManifest(manifestPath)).entries.find(
+      (entry) => entry.canonicalPath === '.agents/skills/skill-one',
+    )!;
+    await cp(
+      join(root, '.claude', 'skills', 'skill-one'),
+      join(root, '.claude', 'old-skills', 'skill-one'),
+      { recursive: true },
+    );
+    await writeFile(join(skill, 'SKILL.md'), '# skill v2\n', 'utf8');
+    await sync();
+    const v2 = await loadManifest(manifestPath);
+    await saveManifest(manifestPath, {
+      ...v2,
+      entries: v2.entries.map((entry) =>
+        entry.canonicalPath === v1.canonicalPath
+          ? {
+              ...entry,
+              providerPath: '.claude/old-skills/skill-one',
+              contentHash: v1.contentHash,
+            }
+          : entry,
+      ),
+    });
+    const trackedDrift = async () =>
+      (
+        await detectDrift(
+          (
+            await loadManifest(manifestPath)
+          ).entries.find((entry) => entry.canonicalPath === v1.canonicalPath)!,
+          root,
+        )
+      ).state;
+    expect(await trackedDrift()).toEqual({ status: 'in_sync' });
+
+    const plan = await sync();
+
+    expect(plan.entries).toEqual([
+      expect.objectContaining({ operation: 'skip' }),
+    ]);
+    expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    expect(await trackedDrift()).toEqual({ status: 'in_sync' });
+  });
+
+  it('copy mode: a marker-less skill or agent directory reports the same error on every run instead of looping', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const adapter = createTestAdapter({ defaultStrategy: 'copy' });
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'custom-skill', 'notes.md'),
+      '# notes\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'agents', 'custom-agent'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'agents', 'custom-agent', 'notes.md'),
+      '# notes\n',
+      'utf8',
+    );
+
+    async function sync() {
+      const manifest = await loadManifest(manifestPath);
+      const plan = await computeSyncPlan({
+        canonical: await scanCanonical(root, 'project'),
+        adapters: [adapter],
+        manifest,
+        scope: 'project',
+        config: COPY_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+      const result = await executeSyncPlan(plan, manifest, manifestPath);
+      return { plan, result };
+    }
+
+    const first = await sync();
+    const second = await sync();
+
+    for (const { plan, result } of [first, second]) {
+      expect(
+        plan.entries.filter((entry) => entry.operation === 'error'),
+      ).toEqual([
+        expect.objectContaining({
+          canonical: expect.objectContaining({ name: 'custom-skill' }),
+          reason:
+            'canonical skill directory .agents/skills/custom-skill has no SKILL.md; add SKILL.md or remove the directory, then re-run oat sync',
+        }),
+        expect.objectContaining({
+          canonical: expect.objectContaining({ name: 'custom-agent' }),
+          reason:
+            'canonical agent directory .agents/agents/custom-agent has no AGENT.md; add AGENT.md or remove the directory, then re-run oat sync',
+        }),
+      ]);
+      expect(
+        plan.entries.some((entry) => entry.operation === 'update_copy'),
+      ).toBe(false);
+      expect(result.failed).toBe(2);
+    }
+    expect(
+      first.plan.entries
+        .filter((entry) => entry.operation !== 'error')
+        .map((entry) => entry.operation),
+    ).toEqual(['create_copy', 'create_copy']);
+    expect(
+      second.plan.entries
+        .filter((entry) => entry.operation !== 'error')
+        .map((entry) => entry.operation),
+    ).toEqual(['skip', 'skip']);
+    await expect(
+      lstat(join(root, '.claude', 'skills', 'custom-skill')),
+    ).rejects.toThrow();
+    const manifest = await loadManifest(manifestPath);
+    expect(manifest.entries.map((entry) => entry.canonicalPath).sort()).toEqual(
+      ['.agents/agents/agent-one', '.agents/skills/skill-one'],
+    );
   });
 
   it('file-based agent: syncs via symlink', async () => {

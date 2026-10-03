@@ -446,12 +446,11 @@ describe('detectDrift', () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
     tempDirs.push(root);
     const { canonicalPath } = await seedManagedCopy(root);
-    // Length framing changed every directory digest, and `oat sync` plans
-    // `skip` for a faithful tree without restamping an entry it already owns,
-    // so a manifest written before the change keeps its legacy value forever.
-    // The detector recognizes exactly that manifest and re-decides with the
-    // framed digests; without the bridge every pre-existing copy-strategy
-    // install would report permanent, unrepairable drift.
+    // Length framing changed every directory digest, so a manifest written
+    // before the change keeps its legacy value until the next `oat sync`
+    // restamps it. The detector recognizes exactly that manifest and re-decides
+    // with the framed digests; without the bridge a pre-framing copy-strategy
+    // install would report drift until that sync runs.
     const { legacy } = await computeDirectoryDigests(canonicalPath);
     const copyEntry = createManifestEntry({
       strategy: 'copy',

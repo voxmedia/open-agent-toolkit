@@ -1,7 +1,7 @@
 ---
 id: BL-261001-resolve-the-summary-template
 title: Resolve the summary template in oat-wrap-up through oat template resolve
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -10,7 +10,7 @@ labels:
   - templates
 assignee: null
 created: 2026-10-01T19:19:36.888Z
-updated: 2026-10-01T19:19:36.888Z
+updated: '2026-10-02T22:52:19Z'
 associated_issues: []
 external_plans: []
 ---

@@ -6,7 +6,7 @@ disable-model-invocation: false
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # Wrap-Up
@@ -365,7 +365,13 @@ so I can review before committing it.
 - Automation patterns (Claude Code `CronCreate`, Codex host scheduling, plain cron): `references/automation-recipes.md`
 - Prerequisite command: `oat repo archive sync` at `packages/cli/src/commands/repo/archive/index.ts`
 - Merged-PR query pattern: `packages/cli/src/commands/repo/pr-comments/collect/collect-comments.ts:198-205`
-- Summary frontmatter schema: `.oat/templates/summary.md`
+- Summary frontmatter schema: the `summary` template, resolved through the repository, user, then bundled tier. Run `oat template resolve summary --json` and read the reported `path`. A user-scope-only install has no repository `.oat/templates/`, and the bundle tier reports `"path": null`; in that case copy it to a scratch file and read the copy:
+
+  ```bash
+  SUMMARY_TEMPLATE_DIR="$(mktemp -d)"
+  oat template resolve summary --output "$SUMMARY_TEMPLATE_DIR/summary.md"
+  ```
+
 - Config key: `archive.wrapUpExportPath` (managed via `oat config set archive.wrapUpExportPath <path>`)
 
 ## Troubleshooting
@@ -394,7 +400,7 @@ so I can review before committing it.
 
 **"Shipped via OAT projects" is empty or "Other merged PRs" contains PRs that clearly correspond to included summaries (false negative):**
 
-- Step 7's cross-reference logic is strict: it only claims a PR for a summary when the summary body literally contains the PR number (`#<n>`, `github.com/.../pull/<n>`, or a bare PR number adjacent to keywords like "PR", "merged", "ships in"), or when a sibling `pr/` directory inside the project references the PR. OAT summaries as authored today (see `.oat/templates/summary.md`) do not inline PR numbers, so in repos that have not adopted the convention of citing PRs in summaries, the cross-reference will often find zero matches and all merged PRs will land in "Other merged PRs".
+- Step 7's cross-reference logic is strict: it only claims a PR for a summary when the summary body literally contains the PR number (`#<n>`, `github.com/.../pull/<n>`, or a bare PR number adjacent to keywords like "PR", "merged", "ships in"), or when a sibling `pr/` directory inside the project references the PR. OAT summaries as authored today (see the `summary` template, resolved as in Reference) do not inline PR numbers, so in repos that have not adopted the convention of citing PRs in summaries, the cross-reference will often find zero matches and all merged PRs will land in "Other merged PRs".
 - **Workaround options (author-time)**: add a short "Associated PRs" section to project summaries and list PR numbers inline, OR populate `pr/` under each project directory with PR metadata so the sibling scan has data to match against.
 - **Workaround options (report-time)**: manually re-read the generated report; move PRs from "Other merged PRs" into "Shipped via OAT projects" by hand if the correspondence is obvious (matching keywords in the PR title and the summary's What Was Implemented section). The skill is designed to produce an editable draft, not a final release note.
 - This is a v1 limitation. Future versions may add a looser heuristic (e.g., title-keyword matching, commit-to-project mapping via `git log`) to close the gap.

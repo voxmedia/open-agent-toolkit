@@ -1,7 +1,7 @@
 ---
 id: BL-260720-add-oat-project-complete-auto
 title: Add oat-project-complete-auto companion skill for autonomous closeouts
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - workflow-integrity
 assignee: null
 created: 2026-07-20T14:31:24.681Z
-updated: 2026-09-09T12:32:55.000Z
+updated: '2026-10-02T22:52:16Z'
 associated_issues: []
 external_plans: []
 ---
@@ -29,9 +29,6 @@ Structural gap found by the Orc wave program (first-run handoff signal 10, root-
 - Interactive oat-project-complete unchanged (flag stays; human gate preserved).
 - wave-execute step 8 repointed to the companion for autonomous runs (removes the interim as-document guidance shipped in 1.7.0).
 - BATCH MODE (operator design 2026-07-20): supports completing N wave-wrapper projects in one invocation at program close, gated by the program-end operator checkpoint (the ask itself is the human gate for the batch); per-project preconditions still hard-fail individually.
-
-- {Outcome 1}
-- {Outcome 2}
 
 ## Notes
 

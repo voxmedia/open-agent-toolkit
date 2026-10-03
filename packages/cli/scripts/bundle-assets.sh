@@ -1,13 +1,90 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+# Physical paths: run through a symlinked checkout, a logical path made node
+# resolve the inventory module to a different path than argv[1], so every
+# lookup printed nothing (the likely trigger of the Wave 3 disk fill). This is
+# one layer of that fix, alongside the real-path entry check in
+# bundle-inputs.mjs; neither is redundant, and keeping REPO_ROOT physical keeps
+# every path the guards below print and compare in one form.
+SCRIPT_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_ROOT="$(cd -P "${SCRIPT_DIR}/../../.." && pwd -P)"
 ASSETS="${OAT_ASSETS_DIR:-${REPO_ROOT}/packages/cli/assets}"
 INVENTORY="${SCRIPT_DIR}/bundle-inputs.mjs"
-DOCS_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get docsRoot)"
-MIGRATION_PROMPT_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get migrationPrompt)"
-DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get dispatchMatrix)"
+
+# Every guard below runs before the first mkdir, cp, mv, or rm. An inventory
+# lookup that prints nothing collapses "${REPO_ROOT}/<value>" to the repository
+# root, and the docs copy then copies the whole repository into its own staging
+# directory until the disk fills (Wave 3, 2026-10-01). Fail closed instead.
+fail_bundle() {
+  echo "bundle-assets: $*" >&2
+  exit 1
+}
+
+# Print the physical absolute form of a path that may not exist yet: resolve
+# the nearest existing ancestor with `cd -P` and `pwd -P`, so neither a symlink
+# alias nor a `<symlink>/..` spelling can hide a staging directory inside a
+# copied source, and append the missing components. A logical `cd` would trim
+# `<symlink>/..` as text while the kernel follows the symlink first.
+physical_path() {
+  local path="$1" suffix="" name resolved
+  case "${path}" in
+    /*) ;;
+    *) path="${PWD}/${path}" ;;
+  esac
+  while [ ! -d "${path}" ]; do
+    name="$(basename "${path}")"
+    case "${name}" in
+      .) ;;
+      ..)
+        echo "bundle-assets: cannot resolve '..' below a missing directory in ${1}" >&2
+        return 1
+        ;;
+      *) suffix="/${name}${suffix}" ;;
+    esac
+    path="$(dirname "${path}")"
+  done
+  resolved="$(cd -P "${path}" && pwd -P)" || return 1
+  resolved="${resolved%/}${suffix}"
+  printf '%s\n' "${resolved:-/}"
+}
+
+# True when $1 is $2 or lies below it. Both arguments are physical paths.
+path_is_within() {
+  [ "$2" = "/" ] && return 0
+  [ "$1" = "$2" ] && return 0
+  case "$1" in
+    "$2"/*) return 0 ;;
+  esac
+  return 1
+}
+
+# Print "${REPO_ROOT}/<value>" for an inventory path lookup, or exit when the
+# value is empty, absolute, climbs with '..', or physically names the
+# repository root.
+require_inventory_path() {
+  local key="$1" value
+  value="$(node "${INVENTORY}" --get "${key}")" ||
+    fail_bundle "inventory lookup '${key}' failed."
+  [ -n "${value}" ] ||
+    fail_bundle "inventory lookup '${key}' printed nothing; refusing to build from the repository root."
+  case "${value}" in
+    /*) fail_bundle "inventory lookup '${key}' returned an absolute path (${value}); expected a repository-relative path." ;;
+  esac
+  case "/${value}/" in
+    */../*) fail_bundle "inventory lookup '${key}' contains a '..' segment (${value}); expected a path inside the repository." ;;
+  esac
+  # Both sides are normalized, so the check does not depend on REPO_ROOT
+  # already being physical.
+  if [ "$(physical_path "${REPO_ROOT}/${value}")" = "$(physical_path "${REPO_ROOT}")" ]; then
+    fail_bundle "inventory lookup '${key}' resolves to the repository root (${value}); refusing to copy the repository into its own bundle."
+  fi
+  printf '%s\n' "${REPO_ROOT}/${value}"
+}
+
+DOCS_SOURCE="$(require_inventory_path docsRoot)" || exit 1
+MIGRATION_PROMPT_SOURCE="$(require_inventory_path migrationPrompt)" || exit 1
+DISPATCH_MATRIX_RECOMMENDATION_SOURCE="$(require_inventory_path dispatchMatrix)" || exit 1
 
 # The bundle is published into ASSETS by rename rather than rebuilt in place.
 # `resolveAssetsRoot` in the CLI honours a non-empty OAT_ASSETS_DIR, but every
@@ -20,6 +97,43 @@ DISPATCH_MATRIX_RECOMMENDATION_SOURCE="${REPO_ROOT}/$(node "${INVENTORY}" --get 
 # leaves the previous bundle intact if the build fails.
 STAGING="${ASSETS}.staging.$$"
 PREVIOUS="${ASSETS}.previous.$$"
+
+# Destination rule. Publishing renames whatever sits at ASSETS to PREVIOUS and
+# deletes it, so an OAT_ASSETS_DIR override is published only when it is
+# absent, an empty directory, or a directory holding bundle-metadata.json (a
+# previous bundle); anything else is refused, including a directory that
+# cannot be listed, which is not known to be empty. The default destination,
+# packages/cli/assets, is exempt: a fresh checkout holds its tracked files
+# without bundle-metadata.json.
+if [ -n "${OAT_ASSETS_DIR:-}" ] && { [ -e "${ASSETS}" ] || [ -L "${ASSETS}" ]; }; then
+  if [ ! -d "${ASSETS}" ]; then
+    fail_bundle "refusing to build: the assets destination (${ASSETS}) is not a directory; remove it or choose an empty directory."
+  fi
+  if [ ! -f "${ASSETS}/bundle-metadata.json" ]; then
+    # Print one fixed byte per entry rather than any filename: a textual
+    # listing captured by command substitution loses trailing newlines, so a
+    # directory whose only entry is named with newlines would read as empty.
+    # -H follows ASSETS itself when it is a symlink, so a link to a populated
+    # directory is checked through, not read as an empty starting point.
+    assets_has_entry="$(find -H "${ASSETS}" -mindepth 1 -maxdepth 1 -exec printf x \; -quit)" ||
+      fail_bundle "refusing to build: the assets destination (${ASSETS}) cannot be listed; remove it or choose an empty directory."
+    if [ -n "${assets_has_entry}" ]; then
+      fail_bundle "refusing to build: the assets destination (${ASSETS}) is neither an empty directory nor a previous bundle (no bundle-metadata.json); remove it or choose an empty directory."
+    fi
+  fi
+fi
+
+# Recursion rule. The staging directory must not be at or inside a recursively
+# copied source root (skills, templates, docs), or the copy would copy that tree
+# into itself. Compared on physical paths, so a symlink alias or `<link>/..`
+# cannot hide it.
+STAGING_PHYSICAL="$(physical_path "${STAGING}")" || exit 1
+for source_root in "${REPO_ROOT}/.agents/skills" "${REPO_ROOT}/.oat/templates" "${DOCS_SOURCE}"; do
+  source_root_physical="$(physical_path "${source_root}")" || exit 1
+  if path_is_within "${STAGING_PHYSICAL}" "${source_root_physical}"; then
+    fail_bundle "refusing to build: the staging directory (${STAGING_PHYSICAL}) is at or inside the recursively copied source ${source_root_physical}."
+  fi
+done
 
 # The trap must not destroy the only surviving copy. If the first rename below
 # succeeded and the second then failed, ASSETS does not exist while PREVIOUS

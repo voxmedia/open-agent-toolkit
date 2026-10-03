@@ -98,6 +98,27 @@ Key behavior:
   failures, but skew present — apply reports
   `Manifest version refreshed; no content changes required.` instead of
   `No changes required.`, so a manifest write is never described as a no-op.
+- A faithful copy-strategy entry whose manifest row records a stale
+  `contentHash` (a pre-framing legacy digest or a tampered value) is planned as
+  `skip` with the reason
+  `already in sync; restamp stale manifest content hash`, and `--json` plan
+  entries carry the verified digest as `restampContentHash`. Apply writes that
+  digest, so the next run is a no-op. Only a row that tracks the same provider
+  path that sync checked is restamped. Dry-run then reports
+  `Run without --dry-run to restamp N stale manifest content hashes.` instead
+  of `No changes to apply.`. Apply reports
+  `Manifest content hash restamped for N entries; no content changes required.`
+  (combined with the version-refresh sentence when both happen), or
+  `Manifest content hash restamped for N entries.` beside a partial failure.
+- A copy-strategy canonical skill directory without `SKILL.md`, or agent
+  directory without `AGENT.md`, is planned as an `error` operation whose reason
+  names the missing file, instead of a copy that never verifies and is retried
+  on every run. It changes nothing and is not a planned operation; other
+  entries still sync. Apply reports it as a failed result (`status: failed`
+  with a `failure` in `--json` `operationResults`) and exits 1. Dry-run lists
+  it, warns `N entry cannot sync until its configuration error is fixed.`,
+  counts it in `summary.failed`, and still exits 0. Symlink strategy is
+  unaffected.
 
 `oat sync` is not the only command that replaces a manifest's producer version.
 `oat init`, `oat remove skill`, and `oat status` each capture the manifest's

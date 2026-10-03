@@ -280,6 +280,7 @@ export interface OatWorkflowConfig {
   hillCheckpointDefault?: WorkflowHillCheckpointDefault;
   archiveOnComplete?: boolean;
   createPrOnComplete?: boolean;
+  autonomousComplete?: boolean;
   postImplementSequence?: WorkflowPostImplementSequence;
   reviewExecutionModel?: WorkflowReviewExecutionModel;
   autoReviewAtHillCheckpoints?: boolean;
@@ -733,6 +734,10 @@ function normalizeWorkflowConfig(
 
   if (typeof parsed.createPrOnComplete === 'boolean') {
     next.createPrOnComplete = parsed.createPrOnComplete;
+  }
+
+  if (typeof parsed.autonomousComplete === 'boolean') {
+    next.autonomousComplete = parsed.autonomousComplete;
   }
 
   const postImplementSequence = normalizeWorkflowPostImplementSequence(

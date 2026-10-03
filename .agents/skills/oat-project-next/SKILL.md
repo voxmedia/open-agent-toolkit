@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.4
+  version: 1.1.5
 ---
 
 # Project Next
@@ -135,6 +135,7 @@ Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 | `oat_hill_completed`      | Which HiLL gates have been passed                                                            |
 | `oat_blockers`            | Informational warnings (not routing gates)                                                   |
 | `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                    |
+| `oat_quick_start_gate`    | Reported only in the Step 6 announcement; never a routing input                              |
 | `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
@@ -331,7 +332,10 @@ Apply the following checks in priority order. Stop at the first match:
 **5.0: Unresolved implementation exit gate**
 
 Before every other post-implementation route, inspect
-`oat_implement_exit_gate` in project state. If
+`oat_implement_exit_gate` in project state. Its `status`, `disposition`,
+`config_fingerprint`, `reviewed_head`, and `decided_at` fields are the shared
+lifecycle gate record core in `references/docs/gate-approval-record.md`; the
+freshness rules below are this record's own. If
 `oat_implement_exit_gate` is absent, `pending`, `blocked`, `stale`, malformed,
 or not fresh, route to `oat-project-implement`.
 
@@ -561,6 +565,19 @@ Current: {oat_phase} ({oat_phase_status}) — {boundary tier or post-impl step d
 Routing: → {target-skill-name}
 Reason: {one-line explanation}
 ```
+
+**Quick-start gate record:** When `oat_quick_start_gate` exists, read it as
+`references/docs/gate-approval-record.md` describes, without recomputing its
+fingerprint, and add one line after the `Current:` line:
+
+```
+Quick-start gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded)
+```
+
+Write `malformed` in place of the values when the fields do not form a valid
+record. The record adds no route and no warning. The quick plan readiness
+predicate stays the single routing rule for quick plans, and an absent record
+(no record written) adds no line.
 
 **Blocker warning:** If `oat_blockers` is non-empty, add before the routing line:
 

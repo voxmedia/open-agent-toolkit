@@ -10,7 +10,11 @@ import {
 
 import type { SyncConfig } from '@config/sync-config';
 import { CliError } from '@errors/index';
-import { computeContentHash, computeStringHash } from '@manifest/hash';
+import {
+  computeContentHash,
+  computeDirectoryDigests,
+  computeStringHash,
+} from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type {
   Manifest,
@@ -373,6 +377,33 @@ export async function classifyObsoleteMappingRetirement(
           'obsolete mapping has verified clean managed copy',
         );
       }
+
+      // Pre-framing manifest bridge, mirroring `drift/detector.ts`: a manifest
+      // written before length framing records the legacy digest, so the framed
+      // comparison above cannot match it and a faithful obsolete copy would be
+      // detached and left behind as a stale unmanaged tree. Accept the legacy
+      // value only when it is the legacy digest of the canonical tree *and*
+      // the copy's framed managed digest equals that same capture's framed
+      // digest, so acceptance still rests entirely on the framed digests (a
+      // tampered body or a forged recorded hash still detaches). Any failure
+      // to read the canonical tree is "cannot verify" and detaches below.
+      if (managedHash !== null) {
+        const canonicalDigests = await computeDirectoryDigests(
+          canonicalPath,
+        ).catch(() => null);
+        if (
+          canonicalDigests !== null &&
+          manifestEntry.contentHash === canonicalDigests.legacy &&
+          managedHash === canonicalDigests.framed
+        ) {
+          return createRetirementEntry(
+            manifestEntry,
+            scopeRoot,
+            'remove',
+            'obsolete mapping has verified clean managed copy',
+          );
+        }
+      }
     }
   }
 
@@ -384,12 +415,23 @@ export async function classifyObsoleteMappingRetirement(
   );
 }
 
+interface ClassifiedOperation extends Pick<
+  SyncPlanEntry,
+  'operation' | 'reason'
+> {
+  /**
+   * The canonical digest a copy-strategy `skip` was verified against: the
+   * value `toManifestEntry` records (framed for a directory).
+   */
+  verifiedContentHash?: string;
+}
+
 async function classifyOperation(
   canonicalEntry: CanonicalEntry,
   providerPath: string,
   strategy: 'symlink' | 'copy',
   renderedContent?: string,
-): Promise<Pick<SyncPlanEntry, 'operation' | 'reason'>> {
+): Promise<ClassifiedOperation> {
   if (strategy === 'symlink') {
     let providerStat: Awaited<ReturnType<typeof lstat>>;
     try {
@@ -465,6 +507,7 @@ async function classifyOperation(
     return {
       operation: 'skip',
       reason: 'already in sync',
+      verifiedContentHash: canonicalHash,
     };
   }
 
@@ -488,6 +531,7 @@ async function classifyOperation(
       return {
         operation: 'skip',
         reason: 'already in sync',
+        verifiedContentHash: canonicalHash,
       };
     }
   }
@@ -496,6 +540,42 @@ async function classifyOperation(
     operation: 'update_copy',
     reason: 'copied content differs from canonical content',
   };
+}
+
+/**
+ * The marker file a copy-strategy directory needs and lacks, or `null`.
+ *
+ * `applyCopyMarker` prepends the banner to `SKILL.md` / `AGENT.md`, and the
+ * managed-copy digest requires that banner. A canonical skill or agent
+ * directory without its marker therefore produced a copy that never verified:
+ * `computeManagedDirectoryCopyHash` returned `null`, so every `oat sync`
+ * planned another `update_copy` while the manifest hash never moved.
+ */
+async function missingCopyMarker(
+  canonicalEntry: CanonicalEntry,
+): Promise<string | null> {
+  if (canonicalEntry.isFile || canonicalEntry.type === 'rule') {
+    return null;
+  }
+
+  const markerFileName =
+    canonicalEntry.type === 'agent' ? 'AGENT.md' : 'SKILL.md';
+  try {
+    const markerStat = await stat(
+      join(canonicalEntry.canonicalPath, markerFileName),
+    );
+    return markerStat.isFile() ? null : markerFileName;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+    ) {
+      return markerFileName;
+    }
+    throw error;
+  }
 }
 
 function resolveScopeRoot(
@@ -882,7 +962,29 @@ export async function computeSyncPlan({
             ? manifestEntry.strategy
             : mappingStrategy;
 
-        const operation = deferredCollectionTransition
+        const missingMarker =
+          entryStrategy === 'copy'
+            ? await missingCopyMarker(canonicalEntry)
+            : null;
+        if (missingMarker !== null) {
+          const displayPath = relativeCanonicalPath.replaceAll('\\', '/');
+          entries.push({
+            canonical: canonicalEntry,
+            provider: adapter.name,
+            providerPath,
+            operation: 'error',
+            strategy: entryStrategy,
+            reason: `canonical ${canonicalEntry.type} directory ${displayPath} has no ${missingMarker}; add ${missingMarker} or remove the directory, then re-run oat sync`,
+          });
+          // Seen, so an owned row is neither removed nor detached: the entry
+          // still exists canonically and only its configuration is wrong.
+          seenCanonicalKeys.add(
+            `${normalize(relativeCanonicalPath)}::${adapter.name}`,
+          );
+          continue;
+        }
+
+        const operation: ClassifiedOperation = deferredCollectionTransition
           ? {
               operation:
                 entryStrategy === 'copy'
@@ -904,17 +1006,40 @@ export async function computeSyncPlan({
               );
             })();
 
+        // A faithful copy whose owning manifest entry records a different
+        // digest (a pre-framing legacy value or a tampered one) is restamped on
+        // skip. Without this `ensureSkipEntryManaged` kept the stale value
+        // forever: `oat status` reported drift that no `oat sync` repaired.
+        // The row must track the path that was verified: a row keyed by
+        // `(canonicalPath, provider)` can still name an older provider path
+        // (after a `providerDir` change), and stamping it with the digest of a
+        // different tree would turn its `in_sync` into permanent drift.
+        const { verifiedContentHash } = operation;
+        const restampContentHash =
+          operation.operation === 'skip' &&
+          verifiedContentHash !== undefined &&
+          manifestEntry?.strategy === 'copy' &&
+          normalize(manifestEntry.providerPath).replaceAll('\\', '/') ===
+            relativeManifestPath(entryScopeRoot, providerPath) &&
+          manifestEntry.contentHash !== verifiedContentHash
+            ? verifiedContentHash
+            : undefined;
+
         entries.push({
           canonical: canonicalEntry,
           provider: adapter.name,
           providerPath,
           operation: operation.operation,
           strategy: entryStrategy,
-          reason: operation.reason,
+          reason:
+            restampContentHash === undefined
+              ? operation.reason
+              : `${operation.reason}; restamp stale manifest content hash`,
           renderedContent,
           ...(deferredCollectionTransition
             ? { deferredUntilCollectionDetached: true }
             : {}),
+          ...(restampContentHash === undefined ? {} : { restampContentHash }),
         });
 
         seenCanonicalKeys.add(

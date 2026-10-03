@@ -1,5 +1,5 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, normalize, relative, resolve } from 'node:path';
 
 import {
   copyDirectory,
@@ -67,7 +67,11 @@ export type CollectionSyncResult = SyncResult & {
 };
 
 function mutatesProviderPath(entry: SyncPlanEntry): boolean {
-  return entry.operation !== 'skip' && entry.operation !== 'detach';
+  return (
+    entry.operation !== 'skip' &&
+    entry.operation !== 'detach' &&
+    entry.operation !== 'error'
+  );
 }
 
 function operationEvidence(
@@ -224,7 +228,9 @@ async function applyCopyMarker(entry: SyncPlanEntry): Promise<void> {
       'code' in error &&
       error.code === 'ENOENT'
     ) {
-      // Marker insertion is best-effort for non-standard directory layouts.
+      // Marker insertion stays best-effort here. The planner already reports a
+      // canonical directory without its marker as an `error` entry, so this
+      // path is reached only if the marker disappears between plan and apply.
       return;
     }
     throw error;
@@ -376,18 +382,51 @@ function removeManifestEntry(
     : { ...manifest, entries, lastUpdated: new Date().toISOString() };
 }
 
+/**
+ * Whether two scope-relative manifest paths name the same location. A stored
+ * row may spell its path differently (`./.claude/skills/x`) from the form
+ * `resolveManifestPaths` produces; the planner compares normalized paths, so
+ * the restamp guard must too, or a planned restamp is silently dropped. The
+ * stored spelling itself is left unchanged.
+ */
+function sameManifestPath(left: string, right: string): boolean {
+  return (
+    normalize(left).replaceAll('\\', '/') ===
+    normalize(right).replaceAll('\\', '/')
+  );
+}
+
 async function ensureSkipEntryManaged(
   planEntry: SyncPlanEntry,
   manifest: ManifestV2,
 ): Promise<ManifestV2> {
-  const { canonicalPath } = resolveManifestPaths(planEntry);
+  const { canonicalPath, providerPath } = resolveManifestPaths(planEntry);
   const existing = manifest.entries.find(
     (entry) =>
       entry.canonicalPath === canonicalPath &&
       entry.provider === planEntry.provider,
   );
   if (existing) {
-    return manifest;
+    // An owned entry is rewritten only when the planner verified the provider
+    // content and found the recorded digest stale; it then writes exactly the
+    // digest it verified. The row must track that same provider path, or the
+    // digest would describe a tree the row does not point at. Every other
+    // owned skip leaves the manifest as is, so a settled sync stays a no-op.
+    const restampContentHash = planEntry.restampContentHash;
+    if (
+      restampContentHash === undefined ||
+      existing.strategy === 'collection' ||
+      !sameManifestPath(existing.providerPath, providerPath) ||
+      existing.contentHash === restampContentHash
+    ) {
+      return manifest;
+    }
+    return addManifestEntry(manifest, {
+      ...existing,
+      strategy: existing.strategy,
+      contentHash: restampContentHash,
+      lastSynced: new Date().toISOString(),
+    });
   }
 
   const manifestEntry = await toManifestEntry(planEntry, planEntry.strategy);
@@ -921,6 +960,13 @@ export async function executeSyncPlan(
           ) ??
             'Collection alias could not be safely cleared; resolve the reported collection conflict and retry.',
         ),
+      );
+      continue;
+    }
+    if (operation.operation === 'error') {
+      // A planning-time configuration error: report it, change nothing.
+      operationResults.push(
+        operationEvidence(plan.scope, operation, 'failed', operation.reason),
       );
       continue;
     }

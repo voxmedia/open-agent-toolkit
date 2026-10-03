@@ -1,7 +1,7 @@
 ---
 id: BL-260718-harden-full-surface-gate
 title: Harden full-surface gate reviews against budget and recursive dispatch
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-07-18T17:36:37.972Z
-updated: 2026-07-18T17:36:37.972Z
+updated: '2026-10-02T22:52:13Z'
 associated_issues: []
 external_plans: []
 ---

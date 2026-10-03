@@ -810,6 +810,15 @@ Retry exhaustion stops a sequential run. In a parallel group, mark the phase
 `excluded`, do not merge its worktree, and report the review artifact and
 worktree in Outstanding Items.
 
+**Complexity review at retry exhaustion.** Before escalating, dispatch the
+complexity review that `references/docs/complexity-review-fallback.md` defines
+for this exhausted loop, then show its decision message; under
+`OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
+Record the operator's choice with the report path in `implementation.md`.
+Agents never select the disposition. For an excluded parallel phase, the
+review reads that phase's committed worktree range and its decision joins the
+fan-in report.
+
 ### Optional External Phase Review Gate
 
 After the root-owned per-phase reviewer passes and both halves of Step 7
@@ -843,6 +852,15 @@ row transitions).
 Gate retry rounds use the same orchestration retry limit. Gate independence,
 configured provenance, liveness telemetry, and fail-closed behavior are
 unchanged.
+
+**Complexity review at gate retry exhaustion.** When the gate still blocks at
+that limit, the phase row goes `blocked`. Before escalating, dispatch the
+complexity review that `references/docs/complexity-review-fallback.md` defines
+for this exhausted gate loop, then show its decision message; under
+`OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
+Record the operator's choice with the report path in `implementation.md`.
+Agents never select the disposition. Launch, transport, and validation
+failures consume no retry round and do not trigger the review.
 
 #### Reviews Ledger Mutation Contract
 

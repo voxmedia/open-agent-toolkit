@@ -53,9 +53,10 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
  *    skipped it. Combined with the unframed digest that let a view drop
  *    `SKILL.md`, fuse its bytes into a surviving file, and read `in_sync`. The
  *    requirement is unconditional, so a skill directory that genuinely has no
- *    `SKILL.md` (a layout `applyCopyMarker` tolerates as best-effort) is now
- *    permanently `drifted` / `update_copy` rather than `in_sync`: the safe
- *    direction, and the direction the review asked for.
+ *    `SKILL.md` reads `drifted` rather than `in_sync`: the safe direction, and
+ *    the direction the review asked for. The planner does not loop on it:
+ *    `computeSyncPlan` reports a canonical directory without its marker as a
+ *    configuration `error` entry instead of planning `update_copy`.
  *
  * These claims describe a quiescent tree. Every check here is path-based, so
  * none of them survives an adversary swapping an entry between the check and

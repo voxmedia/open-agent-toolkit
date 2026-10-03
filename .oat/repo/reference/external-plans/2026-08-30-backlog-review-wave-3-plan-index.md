@@ -24,7 +24,7 @@ not an `oat-project-import-plan` target.
     is not plan-ready. The shared runner contract, structural anchor/probe
     record, migration roster, and ownership boundary remain unresolved. Keep
     the narrow codex-skill guard independent.
-  - [BL-260713-root-agent-judgment-logging](../../pjm/backlog/items/BL-260713-root-agent-judgment-logging.md)
+  - [BL-260713-root-agent-judgment-logging](../../pjm/backlog/archived/BL-260713-root-agent-judgment-logging.md)
     is substantially implemented by the root-owned project-log append points
     landed with PR #156 and the reviewer prohibition at
     `.agents/agents/oat-reviewer.md:113-116`. Archive the broad item after a

@@ -1,13 +1,21 @@
 import { execFileSync } from 'node:child_process';
 import {
+  chmodSync,
+  copyFileSync,
   existsSync,
+  lstatSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
+  realpathSync,
   rmSync,
+  symlinkSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import {
   DECISION_INDEX_END,
@@ -789,6 +797,793 @@ describe('bundle asset inventory consistency', () => {
       // omits `Legacy` would drop migrated `legacy_id` values.
       expect(promptContent).toContain(getCanonicalDecisionIndexHeader());
       expect(promptContent).not.toContain('| ID | Date | Status | Decision |');
+    });
+  });
+});
+
+type StubInventory = {
+  skills: string[];
+  agents: string[];
+  templateFiles: string[];
+  templateDirectories: string[];
+  oatScripts: string[];
+  publicVersionPackages: string[];
+  docsRoot: string;
+  migrationPrompt: string;
+  dispatchMatrix: string;
+};
+
+const VALID_STUB_INVENTORY: StubInventory = {
+  skills: ['demo-skill'],
+  agents: ['demo-agent.md'],
+  templateFiles: ['state.md'],
+  templateDirectories: ['ideas'],
+  oatScripts: ['demo.sh'],
+  publicVersionPackages: ['cli'],
+  docsRoot: 'apps/demo-docs/docs',
+  migrationPrompt: 'packages/cli/config/migration.md',
+  dispatchMatrix: 'packages/cli/config/matrix.json',
+};
+
+// Every command that can create, copy, move, or delete a tree. In `refuse`
+// mode the shims record the call and exit without touching the filesystem, so
+// a configuration that would recurse can never grow: the log is a trap-proof
+// marker (the script's EXIT trap cannot erase it) that a rejection happened
+// before staging was ever created.
+const GUARDED_COMMANDS = ['cp', 'mkdir', 'mv', 'rm'];
+
+type StubBundleTree = {
+  scratch: string;
+  repoRoot: string;
+  scriptPath: string;
+  logPath: string;
+  binDir: string;
+};
+
+function writeTreeFile(path: string, content: string, mode?: number): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content, mode === undefined ? undefined : { mode });
+}
+
+function stubInventorySource(inventory: StubInventory): string {
+  return [
+    `export const BUNDLE_INPUTS = ${JSON.stringify(inventory)};`,
+    'const [command, name] = process.argv.slice(2);',
+    "if (command === '--get') {",
+    "  process.stdout.write(String(BUNDLE_INPUTS[name]) + '\\n');",
+    "} else if (command === '--list') {",
+    "  process.stdout.write(BUNDLE_INPUTS[name].join('\\n') + '\\n');",
+    '}',
+    '',
+  ].join('\n');
+}
+
+/**
+ * The real `bundle-inputs.mjs` with only its BUNDLE_INPUTS data swapped for the
+ * stub inventory, so its entry check and lookup validation are the shipped ones.
+ */
+function realEntryInventorySource(inventory: StubInventory): string {
+  const source = readFileSync(getBundleInventoryPath(), 'utf8');
+  const startMarker = 'export const BUNDLE_INPUTS = Object.freeze({';
+  const endMarker = '\n});\n';
+  const start = source.indexOf(startMarker);
+  const end = source.indexOf(endMarker, start);
+  expect(start).toBeGreaterThanOrEqual(0);
+  expect(end).toBeGreaterThan(start);
+  return [
+    source.slice(0, start),
+    `export const BUNDLE_INPUTS = Object.freeze(${JSON.stringify(inventory)});\n`,
+    source.slice(end + endMarker.length),
+  ].join('');
+}
+
+/**
+ * Build a tiny isolated repository whose `packages/cli/scripts/` holds a copy
+ * of the real `bundle-assets.sh` next to a stub inventory, so the temporary
+ * directory is the script's REPO_ROOT. The tree holds one file per inventory
+ * category and nothing else, keeping any accidental copy bounded.
+ */
+function createStubBundleTree(
+  inventory: StubInventory,
+  options: { realInventoryEntry?: boolean } = {},
+): StubBundleTree {
+  const scratch = realpathSync(
+    mkdtempSync(join(tmpdir(), 'oat-bundle-guard-')),
+  );
+  const repoRoot = join(scratch, 'repo');
+  const scriptsDir = join(repoRoot, 'packages/cli/scripts');
+  const binDir = join(scratch, 'bin');
+  const logPath = join(scratch, 'guarded-commands.log');
+
+  writeTreeFile(join(repoRoot, 'NOTICES.md'), '# Notices\n');
+  writeTreeFile(
+    join(repoRoot, '.agents/skills/demo-skill/SKILL.md'),
+    '# demo\n',
+  );
+  writeTreeFile(
+    join(repoRoot, '.agents/skills/demo-skill/tests/demo.test.mjs'),
+    '\n',
+  );
+  writeTreeFile(join(repoRoot, '.agents/agents/demo-agent.md'), '# agent\n');
+  writeTreeFile(join(repoRoot, '.oat/templates/state.md'), '# state\n');
+  writeTreeFile(join(repoRoot, '.oat/templates/ideas/idea.md'), '# idea\n');
+  writeTreeFile(join(repoRoot, '.oat/scripts/demo.sh'), '#!/bin/sh\n');
+  writeTreeFile(join(repoRoot, 'apps/demo-docs/docs/index.md'), '# docs\n');
+  writeTreeFile(
+    join(repoRoot, 'packages/cli/config/migration.md'),
+    '# migration\n',
+  );
+  writeTreeFile(join(repoRoot, 'packages/cli/config/matrix.json'), '{}\n');
+  writeTreeFile(
+    join(repoRoot, 'packages/cli/package.json'),
+    `${JSON.stringify({ name: 'demo-cli', version: '9.9.9' })}\n`,
+  );
+  writeTreeFile(
+    join(scriptsDir, 'bundle-inputs.mjs'),
+    options.realInventoryEntry
+      ? realEntryInventorySource(inventory)
+      : stubInventorySource(inventory),
+  );
+  mkdirSync(scriptsDir, { recursive: true });
+  copyFileSync(getBundleScriptPath(), join(scriptsDir, 'bundle-assets.sh'));
+
+  for (const command of GUARDED_COMMANDS) {
+    writeTreeFile(
+      join(binDir, command),
+      [
+        '#!/bin/sh',
+        `printf '%s %s\\n' '${command}' "$*" >> "$OAT_BUNDLE_GUARD_LOG"`,
+        'if [ "$OAT_BUNDLE_GUARD_MODE" = refuse ]; then',
+        '  exit 97',
+        'fi',
+        'PATH="$OAT_BUNDLE_GUARD_REAL_PATH"',
+        'export PATH',
+        `exec ${command} "$@"`,
+        '',
+      ].join('\n'),
+      0o755,
+    );
+  }
+  writeFileSync(logPath, '');
+
+  return {
+    scratch,
+    repoRoot,
+    scriptPath: join(scriptsDir, 'bundle-assets.sh'),
+    logPath,
+    binDir,
+  };
+}
+
+type BundleRun = { status: number | null; stderr: string };
+
+function runStubBundle(
+  tree: StubBundleTree,
+  options: {
+    assetsDir?: string;
+    mode: 'refuse' | 'allow';
+    scriptPath?: string;
+  },
+): BundleRun {
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    PATH: `${tree.binDir}:${process.env.PATH ?? ''}`,
+    OAT_BUNDLE_GUARD_LOG: tree.logPath,
+    OAT_BUNDLE_GUARD_MODE: options.mode,
+    OAT_BUNDLE_GUARD_REAL_PATH: process.env.PATH ?? '',
+  };
+  delete env.OAT_ASSETS_DIR;
+  if (options.assetsDir !== undefined) {
+    env.OAT_ASSETS_DIR = options.assetsDir;
+  }
+
+  try {
+    execFileSync('bash', [options.scriptPath ?? tree.scriptPath], {
+      env,
+      stdio: 'pipe',
+      encoding: 'utf8',
+      timeout: 10_000,
+    });
+    return { status: 0, stderr: '' };
+  } catch (error) {
+    const failure = error as { status: number | null; stderr?: string };
+    return { status: failure.status, stderr: failure.stderr ?? '' };
+  }
+}
+
+function readGuardedCommandLog(tree: StubBundleTree): string {
+  return readFileSync(tree.logPath, 'utf8');
+}
+
+function expectRejectedBeforeAnyCopy(
+  tree: StubBundleTree,
+  run: BundleRun,
+  message: RegExp,
+): void {
+  expect(run.status).toBe(1);
+  expect(run.stderr).toMatch(message);
+  expect(readGuardedCommandLog(tree)).toBe('');
+}
+
+/** Every path at or below `path` with its file contents, for before/after equality. */
+function snapshotPath(path: string): Record<string, string> {
+  const snapshot: Record<string, string> = {};
+  const visit = (current: string, label: string): void => {
+    if (lstatSync(current).isDirectory()) {
+      snapshot[label] = '<dir>';
+      for (const name of readdirSync(current).sort()) {
+        visit(join(current, name), `${label}/${name}`);
+      }
+    } else {
+      snapshot[label] = readFileSync(current, 'utf8');
+    }
+  };
+  visit(path, '.');
+  return snapshot;
+}
+
+describe('bundle-assets fail-closed guards', () => {
+  it.each(['docsRoot', 'migrationPrompt', 'dispatchMatrix'] as const)(
+    'rejects an empty %s lookup before staging is created',
+    (key) => {
+      const tree = createStubBundleTree({ ...VALID_STUB_INVENTORY, [key]: '' });
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          new RegExp(`inventory lookup '${key}' printed nothing`),
+        );
+        expect(existsSync(join(tree.scratch, 'out'))).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it.each([
+    ['.', /inventory lookup 'docsRoot' resolves to the repository root/],
+    ['./', /inventory lookup 'docsRoot' resolves to the repository root/],
+    ['/etc', /inventory lookup 'docsRoot' returned an absolute path/],
+    ['apps/../..', /inventory lookup 'docsRoot' contains a '\.\.' segment/],
+  ])(
+    'rejects a docsRoot lookup of %j that escapes or equals the repository root',
+    (value, message) => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: value,
+      });
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, message);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it.each([
+    ['a bundled skill directory', 'repo/.agents/skills/demo-skill/bundle'],
+    ['a copied template directory', 'repo/.oat/templates/ideas/bundle'],
+    ['the docs source', 'repo/apps/demo-docs/docs/bundle'],
+  ])(
+    'rejects an assets destination whose staging lands inside %s before any copy',
+    (_label, relativeDestination) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, relativeDestination),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'rejects an assets destination reached through a symlink alias of a copied source',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const alias = join(tree.scratch, 'alias');
+        symlinkSync(join(tree.repoRoot, '.agents/skills/demo-skill'), alias);
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(alias, 'bundle'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+        expect(
+          existsSync(join(tree.repoRoot, '.agents/skills/demo-skill/bundle')),
+        ).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // The kernel resolves `<symlink>/..` to the parent of the symlink's target,
+  // while a logical `cd` trims the text instead. The guard must check the
+  // directory mkdir, cp, and mv will actually write to.
+  it.each([
+    ['the docs source', 'repo/apps/demo-docs/docs/sub'],
+    ['a bundled skill directory', 'repo/.agents/skills/demo-skill/sub'],
+  ])(
+    'rejects an assets destination written as <symlink>/.. that lands inside %s',
+    (_label, aliasTarget) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        mkdirSync(join(tree.scratch, aliasTarget), { recursive: true });
+        const alias = join(tree.scratch, 'alias');
+        symlinkSync(join(tree.scratch, aliasTarget), alias);
+
+        // Built by hand: `join` would collapse `alias/..` lexically.
+        const run = runStubBundle(tree, {
+          assetsDir: `${alias}/../bundle`,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(tree, run, /refusing to build/);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // Publishing renames whatever sits at the destination away and deletes it,
+  // so an OAT_ASSETS_DIR override that is populated but is not a bundle is
+  // refused, whatever it holds: a canonical source, the repository, or a file.
+  it.each([
+    ['a populated directory outside the repository', 'populated'],
+    ['the agents directory', 'repo/.agents/agents'],
+    ['the repository root', 'repo'],
+    ['the notices file', 'repo/NOTICES.md'],
+  ])(
+    'rejects %s as an assets destination with its contents intact',
+    (_label, relativeDestination) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        writeTreeFile(
+          join(tree.scratch, 'populated/agent-instruction.md'),
+          '# a\n',
+        );
+        writeTreeFile(join(tree.scratch, 'populated/nested/rules.md'), '# r\n');
+        const destination = join(tree.scratch, relativeDestination);
+        const before = snapshotPath(destination);
+
+        const run = runStubBundle(tree, {
+          assetsDir: destination,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /remove it or choose an empty directory/,
+        );
+        expect(snapshotPath(destination)).toEqual(before);
+        expect(Object.keys(before).length).toBeGreaterThan(0);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // A textual listing captured by command substitution loses trailing
+  // newlines, so a directory whose only entry is named with newlines would
+  // read as empty and be renamed away. Emptiness must not depend on names.
+  it.each([
+    ['a single newline', '\n'],
+    ['two newlines', '\n\n'],
+  ])(
+    'rejects an OAT_ASSETS_DIR whose only entry is named %s, with its contents intact',
+    (_label, name) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const destination = join(tree.scratch, 'newline-entry');
+        mkdirSync(destination);
+        writeFileSync(join(destination, name), 'keep\n');
+        const before = snapshotPath(destination);
+
+        const run = runStubBundle(tree, {
+          assetsDir: destination,
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /neither an empty directory nor a previous bundle/,
+        );
+        expect(snapshotPath(destination)).toEqual(before);
+        expect(readFileSync(join(destination, name), 'utf8')).toBe('keep\n');
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // A directory that cannot be listed is not known to be empty, so it is
+  // refused rather than renamed away. Root can list any directory, so the
+  // case only discriminates for an unprivileged user.
+  it.skipIf(process.getuid?.() === 0)(
+    'rejects an unreadable OAT_ASSETS_DIR instead of treating it as empty',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      const locked = join(tree.scratch, 'locked');
+      try {
+        writeTreeFile(join(locked, 'user-data.txt'), 'keep\n');
+        chmodSync(locked, 0o000);
+
+        const run = runStubBundle(tree, { assetsDir: locked, mode: 'refuse' });
+
+        expectRejectedBeforeAnyCopy(tree, run, /cannot be listed/);
+        chmodSync(locked, 0o755);
+        expect(snapshotPath(locked)).toEqual({
+          '.': '<dir>',
+          './user-data.txt': 'keep\n',
+        });
+      } finally {
+        chmodSync(locked, 0o755);
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // `find` does not follow a symlink given as its starting path, so the
+  // emptiness check must, or a link to a populated directory reads as empty.
+  it(
+    'rejects an OAT_ASSETS_DIR symlinked to a populated directory, leaving link and contents intact',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const target = join(tree.scratch, 'populated-target');
+        writeTreeFile(join(target, 'user-data.txt'), 'keep\n');
+        const link = join(tree.scratch, 'linked-out');
+        symlinkSync(target, link);
+        const before = snapshotPath(target);
+
+        const run = runStubBundle(tree, { assetsDir: link, mode: 'refuse' });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /neither an empty directory nor a previous bundle/,
+        );
+        expect(lstatSync(link).isSymbolicLink()).toBe(true);
+        expect(readlinkSync(link)).toBe(target);
+        expect(snapshotPath(target)).toEqual(before);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into an OAT_ASSETS_DIR symlinked to an empty directory',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const target = join(tree.scratch, 'empty-target');
+        mkdirSync(target);
+        const link = join(tree.scratch, 'linked-out');
+        symlinkSync(target, link);
+
+        const run = runStubBundle(tree, { assetsDir: link, mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(readFileSync(join(link, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it.each([
+    ['an existing bundle', true],
+    ['an empty directory', false],
+  ])(
+    'rebuilds an OAT_ASSETS_DIR that is %s',
+    (_label, isBundle) => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const assetsDir = join(tree.scratch, 'out');
+        mkdirSync(assetsDir);
+        if (isBundle) {
+          writeFileSync(join(assetsDir, 'bundle-metadata.json'), '{}\n');
+          writeFileSync(join(assetsDir, 'stale.txt'), 'old\n');
+        }
+
+        const run = runStubBundle(tree, { assetsDir, mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(readFileSync(join(assetsDir, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+        expect(existsSync(join(assetsDir, 'stale.txt'))).toBe(false);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // A fresh checkout carries the tracked files of packages/cli/assets but no
+  // bundle-metadata.json, so the default destination is exempt from the rule.
+  it(
+    'still builds into a default destination holding only tracked files',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const assetsDir = join(tree.repoRoot, 'packages/cli/assets');
+        writeTreeFile(join(assetsDir, 'public-package-versions.json'), '{}\n');
+
+        const run = runStubBundle(tree, { mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(existsSync(join(assetsDir, 'bundle-metadata.json'))).toBe(true);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // The likely Wave 3 disk-fill trigger: through a symlinked checkout, node resolved
+  // the inventory module to its real path while argv[1] kept the link, the
+  // entry check never matched, and every lookup printed nothing.
+  it(
+    'builds through a symlinked checkout path with the shipped inventory entry check',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY, {
+        realInventoryEntry: true,
+      });
+      try {
+        const checkoutLink = join(tree.scratch, 'checkout-link');
+        symlinkSync(tree.repoRoot, checkoutLink);
+        const assetsDir = join(tree.scratch, 'out');
+
+        const run = runStubBundle(tree, {
+          assetsDir,
+          mode: 'allow',
+          scriptPath: join(
+            checkoutLink,
+            'packages/cli/scripts/bundle-assets.sh',
+          ),
+        });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(readFileSync(join(assetsDir, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  // The repository-root check compares physical paths, so a symlink that names
+  // the repository root is caught as well as `.` and `./`.
+  // Invoked through a symlinked checkout, REPO_ROOT is only physical because of
+  // `pwd -P`; the root check normalizes both sides so it holds on its own. The
+  // destination sits outside the tree, so no recursion rule can stand in.
+  it(
+    'rejects a root-valued lookup run through a symlinked checkout path',
+    () => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: '.',
+      });
+      try {
+        const checkoutLink = join(tree.scratch, 'checkout-link');
+        symlinkSync(tree.repoRoot, checkoutLink);
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+          scriptPath: join(
+            checkoutLink,
+            'packages/cli/scripts/bundle-assets.sh',
+          ),
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /inventory lookup 'docsRoot' resolves to the repository root/,
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'rejects an inventory lookup that is a symlink to the repository root',
+    () => {
+      const tree = createStubBundleTree({
+        ...VALID_STUB_INVENTORY,
+        docsRoot: 'apps/root-link',
+      });
+      try {
+        symlinkSync('..', join(tree.repoRoot, 'apps/root-link'));
+
+        const run = runStubBundle(tree, {
+          assetsDir: join(tree.scratch, 'out'),
+          mode: 'refuse',
+        });
+
+        expectRejectedBeforeAnyCopy(
+          tree,
+          run,
+          /inventory lookup 'docsRoot' resolves to the repository root/,
+        );
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into a disjoint destination',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const assetsDir = join(tree.scratch, 'out/assets');
+        const run = runStubBundle(tree, { assetsDir, mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        expect(
+          readFileSync(join(assetsDir, 'skills/demo-skill/SKILL.md'), 'utf8'),
+        ).toBe('# demo\n');
+        expect(existsSync(join(assetsDir, 'skills/demo-skill/tests'))).toBe(
+          false,
+        );
+        expect(readFileSync(join(assetsDir, 'docs/index.md'), 'utf8')).toBe(
+          '# docs\n',
+        );
+        expect(existsSync(join(assetsDir, 'templates/ideas/idea.md'))).toBe(
+          true,
+        );
+        expect(readGuardedCommandLog(tree)).toMatch(/^cp /m);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'still builds into the default destination',
+    () => {
+      const tree = createStubBundleTree(VALID_STUB_INVENTORY);
+      try {
+        const run = runStubBundle(tree, { mode: 'allow' });
+
+        expect(run).toEqual({ status: 0, stderr: '' });
+        const assetsDir = join(tree.repoRoot, 'packages/cli/assets');
+        expect(
+          JSON.parse(
+            readFileSync(join(assetsDir, 'bundle-metadata.json'), 'utf8'),
+          ),
+        ).toEqual({ schemaVersion: 1, oatVersion: '9.9.9' });
+        expect(existsSync(join(assetsDir, 'docs/index.md'))).toBe(true);
+      } finally {
+        rmSync(tree.scratch, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  describe('bundle-inputs.mjs path lookups', () => {
+    const realDocsRootEntry = "docsRoot: 'apps/oat-docs/docs',";
+
+    function runInventoryCopyWithDocsRoot(value: string): BundleRun {
+      const scratch = realpathSync(
+        mkdtempSync(join(tmpdir(), 'oat-bundle-inputs-')),
+      );
+      try {
+        const source = readFileSync(getBundleInventoryPath(), 'utf8');
+        expect(source).toContain(realDocsRootEntry);
+        const inventoryCopy = join(scratch, 'bundle-inputs.mjs');
+        writeFileSync(
+          inventoryCopy,
+          source.replace(
+            realDocsRootEntry,
+            `docsRoot: ${JSON.stringify(value)},`,
+          ),
+        );
+        try {
+          execFileSync(process.execPath, [inventoryCopy, '--get', 'docsRoot'], {
+            stdio: 'pipe',
+            encoding: 'utf8',
+          });
+          return { status: 0, stderr: '' };
+        } catch (error) {
+          const failure = error as { status: number | null; stderr?: string };
+          return { status: failure.status, stderr: failure.stderr ?? '' };
+        }
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    }
+
+    it.each([
+      ['', /docsRoot.*is empty/],
+      ['/abs/docs', /docsRoot.*is an absolute path/],
+      ['apps/../docs', /docsRoot.*contains a '\.\.' segment/],
+    ])(
+      'rejects a docsRoot value of %j with a non-zero exit',
+      (value, message) => {
+        const run = runInventoryCopyWithDocsRoot(value);
+
+        expect(run.status).not.toBe(0);
+        expect(run.stderr).toMatch(message);
+      },
+    );
+
+    it('runs its CLI when invoked through a symlinked checkout path', () => {
+      const scratch = realpathSync(
+        mkdtempSync(join(tmpdir(), 'oat-bundle-inputs-link-')),
+      );
+      try {
+        const checkoutLink = join(scratch, 'checkout-link');
+        symlinkSync(
+          join(dirname(getBundleInventoryPath()), '../../..'),
+          checkoutLink,
+        );
+
+        expect(
+          execFileSync(
+            process.execPath,
+            [
+              join(checkoutLink, 'packages/cli/scripts/bundle-inputs.mjs'),
+              '--get',
+              'docsRoot',
+            ],
+            { encoding: 'utf8' },
+          ),
+        ).toBe('apps/oat-docs/docs\n');
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    });
+
+    it('prints the real repository-relative docs root', () => {
+      expect(
+        execFileSync(
+          process.execPath,
+          [getBundleInventoryPath(), '--get', 'docsRoot'],
+          { encoding: 'utf8' },
+        ),
+      ).toBe('apps/oat-docs/docs\n');
     });
   });
 });

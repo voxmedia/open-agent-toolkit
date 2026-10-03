@@ -113,7 +113,9 @@ for your approval before the first wave starts. When the final wave merges,
 the skill stops at one human-gated checkpoint that asks whether to run the
 deferred completion tail (archive, S3 upload, and active-project clear) for
 every wave's wrapper project; autonomous runs never answer that question
-themselves.
+themselves. On yes, it runs `oat-project-complete-auto` once in batch mode;
+a wrapper the companion refuses keeps its deferral, and the report names its
+next step (usually completing it with `oat-project-complete`).
 
 **Example scenario:** Twelve reviewed external plans include a shared API
 foundation, client changes, and independent documentation work. Use `new` to
@@ -173,7 +175,10 @@ closeout it archives the wave's backlog items with `oat backlog archive` and
 runs the configured closeout sequence (which can open the PR). It then stops
 once at a HiLL (human-in-the-loop) approval checkpoint before running the
 `oat-project-complete` process, including project archive and any configured
-S3 upload. After you merge the wave, it resets the working branch, deletes
+S3 upload. Under autonomous execution it runs that process through the
+`oat-project-complete-auto` companion, which needs
+`workflow.autonomousComplete: true` and records a completion-before-merge
+exception for the open wave PR. After you merge the wave, it resets the working branch, deletes
 stale phase branches, and runs `oat-wave-program wave-close`. Merging the wave
 into `main` stays your decision.
 
@@ -192,7 +197,10 @@ presented as proof the integrated tree passes.
 
 Closeout writes end-of-run synthesis before archive work. Autonomous execution
 can defer a wrapper's archive tail to program close only with an explicit
-ledger disposition. That deferral does not satisfy the full completion tail.
+ledger disposition, and only when the companion refuses for a deferrable
+reason (the opt-in is off, the PR precondition is unmet, or a completion
+question has no recorded answer); any other refusal stops closeout at a
+boundary. That deferral does not satisfy the full completion tail.
 Source-plan requirements remain intact even when live drift changes a mechanism.
 
 **Next step:** Follow the wave's reported review and merge boundary. After the

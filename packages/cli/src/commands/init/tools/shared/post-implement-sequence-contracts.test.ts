@@ -326,11 +326,17 @@ describe('post-implementation sequence contracts', () => {
       'receive_completed',
       'failure',
       'updated_at',
+      'decided_at',
     ]) {
       expect(state, `persisted gate field ${field}`).toMatch(
         new RegExp(`^  ${field}:`, 'm'),
       );
     }
+    // The five-field core is defined once in the shared gate approval record.
+    expect(gate).toContain('references/docs/gate-approval-record.md');
+    expect(normalized).toMatch(
+      /Every write that sets `status` to `allowed` or `blocked` also sets `decided_at`/,
+    );
     expect(normalized).toContain(
       'A `not_configured` resolution persists `allowed/no_gate` with `disposition: no_gate`',
     );
@@ -401,6 +407,7 @@ describe('post-implementation sequence contracts', () => {
       'receive_completed',
       'failure',
       'updated_at',
+      'decided_at',
     ]) {
       expect(template, `scaffolded gate field ${field}`).toMatch(
         new RegExp(`^#   ${field}:`, 'm'),

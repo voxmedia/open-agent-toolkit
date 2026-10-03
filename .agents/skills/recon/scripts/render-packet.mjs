@@ -9,6 +9,7 @@ import { isDirectExecution } from './lib/cli-entry.mjs';
 import {
   affirmingDispositionByReviewKind,
   classifyUnresolvedIssue,
+  requiredReviewKindsForProfile,
   unresolvedIssuesBlockClaim,
 } from './lib/contracts.mjs';
 import { reviewBriefEntries } from './lib/review-binding.mjs';
@@ -151,17 +152,35 @@ function omittedReviews(claimId, reviews) {
     .map(({ value }) => value);
 }
 
+// Every incorporated review of a kind the achieved profile requires whose
+// brief did not list `claimId`, so it gave the claim no disposition. Such a
+// claim cannot be verified, and the reason is the missing review, not an
+// omission by the reviewer.
+function unbriefedRequiredReviews(claimId, reviews, requiredKinds) {
+  return reviews
+    .filter(
+      ({ value, briefed }) =>
+        requiredKinds.includes(value.reviewKind) &&
+        !briefed.has(claimId) &&
+        !(value.dispositions ?? []).some((item) => item.claimId === claimId),
+    )
+    .map(({ value }) => value);
+}
+
 function issueText(entry) {
   return typeof entry === 'string' ? entry : (entry?.text ?? '');
 }
 
 // Every claim an incorporated review kept below `verified` (an unresolved
 // issue that applies to it, a coverage finding that names it, a
-// non-affirming disposition, or an assurance review that left a briefed claim
-// without a disposition), with the review's own words. Key-claim status
+// non-affirming disposition, an assurance review that left a briefed claim
+// without a disposition, or a review the achieved profile requires whose
+// brief left the claim out), with the review's own words. Key-claim status
 // alone would let a `complete` packet hide a downgraded non-key claim.
 function reviewDowngradeLines(validatedRun) {
-  const { ledger, artifacts, assuranceReviewIds } = validatedRun;
+  const { ledger, artifacts, assuranceReviewIds, achievedProfile } =
+    validatedRun;
+  const requiredKinds = requiredReviewKindsForProfile(achievedProfile);
   const assurance = new Set(assuranceReviewIds);
   const reviews = artifacts
     .map(({ value }) => value)
@@ -212,6 +231,15 @@ function reviewDowngradeLines(validatedRun) {
     for (const review of omittedReviews(claim.id, briefedReviews)) {
       reasons.push(
         `${review.reviewKind} review: not reviewed (no disposition)`,
+      );
+    }
+    for (const review of unbriefedRequiredReviews(
+      claim.id,
+      briefedReviews,
+      requiredKinds,
+    )) {
+      reasons.push(
+        `${review.reviewKind} review: outside its brief (no disposition)`,
       );
     }
     for (const review of reviews) {

@@ -79,6 +79,10 @@ export const SYNC_OPERATION_TYPES = [
   'remove',
   'detach',
   'skip',
+  // A configuration error found while planning (for example a copy-strategy
+  // skill or agent directory with no marker file). It mutates nothing and
+  // reports as a failed operation, so it cannot loop as a repeated copy.
+  'error',
 ] as const;
 
 export type SyncOperationType = (typeof SYNC_OPERATION_TYPES)[number];
@@ -92,6 +96,15 @@ export interface SyncPlanEntry {
   reason: string;
   renderedContent?: string;
   deferredUntilCollectionDetached?: boolean;
+  /**
+   * Set only on a copy-strategy `skip` whose provider content was verified
+   * against canonical while the manifest entry that already owns it, and that
+   * tracks this same provider path, records a different `contentHash` (a
+   * pre-framing legacy digest or a tampered value).
+   * The value is the framed digest the planner verified; `executeSyncPlan`
+   * writes exactly it, so the next plan carries no restamp.
+   */
+  restampContentHash?: string;
 }
 
 export type RemovalSyncPlanEntry = SyncPlanEntry & {

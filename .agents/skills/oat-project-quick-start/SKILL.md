@@ -5,9 +5,9 @@ argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.17
+  version: 2.3.18
 ---
 
 # Quick Start Project
@@ -846,7 +846,7 @@ as the last check before plan and project completion:
 
    Handle all three `resolution` values explicitly:
    - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 3.7 below.
-   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then proceed directly to the completion steps in Step 3.7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, write `oat_quick_start_gate` as `allowed/project_disabled` with `reviewed_head: null` per **Persist the gate outcome** below, then proceed directly to the completion steps in Step 3.7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
    - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
 
    A null, missing, malformed, or unrecognized result is an operational failure
@@ -891,6 +891,17 @@ as the last check before plan and project completion:
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
+   **Complexity review at `maxAttempts`.** When `block` attempts are exhausted,
+   dispatch the complexity review that
+   `references/docs/complexity-review-fallback.md` defines for the plan bundle
+   before escalating, then show its decision message with the accumulated
+   feedback; under `OAT_AUTONOMOUS=1`, put the same content in the boundary
+   report instead. Record the operator's choice with the report path in
+   `implementation.md`. Agents never select the disposition. Only exhausted
+   `block` attempts trigger the review. To launch it, load the current
+   `oat-project-dispatch-subagents/SKILL.md` and follow it, resolving the route
+   as that doc's "Routing outside implement" section describes.
+
 7. Runtime selection note: the review-only declaration carries producer
    identity, not reviewer runtime identity. By default, `oat gate review` and
    `oat gate cross-provider-exec` resolve the current host from built-in
@@ -904,6 +915,23 @@ as the last check before plan and project completion:
 A gate that ends in `block` after attempts are exhausted, or at an unresolved
 `prompt` boundary, means the completion steps below MUST NOT run; the phase
 stays `in_progress` and resumable.
+
+**Persist the gate outcome.** For a configured gate, including one disabled by
+project override, write `oat_quick_start_gate` to `$PROJECT_PATH/state.md` with
+the core fields defined in `references/docs/gate-approval-record.md` once the
+gate reaches its outcome, and commit it with the next quick-start bookkeeping
+commit or before stopping:
+
+- passed: `allowed/passed`;
+- `warn` failure: `allowed/warned`;
+- a `prompt` failure the operator explicitly continues past: `allowed/prompt_approved`;
+- a `prompt` failure declined or deferred (every `prompt` failure under
+  `OAT_AUTONOMOUS=1`), `block` exhausted after `maxAttempts`, or a launch,
+  validation, or receive failure: `blocked` with `disposition: null`;
+- `configured_disabled_by_project`: `allowed/project_disabled` with `reviewed_head: null` and no launch.
+
+`not_configured` writes no record. `reviewed_head` is the plan commit the gate
+reviewed and `decided_at` the decision time. A rerun replaces the record. Step 3.7 stays gated by the control flow above and does not read this record back.
 
 ### Step 3.7: Record Review Disposition and Mark Plan Complete
 

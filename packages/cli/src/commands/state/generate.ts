@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { readdir, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import {
@@ -10,11 +10,20 @@ import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { listSyncedRecords } from '@commands/project/sync/record';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
-import { parseFrontmatterField } from '@commands/shared/frontmatter';
+import {
+  getFrontmatterBlock,
+  parseFrontmatterField,
+} from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { resolveScopeRoot } from '@commands/shared/project-scope';
 import { readOatLocalConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
+import {
+  evaluateQuickPlanReadiness,
+  quickPlanNotReadyReason,
+  type QuickPlanReadiness,
+} from '@open-agent-toolkit/control-plane';
+import YAML from 'yaml';
 
 export interface GitOperations {
   isGitRepo(root: string): boolean;
@@ -47,11 +56,13 @@ interface ProjectState {
   pauseTimestamp: string;
   pauseReason: string;
   blockers: string;
-  hillCheckpoints: string;
-  hillCompleted: string;
+  hillCheckpoints: string[];
+  hillCompleted: string[];
   hillStatus: string;
   workflowMode: string;
   docsUpdated: string;
+  /** Read only for a quick project in its `plan` phase; otherwise `null`. */
+  quickPlanReadiness: QuickPlanReadiness | null;
 }
 
 interface ActiveProject {
@@ -150,8 +161,64 @@ async function readActiveProject(repoRoot: string): Promise<ActiveProject> {
   return result;
 }
 
-export function phaseInHillList(phase: string, listStr: string): boolean {
-  return listStr.includes(`"${phase}"`);
+/**
+ * Reads a HiLL phase list in any YAML form the router's parsed state accepts:
+ * a parsed array, or flow text with double, single, or no quotes.
+ */
+function toPhaseList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value !== 'string') return [];
+  return value
+    .trim()
+    .replace(/^\[|\]$/g, '')
+    .split(',')
+    .map((item) =>
+      item
+        .trim()
+        .replace(/^(["'])(.*)\1$/, '$2')
+        .trim(),
+    )
+    .filter(Boolean);
+}
+
+export function phaseInHillList(
+  phase: string,
+  list: string | readonly string[],
+): boolean {
+  return toPhaseList(list).includes(phase);
+}
+
+/**
+ * Parses the HiLL lists from the state frontmatter as YAML, so block arrays
+ * are read whole (a line-oriented field read sees only the first item). A
+ * frontmatter block that is not valid YAML falls back to the textual lists.
+ */
+async function readHillLists(
+  stateFile: string,
+): Promise<{ checkpoints: string[]; completed: string[] }> {
+  try {
+    const block = getFrontmatterBlock(await readFile(stateFile, 'utf8'));
+    const parsed: unknown = block ? YAML.parse(block) : null;
+    if (parsed && typeof parsed === 'object') {
+      const record = parsed as Record<string, unknown>;
+      return {
+        checkpoints: toPhaseList(record.oat_hill_checkpoints),
+        completed: toPhaseList(record.oat_hill_completed),
+      };
+    }
+  } catch {
+    // Fall through to the textual read.
+  }
+  return {
+    checkpoints: toPhaseList(
+      await parseFrontmatterField(stateFile, 'oat_hill_checkpoints'),
+    ),
+    completed: toPhaseList(
+      await parseFrontmatterField(stateFile, 'oat_hill_completed'),
+    ),
+  };
 }
 
 async function readProjectState(
@@ -180,10 +247,8 @@ async function readProjectState(
       : '';
   const blockers =
     (await parseFrontmatterField(stateFile, 'oat_blockers')) || '[]';
-  const hillCheckpoints =
-    (await parseFrontmatterField(stateFile, 'oat_hill_checkpoints')) || '[]';
-  const hillCompleted =
-    (await parseFrontmatterField(stateFile, 'oat_hill_completed')) || '[]';
+  const { checkpoints: hillCheckpoints, completed: hillCompleted } =
+    await readHillLists(stateFile);
   const workflowMode =
     (await parseFrontmatterField(stateFile, 'oat_workflow_mode')) ||
     'spec-driven';
@@ -193,6 +258,13 @@ async function readProjectState(
   );
   const docsUpdated =
     docsUpdatedRaw && docsUpdatedRaw !== 'null' ? docsUpdatedRaw : '';
+
+  const quickPlanReadiness =
+    workflowMode === 'quick' && phase === 'plan'
+      ? evaluateQuickPlanReadiness(
+          await readOptionalFile(join(repoRoot, projectPath, 'plan.md')),
+        )
+      : null;
 
   let hillStatus: string;
   if (phaseInHillList(phase, hillCheckpoints)) {
@@ -215,7 +287,17 @@ async function readProjectState(
     hillStatus,
     workflowMode,
     docsUpdated,
+    quickPlanReadiness,
   };
+}
+
+async function readOptionalFile(path: string): Promise<string | null> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
+  }
 }
 
 async function readKnowledgeStatus(repoRoot: string): Promise<KnowledgeStatus> {
@@ -337,9 +419,12 @@ function computeNextStep(
     };
   }
 
-  // HiLL checkpoint gating
+  // HiLL checkpoint gating. A quick plan phase checks a pending checkpoint at
+  // any status before quick plan readiness, as the control-plane router does.
+  const quickPlanPhase =
+    state.workflowMode === 'quick' && state.phase === 'plan';
   if (
-    state.phaseStatus === 'complete' &&
+    (state.phaseStatus === 'complete' || quickPlanPhase) &&
     phaseInHillList(state.phase, state.hillCheckpoints) &&
     !phaseInHillList(state.phase, state.hillCompleted)
   ) {
@@ -371,6 +456,25 @@ function computeNextStep(
       step: 'oat-project-quick-start',
       reason: 'Continue the promoted quick workflow',
     };
+  }
+
+  // A quick plan phase routes by quick plan readiness at every status, as the
+  // control-plane router does: a plan that is not ready resumes quick-start in
+  // place, and a ready plan goes to implementation (readiness implies a
+  // complete plan whose `oat_ready_for` names it, so the router gives the
+  // explicit-pointer reason). The shared `plan:*` routes below serve the other
+  // modes. generate.test.ts pins parity with `recommendSkill`.
+  if (quickPlanPhase && state.quickPlanReadiness) {
+    return state.quickPlanReadiness.ready
+      ? {
+          step: 'oat-project-implement',
+          reason:
+            'Current artifact is complete and explicitly points to the next skill',
+        }
+      : {
+          step: 'oat-project-quick-start',
+          reason: quickPlanNotReadyReason(state.quickPlanReadiness),
+        };
   }
 
   // Workflow mode routing

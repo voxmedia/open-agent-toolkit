@@ -4,7 +4,11 @@ import { join, relative } from 'node:path';
 
 import { DEFAULT_SYNC_CONFIG as AUTO_SYNC_CONFIG } from '@config/sync-config';
 import { CliError } from '@errors/index';
-import { computeDirectoryHash } from '@manifest/hash';
+import {
+  computeDirectoryDigests,
+  computeDirectoryHash,
+  computeFileHash,
+} from '@manifest/hash';
 import { createEmptyManifest } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 import { transformCanonicalToClaudeRule } from '@providers/claude/rule-transform';
@@ -572,6 +576,142 @@ describe('computeSyncPlan', () => {
     ]);
   });
 
+  describe('obsolete copy mapping with a pre-framing manifest digest', () => {
+    /**
+     * Seeds a canonical skill with a reference file and the managed Cursor
+     * copy the writer would have produced for it (banner plus sentinel), with
+     * an optional provider-side body override for the tampered case.
+     */
+    async function seedObsoleteCursorCopy(
+      root: string,
+      providerSkillBody = '# skill\n',
+    ): Promise<{ canonicalPath: string }> {
+      const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+      const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+      await mkdir(join(canonicalPath, 'references'), { recursive: true });
+      await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+      await writeFile(
+        join(canonicalPath, 'references', 'notes.md'),
+        '# notes\n',
+        'utf8',
+      );
+      await mkdir(join(providerPath, 'references'), { recursive: true });
+      const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+      await writeFile(
+        join(providerPath, 'SKILL.md'),
+        `${marker}\n${providerSkillBody}`,
+        'utf8',
+      );
+      await writeFile(
+        join(providerPath, 'references', 'notes.md'),
+        '# notes\n',
+        'utf8',
+      );
+      await writeFile(
+        join(providerPath, OAT_DIRECTORY_SENTINEL),
+        `${marker}\n`,
+        'utf8',
+      );
+      return { canonicalPath };
+    }
+
+    async function planRetirement(root: string, contentHash: string) {
+      return computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createCursorNativeSkillAdapter()],
+        manifest: manifestWithEntry(
+          createCursorSkillManifestEntry({ strategy: 'copy', contentHash }),
+        ),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+    }
+
+    it('removes a faithful copy whose manifest records the legacy digest', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const { canonicalPath } = await seedObsoleteCursorCopy(root);
+      const { framed, legacy } = await computeDirectoryDigests(canonicalPath);
+      expect(legacy).not.toBe(framed);
+
+      const plan = await planRetirement(root, legacy);
+
+      expect(plan.removals).toEqual([
+        expect.objectContaining({
+          operation: 'remove',
+          reason: 'obsolete mapping has verified clean managed copy',
+        }),
+      ]);
+    });
+
+    it('detaches a tampered copy even when the manifest records the legacy digest', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const { canonicalPath } = await seedObsoleteCursorCopy(
+        root,
+        '# user-modified skill\n',
+      );
+      const { legacy } = await computeDirectoryDigests(canonicalPath);
+
+      const plan = await planRetirement(root, legacy);
+
+      expect(plan.removals).toEqual([
+        expect.objectContaining({
+          operation: 'detach',
+          reason:
+            'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+        }),
+      ]);
+    });
+
+    it('detaches a faithful copy whose recorded digest is forged', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await seedObsoleteCursorCopy(root);
+
+      const plan = await planRetirement(root, 'f'.repeat(64));
+
+      expect(plan.removals).toEqual([
+        expect.objectContaining({
+          operation: 'detach',
+          reason:
+            'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+        }),
+      ]);
+    });
+
+    it('detaches when the canonical tree is gone and the digest cannot be verified', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const { canonicalPath } = await seedObsoleteCursorCopy(root);
+      const { legacy } = await computeDirectoryDigests(canonicalPath);
+      await rm(canonicalPath, { recursive: true, force: true });
+
+      const plan = await computeSyncPlan({
+        canonical: [],
+        adapters: [createCursorNativeSkillAdapter()],
+        manifest: manifestWithEntry(
+          createCursorSkillManifestEntry({
+            strategy: 'copy',
+            contentHash: legacy,
+          }),
+        ),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.removals).toEqual([
+        expect.objectContaining({
+          operation: 'detach',
+          reason:
+            'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+        }),
+      ]);
+    });
+  });
+
   it.each([
     {
       allowedCanonicalPaths: undefined,
@@ -922,12 +1062,128 @@ describe('computeSyncPlan', () => {
     expect(plan.entries).toEqual([]);
   });
 
+  describe('marker-less copy-strategy directories', () => {
+    it.each([
+      { type: 'skill' as const, name: 'custom-skill', marker: 'SKILL.md' },
+      { type: 'agent' as const, name: 'custom-agent', marker: 'AGENT.md' },
+    ])(
+      'plans a configuration error naming $marker instead of a copy',
+      async ({ type, name, marker }) => {
+        const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+        tempDirs.push(root);
+        const directory = type === 'skill' ? 'skills' : 'agents';
+        await mkdir(join(root, '.agents', directory, name, 'references'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(root, '.agents', directory, name, 'references', 'notes.md'),
+          '# notes\n',
+          'utf8',
+        );
+        await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+          '# skill\n',
+          'utf8',
+        );
+
+        const plan = await computeSyncPlan({
+          canonical: [
+            createCanonicalEntry(root, type, name),
+            createCanonicalEntry(root, 'skill', 'skill-one'),
+          ],
+          adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+          manifest: createEmptyManifest(),
+          scope: 'project',
+          config: AUTO_SYNC_CONFIG,
+          scopeRoot: root,
+        });
+
+        // Mapping order (skills before agents) decides entry order.
+        expect(plan.entries).toHaveLength(2);
+        expect(plan.entries).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              canonical: expect.objectContaining({ name }),
+              operation: 'error',
+              strategy: 'copy',
+              reason: `canonical ${type} directory .agents/${directory}/${name} has no ${marker}; add ${marker} or remove the directory, then re-run oat sync`,
+            }),
+            expect.objectContaining({
+              canonical: expect.objectContaining({ name: 'skill-one' }),
+              operation: 'create_copy',
+            }),
+          ]),
+        );
+      },
+    );
+
+    it('keeps an owned marker-less entry instead of planning its removal', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+        recursive: true,
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'custom-skill')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: manifestWithEntry({
+          canonicalPath: '.agents/skills/custom-skill',
+          providerPath: '.claude/skills/custom-skill',
+          provider: 'claude',
+          contentType: 'skill',
+          strategy: 'copy',
+          contentHash: 'e'.repeat(64),
+          isFile: false,
+          lastSynced: '2026-01-01T00:00:00.000Z',
+        }),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries).toEqual([
+        expect.objectContaining({ operation: 'error' }),
+      ]);
+      expect(plan.removals).toEqual([]);
+    });
+
+    it('still symlinks a marker-less directory under symlink strategy (control)', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await mkdir(join(root, '.agents', 'skills', 'custom-skill'), {
+        recursive: true,
+      });
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'custom-skill')],
+        adapters: [createTestAdapter()],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries).toEqual([
+        expect.objectContaining({ operation: 'create_symlink' }),
+      ]);
+    });
+  });
+
   it('uses copy strategy when adapter specifies copy', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);
     await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
       recursive: true,
     });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill\n',
+      'utf8',
+    );
 
     const canonical = [createCanonicalEntry(root, 'skill', 'skill-one')];
 
@@ -969,6 +1225,186 @@ describe('computeSyncPlan', () => {
       operation: 'skip',
       reason: 'already in sync',
       strategy: 'copy',
+    });
+  });
+
+  describe('restamping a stale copy-strategy content hash', () => {
+    function copyManifestEntry(contentHash: string | null): ManifestEntry {
+      return {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.claude/skills/skill-one',
+        provider: 'claude',
+        contentType: 'skill',
+        strategy: 'copy',
+        contentHash,
+        isFile: false,
+        lastSynced: '2026-01-01T00:00:00.000Z',
+      };
+    }
+
+    async function planWithRecordedHash(
+      root: string,
+      contentHash: string | null,
+    ) {
+      return computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: manifestWithEntry(copyManifestEntry(contentHash)),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+    }
+
+    it.each([
+      { label: 'legacy', recorded: 'legacy' as const },
+      { label: 'tampered', recorded: 'tampered' as const },
+    ])(
+      'plans a restamp on skip when the recorded hash is $label',
+      async ({ recorded }) => {
+        const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+        tempDirs.push(root);
+        const { canonicalPath } = await seedManagedSkillCopy(root);
+        const { framed, legacy } = await computeDirectoryDigests(canonicalPath);
+        const recordedHash = recorded === 'legacy' ? legacy : 'a'.repeat(64);
+
+        const plan = await planWithRecordedHash(root, recordedHash);
+
+        expect(plan.entries).toHaveLength(1);
+        expect(plan.entries[0]).toMatchObject({
+          operation: 'skip',
+          strategy: 'copy',
+          reason: 'already in sync; restamp stale manifest content hash',
+          restampContentHash: framed,
+        });
+      },
+    );
+
+    it('plans a restamp on skip for a faithful file copy with a stale hash', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const canonicalPath = join(root, '.agents', 'rules', 'rule-one.md');
+      await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+      await writeFile(canonicalPath, '# rule\n', 'utf8');
+      await mkdir(join(root, '.claude', 'rules'), { recursive: true });
+      await writeFile(
+        join(root, '.claude', 'rules', 'rule-one.md'),
+        '# rule\n',
+        'utf8',
+      );
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'rule', 'rule-one.md')],
+        adapters: [
+          createTestAdapter({
+            defaultStrategy: 'copy',
+            projectMappings: [
+              {
+                contentType: 'rule',
+                canonicalDir: '.agents/rules',
+                providerDir: '.claude/rules',
+                nativeRead: false,
+              },
+            ],
+          }),
+        ],
+        manifest: manifestWithEntry({
+          canonicalPath: '.agents/rules/rule-one.md',
+          providerPath: '.claude/rules/rule-one.md',
+          provider: 'claude',
+          contentType: 'rule',
+          strategy: 'copy',
+          contentHash: 'b'.repeat(64),
+          isFile: true,
+          lastSynced: '2026-01-01T00:00:00.000Z',
+        }),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries[0]).toMatchObject({
+        operation: 'skip',
+        restampContentHash: await computeFileHash(canonicalPath),
+      });
+    });
+
+    it('leaves a matching recorded hash untouched (control)', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const { canonicalPath } = await seedManagedSkillCopy(root);
+
+      const plan = await planWithRecordedHash(
+        root,
+        await computeDirectoryHash(canonicalPath),
+      );
+
+      expect(plan.entries[0]).toMatchObject({
+        operation: 'skip',
+        reason: 'already in sync',
+      });
+      expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    });
+
+    it('does not restamp a row that tracks a different provider path', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await seedManagedSkillCopy(root);
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: manifestWithEntry({
+          ...copyManifestEntry('a'.repeat(64)),
+          providerPath: '.claude/old-skills/skill-one',
+        }),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      // The faithful copy was verified at `.claude/skills/skill-one`; its digest
+      // says nothing about the tree the row actually tracks.
+      expect(plan.entries[0]).toMatchObject({
+        operation: 'skip',
+        reason: 'already in sync',
+      });
+      expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    });
+
+    it('does not restamp an entry the manifest does not own yet', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      await seedManagedSkillCopy(root);
+
+      const plan = await computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: AUTO_SYNC_CONFIG,
+        scopeRoot: root,
+      });
+
+      expect(plan.entries[0]).toMatchObject({ operation: 'skip' });
+      expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
+    });
+
+    it('re-copies rather than restamps a tampered body with a stale hash', async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+      tempDirs.push(root);
+      const { canonicalPath, providerPath } = await seedManagedSkillCopy(root);
+      await writeFile(
+        join(providerPath, 'SKILL.md'),
+        `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n# tampered\n`,
+        'utf8',
+      );
+      const { legacy } = await computeDirectoryDigests(canonicalPath);
+
+      const plan = await planWithRecordedHash(root, legacy);
+
+      expect(plan.entries[0]).toMatchObject({ operation: 'update_copy' });
+      expect(plan.entries[0]).not.toHaveProperty('restampContentHash');
     });
   });
 

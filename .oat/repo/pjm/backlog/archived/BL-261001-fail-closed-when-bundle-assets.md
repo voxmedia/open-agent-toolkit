@@ -1,7 +1,7 @@
 ---
 id: BL-261001-fail-closed-when-bundle-assets
 title: Fail closed when bundle-assets lookups come back empty
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - safety
 assignee: null
 created: 2026-10-01T19:19:36.657Z
-updated: 2026-10-01T19:19:36.657Z
+updated: '2026-10-02T22:52:12Z'
 associated_issues: []
 external_plans: []
 ---

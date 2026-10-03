@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.5
+  version: 1.9.6
 ---
 
 # Execute a Wave of External Plans
@@ -417,35 +417,56 @@ archive anything first.
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
 8. **The full `oat-project-complete` PROCESS, with an explicit autonomous
-   deferral branch.** Interactive runs retain the standing per-wave order
-   review → complete → merge (an open PR is expected, not a blocker — the
-   archive-aware PR body sync handles it). The requirement remains the whole
-   completion process, named explicitly: `oat project complete-state` →
-   `oat project archive` (the CLI owns the local archive move, the summary
-   export, and the S3 sync when `s3SyncOnComplete` is configured) →
-   active-project pointer clear → the completion bookkeeping commit. Running
-   `oat project complete-state` ALONE does NOT satisfy this step: in the Orc
-   first run all four wrapper projects were left lifecycle-complete but
-   unarchived until an operator audit asked (S10).
-
-   Under autonomous execution, each wave MUST still run
-   `oat project complete-state` and its then-current project bookkeeping. The
-   archive tail — `oat project archive` (including configured S3 sync) →
-   active-project pointer clear → completion bookkeeping commit — MAY be
-   deferred to the program boundary so the wave can merge and execution can
-   continue. Record every such choice in the wave ledger exactly as
-   `completion tail: deferred to program close`; deferral is an outstanding
-   disposition, never satisfaction of the full-tail requirement. Interactive
-   per-wave full-tail completion remains valid.
+   companion and deferral branch.** Interactive runs retain the standing
+   per-wave order review → complete → merge (an open PR is expected, not a
+   blocker — the archive-aware PR body sync handles it). The requirement
+   remains the whole completion process, named explicitly:
+   `oat project complete-state` → `oat project archive` (the CLI owns the local
+   archive move, the summary export, and the S3 sync when `s3SyncOnComplete` is
+   configured) → active-project pointer clear → the completion bookkeeping
+   commit. Running `oat project complete-state` ALONE does NOT satisfy this
+   step: in the Orc first run all four wrapper projects were left
+   lifecycle-complete but unarchived until an operator audit asked (S10).
 
    The interactive completion skill is model-invisible
-   (`disable-model-invocation: true`), so an autonomous orchestrator executes
-   its `SKILL.md` as a document, resolving its gates from config
-   (`workflow.archiveOnComplete`, `workflow.createPrOnComplete`), until an
-   `oat-project-complete-auto` companion ships
-   (BL-260720-add-oat-project-complete-auto). If the archive tail is deferred,
-   that execution occurs after the one human-gated program-end checkpoint in
-   `oat-wave-program`, across every deferred wave wrapper.
+   (`disable-model-invocation: true`). Under autonomous execution, invoke
+   `oat-project-complete-auto` for the wave wrapper project with this step's
+   completion-before-merge provenance:
+   `--requested-by oat-wave-execute:closeout-step-8 --completion-before-merge --reason "wave <wave-id> completes before its merge handoff" <wrapper-project-path>`.
+   The companion runs only with `workflow.autonomousComplete: true`, preflights
+   the wrapper, records the completion-before-merge exception for the open,
+   tracked wave PR in the wrapper's `implementation.md`, and then runs the full
+   completion process. Record its run-report outcome in the wave ledger.
+
+   Fall back to the deferral below only when the run report's `refused_check`
+   is `opt-in` (`interactive completion required`), `preflight:4` (the PR
+   precondition), or `preflight:7` (a completion question with no recorded
+   answer). Any other refusal — an objective preflight failure, namely
+   `preflight:1` (post-implement sequence incomplete), `preflight:2`
+   (incomplete tasks), `preflight:3` (final review not passed), `preflight:5`
+   (unresolved blockers), or `preflight:6` (project-log gate unsatisfied), or
+   an `activation` refusal — stops wave closeout at a boundary: report the
+   failing check and run neither `oat project complete-state` nor the merge
+   handoff. `oat project complete-state` checks only the closeout snapshot, so
+   running it after an objective refusal would mark an unhealthy wrapper
+   complete. A `preflight:1` refusal whose reason is
+   `project directory absent (archived?); resume with oat-project-complete`
+   means an earlier run archived the wrapper and a later completion step
+   failed: the boundary report names `oat-project-complete` as the next owner,
+   whose archive-resume branches finish the tail, and never another companion
+   run.
+
+   On a deferrable stop, the wave MUST still run `oat project complete-state`
+   and its then-current project bookkeeping, and the archive tail —
+   `oat project archive` (including configured S3 sync) → active-project
+   pointer clear → completion bookkeeping commit — MAY be deferred to the
+   program boundary so the wave can merge and execution can continue. Record
+   every such choice in the wave ledger exactly as
+   `completion tail: deferred to program close`, with the companion's stated
+   reason; deferral is an outstanding disposition, never satisfaction of the
+   full-tail requirement. Interactive per-wave full-tail completion remains
+   valid. A deferred tail runs after the one human-gated program-end
+   checkpoint in `oat-wave-program`, across every deferred wave wrapper.
 
 9. **After the operator merges:** reconcile (squash-merge means content-diff the
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale

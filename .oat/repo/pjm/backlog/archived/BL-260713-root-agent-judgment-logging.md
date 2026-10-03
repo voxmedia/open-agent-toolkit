@@ -1,14 +1,14 @@
 ---
 id: BL-260713-root-agent-judgment-logging
 title: 'Root-agent judgment logging responsibility for project log'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: feature # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [project-log, orchestration, fast-follow]
 assignee: null
 created: '2026-07-13T20:24:00Z'
-updated: '2026-07-13T20:24:00Z'
+updated: '2026-10-02T22:52:15Z'
 associated_issues: [{ type: project, ref: 'orchestration-run-log' }]
 external_plans: [] # repo-relative .oat/repo/reference/external-plans/*.md paths
 ---

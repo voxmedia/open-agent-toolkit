@@ -1,9 +1,11 @@
 import { execFileSync, spawn as spawnProcess } from 'node:child_process';
+import * as claimFs from 'node:fs/promises';
 import {
   mkdir,
   mkdtemp,
   readdir,
   readFile,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -39,6 +41,9 @@ import { extractStructuredRefusal } from './child-process';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
+// Keep real filesystem effects while allowing deterministic concurrent-call scheduling.
+vi.mock('node:fs/promises', { spy: true });
+
 interface HarnessOptions {
   cwd: string;
   home: string;
@@ -56,6 +61,7 @@ interface HarnessOptions {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  isProcessAlive?: (pid: number) => boolean;
   readGateRouteReceipt?: (
     path: string,
     expectedCliRoot: string,
@@ -170,6 +176,9 @@ function createHarness(options: HarnessOptions): {
     ...(options.removeGateRunMarker
       ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
+    // Claims are keyed by each test's own temporary project, so no claim from
+    // an unrelated process can match; liveness is never probed for real.
+    isProcessAlive: options.isProcessAlive ?? (() => false),
     appendProjectLog:
       options.appendProjectLog ??
       (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
@@ -395,6 +404,7 @@ async function runReviewGate(options: {
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
+  isProcessAlive?: HarnessOptions['isProcessAlive'];
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   appendProjectLog?: HarnessOptions['appendProjectLog'];
@@ -413,6 +423,7 @@ async function runReviewGate(options: {
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
+    isProcessAlive: options.isProcessAlive,
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
     appendProjectLog: options.appendProjectLog,
@@ -6776,6 +6787,7 @@ describe('oat gate', () => {
       OAT_INVOCATION_MODEL: promptModel,
       OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
       OAT_GATE_CLI_ROOT: currentGateCliRoot(),
+      OAT_GATE_RUN_MARKER_DIR: join(tmpdir(), 'oat-gate-runs'),
     });
     expect(promptRuntime).toBe('codex');
     expect(promptModel).toBe('provider-default');
@@ -6893,6 +6905,8 @@ describe('oat gate', () => {
         reviewType: 'code',
         reviewScope: 'p02',
         project: projectPath,
+        projectRoot: await realpath(join(root, projectPath)),
+        pid: process.pid,
         startedAt: expect.any(String),
         budgetMs: 1_800_000,
         budgetSource: 'scope-default',
@@ -6901,6 +6915,655 @@ describe('oat gate', () => {
       expect(outcome).toBeTruthy();
     },
   );
+
+  describe('duplicate live gate runs', () => {
+    const reviewArgs = [
+      '--target',
+      'codex-default',
+      '--review-type',
+      'code',
+      '--review-scope',
+      'p02',
+      'Review',
+    ];
+
+    async function claimDir(): Promise<string> {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-gate-claims-'));
+      tempDirs.push(dir);
+      return dir;
+    }
+
+    async function claimFiles(dir: string): Promise<string[]> {
+      return (await readdir(dir)).filter((name) => name.startsWith('claim-'));
+    }
+
+    /** Runs one gate that holds its claim until `release` resolves. */
+    async function holdClaim(options: {
+      root: string;
+      home: string;
+      projectPath: string;
+      dir: string;
+      isProcessAlive?: (pid: number) => boolean;
+    }): Promise<{
+      runId: () => string | undefined;
+      claimPath: () => Promise<string>;
+      release: () => void;
+      done: Promise<LoggerCapture>;
+    }> {
+      let release = (): void => {};
+      const released = new Promise<void>((settle) => {
+        release = settle;
+      });
+      let started = (): void => {};
+      const running = new Promise<void>((settle) => {
+        started = settle;
+      });
+      let runId: string | undefined;
+      const runner = createProcessRunner({
+        onExecute: async (call) => {
+          runId = call.args.at(-1)?.match(/^oat_gate_run_id: (\S+)$/m)?.[1];
+          started();
+          await released;
+          await writeReviewArtifact({
+            root: options.root,
+            projectPath: options.projectPath,
+            finding: 'clean',
+          });
+        },
+      });
+      const done = runReviewGate({
+        root: options.root,
+        home: options.home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: options.dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: options.isProcessAlive ?? (() => true),
+        args: reviewArgs,
+      });
+      // Fail fast, with the gate's output, if it ends without launching.
+      await Promise.race([
+        running,
+        done.then((capture) => {
+          throw new Error(
+            `claim holder ended before launch: ${JSON.stringify({
+              json: capture.jsonPayloads,
+              warn: capture.warn,
+              error: capture.error,
+            })}`,
+          );
+        }),
+      ]);
+      return {
+        runId: () => runId,
+        claimPath: async () =>
+          join(options.dir, (await claimFiles(options.dir))[0]!),
+        release,
+        done,
+      };
+    }
+
+    it('rejects a gate whose project, review type, and scope are claimed by a live run', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const first = await holdClaim({ root, home, projectPath, dir });
+      const runner = createProcessRunner();
+      const diagnostics: string[] = [];
+      const markerWrites: string[] = [];
+      const projectLogAppends: unknown[] = [];
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        writeDiagnostic: (message) => diagnostics.push(message),
+        isProcessAlive: () => true,
+        writeGateRunMarker: async (path) => {
+          markerWrites.push(path);
+          return true;
+        },
+        appendProjectLog: async (input) => {
+          projectLogAppends.push(input);
+          return { status: 'skipped', reason: 'projectLog=false' };
+        },
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'Code',
+          '--review-scope',
+          ' P02 ',
+          'Review',
+        ],
+      });
+      const claimPath = await first.claimPath();
+      first.release();
+      const firstCapture = await first.done;
+
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(markerWrites).toHaveLength(0);
+      expect(projectLogAppends).toHaveLength(0);
+      expect(capture.jsonPayloads).toHaveLength(1);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        project: projectPath,
+        recursion: { decision: 'rejected', matchedRunId: first.runId() },
+        message: expect.stringContaining(String(first.runId())),
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+      expect(
+        diagnostics
+          .map((line) => JSON.parse(line) as Record<string, unknown>)
+          .filter((entry) => entry.type === 'gate-recursion'),
+      ).toEqual([
+        {
+          type: 'gate-recursion',
+          runId: expect.any(String),
+          decision: 'rejected',
+          matchedRunId: first.runId(),
+          matchedPid: process.pid,
+          claimPath,
+        },
+      ]);
+      // The rejected run leaves the live claim alone; the owner releases it.
+      expect(firstCapture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it('lets exactly one of two simultaneous identical gates run', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      let loserChecked = (): void => {};
+      const loserSettled = new Promise<void>((settle) => {
+        loserChecked = settle;
+      });
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          // Hold the winner until the loser has seen the claim, bounded so a
+          // broken claim (both running) fails on assertions, not a hang.
+          await Promise.race([
+            loserSettled,
+            new Promise((settle) => setTimeout(settle, 2_000)),
+          ]);
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      const launch = () =>
+        runReviewGate({
+          root,
+          home,
+          processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+          runProcess: runner.runProcess,
+          isProcessAlive: () => {
+            loserChecked();
+            return true;
+          },
+          args: reviewArgs,
+        });
+
+      const captures = await Promise.all([launch(), launch()]);
+
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(1);
+      const decisions = captures.map(
+        (capture) =>
+          (capture.jsonPayloads[0]?.recursion as { decision?: string })
+            ?.decision,
+      );
+      expect(decisions.sort()).toEqual(['none', 'rejected']);
+      const winner = captures.find(
+        (capture) => capture.jsonPayloads[0]?.status === 'ok',
+      );
+      const loser = captures.find(
+        (capture) => capture.jsonPayloads[0]?.status === 'review_failed',
+      );
+      expect(loser?.jsonPayloads[0]).toMatchObject({
+        recursion: {
+          decision: 'rejected',
+          matchedRunId: winner?.jsonPayloads[0]?.runId,
+        },
+      });
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it('preserves the replacement owner across a three-contender stale recovery race', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const probe = await holdClaim({ root, home, projectPath, dir });
+      const path = await probe.claimPath();
+      probe.release();
+      await probe.done;
+      const stale = JSON.stringify({ runId: 'dead-run', pid: 5151 });
+      await writeFile(path, stale, 'utf8');
+
+      const deferred = () => {
+        let resolve = (): void => {};
+        const promise = new Promise<void>((settle) => {
+          resolve = settle;
+        });
+        return { promise, resolve };
+      };
+      const staleRead = deferred();
+      const continueRead = deferred();
+      const movedClaim = deferred();
+      const continueMove = deferred();
+      const releaseThird = deferred();
+      const thirdStarted = deferred();
+      const actualFs =
+        await vi.importActual<typeof claimFs>('node:fs/promises');
+      const realRead = actualFs.readFile;
+      const realRename = actualFs.rename;
+      let interceptedRead = false;
+      // Schedule filesystem calls, retaining their actual on-disk behavior.
+      // A observes stale; B replaces it; A tries to move B aside; C competes.
+      const readSpy = vi
+        .spyOn(claimFs, 'readFile')
+        .mockImplementation(async (...args) => {
+          const result = await realRead(...args);
+          if (args[0] === path && result === stale && !interceptedRead) {
+            interceptedRead = true;
+            staleRead.resolve();
+            await continueRead.promise;
+          }
+          return result;
+        });
+      const renameSpy = vi
+        .spyOn(claimFs, 'rename')
+        .mockImplementation(async (...args) => {
+          await realRename(...args);
+          if (args[0] === path && (await realRead(args[1], 'utf8')) !== stale) {
+            movedClaim.resolve();
+            await continueMove.promise;
+          }
+        });
+      const runner = createProcessRunner();
+      const first = runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: (pid) => pid !== 5151,
+        args: reviewArgs,
+      });
+      let second: Awaited<ReturnType<typeof holdClaim>> | undefined;
+      let third: Promise<LoggerCapture> | undefined;
+      const thirdRunner = createProcessRunner({
+        onExecute: async () => {
+          thirdStarted.resolve();
+          await releaseThird.promise;
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      let firstCapture: LoggerCapture | undefined;
+      let thirdCapture: LoggerCapture | undefined;
+      let ownerWhileContending: string | undefined;
+      try {
+        await staleRead.promise;
+        second = await holdClaim({
+          root,
+          home,
+          projectPath,
+          dir,
+          isProcessAlive: (pid) => pid !== 5151,
+        });
+        continueRead.resolve();
+        // Fixed recovery leaves B in place and A ends. The old implementation
+        // instead opens an empty shared path by moving B's live claim aside.
+        await Promise.race([movedClaim.promise, first]);
+        third = runReviewGate({
+          root,
+          home,
+          processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+          runProcess: thirdRunner.runProcess,
+          isProcessAlive: () => true,
+          args: reviewArgs,
+        });
+        await Promise.race([thirdStarted.promise, third]);
+        continueMove.resolve();
+        firstCapture = await first;
+        ownerWhileContending = (
+          JSON.parse(await realRead(path, 'utf8')) as { runId: string }
+        ).runId;
+      } finally {
+        continueRead.resolve();
+        continueMove.resolve();
+        releaseThird.resolve();
+        if (third) thirdCapture = await third;
+        second?.release();
+        if (second) await second.done;
+        await first;
+        readSpy.mockRestore();
+        renameSpy.mockRestore();
+      }
+      expect(
+        thirdRunner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(ownerWhileContending).toBe(second?.runId());
+      expect(firstCapture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'rejected', matchedRunId: second?.runId() },
+      });
+      expect(thirdCapture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'rejected', matchedRunId: second?.runId() },
+      });
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it.each([
+      ['a dead owner', { runId: 'dead-run', pid: 5151 }],
+      ['an unparseable claim', '{"runId":'],
+    ])('replaces a claim held by %s once and runs', async (_label, claim) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      // Learn this identity's claim file name from a completed run.
+      const probe = await holdClaim({ root, home, projectPath, dir });
+      const claimPath = await probe.claimPath();
+      probe.release();
+      await probe.done;
+      await writeFile(
+        claimPath,
+        typeof claim === 'string' ? claim : JSON.stringify(claim),
+        'utf8',
+      );
+      const livenessChecks: number[] = [];
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: (pid) => {
+          livenessChecks.push(pid);
+          return pid !== 5151;
+        },
+        args: reviewArgs,
+      });
+
+      expect(livenessChecks).toEqual(
+        typeof claim === 'string' ? [] : [5151, 5151],
+      );
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(1);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it('does not block on run markers or claims for another scope', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const otherScope = await holdClaim({ root, home, projectPath, dir });
+      // A live-looking marker for the same identity is observability only.
+      await writeFile(
+        join(dir, 'live-run.json'),
+        JSON.stringify({
+          runId: 'live-run',
+          reviewType: 'code',
+          reviewScope: 'p03',
+          project: projectPath,
+          projectRoot: await realpath(join(root, projectPath)),
+          pid: process.pid,
+        }),
+        'utf8',
+      );
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: () => true,
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'code',
+          '--review-scope',
+          'p03',
+          'Review',
+        ],
+      });
+      otherScope.release();
+      await otherScope.done;
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+    });
+
+    it('uses an exported claim directory instead of TMPDIR and re-exports it to the child', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const markerPaths: string[] = [];
+      let claimsDuringRun: string[] = [];
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          claimsDuringRun = await claimFiles(dir);
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      // In-process, os.tmpdir() is this test's TMPDIR, so only the export can
+      // route the claim and marker into `dir`.
+      await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        writeGateRunMarker: async (path) => {
+          markerPaths.push(path);
+          return true;
+        },
+        removeGateRunMarker: async () => {},
+        args: reviewArgs,
+      });
+
+      expect(claimsDuringRun).toHaveLength(1);
+      expect(markerPaths).toEqual([expect.stringMatching(/\.json$/)]);
+      expect(dirname(markerPaths[0]!)).toBe(dir);
+      expect(
+        runner.calls.find((call) => call.purpose === 'execute')?.env,
+      ).toMatchObject({ OAT_GATE_RUN_MARKER_DIR: dir });
+    });
+
+    it('refuses launch when a live claim cannot be read', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const owner = await holdClaim({ root, home, projectPath, dir });
+      const path = await owner.claimPath();
+      const ownerText = await readFile(path, 'utf8');
+      const actualFs =
+        await vi.importActual<typeof claimFs>('node:fs/promises');
+      const readSpy = vi
+        .spyOn(claimFs, 'readFile')
+        .mockImplementation(async (...args) => {
+          if (args[0] === path) {
+            throw Object.assign(new Error('claim read denied'), {
+              code: 'EACCES',
+            });
+          }
+          return actualFs.readFile(...args);
+        });
+      const diagnostics: string[] = [];
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+      let capture: LoggerCapture | undefined;
+      let retainedClaim: string | undefined;
+      try {
+        capture = await runReviewGate({
+          root,
+          home,
+          processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+          runProcess: runner.runProcess,
+          isProcessAlive: () => true,
+          writeDiagnostic: (message) => diagnostics.push(message),
+          args: reviewArgs,
+        });
+        retainedClaim = await actualFs.readFile(path, 'utf8');
+      } finally {
+        readSpy.mockRestore();
+        owner.release();
+        await owner.done;
+      }
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(retainedClaim).toBe(ownerText);
+      expect(capture?.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        exitCode: 1,
+        recursion: { decision: 'unchecked' },
+        message: expect.stringContaining('claim read denied'),
+      });
+      expect(
+        diagnostics
+          .map((line) => JSON.parse(line))
+          .filter((entry) => entry.type === 'gate-recursion'),
+      ).toEqual([
+        {
+          type: 'gate-recursion',
+          runId: expect.any(String),
+          decision: 'unchecked',
+        },
+      ]);
+      expect(await claimFiles(dir)).toEqual([]);
+    });
+
+    it('refuses stale recovery while its mutation guard is occupied', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const dir = await claimDir();
+      const probe = await holdClaim({ root, home, projectPath, dir });
+      const path = await probe.claimPath();
+      probe.release();
+      await probe.done;
+      const stale = JSON.stringify({ runId: 'dead-run', pid: 5151 });
+      await writeFile(path, stale, 'utf8');
+      const mutationPath = `${path}.mutation`;
+      await mkdir(mutationPath);
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: dir },
+        runProcess: runner.runProcess,
+        isProcessAlive: () => false,
+        args: reviewArgs,
+      });
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(await readFile(path, 'utf8')).toBe(stale);
+      expect(await readdir(mutationPath)).toEqual([]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        recursion: { decision: 'unchecked' },
+        message: expect.stringContaining(mutationPath),
+      });
+    });
+
+    it('records an unchecked decision and refuses launch when the claim cannot be written', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const blocker = join(await claimDir(), 'not-a-directory');
+      await writeFile(blocker, '', 'utf8');
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: { OAT_GATE_RUN_MARKER_DIR: join(blocker, 'runs') },
+        runProcess: runner.runProcess,
+        writeGateRunMarker: async () => true,
+        removeGateRunMarker: async () => {},
+        args: reviewArgs,
+      });
+
+      expect(capture.warn).toEqual([
+        expect.stringContaining('Unable to claim'),
+      ]);
+      expect(
+        runner.calls.filter((call) => call.purpose === 'execute'),
+      ).toHaveLength(0);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        exitCode: 1,
+        message: expect.stringContaining(
+          'duplicate-run exclusion could not be established',
+        ),
+        recursion: { decision: 'unchecked' },
+      });
+    });
+
+    it('carries the recursion decision on failure envelopes after launch', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({ executeTimedOut: true });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: reviewArgs,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        timedOut: true,
+        recursion: { decision: 'none' },
+      });
+    });
+  });
 
   it('warns and continues when run marker writes fail', async () => {
     const { root, home } = await setup();
@@ -8437,6 +9100,115 @@ describe('oat gate', () => {
     expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: expected });
   });
 
+  it.each(['plan', 'design', 'discovery'])(
+    'uses the 30-minute artifact scope default for %s',
+    async (scope) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        globalArgs: [],
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'artifact',
+          '--review-scope',
+          scope,
+          'Review',
+        ],
+      });
+      expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_800_000 });
+      expect(capture.info).toContain(
+        'Running gate target codex-default (codex); timeout=1800000ms (source=scope-default).',
+      );
+    },
+  );
+
+  it('keeps cli, target, config, and env overrides ahead of the artifact scope default', async () => {
+    const artifactArgs = [
+      '--target',
+      'codex-default',
+      '--review-type',
+      'artifact',
+      '--review-scope',
+      'plan',
+    ];
+    const cases: Array<{
+      config: Record<string, unknown>;
+      env: NodeJS.ProcessEnv;
+      cli: string[];
+      timeoutMs: number;
+      source: string;
+    }> = [
+      {
+        config: {
+          gateTimeouts: { artifact: 1_200_000 },
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 1_300_000 } },
+          },
+        },
+        env: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+        cli: ['--timeout-ms', '1400000'],
+        timeoutMs: 1_400_000,
+        source: 'cli',
+      },
+      {
+        config: {
+          gateTimeouts: { artifact: 1_200_000 },
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 1_300_000 } },
+          },
+        },
+        env: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+        cli: [],
+        timeoutMs: 1_300_000,
+        source: 'target',
+      },
+      {
+        config: { gateTimeouts: { artifact: 1_200_000 } },
+        env: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+        cli: [],
+        timeoutMs: 1_200_000,
+        source: 'config',
+      },
+      {
+        config: {},
+        env: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+        cli: [],
+        timeoutMs: 1_100_000,
+        source: 'env',
+      },
+    ];
+    for (const entry of cases) {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, workflow: entry.config })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv: entry.env,
+        runProcess: runner.runProcess,
+        globalArgs: [],
+        args: [...artifactArgs, ...entry.cli, 'Review'],
+      });
+      expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: entry.timeoutMs });
+      expect(capture.info).toContain(
+        `Running gate target codex-default (codex); timeout=${entry.timeoutMs}ms (source=${entry.source}).`,
+      );
+    }
+  });
+
   it('uses config before env and env before scope defaults', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -8516,7 +9288,7 @@ describe('oat gate', () => {
       expect.stringContaining('OAT_GATE_EXEC_TIMEOUT_MS'),
     ]);
     expect(capture.info).toContain(
-      'Running gate target codex-default (codex); timeout=900000ms (source=scope-default).',
+      'Running gate target codex-default (codex); timeout=1800000ms (source=scope-default).',
     );
   });
 

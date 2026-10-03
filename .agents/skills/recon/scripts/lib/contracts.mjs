@@ -2281,8 +2281,9 @@ function validateReviewBriefArtifact(value, errors) {
 }
 
 // The affirming disposition each review kind gives a claim it supports. The
-// first three are the required reviews for `verified`. The reconciler, the
-// validator, and the renderer all read this one table.
+// first three are required for `verified` at every reviewed profile
+// (`requiredReviewKindsForProfile` adds the thorough kind). The reconciler,
+// the validator, and the renderer all read this one table.
 export const affirmingDispositionByReviewKind = Object.freeze({
   semantic: 'affirmed',
   adversarial: 'unchallenged',
@@ -2296,6 +2297,19 @@ export const requiredReviewKinds = Object.freeze([
   'adversarial',
   'coverage',
 ]);
+
+// The review kinds whose affirming disposition a `verified` claim needs at the
+// given achieved profile: the core reviews, plus redundant verification at
+// `thorough`. Contradiction resolution is conditional and never required.
+// Reconciliation, publication, and the renderer all read this one rule, so a
+// claim any required kind leaves without a disposition stays below `verified`
+// everywhere.
+export function requiredReviewKindsForProfile(profile) {
+  return Object.freeze([
+    ...requiredReviewKinds,
+    ...(profile === 'thorough' ? ['redundant-verification'] : []),
+  ]);
+}
 
 // `unresolvedIssues` entries are a closed union:
 // - a string (legacy), read as a global issue;

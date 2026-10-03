@@ -39,6 +39,7 @@ export const PROJECT_STATE_FRONTMATTER_FIELDS = [
   'oat_hill_completed',
   'oat_parallel_execution',
   'oat_implement_exit_gate',
+  'oat_quick_start_gate',
   'oat_skill_gate_overrides',
   'oat_pr_status',
   'oat_pr_url',

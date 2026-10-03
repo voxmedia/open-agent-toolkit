@@ -1,7 +1,7 @@
 ---
 id: BL-260908-tighten-the-pr-final-ledger
 title: Tighten the pr-final ledger guard's prose and escaped-pipe boundary
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T06:58:19.023Z
-updated: 2026-09-08T17:36:27.000Z
+updated: '2026-10-02T22:52:17Z'
 associated_issues: []
 external_plans: []
 ---

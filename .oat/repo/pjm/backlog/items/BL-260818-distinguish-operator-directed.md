@@ -12,7 +12,7 @@ labels:
   - skills
 assignee: null
 created: 2026-08-18T00:01:02.918Z
-updated: 2026-10-01T17:36:30Z
+updated: 2026-10-02T22:53:49Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/207
@@ -79,11 +79,31 @@ review's recommendations as bounded tasks, then run one review or gate over the
 result. The first slice ships as `BL-261001-run-a-complexity-review-when`;
 this item keeps the consolidated question and the shared authorization record.
 
+### Shipped in backlog wave 4 (2026-10-02)
+
+`BL-261001-run-a-complexity-review-when` closed in backlog wave 4 (p04).
+`oat-project-implement` (root review retry, phase gate retry, final review
+cap, exit gate block), `oat-project-review-receive` (cycle cap), and
+`oat-project-quick-start` (QS-12 plan gate block) now dispatch one read-only
+complexity review before the exhaustion decision message, also in the
+`OAT_AUTONOMOUS=1` boundary report. The report classifies each open finding
+as accepted-requirement, regression, or new-hardening and lists the findings a
+recommended simplification would dissolve. The decision message offers
+**simplify** (route the accepted simplifications through the owning skill's
+revision path, then review the revised work again); the operator always
+chooses, and the choice is recorded with the report path in
+`implementation.md`. The condensed guidance is defined once in
+`.agents/docs/complexity-review-fallback.md`. The sibling gate-capable skills
+are a separate follow-up. The criteria below no longer ask for any of that;
+what stays open is the consolidated question across all dispositions and the
+shared authorization record.
+
 ## Acceptance Criteria
 
 - At review-cap or gate-budget exhaustion, the workflow presents one
   consolidated decision with findings classified as accepted-requirement,
-  regression, or new-hardening, instead of another round or a silent stop.
+  regression, or new-hardening, instead of another round or a silent stop
+  (reuse the classification the wave 4 complexity report already produces).
 - The operator disposition is one of extra cycles, proceed with override, or
   corrective revision, and is persisted in the shared append-only authorization
   record with the fields above. Agents never self-issue a disposition.
@@ -102,11 +122,6 @@ this item keeps the consolidated question and the shared authorization record.
 - Fixtures cover each disposition kind, exhaustion, decline, resume, unrelated
   findings, and closeout validation, for both phase and final reviews and
   configured gates.
-- At exhaustion, the consolidated decision includes a complexity review of
-  the reviewed target, run by a read-only subagent before the question is
-  shown (and before an autonomous boundary report), with each open finding
-  marked as dissolved by a recommended simplification or not.
-- The operator disposition set adds **simplify**: the complexity review's
-  accepted recommendations become bounded tasks, completing them requires one
-  review or gate over the result, and the disposition is recorded in the
-  shared authorization record like the other three.
+- The **simplify** disposition (offered since wave 4, recorded today only as
+  an `implementation.md` line) is recorded in the shared authorization record
+  like the other three.

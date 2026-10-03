@@ -166,7 +166,7 @@ is evaluated.
 - **Passing gate** (no findings at or above the threshold): receive runs a non-pausing **judgment sweep**. It makes a per-finding decision for each Medium/Low — defer to final review (the default, recorded so [final review](#phase-and-final-review) resurfaces it), address now (only for small, contained, low-risk fixes, which do **not** re-trigger the standard reviewer or re-gate the phase), or reject with rationale — then archives the artifact. Address-now is an exception, not the norm; if such a fix reveals a Critical/High concern it escalates to the blocking path.
 - **Blocking gate** (one or more findings at or above the threshold): receive converts findings to fix tasks and implementation re-runs the standard reviewer and the gate for the phase. These block → fix → re-gate rounds are bounded by `oat_orchestration_retry_limit` (default `2`); exhausting the bound stops a sequential run or excludes the phase in a parallel group, matching the standard fix loop's terminal handling.
 
-Gate-originated artifacts (`oat_review_invocation: gate`) are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
+Gate-originated artifacts (`oat_review_invocation: gate`) and saved complexity reports are excluded from the same-scope review-cycle cap in `oat-project-review-receive`. The cap measures failed fix cycles of the standard review loop, so counting gate artifacts would trip it on artifact volume rather than real fix rounds.
 
 When a phase is re-gated multiple times, each round produces a distinct review artifact — filenames and `oat_generated_at` are seconds-precision, so rounds never collide and `oat review latest` resolves the newest. An orchestrator should know a gate finished from the `oat --json gate review` result envelope on process exit (`status`, `runId`, `generatedAt`), not by watching the `reviews/` directory or the provider's log; see [Gate completion signal](../../advanced/workflow-gates.md#gate-completion-signal).
 
@@ -225,6 +225,68 @@ Final review `passed` gate requires:
 - No unresolved Critical/High/Medium findings.
 - Deferred Medium findings resurfaced and explicitly dispositioned.
 - Low findings explicitly dispositioned (after plain-language explanation).
+
+## Complexity review at budget exhaustion
+
+When a review or gate budget runs out, another round of the same review is
+unlikely to converge. Before asking the operator how to proceed, the root
+dispatches one complexity review and shows it together with the reasons the
+loop stopped. The review asks whether the reviewed work, and the machinery the
+findings keep demanding, earns its cost against the contract. It is not
+another correctness review.
+
+It runs at every budget-exhaustion point:
+
+| Exhaustion point                                              | Owning skill                 |
+| ------------------------------------------------------------- | ---------------------------- |
+| Phase review fix rounds reach `oat_orchestration_retry_limit` | `oat-project-implement`      |
+| A phase review gate still blocks at that limit                | `oat-project-implement`      |
+| The final review reaches its three-cycle cap                  | `oat-project-implement`      |
+| The implementation exit gate ends in `block` at `maxAttempts` | `oat-project-implement`      |
+| A review scope reaches the three-cycle cap                    | `oat-project-review-receive` |
+| The quick-start plan gate ends in `block` at `maxAttempts`    | `oat-project-quick-start`    |
+
+A single `prompt` failure, a `warn` outcome, and launch or transport failures
+that consume no attempt are not budget exhaustions. The operator can ask for
+the same review at any other time; there is no automatic early trigger.
+
+How it runs:
+
+- **Probe.** OAT looks for an installed `complexity-review` skill in
+  `~/.agents/skills`, then `~/.claude/skills`, then the repository's
+  `.agents/skills`. When one is found, the reviewer follows it as a document,
+  without asking questions. Otherwise the reviewer follows a condensed method
+  bundled with the lifecycle skills: restate the contract from independent
+  sources, establish the simplest viable baseline, inventory the machinery,
+  apply the deletion test, build a ledger (Item, Claimed value, Evidence,
+  Lifecycle cost, Recommendation), and give a verdict of
+  `Deletion-rule compliant`, `Partially compliant`, or `Not compliant`.
+- **Read-only reviewer.** One reviewer-class subagent at the resolved reviewer
+  ceiling reads the reviewed target, the contract sources (backlog items,
+  discovery, spec, design, and decision records), and every review artifact of
+  the exhausted loop. It writes nothing and returns its report to the root.
+  Outside an implement run (quick-start, or a standalone review-receive), the
+  root loads the project dispatch skills and resolves the reviewer ceiling with
+  `oat project dispatch-ceiling resolve --role reviewer`.
+- **One review per exhausted loop.** A saved report for the scope that is newer
+  than every review artifact of that scope is reused, so re-entering a capped
+  receive does not dispatch a second review.
+- **OAT additions.** The report marks rows only the operator can settle as
+  `REQUIRES-OPERATOR`, classifies each open finding as an accepted
+  requirement, a regression, or new hardening, lists the findings a
+  simplification would dissolve, and recommends a disposition: extra cycles,
+  proceed with override, corrective revision, or **simplify**.
+- **Decision message.** The root saves the report as
+  `reviews/archived/complexity-<scope>-<timestamp>.md` (outside the top-level
+  `reviews/` directory, so routers never mistake it for an unprocessed review,
+  and outside the review-cycle count), shows one decision message with the
+  stop reasons, verdict, dissolvable findings, and operator questions, and
+  records the operator's choice with the report path in `implementation.md`.
+
+Agents never select the disposition, including the recommended one. Under
+`OAT_AUTONOMOUS=1` the run stops at its boundary report, which carries the same
+content. The condensed method adapts the operator's `complexity-review` skill
+from `tkstang/skills`; see `NOTICES.md`.
 
 ## Subagent Compatibility
 

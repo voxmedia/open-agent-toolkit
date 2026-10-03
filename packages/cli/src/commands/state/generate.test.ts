@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { GitRunner } from '@commands/project/sync/git';
+import { getProjectState } from '@open-agent-toolkit/control-plane';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -67,6 +68,82 @@ async function writeLocalConfig(
     `${JSON.stringify({ version: 1, ...config })}\n`,
     'utf8',
   );
+}
+
+const QUICK_PLAN_BODY = [
+  '# Plan: demo',
+  '',
+  '## Phase 1: Foundation',
+  '',
+  '### Task p01-t01: Add the readiness predicate',
+  '',
+].join('\n');
+
+function quickPlan(frontmatter: string, reviewStatus: string): string {
+  return [
+    '---',
+    frontmatter,
+    '---',
+    '',
+    QUICK_PLAN_BODY,
+    '## Reviews',
+    '',
+    '| Scope | Type     | Status | Date       | Artifact |',
+    '| ----- | -------- | ------ | ---------- | -------- |',
+    `| plan  | artifact | ${reviewStatus} | 2026-10-02 | -        |`,
+    '',
+  ].join('\n');
+}
+
+const NOT_READY_QUICK_PLAN = quickPlan(
+  'oat_status: in_progress\noat_ready_for: null\noat_template: false',
+  'pending',
+);
+
+const READY_QUICK_PLAN = quickPlan(
+  'oat_status: complete\noat_ready_for: oat-project-implement\noat_template: false',
+  'passed',
+);
+
+/**
+ * An active quick project in its `plan` phase. `dashboardMatchesRouter`
+ * asserts that the dashboard reports the control-plane router's exact
+ * recommendation for the same project.
+ */
+async function quickPlanFixture(
+  root: string,
+  phaseStatus: string,
+  overrides: Record<string, string> = {},
+) {
+  const projectPath = '.oat/projects/shared/quick-plan';
+  await writeLocalConfig(root, { activeProject: projectPath });
+  await writeStateFile(root, projectPath, {
+    oat_phase: 'plan',
+    oat_phase_status: phaseStatus,
+    oat_workflow_mode: 'quick',
+    oat_hill_checkpoints: '[]',
+    oat_hill_completed: '[]',
+    ...overrides,
+  });
+  const planPath = join(root, projectPath, 'plan.md');
+  return {
+    projectPath,
+    writePlan: (content: string) => writeFile(planPath, content, 'utf8'),
+    removePlan: () => rm(planPath),
+    async dashboardMatchesRouter() {
+      const dashboard = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-10-02',
+        git: mockGit,
+      });
+      const { recommendation } = await getProjectState(join(root, projectPath));
+      expect({
+        skill: dashboard.recommendedStep,
+        reason: dashboard.recommendedReason,
+      }).toEqual(recommendation);
+      return dashboard;
+    },
+  };
 }
 
 describe('generateStateDashboard', () => {
@@ -421,6 +498,120 @@ describe('generateStateDashboard', () => {
       git: mockGit,
     });
     expect(discovering.recommendedStep).toBe('oat-project-discover');
+  });
+
+  it('routes a quick plan in progress by quick plan readiness, matching the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const fixture = await quickPlanFixture(root, 'in_progress');
+
+    // A pre-review plan is not ready: resume quick-start in place.
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const notReady = await fixture.dashboardMatchesRouter();
+    expect(notReady.recommendedStep).toBe('oat-project-quick-start');
+    expect(notReady.recommendedReason).toBe(
+      'Quick plan is not implementation-ready (frontmatter is not the recorded plan-complete state); resume the quick workflow in place',
+    );
+
+    // A missing plan is not ready either.
+    await fixture.removePlan();
+    const missing = await fixture.dashboardMatchesRouter();
+    expect(missing.recommendedStep).toBe('oat-project-quick-start');
+    expect(missing.recommendedReason).toContain('plan.md is missing');
+
+    // A ready plan routes to implementation.
+    await fixture.writePlan(READY_QUICK_PLAN);
+    const ready = await fixture.dashboardMatchesRouter();
+    expect(ready.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it('routes a quick plan at plan:complete by quick plan readiness, matching the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const fixture = await quickPlanFixture(root, 'complete');
+
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const notReady = await fixture.dashboardMatchesRouter();
+    expect(notReady.recommendedStep).toBe('oat-project-quick-start');
+
+    await fixture.writePlan(READY_QUICK_PLAN);
+    const ready = await fixture.dashboardMatchesRouter();
+    expect(ready.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it.each([
+    ['double-quoted flow', '["plan"]'],
+    ['single-quoted flow', "['plan']"],
+    ['bare flow', '[design, plan]'],
+    ['block', '\n  - design\n  - plan'],
+  ])(
+    'routes a quick plan with a pending plan HiLL checkpoint (%s array) like the router',
+    async (_form, checkpoints) => {
+      const root = await createTempRepo();
+      tempDirs.push(root);
+      const fixture = await quickPlanFixture(root, 'in_progress', {
+        oat_hill_checkpoints: checkpoints,
+      });
+
+      // A ready plan would route to implementation without the checkpoint, so
+      // only a recognized pending checkpoint sends it to the plan skill. The
+      // two surfaces word the HiLL reason differently, so compare the skill.
+      await fixture.writePlan(READY_QUICK_PLAN);
+      const dashboard = await generateStateDashboard({
+        repoRoot: root,
+        today: '2026-10-02',
+        git: mockGit,
+      });
+      const { recommendation } = await getProjectState(
+        join(root, fixture.projectPath),
+      );
+      expect(recommendation.skill).toBe('oat-project-plan');
+      expect(dashboard.recommendedStep).toBe(recommendation.skill);
+      expect(dashboard.recommendedReason).toContain('HiLL approval');
+    },
+  );
+
+  it.each([
+    ['single-quoted flow', "['plan']"],
+    ['bare flow', '[plan]'],
+    ['block', '\n  - plan'],
+  ])(
+    'treats a completed plan HiLL checkpoint (%s array) as passed like the router',
+    async (_form, completed) => {
+      const root = await createTempRepo();
+      tempDirs.push(root);
+      const fixture = await quickPlanFixture(root, 'in_progress', {
+        oat_hill_checkpoints: '["plan"]',
+        oat_hill_completed: completed,
+      });
+
+      await fixture.writePlan(READY_QUICK_PLAN);
+      const dashboard = await fixture.dashboardMatchesRouter();
+      expect(dashboard.recommendedStep).toBe('oat-project-implement');
+    },
+  );
+
+  it('routes a quick plan with a pending plan HiLL checkpoint like the router', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const fixture = await quickPlanFixture(root, 'in_progress', {
+      oat_hill_checkpoints: '["plan"]',
+    });
+
+    // The router checks a pending HiLL checkpoint before readiness, at any
+    // phase status, so the plan skill owns the approval.
+    await fixture.writePlan(NOT_READY_QUICK_PLAN);
+    const dashboard = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-10-02',
+      git: mockGit,
+    });
+    const { recommendation } = await getProjectState(
+      join(root, fixture.projectPath),
+    );
+    expect(recommendation.skill).toBe('oat-project-plan');
+    expect(dashboard.recommendedStep).toBe(recommendation.skill);
+    expect(dashboard.recommendedReason).toContain('HiLL approval');
   });
 
   it('routes lite implement closeout directly to pr-final without documentation', async () => {
@@ -843,5 +1034,18 @@ describe('phaseInHillList', () => {
 
   it('returns false for empty list', () => {
     expect(phaseInHillList('design', '[]')).toBe(false);
+  });
+
+  it('accepts single-quoted and bare flow arrays', () => {
+    expect(phaseInHillList('plan', "['plan']")).toBe(true);
+    expect(phaseInHillList('plan', '[plan]')).toBe(true);
+    expect(phaseInHillList('plan', "[ 'design' , plan ]")).toBe(true);
+    expect(phaseInHillList('plan', "['plan-review']")).toBe(false);
+    expect(phaseInHillList('plan', '[planning]')).toBe(false);
+  });
+
+  it('accepts an already parsed list', () => {
+    expect(phaseInHillList('plan', ['design', 'plan'])).toBe(true);
+    expect(phaseInHillList('plan', ['design'])).toBe(false);
   });
 });

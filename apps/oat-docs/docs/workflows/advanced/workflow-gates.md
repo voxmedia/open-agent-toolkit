@@ -247,6 +247,45 @@ Only an artifact with `oat_review_invocation: gate` and the matching
 review, phase review, or manually produced independent review cannot substitute
 for it.
 
+### Gate approval records
+
+Two lifecycle gates persist their outcome in project `state.md` with a shared
+five-field core:
+
+| Field                | Meaning                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `status`             | `allowed` or `blocked`                                                                         |
+| `disposition`        | `passed`, `warned`, `prompt_approved`, or `project_disabled` when allowed; `null` when blocked |
+| `config_fingerprint` | Stable hash of the resolved gate declaration                                                   |
+| `reviewed_head`      | The commit the gate reviewed, recorded as provenance                                           |
+| `decided_at`         | ISO 8601 UTC time of the decision                                                              |
+
+`oat_implement_exit_gate` keeps its additional closeout fields and writes
+`decided_at` with every allowed or blocked outcome. `oat_quick_start_gate`,
+written by `oat-project-quick-start` for every configured plan-gate outcome,
+carries exactly the core:
+
+- a passing gate writes `allowed/passed`, and a `warn` failure writes
+  `allowed/warned`;
+- a `prompt` failure the operator explicitly continues past writes
+  `allowed/prompt_approved`;
+- a declined or deferred `prompt` (always under `OAT_AUTONOMOUS=1`), a `block`
+  still failing at `maxAttempts`, or an operational failure writes `blocked`
+  with a `null` disposition;
+- a gate disabled by project override writes `allowed/project_disabled`
+  without launching anything; and
+- a gate that is not configured writes no record (implement writes
+  `allowed/no_gate` instead).
+
+`oat-project-next` and `oat-project-progress` report the quick-start record as
+recorded: status, disposition, `decided_at`, and `config_fingerprint` as
+provenance, or `malformed` when the fields do not form a valid record. They do
+not recompute the fingerprint, because no CLI emits a canonical one for the
+quick-start gate, and they never route on the record: quick plan readiness
+remains the only routing rule for quick plans, and `reviewed_head` is not
+compared with `HEAD` because quick-start commits after the gate. A record
+written before `decided_at` existed is still valid.
+
 ## Review gates
 
 `oat gate review` is intentionally stateful. It is equivalent to running
@@ -953,6 +992,12 @@ failures, and receive failures are operational failures rather than validated
 blocking findings. They remain blocked regardless of `onFailure`; even `warn`
 cannot turn them into an allowed disposition.
 
+When `block` still fails after `maxAttempts`, the implementation exit gate and
+the quick-start plan gate run a
+[complexity review](../projects/reviews/index.md#complexity-review-at-budget-exhaustion)
+before escalating, and show it with the accumulated feedback. The operator
+chooses how to proceed, including **simplify**; agents never choose for them.
+
 `cross-provider-exec` does fallback only before dispatch, while selecting an
 available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
@@ -970,9 +1015,11 @@ the budget at the narrowest useful level. The first valid value wins:
 All configured values must be integer milliseconds from `1,000` through
 `14,400,000`. Invalid persisted values are ignored with a warning and
 resolution continues to the next source. Code reviews at `final`, phase
-(`pNN`), or phase-range (`pNN-pMM`) scope default to 1,800,000 ms (30 minutes).
-Task-scoped code reviews (`pNN-tNN`) and artifact reviews default to 900,000 ms
-(15 minutes). Startup output reports both the resolved value and source.
+(`pNN`), or phase-range (`pNN-pMM`) scope and every artifact review (for
+example `plan`, `design`, or `discovery`) default to 1,800,000 ms (30 minutes),
+because they read the full surface. Task-scoped code reviews (`pNN-tNN`)
+default to 900,000 ms (15 minutes). Startup output reports both the resolved
+value and source.
 
 Example migration from the former single environment override:
 
@@ -981,7 +1028,7 @@ Example migration from the former single environment override:
   "workflow": {
     "gateTimeouts": {
       "code": 2400000,
-      "artifact": 900000
+      "artifact": 2400000
     },
     "gates": {
       "execTargets": {
@@ -1048,10 +1095,60 @@ diagnostic because the refusal itself explains why execution stopped.
 
 Before spawn, the gate also writes a transient marker under the system temp
 directory at `oat-gate-runs/<runId>.json`; startup diagnostics print its path.
-The marker records target, runtime, project, review type/scope, start time,
-budget, and budget source. It is deleted at terminal completion. An orphaned
-marker indicates the gate parent itself stopped unexpectedly, but markers are
-diagnostic only and are never used for artifact validation.
+The marker records target, runtime, project, the resolved project directory
+(`projectRoot`), the owning gate process ID (`pid`), review type/scope, start
+time, budget, and budget source. It is deleted at terminal completion. An
+orphaned marker indicates the gate parent itself stopped unexpectedly. Markers
+are diagnostic only: they are never used for artifact validation or for
+duplicate-run detection.
+
+#### Nested and duplicate runs
+
+Before launching, `oat gate review` atomically claims its project directory,
+review type, and review scope (type and scope compare case-insensitively). The
+claim is a `claim-<hash>.lock` file in the same `oat-gate-runs/` directory,
+created through an exclusive link, so at most one live gate holds a given
+project, type, and scope at a time. That holds even when two identical gates
+start at the same moment. The claim is released when the run ends.
+
+If the claim is already held by a live process, the new run is rejected
+without launching a target, writing a marker, or appending a project-log entry.
+It exits nonzero with `status: review_failed`,
+`outcome: review_did_not_complete`, and a message naming the holding run, its
+process ID, and its claim path. This covers a reviewer that launches its own
+gate for the scope it is reviewing, a second orchestrator launch for a scope
+already under review, and simultaneous launches. Wait for the live run to
+finish; remove the named claim only when that process is not a gate. A claim
+whose owner process is dead, or whose content cannot be parsed, is replaced
+once and the run proceeds. Recovery and release serialize destructive claim
+changes with an exclusive `<claim-path>.mutation` directory. Recovery checks
+ownership again under that guard before removing a stale claim, so a
+replacement live owner remains protected even when three launches compete.
+If another mutation holds the guard, the new run refuses to start; retry after
+it finishes. An interrupted mutation can leave the guard behind. Remove that
+exact guard directory only after verifying that no gate is still using it;
+OAT does not automatically reclaim it. Liveness is a process-ID check, so a stale claim
+whose process ID was reused by an unrelated process still blocks until it is
+removed.
+
+The gate exports its run directory to the reviewer child as
+`OAT_GATE_RUN_MARKER_DIR`, and every gate prefers that variable (when it is an
+absolute path) over the system temp directory. A nested gate therefore finds
+its parent's claim even when the reviewer runtime gives tool commands a
+different `TMPDIR`. Runs in separate checkouts or worktrees resolve to
+different project directories and never block each other.
+
+The `ok`/`blocked` envelope and the `review_did_not_complete` envelope (child
+failure, timeout, refusal, or duplicate rejection) record the decision as
+`recursion`: `{ "decision": "none" }`,
+`{ "decision": "rejected", "matchedRunId": "<runId>" }`, or
+`{ "decision": "unchecked" }` when claim acquisition fails (including an
+unreadable claim or a held mutation guard). The gate warns, exits nonzero with
+`status: review_failed` and `outcome: review_did_not_complete`, and does not
+launch a reviewer, write a run marker, or append a project-log entry. Other envelopes keep
+their existing shape. JSON mode also writes a `gate-recursion` diagnostic line
+beside the `gate-run-marker` line; a rejection adds `matchedPid` and
+`claimPath`.
 
 After a review target times out, OAT re-scans the project reviews for exactly
 one artifact carrying that invocation's `oat_gate_run_id`. A recovered artifact
@@ -1085,6 +1182,7 @@ those artifacts; correct the project/run correlation and start a new gate run.
 | Passing artifact lost receive routing                                 | handoff and `receiveEligible` fixture                                                                                  |
 | Passing review reported as a failed gate after a post-selection error | post-selection recovery cases plus snapshot-replacement, non-gate-marker, and foreign-target controls                  |
 | Transient index lock turned a completed review into a failed gate     | index-lock retry cases plus persistent/transient classification, receipt fixture, and fresh-process recovery control   |
+| A second gate ran for a project and scope already under review        | claim unit cases plus running-gate, simultaneous-launch, and differing-`TMPDIR` nested fake-runtime cases              |
 
 ## Current limits
 
@@ -1200,8 +1298,9 @@ skip tool-approval prompts, so an unattended reviewer can stall on such a
 prompt. On a trusted machine that runs gates unattended, add your own target
 with the permissions it needs, for example with `--layer user`.
 
-A code review of a whole phase, a phase range, or the final result may run for
-30 minutes by default; other reviews get 15 minutes. OAT uses the first timeout
+A code review of a whole phase, a phase range, or the final result, and any
+artifact review, may run for 30 minutes by default; task-scoped code reviews
+get 15 minutes. OAT uses the first timeout
 it finds: the command's `--timeout-ms`, then the target's `timeoutMs`, then
 `workflow.gateTimeouts`, then the `OAT_GATE_EXEC_TIMEOUT_MS` environment
 variable, then the built-in default.

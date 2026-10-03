@@ -19,3 +19,11 @@ Defer the oat-project-complete-auto companion skill to an owned backlog item (BL
 ## Consequences
 
 Autonomous programs keep a deterministic, operator-sanctioned closeout boundary. The companion ships only when the guard semantics are implemented; wave skills meanwhile record archive-tail deferrals explicitly (p-rev4).
+
+## Amended
+
+Amended on 2026-10-03 by DR-261003-autonomous-completion-uses. The companion
+shipped with a standing `workflow.autonomousComplete` opt-in instead of a
+per-program one, and it completes each wave before its merge handoff as well as
+at the program-end checkpoint. The rule that it never fires from task
+completion alone is unchanged.

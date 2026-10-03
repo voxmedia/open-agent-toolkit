@@ -1,5 +1,12 @@
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,10 +42,18 @@ interface GateRunResult {
   diagnostics: Record<string, unknown>[];
 }
 
-async function setupFixture(): Promise<{ root: string; home: string }> {
+interface GateFixture {
+  root: string;
+  home: string;
+  /** Per-fixture TMPDIR, so run markers from other processes are never seen. */
+  tmp: string;
+}
+
+async function setupFixture(): Promise<GateFixture> {
   const root = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-'));
   const home = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-home-'));
-  tempRoots.push(root, home);
+  const tmp = await mkdtemp(join(tmpdir(), 'oat-gate-hardening-tmp-'));
+  tempRoots.push(root, home, tmp);
   const project = '.oat/projects/shared/demo';
   execFileSync('git', ['init', '-q'], { cwd: root });
   await mkdir(join(root, project), { recursive: true });
@@ -72,11 +87,11 @@ async function setupFixture(): Promise<{ root: string; home: string }> {
       },
     })}\n`,
   );
-  return { root, home };
+  return { root, home, tmp };
 }
 
 async function runGate(
-  fixture: { root: string; home: string },
+  fixture: GateFixture,
   options: {
     env?: NodeJS.ProcessEnv;
     json?: boolean;
@@ -112,6 +127,10 @@ async function runGate(
       env: {
         ...process.env,
         HOME: fixture.home,
+        TMPDIR: fixture.tmp,
+        // A gate prefers an inherited absolute marker directory over TMPDIR,
+        // so pin each fixture to its own; case 10 overrides it on purpose.
+        OAT_GATE_RUN_MARKER_DIR: join(fixture.tmp, 'oat-gate-runs'),
         NO_UPDATE_NOTIFIER: '1',
         OAT_GATE_LIVENESS_INTERVAL_MS: '100',
         FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME: 'cursor',
@@ -159,13 +178,30 @@ async function runGate(
           finalPayload ??
           jsonLines.findLast((entry) => typeof entry.status === 'string'),
         diagnostics: jsonLines.filter((entry) =>
-          ['gate-start', 'gate-liveness', 'gate-route'].includes(
-            String(entry.type),
-          ),
+          [
+            'gate-start',
+            'gate-liveness',
+            'gate-route',
+            'gate-recursion',
+          ].includes(String(entry.type)),
         ),
       });
     });
   });
+}
+
+/** Waits until a live gate under `tmp` has taken its duplicate-run claim. */
+async function waitForClaim(tmp: string): Promise<void> {
+  const dir = join(tmp, 'oat-gate-runs');
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const names = await readdir(dir).catch(() => [] as string[]);
+    if (names.some((name) => name.startsWith('claim-'))) {
+      return;
+    }
+    await new Promise((settle) => setTimeout(settle, 50));
+  }
+  throw new Error(`no gate claim appeared under ${dir}`);
 }
 
 afterEach(async () => {
@@ -340,6 +376,139 @@ describe(
       expect(artifact).toContain(
         `oat_gate_run_id: ${String(result.payload?.runId)}`,
       );
+    });
+
+    it('case 8: a running gate rejects a second identical gate', async () => {
+      const fixture = await setupFixture();
+      const first = runGate(fixture, {
+        env: { FAKE_GATE_ARTIFACT: 'correlated', FAKE_GATE_DELAY_MS: '5000' },
+      });
+      await waitForClaim(fixture.tmp);
+      const second = await runGate(fixture, {
+        env: { FAKE_GATE_ARTIFACT: 'correlated' },
+      });
+      const firstResult = await first;
+
+      expect(firstResult.exitCode, firstResult.stderr).toBe(0);
+      expect(firstResult.payload).toMatchObject({
+        status: 'ok',
+        recursion: { decision: 'none' },
+      });
+      expect(second.exitCode, second.stderr).toBe(1);
+      expect(second.payload).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        recursion: {
+          decision: 'rejected',
+          matchedRunId: firstResult.payload?.runId,
+        },
+      });
+      expect(second.payload).not.toHaveProperty('receiveEligible');
+      expect(second.diagnostics).toContainEqual({
+        type: 'gate-recursion',
+        runId: second.payload?.runId,
+        decision: 'rejected',
+        matchedRunId: firstResult.payload?.runId,
+        matchedPid: expect.any(Number),
+        claimPath: expect.stringContaining(
+          join(fixture.tmp, 'oat-gate-runs', 'claim-'),
+        ),
+      });
+      // The rejected gate launched nothing.
+      expect(
+        second.diagnostics.filter((entry) => entry.type === 'gate-start'),
+      ).toEqual([]);
+      // The first gate released its claim on completion.
+      expect(
+        (await readdir(join(fixture.tmp, 'oat-gate-runs'))).filter((name) =>
+          name.startsWith('claim-'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('case 9: two simultaneous identical gates run exactly once', async () => {
+      const fixture = await setupFixture();
+      const env = {
+        FAKE_GATE_ARTIFACT: 'correlated',
+        FAKE_GATE_DELAY_MS: '3000',
+      };
+      const results = await Promise.all([
+        runGate(fixture, { env }),
+        runGate(fixture, { env }),
+      ]);
+
+      const statuses = results.map((result) => result.payload?.status).sort();
+      expect(
+        statuses,
+        results.map((result) => result.stderr).join('\n'),
+      ).toEqual(['ok', 'review_failed']);
+      const winner = results.find((result) => result.payload?.status === 'ok');
+      const loser = results.find(
+        (result) => result.payload?.status === 'review_failed',
+      );
+      expect(loser?.payload).toMatchObject({
+        recursion: {
+          decision: 'rejected',
+          matchedRunId: winner?.payload?.runId,
+        },
+      });
+    });
+
+    it('case 11: an inherited caller marker directory is left untouched', async () => {
+      // Inside a gate reviewer, the parent gate exports its absolute marker
+      // directory. Ordinary fixtures must claim and mark under their own tmp,
+      // where waitForClaim looks, and never write into the parent's area.
+      const inherited = await mkdtemp(
+        join(tmpdir(), 'oat-gate-hardening-inherited-'),
+      );
+      tempRoots.push(inherited);
+      const previous = process.env.OAT_GATE_RUN_MARKER_DIR;
+      process.env.OAT_GATE_RUN_MARKER_DIR = inherited;
+      try {
+        const fixture = await setupFixture();
+        const first = runGate(fixture, {
+          env: { FAKE_GATE_ARTIFACT: 'correlated', FAKE_GATE_DELAY_MS: '2000' },
+        });
+        await waitForClaim(fixture.tmp);
+        const result = await first;
+
+        // waitForClaim above proved the claim was taken under fixture.tmp.
+        expect(result.exitCode, result.stderr).toBe(0);
+        expect(await readdir(inherited)).toEqual([]);
+      } finally {
+        if (previous === undefined) delete process.env.OAT_GATE_RUN_MARKER_DIR;
+        else process.env.OAT_GATE_RUN_MARKER_DIR = previous;
+      }
+    });
+
+    it('case 10: a nested gate with a different TMPDIR finds the exported claim directory', async () => {
+      const fixture = await setupFixture();
+      const childTmp = await mkdtemp(
+        join(tmpdir(), 'oat-gate-hardening-child-'),
+      );
+      tempRoots.push(childTmp);
+      const parent = runGate(fixture, {
+        env: { FAKE_GATE_ARTIFACT: 'correlated', FAKE_GATE_DELAY_MS: '5000' },
+      });
+      await waitForClaim(fixture.tmp);
+      // What a reviewer child sees: its own TMPDIR plus the parent's export.
+      const nested = await runGate(fixture, {
+        env: {
+          FAKE_GATE_ARTIFACT: 'correlated',
+          TMPDIR: childTmp,
+          OAT_GATE_RUN_MARKER_DIR: join(fixture.tmp, 'oat-gate-runs'),
+        },
+      });
+      const parentResult = await parent;
+
+      expect(parentResult.payload).toMatchObject({ status: 'ok' });
+      expect(nested.exitCode, nested.stderr).toBe(1);
+      expect(nested.payload).toMatchObject({
+        recursion: {
+          decision: 'rejected',
+          matchedRunId: parentResult.payload?.runId,
+        },
+      });
     });
   },
 );

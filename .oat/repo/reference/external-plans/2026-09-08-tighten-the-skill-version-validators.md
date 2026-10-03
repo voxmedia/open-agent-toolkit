@@ -5,7 +5,7 @@ oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/archived/BL-260906-extend-check-skill-bumps.md
   - .oat/repo/pjm/backlog/archived/BL-260908-report-a-changed-skill-with-no.md
-  - .oat/repo/pjm/backlog/items/BL-260908-retire-the-top-level-skill.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-retire-the-top-level-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -78,7 +78,7 @@ in either validator.
 - Source backlog item:
   [BL-260908-report-a-changed-skill-with-no — Report a changed skill with no frontmatter block in the bump validator](../../pjm/backlog/archived/BL-260908-report-a-changed-skill-with-no.md)
 - Source backlog item:
-  [BL-260908-retire-the-top-level-skill — Retire the top-level skill version alias on the recorded schedule](../../pjm/backlog/items/BL-260908-retire-the-top-level-skill.md)
+  [BL-260908-retire-the-top-level-skill — Retire the top-level skill version alias on the recorded schedule](../../pjm/backlog/archived/BL-260908-retire-the-top-level-skill.md)
   — step 1 only; see its "Split (2026-09-08 triage)" section.
 - Related decisions:
   [DR-260906-one-version-bump-per-changed](../decisions/DR-260906-one-version-bump-per-changed.md),

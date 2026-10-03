@@ -294,6 +294,15 @@ To run in a separate session use: oat-project-review-provide code final
 - If Critical/High findings: Fix tasks added, re-run the `oat-project-implement` skill
 - Loop until final review passes (max 3 cycles per oat-project-review-receive)
 
+**Final review cap.** When the final review reaches the three-cycle cap,
+dispatch the complexity review that
+`references/docs/complexity-review-fallback.md` defines for the final loop,
+then show its decision message; under `OAT_AUTONOMOUS=1`, put the same content
+in the boundary report instead. Record the operator's choice with the report
+path in `implementation.md`. Agents never select the disposition. One exhausted
+loop gets one review: follow that doc's reuse rule, so a report the receive
+step's cycle cap already produced for this final loop serves here too.
+
 **After final review is marked `passed`:**
 
 - Record the passed final review and keep the project in implementation closeout.
@@ -311,7 +320,11 @@ or satisfies this configured exit gate.
 **Persisted transition contract:**
 
 `"$PROJECT_PATH/state.md"` is the routing source of truth. Store one closeout
-generation as a sibling of `oat_post_implement_sequence`:
+generation as a sibling of `oat_post_implement_sequence`. Its `status`,
+`disposition`, `config_fingerprint`, `reviewed_head`, and `decided_at` fields
+are the shared lifecycle gate record core defined in
+`references/docs/gate-approval-record.md`; the additional values and fields
+below, and the freshness rules in this step, belong to this carrier:
 
 ```yaml
 oat_implement_exit_gate:
@@ -351,6 +364,7 @@ oat_implement_exit_gate:
   receive_completed: false
   failure: null
   updated_at: '2026-07-18T00:00:00Z'
+  decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome
 ```
 
 At the start of a new closeout generation, require a current passed final
@@ -550,6 +564,9 @@ disposition.
 - An explicit prompt continuation persists `allowed/prompt_approved`; defer or
   no response persists `blocked` and stops. A warn continuation persists
   `allowed/warned` before closeout proceeds.
+- Every write that sets `status` to `allowed` or `blocked` also sets
+  `decided_at` to the current ISO 8601 UTC time; `pending` and `stale` writes
+  leave it unchanged.
 
 **Interruption, resume, and freshness:**
 
@@ -789,6 +806,16 @@ completion, or success output, run the configured gate:
    missing CLIs, unavailable runtimes, transport failures, validation or
    correlation failures, and receive failures cannot continue to sequencing,
    final HiLL, completion, or success output regardless of `on_failure`.
+
+   **Complexity review at `maxAttempts`.** When the gate ends in `block` after
+   attempts are exhausted, dispatch the complexity review that
+   `references/docs/complexity-review-fallback.md` defines for this exhausted
+   gate loop before escalating, then show its decision message with the
+   accumulated feedback; under `OAT_AUTONOMOUS=1`, put the same content in the
+   boundary report instead. Record the operator's choice with the report path
+   in `implementation.md`. Agents never select the disposition. A single
+   unresolved policy boundary that consumed no remediation attempt is not a
+   budget exhaustion and does not trigger the review.
 
    When the gate ends in `block` after attempts are exhausted or remains at an
    unresolved `prompt` boundary, the completion steps below MUST NOT run. The

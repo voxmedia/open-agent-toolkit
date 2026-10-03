@@ -167,6 +167,7 @@ type ConfigKey =
   | 'workflow.autoArtifactReview.analysis'
   | 'workflow.autoArtifactReview.plan'
   | 'workflow.autoReviewAtHillCheckpoints'
+  | 'workflow.autonomousComplete'
   | 'workflow.createPrOnComplete'
   | 'workflow.designMode'
   | 'workflow.projectLog'
@@ -345,6 +346,7 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.hillCheckpointDefault',
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
+  'workflow.autonomousComplete',
   'workflow.postImplementSequence',
   'workflow.retro.filing.repo',
   'workflow.retro.filing.upstream',
@@ -889,6 +891,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
     description:
       'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.autonomousComplete',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'boolean',
+    defaultValue: 'false',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.autonomousComplete <true|false>',
+    description:
+      'Standing opt-in for oat-project-complete-auto, the non-interactive completion companion that runs only when a workflow names it as a step (today oat-wave-execute closeout step 8 and the oat-wave-program completion checkpoint); its OAT_AUTONOMOUS lifecycle route refuses until a lifecycle skill names the companion, and none does today. When false (the default), that skill stops with "interactive completion required". The interactive oat-project-complete is unaffected. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.postImplementSequence',
@@ -1462,6 +1476,7 @@ function closedDispatchProviderValues(
 const WORKFLOW_BOOLEAN_KEYS = new Set<ConfigKey>([
   'workflow.archiveOnComplete',
   'workflow.createPrOnComplete',
+  'workflow.autonomousComplete',
   'workflow.autoReviewAtHillCheckpoints',
   'workflow.autoNarrowReReviewScope',
   'workflow.autoArtifactReview.plan',

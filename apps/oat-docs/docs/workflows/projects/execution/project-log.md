@@ -119,6 +119,12 @@ entries without asking agents to edit `project-log.md`:
 - `oat-project-implement` records accepted subagent dispatches, STOP or park
   events, phase outcomes, and parallel-group merge results. These entries point
   to the corresponding `implementation.md` record instead of copying it.
+- The `oat-project-implement` root also appends root-judgment entries when
+  breaks, surprises, workarounds, or notable successes surface, including
+  observations relayed from subagent reports. An entry that surfaces while a
+  child owns the worktree is queued and appended at the next bookkeeping
+  boundary. Phase implementers and other dispatched subagents have no logging
+  duties.
 - When `oat-project-implement` or `oat-project-review-provide` receives an
   artifact-mode review, the root workflow first consumes exactly one
   `**Reconnaissance:** attempted` or

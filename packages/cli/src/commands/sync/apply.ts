@@ -25,6 +25,7 @@ import type {
 } from './sync.types';
 import {
   buildCollectionLifecycle,
+  countContentRestamps,
   countPlannedOperations,
   formatCollectionLifecycle,
   toSyncOutputPlan,
@@ -272,6 +273,33 @@ function coreHumanStatus(
   }
 }
 
+/**
+ * The trailing message of a run that planned no operation. Both restamps are
+ * real manifest mutations, so neither may be reported as "No changes
+ * required."; a content-hash restamp is named with its entry count.
+ */
+function formatNoOperationMessage(
+  versionRestamped: boolean,
+  contentRestamps: number,
+): string {
+  const contentRestamp =
+    contentRestamps > 0
+      ? `content hash restamped for ${contentRestamps} ${
+          contentRestamps === 1 ? 'entry' : 'entries'
+        }`
+      : undefined;
+  if (versionRestamped && contentRestamp) {
+    return `Manifest version refreshed and ${contentRestamp}; no content changes required.`;
+  }
+  if (versionRestamped) {
+    return 'Manifest version refreshed; no content changes required.';
+  }
+  if (contentRestamp) {
+    return `Manifest ${contentRestamp}; no content changes required.`;
+  }
+  return 'No changes required.';
+}
+
 /** The sentence `formatSyncPlan` appends to its heading for an empty plan. */
 const EMPTY_PLAN_SUFFIX = '\nNo changes required.';
 
@@ -324,7 +352,11 @@ function formatCoreResults(
       }),
     );
     const status = coreHumanStatus(result?.status);
-    const failure = result?.failure ? ` — ${result.failure}` : '';
+    // A configuration error's failure repeats its reason verbatim; print it once.
+    const failure =
+      result?.failure && result.failure !== operation.reason
+        ? ` — ${result.failure}`
+        : '';
     return `- ${plan.scope}:${operation.provider}:${operation.canonical.type}:${operation.operation} ${operation.canonical.name}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
   });
   const aggregate = evidence?.aggregateOnly
@@ -592,6 +624,7 @@ export async function runSyncApply(
     // tests instead.
     const restampOnly =
       summary.plannedOperations === 0 && versionSkew.length > 0;
+    const contentRestamps = countContentRestamps(scopePlans);
     context.logger.info(
       formatAppliedOutput(
         scopePlans,
@@ -603,11 +636,17 @@ export async function runSyncApply(
     );
     if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
+      if (contentRestamps > 0) {
+        // The restamped skips still succeeded; name them beside the failure.
+        context.logger.info(
+          `\nManifest content hash restamped for ${contentRestamps} ${
+            contentRestamps === 1 ? 'entry' : 'entries'
+          }.`,
+        );
+      }
     } else if (summary.plannedOperations === 0) {
       context.logger.info(
-        restampOnly
-          ? '\nManifest version refreshed; no content changes required.'
-          : '\nNo changes required.',
+        `\n${formatNoOperationMessage(restampOnly, contentRestamps)}`,
       );
     } else {
       context.logger.success('\nSync applied successfully.');

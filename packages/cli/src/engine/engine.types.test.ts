@@ -10,7 +10,7 @@ import {
 } from './engine.types';
 
 describe('engine types', () => {
-  it('SyncOperationType includes all 7 operation types', () => {
+  it('SyncOperationType includes all 8 operation types', () => {
     const operations: SyncOperationType[] = [...SYNC_OPERATION_TYPES];
 
     expect(SYNC_OPERATION_TYPES).toEqual([
@@ -21,8 +21,9 @@ describe('engine types', () => {
       'remove',
       'detach',
       'skip',
+      'error',
     ]);
-    expect(operations).toHaveLength(7);
+    expect(operations).toHaveLength(8);
   });
 
   it('SyncPlanEntry has all required fields', () => {

@@ -2402,6 +2402,34 @@ describe('oat-config', () => {
       });
     });
 
+    it('reads workflow.autonomousComplete as a boolean and drops other values', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { autonomousComplete: true },
+        }),
+        'utf8',
+      );
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        workflow: { autonomousComplete: true },
+      });
+
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: { autonomousComplete: 'yes', archiveOnComplete: true },
+        }),
+        'utf8',
+      );
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow).toEqual({ archiveOnComplete: true });
+    });
+
     it('drops non-boolean workflow.autoArtifactReview values', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');

@@ -484,5 +484,11 @@
     "anchor": "SUMMARY_PUSH=$(oat project push \"$PROJECT_PATH\" --message \"docs: update summary for {project-name}\" --json)",
     "kind": "write",
     "guard": "project-scope"
+  },
+  {
+    "file": ".agents/skills/oat-project-complete-auto/SKILL.md",
+    "anchor": "--message \"chore(oat): record completion-before-merge exception\" --json",
+    "kind": "write",
+    "guard": "project-scope"
   }
 ]

@@ -1,7 +1,7 @@
 ---
 id: BL-261001-run-a-complexity-review-when
 title: Run a complexity review when a review or gate budget is exhausted
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - skills
 assignee: null
 created: 2026-10-01T17:36:21.076Z
-updated: 2026-10-01T17:36:21.076Z
+updated: '2026-10-02T22:52:15Z'
 associated_issues: []
 external_plans: []
 ---

@@ -2521,6 +2521,26 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
     anchor: 'Step 8: Check Review Cycle Count',
+    match: 'To launch the review, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-dispatch-subagents'],
+    requires: [
+      'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Gate Execution',
+    match: 'To launch it, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-dispatch-subagents'],
+    requires: [
+      'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 8: Check Review Cycle Count',
     match: 'phase gate re-runs are governed by the phase review gate flow',
     classification: 'non-executing',
     skills: ['oat-project-implement'],
@@ -2680,6 +2700,67 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-summary'],
     reason: 'Frontmatter description listing example user phrasings.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Autonomous Project Completion',
+    match: 'A person completing a project uses',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Names the interactive skill a person uses; not a directive.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Relationship to oat-project-complete',
+    match: 'One batched prompt, gate confirmations',
+    classification: 'non-executing',
+    skills: ['oat-project-complete', 'oat-project-complete-auto'],
+    reason: 'Comparison table of the two skills.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Answer table',
+    match: 'Every question or confirmation in',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Introduces the answer table; Step 5 loads and follows the skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Answer table',
+    match: 'question or gate | Resolution',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason: 'Answer table rows; Step 5 loads and follows the skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 3: Objective Preflight (Per Project)',
+    match: 'resume with oat-project-complete`: recovery belongs to',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      'Refusal reason naming the recovery owner; the companion refuses and does not run it.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 5: Complete the Project',
+    match: 'A later companion run refuses at preflight once',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      'Names the recovery owner for an archived project; the companion stops.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete-auto/SKILL.md',
+    anchor: 'Step 5: Complete the Project',
+    match: 'Load the current `oat-project-complete/SKILL.md`',
+    classification: 'load-required',
+    skills: ['oat-project-complete'],
+    requires: [
+      'Load the current `oat-project-complete/SKILL.md` and follow its Steps 1 through 12',
+      'Never complete from a remembered version of that skill',
+    ],
   },
 ];
 
@@ -3515,23 +3596,26 @@ describe('named-skill execution contract', () => {
     // The symlinked half of the live inventory, named rather than counted. Each
     // of these is reached only through a `*.md` link under `.agents/skills`;
     // without symlink following the live walk reaches 241 files and none of
-    // these six, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
+    // these, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
     expect(live).toEqual(
       expect.arrayContaining([
         '.agents/docs/agent-instruction.md',
         '.agents/docs/autonomy-contract.md',
+        '.agents/docs/complexity-review-fallback.md',
         '.agents/docs/cursor-rules-files.md',
+        '.agents/docs/gate-approval-record.md',
         '.agents/docs/provider-reference.md',
         '.agents/docs/rules-files.md',
         '.agents/docs/skills-guide.md',
       ]),
     );
 
-    // Six entries, not eleven: six of the eleven links resolve onto
-    // `autonomy-contract.md`, and the realpath key collapses them.
+    // One entry per shared doc, not per link: six links resolve onto
+    // `autonomy-contract.md`, three onto `complexity-review-fallback.md`, and
+    // four onto `gate-approval-record.md`, and the realpath key collapses them.
     expect(
       live.filter((file) => file.startsWith('.agents/docs/')),
-    ).toHaveLength(6);
+    ).toHaveLength(8);
 
     // Deduplication is a property of the whole inventory, not just the links.
     expect(new Set(live).size).toBe(live.length);

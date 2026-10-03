@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const BUNDLE_INPUTS = Object.freeze({
   skills: Object.freeze([
@@ -35,6 +37,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-project-capture',
     'oat-project-clear-active',
     'oat-project-complete',
+    'oat-project-complete-auto',
     'oat-project-design',
     'oat-project-dispatch-subagents',
     'oat-project-discover',
@@ -122,7 +125,9 @@ export const BUNDLE_INPUTS = Object.freeze({
   linkedFiles: Object.freeze([
     '.agents/docs/agent-instruction.md',
     '.agents/docs/autonomy-contract.md',
+    '.agents/docs/complexity-review-fallback.md',
     '.agents/docs/cursor-rules-files.md',
+    '.agents/docs/gate-approval-record.md',
     '.agents/docs/provider-reference.md',
     '.agents/docs/rules-files.md',
     '.agents/docs/skills-guide.md',
@@ -185,18 +190,54 @@ function printList(name) {
   process.stdout.write(`${values.join('\n')}\n`);
 }
 
+// Every `--get` value is a repository-relative path that bundle-assets.sh
+// joins onto the repository root. An empty value would collapse that join to
+// the root itself, so reject anything that is not a path inside the repository.
+function invalidRepositoryPathReason(value) {
+  if (value.length === 0) {
+    return 'is empty';
+  }
+  if (isAbsolute(value) || value.startsWith('/')) {
+    return 'is an absolute path';
+  }
+  if (value.split(/[\\/]/).includes('..')) {
+    return "contains a '..' segment";
+  }
+  return null;
+}
+
 function printValue(name) {
   const value = BUNDLE_INPUTS[name];
   if (typeof value !== 'string') {
     throw new Error(`Unknown bundle inventory value: ${name}.`);
   }
+  const reason = invalidRepositoryPathReason(value);
+  if (reason) {
+    throw new Error(
+      `Bundle inventory value ${name} ${reason} (${JSON.stringify(value)}); expected a repository-relative path.`,
+    );
+  }
   process.stdout.write(`${value}\n`);
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+// Node resolves the main module to its real path, while argv[1] keeps the path
+// as invoked. Compare real paths, so a symlinked checkout still runs the CLI
+// instead of silently printing nothing for every lookup.
+function isEntryPoint() {
+  if (!process.argv[1]) {
+    return false;
+  }
+  try {
+    return (
+      realpathSync(process.argv[1]) ===
+      realpathSync(fileURLToPath(import.meta.url))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) {
   const [command, name] = process.argv.slice(2);
   if (command === '--json' && name === undefined) {
     process.stdout.write(`${JSON.stringify(BUNDLE_INPUTS)}\n`);

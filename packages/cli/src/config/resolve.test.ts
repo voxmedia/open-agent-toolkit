@@ -592,6 +592,10 @@ describe('resolveEffectiveConfig', () => {
         value: null,
         source: 'default',
       });
+      expect(result.resolved['workflow.autonomousComplete']).toEqual({
+        value: false,
+        source: 'default',
+      });
       expect(result.resolved['workflow.postImplementSequence']).toEqual({
         value: null,
         source: 'default',
@@ -734,6 +738,7 @@ describe('resolveEffectiveConfig', () => {
               workflow: {
                 hillCheckpointDefault: 'final',
                 archiveOnComplete: true,
+                autonomousComplete: true,
                 autoReviewAtHillCheckpoints: true,
                 autoArtifactReview: { plan: false },
               },
@@ -746,6 +751,10 @@ describe('resolveEffectiveConfig', () => {
         source: 'user',
       });
       expect(result.resolved['workflow.archiveOnComplete']).toEqual({
+        value: true,
+        source: 'user',
+      });
+      expect(result.resolved['workflow.autonomousComplete']).toEqual({
         value: true,
         source: 'user',
       });

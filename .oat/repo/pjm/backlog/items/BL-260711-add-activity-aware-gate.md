@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: 2026-09-04T21:32:37Z
+updated: 2026-10-02T22:53:49Z
 associated_issues: []
 ---
 
@@ -78,3 +78,14 @@ idle-kill versus hard-cap outcomes.
   (`oat-project-fixture` project) once available.
 - Where a provider supports it, offer a non-mutating operational preflight before starting the review (GitHub issue #197, second failure mode).
 - When a selected target becomes unavailable after selection but before an artifact exists, emit a structured `blocked` terminal envelope that preserves the selected target, the failure stage, whether an artifact exists, receive eligibility, and a bounded reason category such as provider unavailable or usage limited, without exposing account details.
+
+## Notes
+
+- 2026-10-02 (backlog wave 4): not implemented; the item left the wave at the
+  plan-gate escalation. Precondition for the idle-kill slice: an idle kill
+  cannot serve Codex gates until Codex transcript activity can be attributed
+  to the gate child. Today `packages/cli/src/commands/gate/activity-probes.ts`
+  labels Codex transcript activity `ambient-runtime` (any Codex session on the
+  machine), not `project-dir`, so it cannot prove that this gate's child is the
+  one working. Wave 4 did ship a 30-minute default for artifact gate reviews
+  and duplicate-gate rejection (`BL-260718-harden-full-surface-gate`).
