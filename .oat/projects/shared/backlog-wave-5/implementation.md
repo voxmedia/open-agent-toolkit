@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed native r7 and configured gate r5. Automatic rewritten-history recovery remains deferred. Six Low findings and one newly deferred Medium require final-scope disposition. Phases 4–6 and the one-PR tail remain pending.
+Phases 1–3 are complete. Phase 4 has four committed tasks and a zero-finding native review; its configured gate is pending. Automatic rewritten-history recovery remains deferred. Six Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phases 5–6 and the one-PR tail remain pending.
 
 ## Progress Overview
 
@@ -3113,7 +3113,7 @@ Dispatch: scope=p04 action=review role=reviewer model_axis=selected:gpt-6.1-sol 
     "task_name": "wave5_phase4_review"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3167,3 +3167,9 @@ Dispatch: scope=p04 action=review role=reviewer model_axis=selected:gpt-6.1-sol 
 ```
 
 Native exact target accepted HOLD; source/live catalog and canonical role event validated before launch. Independent bounded Phase4 product/consumer correctness and real controls; no nested agents, live calls, product or tracking changes. Root supplies immutable reviewed head only after this acceptance is committed. Four tasks and recovery settled in prior ledger. Root receives/archives dispositions and configured gate; prior final-owned items remain outside current p04 scope.
+
+### Phase 4 native r1 received — 2026-10-04
+
+**Artifact:** `reviews/archived/p04-review-2026-10-04T154829Z.md`; reviewed immutable HEAD977689cd913df72029fb0388802307cb3d7696f2/base d882efb69bfc79800bc74f6c2919bf97798a19aa, invocation auto. Exact native Sol6.1/high request wave5-p04-review-r1 completed, zero Critical/High/Medium/Low. Root consumed exactly one terminal `**Reconnaissance:** not-attempted` before parsing and read the full report; no Review Orchestration section or reconnaissance log. Branch parser confirms all zero/nonblocking. Independent fresh61 CLI tests and6 actual knowledge controls passed, including full/omitted archive sides and manual/collision/staged preservation; author baseline/neutralization and broader composition remain separately attributed. Artifact commit ddb185aaf15586943ad27f03c1d49988ea4f90f0 changed only its report and left clean status.
+
+All native dispositions settled; phase remains in_progress4/4 pending configured Opus-high gate r1.26/30 tasks, recovery1/10pendingnull unchanged. Prior six Lows plus one diagnostic Medium retain final ownership; Phase6 versions/projections remain pending. No task replay or phase acceptance inferred from test count.

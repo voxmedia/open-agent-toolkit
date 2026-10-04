@@ -172,6 +172,10 @@ wave5-p04-t04-received: Plain Markdown actual offered option8158a60 and real con
 
 wave5-p04-author-terminal: exact native phase request completed4 tasks plus verified recovery1; direct86CLI/6knowledge/699skills and CLI/docs/validator composition pass.26/30tasks, native review/configuredgate pending. Recovery1/10 pendingnull preserved, all product scopes clean.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-native-r1-received: four tasks and recovery settled; exact native review r1 passed zero findings, independent61 CLI and6 knowledge controls0.26/30 tasks, configured Opus-high gate pending; recovery1/10pendingnull unchanged, seven final-owned items retained.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
