@@ -3546,7 +3546,7 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
     "task_name": "wave5_phase5_fix1_resume"
   },
   "launch_status": "accepted",
-  "child_outcome": "completed",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3568,6 +3568,15 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "task_id": "p05-t04",
       "commit": "01b1a496db73c322428fd2ef2bbbf0e92090f73d",
       "result": "DONE; exact two paths; committed161archive/87completion, authentic9controls and source/export conservation pass; clean RELEASE."
+    },
+    {
+      "source": "native-followup-acceptance",
+      "event": "cont-backlog-wave-5-p05-fix-2",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "Same accepted handle HOLD; p05-t05 two-file scope; awaiting root START."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3585,6 +3594,19 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "commit": "01b1a496db73c322428fd2ef2bbbf0e92090f73d",
       "start_artifact": "p05-fix1-start-20261004T200103Z",
       "manifest_digest": "c580d3bcb5b27134b797a2be0b5f95a9a5e621e0c702e3b8359048b3a61c4827"
+    },
+    {
+      "event_id": "cont-backlog-wave-5-p05-fix-2",
+      "original_request_id": "wave5-p05-implement-r1",
+      "accepted_request_id": "wave5-p05-fix1-crash-resume",
+      "mode": "fix",
+      "task_id": "p05-t05",
+      "finding": "p05-r2-M1",
+      "scope": "two archive source/test files; actual markup attributes only",
+      "review_fix_iteration": 2,
+      "review_fix_limit": 2,
+      "status": "accepted-hold",
+      "baseline": "157d5523680c38e474579388eecdb002ced7823f"
     }
   ],
   "task_class": "consequential",
@@ -3735,3 +3757,5 @@ Exactly one terminal `**Reconnaissance:** not-attempted` was consumed and persis
 M1: code_fix_required, Task Scope Minor, new p05-t05. Independent root authentic derivative reproduces literal href script corruption and src asset-resolution refusal while unrelated value script remains valid; extracted pre-fix module preserves and executes all three to123. Actual markup attribute ownership must preserve authored raw bodies/non-attribute text across existing replacement paths. Original source bytes and seven historical hashes remain conserved. This is within R1/R4; no framework/dependency/schema/authoring-policy expansion. Same accepted crash-continuation author resumes fix2/2, linked original request; recovery1/10 pendingnull unchanged. All earlier accepted commits and negative probes remain immutable. Phase5 remains in_progress pending correction/full native review/configured gate; prior ten Lows and one diagnostic Medium remain final-owned.
 
 An unsupported completed-reviewer interruption attempt was rejected without effects; no supported interruption/release was available and no cleanup/replacement followed. Root did not alter product paths during receive.
+
+Same accepted /root/wave5_phase5_fix1_resume acknowledged HOLD for cont-backlog-wave-5-p05-fix-2, p05-t05. Exact Sol6.1/high target, fresh resolver notices[], completed prior task evidence and original request linkage preserved. Generic continuation validated-only before START; fix2/2 and recovery1/10 pendingnull unchanged. Root owns immutable START/bookkeeping; child owns only declared two product files.
