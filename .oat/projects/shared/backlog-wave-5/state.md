@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t02
-oat_last_commit: aa4d9b0400bea1faa513895b1d933b1060e13ed2
+oat_current_task: p03-t03
+oat_last_commit: b4705eebeccb9321f0326288d037f16440a3e413
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T00:58:42.369552Z
+oat_project_state_updated: 2026-10-04T01:28:33.031303Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 task 1 complete; CLI lifecycle adoption is next
+Implement - Phase 3 tasks 1 and 2 complete; skill lifecycle adoption is next
 
 ## Artifacts
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 3     | 1/3       |
+| Phase 3 | in_progress | 3     | 2/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 11/20 tasks completed
+**Total:** 12/20 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -139,8 +139,10 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t02: Adopt the primitive in current CLI lifecycle callers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b4705eebeccb9321f0326288d037f16440a3e413
+
+**Outcome:** Nine planned caller/test paths committed. Declared direct suite passed 592/592; CLI checks, types, build, format and normal commit hooks passed. Root verified scoped commit/clean tree, inspected the failing stable-identity control and repeated four real caller preservation/retry tests successfully (`analysis/p03-t02-root-tests.log`). A byte-derived identity changed after hook formatting: caught and corrected before commit, with the same neutralized retry test failing exit 1 and restored suite passing. No post-commit recovery, no new finding deferral.
 
 ### Task p03-t03: Adopt exact-path commits across skill lifecycle owners
 
@@ -1108,3 +1110,19 @@ Accepted native handle `/root/wave5_phase3`; explicit materialized-role invocati
 ### Phase 3 task-1 receipt and adoption boundary
 
 Actual author execution base: d1fd3642a15cd442163de75be28b10c30cf7bc53. Task-1 commit and clean status verified by root. The same accepted phase author remains running and holds mutations until bookkeeping is committed. For task 2, migration enumerates its exact tracked source-file removals before filesystem mutation; the helper itself never expands directories. The parent-index prune recovery site is an adopter. Nested synced-worktree artifact commits and non-index `commit-tree` bootstrap remain intentional exclusions preserving their existing policies. No unrelated command family is added.
+
+### Phase 3 CLI caller adoption
+
+| Caller                         | Exact ownership and retained contract                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gate log finalization          | Existing gate wrapper reaches shared project-log helper; advisory lock, committed run read-back, lost-entry handling and receipt schema preserved.  |
+| Project-log commit             | Exact log file; caller-supplied entry identity survives hook formatting; structured helper failure stays diagnostic with pending recovery evidence. |
+| Shared scaffold                | Exact createdFiles through record adapter; real lint-staged proof preserves partial unrelated index/worktree bytes and leaves owned files clean.    |
+| Parent synced scaffold/records | Existing allowlist, concrete record/optional gitignore; repair message retains exact helper identity and safely quoted paths.                       |
+| Promotion                      | Four declared artifacts; real Git coverage replaces mocked commit-call assertions.                                                                  |
+| Shared-to-synced migration     | Captures literal tracked source files before removal, commits exact deletions/record/optional gitignore. No directory expansion in helper.          |
+| Parent prune recovery          | Routes concrete record deletion through same adapter.                                                                                               |
+| Nested pushSynced              | Intentionally excluded: isolated synced-worktree index and existing all-artifact/hooks-disabled policy.                                             |
+| commit-tree ref bootstrap      | Intentionally excluded: no parent-index commit.                                                                                                     |
+
+Record adapter reserves one ignored operation marker keyed by message and exact paths before helper invocation. Complete JSON publishes atomically by exclusive hard-link; retries reuse the winner across formatting. Verified settlement removes only matching inode/dev/bytes; a replacement survives with inspection guidance. Actual caller probe proves formatted committed-but-blocked retry preserves the concurrent staged blob, finalizes owned entries and creates no duplicate commit. This bounded adapter delta is the source of truth; no general tracking framework or public receipt schema is introduced. Author evidence: `analysis/p03/t02-final-verification.log`, `t02-identity-negative.log`. Same accepted author holds mutations pending p03-t03 release.
