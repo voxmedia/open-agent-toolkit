@@ -1068,7 +1068,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "completed",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1099,8 +1099,10 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "phase": "p03",
       "task_ids": ["p03-t04"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T022902Z.md",
-      "status": "planned",
-      "reason": "Same accepted Sol-high handle; two High recovery findings; append-only fix1/2 independent of recovery1/10, no task replay."
+      "status": "accepted",
+      "reason": "Same accepted Sol-high handle; two High recovery findings; append-only fix1/2 independent of recovery1/10, no task replay.",
+      "accepted_handle": "/root/wave5_phase3",
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high"
     }
   ],
   "task_class": "consequential",
