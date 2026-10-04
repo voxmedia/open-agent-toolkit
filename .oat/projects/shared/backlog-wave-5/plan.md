@@ -681,6 +681,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T145112Z.md           | ca5633822b83ea54d08a66b3dce7fc721d550ed7 | auto       | -                    |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T150535Z.md           | 5dbd2c71540a98c21f0c90684522588c56b605e6 | gate       | claude-opus-5-5-high |
 | p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T154829Z.md           | 977689cd913df72029fb0388802307cb3d7696f2 | auto       | -                    |
+| p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T155932Z.md           | 6a5f522c3d5da9bd747aefdffc52cb43f397c257 | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T15:53:08.965675Z
+oat_project_state_updated: 2026-10-04T16:03:23.927088Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — Phase 4
+**Status:** In progress — Phase 5 ready
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 4 native review passed with zero findings; configured Opus-high gate pending
+Implement - Phase 4 complete; Phase 5 recap export and historical migration ready
 
 ## Artifacts
 
@@ -154,11 +154,11 @@ Implement - Phase 4 native review passed with zero findings; configured Opus-hig
 
 ## Blockers
 
-None. Phase 3 received and cleared; six Lows and one stored-receipt diagnostic Medium final-owned. Automatic rewrite recovery deferred.
+None. Phases 1–4 received and cleared; ten Lows and one stored-receipt diagnostic Medium final-owned. Automatic rewrite recovery deferred.
 
 ## Next Milestone
 
-Receive configured Phase 4 gate, then continue sequential Phase 5 recap export and migration.
+Execute Phase 5 flat recap producer, completion/resume consumers and verified historical migration.
 
 ### Approved continuation — 2026-10-04
 

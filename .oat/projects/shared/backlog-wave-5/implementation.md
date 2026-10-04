@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1–3 are complete. Phase 4 has four committed tasks and a zero-finding native review; its configured gate is pending. Automatic rewritten-history recovery remains deferred. Six Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phases 5–6 and the one-PR tail remain pending.
+Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Ten Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phases 5–6 and the one-PR tail remain pending.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | in_progress | 4     | 4/4       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 12    | 12/12     |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 26/30 tasks completed
 
@@ -217,7 +217,7 @@ Phases 1–3 are complete. Phase 4 has four committed tasks and a zero-finding n
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
 
@@ -3173,3 +3173,25 @@ Native exact target accepted HOLD; source/live catalog and canonical role event 
 **Artifact:** `reviews/archived/p04-review-2026-10-04T154829Z.md`; reviewed immutable HEAD977689cd913df72029fb0388802307cb3d7696f2/base d882efb69bfc79800bc74f6c2919bf97798a19aa, invocation auto. Exact native Sol6.1/high request wave5-p04-review-r1 completed, zero Critical/High/Medium/Low. Root consumed exactly one terminal `**Reconnaissance:** not-attempted` before parsing and read the full report; no Review Orchestration section or reconnaissance log. Branch parser confirms all zero/nonblocking. Independent fresh61 CLI tests and6 actual knowledge controls passed, including full/omitted archive sides and manual/collision/staged preservation; author baseline/neutralization and broader composition remain separately attributed. Artifact commit ddb185aaf15586943ad27f03c1d49988ea4f90f0 changed only its report and left clean status.
 
 All native dispositions settled; phase remains in_progress4/4 pending configured Opus-high gate r1.26/30 tasks, recovery1/10pendingnull unchanged. Prior six Lows plus one diagnostic Medium retain final ownership; Phase6 versions/projections remain pending. No task replay or phase acceptance inferred from test count.
+
+### Phase 4 configured Opus r1 received — 2026-10-04
+
+**Artifact:** `reviews/archived/p04-review-2026-10-04T155932Z.md`; reviewed HEAD6a5f522c3d5da9bd747aefdffc52cb43f397c257/base d882efb69bfc79800bc74f6c2919bf97798a19aa, invocation gate, run2ccc9d2d-871c-4368-84dd-78fe51622f5b. Exact configured claude-opus-5-5-high/runtimeclaude/modelclaude-opus-5-5/efforthigh, exit0/statusok/receiveEligibletrue/non-nullhandoff; parser/envelope/provenance match0C0H0M4L, passedHighthreshold. Root consumed exactly one terminal not-attempted signal before artifact validation, read full report and checked artifact-only98c4c13 plus gate-owned structural log0840dbb commits. Initial root transcript extractor had a one-element tuple-unpack error before signal consumption; corrected uniquely matched session f3f80e9f-e3cd-4349-89e5-c4bf26696abc, with no premature artifact validation or product change. No Review Orchestration/reconnaissance log.
+
+Independent gate61 CLI/6knowledge/699skills plus docs/skillvalidation0; branchbuild reused, author pre-fix evidence inspected/attributed. Real archive/helper/index/full/omitted-side/manual/collision/staged controls verified independently. Root separately repeated large-reference observer in attempt-owned temporary parent with isolated child environment, observer0: small59bytes claimed5paths versus large1248059bytes omittedreference4paths. Categorical bad/accepted observation verified; observer0 does not mean the large case is correct. Root read actual knowledge snippet and confirmed report visibility limitation.
+
+Passing-gate non-pausing judgment sweep, ordered per-finding decisions:
+
+- **L1 — defer to final.** Agree with reproduced default maxBuffer omission on pending historical evidence. First-pass complete results and current355KB corpus are unaffected; all index/receipt preservation stays intact. Final correction can bound read failure semantics without expanding archive ownership or weakening fail-closed rules.
+- **L2 — defer to final.** Agree: long-form owning lifecycle guidance already excludes never-tracked source; shorter guidance should route there or state the rule. Clear helper refusal preserves literals; complete consistency cleanup belongs with final caller/guidance review.
+- **L3 — defer to final.** Agree this is an unstated product choice rather than an S1 defect: scanner already rewrites untracked nonignored references, and S1 explicitly includes every rewritten path. Preserve approved behavior now; final disposition must name the boundary rather than silently invent skip/commit policy or broaden requirements.
+- **L4 — defer to final.** Agree that an operation report must remain available across separate shell calls; current actual-snippet test appends its own cat. Final bounded consumer correction should expose retained report evidence and clean temporary files, preserving exact deletion/commit ownership and requiring an actual separate-call keeper.
+
+#### Deferred Findings (Low) — Phase 4 gate r1
+
+- p04-gate-r1-L1: >1MiB historical retry evidence omission; source T155932Z Low1, independently repeated root observer above.
+- p04-gate-r1-L2: never-tracked old-path omission guidance consistency; source T155932Z Low2.
+- p04-gate-r1-L3: untracked rewritten-reference disposition product choice; source T155932Z Low3. Approved S1 unchanged pending final judgment.
+- p04-gate-r1-L4: generated-knowledge report visibility across shell calls/temp cleanup; source T155932Z Low4.
+
+Phase4 complete4/4: all native dispositions settled, configured gate passed with durable default final deferrals.26/30 tasks, native1/gate1, review-fix0; recoveryused1/10pendingnull unchanged. Ten Low findings and one prior Medium now final-owned, none dropped. Phase5 next; Phase6 versions/projections and full final gates/onePR remain pending.
