@@ -1546,48 +1546,44 @@ async function transformRecapPage(
   const css = async (text: string, base: string) =>
     replaceAsync(
       text,
-      /url\(\s*(['"]?)([^)'"\s]+)\1\s*\)/gi,
-      async (match) => `url("${await asset(match[2]!, base)}")`,
+      // Consume CSS comments/strings before recognizing a resource URL. Text in
+      // those bodies can describe markup or url(...) without referencing an asset.
+      /\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|(?<![\w-])url\(\s*(['"]?)([^)'"\s]+)\1\s*\)/gi,
+      async (match) =>
+        match[2] === undefined
+          ? match[0]
+          : `url("${await asset(match[2], base)}")`,
     );
-  html = await replaceAsync(
-    html,
-    /<link\b[^>]*\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))[^>]*>/gi,
-    async (match) => {
-      const url = match[1] ?? match[2] ?? match[3]!;
-      if (
-        !/\brel\s*=\s*(?:"stylesheet"|'stylesheet'|stylesheet(?=[\s/>]))/i.test(
-          match[0],
-        ) ||
-        external(url)
-      )
-        return match[0];
-      const file = resolve(dirname(sourcePage), url);
-      await asset(url, sourcePage); // Enforce containment before reading CSS.
-      return `<style>${await css(await readFile(join(stagedRoot, relative(sourceRunRoot, file)), 'utf8'), file)}</style>`;
-    },
-  );
-  html = await replaceAsync(
-    html,
-    /<script\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))[^>]*>\s*<\/script\s*>/gi,
-    async (match) => {
-      const url = match[1] ?? match[2] ?? match[3]!;
-      if (external(url)) return match[0];
-      await asset(url, sourcePage);
-      return match[0]
-        .replace(/\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))/i, '')
-        .replace(
-          />\s*<\/script/i,
-          `>${(await readFile(join(stagedRoot, relative(sourceRunRoot, resolve(dirname(sourcePage), url))), 'utf8')).replace(/<\/script/gi, '<\\/script')}</script`,
+  // Match complete attributes, including unrelated quoted values. Looking only
+  // for href/src would also find those strings inside title/data attributes.
+  const attributePattern =
+    /\s+([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+)))?/g;
+  const attributes = (tag: string) =>
+    new Map(
+      [...tag.matchAll(attributePattern)].map((match) => [
+        match[1]!.toLowerCase(),
+        match[2] ?? match[3] ?? match[4],
+      ]),
+    );
+  const rewriteAttributes = async (tag: string, removeScriptSource = false) =>
+    replaceAsync(tag, attributePattern, async (match) => {
+      const name = match[1]!.toLowerCase();
+      const url = match[2] ?? match[3] ?? match[4];
+      if (url === undefined) return match[0];
+      if (name === 'style') {
+        const value = await css(url, sourcePage);
+        if (value === url) return match[0];
+        const quote = match[3] !== undefined ? "'" : '"';
+        const escaped = value.replaceAll(
+          quote,
+          quote === '"' ? '&quot;' : '&#39;',
         );
-    },
-  );
-  html = await replaceAsync(
-    html,
-    /\s+(href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))/gi,
-    async (match) => {
-      const url = match[2] ?? match[3] ?? match[4]!;
+        return ` ${match[1]}=${quote}${escaped}${quote}`;
+      }
+      if (name !== 'href' && name !== 'src') return match[0];
+      if (name === 'src' && removeScriptSource) return '';
       if (external(url)) return match[0];
-      if (match[1]!.toLowerCase() === 'src') {
+      if (name === 'src') {
         const quote = match[3] !== undefined ? "'" : '"';
         return ` src=${quote}${await asset(url, sourcePage)}${quote}`;
       }
@@ -1652,9 +1648,75 @@ async function transformRecapPage(
           return '';
       }
       return ` href="${relative(dirname(exportPage), target).split(sep).join('/')}${fragment ? `#${fragment}` : ''}"`;
-    },
-  );
-  return css(html, sourcePage);
+    });
+
+  // Walk markup once. Comments and raw-text elements are opaque to attribute
+  // rewriting; generated script/style bodies are never fed back into the walk.
+  const markup =
+    /<!--[\s\S]*?(?:-->|$)|<![^>]*>|<\?[^>]*>|<[a-z][a-z0-9:-]*(?=[\s/>])(?:[^"'<>]|"[^"]*"|'[^']*')*>/gi;
+  let output = '';
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = markup.exec(html))) {
+    output += html.slice(cursor, match.index);
+    const tag = match[0];
+    const name = /^<([a-z][a-z0-9:-]*)/i.exec(tag)?.[1]?.toLowerCase();
+    cursor = markup.lastIndex;
+    if (!name) {
+      output += tag;
+      continue;
+    }
+    const values = attributes(tag);
+    if (name === 'link' && values.get('rel')?.toLowerCase() === 'stylesheet') {
+      const url = values.get('href');
+      if (url !== undefined && !external(url)) {
+        await asset(url, sourcePage);
+        const file = resolve(dirname(sourcePage), url);
+        output += `<style>${await css(await readFile(join(stagedRoot, relative(sourceRunRoot, file)), 'utf8'), file)}</style>`;
+        continue;
+      }
+    }
+    if (
+      /^(script|style|textarea|title|xmp|iframe|noembed|noframes|plaintext)$/.test(
+        name,
+      )
+    ) {
+      const closing = new RegExp(`</${name}\\s*>`, 'gi');
+      closing.lastIndex = cursor;
+      const end = name === 'plaintext' ? null : closing.exec(html);
+      let body = html.slice(cursor, end?.index ?? html.length);
+      let inlineScript = false;
+      const url = values.get('src');
+      if (
+        name === 'script' &&
+        end &&
+        !body.trim() &&
+        url !== undefined &&
+        !external(url)
+      ) {
+        await asset(url, sourcePage);
+        body = (
+          await readFile(
+            join(
+              stagedRoot,
+              relative(sourceRunRoot, resolve(dirname(sourcePage), url)),
+            ),
+            'utf8',
+          )
+        ).replace(/<\/script/gi, '<\\/script');
+        inlineScript = true;
+      } else if (name === 'style') {
+        body = await css(body, sourcePage);
+      }
+      output +=
+        (await rewriteAttributes(tag, inlineScript)) + body + (end?.[0] ?? '');
+      cursor = end ? closing.lastIndex : html.length;
+      markup.lastIndex = cursor;
+    } else {
+      output += await rewriteAttributes(tag);
+    }
+  }
+  return output + html.slice(cursor);
 }
 
 async function cleanupOwnedRecapPath(

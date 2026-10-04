@@ -17,6 +17,7 @@ import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runInNewContext } from 'node:vm';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { defaultGitRunner } from '@commands/project/sync/git';
@@ -400,6 +401,134 @@ describe('archive utils', () => {
       }
     },
   );
+
+  it.each(
+    ['inline', 'inlined'].flatMap((mode) =>
+      ['href', 'src', 'value'].map((name) => [mode, name]),
+    ),
+  )(
+    'preserves and executes %s script assignments named %s',
+    async (mode, name) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const script = `const ${name}=123; globalThis.recapValue=${name};`;
+      const page = `<html><body>${mode === 'inline' ? `<script>${script}</script>` : '<script src=local.js></script>'}</body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const scriptPath = `${dirname(manifest.artifacts[0].renderedPath)}/local.js`;
+      if (mode === 'inlined') {
+        await writeFile(join(root, scriptPath), script);
+        manifest.immutableHashes[scriptPath] =
+          `sha256:${createHash('sha256').update(script).digest('hex')}`;
+        await writeFile(manifestPath, JSON.stringify(manifest));
+      }
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const emitted = exported.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+      expect(emitted).toBe(script);
+      const context: { recapValue?: number } = {};
+      runInNewContext(emitted!, context);
+      expect(context.recapValue).toBe(123);
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      if (mode === 'inlined')
+        expect(
+          await readFile(join(result.archivePath, run, scriptPath), 'utf8'),
+        ).toBe(script);
+    },
+  );
+
+  it('preserves raw bodies and non-attribute text while embedding actual CSS resources', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const script = String.raw`const tag='<img src=missing.svg><link rel=stylesheet href=missing.css><script src=missing.js><\/script>'; const text='url(missing.svg)'; globalThis.recapValue=123;`;
+    const style = `.note::before{content:" href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg)"} /* <link rel=stylesheet href=missing.css> url(missing.svg) */ .hero{background:url(asset.svg)}`;
+    const text = '<p>href=missing.md src=missing.svg url(missing.svg)</p>';
+    const comment =
+      '<!-- <img src=missing.svg><script src=missing.js></script> url(missing.svg) -->';
+    const attribute = `<div title=' href=missing.md src=missing.svg url(missing.svg) <img src=missing.svg>' data-src=missing.svg></div>`;
+    const rawText =
+      '<textarea><img src=missing.svg> url(missing.svg)</textarea>';
+    const page = `<html><head><style>${style}</style><link rel=stylesheet href=style.css></head><body><script>${script}</script>${text}${comment}${attribute}${rawText}<div style='background:url(asset.svg)'></div></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const root = join(projectPath, run);
+    const manifestPath = join(root, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const parent = dirname(manifest.artifacts[0].renderedPath);
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    for (const [name, bytes] of Object.entries({
+      'asset.svg': svg,
+      'style.css': style,
+    })) {
+      const file = `${parent}/${name}`;
+      await writeFile(join(root, file), bytes);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    }
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const exported = await readFile(
+      result.projectRecapExport!.exportRoot,
+      'utf8',
+    );
+    for (const preserved of [script, text, comment, attribute, rawText])
+      expect(exported).toContain(preserved);
+    const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    const embeddedStyle = style.replace(
+      'background:url(asset.svg)',
+      `background:url("${dataUrl}")`,
+    );
+    expect(exported).toContain(`<style>${embeddedStyle}</style>`);
+    expect(exported.match(/<style>/g)).toHaveLength(2);
+    expect(exported).toContain(`style='background:url("${dataUrl}")'`);
+    const context: { recapValue?: number } = {};
+    runInNewContext(
+      exported.match(/<script>([\s\S]*?)<\/script>/)![1]!,
+      context,
+    );
+    expect(context.recapValue).toBe(123);
+    expect(
+      await readFile(
+        join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+        'utf8',
+      ),
+    ).toBe(page);
+    expect(
+      await readFile(
+        join(result.archivePath, run, parent, 'style.css'),
+        'utf8',
+      ),
+    ).toBe(style);
+  });
 
   it.each(['"../../../../../plan.md"', '../../../../../plan.md'])(
     'rejects an asset outside the verified package with src=%s',
