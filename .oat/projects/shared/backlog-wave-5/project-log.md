@@ -196,6 +196,10 @@ wave5-p05-t01-root-settlement: p05-t01 and recovery1/10 validated; immutable ori
 
 wave5-p05-t02-root-receipt: bounded commit3308825f verified, real first-pass and archived retry identity controls independently pass; legacy receipts preserved, migration release awaits committed bookkeeping.
 
+### 2026-10-04 · structural · oat-project-implement · p05-t03
+
+wave5-p05-t03-root-receipt: exact80path commita080adeb verified; root independently conserved all65 original files, unchanged archive versions, seven output hashes and43relative targets;29/30 tasks complete, Phase5 independent review remains pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

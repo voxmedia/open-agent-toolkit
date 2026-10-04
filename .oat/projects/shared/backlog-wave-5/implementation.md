@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 3     | 2/3       |
+| Phase 5 | in_progress | 3     | 3/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 28/30 tasks completed
+**Total:** 29/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -276,8 +276,14 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p05-t03: Migrate every tracked recap after evidence preservation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a080adeb7324d74fddeb4166bc1375bb7b8d0dfd
+
+**Outcome:** All seven historical packages become same-stem flat pages; 65 original tracked files (23,767,148 bytes) become seven HTML files (214,934 bytes), saving23,552,214 bytes. Full original source/QA/metadata/page bytes are preserved first. Five packages match their owning original archived runs; both July versions preserve full tracked snapshots at each owning archived project's explainers/tracked-export-snapshots/<dated-stem>/ while earlier archived attestation bytes remain unchanged. No original manifest/build record/outcome is rewritten. The stray's exact original bytes already exist in the actual program-recap source/fact-base.json; maintained execution-program reference now points there, while immutable run-request/content-approval retain historical input locators. Seven summary references point to the flat pages; original outcomes/history stay intact.
+
+**Verification:** Author full inventory matches root's independent pre-migration baseline65files/23,767,148bytes. Seven actual producer exports pass matching retry, foreign-conflict refusal/no overwrite and owned rollback. Author pre/postcommit oracle verifies every original/preserved and existing archive hash, emitted hashes, narrative conservation, relative links/fragments, exact flat contents and maintained references; archive101/101, docs validation and scoped eight-Markdown format/diff passed. Normal-hook helper committed exact80paths (Git detects7HTML renames,73displayed paths); root independently matched the no-renames pathset to65removals+7newpages+8maintained refs and full parentff27b0b1/clean readback. Root fully reread all65 preserved files against its own pre-migration hashes, checked all recorded existing archive versions unchanged, independently checked seven reported output hashes and43relative href/src targets/fragments and duplicate IDs, all pass. Root repeated genuine public producer first-pass/recordless retry and identity mismatches plus old-opened-file/current rollback race from exact preserved Wave4 source, all acceptance controls0. Evidence analysis/p05/root-original-tracked-recap-hashes.json, root-t03-committed-conservation.json, root-t02-post-migration-probe/\*, root-r01-post-migration-race.json; author t03-proof-summary.json contains full mappings and repeatable named post-migration probe commands, original probes/results remain unchanged.
+
+**Rendered artifacts:** Author T3 exact-byte about:blank renders all seven desktop pages, clicks all seven architecture pivots (sectiontop within1px), and measures seven320px mobile views with no duplicate IDs/broken fragments/overflow; Wave4 mobile screenshot inspected. Root visually inspected authentic committed-byte triage/Wave4 screenshots and previously inspected identical Wave4 SHA desktop/System view. One transient automation-host error is retained; later same-tab proof succeeds. No HTTP-route or live S3 claim. All large hash inventories and screenshots remain ignored; no tracked baseline, sidecar, original evidence change or product scope expansion. Phase5 remains in_progress pending composed handoff and required independent reviews. Recovery1/10 pendingnull unchanged.
 
 ## Phase 6: Versions and generated integration
 
