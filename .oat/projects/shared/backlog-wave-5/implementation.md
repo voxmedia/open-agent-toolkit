@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p03-t06
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; native round 3 passed; independent gate blocks with 1 High, 2 Medium and 1 Low. User approved the four corrections, one additional native review and configured Opus gate after the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review and configured Opus gate remain pending after the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 9     | 5/9       |
+| Phase 3 | in_progress | 9     | 9/9       |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 15/27 tasks completed
+**Total:** 19/27 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -168,23 +168,31 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t06: (review) Support unrelated nested repositories and gitlinks
 
-**Status:** pending — approved corrective revision
-**Commit:** -
+**Status:** completed
+**Commit:** 7dca5132401b5979bf5190cfd73af600c0e7f627
+**Outcome:** Git-emitted nested repository/submodule inventories use one preservation identity in the snapshot and generated hook guard. Stable nested state succeeds; altered protected state refuses.
+**Verification:** Final committed-head direct composition 1107/1107 tests across 13 files; CLI check/types/fresh build and all ten author source/built/public probes exit0. Task-specific pre-fix failures and accepted/ownership controls are retained in `analysis/p03/`; see the continuation receive entry below.
 
 ### Task p03-t07: (review) Accept staged tracked removals and both rename sides
 
-**Status:** pending — approved corrective revision
-**Commit:** -
+**Status:** completed
+**Commit:** c5ebb92cc462fd38ea190543417dab57457574b0
+**Outcome:** HEAD/index evidence recognizes literal staged removals and both rename sides, while arbitrary missing paths still refuse.
+**Verification:** Final committed-head direct composition 1107/1107 tests across 13 files; CLI check/types/fresh build and all ten author source/built/public probes exit0. Task-specific pre-fix failures and accepted/ownership controls are retained in `analysis/p03/`; see the continuation receive entry below.
 
 ### Task p03-t08: (review) Settle operation-owned resources on termination
 
-**Status:** pending — approved corrective revision
-**Commit:** -
+**Status:** completed
+**Commit:** acad6fdcd6ba07c222c7679f7fcf60281a3beccd
+**Outcome:** Operation-scoped SIGTERM/SIGINT handling waits for active Git settlement before inode/device-checked resource cleanup. Prelaunch interruption commits nothing; foreign lock/temp replacements survive.
+**Verification:** Final committed-head direct composition 1107/1107 tests across 13 files; CLI check/types/fresh build and all ten author source/built/public probes exit0. Task-specific pre-fix failures and accepted/ownership controls are retained in `analysis/p03/`; see the continuation receive entry below.
 
 ### Task p03-t09: (review) Finalize settled record markers before fresh operations
 
-**Status:** pending — approved corrective revision
-**Commit:** -
+**Status:** completed
+**Commit:** ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c
+**Outcome:** A narrow fully verified receipt/publication proof permits the marker-owning adapter to make at most one fresh reservation for changed unstaged record bytes. Migration settlement never rotates. Forged receipt, unresolved index and replaced marker refuse.
+**Verification:** Final committed-head direct composition 1107/1107 tests across 13 files; CLI check/types/fresh build and all ten author source/built/public probes exit0. Task-specific pre-fix failures and accepted/ownership controls are retained in `analysis/p03/`; see the continuation receive entry below.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1103,7 +1111,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1170,10 +1178,19 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "task_ids": ["p03-t06", "p03-t07", "p03-t08", "p03-t09"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T051023Z.md",
       "complexity_report": "reviews/archived/complexity-p03-2026-10-04T052701Z.md",
-      "status": "accepted",
+      "status": "completed",
       "accepted_handle": "/root/wave5_phase3",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
-      "reason": "User explicitly approved bounded corrective revision and one additional native review plus configured Opus gate; original handle resumed, HOLD acknowledged. No counter reset or standing policy alteration."
+      "reason": "User explicitly approved bounded corrective revision and one additional native review plus configured Opus gate; original handle resumed, HOLD acknowledged. No counter reset or standing policy alteration.",
+      "execution_base": "c6fbc6436292d0562059f9168b9074c5d93fb92d",
+      "final_head": "ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c",
+      "fix_commits": [
+        "7dca5132401b5979bf5190cfd73af600c0e7f627",
+        "c5ebb92cc462fd38ea190543417dab57457574b0",
+        "acad6fdcd6ba07c222c7679f7fcf60281a3beccd",
+        "ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c"
+      ],
+      "outcome": "DONE; four exact task commits, direct1107/13 and actual probes pass; clean worktree, recovery1/10 pendingnull unchanged, product-write authority released."
     }
   ],
   "task_class": "consequential",
@@ -1761,3 +1778,13 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 **Authorized scope:** p03-t06..t09, one additional fresh native review and configured Opus gate. If new blocking findings remain after that additional cycle, return to operator; no new automatic iteration beyond this approval. On pass, continue the already-approved later phases and lifecycle tail through one mergeable PR, no merge/release.
 **Continuation:** Original `/root/wave5_phase3` successfully resumed and acknowledged HOLD; original request `wave5-p03-implement-r1`, event `wave5-p03-fix-continuation-r3`. No replacement launch or inferred loss of original handle. Fresh origin/main fetch found no new commits in six declared correction paths; exact implementer resolver Sol6.1/high has no notices. Root owns bookkeeping until committed START head.
 Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+### Approved Phase 3 correction continuation received — 2026-10-04
+
+Original request `wave5-p03-implement-r1`, same accepted `/root/wave5_phase3`, continuation `wave5-p03-fix-continuation-r3`; exact Sol6.1/high materialized role unchanged. Execution range `c6fbc6436292d0562059f9168b9074c5d93fb92d..ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c` contains exactly four task commits and only the helper/ref-sync source/test paths. Author returned DONE and released product writes. Root inspected exact committed scopes and production composition, clean status and range diff. Recovery remains1/10 pendingnull; review cap history and explicit one-cycle override remain unchanged.
+
+Authoritative author checks: `analysis/p03/r3-phase-post.log`1107/13 direct tests with isolated subprocess HOME; `r3-check-post.log`, `r3-types-post.log`, `r3-build-post.log` exit0. Ten actual committed-head source/built/public controls passed: nested preservation, removal/rename, real signals, record repair/recurrence, migration/promotion recovery and captured wrong-parent refusal. Pre-fix logs t06..t09 show the reported categories. Neutralized owned-index publication guard breaks helper and public unresolved-record keepers, then exact bytes restored before passing checks. These are author execution claims; root's independent results are recorded below.
+
+Root independently executed saved directory and removal source commands, built real SIGTERM/SIGINT/terminal-group/prelaunch controls, and built public record repair/recurrence: all exit0, literal unrelated/concurrent state preserved, matching retries deduplicated and expected refusals observed. Evidence `analysis/p03-r3-root-{directory,removal,signal,record}.json`; stderr empty. Focused root test result follows before the pre-review commit.
+
+Limits: a nonterminating hook may delay catchable termination indefinitely; SIGKILL/abrupt-death reclamation remains deferred. Already-staged later record recurrence conservatively refuses marker rotation; ordinary unstaged producer recurrence succeeds. Nested inventory excludes ignored bytes and does not follow symlinks. No new receipt schema, PID registry, framework or requirement waiver. All9 Phase3 tasks are complete, phase remainsin_progress for the authorized additional native review and configured Opus gate. Next pointerp04-t01 is dependency-gated until both pass. Fivep01Lowdeferrals remain mandatory final scope.

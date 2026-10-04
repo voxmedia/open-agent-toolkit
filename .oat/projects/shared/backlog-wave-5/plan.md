@@ -345,7 +345,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Finding:** L1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded corrective revision explicitly approved by the operator on 2026-10-04.
 
-**Files:** `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`. Declare any additional need before editing.
+**Files:** `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`, `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Root accepted the declared helper/test addition before editing: share a narrow positive settlement proof instead of duplicating a weaker receipt validator.
 
 **Dependencies:** p03-t05 committed. User explicitly approved these four corrections and one additional native review plus configured Opus gate; further blocking findings return to the operator. One append-only correction commit per task, original commits immutable.
 
@@ -621,7 +621,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md           | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T032627Z.md           | 0ab95601abdd58e124c37b4d9770e07aaade5b09 | auto       | -                    |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T050037Z.md           | de854f7bc9e11e3a3b7a8f5ffaa02e75fbd8bec9 | auto       | -                    |
-| p03    | code     | received        | 2026-10-04 | reviews/archived/p03-review-2026-10-04T051023Z.md           | 6fa4f0d5947faf15fc2bda64410f534c8b85a3fe | gate       | claude-opus-5-5-high |
+| p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T051023Z.md           | 6fa4f0d5947faf15fc2bda64410f534c8b85a3fe | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

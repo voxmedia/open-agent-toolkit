@@ -100,6 +100,10 @@ wave5-p03-complexity-stop-20261004: STOP at three-standard-review cap; complexit
 
 wave5-p03-operator-approval-20261004: User approved corrective revision p03-t06..t09 and one additional native review plus configured Opus gate; explicit scope-bound cap override, counters unchanged; same original phase author resumed HOLD. Continue later wave and one mergeable PR on pass; no merge/release. Evidence implementation.md and reviews/archived/complexity-p03-2026-10-04T052701Z.md.
 
+### 2026-10-04 · structural · oat-project-implement · p03
+
+wave5-p03-corrections-received-20261004: four approved correction commits ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c; author1107/13 and root107/2 plus actual command controls passed, recovery1/null; implementation.md records evidence and limits, additional native review and configured Opus gate pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
