@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Ten Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phases 5–6 and the one-PR tail remain pending.
+Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Ten Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phase 5 is in progress; Phase 6 and the one-PR tail remain pending.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 12    | 12/12     |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 12    | 12/12     |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | in_progress | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
 **Total:** 26/30 tasks completed
 
@@ -128,7 +128,7 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ## Phase 3: Shared hook-safe exact-path commits
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
 
@@ -3297,3 +3297,5 @@ Dispatch: scope=p05 action=implementation role=implementer producer=unknown prov
 Exact native accepted handle `/root/wave5_phase5`, HOLD until acceptance commit. Phase base a49abbf525f3de8f2ee28781a51b7d88aa3c5097. Current main fetch found no drift in declared Phase5 paths; ignored analysis/p05-main-drift.json. Complete phase classified consequential: original evidence conservation, atomic write/rollback, real report and terminal retry/resume consumers. Native schema/materialized role plus fresh live T3 catalog support exact Sol6.1/high; service tier unspecified/default, runtime confirmation not reported. Resolver notices[]. Three sequential tasks, exact product ownership and per-task commit/root ledger handshake; no nested workers/live calls. Root owns tracking/log/reviews/publication, Phase6 versions/projections.
 
 Effective recovery projectdefault10/phase10/sourceprojectdefault/used0/remaining10/pendingnull from authoritative state ledger. Capacity does not grant repeated failed attempts. Ten Low findings and one stored-receipt diagnostic Medium remain final-owned; automatic rewritten-history recovery deferred. Root corrected four earlier task status scalars complete→completed to the project reader vocabulary, independently confirmed project status26/30, preserving actual commits/phase status/counters. No task replay.
+
+Root START alignment: match Progress Overview by cell content after hook formatting; Phase5 row in_progress agrees with its section/resume pointer. Phase3 section and row complete agree with received native r7/configured r5 outcome and12/12 task ledger; preserve event history and counters. No product edit.
