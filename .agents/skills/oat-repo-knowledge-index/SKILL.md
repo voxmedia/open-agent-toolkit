@@ -42,19 +42,38 @@ EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -
 **If `$EXISTING_MD` is non-empty (actual content exists):**
 
 - List current files: `ls -la .oat/repo/knowledge/*.md 2>/dev/null`
-- Ask: "Refresh (delete + regenerate) or Skip?"
-- If Refresh: `rm -rf .oat/repo/knowledge/*.md && mkdir -p .oat/repo/knowledge`
+- Ask: "Refresh generated knowledge or Skip? Hand-written files will be kept; unmarked output-name collisions stop refresh."
+- If Refresh: Continue to the owned-output preflight in Step 2; do not delete files by a wildcard.
 - If Skip: Exit
 
 **If `$EXISTING_MD` is empty (no content or only .gitkeep):**
 
 - Continue to Step 2
 
-### Step 2: Create Knowledge Directory
+### Step 2: Prepare Only Owned Generated Outputs
+
+Set `SKILL_DIR` to the absolute directory containing this loaded `SKILL.md`.
+Resolve the repository root, then run the deterministic ownership preflight
+before thin-index generation or mapper writes. It checks every expected
+output name before deleting anything: an unmarked file, symlink or directory
+collision stops the run and remains intact. Only regular Markdown files with
+frontmatter `oat_generated: true` are removed; other files and manual notes
+survive. Symlinked directories in `.oat/repo/knowledge` are refused.
 
 ```bash
-mkdir -p .oat/repo/knowledge
+REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+KNOWLEDGE_REFRESH_REPORT=$(mktemp) || exit 1
+node "$SKILL_DIR/scripts/refresh-owned.mjs" --prepare "$REPO_ROOT" > "$KNOWLEDGE_REFRESH_REPORT" || exit 1
 ```
+
+Retain the report's exact `affectedPaths` (removed generated paths plus the
+eight expected outputs) through generation and commit. This temporary report
+is operation evidence, not a persistent ownership manifest. Do not broaden
+ownership to the whole directory. Expected outputs are `project-index.md`,
+`stack.md`, `architecture.md`, `structure.md`, `integrations.md`, `testing.md`,
+`conventions.md` and `concerns.md`; mappers must write only their declared
+outputs, retaining the generated frontmatter. Relocate an authored collision
+only with the operator's direction, then rerun the preflight.
 
 ### Step 3: Get Git SHAs for Frontmatter
 
@@ -655,23 +674,31 @@ cat .oat/repo/knowledge/project-index.md | head -50
 
 Expected: Complete overview with frontmatter and links
 
-### Step 10: Commit Knowledge Base
+### Step 10: Commit Only Generated Knowledge Paths
+
+Verify all eight generated outputs, then format their existing supported text
+using the repository's documented write command. Retain removed tracked
+generated paths from the preparation report, including filenames outside the
+current eight-output set. Convert the report's absolute paths to literal
+repository-relative files using `REPO_ROOT`, deduplicate them, and populate
+`KNOWLEDGE_OWNED_FILES`. Omit a removed path only if Git proves it was never
+tracked; never omit a tracked generated deletion. Do not add manual files,
+collisions or the tracking/dashboard files below to this commit.
 
 ```bash
-git add .oat/repo/knowledge/
-git commit -m "docs: generate knowledge base
-
-- project-index.md - High-level codebase overview
-- stack.md - Technologies and dependencies
-- architecture.md - System design and patterns
-- structure.md - Directory layout
-- conventions.md - Code style and patterns
-- testing.md - Test structure and practices
-- integrations.md - External services and APIs
-- concerns.md - Technical debt and issues
-
-Generated from commit: {MERGE_BASE_SHA}"
+node "$SKILL_DIR/scripts/refresh-owned.mjs" --verify "$REPO_ROOT" || exit 1
+oat internal commit-paths --help || exit 1
+# KNOWLEDGE_OWNED_FILES is the exact retained affectedPaths list after verification.
+# Format existing generated text members using the repository write command.
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:knowledge-index" --message "docs: generate knowledge base from $MERGE_BASE_SHA" -- "${KNOWLEDGE_OWNED_FILES[@]}" || exit 1
 ```
+
+Set a unique `COMMIT_IDENTITY` before the first commit attempt and retain the
+identity, message and literal file list for retries. If the shared command is
+unavailable, stop and update the CLI; a blocked/failed result stops this run
+and retains its receipt for the reported recovery. Hooks stay enabled;
+unrelated staged entries and unstaged bytes remain preserved. Verify the
+owned paths match the committed hook-final content before proceeding.
 
 ### Step 10b: Update Tracking Manifest
 
