@@ -114,9 +114,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): prepare final implementation closeout" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
-  [ -f "$PROJECT_PATH/project-log.md" ] && git add "$PROJECT_PATH/project-log.md"
-  git diff --cached --quiet || git commit -m "chore(oat): prepare final implementation closeout"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md")
+  [ -f "$PROJECT_PATH/project-log.md" ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/project-log.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-implement:completion-and-closeout:1" --message "chore(oat): prepare final implementation closeout" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 
@@ -1215,9 +1215,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): mark implementation complete" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
-  [ -f "$PROJECT_PATH/project-log.md" ] && git add "$PROJECT_PATH/project-log.md"
-  git diff --cached --quiet || git commit -m "chore(oat): mark implementation complete"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md")
+  [ -f "$PROJECT_PATH/project-log.md" ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/project-log.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-implement:completion-and-closeout:2" --message "chore(oat): mark implementation complete" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

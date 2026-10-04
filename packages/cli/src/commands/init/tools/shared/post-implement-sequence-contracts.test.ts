@@ -1305,10 +1305,10 @@ describe('post-implementation sequence contracts', () => {
       );
     });
 
-    it('stages the project log conditionally in all four bookkeeping blocks', () => {
+    it('owns the project log conditionally in all four bookkeeping blocks', () => {
       const skill = readImplementSkill();
       const staging = skill.match(
-        /\[ -f .*project-log\.md.*\] && git add .*project-log\.md/g,
+        /\[ -f .*project-log\.md.*\] && OWNED_COMMIT_PATHS\+=\(.*project-log\.md/g,
       );
 
       // Step 7a pre-review, Step 7b post-review, and the two
@@ -2087,7 +2087,7 @@ describe('phase bookkeeping ordering around per-phase review', () => {
         /if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n\s+oat project push "\{PROJECT_PATH\}"/,
       );
       expect(half, `${name} stages the log only when it exists`).toContain(
-        '[ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md',
+        '[ -f {PROJECT_PATH}/project-log.md ] && OWNED_COMMIT_PATHS+=({PROJECT_PATH}/project-log.md)',
       );
     }
     expect(preReviewHalf(route)).toContain(

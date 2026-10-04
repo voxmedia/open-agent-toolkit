@@ -542,12 +542,76 @@ describe('validateOatSkills', () => {
     await createSkillFile(
       root,
       'oat-project-guarded',
-      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" || exit 1\nelse\n  git add "$PROJECT_PATH/state.md"\n  git commit -m "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" || exit 1\nelse\n  OWNED_FILES=("$PROJECT_PATH/state.md")\n  oat internal commit-paths --identity "stable-operation" --message "chore(oat): persist artifacts" -- "\${OWNED_FILES[@]}" || exit 1\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
 
     expect(result.findings).toEqual([]);
+  });
+
+  it.each([
+    [
+      'oat internal commit-paths --message "write" -- "$PROJECT_PATH/state.md" || exit 1',
+      'stable identity',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" || exit 1',
+      'explicit owned file list',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'FILES=("$PROJECT_PATH/reviews/")\nOWNED_FILES=("${FILES[@]}")\noat internal commit-paths --identity "stable" --message "write" -- "${OWNED_FILES[@]}" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/*.md" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/state.md"',
+      'nonzero exit',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- .oat/projects/synced/demo/state.md || exit 1',
+      'use oat project push',
+    ],
+  ])(
+    'rejects an unsafe exact-path public writer: %s',
+    async (writer, message) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+      tempDirs.push(root);
+      const skillPath = await createSkillFile(
+        root,
+        'oat-project-exact-writer',
+        `${validSkillContent('oat-project-exact-writer')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\n${writer}\n\`\`\`\n`,
+      );
+      const result = await validateOatSkills(root);
+      expect(result.findings).toContainEqual({
+        file: skillPath,
+        message: expect.stringContaining(message),
+      });
+    },
+  );
+
+  it('keeps helper writes behind the same-block scope guard, including multiline messages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-unguarded-exact',
+      `${validSkillContent('oat-project-unguarded-exact')}\n\n\`\`\`bash\noat internal commit-paths --identity "stable" --message "write\ncontinued" -- "$PROJECT_PATH/state.md" || exit 1\n\`\`\`\n`,
+    );
+    const result = await validateOatSkills(root);
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringContaining(
+        'scope --format value guard earlier in the same fenced block',
+      ),
+    });
   });
 
   it('rejects a status-blind synced push JSON receipt', async () => {
@@ -910,7 +974,7 @@ describe('validateOatSkills', () => {
       },
     ]);
     expect(skill).toMatch(
-      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else\n  PROJECT_OUTPUT_PATHS=\(\)[\s\S]*?git add -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"[\s\S]*?git commit --only -m "chore\(oat\): record wave plan gate" -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"\nfi\n```/,
+      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else[\s\S]*?OWNED_COMMIT_PATHS=\("\$\{WAVE_GATE_OUTPUT_PATHS\[@\]\}"\)[\s\S]*?oat internal commit-paths --identity [^\n]+--message "chore\(oat\): record wave plan gate" -- "\$\{OWNED_COMMIT_PATHS\[@\]\}" \|\| exit 1\nfi\n```/,
     );
   });
 
@@ -3638,7 +3702,9 @@ describe('validateOatSkills', () => {
     expect(agent).toMatch(
       /HEAD exactly equals\s+`phase_base_head`[\s\S]{0,300}Never\s+use ancestry from `expected_base_sha` as a substitute/i,
     );
-    expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
+    expect(agent).toContain(
+      'GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null oat internal commit-paths',
+    );
     expect(agent).toContain('`--no-verify`');
     expect(agent).toContain('Phase-Wide Self-Review');
     expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);

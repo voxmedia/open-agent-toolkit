@@ -37,6 +37,35 @@ Each full command reference should include:
 
 The first practical expansion path is to keep improving the existing owners: [Docs App Commands](../docs-tooling/commands.md), [Provider Interop Commands](../provider-sync/commands.md), [Config and Local State](config-and-local-state.md), [Tool Packs](../getting-started/tool-packs.md), [Workflow & Projects](../workflows/projects/index.md), and [Repository PR Comment Analysis](repository-pr-comments.md).
 
+## Exact-path maintenance commits
+
+`oat internal commit-paths --identity <operation> --message <message> -- <files...>`
+commits an explicit list of owned files with enabled Git hooks. Include tracked
+removals and both names of a rename. Directories, untracked missing paths,
+unmerged entries and paths outside the repository are rejected; the command
+does not discover ownership or expand directory/glob pathspecs. Unrelated staged
+entries and worktree bytes remain preserved, including partially staged files.
+On success, owned index/worktree bytes match the hook-final commit.
+
+Choose a unique identity before the first attempt and retain the identity,
+message and literal path list for retries. With global `--json`, outcomes are
+`committed`, `already-matching`, `nothing`, `blocked` or `failed`.
+Success exits 0, `blocked` exits 1 and `failed` exits 2. A blocked result can
+name a verified commit whose owned-index publication still needs repair; do not
+claim settlement until a matching retry succeeds. Ignored receipts under the
+Git directory verify the exact identity, commit, tree and paths before reuse.
+Lock inspection/retry is bounded and never deletes another writer's lock.
+
+If the command is unavailable, stop and update the CLI; there is no broad Git
+commit fallback. Synced project artifacts still use `oat project push` after
+successful scope resolution. During development, run the current source entry:
+
+```bash
+pnpm --silent run cli -- internal commit-paths --identity "$COMMIT_IDENTITY" --message "$COMMIT_MESSAGE" -- "${OWNED_FILES[@]}"
+```
+
+A `dist` invocation requires a fresh build after the latest CLI source changes.
+
 ## Command Groups
 
 | Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                                   |

@@ -12,6 +12,10 @@ metadata:
 
 Process review findings into actionable plan tasks and guide gap closure execution.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Purpose
 
 Turn review output into plan changes and a clear next action. This closes the feedback loop between reviewing and fixing.
@@ -412,6 +416,11 @@ Derive `TASK_PREFIX` from scope:
 
 ### Step 5: Convert Findings to Tasks
 
+Each generated fix task initializes `TASK_OWNED_FILES=()` before its first
+edit and appends the exact files at their producers, including removals and
+both rename sides. Carry that task-owned list and stable request/task identity
+into its Commit step; never infer ownership from the staged index.
+
 **For each Critical, High, and Medium finding (default):**
 
 Create a plan task entry:
@@ -440,8 +449,8 @@ Expected: {expected outcome}
 **Step 4: Commit**
 
 ```bash
-git add {files}
-git commit -m "fix({task_id}): {description}"
+OWNED_COMMIT_PATHS=("${TASK_OWNED_FILES[@]}")
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-review-receive:{task_id}" --message "fix({task_id}): {description}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 ```
 
 Fix tasks that edit synced artifacts use `oat project push` under the scope
@@ -560,8 +569,17 @@ After the fix tasks are complete:
 After plan/implementation/state updates reference the archived location, move the processed review artifact into the local-only history directory:
 
 ```bash
+REVIEW_ARCHIVE_PATHS=()
+# Record a tracked source deletion before the move; an untracked source has no
+# deletion to commit. The destination is included only when it is not ignored.
+if git --literal-pathspecs ls-files --error-unmatch -- "$REVIEW_PATH" >/dev/null 2>&1; then
+  REVIEW_ARCHIVE_PATHS+=("$REVIEW_PATH")
+fi
 mkdir -p "$ARCHIVED_REVIEW_DIR"
-mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
+mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH" || exit 1
+if ! git check-ignore -q -- "$ARCHIVED_REVIEW_PATH"; then
+  REVIEW_ARCHIVE_PATHS+=("$ARCHIVED_REVIEW_PATH")
+fi
 ```
 
 Rules:
@@ -582,12 +600,10 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record review findings and add fix tasks ({scope})" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-  # Capture the Step 7.5 archive move: stages both the deletion of the original
-  # review path and the new archived location. Scope to the project's reviews/
-  # directory — never use repo-wide `git add -A`.
-  git add "$PROJECT_PATH/reviews/"
-  git diff --cached --quiet || git commit -m "chore(oat): record review findings and add fix tasks ({scope})"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md")
+  # Consume the exact producer list retained from the Step 7.5 archive move.
+  OWNED_COMMIT_PATHS+=("${REVIEW_ARCHIVE_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-review-receive:2" --message "chore(oat): record review findings and add fix tasks ({scope})" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 
@@ -595,7 +611,7 @@ Do not use `git add -A` or glob patterns that reach outside `"$PROJECT_PATH/revi
 
 If the project itself is still untracked because earlier lifecycle steps never committed the initial artifact set, widen this bookkeeping commit to include the untracked core project artifacts (`discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`, `state.md`). Do not stage `.oat/state.md`; it is generated dashboard state and normally gitignored. Do not leave the project tree partially tracked after receive-review finishes.
 
-**Note on archived review paths:** When `reviews/archived/` matches a `localPaths` pattern (the default setup), the archived file is gitignored and `git add "$PROJECT_PATH/reviews/"` will only stage the deletion of the original (now-moved) top-level review file. When `reviews/archived/` is tracked, both the deletion and the new archived location are staged. Both cases are safe — the command handles them uniformly.
+**Note on archived review paths:** Retain `REVIEW_ARCHIVE_PATHS` across a retry. When `reviews/archived/` matches a `localPaths` pattern, include the old tracked review path only; when the destination is tracked, include both rename sides. Do not pass the reviews directory or ignored destination to the helper. A resumed operation uses the retained producer list and identity so the helper can verify a previously committed removal.
 
 **Worktree handling:** If the project was resolved via a worktree in Step 0, run the git commands scoped to the worktree (`git -C "$WORKTREE_PATH" ...`) so the commit lands on the worktree branch.
 
@@ -765,8 +781,17 @@ For `artifact` reviews, do not route to implementation tasks. After user-approve
 **Archive the consumed review artifact (same as Step 7.5):**
 
 ```bash
+REVIEW_ARCHIVE_PATHS=()
+# Record a tracked source deletion before the move; an untracked source has no
+# deletion to commit. The destination is included only when it is not ignored.
+if git --literal-pathspecs ls-files --error-unmatch -- "$REVIEW_PATH" >/dev/null 2>&1; then
+  REVIEW_ARCHIVE_PATHS+=("$REVIEW_PATH")
+fi
 mkdir -p "$ARCHIVED_REVIEW_DIR"
-mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
+mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH" || exit 1
+if ! git check-ignore -q -- "$ARCHIVED_REVIEW_PATH"; then
+  REVIEW_ARCHIVE_PATHS+=("$ARCHIVED_REVIEW_PATH")
+fi
 ```
 
 - Before the move, use the Step 1 `REVIEW_FILENAME` for every artifact-review reference or event identity written by the approved edits.

@@ -177,7 +177,7 @@ function executesCommand(line: string, command: 'git' | 'oat'): boolean {
   const modifiers =
     '(?:!\\s+)?(?:command\\s+)?(?:env\\s+)?(?:[A-Z][A-Z0-9_]*=\\S+\\s+)*';
   return new RegExp(
-    `^\\s*(?:(?:[A-Z][A-Z0-9_]*)=\\$\\()?${command}\\b|${prefix}${modifiers}${command}\\b`,
+    `^\\s*(?:(?:[A-Z][A-Z0-9_]*)=\\$\\()?${modifiers}${command}\\b|${prefix}${modifiers}${command}\\b`,
   ).test(line);
 }
 
@@ -201,6 +201,17 @@ function logicalLines(content: string): LogicalLine[] {
       combined += continuation.trimStart();
       offset += continuation.length + 1;
     }
+    // Quoted helper messages may span lines; include their ownership tail.
+    while (
+      /\boat\s+internal\s+commit-paths\b/.test(combined) &&
+      (combined.match(/(?<!\\)"/g)?.length ?? 0) % 2 === 1 &&
+      index + 1 < physicalLines.length
+    ) {
+      index += 1;
+      const continuation = physicalLines[index] ?? '';
+      combined += `\n${continuation}`;
+      offset += continuation.length + 1;
+    }
     logical.push({
       content: combined,
       endLine: index,
@@ -220,7 +231,9 @@ function isProjectArtifactWriterLine(
     executesGitCommand(trimmed) || executesCommand(trimmed, 'oat');
   const writesProjectArtifact =
     executesGitOrOat &&
-    /\bgit\s+(?:add|commit)\b|\boat\s+project\s+push\b/.test(trimmed) &&
+    /\bgit\s+(?:add|commit)\b|\boat\s+(?:project\s+push|internal\s+commit-paths)\b/.test(
+      trimmed,
+    ) &&
     referencesProjectArtifactVariable(line, artifactArrays);
   const writesActiveProject =
     executesGitOrOat && /\boat\s+config\s+set\s+activeProject\b/.test(trimmed);
@@ -300,8 +313,11 @@ function projectArtifactWriterSites(content: string): ContentSite[] {
   const sites = new Map<string, ContentSite>();
   const artifactArrays = projectArtifactArrays(content);
   for (const line of logicalLines(content)) {
-    if (isProjectArtifactWriterLine(line.content, artifactArrays)) {
-      const site = contentSiteAt(content, line.offset, fencedSites);
+    const site = contentSiteAt(content, line.offset, fencedSites);
+    const writerArrays = /\boat\s+internal\s+commit-paths\b/.test(line.content)
+      ? projectArtifactArrays(site.content)
+      : artifactArrays;
+    if (isProjectArtifactWriterLine(line.content, writerArrays)) {
       sites.set(`${site.start}:${site.end}`, site);
     }
   }
@@ -324,12 +340,17 @@ function collectSyncedContentFindings(
   }
 
   const logical = logicalLines(content);
+  const fencedSites = fencedContentSites(content);
   const artifactArrays = projectArtifactArrays(content);
   for (const [logicalIndex, site] of logical.entries()) {
     const line = site.content;
     const lineNumber = site.startLine + 1;
 
-    if (/\bgit\s+add\b[^\n]*\.oat\/projects\/synced(?:\/|\b)/.test(line)) {
+    if (
+      /\b(?:git\s+add|oat\s+internal\s+commit-paths)\b[^\n]*\.oat\/projects\/synced(?:\/|\b)/.test(
+        line,
+      )
+    ) {
       findings.push({
         file,
         message: `Line ${lineNumber}: Never stage a path under .oat/projects/synced/; use oat project push`,
@@ -371,6 +392,80 @@ function collectSyncedContentFindings(
         file,
         message: `Line ${lineNumber}: Project-artifact staging must name exact files, not the project directory or a glob`,
       });
+    }
+
+    const isExactCommit =
+      executesCommand(line, 'oat') &&
+      /\boat\s+internal\s+commit-paths\b/.test(line) &&
+      !/\bcommit-paths\s+--help(?:\s|$)/.test(line);
+    if (isExactCommit && isLifecycleSafetyFile(file)) {
+      const ownedTail = /\s--\s+([\s\S]+?)(?:\s+\|\||\s+&&|$)/.exec(line)?.[1];
+      if (
+        !/--identity\s+\S/.test(line) ||
+        !/--message\s+\S/.test(line) ||
+        !ownedTail?.trim()
+      ) {
+        findings.push({
+          file,
+          message: `Line ${lineNumber}: Exact-path commits require a stable identity, message, and explicit owned file list after --`,
+        });
+      }
+      if (ownedTail) {
+        const arrays = new Set(
+          [...ownedTail.matchAll(/\$\{([A-Z][A-Z0-9_]*)\[@\]\}/g)].map(
+            (match) => match[1] ?? '',
+          ),
+        );
+        let ownedValues = ownedTail;
+        for (let changed = true; changed; ) {
+          changed = false;
+          for (const candidate of logicalLines(
+            contentSiteAt(content, site.offset, fencedSites).content,
+          )) {
+            const assignment = /^\s*([A-Z][A-Z0-9_]*)(?:\+)?=\((.*)\)\s*$/.exec(
+              candidate.content,
+            );
+            if (
+              !assignment?.[1] ||
+              !arrays.has(assignment[1]) ||
+              !assignment[2]
+            )
+              continue;
+            const value = assignment[2];
+            ownedValues += ` ${value}`;
+            for (const match of value.matchAll(
+              /\$\{([A-Z][A-Z0-9_]*)\[@\]\}/g,
+            )) {
+              if (match[1] && !arrays.has(match[1])) {
+                arrays.add(match[1]);
+                changed = true;
+              }
+            }
+          }
+        }
+        if (
+          /(?:\$PROJECT_PATH|\$\{PROJECT_PATH\}|\{PROJECT_PATH\})(?:\/(?:reviews|references|pr))?\/?(?:["'\s]|$)|[^\s"']*\*[^\s"']*|[^\s"']\/["']/.test(
+            ownedValues,
+          )
+        ) {
+          findings.push({
+            file,
+            message: `Line ${lineNumber}: Exact-path commits must name concrete owned files, not a directory or glob`,
+          });
+        }
+        if (/\.oat\/projects\/synced(?:\/|\b)/.test(ownedValues)) {
+          findings.push({
+            file,
+            message: `Line ${lineNumber}: Never commit a path under .oat/projects/synced/; use oat project push`,
+          });
+        }
+      }
+      if (!/\|\|\s*(?:\{|exit\b)/.test(line)) {
+        findings.push({
+          file,
+          message: `Line ${lineNumber}: Exact-path commit must handle a nonzero exit explicitly and stop bookkeeping`,
+        });
+      }
     }
 
     const pushReceipt =
@@ -438,6 +533,9 @@ function collectSyncedContentFindings(
   const logicalByStart = new Map(
     logical.map((line) => [line.startLine, line.content] as const),
   );
+  const logicalOffsetByStart = new Map(
+    logical.map((line) => [line.startLine, line.offset] as const),
+  );
   const continuedLines = new Set(
     logical.flatMap((line) =>
       Array.from(
@@ -448,6 +546,7 @@ function collectSyncedContentFindings(
   );
   let fenceMarker: string | null = null;
   let scopeGuardSeen = false;
+  let fencedArtifactArrays = artifactArrays;
 
   for (const [index, line] of lines.entries()) {
     const lineNumber = index + 1;
@@ -458,6 +557,13 @@ function collectSyncedContentFindings(
       if (fenceMarker === null) {
         fenceMarker = marker;
         scopeGuardSeen = false;
+        fencedArtifactArrays = projectArtifactArrays(
+          contentSiteAt(
+            content,
+            logicalOffsetByStart.get(index) ?? 0,
+            fencedSites,
+          ).content,
+        );
       } else if (
         marker[0] === fenceMarker[0] &&
         marker.length >= fenceMarker.length &&
@@ -490,8 +596,15 @@ function collectSyncedContentFindings(
     }
 
     if (
-      /\bgit\s+(?:add|commit)\b/.test(inspectedLine) &&
-      referencesProjectArtifactVariable(inspectedLine, artifactArrays) &&
+      /\bgit\s+(?:add|commit)\b|\boat\s+internal\s+commit-paths\b/.test(
+        inspectedLine,
+      ) &&
+      referencesProjectArtifactVariable(
+        inspectedLine,
+        /\boat\s+internal\s+commit-paths\b/.test(inspectedLine)
+          ? fencedArtifactArrays
+          : artifactArrays,
+      ) &&
       !scopeGuardSeen
     ) {
       findings.push({

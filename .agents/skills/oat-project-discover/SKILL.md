@@ -12,6 +12,10 @@ metadata:
 
 Gather requirements and understand the problem space through natural collaborative dialogue.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Prerequisites
 
 **Required:** Knowledge base must exist. If missing, run the `oat-repo-knowledge-index` skill first.
@@ -575,14 +579,14 @@ Key decisions:
 Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/discovery.md" "$PROJECT_PATH/state.md")
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git commit -m "docs: complete discovery for {project-name}
+  OWNED_COMMIT_PATHS=("${PROJECT_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-discover:1" --message "docs: complete discovery for {project-name}
 
 Key decisions:
 - {Decision 1}
 - {Decision 2}
 
-Ready for design phase"
+Ready for design phase" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

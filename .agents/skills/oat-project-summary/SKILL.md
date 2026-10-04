@@ -12,6 +12,10 @@ metadata:
 
 Generate a durable project summary artifact from project lifecycle artifacts.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Purpose
 
 Produce a `summary.md` that serves as institutional memory — capturing what was built, why decisions were made, what tradeoffs occurred, and what follow-up work was identified. This artifact is distinct from the PR description: summary.md is reflective and thorough; PR descriptions are reviewer-oriented and actionable.
@@ -566,7 +570,7 @@ fi
 
 PARENT_DURABILITY_COMMIT=""
 if [ "$PROJECT_SCOPE" = "synced" ] && [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; then
-  git add -- "${PARENT_OUTPUT_PATHS[@]}"
+  OWNED_COMMIT_PATHS=("${PARENT_OUTPUT_PATHS[@]}")
   if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ] && [ "$DECISION_INDEX_CHANGED" = "true" ]; then
     PARENT_COMMIT_MESSAGE="docs: update project log ledger and decisions for {project-name}"
   elif [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
@@ -574,7 +578,7 @@ if [ "$PROJECT_SCOPE" = "synced" ] && [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; th
   else
     PARENT_COMMIT_MESSAGE="docs: promote summary decisions for {project-name}"
   fi
-  git commit --only -m "$PARENT_COMMIT_MESSAGE" -- "${PARENT_OUTPUT_PATHS[@]}"
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-summary:1" --message "$PARENT_COMMIT_MESSAGE" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   PARENT_DURABILITY_COMMIT=$(git rev-parse HEAD)
   PARENT_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$PARENT_DURABILITY_COMMIT")
   # Inspect the complete output and require exact set equality with the
@@ -609,8 +613,8 @@ else
   if [ "${#PARENT_OUTPUT_PATHS[@]}" -gt 0 ]; then
     PROJECT_OUTPUT_PATHS+=("${PARENT_OUTPUT_PATHS[@]}")
   fi
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git commit --only -m "docs: generate summary for {project-name}" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  OWNED_COMMIT_PATHS=("${PROJECT_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-summary:2" --message "docs: generate summary for {project-name}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
 fi
 
@@ -639,8 +643,8 @@ if [ "$PROJECT_SCOPE" = "synced" ]; then
   SUMMARY_PUSH=$(oat project push "$PROJECT_PATH" --message "docs: update summary for {project-name}" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   SUMMARY_COMMIT_SHA=$(parse_synced_push_receipt "$SUMMARY_PUSH") || { printf '%s\n' "$SUMMARY_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git commit --only -m "docs: update summary for {project-name}" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  OWNED_COMMIT_PATHS=("${PROJECT_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-summary:3" --message "docs: update summary for {project-name}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   SUMMARY_COMMIT_SHA=$(git rev-parse HEAD)
 fi
 ```

@@ -119,8 +119,16 @@ disposition every finding in the phase report. }
 
 **Step { N }: Commit**
 
+Before task edits, initialize `TASK_OWNED_FILES=()` and append the exact files
+at each source-plan producer, including created files, tracked removals and both
+rename sides. Retain the complete list and a stable unique `COMMIT_IDENTITY`
+for this wrapper task through retries; each task uses its own identity/suffix.
+Never infer ownership from the staged index or pass directories. Verify
+`oat internal commit-paths --help` first; if unavailable, stop and update the CLI.
+A nonzero result stops with its receipt and diagnostic; hooks remain enabled.
+
 ```bash
-git commit -m "{type}(p{NN}-t01): { description }"
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-wave-execute:wrapper-plan-template:p{NN}-t01" --message "{type}(p{NN}-t01): { description }" -- "${TASK_OWNED_FILES[@]}" || exit 1
 ```
 
 ---

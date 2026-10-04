@@ -12,6 +12,10 @@ metadata:
 
 Process unresolved GitHub PR review feedback into normalized findings and standalone tasks without requiring an active OAT project.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Prerequisites
 
 - `npx agent-reviews` is available.
@@ -172,6 +176,12 @@ Also output deferred and dismissed lists with reasons.
 
 ### Step 6: Optional Fix Implementation
 
+Before the first approved write, initialize `OWNED_OUTPUT_FILES=()`. Append
+each exact successfully created, modified or removed path at that write,
+including both names of a rename and any generated navigation/index file this
+step actually changes. Retain the complete list through verification and commit
+retries; do not substitute a directory or staged-index diff.
+
 After the task list is confirmed, ask:
 
 `Would you like me to address these fixes, commit, and push the changes? [yes/no]`
@@ -183,10 +193,10 @@ If yes:
 3. Stage and commit with a descriptive message referencing the PR:
 
    ```bash
-   git add {changed-files}
-   git commit -m "fix: address PR #<N> review feedback
+   OWNED_COMMIT_PATHS=("${OWNED_OUTPUT_FILES[@]}")
+   oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-review-receive-remote:1" --message "fix: address PR #<N> review feedback
 
-   Resolved findings: {list of finding IDs and titles}"
+   Resolved findings: {list of finding IDs and titles}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
    ```
 
 4. Push to the current branch:

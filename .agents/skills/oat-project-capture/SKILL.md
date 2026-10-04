@@ -12,6 +12,10 @@ metadata:
 
 Retroactively create an OAT project from work that happened outside the structured workflow. Populates `discovery.md` from conversation context and `implementation.md` from commit history, producing a tracked project ready for review or PR.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## When to Use
 
 Use when:
@@ -268,8 +272,8 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): capture existing work for {name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/discovery.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-  git diff --cached --quiet || git commit -m "chore(oat): capture existing work for {name}"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/discovery.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-capture:1" --message "chore(oat): capture existing work for {name}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

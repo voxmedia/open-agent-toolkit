@@ -13,6 +13,10 @@ metadata:
 
 Request and execute a code/file review that is not tied to an OAT project lifecycle.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Prerequisites
 
 - Git repository with changes/files to review.
@@ -207,8 +211,8 @@ If artifact is in tracked storage (e.g., `.oat/repo/reviews`), ask whether to co
 Suggested commit (when approved):
 
 ```bash
-git add "{artifact-path}"
-git commit -m "chore(oat): record ad-hoc review artifact"
+OWNED_COMMIT_PATHS=("{artifact-path}")
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-review-provide:1" --message "chore(oat): record ad-hoc review artifact" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 ```
 
 For local-active or inline modes, do not commit unless user explicitly requests.

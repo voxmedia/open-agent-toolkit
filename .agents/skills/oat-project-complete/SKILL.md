@@ -12,6 +12,10 @@ metadata:
 
 Mark the active OAT project lifecycle as complete.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Progress Indicators (User-Facing)
 
 When executing this skill, provide lightweight progress feedback so the user can tell what's happening after they confirm.
@@ -1426,6 +1430,13 @@ Expected changes may include:
 - The complete tracked recap export and tracked summary export reported by
   archive (if present)
 
+Initialize `COMPLETION_OUTPUT_PATHS=()` before closeout writes. Each producer
+appends its exact successful output paths from the expected changes above,
+including tracked removals and both names of a rename; omit ignored local
+config/dashboard outputs. Retain that list for retries. Do not infer ownership
+from the staged index or pass project/export directories. The synced record
+producer already supplies the single exact `SYNCED_RECORD_PATH`.
+
 Run:
 
 ```bash
@@ -1433,23 +1444,15 @@ if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   if [[ "$SHOULD_ARCHIVE" == "true" ]]; then
     test -n "$LIFECYCLE_COMMIT"
   else
-    git add -- "$SYNCED_RECORD_PATH"
-    if git diff --cached --quiet -- "$SYNCED_RECORD_PATH"; then
-      LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH")
-      node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
-        "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
-    else
-      git commit --only "$SYNCED_RECORD_PATH" \
-        -m "chore(oat): complete synced project ${PROJECT_NAME}" &&
-        LIFECYCLE_COMMIT=$(git rev-parse HEAD) &&
-        node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
-          "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
-    fi
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-complete:1" --message "chore(oat): complete synced project ${PROJECT_NAME}" -- "$SYNCED_RECORD_PATH" || exit 1
+    LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH") || exit 1
+    node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+      "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
   fi
 else
   git status --short
-  git add -- <exact completion and lifecycle paths>
-  git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
+  : "${COMPLETION_OUTPUT_PATHS:?retain the exact lifecycle producer file list}"
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-complete:2" --message "chore(oat): complete project lifecycle for ${PROJECT_NAME}" -- "${COMPLETION_OUTPUT_PATHS[@]}" || exit 1
   LIFECYCLE_COMMIT=$(git rev-parse HEAD)
 fi
 ```

@@ -17,6 +17,10 @@ This skill is **model-invocable** (`disable-model-invocation: false`): orchestra
 
 > ⚠️ **When not to substitute.** This skill is the **only** supported mechanism for orchestrator-driven worktree creation in OAT skills. Host-native isolation primitives — Claude Code's `Agent({ isolation: "worktree" })`, Cursor's worktree-isolated agent invocations, and equivalents in other hosts — are **not** substitutes. They may use the primary repo's checkout (often `main`) as the base regardless of the caller's current branch, silently producing a worktree at the wrong base. OAT orchestrators dispatching mid-run from a feature branch MUST go through this skill with an explicit `--base` so the resulting worktree contains the orchestrator's prior commits.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Relationship to oat-worktree-bootstrap
 
 This skill is the **autonomous companion** to `oat-worktree-bootstrap`. Key differences:
@@ -358,28 +362,52 @@ Create them if missing, run the `git_clean` baseline check, and then run sync:
 mkdir -p "{target-path}/.claude/skills"
 mkdir -p "{target-path}/.cursor/rules"
 git status --porcelain
-oat sync --scope all
+SYNC_PLAN_JSON=$(oat sync --scope all --dry-run --json) || exit 1
+SYNC_OUTPUT_FILES=()
+# Populate the exact list from the producer evidence described below before apply.
+SYNC_RESULT_JSON=$(oat sync --scope all --json) || exit 1
 ```
 
-After sync completes, commit sync-managed output if any scoped path is dirty:
+Before the apply invocation, populate `SYNC_OUTPUT_FILES` from the supported
+`SYNC_PLAN_JSON.plans[]` entries/removals for `scope: project`:
+
+- `providerPath` is the planned target, and `canonical.isFile` identifies file
+  assets. Include that exact file for a mutating operation; include old tracked
+  paths for removals. Skip `operation: skip` unless the manifest was restamped.
+- A symlink projection owns the single provider symlink path. A copy projection
+  of a directory owns concrete copied members: enumerate the canonical producer
+  files before applying and map each relative member to its provider destination.
+  Capture the exact existing tracked members with literal `git ls-files -z`
+  before a planned removal. Do not discover this list from the staged index.
+- Include `.oat/sync/manifest.json` when the project manifest is written. Omit
+  ignored output files and user-scope paths, which are outside the worktree.
+- `operationResults[]` reports scope/provider/contentKind/asset/action/status,
+  **not file paths**. Match those identities to the planned entries/removals and
+  require successful/current results before committing. Materialization
+  extensions expose their own `operations[].path`; include only verified
+  concrete project files. Collection/directory outcomes require complete
+  producer member evidence. Stop on unknown, failed, incomplete or changed
+  inventories; never pass a directory to the helper.
+
+Append each exact planned output to `SYNC_OUTPUT_FILES` before mutation and
+verify it against the actual result after sync. Include both rename sides and
+retain the list and identity through a retry. The helper never expands a
+provider directory or invents a producer inventory.
+
+After sync completes, commit the retained exact list:
 
 ```bash
-SYNC_PATHS=(.oat/sync/manifest.json .claude .cursor .codex)
-SYNC_STAGE_PATHS=(existing-or-tracked sync paths)
-git status --porcelain -- "${SYNC_STAGE_PATHS[@]}"
-git add -A -- "${SYNC_STAGE_PATHS[@]}"
-STAGED_SYNC_FILES=(staged sync-managed files from git diff --cached)
-git commit -m "chore: run sync" -- "${STAGED_SYNC_FILES[@]}"
+if [ "${#SYNC_OUTPUT_FILES[@]}" -gt 0 ]; then
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-worktree-bootstrap-auto:1" --message "chore: run sync" -- "${SYNC_OUTPUT_FILES[@]}" || exit 1
+else
+  echo "sync_commit: skip"
+fi
 ```
 
-Use a staged-diff guard so no empty commit is created. After scoped staging,
-derive the concrete staged sync-managed files from
-`git diff --cached --name-only --no-renames -- "${SYNC_STAGE_PATHS[@]}"` and
-commit only those file paths. Do not pass provider directory pathspecs to
-`git commit`, because empty provider directories can make the commit fail. This
-file-list isolation is what keeps `chore: run sync` limited to sync-managed
-paths even if unrelated files were already staged. If no scoped path is dirty,
-or staging produces no diff, report `sync_commit: skip`.
+A `nothing` result reports `sync_commit: skip`; blocked/failed results
+stop bootstrap and retain the helper's resumable diagnostic. Never use directory
+pathspecs, staged-diff discovery, or an empty broad commit. Smoke mode continues
+to skip sync and this commit entirely.
 
 ### Step 5: Return Structured Status
 

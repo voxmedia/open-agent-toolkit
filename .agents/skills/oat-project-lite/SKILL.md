@@ -15,6 +15,10 @@ metadata:
 Create or resume a project in **lite mode** and produce one approved,
 single-phase `plan.md` for `oat-project-implement`.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Prerequisites
 
 - A repository initialized for OAT (`.oat/` and `.agents/` exist).
@@ -100,9 +104,7 @@ Use these compact progress lines:
   the gate passes or resolves.
 - Before each scoped commit, resolve the project scope. Scope resolution fails
   closed. A synced project uses `oat project push` with the same message;
-  another scope uses only `git add -- "$PROJECT_PATH/plan.md"
-"$PROJECT_PATH/state.md" "$PROJECT_PATH/implementation.md"` followed by a
-  commit when the index is non-empty. Never stage unrelated paths.
+  another scope uses `oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-lite:1" --message "$BOOKKEEPING_MESSAGE" -- "$PROJECT_PATH/plan.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/implementation.md"` and stops on a nonzero exit. Set the same bookkeeping message and a distinct operation identity for each lifecycle write; retain both for retries. Never include unrelated paths.
 
 ## Artifact Hygiene
 
@@ -122,7 +124,7 @@ get carried into the project workflow's bookkeeping commits.
 2. If `.oat/sync/manifest.json` is the only entry **and** its two-character
    status code is either `??` or made up solely of the letter `M` and blanks —
    a plain modification, staged, unstaged, or both — commit it without asking:
-   `git add -- .oat/sync/manifest.json` then `git commit -m "chore: run sync"`.
+   `oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-lite:2" --message "chore: run sync" -- .oat/sync/manifest.json`.
    Report the commit and continue. Every other code falls through, including
    `MD`, `MT`, `AM`, `RM`, `CM`, and every unmerged state.
 3. Otherwise, present the dirty list to the user and offer commit now, proceed

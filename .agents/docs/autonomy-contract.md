@@ -11,6 +11,25 @@ mid-run user input. It defines the activation signal, boundary behavior,
 provenance requirements, and the inventory of interactive gates that an
 autonomous caller must resolve.
 
+## Exact-path commit ownership
+
+Autonomous parent-branch bookkeeping and task commits use the shared
+`oat internal commit-paths` primitive with an exact producer-owned file list,
+message and stable unique operation/task identity. Capture the list when files
+are created, changed, removed or renamed; retain it and the identity through
+hook formatting and resumable retries. Include both rename sides and tracked
+removals; omit ignored local outputs. Never infer ownership from unrelated
+staging or pass directories for the helper to expand.
+
+Verify `oat internal commit-paths --help` before the first commit. A missing
+command stops execution with CLI-update guidance; blocked/failed outcomes stop
+with their receipt and diagnostic. There is no staged-index or pathspec-only
+fallback. Ordinary hooks remain enabled; a validated smoke child retains its
+launcher-owned hook policy on the same primitive. Synced project artifacts
+continue through scope-resolved `oat project push`, with scope/push failures
+stopping bookkeeping. This ownership contract applies to the lifecycle sites
+in the vendored inventory below.
+
 ## Activation and lifetime
 
 Autonomy is active only when the current process environment contains the exact

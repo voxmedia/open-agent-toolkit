@@ -25,6 +25,10 @@ Historical `DR-*` and `BL-*` slugs in this skill (including the provenance
 record above) are evidence citations in the source program's repository; they
 are not required artifacts in the consuming repo.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Progress Indicators (User-Facing)
 
 Print this banner once when execution starts:
@@ -256,6 +260,12 @@ terminal state for gate rows (Orc operator-audit S8).
 Persist the gate artifact and its dispositions through the wrapper project's
 scope-aware bookkeeping route:
 
+Before running the gate, initialize `WAVE_GATE_OUTPUT_PATHS=()` and append the
+exact plan, state, implementation, review and receive-receipt files each gate
+producer actually writes. Include tracked removals and both rename sides, omit
+ignored outputs, and retain the list through retries. Do not discover ownership
+from a project-directory or staged-index diff.
+
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 if [ -z "$PROJECT_PATH" ]; then
@@ -267,14 +277,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  PROJECT_OUTPUT_PATHS=()
-  while IFS= read -r output_path; do
-    PROJECT_OUTPUT_PATHS+=("$output_path")
-  done < <(git diff --name-only -- "$PROJECT_PATH")
-  [ "${#PROJECT_OUTPUT_PATHS[@]}" -gt 0 ] || exit 1
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git diff --cached --quiet -- "${PROJECT_OUTPUT_PATHS[@]}" ||
-    git commit --only -m "chore(oat): record wave plan gate" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  : "${WAVE_GATE_OUTPUT_PATHS:?retain the exact gate producer file list}"
+  OWNED_COMMIT_PATHS=("${WAVE_GATE_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-wave-execute:1" --message "chore(oat): record wave plan gate" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

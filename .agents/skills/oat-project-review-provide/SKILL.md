@@ -12,6 +12,10 @@ metadata:
 
 Request and execute a code or artifact review for the current project scope.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Purpose
 
 Produce an independent review artifact that verifies requirements/design alignment (mode-aware) and code quality.
@@ -1207,9 +1211,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record {scope} review artifact" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$ACTIVE_REVIEW_PATH"
-  [ -f "$PROJECT_PATH/plan.md" ] && git add "$PROJECT_PATH/plan.md"
-  git diff --cached --quiet || git commit -m "chore(oat): record {scope} review artifact"
+  OWNED_COMMIT_PATHS=("$ACTIVE_REVIEW_PATH")
+  [ -f "$PROJECT_PATH/plan.md" ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/plan.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-review-provide:1" --message "chore(oat): record {scope} review artifact" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

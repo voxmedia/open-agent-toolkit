@@ -12,6 +12,10 @@ metadata:
 
 Generate or update documentation files from a docs analysis artifact, with explicit approval and branch-based workflow.
 
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
+
 ## Prerequisites
 
 - A recent docs analysis artifact in `.oat/repo/analysis/`.
@@ -196,6 +200,12 @@ If branch creation fails because of unrelated local changes, ask the user to res
 
 ### Step 4: Apply Approved Changes
 
+Before the first approved write, initialize `OWNED_OUTPUT_FILES=()`. Append
+each exact successfully created, modified or removed path at that write,
+including both names of a rename and any generated navigation/index file this
+step actually changes. Retain the complete list through verification and commit
+retries; do not substitute a directory or staged-index diff.
+
 For each approved recommendation:
 
 1. Read only the affected docs files and the evidence sources cited by the artifact.
@@ -245,8 +255,8 @@ If no docs app exists yet, use file-level verification and confirm the structura
 Commit the approved changes:
 
 ```bash
-git add {approved-files}
-git commit -m "docs: apply approved docs recommendations"
+OWNED_COMMIT_PATHS=("${OWNED_OUTPUT_FILES[@]}")
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-docs-apply:1" --message "docs: apply approved docs recommendations" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 ```
 
 **Offer to open a PR:**
