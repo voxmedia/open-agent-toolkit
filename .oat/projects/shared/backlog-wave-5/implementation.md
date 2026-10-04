@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t04
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks are verified; native review found two recovery gaps. Bounded fix p03-t04 precedes fresh root review and the independent phase gate.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and the bounded recovery fix are verified; fresh native review and the configured independent phase gate remain pending.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 3/4       |
+| Phase 3 | in_progress | 4     | 4/4       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 13/21 tasks completed
+**Total:** 14/21 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -153,9 +153,11 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t04: Reconcile lifecycle commit recovery (p03-review)
 
-**Status:** pending
-**Commit:** -
-**Outcome:** H1/H2 converted to one bounded fix-round task.
+**Status:** completed
+**Commit:** ef26eb5100f980955ab09ae5bc89d16066a99b23
+**Outcome:** Both Highs corrected in five declared paths: public migration command/tests, promotion/tests and ref-sync. Verified committed migration is retained with public finalization; original identity/bytes/inode/device and expected commit bound through settlement, local pointer failure retains marker. Foreign identity/path/tree/HEAD/remote/nested bytes and marker/receipt replacement refuse without index loss. Promotion JSON/human exposes structured helper result and quoted cwd-aware recovery; direct command finalizes existing Quick bytes and deduplicates committed-pending success. Original source confinement and hooks-disabled nested producer policy preserved.
+
+**Verification:** Author pre/postcommitted HEAD direct composition1088/13files, CLI check/types/fresh build and actual public probes pass. Root repeated54/54 migration/promotion tests plus actual returned recovery commands, preserving literal unrelated/concurrent state and same-SHA retries (`analysis/p03-fix-r1-root-tests.log`, `p03-fix-r1-root-migration.json`, `p03-fix-r1-root-promotion.json`). Pre-fix owning keepers fail for reported reason; duplicated early promotion block removed (3 distinct cases, not5). One immutable fix-round commit, exact5paths, normal source-helper hooks, clean tree; recovery1/null unchanged. Phase remains in progress for fresh native review and Opus-high gate.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1068,7 +1070,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1080,7 +1082,8 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
-    "Complete DONE phase report validated; same-handle read-only range correction confirms d1fd3642a15cd442163de75be28b10c30cf7bc53..99a1a8ac0718e7624bb2eb83b78980e5421c5fc0. Three task commits, one recovery, usage1/null; no nested dispatches."
+    "Complete DONE phase report validated; same-handle read-only range correction confirms d1fd3642a15cd442163de75be28b10c30cf7bc53..99a1a8ac0718e7624bb2eb83b78980e5421c5fc0. Three task commits, one recovery, usage1/null; no nested dispatches.",
+    "Read-only same-handle fix report stamp corrected to action=fix role=fix; all commit/range/proof facts unchanged, no extra iteration/recovery."
   ],
   "continuation_events": [
     {
@@ -1099,10 +1102,13 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "phase": "p03",
       "task_ids": ["p03-t04"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T022902Z.md",
-      "status": "accepted",
+      "status": "completed",
       "reason": "Same accepted Sol-high handle; two High recovery findings; append-only fix1/2 independent of recovery1/10, no task replay.",
       "accepted_handle": "/root/wave5_phase3",
-      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high"
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "fix_commit": "ef26eb5100f980955ab09ae5bc89d16066a99b23",
+      "execution_base": "089f9a75975c1405b8e36d382f68bd7c1c3241b7",
+      "outcome": "DONE; H1/H2 fixed, direct1088 tests/13files and actual returned CLI recovery commands pass; root54tests/probes repeat, clean tree, recovery1/null."
     }
   ],
   "task_class": "consequential",
@@ -1333,3 +1339,93 @@ Same author continuation planned at exact Sol6.1/high. Explicit candidate resolv
 ### p03-t04 public migration boundary clarification
 
 Before product edits, same author held and requested the actual public `project/migrate/index.ts` plus existing `index.test.ts`. Root source check agrees: duplicate eager source-existence confinement prevents a removed-source pending operation from reaching its owner. Add only these two paths to p03-t04 and its verification; retain lexical direct-child/slug/shared-scope guards and ordinary owner confinement, leaving the shared guard strict. Existing migration-command family owns this distinct caller-routing regression. No new feature, helper framework or task; ten candidate paths, actual edited subset only. Fresh main check has no changes in these paths. Author remains HOLD through this separate scope-bookkeeping commit.
+
+### Phase 3 fix receipt and fresh root re-review request
+
+Fix iteration1/2 settled; no post-commit recovery. Original task/recovery commits immutable, author DONE corrected stamp and exact5paths validated. Root independent54 tests and returned migration/promotion commands pass with same commit IDs, no rerender or unrelated/concurrent data loss. Ordinary symlink/source refusals preserved; hypothetical nested hook-format mismatch ruled out by actual hooks-disabled producer probe, so no extra persistence metadata introduced. Total14/21; next incompletep04-t01 remains gated by p03 review.
+
+Fix Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Re-review exact ceiling resolved without notices; reviewer routes reject classification CLI flags, so corrected resolver uses only supported reviewer arguments. Root classification remains consequential in generic record. No child started on rejected resolver call. Primary scope is p03-t04 fix range089f9a75..committed acceptance baseline, prior full phase d1fd3642..baseline context; prior artifact/head and new task ledger supplied. Future outcome bookkeeping/log writes excluded. No project-log append before fix/re-review clean handoff.
+
+Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+#### Dispatch wave5-p03-review-r2
+
+```json
+{
+  "request_id": "wave5-p03-review-r2",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Re-review bounded p03-t04 H1/H2 fixes through actual public recovery, preservation and receipt composition; prior full phase provides context.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T03:15:40.713837Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r2"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
