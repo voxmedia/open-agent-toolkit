@@ -3309,7 +3309,11 @@ Dispatch: scope=p05 action=implementation role=implementer producer=unknown prov
       "review_artifact": "reviews/archived/p05-review-2026-10-04T171337Z.md",
       "status": "accepted",
       "acceptance": "native-followup accepted HOLD",
-      "base_head": "c5934162ec90d28be95c11792fa6436f4feac661"
+      "base_head": "c5934162ec90d28be95c11792fa6436f4feac661",
+      "terminal_outcome": "interrupted-by-host-restart-before-task-commit",
+      "captured_artifact": "p05-fix1-20261004T195456Z",
+      "manifest_digest": "5f14acc6b6675391f922b776ce2a9e696f5c9fb2ba657d509f2680cb962d3166",
+      "next_request_id": "wave5-p05-fix1-crash-resume"
     }
   ],
   "task_class": "consequential",
@@ -3487,3 +3491,113 @@ M1 disposition: code_fix_required, Task Scope Minor, new p05-t04. Root independe
 Root probe initially ran from pnpm-filter package cwd and failed ENOENT without product mutation; corrected repository-root tsx invocation independently reproduced the defect. A second unsupported completed-reviewer interruption attempt returned unsupported call without effects; no retry/replacement/cleanup. Only the supported original-author continuation is used. Full conserved source hashes, authentic producer/consumers and final gates remain owning acceptance boundaries.
 
 Original phase handle accepted bounded fix HOLD via supported native followup. Exact target/axes retained; generic continuation validated-only before root START. Acceptance baselinec5934162, reviewfix1/2, no recovery reservation or counter changes.
+
+### Phase 5 fix1 crash continuation — wave5-p05-fix1-crash-resume
+
+```json
+{
+  "request_id": "wave5-p05-fix1-crash-resume",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Continue preserved p05-t04 unquoted recap syntax correction after host restart; validate sealed two-file patch and complete remaining authentic/phase verification.",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p05-crash-resume",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-04T19:57:31.651887Z"
+  },
+  "authority": "p05-t04-two-file-fix-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 14400,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase5_fix1_resume"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD; native host restart made original handle unavailable"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "cont-backlog-wave-5-p05-fix-1-crash-resume",
+      "original_request_id": "wave5-p05-implement-r1",
+      "prior_event": "cont-backlog-wave-5-p05-fix-1",
+      "mode": "fix",
+      "task_id": "p05-t04",
+      "reason": "original native handle unavailable after host restart",
+      "captured_base": "5dd7b8e6220de7306e2d587386a81b88417c3442"
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Original archive evidence conservation, atomic export rollback and actual terminal receipt consumers require bounded consequential implementation and independent review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+User requested resume after suspected machine crash. Current host tstang-mini.local, same checkout/branch, HEAD5dd7b8e, only original author two-file uncommitted fix present. Former native handle unavailable (live list root only); one fresh same-target bounded fix continuation authorized by plan/resume and phase contract, not provider fallback or counter reset. Native accepted /root/wave5_phase5_fix1_resume HOLD, exact Sol6.1/high role, fresh catalog and resolver notices[]. No new standalone thread/worktree or relocation.
+
+Data volume now33GiB free versus pre-interruption116MiB/ENOSPC. No disk cleanup, original archive deletion or retained evidence disposal occurred. Last author focused logs retain five expected baseline failures, three valid quoted controls and patched8pass; authentic replay never started and is not counted. Captured dirty artifact outside checkout at ~/.oat/recovery-artifacts/backlog-wave-5/p05-fix1-20261004T195456Z (digest5f14acc6b6675391f922b776ce2a9e696f5c9fb2ba657d509f2680cb962d3166,size15787,worktree-only,two declared paths) passed actual sealed replay/current-base verification before exact restorePlan returned the tree clean. Original artifact remains unchanged. After this tracking-only commit, root supplies a separately sealed same-byte patch bound to START HEAD, proving both product paths unchanged across bookkeeping; no stale-base apply. The unfinished correction stays one bounded p05-t04 fix commit; no accepted task/recovery commit existed for it. Fix iteration1/2 and recovery1/10 pendingnull preserved. Root owns subsequent bookkeeping and full independent native/configured reviews.
