@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t03
-oat_last_commit: b4705eebeccb9321f0326288d037f16440a3e413
+oat_last_commit: 4cb7576e04eece80952d67bf1f35f56aa3659659
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -110,16 +110,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p03:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: wave5-p03-recovery-1
-        original_request_id: wave5-p03-implement-r1
-        original_task_id: p03-t01
-        original_commit: aa4d9b0400bea1faa513895b1d933b1060e13ed2
-        discovered_by: p03-t03 source-CLI root bookkeeping commit under type-module repository
-        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
-        reservation_head: 7ecb5d36835c1cc66aeec5f8e32ca47d4ab6b720
-        status: completed
+      pending_attempt: null
     p04:
       used_attempts: 0
       pending_attempt: null

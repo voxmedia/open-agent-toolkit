@@ -1072,7 +1072,18 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p03-recovery-1",
+      "original_request_id": "wave5-p03-implement-r1",
+      "phase": "p03",
+      "original_task_id": "p03-t01",
+      "original_commit": "aa4d9b0400bea1faa513895b1d933b1060e13ed2",
+      "status": "completed",
+      "recovery_commit": "4cb7576e04eece80952d67bf1f35f56aa3659659",
+      "reason": "Same accepted handle; verified canonical type-module hook launcher recovery, usage1/10."
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
@@ -1126,3 +1137,24 @@ Actual author execution base: d1fd3642a15cd442163de75be28b10c30cf7bc53. Task-1 c
 | commit-tree ref bootstrap      | Intentionally excluded: no parent-index commit.                                                                                                     |
 
 Record adapter reserves one ignored operation marker keyed by message and exact paths before helper invocation. Complete JSON publishes atomically by exclusive hard-link; retries reuse the winner across formatting. Verified settlement removes only matching inode/dev/bytes; a replacement survives with inspection guidance. Actual caller probe proves formatted committed-but-blocked retry preserves the concurrent staged blob, finalizes owned entries and creates no duplicate commit. This bounded adapter delta is the source of truth; no general tracking framework or public receipt schema is introduced. Author evidence: `analysis/p03/t02-final-verification.log`, `t02-identity-negative.log`. Same accepted author holds mutations pending p03-t03 release.
+
+### Phase 3 task-3 existing-contract scope clarification
+
+Before editing additional tests, root declared the three existing CLI skill-contract test files discovered by the author in p03-t03. Their old commit/staging forms will be adapted only where focused failures require it, preserving public ownership/fail-closed/smoke/receipt guarantees. No new test harness, campaign, task or command family. Author held all mutations while root committed this clarification through the new source helper; pending skill edits remain author-owned.
+
+### Recovery Event wave5-p03-recovery-1
+
+- Phase/task: p03 / p03-t01
+- Original request: wave5-p03-implement-r1
+- Original commit: aa4d9b0400bea1faa513895b1d933b1060e13ed2
+- Defect class: composition
+- Discovered by: p03-t03 source-CLI root bookkeeping commit under type-module repository (`analysis/p03-t03-scope-commit.json`)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: 4cb7576e04eece80952d67bf1f35f56aa3659659
+- Verification: authoritative postcommit focused 9/9 and phase 601/601 across eight files; source CLI hook/verified retry; CLI check/types/build all pass without Turbo replay. Root independently repeated accepted/retry source probe (`analysis/p03-recovery-1-root-probe.json`).
+- Reason: extensionless Git hook launcher now execs an explicit CommonJS companion with safely quoted Node/path, preserving hook argv/env and ownership guards. Existing fixture now matches the canonical type-module boundary; pre-fix keeper and source probe fail for require-is-not-defined, with original HEAD/index/worktree preserved.
+
+Root validated DONE report, exact same handle/target/axes, original immutable history, three-file candidate range, committed completed marker and authoritative postcommit results before clearing pending. Used attempts stays 1, remaining 9. The failed root scope-amendment created no commit. Before recovery, all 31 known pending paths were sealed into a verified artifact; restore returned the base clean except the reservation. After repair, original/current blobs for all parked paths were confirmed unchanged, artifact manifest digest rechecked and patch checked before reapplying. Artifact: `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/wave5-p03-recovery-1-parked-6abyon_y/capture`; digest `50dddab3e64951b00cd503b4692c1236c841573a9257e35e6da21a93d70d6a93`; size 96436. Original parked skill/root edits are restored without duplicating a task commit. Evidence remains ignored; the same accepted author resumes p03-t03 after this bookkeeping.
