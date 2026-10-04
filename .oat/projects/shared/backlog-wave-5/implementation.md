@@ -1250,8 +1250,8 @@ Exact project review ceiling resolved to Sol 6.1 high, native materialized role;
     "fork_turns": "none",
     "task_name": "wave5_phase3_review_r1"
   },
-  "launch_status": "planned",
-  "child_outcome": null,
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1295,3 +1295,5 @@ Exact project review ceiling resolved to Sol 6.1 high, native materialized role;
   }
 }
 ```
+
+Accepted native review handle `/root/wave5_phase3_review_r1`; exact materialized Sol-high role. No fallback/runtime self-disclosure claimed. Reviewer holds tests/artifact mutation until root START with this committed acceptance baseline.
