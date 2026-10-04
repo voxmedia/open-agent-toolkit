@@ -232,6 +232,10 @@ wave5-p06-t03-receipt-01ed25a23 exact two-file inventory correction verified,41d
 
 wave5-root-t04-receipt-a1a7f4f6: Root verified exact three-file task commit, direct45tests and real hook state preservation; p06 progress35/39, next t05 under delegated operator authority.
 
+### 2026-10-04 · structural · oat-project-implement · p06-t05
+
+wave5-root-t05-receipt-80109a77: Root verified five-file correction and306tests; separately resolved five p01 Lows except recorded deletion-policy deferral, withdrawn invalid deletion-guard claim; progress36/39, next t06.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
