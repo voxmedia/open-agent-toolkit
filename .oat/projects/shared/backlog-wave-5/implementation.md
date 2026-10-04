@@ -1833,8 +1833,8 @@ Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown
     "fork_turns": "none",
     "task_name": "wave5_phase3_review_r4"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1845,7 +1845,9 @@ Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Exact native materialized target accepted as /root/wave5_phase3_review_r4; complete fresh-context brief and HOLD acknowledged before review execution. Root owns acceptance ledger until clean START head. Runtime identity not reported; no nested lane, fallback or replacement."
+  ],
   "continuation_events": [],
   "task_class": "consequential",
   "model_class_floor": "consequential",
