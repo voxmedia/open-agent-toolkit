@@ -2213,8 +2213,8 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "target": "<redacted-path>",
     "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2222,6 +2222,11 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
       "model": "gpt-6.1-sol",
       "effort": "high",
       "policy_source": "project-state"
+    },
+    {
+      "source": "native-followup-acceptance",
+      "target": "<redacted-path>",
+      "result": "accepted; child acknowledged HOLD; no replacement or recovery"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -2267,3 +2272,5 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 ```
 
 Planned read-only refreshed necessity assessment at already-resolved reviewer ceiling; reuse original assessor when available. No correctness round, probes, writes, nested lanes or operator disposition selection.
+
+Acceptance: original assessor /root/wave5_phase3_complexity resumed and acknowledged HOLD. No replacement, recovery, correctness-cycle increment or product authority. Root acceptance commit will bind START to its exact HEAD.
