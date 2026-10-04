@@ -1535,9 +1535,17 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "fork_turns": "none",
     "task_name": "wave5_phase3_review_r3"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
-  "configured_invocation_evidence": [],
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -1572,3 +1580,5 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
   }
 }
 ```
+
+Accepted native reviewer `/root/wave5_phase3_review_r3` (Kepler), exact configured Sol6.1/high materialized role; HOLD acknowledged before root acceptance baseline. Narrow receipt-parent range a8e87522..START, complete prior reports and full phase context supplied. No replacement, fallback or runtime self-report claim.
