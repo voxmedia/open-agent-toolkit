@@ -240,6 +240,9 @@ function emitArchivePushText(
     logger.info(
       `Project recap export: ${report.projectRecapExport.exportRoot}`,
     );
+    logger.info(
+      `Recap run: ${report.projectRecapExport.runId}; original ${report.projectRecapExport.page.originalSha256}; exported ${report.projectRecapExport.page.exportedSha256}; verified ${report.projectRecapExport.verifiedArtifactCount} immutable files.`,
+    );
   }
 }
 

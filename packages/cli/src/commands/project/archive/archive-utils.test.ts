@@ -129,6 +129,258 @@ describe('archive utils', () => {
     };
   }
 
+  // Captured declarations: 1c58b4f88d202a5138a6aa0fc32d54fff31de5a7,
+  // .oat/repo/reference/project-recaps/20260721-explainer-kit/{manifest,build-record}.json.
+  // Original source SHA-256 (fixture JSON is formatter-normalized without value changes): manifest e130e415435062ea59c359fd1eab52bbcbd75058adfbaa71437b942152668f3f;
+  // build record 01ae605954dc54e1c7dc0600c410c6c022220cfbf9b967f79636af183ba93cb7.
+  // Payloads below are small controlled derivatives, not captured original evidence.
+  async function createLegacyRecap(
+    projectPath: string,
+    page: string,
+  ): Promise<string> {
+    const run = 'explainers/legacy-run';
+    const root = join(projectPath, run);
+    const fixture = fileURLToPath(
+      new URL('./fixtures/legacy-package-contract/', import.meta.url),
+    );
+    const manifest = JSON.parse(
+      await readFile(join(fixture, 'manifest.json'), 'utf8'),
+    );
+    for (const path of Object.keys(manifest.immutableHashes)) {
+      const bytes =
+        path === manifest.artifacts[0].renderedPath
+          ? page
+          : [manifest.source.factBasePath, manifest.theme.path].includes(path)
+            ? `${JSON.stringify({ fixture: path }, null, 2)}\n`
+            : `controlled ${path}\n`;
+      await mkdir(dirname(join(root, path)), { recursive: true });
+      await writeFile(join(root, path), bytes);
+      manifest.immutableHashes[path] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    }
+    manifest.source.factBaseHash = `sha256:${createHash('sha256')
+      .update(JSON.stringify({ fixture: manifest.source.factBasePath }))
+      .digest('hex')}`;
+    manifest.theme.hash = `sha256:${createHash('sha256')
+      .update(JSON.stringify({ fixture: manifest.theme.path }))
+      .digest('hex')}`;
+    expect(manifest.source.factBaseHash).not.toBe(
+      manifest.immutableHashes[manifest.source.factBasePath],
+    );
+    expect(manifest.theme.hash).not.toBe(
+      manifest.immutableHashes[manifest.theme.path],
+    );
+    manifest.artifacts[0].hash =
+      manifest.immutableHashes[manifest.artifacts[0].renderedPath];
+    await copyFile(
+      join(fixture, 'build-record.json'),
+      join(root, 'build-record.json'),
+    );
+    await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
+    return run;
+  }
+
+  it('exports exactly one HTML with identity while preserving the full captured v2 archive', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const source = await readFile(join(recap.runRoot, 'site/index.html'));
+    const originalFiles = await readdir(recap.runRoot);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const report = result.projectRecapExport!;
+    expect(await readdir(dirname(report.exportRoot))).toEqual([
+      '20260401-demo.html',
+    ]);
+    expect(report).not.toHaveProperty('manifest');
+    expect(report.runId).toBe('run-p01-t06-fixture');
+    expect(report.page.originalSha256).toBe(
+      `sha256:${createHash('sha256').update(source).digest('hex')}`,
+    );
+    const archivedRun = join(result.archivePath, recap.relativeRunPath);
+    expect(await readdir(archivedRun)).toEqual(originalFiles);
+    expect(await readFile(join(archivedRun, 'site/index.html'))).toEqual(
+      source,
+    );
+    await cp(result.archivePath, projectPath, { recursive: true });
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(retried.projectRecapExport).toEqual({
+      ...report,
+    });
+    expect(await readdir(dirname(report.exportRoot))).toEqual([
+      '20260401-demo.html',
+    ]);
+  });
+
+  it.each(['qa/result.json', 'source/fact-base.json'])(
+    'rejects tampered %s despite page-only export',
+    async (file) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const recap = await createRecapPackage(projectPath);
+      await writeFile(join(recap.runRoot, file), 'tampered evidence');
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/hash verification/);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it('uses the real legacy renderedPath and embeds assets while repairing destination links and fragments', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
+    const decision = join(repoRoot, '.oat/repo/reference/decisions/DR-test.md');
+    await mkdir(dirname(decision), { recursive: true });
+    await writeFile(decision, '# Decision\n');
+    const page = `<html><head><link rel="stylesheet" href="style.css"></head><body id="valid"><a href="#valid">pivot</a><a href="#missing">bad pivot</a><a href="index.html#missing">bad self pivot</a><a href="../../../../../summary.md#summary">Summary</a><a href="../../../../../../../../repo/reference/decisions/DR-test.md#decision">Decision</a><a href="../../../../../plan.md">Source</a><a href="https://github.com/voxmedia/open-agent-toolkit/pull/1">PR</a><img src="asset.svg"><script src="local.js"></script></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const root = join(projectPath, run);
+    const manifest = JSON.parse(
+      await readFile(join(root, 'manifest.json'), 'utf8'),
+    );
+    const parent = dirname(manifest.artifacts[0].renderedPath);
+    for (const [name, bytes] of Object.entries({
+      'style.css': '.hero{background:url(asset.svg)}',
+      'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      'local.js': 'document.body.dataset.ready="yes";',
+    })) {
+      const file = `${parent}/${name}`;
+      await writeFile(join(root, file), bytes);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    }
+    await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const exported = await readFile(
+      result.projectRecapExport!.exportRoot,
+      'utf8',
+    );
+    expect(exported).toContain('href="#valid"');
+    expect(exported).not.toContain('href="#missing"');
+    expect(exported).toContain('../project-summaries/20260401-demo.md#summary');
+    expect(exported).toContain('../decisions/DR-test.md#decision');
+    expect(exported).not.toContain('plan.md');
+    expect(exported).toContain(
+      'https://github.com/voxmedia/open-agent-toolkit/pull/1',
+    );
+    expect(exported).toContain('data:image/svg+xml;base64,');
+    expect(exported).toContain('document.body.dataset.ready="yes";');
+    expect(exported).not.toMatch(
+      /(?:src|href)="(?:asset.svg|style.css|local.js)"/,
+    );
+    expect(
+      await readFile(
+        join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+        'utf8',
+      ),
+    ).toBe(page);
+  });
+
+  it.each(['different bytes', 'same bytes'] as const)(
+    'preserves another writer replacement with %s during archive rollback',
+    async (replacement) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const recap = await createRecapPackage(projectPath);
+      const page = join(
+        repoRoot,
+        '.oat/repo/reference/project-recaps/20260401-demo.html',
+      );
+      let replaced = '';
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: recap.relativeRunPath,
+            s3SyncOnComplete: false,
+          },
+          {
+            timestamp: () => '2026-04-01T12:34:56Z',
+            copyDirectory: async () => {
+              replaced =
+                replacement === 'same bytes'
+                  ? await readFile(page, 'utf8')
+                  : 'OTHER WRITER';
+              await rm(page);
+              await writeFile(page, replaced);
+              throw new Error('archive failure after replacement');
+            },
+          },
+        ),
+      ).rejects.toThrow('archive failure after replacement');
+      expect(await readFile(page, 'utf8')).toBe(replaced);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it('refuses a different existing flat page without changing its bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    await mkdir(dirname(page), { recursive: true });
+    await writeFile(page, 'existing different page');
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/does not match/);
+    expect(await readFile(page, 'utf8')).toBe('existing different page');
+  });
+
   it('builds a repo-scoped remote archive URI', () => {
     expect(
       buildProjectArchiveS3Uri(
@@ -583,7 +835,7 @@ describe('archive utils', () => {
           'repo',
           'reference',
           'project-recaps',
-          snapshotId,
+          `${snapshotId}.html`,
         ),
       );
       expect(result.s3Path).toBe(
@@ -1311,7 +1563,7 @@ describe('archive utils', () => {
                   'repo',
                   'reference',
                   'project-recaps',
-                  snapshotId,
+                  `${snapshotId}.html`,
                 )
               : null,
           );
@@ -1355,7 +1607,7 @@ describe('archive utils', () => {
                   'project-recaps',
                 ),
               ),
-            ).toEqual([snapshotId]);
+            ).toEqual([`${snapshotId}.html`]);
           }
           expect(
             s3Calls
@@ -1423,7 +1675,7 @@ describe('archive utils', () => {
           'repo',
           'reference',
           'project-recaps',
-          '20260401-demo',
+          '20260401-demo.html',
         ),
       ),
     ).rejects.toThrow();
@@ -1441,7 +1693,7 @@ describe('archive utils', () => {
         await copyFile(source, destination);
         if (!stagedRoot) {
           let candidate = dirname(destination);
-          while (!candidate.includes('20260401-demo.tmp-')) {
+          while (!candidate.includes('20260401-demo.html.tmp-')) {
             candidate = dirname(candidate);
           }
           stagedRoot = candidate;
@@ -1530,7 +1782,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+    expect(result.projectRecapExport?.verifiedArtifactCount).toBe(
       recap.immutableCount,
     );
     await expect(access(projectPath)).rejects.toThrow();
@@ -1644,7 +1896,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+    expect(result.projectRecapExport?.verifiedArtifactCount).toBe(
       recap.immutableCount,
     );
     await expect(access(projectPath)).rejects.toThrow();
@@ -1661,7 +1913,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
     await mkdir(exportRoot, { recursive: true });
     await writeFile(join(exportRoot, 'keep.txt'), 'original\n', 'utf8');
@@ -1746,7 +1998,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
     await expect(
-      access(join(retried.projectRecapExport!.exportRoot, 'manifest.json')),
+      access(retried.projectRecapExport!.exportRoot),
     ).resolves.toBeUndefined();
   });
 
@@ -1851,7 +2103,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
 
     await expect(
@@ -1924,15 +2176,9 @@ describe('archive utils', () => {
         }),
       ).rejects.toThrow('injected project cleanup failure');
 
-      await expect(
-        access(join(exportRoot, 'manifest.json')),
-      ).resolves.toBeUndefined();
+      await expect(access(exportRoot)).resolves.toBeUndefined();
       const tracked = await defaultGitRunner.run(
-        [
-          'ls-files',
-          '--error-unmatch',
-          `${exportPathspec}/20260401-demo/manifest.json`,
-        ],
+        ['ls-files', '--error-unmatch', `${exportPathspec}/20260401-demo.html`],
         { allowFailure: true, cwd: repoRoot },
       );
       expect(tracked.code === 0).toBe(trackingState === 'tracked');
@@ -2188,7 +2434,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
 
     await expect(
@@ -2211,9 +2457,7 @@ describe('archive utils', () => {
       timestamp,
     });
     expect(retried.snapshotId).toBe('20260401-demo');
-    await expect(
-      access(join(recapExportRoot, 'manifest.json')),
-    ).resolves.toBeUndefined();
+    await expect(access(recapExportRoot)).resolves.toBeUndefined();
     await rm(retried.summaryExportFile!);
 
     await expect(
@@ -2226,9 +2470,7 @@ describe('archive utils', () => {
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');
-    await expect(
-      access(join(recapExportRoot, 'manifest.json')),
-    ).resolves.toBeUndefined();
+    await expect(access(recapExportRoot)).resolves.toBeUndefined();
   });
 
   it('directs an active record with an absent checkout to project pull', async () => {

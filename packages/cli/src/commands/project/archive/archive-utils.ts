@@ -1,6 +1,7 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import {
+  link,
   lstat,
   readFile,
   readdir,
@@ -180,15 +181,19 @@ interface ArchiveProjectOnCompletionDependencies
 export interface ArchiveProjectRecapExportV1 {
   sourceRunRoot: string;
   exportRoot: string;
-  manifest: {
-    relativePath: 'manifest.json';
-    verifiedArtifactCount: number;
+  runId: string;
+  page: {
+    sourceRelativePath: string;
+    originalSha256: string;
+    exportedSha256: string;
   };
+  verifiedArtifactCount: number;
 }
 
 interface AttemptProjectRecapExport {
   export: ArchiveProjectRecapExportV1;
   createdByAttempt: boolean;
+  identity?: { dev: number; ino: number };
 }
 
 export interface ArchiveProjectOnCompletionResult {
@@ -898,7 +903,7 @@ async function exportProjectSummary(
 }
 
 interface ProjectRecapManifest {
-  schemaVersion: 'explainer-kit.manifest/v2';
+  schemaVersion: 'explainer-kit.manifest/v2' | 'explainer-kit.manifest/v1';
   runId: string;
   slug: string;
   createdAt: string;
@@ -920,11 +925,18 @@ interface ProjectRecapManifest {
     id: string;
     type: 'hub' | 'diagram' | 'explainer' | 'deck' | 'catalog';
     contentPath: string;
+    renderedPath?: string;
     status: 'built' | 'failed';
     hash: string;
   }>;
   immutableHashes: Record<string, string>;
-  outcome: 'built' | 'built-needs-review' | 'failed' | 'incomplete';
+  buildRecord?: { path: 'build-record.json'; hash: string };
+  outcome:
+    | 'built'
+    | 'built-needs-review'
+    | 'built-durable'
+    | 'failed'
+    | 'incomplete';
   warnings: string[];
 }
 
@@ -947,13 +959,62 @@ async function parseProjectRecapManifest(
     throw new CliError('Selected project recap has an invalid manifest.json.');
   }
 
-  if (!isProjectRecapManifestV2(value)) {
+  if (
+    !isProjectRecapManifestV2(value) &&
+    !isLegacyProjectRecapManifest(value)
+  ) {
     throw new CliError(
       'Selected project recap manifest does not match the explainer-kit manifest contract.',
     );
   }
 
   return value;
+}
+
+// Compatibility is derived from the captured July v1 packages. Their manifest
+// and build record receive durability attestations after immutable recording.
+function isLegacyProjectRecapManifest(
+  value: unknown,
+): value is ProjectRecapManifest {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== 'explainer-kit.manifest/v1' ||
+    !isNonEmptyString(value.runId) ||
+    !isNonEmptyString(value.slug) ||
+    !isDateTime(value.createdAt) ||
+    !isRecord(value.recipe) ||
+    value.recipe.id !== 'project-recap' ||
+    !isRecord(value.source) ||
+    !isSafeRelativePath(value.source.factBasePath) ||
+    !isSha256(value.source.factBaseHash) ||
+    !isHashMap(value.source.inputHashes) ||
+    !isRecord(value.theme) ||
+    value.theme.path !== 'theme.resolved.json' ||
+    !isSha256(value.theme.hash) ||
+    !isRecord(value.buildRecord) ||
+    value.buildRecord.path !== 'build-record.json' ||
+    !isSha256(value.buildRecord.hash) ||
+    !isHashMap(value.immutableHashes) ||
+    !Array.isArray(value.source.authorResultPaths) ||
+    !value.source.authorResultPaths.every(isSafeRelativePath) ||
+    !Array.isArray(value.artifacts) ||
+    value.artifacts.length !== 1 ||
+    !['built', 'built-needs-review', 'built-durable'].includes(
+      String(value.outcome),
+    )
+  )
+    return false;
+  return value.artifacts.every(
+    (artifact: unknown) =>
+      isRecord(artifact) &&
+      isNonEmptyString(artifact.id) &&
+      artifact.status === 'built' &&
+      isSafeRelativePath(artifact.contentPath) &&
+      isSafeRelativePath(artifact.renderedPath) &&
+      artifact.renderedPath.startsWith('site/') &&
+      artifact.mediaType === 'text/html' &&
+      isSha256(artifact.hash),
+  );
 }
 
 function isProjectRecapManifestV2(
@@ -1186,6 +1247,39 @@ async function verifyProjectRecapImmutableHashes(
   return entries.length;
 }
 
+async function verifyRecapInventory(
+  root: string,
+  files: string[],
+): Promise<void> {
+  const allowed = new Set(files);
+  const directories = new Set<string>();
+  for (const file of files) {
+    let parent = dirname(file);
+    while (parent !== '.') {
+      directories.add(parent);
+      parent = dirname(parent);
+    }
+  }
+  const present = new Set<string>();
+  async function inspect(current = ''): Promise<void> {
+    for (const entry of await readdir(join(root, current), {
+      withFileTypes: true,
+    })) {
+      const entryPath = current ? `${current}/${entry.name}` : entry.name;
+      if (entry.isDirectory() && directories.has(entryPath))
+        await inspect(entryPath);
+      else if (entry.isFile() && allowed.has(entryPath)) present.add(entryPath);
+      else
+        throw new CliError(
+          'Selected project recap package inventory is invalid.',
+        );
+    }
+  }
+  await inspect();
+  if (files.some((file) => !present.has(file)))
+    throw new CliError('Selected project recap package inventory is invalid.');
+}
+
 async function loadVerifiedProjectRecap(
   projectPath: string,
   projectRecapRun: string,
@@ -1211,7 +1305,13 @@ async function loadVerifiedProjectRecap(
     );
   }
   if (
-    !['built', 'built-needs-review'].includes(manifest.outcome) ||
+    ![
+      'built',
+      'built-needs-review',
+      ...(manifest.schemaVersion === 'explainer-kit.manifest/v1'
+        ? ['built-durable']
+        : []),
+    ].includes(manifest.outcome) ||
     manifest.artifacts.some((artifact) => artifact.status !== 'built')
   ) {
     throw new CliError(
@@ -1222,6 +1322,81 @@ async function loadVerifiedProjectRecap(
     sourceRunRoot,
     manifest,
   );
+  if (manifest.schemaVersion === 'explainer-kit.manifest/v1') {
+    const raw = JSON.parse(manifestContents) as {
+      source: { authorResultPaths: string[] };
+    };
+    // July v1 hashes fact-base/theme canonical JSON identities separately
+    // from immutableHashes' exact file-byte digests (captured writer contract).
+    const canonicalize = (value: unknown): unknown => {
+      if (Array.isArray(value)) return value.map(canonicalize);
+      if (isRecord(value))
+        return Object.fromEntries(
+          Object.keys(value)
+            .sort()
+            .map((key) => [key, canonicalize(value[key])]),
+        );
+      return value;
+    };
+    const canonicalFileHash = async (file: string) =>
+      sha256(
+        JSON.stringify(
+          canonicalize(
+            JSON.parse(await readFile(join(sourceRunRoot, file), 'utf8')),
+          ),
+        ),
+      );
+    const required = [
+      'run-request.json',
+      'source/fact-base.json',
+      'source/fact-base.md',
+      'source/content-approval.json',
+      'theme.resolved.json',
+      ...raw.source.authorResultPaths,
+      ...manifest.artifacts.flatMap((artifact) => [
+        artifact.contentPath,
+        artifact.renderedPath!,
+      ]),
+    ];
+    if (
+      required.some((file) => !(file in manifest.immutableHashes)) ||
+      manifest.source.factBaseHash !==
+        (await canonicalFileHash(manifest.source.factBasePath)) ||
+      manifest.theme.hash !== (await canonicalFileHash(manifest.theme.path)) ||
+      manifest.artifacts.some(
+        (artifact) =>
+          artifact.hash !== manifest.immutableHashes[artifact.renderedPath!],
+      )
+    ) {
+      throw new CliError(
+        'Selected legacy recap has incomplete immutable package hashes.',
+      );
+    }
+    const packagePaths = [
+      ...Object.keys(manifest.immutableHashes),
+      'manifest.json',
+      'build-record.json',
+    ].sort();
+    await verifyRecapInventory(sourceRunRoot, packagePaths);
+    const record = JSON.parse(
+      await readFile(join(sourceRunRoot, 'build-record.json'), 'utf8'),
+    ) as { runId: string; outcome: string; schemaVersion: string };
+    if (
+      record.schemaVersion !== 'explainer-kit.build-record/v1' ||
+      record.runId !== manifest.runId ||
+      record.outcome !== manifest.outcome
+    )
+      throw new CliError(
+        'Legacy recap build record identity does not match its manifest.',
+      );
+    return {
+      sourceRunRoot,
+      manifestContents,
+      manifest,
+      verifiedArtifactCount,
+      packagePaths,
+    };
+  }
   const packageCoverage = await loadExplainerPackageCoverage();
   const missingCoverage = packageCoverage
     .requiredImmutablePackagePaths(manifest)
@@ -1282,144 +1457,283 @@ export async function verifySelectedProjectRecapForArchive(
   await loadVerifiedProjectRecap(projectPath, projectRecapRun);
 }
 
+function sha256(bytes: string | Buffer): string {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+async function transformRecapPage(
+  html: string,
+  sourcePage: string,
+  sourceRunRoot: string,
+  stagedRoot: string,
+  exportPage: string,
+  options: ArchiveProjectOnCompletionOptions,
+): Promise<string> {
+  const external = (url: string) => /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(url);
+  const asset = async (url: string, base: string): Promise<string> => {
+    if (external(url) || url.startsWith('#')) return url;
+    const assetPath = resolve(
+      dirname(base),
+      decodeURIComponent(url.split(/[?#]/)[0]!),
+    );
+    if (
+      !isInsidePath(sourceRunRoot, assetPath) ||
+      !isInsidePath(await realpath(sourceRunRoot), await realpath(assetPath))
+    )
+      throw new CliError(`Recap asset escapes its verified package: ${url}`);
+    const bytes = await readFile(
+      join(stagedRoot, relative(sourceRunRoot, assetPath)),
+    );
+    const mime: Record<string, string> = {
+      png: 'image/png',
+      svg: 'image/svg+xml',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      woff: 'font/woff',
+      woff2: 'font/woff2',
+    };
+    const type =
+      mime[assetPath.split('.').pop() ?? ''] ?? 'application/octet-stream';
+    return `data:${type};base64,${bytes.toString('base64')}`;
+  };
+  const replaceAsync = async (
+    text: string,
+    pattern: RegExp,
+    callback: (match: RegExpExecArray) => Promise<string>,
+  ) => {
+    const matches = [...text.matchAll(pattern)];
+    const replacements = await Promise.all(matches.map(callback));
+    for (let index = matches.length - 1; index >= 0; index--) {
+      const match = matches[index]!;
+      text =
+        text.slice(0, match.index) +
+        replacements[index] +
+        text.slice(match.index! + match[0].length);
+    }
+    return text;
+  };
+  const css = async (text: string, base: string) =>
+    replaceAsync(
+      text,
+      /url\(\s*(['"]?)([^)'"\s]+)\1\s*\)/gi,
+      async (match) => `url("${await asset(match[2]!, base)}")`,
+    );
+  html = await replaceAsync(
+    html,
+    /<link\b[^>]*\bhref\s*=\s*(['"])(.*?)\1[^>]*>/gi,
+    async (match) => {
+      if (
+        !/\brel\s*=\s*(['"])stylesheet\1/i.test(match[0]) ||
+        external(match[2]!)
+      )
+        return match[0];
+      const file = resolve(dirname(sourcePage), match[2]!);
+      await asset(match[2]!, sourcePage); // Enforce containment before reading CSS.
+      return `<style>${await css(await readFile(join(stagedRoot, relative(sourceRunRoot, file)), 'utf8'), file)}</style>`;
+    },
+  );
+  html = await replaceAsync(
+    html,
+    /<script\b[^>]*\bsrc\s*=\s*(['"])(.*?)\1[^>]*>\s*<\/script\s*>/gi,
+    async (match) => {
+      if (external(match[2]!)) return match[0];
+      await asset(match[2]!, sourcePage);
+      return match[0]
+        .replace(/\s+src\s*=\s*(['"])(.*?)\1/i, '')
+        .replace(
+          />\s*<\/script/i,
+          `>${(await readFile(join(stagedRoot, relative(sourceRunRoot, resolve(dirname(sourcePage), match[2]!))), 'utf8')).replace(/<\/script/gi, '<\\/script')}</script`,
+        );
+    },
+  );
+  html = await replaceAsync(
+    html,
+    /\s+(href|src)\s*=\s*(['"])(.*?)\2/gi,
+    async (match) => {
+      const url = match[3]!;
+      if (external(url)) return match[0];
+      if (match[1]!.toLowerCase() === 'src')
+        return ` src=${match[2]}${await asset(url, sourcePage)}${match[2]}`;
+      const [pathname, fragment] = url.split('#');
+      if (!pathname) {
+        if (
+          fragment &&
+          !new RegExp(
+            `\\b(?:id|name)=["']${fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+          ).test(html)
+        )
+          return '';
+        return match[0];
+      }
+      const original = resolve(
+        dirname(sourcePage),
+        decodeURIComponent(pathname.split('?')[0]!),
+      );
+      if (original === sourcePage) {
+        if (
+          !fragment ||
+          !new RegExp(
+            `\\b(?:id|name)=["']${fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+          ).test(html)
+        )
+          return '';
+        return ` href="#${fragment}"`;
+      }
+      let target = original;
+      if (
+        original === resolve(options.projectPath, 'summary.md') &&
+        options.summaryExportPath
+      )
+        target = resolve(
+          options.repoRoot,
+          options.summaryExportPath,
+          `${basename(exportPage, '.html')}.md`,
+        );
+      const referenceRoot = resolve(options.repoRoot, '.oat/repo/reference');
+      const preserved =
+        isInsidePath(referenceRoot, target) &&
+        !isInsidePath(resolve(referenceRoot, 'project-recaps'), target) &&
+        (await fileExists(target));
+      const futureSummary =
+        original === resolve(options.projectPath, 'summary.md') &&
+        Boolean(options.summaryExportPath) &&
+        (await fileExists(original));
+      if (!preserved && !futureSummary) return '';
+      if (fragment) {
+        const contents = await readFile(preserved ? target : original, 'utf8');
+        const anchors = [...contents.matchAll(/^#+\s+(.+)$/gm)].map((heading) =>
+          heading[1]!
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-'),
+        );
+        if (
+          !anchors.includes(fragment) &&
+          !contents.includes(`id="${fragment}"`)
+        )
+          return '';
+      }
+      return ` href="${relative(dirname(exportPage), target).split(sep).join('/')}${fragment ? `#${fragment}` : ''}"`;
+    },
+  );
+  return css(html, sourcePage);
+}
+
+async function removeAttemptRecapExport(
+  attempt: AttemptProjectRecapExport | null,
+  removePath: NonNullable<ArchiveProjectOnCompletionDependencies['removePath']>,
+): Promise<void> {
+  if (!attempt?.createdByAttempt || !attempt.identity) return;
+  const page = attempt.export.exportRoot;
+  if (!(await pathExists(page))) return;
+  const stat = await lstat(page);
+  if (
+    stat.isFile() &&
+    stat.dev === attempt.identity.dev &&
+    stat.ino === attempt.identity.ino &&
+    sha256(await readFile(page)) === attempt.export.page.exportedSha256
+  )
+    await removePath(page, { recursive: true, force: true });
+}
+
 async function exportSelectedProjectRecap(
   options: ArchiveProjectOnCompletionOptions,
   snapshotName: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
 ): Promise<AttemptProjectRecapExport | null> {
   const selectedRun = options.projectRecapRun?.trim();
-  if (!selectedRun) {
-    return null;
-  }
-
+  if (!selectedRun) return null;
   const verified = await loadVerifiedProjectRecap(
     options.projectPath,
     selectedRun,
   );
-  const {
-    sourceRunRoot,
-    manifestContents: sourceManifestContents,
-    packagePaths,
-  } = verified;
-
+  if (verified.manifest.artifacts.length !== 1)
+    throw new CliError(
+      'Selected project recap must declare exactly one rendered HTML page.',
+    );
+  const pagePath =
+    verified.manifest.artifacts[0]!.renderedPath ??
+    verified.manifest.artifacts[0]!.contentPath;
+  if (!pagePath.startsWith('site/') || !pagePath.endsWith('.html'))
+    throw new CliError(
+      'Selected project recap must declare a rendered HTML page.',
+    );
   const exportRoot = join(
     options.repoRoot,
-    '.oat',
-    'repo',
-    'reference',
-    'project-recaps',
-    snapshotName,
+    '.oat/repo/reference/project-recaps',
+    `${snapshotName}.html`,
   );
-  if (await pathExists(exportRoot)) {
-    let exportedManifestContents: string;
-    try {
-      exportedManifestContents = await readFile(
-        join(exportRoot, 'manifest.json'),
-        'utf8',
-      );
-    } catch {
-      throw new CliError(
-        `Project recap export destination \`${exportRoot}\` already exists and cannot be verified for retry.`,
-      );
-    }
-    if (exportedManifestContents !== sourceManifestContents) {
-      throw new CliError(
-        `Existing project recap export \`${exportRoot}\` does not match persisted snapshot \`${snapshotName}\`.`,
-      );
-    }
-    const exportedManifest = await parseProjectRecapManifest(
-      exportedManifestContents,
-    );
-    const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
-      exportRoot,
-      exportedManifest,
-    );
-    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
-      ReturnType<typeof loadExplainerPackageCoverage>
-    > &
-      ExactRunPackageCoverage;
-    try {
-      await exactCoverage.enforceRunPackageInventory(
-        exportRoot,
-        exportedManifest,
-      );
-    } catch {
-      throw new CliError(
-        `Existing project recap export \`${exportRoot}\` has invalid content.`,
-      );
-    }
-    return {
-      export: {
-        sourceRunRoot,
-        exportRoot,
-        manifest: {
-          relativePath: 'manifest.json',
-          verifiedArtifactCount,
-        },
-      },
-      createdByAttempt: false,
-    };
-  }
-
   const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
   const makeDir = dependencies.ensureDir ?? ensureDir;
   const copyFile = dependencies.copySingleFile ?? copySingleFile;
   const removePath =
     dependencies.removePath ??
     (async (target, removeOptions) => rm(target, removeOptions));
-  const renamePath = dependencies.renamePath ?? rename;
-
   await makeDir(dirname(exportRoot));
   try {
-    for (const relativePath of packagePaths) {
-      const destination = join(temporaryRoot, relativePath);
-      await makeDir(dirname(destination));
-      await copyFile(join(sourceRunRoot, relativePath), destination);
+    // Stage and re-verify the complete source, even though only its page is exported.
+    for (const file of verified.packagePaths) {
+      await makeDir(dirname(join(temporaryRoot, file)));
+      await copyFile(
+        join(verified.sourceRunRoot, file),
+        join(temporaryRoot, file),
+      );
     }
-    const stagedManifestContents = await readFile(
-      join(temporaryRoot, 'manifest.json'),
-      'utf8',
-    );
-    if (stagedManifestContents !== sourceManifestContents) {
+    if (
+      (await readFile(join(temporaryRoot, 'manifest.json'), 'utf8')) !==
+      verified.manifestContents
+    )
       throw new CliError(
-        'Selected project recap manifest changed while staging the export.',
+        'Selected recap manifest changed while staging the export.',
       );
-    }
-    const stagedManifest = await parseProjectRecapManifest(
-      stagedManifestContents,
-    );
-    const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
+    await verifyProjectRecapImmutableHashes(temporaryRoot, verified.manifest);
+    await verifyRecapInventory(temporaryRoot, verified.packagePaths);
+    const original = await readFile(join(temporaryRoot, pagePath));
+    const transformed = await transformRecapPage(
+      original.toString('utf8'),
+      join(verified.sourceRunRoot, pagePath),
+      verified.sourceRunRoot,
       temporaryRoot,
-      stagedManifest,
+      exportRoot,
+      options,
     );
-    const exactCoverage = (await loadExplainerPackageCoverage()) as Awaited<
-      ReturnType<typeof loadExplainerPackageCoverage>
-    > &
-      ExactRunPackageCoverage;
-    try {
-      await exactCoverage.enforceRunPackageInventory(
-        temporaryRoot,
-        stagedManifest,
-      );
-    } catch {
-      throw new CliError('Staged project recap package inventory is invalid.');
-    }
-    await renamePath(temporaryRoot, exportRoot);
-
-    return {
-      export: {
-        sourceRunRoot,
-        exportRoot,
-        manifest: {
-          relativePath: 'manifest.json',
-          verifiedArtifactCount,
-        },
+    const report: ArchiveProjectRecapExportV1 = {
+      sourceRunRoot: verified.sourceRunRoot,
+      exportRoot,
+      runId: verified.manifest.runId,
+      page: {
+        sourceRelativePath: pagePath,
+        originalSha256: sha256(original),
+        exportedSha256: sha256(transformed),
       },
-      createdByAttempt: true,
+      verifiedArtifactCount: verified.verifiedArtifactCount,
     };
-  } catch (error) {
+    if (await pathExists(exportRoot)) {
+      const stat = await lstat(exportRoot);
+      if (
+        !stat.isFile() ||
+        sha256(await readFile(exportRoot)) !== report.page.exportedSha256
+      )
+        throw new CliError(
+          `Existing project recap export ${exportRoot} already exists and does not match persisted snapshot ${snapshotName}.`,
+        );
+      return { export: report, createdByAttempt: false };
+    }
+    const temporaryPage = join(temporaryRoot, 'export.html');
+    await writeFile(temporaryPage, transformed, { flag: 'wx' });
+    // A hard-link promotion is atomic and refuses an intervening writer, unlike rename.
+    await link(temporaryPage, exportRoot);
+    const identity = await lstat(temporaryPage);
+    return {
+      export: report,
+      createdByAttempt: true,
+      identity: { dev: identity.dev, ino: identity.ino },
+    };
+  } finally {
     await removePath(temporaryRoot, { recursive: true, force: true });
-    throw error;
   }
 }
 
@@ -1625,27 +1939,34 @@ export async function archiveProjectOnCompletion(
       });
     } catch (error) {
       await removePath(archivePath, { recursive: true, force: true });
-      if (attemptedProjectRecapExport?.createdByAttempt) {
-        await removePath(attemptedProjectRecapExport.export.exportRoot, {
-          recursive: true,
-          force: true,
-        });
-      }
+      await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
       throw error;
     }
   }
 
   try {
+    if (projectRecapExport && options.projectRecapRun) {
+      const archivedRecap = await loadVerifiedProjectRecap(
+        archivePath,
+        options.projectRecapRun,
+      );
+      const archivedPage = projectRecapExport.page.sourceRelativePath;
+      if (
+        archivedRecap.manifest.runId !== projectRecapExport.runId ||
+        sha256(
+          await readFile(join(archivedRecap.sourceRunRoot, archivedPage)),
+        ) !== projectRecapExport.page.originalSha256
+      ) {
+        throw new CliError(
+          'Archived recap identity differs from the verified exported page.',
+        );
+      }
+    }
     if (!syncTarget) {
       await removePath(options.projectPath, { recursive: true, force: true });
     }
   } catch (error) {
-    if (attemptedProjectRecapExport?.createdByAttempt) {
-      await removePath(attemptedProjectRecapExport.export.exportRoot, {
-        recursive: true,
-        force: true,
-      });
-    }
+    await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
     throw error;
   }
 
@@ -1664,12 +1985,7 @@ export async function archiveProjectOnCompletion(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (syncTarget) {
-        if (attemptedProjectRecapExport?.createdByAttempt) {
-          await removePath(attemptedProjectRecapExport.export.exportRoot, {
-            recursive: true,
-            force: true,
-          });
-        }
+        await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
         throw new CliError(
           `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
           1,
@@ -1777,13 +2093,7 @@ export async function archiveProjectOnCompletion(
       );
     }
     if (projectRecapExport) {
-      recapExportPaths = (
-        await listArchiveExportFiles(projectRecapExport.exportRoot)
-      ).filter(
-        (filePath) =>
-          basename(filePath) !== 'manifest.json' &&
-          basename(filePath) !== 'build-record.json',
-      );
+      recapExportPaths = [projectRecapExport.exportRoot];
     }
     await (dependencies.removeSyncedRecord
       ? dependencies.removeSyncedRecord(recordPath)
@@ -1926,22 +2236,6 @@ async function recoverSyncedLifecycleCommit(
   }
 
   return candidate;
-}
-
-async function listArchiveExportFiles(
-  root: string,
-  current = root,
-): Promise<string[]> {
-  const entries = await readdir(current, { withFileTypes: true });
-  const files = await Promise.all(
-    entries.map(async (entry) => {
-      const entryPath = join(current, entry.name);
-      return entry.isDirectory()
-        ? listArchiveExportFiles(root, entryPath)
-        : [entryPath];
-    }),
-  );
-  return files.flat().sort();
 }
 
 export async function ensureS3ArchiveAccess(
