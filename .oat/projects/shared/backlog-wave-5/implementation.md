@@ -2091,8 +2091,8 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "fork_turns": "none",
     "task_name": "wave5_phase3_review_r5"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2103,7 +2103,9 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Fresh exact native role accepted as /root/wave5_phase3_review_r5; HOLD before committed START. Runtime identity not reported; no nested lane or fallback."
+  ],
   "continuation_events": [],
   "task_class": "consequential",
   "model_class_floor": "consequential",
@@ -2138,3 +2140,5 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 ```
 
 Planned fresh exact-target r5 review; no nested lanes. Completed resolver report has no notices; canonical role/current native schema and T3 catalog validated. Root task ledger is committed before launch; review outcome bookkeeping remains root-owned after return.
+
+Accepted fresh native handle `/root/wave5_phase3_review_r5`; root owns acceptance metadata only until START. Pre-review task ledger head909a564d238711d7f5c377350a32bb158d25efe7; product commit47e441ace unchanged.
