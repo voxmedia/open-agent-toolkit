@@ -1,10 +1,7 @@
 ---
 oat_current_task: p03-t11
 oat_last_commit: 47e441ace6540f6c0f537dec6b4379c7f4005d52
-oat_blockers:
-  [
-    'p03 M1 recovered-unrecorded receipt; complexity assessment complete, operator disposition required',
-  ]
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug

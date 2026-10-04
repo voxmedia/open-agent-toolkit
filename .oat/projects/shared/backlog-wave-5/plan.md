@@ -375,9 +375,9 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Finding:** M1 in `reviews/archived/p03-review-2026-10-04T125636Z.md`, independently reproduced by root. A post-commit unowned-file mutation leaves the initial receipt without commit/tree; immediate retry recovers successfully. After a valid different-message same-record commit, the original message/path pair fails repeatedly, with no retirement proof and its marker retained.
 
-**Status:** Pending operator disposition after the approved r5 native/r3 configured-gate cycle; no correction or further review authorized.
+**Status:** Approved 2026-10-04; bounded p03-t11 correction plus one fresh native/configured-gate cycle. Six Low findings stay final-owned.
 
-**Files:** Proposed existing four helper/ref-sync source/test paths used by p03-t10. The refreshed necessity assessment and operator disposition establish the minimal route; declare any additional scope before editing.
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`, `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`. Only these four product paths are authorized; declare additional scope before editing.
 
 **Dependencies:** p03-t10 complete; mandatory refreshed complexity assessment and explicit operator disposition before correction or Phase 4.
 
