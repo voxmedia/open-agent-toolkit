@@ -1,10 +1,11 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import {
   access,
   mkdir,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -2006,6 +2007,202 @@ describe('commitRecordChange', () => {
       await fixture.cleanup();
     }
   });
+
+  it.each([
+    'accepted',
+    'unresolved',
+    'staged',
+    'parent',
+    'foreign-marker',
+    'replacement',
+  ])(
+    'reconciles advertised public recovery before record recurrence (%s)',
+    async (condition) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const root = fixture.cloneA;
+        const recordPath = join(root, '.oat/projects/synced/recovered.json');
+        await mkdir(dirname(recordPath), { recursive: true });
+        await writeFile(recordPath, '{"slug":"first"}\n');
+        await writeFile(join(root, 'README.md'), 'STAGED literal\n');
+        git(root, ['add', 'README.md']);
+        await writeFile(join(root, 'README.md'), 'UNSTAGED literal\n');
+        const index = join(root, '.git/index');
+        const alternate = join(root, '.git/record-writer-index');
+        await writeFile(alternate, await readFile(index));
+        await writeFile(join(root, 'concurrent.txt'), 'CONCURRENT literal\n');
+        execFileSync('git', ['add', 'concurrent.txt'], {
+          cwd: root,
+          env: { ...process.env, GIT_INDEX_FILE: alternate },
+        });
+        await writeFile(join(root, '.git/index.lock'), 'FOREIGN lock literal');
+        let error = '';
+        try {
+          await commitRecordChange(
+            root,
+            [recordPath],
+            'chore: recovered record',
+            defaultGitRunner,
+            { projectRoots: defaultProjectRoots(root) },
+          );
+        } catch (failure) {
+          error = String(failure);
+        }
+        expect(error).toContain('Git index lock remains');
+        expect(await readFile(join(root, '.git/index.lock'), 'utf8')).toBe(
+          'FOREIGN lock literal',
+        );
+        await rm(join(root, '.git/index.lock'));
+        const advertised = error.split('with: ')[1]!.split('; receipt ')[0]!;
+        const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+        const entry = join(
+          import.meta.dirname,
+          '../../../../../..',
+          'packages/cli/dist/index.js',
+        );
+        const command = advertised.replace(
+          /^oat /,
+          `${quote(process.execPath)} ${quote(entry)} --json `,
+        );
+        await writeFile(
+          join(root, '.git/hooks/pre-commit'),
+          `#!/bin/sh\ncp "${alternate}" "${index}"\n`,
+          { mode: 0o755 },
+        );
+        const first = spawnSync('/bin/sh', ['-c', command], {
+          cwd: root,
+          encoding: 'utf8',
+        });
+        expect(first.status, first.stderr).toBe(1);
+        const pending = JSON.parse(first.stdout) as {
+          commit: string;
+          receipt: string;
+        };
+        expect(JSON.parse(first.stdout)).toMatchObject({
+          outcome: 'blocked',
+          committed: true,
+        });
+        if (condition !== 'unresolved') {
+          const settled = spawnSync('/bin/sh', ['-c', command], {
+            cwd: root,
+            encoding: 'utf8',
+          });
+          expect(settled.status, settled.stderr).toBe(0);
+          expect(JSON.parse(settled.stdout)).toMatchObject({
+            outcome: 'already-matching',
+            commit: pending.commit,
+          });
+          const repeat = spawnSync('/bin/sh', ['-c', command], {
+            cwd: root,
+            encoding: 'utf8',
+          });
+          expect(JSON.parse(repeat.stdout)).toMatchObject({
+            outcome: 'already-matching',
+            commit: pending.commit,
+          });
+        }
+        const markerDir = join(root, '.git/oat-record-commit-pending');
+        expect(await readdir(markerDir)).toHaveLength(1);
+        await rm(join(root, '.git/hooks/pre-commit'));
+        await writeFile(recordPath, '{"slug":"second"}\n');
+        const markerPath = join(markerDir, (await readdir(markerDir))[0]!);
+        if (condition === 'staged')
+          git(root, ['add', '.oat/projects/synced/recovered.json']);
+        if (condition === 'parent') {
+          const receipt = JSON.parse(await readFile(pending.receipt, 'utf8'));
+          await writeFile(
+            `${pending.receipt}.foreign`,
+            JSON.stringify({
+              ...receipt,
+              parent: '0000000000000000000000000000000000000000',
+            }),
+          );
+          await rename(`${pending.receipt}.foreign`, pending.receipt);
+        }
+        if (condition === 'foreign-marker') {
+          const marker = JSON.parse(await readFile(markerPath, 'utf8'));
+          await writeFile(
+            `${markerPath}.foreign`,
+            JSON.stringify({ ...marker, message: 'FOREIGN marker message' }),
+          );
+          await rename(`${markerPath}.foreign`, markerPath);
+        }
+        if (condition === 'replacement') {
+          const replacer = join(root, '.git/replace-record-marker.cjs');
+          await writeFile(
+            replacer,
+            "const fs=require('node:fs');const dir='.git/oat-record-commit-pending';const p=dir+'/'+fs.readdirSync(dir).find(p=>p.endsWith('.json'));fs.writeFileSync(p+'.foreign',fs.readFileSync(p));fs.renameSync(p+'.foreign',p);",
+          );
+          await writeFile(
+            join(root, '.git/hooks/pre-commit'),
+            `#!/bin/sh\n"${process.execPath}" "${replacer}"\n`,
+            { mode: 0o755 },
+          );
+        }
+        if (condition !== 'accepted') {
+          const markerBytes = await readFile(markerPath);
+          const receiptBytes = await readFile(pending.receipt);
+          const beforeIndex = await readFile(index);
+          await expect(
+            commitRecordChange(
+              root,
+              [recordPath],
+              'chore: recovered record',
+              defaultGitRunner,
+              { projectRoots: defaultProjectRoots(root) },
+            ),
+          ).rejects.toThrow(
+            condition === 'parent'
+              ? 'Receipt does not positively match'
+              : condition === 'foreign-marker'
+                ? 'Unreconciled lifecycle'
+                : condition === 'replacement'
+                  ? 'replacement preserved'
+                  : 'Committed owned bytes differ',
+          );
+          if (condition !== 'replacement') {
+            expect(await readFile(markerPath)).toEqual(markerBytes);
+            expect(await readFile(pending.receipt)).toEqual(receiptBytes);
+            expect(await readFile(index)).toEqual(beforeIndex);
+            expect(git(root, ['rev-parse', 'HEAD'])).toBe(pending.commit);
+          } else expect(await readdir(markerDir)).toHaveLength(1);
+          expect(await readFile(recordPath, 'utf8')).toBe(
+            '{"slug":"second"}\n',
+          );
+          expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
+          expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+            'UNSTAGED literal\n',
+          );
+          expect(git(root, ['show', ':concurrent.txt'])).toBe(
+            'CONCURRENT literal',
+          );
+          return;
+        }
+        const fresh = await commitRecordChange(
+          root,
+          [recordPath],
+          'chore: recovered record',
+          defaultGitRunner,
+          { projectRoots: defaultProjectRoots(root) },
+        );
+        expect(fresh?.sha).not.toBe(pending.commit);
+        expect(
+          git(root, ['show', 'HEAD:.oat/projects/synced/recovered.json']),
+        ).toBe('{"slug":"second"}');
+        expect(git(root, ['status', '--porcelain', '--', recordPath])).toBe('');
+        expect(await readdir(markerDir)).toEqual([]);
+        expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
+        expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+          'UNSTAGED literal\n',
+        );
+        expect(git(root, ['show', ':concurrent.txt'])).toBe(
+          'CONCURRENT literal',
+        );
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
 
   it('preserves a replaced pending marker after verified commit settlement', async () => {
     const fixture = await createSyncedFixture();

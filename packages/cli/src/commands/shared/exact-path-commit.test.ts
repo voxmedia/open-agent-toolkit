@@ -503,11 +503,13 @@ printf "FOREIGN temporary bytes" > "$temporary/foreign"`,
       await writeFile(`${receiptPath}.foreign`, foreign);
       await rename(`${receiptPath}.foreign`, receiptPath);
       const index = await readFile(join(root, '.git/index'));
-      expect(await commitExactPaths(input)).toMatchObject({
+      const foreignResult = await commitExactPaths(input);
+      expect(foreignResult).toMatchObject({
         outcome: 'failed',
         committed: true,
         error: expect.stringMatching(/Receipt does not positively match/),
       });
+      expect(foreignResult.settledCommit).toBeUndefined();
       expect(await readFile(receiptPath, 'utf8')).toBe(foreign);
       expect(await readFile(join(root, '.git/index'))).toEqual(index);
       expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
@@ -525,6 +527,58 @@ printf "FOREIGN temporary bytes" > "$temporary/foreign"`,
       expect(git(root, ['status', '--porcelain', '--', 'owned.md'])).toBe('');
     },
   );
+
+  it('exposes prior publication only for fully verified receipts with unchanged owned index entries', async () => {
+    const root = await repo();
+    await writeFile(join(root, 'owned.md'), 'first owned\n');
+    const index = join(root, '.git/index');
+    const alternate = join(root, '.git/publication-index');
+    await writeFile(alternate, await readFile(index));
+    await writeFile(
+      join(root, 'concurrent.md'),
+      'CONCURRENT publication literal\n',
+    );
+    await exec('git', ['add', 'concurrent.md'], {
+      cwd: root,
+      env: { ...process.env, GIT_INDEX_FILE: alternate },
+    });
+    await hook(root, `cp "${alternate}" "${index}"`);
+    const input = {
+      repoRoot: root,
+      paths: ['owned.md'],
+      message: 'feat: publication proof',
+      identity: 'publication-proof',
+    };
+    const pending = await commitExactPaths(input);
+    expect(pending).toMatchObject({ outcome: 'blocked', committed: true });
+    await writeFile(join(root, 'owned.md'), 'second owned\n');
+    const unresolved = await commitExactPaths(input);
+    expect(unresolved).toMatchObject({ outcome: 'failed' });
+    expect(unresolved.settledCommit).toBeUndefined();
+    await writeFile(join(root, 'owned.md'), 'first owned\n');
+    expect(await commitExactPaths(input)).toMatchObject({
+      outcome: 'already-matching',
+      commit: pending.commit,
+    });
+    await writeFile(join(root, 'owned.md'), 'second owned\n');
+    const publishedIndex = await readFile(index);
+    const settled = await commitExactPaths(input);
+    expect(settled).toMatchObject({
+      outcome: 'failed',
+      settledCommit: pending.commit,
+    });
+    expect(await readFile(index)).toEqual(publishedIndex);
+    git(root, ['add', 'owned.md']);
+    const stagedIndex = await readFile(index);
+    const staged = await commitExactPaths(input);
+    expect(staged).toMatchObject({ outcome: 'failed' });
+    expect(staged.settledCommit).toBeUndefined();
+    expect(await readFile(index)).toEqual(stagedIndex);
+    preservation(root);
+    expect(git(root, ['show', ':concurrent.md'])).toBe(
+      'CONCURRENT publication literal',
+    );
+  });
 
   it('reproduces broad staged leakage and pathspec hook dirt in the baseline', async () => {
     const broad = await repo();

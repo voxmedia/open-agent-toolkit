@@ -31,6 +31,10 @@ export interface ExactPathCommitResult {
   committed: boolean;
   attempts: number;
   commit?: string;
+  /** A fully verified resumed receipt whose owned real-index entries remain
+   * published, but whose worktree now carries different bytes. Failed outcome
+   * stays failed; only the marker-owning adapter may finalize that reservation. */
+  settledCommit?: string;
   receipt?: string;
   error?: string;
   lockClass?: 'transient-index-lock' | 'persistent-index-lock' | 'other';
@@ -414,6 +418,8 @@ export async function commitExactPaths(
       let operationResult: ExactPathCommitResult | undefined;
       let published = false;
       let startedParent: string | undefined;
+      let settledCommit: string | undefined;
+      let verifiedCommittedReceipt = false;
       try {
         if (interrupted)
           throw new Error(
@@ -465,6 +471,7 @@ export async function commitExactPaths(
             throw new Error(
               'Owned artifact changed since this operation committed; use a new identity.',
             );
+          verifiedCommittedReceipt = true;
         } else if (receipt) {
           // Recover the window after Git wrote the commit but before receipt publication.
           const candidates = (
@@ -631,12 +638,28 @@ export async function commitExactPaths(
           throw new Error(
             'Committed artifact contains unowned paths; manual inspection required.',
           );
-        await writeReceipt(receiptPath, receipt);
+        if (
+          verifiedCommittedReceipt &&
+          !(await bytes(receiptPath))?.equals(receiptBytes!)
+        )
+          throw new Error(
+            'Verified receipt was replaced; replacement preserved for inspection.',
+          );
+        if (!verifiedCommittedReceipt) await writeReceipt(receiptPath, receipt);
         // Copy current index into a disposable merge, never into the live index.
         // Only owned entries are reset to the verified hook-final tree.
         const merged = join(temporary, 'merged');
         if (snapshot) await writeFile(merged, snapshot);
         else await git(root, ['read-tree', '--empty'], merged);
+        const ownedEntriesSettled =
+          verifiedCommittedReceipt &&
+          !(
+            await git(
+              root,
+              ['diff', '--cached', '--name-only', commit, '--', ...paths],
+              merged,
+            )
+          ).length;
         await git(root, ['reset', '--quiet', commit, '--', ...paths], merged);
         if (
           (
@@ -646,10 +669,18 @@ export async function commitExactPaths(
               merged,
             )
           ).length
-        )
+        ) {
+          if (
+            ownedEntriesSettled &&
+            (await bytes(indexPath))?.equals(snapshot ?? Buffer.alloc(0)) &&
+            (await bytes(receiptPath))?.equals(receiptBytes!) &&
+            (await stillOwnLock())
+          )
+            settledCommit = commit;
           throw new Error(
             'Committed owned bytes differ from the worktree; inspect changes before retrying.',
           );
+        }
         if (
           !(await bytes(indexPath))?.equals(snapshot ?? Buffer.alloc(0)) &&
           (snapshot !== undefined || (await bytes(indexPath)) !== undefined)
@@ -732,6 +763,7 @@ export async function commitExactPaths(
           outcome: 'failed',
           committed: commit !== undefined,
           commit,
+          ...(settledCommit ? { settledCommit } : {}),
           attempts,
           receipt: receiptPath,
           resumable: true,
@@ -742,6 +774,7 @@ export async function commitExactPaths(
         if (!published) {
           await lock.close().catch(() => undefined);
           if (await stillOwnLock()) await rm(lockPath, { force: true });
+          else if (operationResult) delete operationResult.settledCommit;
         }
         if (temporary && temporaryIdentity) {
           const current = await lstat(temporary).catch(
@@ -756,6 +789,7 @@ export async function commitExactPaths(
           )
             await rm(temporary, { recursive: true, force: true });
           else if (operationResult) {
+            delete operationResult.settledCommit;
             operationResult.outcome = 'failed';
             operationResult.resumable = true;
             operationResult.error =

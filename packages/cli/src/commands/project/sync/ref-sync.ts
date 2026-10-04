@@ -1050,116 +1050,140 @@ export async function commitRecordChange(
     .update(JSON.stringify([message, normalized]))
     .digest('hex');
   const pendingPath = join(pendingDir, `${operation}.json`);
-  if ((await readOptionalFile(pendingPath)) === null) {
-    if (settlement)
-      throw new CliError(
-        'The verified pending migration marker disappeared; preserve state for inspection.',
-        2,
-      );
-    const identity = `project-record:${operation}:${randomUUID()}`;
-    const temporary = await mkdtemp(join(pendingDir, 'reservation-'));
-    const complete = join(temporary, 'pending.json');
-    try {
-      await writeFile(
-        complete,
-        JSON.stringify({ identity, paths: normalized, message }),
-      );
+  for (
+    let reservationAttempt = 0;
+    reservationAttempt < 2;
+    reservationAttempt++
+  ) {
+    if ((await readOptionalFile(pendingPath)) === null) {
+      if (settlement)
+        throw new CliError(
+          'The verified pending migration marker disappeared; preserve state for inspection.',
+          2,
+        );
+      const identity = `project-record:${operation}:${randomUUID()}`;
+      const temporary = await mkdtemp(join(pendingDir, 'reservation-'));
+      const complete = join(temporary, 'pending.json');
       try {
-        await link(complete, pendingPath);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        await writeFile(
+          complete,
+          JSON.stringify({ identity, paths: normalized, message }),
+        );
+        try {
+          await link(complete, pendingPath);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        }
+      } finally {
+        await rm(temporary, { recursive: true, force: true });
       }
-    } finally {
-      await rm(temporary, { recursive: true, force: true });
     }
-  }
-  const file = await open(pendingPath, 'r');
-  const markerIdentity = await file.stat();
-  let markerBytes: string;
-  try {
-    markerBytes = await file.readFile('utf8');
-  } finally {
-    await file.close();
-  }
-  const reservation = JSON.parse(markerBytes) as {
-    identity: string;
-    paths: string[];
-    message: string;
-  };
-  if (
-    settlement &&
-    (reservation.identity !== settlement.marker.identity ||
-      markerBytes !== settlement.marker.bytes ||
-      markerIdentity.ino !== settlement.marker.ino ||
-      markerIdentity.dev !== settlement.marker.dev)
-  )
-    throw new CliError(
-      'The verified pending migration marker was replaced; replacement preserved for inspection.',
-      2,
-    );
-  const clearPending = async (): Promise<void> => {
-    const current = await lstat(pendingPath).catch(
-      (error: NodeJS.ErrnoException) => {
-        if (error.code === 'ENOENT') return undefined;
-        throw error;
-      },
-    );
-    if (!current) return;
+    const file = await open(pendingPath, 'r');
+    const markerIdentity = await file.stat();
+    let markerBytes: string;
+    try {
+      markerBytes = await file.readFile('utf8');
+    } finally {
+      await file.close();
+    }
+    const reservation = JSON.parse(markerBytes) as {
+      identity: string;
+      paths: string[];
+      message: string;
+    };
     if (
-      current.ino !== markerIdentity.ino ||
-      current.dev !== markerIdentity.dev ||
-      (await readOptionalFile(pendingPath)) !== markerBytes
+      settlement &&
+      (reservation.identity !== settlement.marker.identity ||
+        markerBytes !== settlement.marker.bytes ||
+        markerIdentity.ino !== settlement.marker.ino ||
+        markerIdentity.dev !== settlement.marker.dev)
     )
       throw new CliError(
-        `Verified commit exists, but the pending marker at ${pendingPath} was replaced; replacement preserved for inspection.`,
+        'The verified pending migration marker was replaced; replacement preserved for inspection.',
         2,
       );
-    await rm(pendingPath);
-  };
-  if (
-    reservation.message !== message ||
-    JSON.stringify(reservation.paths) !== JSON.stringify(normalized) ||
-    !reservation.identity.startsWith(`project-record:${operation}:`)
-  )
-    throw new CliError(
-      `Unreconciled lifecycle commit marker at ${pendingPath}; preserve it and inspect before retrying.`,
-      2,
-    );
+    const clearPending = async (): Promise<void> => {
+      const current = await lstat(pendingPath).catch(
+        (error: NodeJS.ErrnoException) => {
+          if (error.code === 'ENOENT') return undefined;
+          throw error;
+        },
+      );
+      if (!current) return;
+      if (
+        current.ino !== markerIdentity.ino ||
+        current.dev !== markerIdentity.dev ||
+        (await readOptionalFile(pendingPath)) !== markerBytes
+      )
+        throw new CliError(
+          `Verified commit exists, but the pending marker at ${pendingPath} was replaced; replacement preserved for inspection.`,
+          2,
+        );
+      await rm(pendingPath);
+    };
+    if (
+      reservation.message !== message ||
+      JSON.stringify(reservation.paths) !== JSON.stringify(normalized) ||
+      !reservation.identity.startsWith(`project-record:${operation}:`)
+    )
+      throw new CliError(
+        `Unreconciled lifecycle commit marker at ${pendingPath}; preserve it and inspect before retrying.`,
+        2,
+      );
 
-  const result = await commitExactPaths({
-    repoRoot,
-    paths: normalized,
-    message,
-    identity: reservation.identity,
-  });
-  if (
-    settlement &&
-    ['committed', 'already-matching', 'nothing'].includes(result.outcome) &&
-    result.commit !== settlement.commit
-  )
-    throw new CliError(
-      'Pending migration settlement did not return its verified commit; marker preserved for inspection.',
-      2,
-    );
-  if (result.outcome === 'nothing') {
-    await clearPending();
-    return null;
-  }
-  if (
-    (result.outcome === 'committed' || result.outcome === 'already-matching') &&
-    result.commit
-  ) {
-    try {
-      await settlement?.finalize();
+    const result = await commitExactPaths({
+      repoRoot,
+      paths: normalized,
+      message,
+      identity: reservation.identity,
+    });
+    // A public helper repair can settle Git while leaving our reservation. Only
+    // its narrow positive publication proof authorizes one new generation for
+    // fresh unstaged producer bytes. A migration's finalization remains mandatory.
+    if (
+      !settlement &&
+      reservationAttempt === 0 &&
+      result.outcome === 'failed' &&
+      result.settledCommit &&
+      result.settledCommit === result.commit
+    ) {
       await clearPending();
-    } catch (error) {
-      throw new PendingRecordCommitError(errorMessage(error), result);
+      continue;
     }
-    return { sha: result.commit };
+    if (
+      settlement &&
+      ['committed', 'already-matching', 'nothing'].includes(result.outcome) &&
+      result.commit !== settlement.commit
+    )
+      throw new CliError(
+        'Pending migration settlement did not return its verified commit; marker preserved for inspection.',
+        2,
+      );
+    if (result.outcome === 'nothing') {
+      await clearPending();
+      return null;
+    }
+    if (
+      (result.outcome === 'committed' ||
+        result.outcome === 'already-matching') &&
+      result.commit
+    ) {
+      try {
+        await settlement?.finalize();
+        await clearPending();
+      } catch (error) {
+        throw new PendingRecordCommitError(errorMessage(error), result);
+      }
+      return { sha: result.commit };
+    }
+    throw new PendingRecordCommitError(
+      `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
+      result,
+    );
   }
-  throw new PendingRecordCommitError(
-    `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
-    result,
+  throw new CliError(
+    'Lifecycle commit reservation changed repeatedly; preserve pending state for inspection.',
+    2,
   );
 }
 
