@@ -109,8 +109,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p03:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: wave5-p03-recovery-1
+        original_request_id: wave5-p03-implement-r1
+        original_task_id: p03-t01
+        original_commit: aa4d9b0400bea1faa513895b1d933b1060e13ed2
+        discovered_by: p03-t03 source-CLI root bookkeeping commit under type-module repository
+        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
+        reservation_head: 7ecb5d36835c1cc66aeec5f8e32ca47d4ab6b720
+        status: completed
     p04:
       used_attempts: 0
       pending_attempt: null

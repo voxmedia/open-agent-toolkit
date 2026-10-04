@@ -377,6 +377,8 @@ export async function commitExactPaths(
             );
         const hooks = join(temporary, 'hooks');
         await mkdir(hooks);
+        const shellQuote = (value: string) =>
+          `'${value.replaceAll("'", "'\"'\"'")}'`;
         // Delegate original executable hooks, then guard the emitted tree before
         // Git accepts it. Hooks see their original argv and the isolated index.
         for (const name of [
@@ -392,7 +394,15 @@ export async function commitExactPaths(
           );
           if (!executable && name === 'post-commit') continue;
           const script = `#!/usr/bin/env node\nconst {spawnSync}=require('node:child_process');const fs=require('node:fs');const crypto=require('node:crypto');const path=require('node:path');\n${executable ? `const hook=spawnSync(${JSON.stringify(source)},process.argv.slice(2),{stdio:'inherit'});if(hook.error||hook.status!==0)process.exit(hook.status||1);` : ''}\n${name !== 'post-commit' ? `const owned=${JSON.stringify(paths)};const staged=spawnSync('git',['diff','--cached','--name-only','-z'],{encoding:'utf8'});if(staged.status!==0||staged.stdout.split('\\0').some(p=>p&&!owned.includes(p))){process.stderr.write('Exact-path ownership guard: hook staged an unowned path.\\n');process.exit(1);}const before=${JSON.stringify(worktree)};for(const [p,expected]of Object.entries(before)){let actual;try{const full=path.resolve(p);const info=fs.lstatSync(full);actual=info.isSymbolicLink()?'symlink:'+fs.readlinkSync(full):info.mode+':'+crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');}catch(e){if(e.code!=='ENOENT')throw e;actual='absent';}if(actual!==expected){process.stderr.write('Exact-path preservation guard: unowned worktree path changed: '+p+'\\n');process.exit(1);}}` : ''}\n`;
-          await writeFile(join(hooks, name), script, { mode: 0o700 });
+          // Git requires extensionless hook names. Launch an explicitly CommonJS
+          // companion so the repository's package type cannot reinterpret it.
+          const companion = join(hooks, `${name}.cjs`);
+          await writeFile(companion, script);
+          await writeFile(
+            join(hooks, name),
+            `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(companion)} "$@"\n`,
+            { mode: 0o700 },
+          );
         }
         receipt = { identity: input.identity, paths, parent: head };
         await writeReceipt(receiptPath, receipt);

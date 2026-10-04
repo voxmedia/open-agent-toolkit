@@ -37,6 +37,9 @@ async function repo(): Promise<string> {
   git(root, ['init', '-q']);
   git(root, ['config', 'user.name', 'OAT Test']);
   git(root, ['config', 'user.email', 'oat@example.com']);
+  // The canonical repository declares ESM; generated Git hooks must also run
+  // under that package boundary instead of relying on Node's default format.
+  await writeFile(join(root, 'package.json'), '{"type":"module"}\n');
   await writeFile(join(root, 'owned.md'), 'base owned\n');
   await writeFile(join(root, 'unrelated.md'), 'base unrelated\n');
   await writeFile(join(root, 'deleted.md'), 'base deleted\n');
