@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 is blocked at the operator disposition boundary after p03-t10 and its authorized r5 native/r3 configured-gate cycle. The native review passed with zero findings; the configured gate passed its Critical/High threshold but found an adjacent recovered-unrecorded receipt Medium, independently reproduced by root and queued as p03-t11. The refreshed complexity assessment is complete and recommends a bounded corrective revision under the original recovery contract. No further correction or review allowance is authorized. Six prior Low findings remain final-owned. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phases 1 and 2 are complete. Phase 3 p03-t11 is in progress under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | progress | 11    | 10/11     |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | in_progress | 11    | 10/11     |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
 **Total:** 20/29 tasks completed
 
@@ -205,11 +205,11 @@ Phases 1 and 2 are complete. Phase 3 is blocked at the operator disposition boun
 
 **Status:** in_progress
 **Commit:** -
-**Finding:** Opus gate r3 M1; real post-commit failure leaves an unrecorded receipt, a later same-record generation strands the original reservation. Root reproduced the actual adapter and independently applied the desired acceptance oracle (exit1); immediate control and literal preservation pass. New necessity assessment/operator disposition required; no product changes authorized.
+**Finding:** Opus gate r3 M1; real post-commit failure leaves an unrecorded receipt, a later same-record generation strands the original reservation. Root reproduced the actual adapter and independently applied the desired acceptance oracle (exit1); immediate control and literal preservation pass. Refreshed necessity assessment complete; user approved bounded correction plus one further native/configured-gate cycle.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
-**Status:** in_progress
+**Status:** pending
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
 
