@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and recovery fix are verified; native re-review found one Medium receipt-parent gap, converted to p03-t05 before fresh review and the configured independent phase gate.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; fresh native review and the configured independent gate remain pending.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 5     | 4/5       |
+| Phase 3 | in_progress | 5     | 5/5       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 14/22 tasks completed
+**Total:** 15/22 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -161,8 +161,10 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t05: (review) Verify committed receipt parents before settlement
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6819854106e6f7c98a87160397731d9353122194
+**Outcome:** Existing locked committed-receipt guard now checks actual Git parent before settlement; valid root commits retain empty-parent representation. Three exact approved files, one append-only commit through source helper and normal hooks. No new recovery framework or test-only hook.
+**Verification:** Three pre-fix keeper cases failed for false-parent acceptance; fixed ordinary/root helper and public migration controls pass. Author committed-HEAD direct1090/13files, CLI check/types/fresh build, captured refusal and both public recovery probes all exit0. Root independently repeated29tests/2files and captured actual probe: refused, foreign receipt and pending marker retained, accepted normal migration and literal unrelated state preserved. Evidence `analysis/p03/fix-r2-*`, `analysis/p03-fix-r2-root-tests.log`, `p03-fix-r2-root-gap.json`. Clean worktree; recovery1/10,pendingnull unchanged. Fresh review/gate still required.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1121,7 +1123,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "phase": "p03",
       "task_ids": ["p03-t05"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T032627Z.md",
-      "status": "accepted",
+      "status": "completed",
       "reason": "Same accepted Sol6.1/high handle; bounded Medium receipt-parent correction, second review correction independent of recovery1/10. No original task replay.",
       "accepted_handle": "/root/wave5_phase3",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
@@ -1130,8 +1132,10 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
         "packages/cli/src/commands/shared/exact-path-commit.test.ts",
         "packages/cli/src/commands/project/migrate/index.test.ts"
       ],
-      "execution_base": "ec6a0a2db711ea24352236488b24b657fed6c81f",
-      "acceptance_evidence": "Same native handle acknowledged HOLD; exact configured target preserved, root owns ledger until START baseline."
+      "execution_base": "a8e87522be8cb7ffa116e894932d90bb2aa40a4b",
+      "acceptance_evidence": "Same native handle acknowledged HOLD; exact configured target preserved, root owns ledger until START baseline.",
+      "fix_commit": "6819854106e6f7c98a87160397731d9353122194",
+      "outcome": "DONE;exact3paths,1090tests/13files and real public refusal/accepted recovery probes pass; root29tests/capturedprobe repeat,clean tree,recovery1/null."
     }
   ],
   "task_class": "consequential",
@@ -1482,3 +1486,89 @@ Accepted fresh native reviewer `/root/wave5_phase3_review_r2` (Feynman), exact S
 M1 / Moderate / convert to p03-t05: agree. Root repeated the exact real-Git/offline-remote probe, exit1 because wrong-parent replacement is accepted and pending marker cleared. Commit/tree remain valid; no lost-index/wrong-artifact inference. Existing shared helper positively verifies committed receipt tree/trailer/ancestry but omits actual-parent comparison; add that narrow check and owning regression, preserving root-commit empty parent and foreign evidence. Root evidence: `analysis/p03-root-review-r2-receipt-gap.json`. No design/spec drift, new requirement or new recovery framework.
 
 Exactly one valid terminal `**Reconnaissance:** not-attempted` consumed before any validation/bookkeeping; no orchestration section or project-log append. Fully read artifact, exact full SHA/fix range and prior context validated. Same accepted reviewer resumed after host interruption, retained context, independently passed143tests/5files plus both actual public accepted recovery probes. Original H1/H2 are corrected. Second bounded review correction on same author, separately counted from recovery1/null. Fresh main fetch found no changes in the three declared correction paths. Total14/22, nextp03-t05; fresh native review and configured Opus phase gate remain required before Phase4. Five p01 Low final deferrals preserved.
+
+### Phase 3 receipt correction settled; review round3 planned
+
+Complete DONE report validated, same accepted author/target/action stamp and execution range a8e87522..68198541; one immutable3path correction commit, no recovery attempt.15/22 tasks, all5 Phase3 product taskscomplete; Phase4 pointer remains gated by fresh native review and Opus gate. Prior native r2 event advances only to fixes_completed, notpassed. Exact reviewer resolver has no notices. Narrow third round owns receipt-parent correction and its actual consumers, with prior complete phase evidence/context; does not duplicate prior full-phase reconnaissance.
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+#### Dispatch wave5-p03-review-r3
+
+```json
+{
+  "request_id": "wave5-p03-review-r3",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Review bounded actual-parent verification and owning migration/helper regression; prior full phase and recovery fix supply context.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T04:57:19.754922Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r3"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
