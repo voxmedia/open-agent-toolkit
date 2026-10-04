@@ -62,13 +62,13 @@ survive. Symlinked directories in `.oat/repo/knowledge` are refused.
 
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
-KNOWLEDGE_REFRESH_REPORT=$(mktemp) || exit 1
-node "$SKILL_DIR/scripts/refresh-owned.mjs" --prepare "$REPO_ROOT" > "$KNOWLEDGE_REFRESH_REPORT" || exit 1
+node "$SKILL_DIR/scripts/refresh-owned.mjs" --prepare "$REPO_ROOT" || exit 1
 ```
 
-Retain the report's exact `affectedPaths` (removed generated paths plus the
-eight expected outputs) through generation and commit. This temporary report
-is operation evidence, not a persistent ownership manifest. Do not broaden
+Retain the printed JSON report's exact `affectedPaths` (removed generated paths
+plus the eight expected outputs) through generation and commit, including
+across separate shell calls. The report is operation evidence, not a persistent
+ownership manifest; no temporary report file is created. Do not broaden
 ownership to the whole directory. Expected outputs are `project-index.md`,
 `stack.md`, `architecture.md`, `structure.md`, `integrations.md`, `testing.md`,
 `conventions.md` and `concerns.md`; mappers must write only their declared
@@ -679,13 +679,20 @@ Expected: Complete overview with frontmatter and links
 Verify all eight generated outputs, then format their existing supported text
 using the repository's documented write command. Retain removed tracked
 generated paths from the preparation report, including filenames outside the
-current eight-output set. Convert the report's absolute paths to literal
-repository-relative files using `REPO_ROOT`, deduplicate them, and populate
-`KNOWLEDGE_OWNED_FILES`. Omit a removed path only if Git proves it was never
-tracked; never omit a tracked generated deletion. Do not add manual files,
+current eight-output set. Resolve the repository root again with
+`git rev-parse --show-toplevel`, then convert the report's absolute paths to
+literal repository-relative files using that root, deduplicate them, and populate
+the next shell call's positional arguments; the snippet below initializes
+`KNOWLEDGE_OWNED_FILES` from that retained exact array. Resolve `SKILL_DIR` again
+in each shell call rather than relying on prior shell variables. Omit a removed
+path only if Git proves it was never tracked; never omit a tracked generated
+deletion. Do not add manual files,
 collisions or the tracking/dashboard files below to this commit.
 
 ```bash
+REPO_ROOT=$(git rev-parse --show-toplevel) || exit 1
+KNOWLEDGE_OWNED_FILES=("$@")
+[ "${#KNOWLEDGE_OWNED_FILES[@]}" -gt 0 ] || { echo "Missing retained knowledge affectedPaths; refusing to commit" >&2; exit 1; }
 node "$SKILL_DIR/scripts/refresh-owned.mjs" --verify "$REPO_ROOT" || exit 1
 oat internal commit-paths --help || exit 1
 # KNOWLEDGE_OWNED_FILES is the exact retained affectedPaths list after verification.

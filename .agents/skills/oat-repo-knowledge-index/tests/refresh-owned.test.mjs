@@ -36,6 +36,15 @@ const marked = (body) => `---\noat_generated: true\n---\n\n${body}\n`;
 const git = (root, ...args) =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8' });
 
+async function shippedShell(step, nextStep) {
+  const skill = await readFile(
+    join(repo, '.agents/skills/oat-repo-knowledge-index/SKILL.md'),
+    'utf8',
+  );
+  const section = skill.slice(skill.indexOf(step), skill.indexOf(nextStep));
+  return section.match(/```bash\n([\s\S]*?)```/u)[1];
+}
+
 async function fixture(t) {
   const root = await realpath(
     await mkdtemp(join(tmpdir(), 'knowledge-owned-')),
@@ -93,9 +102,24 @@ async function preservation(root, knowledge) {
 test('unmarked output collision stops before any generated deletion or user index mutation', async (t) => {
   const { root, knowledge } = await fixture(t);
   const index = await readFile(join(root, '.git/index'));
-  await assert.rejects(
-    prepareOwnedRefresh(root),
-    /Unmarked knowledge output collision/,
+  const prepareShell = await shippedShell('### Step 2:', '### Step 3:');
+  assert.throws(
+    () =>
+      execFileSync('bash', ['-c', prepareShell], {
+        cwd: root,
+        env: {
+          ...process.env,
+          SKILL_DIR: join(repo, '.agents/skills/oat-repo-knowledge-index'),
+        },
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }),
+    (error) => {
+      assert.equal(error.status, 1);
+      assert.equal(error.stdout, '');
+      assert.match(error.stderr, /Unmarked knowledge output collision/u);
+      return true;
+    },
   );
   assert.equal(
     await readFile(join(knowledge, 'stack.md'), 'utf8'),
@@ -138,29 +162,21 @@ test('actual owned refresh and helper CLI commit preserve manual bytes and unrel
   );
   // The executable deletion/commit guidance is itself the consumer contract.
   assert.doesNotMatch(skill, /rm -rf[^\n]*\.oat\/repo\/knowledge\/\*\.md/u);
-  const prepareSection = skill.slice(
-    skill.indexOf('### Step 2:'),
-    skill.indexOf('### Step 3:'),
-  );
-  const prepareShell = prepareSection.match(/```bash\n([\s\S]*?)```/u)[1];
+  const prepareShell = await shippedShell('### Step 2:', '### Step 3:');
   const environment = {
     ...process.env,
     SKILL_DIR: join(repo, '.agents/skills/oat-repo-knowledge-index'),
-    REPO_ROOT: root,
     KNOWLEDGE_NODE: process.execPath,
     KNOWLEDGE_CLI: cli,
     COMMIT_IDENTITY: 'knowledge-refresh-keeper',
     MERGE_BASE_SHA: git(root, 'rev-parse', 'HEAD').trim(),
   };
   const result = JSON.parse(
-    execFileSync(
-      'bash',
-      [
-        '-c',
-        `set -e\nKNOWLEDGE_REFRESH_REPORT=""\ntrap '[ -z "$KNOWLEDGE_REFRESH_REPORT" ] || rm -f -- "$KNOWLEDGE_REFRESH_REPORT"' EXIT\n${prepareShell}\ncat "$KNOWLEDGE_REFRESH_REPORT"`,
-      ],
-      { cwd: root, env: environment, encoding: 'utf8' },
-    ),
+    execFileSync('bash', ['-c', prepareShell], {
+      cwd: root,
+      env: environment,
+      encoding: 'utf8',
+    }),
   );
   assert.deepEqual(
     result.removedPaths.map((path) => relative(knowledge, path)),
@@ -170,6 +186,10 @@ test('actual owned refresh and helper CLI commit preserve manual bytes and unrel
     result.outputPaths.map((path) => relative(knowledge, path)).sort(),
     [...outputs].sort(),
   );
+  assert.deepEqual(
+    result.affectedPaths.map((path) => relative(knowledge, path)).sort(),
+    [...outputs, 'old-generated.md'].sort(),
+  );
   assert.deepEqual(await readFile(join(root, '.git/index')), index);
   await generatedOutputs(knowledge);
   await verifyOwnedOutputs(root);
@@ -177,16 +197,12 @@ test('actual owned refresh and helper CLI commit preserve manual bytes and unrel
     '--write',
     ...result.outputPaths,
   ]);
-  const commitSection = skill.slice(
-    skill.indexOf('### Step 10:'),
-    skill.indexOf('### Step 10b:'),
-  );
-  const commitShell = commitSection.match(/```bash\n([\s\S]*?)```/u)[1];
+  const commitShell = await shippedShell('### Step 10:', '### Step 10b:');
   execFileSync(
     'bash',
     [
       '-c',
-      `set -e\noat() { "$KNOWLEDGE_NODE" "$KNOWLEDGE_CLI" --cwd "$REPO_ROOT" "$@"; }\nKNOWLEDGE_OWNED_FILES=("$@")\n${commitShell}`,
+      `set -e\noat() { "$KNOWLEDGE_NODE" "$KNOWLEDGE_CLI" --cwd "$REPO_ROOT" "$@"; }\n${commitShell}`,
       'knowledge-commit',
       ...result.affectedPaths.map((path) => relative(root, path)),
     ],
