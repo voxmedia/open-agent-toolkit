@@ -230,7 +230,8 @@ satisfy the evidence obligation when the controls credibly substantiate the
 guarantee; an unsupported implementer assertion is insufficient. A limitation
 by itself is not evidence of correctness.
 
-Missing consequential evidence requires an existing blocking finding. Use the
+Missing consequential evidence requires a blocking finding under the existing
+severity model. Use the
 existing Critical/High severity model for the guarantee's risk, name the
 unresolved claim and smallest missing proof, and do not report that guarantee
 as accepted. Do not add a new severity, gate status or acceptance exception.
@@ -533,9 +534,9 @@ worker claims, and root-inline coverage}
 
 ## Verification Commands
 
-Record changed-boundary probes with expected/observed categorical outcomes and
-limitations, exact commands and input/artifact provenance. Distinguish commands
-actually executed from suggested reruns or independently inspected evidence.
+{Changed-boundary probes: exact commands, input/artifact provenance,
+expected/observed categorical outcomes and limitations; distinguish executed
+commands, suggested reruns and independently inspected evidence.}
 
 Run these to verify the implementation:
 
