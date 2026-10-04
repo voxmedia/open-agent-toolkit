@@ -1178,7 +1178,9 @@ export async function commitRecordChange(
       return { sha: result.commit };
     }
     throw new PendingRecordCommitError(
-      `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
+      result.resumable === false
+        ? `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Preserve the pending marker at ${pendingPath}${result.receipt ? ` and receipt at ${result.receipt}` : ''} for inspection and explicit provenance reconciliation before any further commit attempt.`
+        : `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
       result,
     );
   }

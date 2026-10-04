@@ -421,6 +421,7 @@ export async function commitExactPaths(
       let settledCommit: string | undefined;
       let storedCommittedReceipt = false;
       let verifiedPriorCommit = false;
+      let resumable = true;
       try {
         if (interrupted)
           throw new Error(
@@ -467,10 +468,12 @@ export async function commitExactPaths(
               break;
             }
           }
-          if (candidates.length && !commit)
+          if (candidates.length && !commit) {
+            resumable = false;
             throw new Error(
-              'Receipt does not positively match the committed artifact.',
+              'Receipt does not positively match the committed artifact: operation-trailer candidates exist, but none matches the expected receipt parent. Preserve the receipt for inspection and explicit provenance reconciliation; an unchanged same-identity retry cannot resolve this condition.',
             );
+          }
         }
         if (commit && receipt) {
           // Resolution and persistence are separate: history recovery must pass
@@ -793,8 +796,8 @@ export async function commitExactPaths(
           ...(settledCommit ? { settledCommit } : {}),
           attempts,
           receipt: receiptPath,
-          resumable: true,
-          error: `${detail(error)}${interrupted ? ` ${interrupted} received; active Git settled before owned cleanup. Retry the same identity to finalize any reported commit.` : ''}`,
+          resumable,
+          error: `${detail(error)}${interrupted ? ` ${interrupted} received; active Git settled before owned cleanup.${resumable ? ' Retry the same identity to finalize any reported commit.' : ''}` : ''}`,
           lockClass: 'other',
         });
       } finally {

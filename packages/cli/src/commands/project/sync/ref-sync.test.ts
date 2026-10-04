@@ -10,7 +10,7 @@ import {
   symlink,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { completedSyncedRefName } from '@commands/shared/project-scope';
 import { CliError } from '@errors/cli-error';
@@ -2266,8 +2266,17 @@ describe('commitRecordChange', () => {
   // Captured gate-r3-adapter-unrecorded.mjs boundary: real post-commit mutation
   // leaves identity/paths/parent persisted, but no commit/tree. Stored-receipt
   // recovery keepers cannot detect this history-resolution eligibility gap.
-  it.each(['immediate', 'intervening', 'staged', 'parent', 'tree'] as const)(
-    'recovers a record whose landed commit was not recorded in its receipt (%s)',
+  // Rewritten-parent input captured in gate-r4-rewritten-history.mjs: retain
+  // the same tree/message/trailer while the actual commit parent changes.
+  it.each([
+    'immediate',
+    'intervening',
+    'staged',
+    'parent',
+    'tree',
+    'rewrite',
+  ] as const)(
+    'handles a record whose landed commit was not recorded in its receipt (%s)',
     async (condition) => {
       const fixture = await createSyncedFixture();
       try {
@@ -2325,7 +2334,30 @@ describe('commitRecordChange', () => {
         expect(await readdir(pendingDir)).toHaveLength(1);
         await rm(join(root, '.git/hooks/post-commit'));
         await writeFile(join(root, 'other.txt'), 'other\n');
-        if (condition !== 'immediate') {
+        if (condition === 'rewrite') {
+          const seed = pendingReceipt.parent;
+          const upstream = git(root, [
+            'commit-tree',
+            git(root, ['rev-parse', `${seed}^{tree}`]),
+            '-p',
+            seed,
+            '-m',
+            'upstream',
+          ]);
+          const rewritten = git(root, [
+            'commit-tree',
+            git(root, ['rev-parse', `${landed}^{tree}`]),
+            '-p',
+            upstream,
+            '-m',
+            git(root, ['show', '-s', '--format=%B', landed]),
+          ]);
+          git(root, ['update-ref', 'HEAD', rewritten]);
+          expect(rewritten).not.toBe(landed);
+          expect(git(root, ['show', '-s', '--format=%P', rewritten])).toBe(
+            upstream,
+          );
+        } else if (condition !== 'immediate') {
           await writeFile(record, '{"slug":"intervening"}\n');
           expect(
             await commitRecordChange(
@@ -2351,26 +2383,89 @@ describe('commitRecordChange', () => {
         if (
           condition === 'staged' ||
           condition === 'parent' ||
-          condition === 'tree'
+          condition === 'tree' ||
+          condition === 'rewrite'
         ) {
           const markerPath = join(pendingDir, (await readdir(pendingDir))[0]!);
           const marker = await readFile(markerPath);
           const receipt = await readFile(receiptPath);
           const beforeIndex = await readFile(index);
           const beforeHead = git(root, ['rev-parse', 'HEAD']);
-          await expect(
-            commitRecordChange(
-              root,
-              [record],
-              'chore: unrecorded record',
-              defaultGitRunner,
-              { projectRoots: defaultProjectRoots(root) },
-            ),
-          ).rejects.toThrow(
-            condition === 'parent' || condition === 'tree'
-              ? 'Receipt does not positively match'
-              : 'Owned artifact changed since',
-          );
+          const recordBytes = await readFile(record);
+          if (condition === 'rewrite') {
+            for (let retry = 0; retry < 2; retry++) {
+              let refusal:
+                | {
+                    message: string;
+                    result: {
+                      resumable?: boolean;
+                      settledCommit?: string;
+                      committed: boolean;
+                    };
+                  }
+                | undefined;
+              try {
+                await commitRecordChange(
+                  root,
+                  [record],
+                  'chore: unrecorded record',
+                  defaultGitRunner,
+                  { projectRoots: defaultProjectRoots(root) },
+                );
+              } catch (error) {
+                refusal = error as typeof refusal;
+              }
+              expect(refusal).toBeDefined();
+              expect.soft(refusal!.result.resumable).toBe(false);
+              expect
+                .soft(refusal!.message)
+                .toContain('none matches the expected receipt parent');
+              expect
+                .soft(refusal!.message)
+                .toMatch(/inspection.*reconciliation/i);
+              expect
+                .soft(refusal!.message)
+                .not.toContain('oat internal commit-paths');
+              expect
+                .soft(refusal!.message)
+                .not.toMatch(/use a new identity|rebase|delete/i);
+              expect(refusal!.result.committed).toBe(false);
+              expect(refusal!.result.settledCommit).toBeUndefined();
+              expect(await readdir(pendingDir)).toEqual([basename(markerPath)]);
+              expect(await readFile(markerPath)).toEqual(marker);
+              expect(await readFile(receiptPath)).toEqual(receipt);
+              expect(await readFile(index)).toEqual(beforeIndex);
+              expect(await readFile(record)).toEqual(recordBytes);
+              expect(git(root, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+              expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
+              expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+                'UNSTAGED literal\n',
+              );
+              expect(git(root, ['show', ':concurrent.txt'])).toBe(
+                'CONCURRENT literal',
+              );
+              expect(await readFile(join(root, 'concurrent.txt'), 'utf8')).toBe(
+                'CONCURRENT literal\n',
+              );
+              expect(await readFile(join(root, 'other.txt'), 'utf8')).toBe(
+                'other\n',
+              );
+            }
+          } else {
+            await expect(
+              commitRecordChange(
+                root,
+                [record],
+                'chore: unrecorded record',
+                defaultGitRunner,
+                { projectRoots: defaultProjectRoots(root) },
+              ),
+            ).rejects.toThrow(
+              condition === 'parent' || condition === 'tree'
+                ? 'Receipt does not positively match'
+                : 'Owned artifact changed since',
+            );
+          }
           expect(await readFile(markerPath)).toEqual(marker);
           expect(await readFile(receiptPath)).toEqual(receipt);
           expect(await readFile(index)).toEqual(beforeIndex);
