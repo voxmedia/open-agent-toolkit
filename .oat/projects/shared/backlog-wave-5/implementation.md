@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 is ready.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 is in progress; the shared exact-path primitive is committed and independently verified.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | pending  | 3     | 0/3       |
-| Phase 4 | pending  | 3     | 0/3       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | in_progress | 3     | 1/3       |
+| Phase 4 | pending     | 3     | 0/3       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 10/20 tasks completed
+**Total:** 11/20 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -132,8 +132,10 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** aa4d9b0400bea1faa513895b1d933b1060e13ed2
+
+**Outcome:** Shared literal-file helper and source CLI entry committed in exactly five planned files. Hooks run against a HEAD-derived temporary index; the real index lock remains held through hooks, comparison and publication of owned entries. Unrelated staged blobs and worktree bytes are preserved. Lock cleanup checks ownership by inode; a concurrent bypass writer is preserved and returns a committed-but-blocked receipt for verified retry, never a stale whole-index restore. Ignored receipts bind operation, parent, tree and path set. Root repeated all nine real Git/hook/concurrency tests successfully (`analysis/p03-t01-root-tests.log`); author also passed CLI checks, types, lint, build and scoped formatting. Baseline broad-stage leakage and hook-dirty behavior reproduced; valid, hook-failure, unowned-hook-stage, literal removal/rename, matching retry, foreign-lock and concurrent-writer controls passed. Recovery usage remains zero. Strategy recorded before adopter work.
 
 ### Task p03-t02: Adopt the primitive in current CLI lifecycle callers
 
@@ -1102,3 +1104,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
 ```
 
 Accepted native handle `/root/wave5_phase3`; explicit materialized-role invocation, runtime identity not reported. Phase base before dispatch c9130a4b8c1cd01e2d91a9bff9a974687721631a; actual clean execution base follows acceptance bookkeeping. No nested lanes requested. Worker holds product writes until START.
+
+### Phase 3 task-1 receipt and adoption boundary
+
+Actual author execution base: d1fd3642a15cd442163de75be28b10c30cf7bc53. Task-1 commit and clean status verified by root. The same accepted phase author remains running and holds mutations until bookkeeping is committed. For task 2, migration enumerates its exact tracked source-file removals before filesystem mutation; the helper itself never expands directories. The parent-index prune recovery site is an adopter. Nested synced-worktree artifact commits and non-index `commit-tree` bootstrap remain intentional exclusions preserving their existing policies. No unrelated command family is added.

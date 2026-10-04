@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: d10b21caadde19d3cf2be6c948ec23ad99abec0b
+oat_current_task: p03-t02
+oat_last_commit: aa4d9b0400bea1faa513895b1d933b1060e13ed2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 2 complete; Phase 3 shared exact-path commit work is next
+Implement - Phase 3 task 1 complete; CLI lifecycle adoption is next
 
 ## Artifacts
 
