@@ -375,7 +375,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Finding:** M1 in `reviews/archived/p03-review-2026-10-04T125636Z.md`, independently reproduced by root. A post-commit unowned-file mutation leaves the initial receipt without commit/tree; immediate retry recovers successfully. After a valid different-message same-record commit, the original message/path pair fails repeatedly, with no retirement proof and its marker retained.
 
-**Status:** Completed at1f7e5842; native r6 received and configured r4 confirms the named sequence. New rewritten-history diagnostic M1 awaits refreshed assessment/operator disposition. Six Low findings stay final-owned.
+**Status:** Completed at1f7e5842; native r6 received and configured r4 confirms the named sequence. Diagnostic M1 is approved for p03-t12; automatic rewrite recovery is deferred. Six Low findings stay final-owned.
 
 **Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`, `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`. Only these four product paths are authorized; declare additional scope before editing.
 
@@ -386,6 +386,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 **Verification:** Saved `analysis/p03/gate-r3-adapter-unrecorded.mjs` has observation-only exit0; its immediate accepted control passes and later-generation output reproduces the dead end. Root captures output and applies an independent expected fresh-SHA/zero-marker acceptance oracle: `analysis/p03-gate-r3-root-unrecorded-acceptance.exit` currently1; unrelated literal preservation passes. Extend the existing record regression with this captured real-Git post-commit failure, then retain staged/forged/foreign/replaced/current-publication refusals and prior intervening/prune-recreate/direct-oldidentity controls. Direct phase composition/check/types/freshbuild and authorized fresh review/gate only after operator decision.
 
 **Format:** Scoped formatter on actual owned files.
+
+### Task p03-t12: (review) Make unbound-provenance refusal diagnostics truthful
+
+**Finding:** Diagnostic portion of M1 in `reviews/archived/p03-review-2026-10-04T140803Z.md`; refreshed necessity report `reviews/archived/complexity-p03-2026-10-04T142327Z.md`. Operator approved this bounded correction and one additional review cycle on 2026-10-04.
+
+**Files:** Only `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`, `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`.
+
+**Dependencies:** p03-t11 committed. Automatic rewritten-history recovery is explicitly deferred; six Low findings retain final ownership. Original request `wave5-p03-implement-r1`; same exact Sol6.1/high target.
+
+**Change:** For trailer candidates that cannot bind the receipt parent, preserve safe refusal and retained evidence, but use existing result/error fields to state an inspection/reconciliation stop. Do not advertise unchanged same-identity retry as sufficient or infer that rebase is certain. Preserve every parent/tree/trailer/ancestry/path/publication/marker ownership guard, migration compensation and mandatory finalization. No automatic marker/receipt deletion or rotation, new command/schema/registry or broader failure-semantic redesign.
+
+**Verification:** Extend the existing owning real-Git record regression with saved `analysis/p03/gate-r4-rewritten-history.mjs` input. Pre-fix assertions must fail for misleading retryability/guidance, post-fix must refuse truthfully while marker/receipt/HEAD/index/worktree/unrelated literals are unchanged. No-rewrite accepted control passes. Retain forged-provenance, recovered/unrecorded, intervening/prune-recreate/direct-oldidentity and migration controls. CLI check/types/freshbuild plus direct phase composition; ONE fresh native Sol6.1/high review (r7) and configured Opus5.5/high gate (r5) are authorized. Further unresolved findings return to operator; counts never reset.
+
+**Format:** Scoped formatter on actual edited paths; one append-only task commit.
+
+**Commit:** `fix(git): report unbound recovery as inspection required`
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -671,12 +687,12 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 11 tasks — shared primitive and CLI/skill adoption, plus eight committed bounded review corrections, including recovered-unrecorded receipt recognition.
+- Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus eight committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 29 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 30 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
@@ -693,3 +709,7 @@ Completion requires evidence for all 40 original acceptance rows plus U1, exactl
 ## Phase 3 review boundary — 2026-10-04
 
 Eleven phase tasks are committed; the approved native r6/configured r4 cycle is consumed. The refreshed necessity report `reviews/archived/complexity-p03-2026-10-04T142327Z.md` recommends a condition-specific diagnostic correction while retaining unbound-provenance refusal and separately deferring automatic rewritten-history recovery. Operator disposition is pending; no new task, correctness cycle or Phase4 launch is authorized. Six Low findings remain final-owned; total21/29 committed. This assessment is not a Reviews event.
+
+### Operator disposition — 2026-10-04
+
+Approved diagnostics-only corrective revision p03-t12 and ONE fresh native Sol6.1/high r7 plus configured Opus5.5/high r5 gate. Automatic recovery after rewritten provenance is deferred as a separate contract decision; safety refusal remains mandatory. Six Lows stay final-owned. Prior six native/four configured rounds and recovery1/10 pendingnull remain durable, not reset. Original phase handle unavailable after runtime restart; lifecycle permits one fresh same-target bounded fix continuation linked to wave5-p03-implement-r1. After this correction/review cycle passes, continue the remaining approved sequential wave and one-PR lifecycle tail; any remaining unresolved blocking disposition returns to operator.

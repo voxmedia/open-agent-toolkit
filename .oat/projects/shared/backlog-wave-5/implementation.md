@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p03-t11
+oat_current_task_id: p03-t12
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 has eleven committed tasks and has consumed the approved native/configured review cycle. The original p03-t11 gap is closed; one new Medium remains for misleading retry guidance after provenance-changing history rewrites. The refreshed necessity report recommends a condition-specific diagnostic correction and deferring automatic rewritten-history recovery. Operator disposition is pending. Six Low findings remain final-owned; phases 4–6, including U1, and the one-PR tail remain pending.
+Phases 1 and 2 are complete. Phase 3 resumes the operator-approved diagnostics-only p03-t12 correction and one further native/configured cycle. Automatic rewritten-history recovery is deferred; six Low findings remain final-owned. Phases 4–6 and the one-PR tail remain pending.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | blocked  | 11    | 11/11     |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | in_progress | 12    | 11/12     |
+| Phase 4 | pending     | 4     | 0/4       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 21/29 tasks completed
+**Total:** 21/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -207,6 +207,12 @@ Phases 1 and 2 are complete. Phase 3 has eleven committed tasks and has consumed
 **Commit:** 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
 **Outcome:** Shared positive prior-commit verification covers stored and history-recovered receipts; persistence state remains separate. Parent/tree/trailer/ancestry/emitted-path and current publication checks precede narrow settledCommit proof. Stored/intervening/prune controls, strict old-identity refusal, sole marker owner and migration finalization remain intact. Two authorized files; preserved interrupted patch committed unchanged.
 **Verification:** Fresh same-target author21keepers0; 1122/13 direct isolated-child-HOME composition before/after commit0; CLI check/types/freshbuild0; fifteen source/built/public probes before and nine core after0. Captured pre-fix acceptance/keeper1 and tree-guard-neutralized1 are inherited evidence, restored guard passes fresh suites. Root independently repeated built unrecorded acceptance0 and verified exact patch SHA256 43175980c8fab5d27f739f0b7c923f301d21eb7d44813bdbaab1c629fef2b951, normal-hook operation trailer, one commit/two paths/clean tree. Short TMPDIR resolved pre-product tsx socket launch failure; no product repair. Evidence analysis/p03/t11-continuation-evidence.json and p03-t11-root-unrecorded-built.\*. Recovery1/10 pendingnull unchanged.
+
+### Task p03-t12: (review) Make unbound-provenance refusal diagnostics truthful
+
+**Status:** pending
+**Commit:** -
+**Scope:** Four named helper/record source/test paths; operator approved diagnostics-only correction. Automatic rewritten-history recovery deferred. One fresh exact native r7/configured r5 cycle; six Lows final-owned.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -2671,3 +2677,7 @@ Accepted independent read-only necessity assessor; new review artifacts require 
 **Operator decisions:** authorize that diagnostic revision and specified allowance, or explicitly accept the diagnostic limitation and continue the remaining approved wave; manual finding selection and simplify through the normal revision path are also available. Separately decide whether to defer automatic rewritten-history recovery or adopt a new contract; recommendation is defer. Six prior Lows retain final ownership and timing. Diagnostic M1 is dissolvable by this narrow correction; broader recovery demand leaves this scope only with explicit defer.
 
 **Stop reason:** review-receive Step8 cap (six native reviews, four configured gates excluded), consumed scope-bound extra-cycle approval, and refreshed report newer than all reviewed artifacts. Agents never select the disposition. Recovery1/10pendingnull unchanged. Phase3 remains blocked with11/11 task commits,total21/29; Phase4–6 and PR tail pending. No further product/review/gate launch, counter reset, push, merge or release. Operator approval was not rejected by automatic review; this is the explicit lifecycle boundary.
+
+### Operator approval and p03-t12 start — 2026-10-04
+
+User approved the recommended diagnostics-only corrective revision and ONE additional fresh exact Sol6.1/high native review plus configured Opus5.5/high gate. Refreshed report: reviews/archived/complexity-p03-2026-10-04T142327Z.md, Partially compliant/provisional rewritten-history scope. Automatic rewritten-history recovery is explicitly deferred; all preservation/provenance/marker/migration guards remain mandatory. Six Low findings remain final-owned. Prior counts6native/4gate and recovery1/10pendingnull unchanged. Original completed fix handle /root/wave5_phase3_t11_continuation cannot be resumed (native followup: not found); one fresh same-target bounded fix continuation is eligible under lifecycle contract, linked to original wave5-p03-implement-r1. Fetch origin/main found no integration drift in the four authorized product paths. No code edited before this committed scope.

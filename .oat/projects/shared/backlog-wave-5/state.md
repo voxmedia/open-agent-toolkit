@@ -1,10 +1,8 @@
 ---
-oat_current_task: p03-t11
+oat_current_task: p03-t12
 oat_last_commit: 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
 oat_blockers:
-  [
-    'Phase 3 diagnostic finding: refreshed necessity report received; operator disposition pending.',
-  ]
+  ['Phase 3 approved diagnostics-only correction and review cycle pending.']
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -132,7 +130,7 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** Blocked — Phase 3
+**Status:** In progress — Phase 3
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
@@ -162,3 +160,7 @@ The approved native r6/configured r4 cycle is consumed. Original p03-t11 gap is 
 ## Next Milestone
 
 Await operator decision on diagnostics-only correction and explicit review allowance, or acceptance of the residual limitation; no additional product or correctness-cycle authority.
+
+### Approved continuation — 2026-10-04
+
+Resume p03-t12 diagnostics-only correction and one further exact native/configured review cycle. Automatic rewritten-history recovery deferred; six Lows final-owned. No counter reset. Required decision now settled; remaining sequential wave continues after this cycle passes.
