@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.14
+  version: 1.7.15
 ---
 
 # Complete Project

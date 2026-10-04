@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.6
+  version: 1.9.7
 ---
 
 # Execute a Wave of External Plans

@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: false
 allowed-tools: Read, Write, Bash, Glob, Grep
 metadata:
-  version: 1.6.2
+  version: 1.6.3
 ---
 
 # Autonomous Worktree Bootstrap

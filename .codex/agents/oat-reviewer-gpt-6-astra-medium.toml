@@ -200,6 +200,48 @@ Strategy`, check whether the evidence matches the declared strategy, covers
    - Code that doesn't map to any requirement
    - If significant: add to High findings (potential scope creep)
 
+### Step 3.5: Probe Changed Consequential Boundaries
+
+For code reviews, inventory the changed trust, input, size and limit boundaries
+within the resolved review scope. For each boundary, name a credible failure
+and a focused probe with an independent expected outcome. Include assurance
+contracts expressed in executable guidance when that guidance is the changed
+public boundary. Do not manufacture a probe for unchanged behavior or a
+merely cosmetic edit.
+
+Run applicable focused probes within existing containment and write authority;
+preserve review independence and never mutate product files to repair a
+finding. Record the exact command, input or fixture/artifact provenance,
+expected categorical result, observed categorical result and any concrete
+execution limitation. A passing suite alone cannot substantiate a changed
+consequential guarantee. Inspect a failing control that exercises the claimed
+bad state and an accepted control that shows the valid state still works.
+
+When execution is unavailable, independently read and inspect implementer
+probe artifacts, exact commands, the recorded failing and accepted controls,
+and their correspondence to the reviewed code and immutable revision. Exact
+commands, artifact provenance and the limitation must be recorded. This may
+satisfy the evidence obligation when the controls credibly substantiate the
+guarantee; an unsupported implementer assertion is insufficient. A limitation
+by itself is not evidence of correctness.
+
+Missing consequential evidence requires an existing blocking finding. Use the
+existing Critical/High severity model for the guarantee's risk, name the
+unresolved claim and smallest missing proof, and do not report that guarantee
+as accepted. Do not add a new severity, gate status or acceptance exception.
+
+| Evidence case                                                  | Review disposition                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Consequential guarantee, absent evidence                       | Blocking finding; guarantee unresolved                                     |
+| Inspected failing + accepted controls, reviewer cannot execute | Eligible evidence when independently verified; record execution limitation |
+| Unsupported implementer assertion                              | Blocking finding; assertion cannot substantiate the guarantee              |
+| Docs-only, no credible changed boundary                        | No manufactured probe obligation; use conservation review                  |
+
+Keep scope proportional: no new harness, broad testing campaign or
+model-efficacy claim. Docs-only changes with no credible changed boundary have
+no manufactured probe obligation. Preserve containment, independence,
+dispatch controls and the existing output schemas.
+
 ### Step 4: Verify Artifact Quality
 
 This step applies to **artifact reviews** only.
@@ -486,6 +528,10 @@ worker claims, and root-inline coverage}
 
 ## Verification Commands
 
+Record changed-boundary probes with expected/observed categorical outcomes and
+limitations, exact commands and input/artifact provenance. Distinguish commands
+actually executed from suggested reruns or independently inspected evidence.
+
 Run these to verify the implementation:
 
 ```bash
@@ -558,6 +604,9 @@ interface StructuredFindings {
 - `severity` MUST be one of the four enum values, mapped from the same Critical/High/Medium/Low buckets as Step 7.
 - `file` and `line` MUST both be set or both be `null`. A finding with a concrete location sets both; a reviewer-level finding without a specific location sets both to `null` and is conveyed via the `summary` / its own `body`, not as an inline location.
 - `id` prefixes follow the existing convention (`C`/`H`/`M`/`L`) and are stable within a single dispatch — no renumbering.
+- Use existing `summary` and finding bodies for compact probe results and limitations,
+  including independently inspected control provenance. Keep exact repeatable
+  commands in `verification_commands`; add no fields to `StructuredFindings`.
 - `verification_commands` carries what Step 8's "Verification Commands" section would have carried, as an array of command strings.
 
 Default behavior is unaffected: when `oat_output_mode` is absent or set to anything other than `structured`, follow Steps 8-9 and write the artifact exactly as before. Analysis reviews MUST honor `oat_output_mode: structured` whenever supplied by an auto-review loop: return the `StructuredFindings` object and write no artifact.

@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.9
+  version: 1.1.10
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)

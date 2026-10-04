@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.19
+  version: 1.4.20
 ---
 
 # Import External Plan

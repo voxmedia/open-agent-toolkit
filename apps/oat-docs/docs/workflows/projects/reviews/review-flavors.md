@@ -36,6 +36,14 @@ for the deep review request/receive mechanics.
   `oat-project-dispatch-subagents` lifecycle-role table, and the OAT design
   decision that defined these four flavors.
 
+Reviews of changed trust or input-limit boundaries require focused probes for
+credible failure modes. Record the failure and accepted controls, their source,
+and any concrete execution limitations. Independently verified implementer
+evidence can satisfy the obligation when the reviewer cannot run the probe;
+unsupported consequential guarantees remain blocking findings. Keep probes
+proportional to the changed boundary and preserve review independence and
+containment.
+
 ## Flow map
 
 === "Diagram"

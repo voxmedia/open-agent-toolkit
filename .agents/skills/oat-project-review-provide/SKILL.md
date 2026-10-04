@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.12
+  version: 1.5.13
 ---
 
 # Request Review

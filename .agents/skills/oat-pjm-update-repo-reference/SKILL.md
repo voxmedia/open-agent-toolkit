@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.1
+  version: 1.4.2
 ---
 
 # Update Repo Reference

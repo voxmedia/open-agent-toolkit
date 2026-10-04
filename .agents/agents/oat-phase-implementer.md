@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.6
+version: 1.1.7
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan

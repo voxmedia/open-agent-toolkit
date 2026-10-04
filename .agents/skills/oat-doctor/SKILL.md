@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.3
+  version: 2.0.4
 ---
 
 # OAT Doctor

@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.18
+  version: 1.0.19
 ---
 
 # Autonomous OAT Project

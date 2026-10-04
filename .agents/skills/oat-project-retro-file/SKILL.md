@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Bash(oat project push:*), Bash(oat project scope:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # File Project Retro Feedback
