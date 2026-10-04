@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T21:58:30.298427Z
+oat_project_state_updated: 2026-10-04T22:02:27.078880Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -158,7 +158,7 @@ None. User approved exact four derived SVG page refresh within p05-t05; correcti
 
 ## Next Milestone
 
-Phase5 full native r3 and configured Opus gate passed and received. Phase6 p06-t01 versions/generated integration next, then root final verification/review/HiLL and one-PR tail.
+Phase5 full native r3 and configured Opus gate passed and received. Phase6 p06-t01 accepted and HOLD pending committed START, then root final verification/review/HiLL and one-PR tail.
 
 ### Approved continuation — 2026-10-04
 

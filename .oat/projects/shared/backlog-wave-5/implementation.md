@@ -3935,3 +3935,103 @@ Passing-gate non-pausing judgment sweep, ordered dispositions:
 - p05-gate-r1-L3: four branch-pinned recap-summary URLs; source T215406Z Low3, actual pushed-branch serving check required at publication or approved relative conversion.
 
 Phase5 complete5/5 after full native r3/configured r1 received and all phase dispositions settled. Original t01–t05/recovery commits immutable, reviewfix2/2 and recoveryused1/10pendingnull unchanged. Thirteen prior/p05 Low findings plus one stored-receipt diagnostic Medium remain FINAL-owned; no silent waiver. Phase6 dependency now satisfied; one task and root final gates/reviews/HiLL/ten-ticket closeout/verified own recap/one mergeable PR remain authorized. No merge or release.
+
+### Phase 6 dispatch — wave5-p06-implement-r1
+
+```json
+{
+  "request_id": "wave5-p06-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p06",
+  "objective": "Execute approved p06-t01: public lockstep and canonical skill/agent owner versions, project-generated projections/catalog/docs integration; one bounded normal-hook commit.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p06",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-04T22:01:02.417154Z"
+  },
+  "authority": "phase-six-declared-versions-generated-docs-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 14400,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase6"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state+invocation-ceiling"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD; Maxwell; bounded p06-t01, no edits/checks/commit/nesting until START"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Final bundled-owner attribution, symlink-vendor versions and generated integration require reconciliation across reviewed surfaces without changing product behavior.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native /root/wave5_phase6 (Maxwell), exact materialized Sol6.1/high phase implementer,freshforknone,HOLD acknowledged; no nested dispatch. Project high policy/ceiling, explicit hard-reasoning/high task classification, exact candidate branch and resolver notices[]. Fresh origin/main6ec5313b91e2595893eb89bb6372c028c0284ab4 has no planned-path drift since integration base. Phasebasec9dee2a0; root supplies newer committed acceptanceHEAD at START. Preflight canonical-role wrapper evidence lookup corrected before launch, no route/fallback or child change. Current canonical role digest and generic prelaunch/accepted records validated-only, runtimeidentitynot-reported/service tier unspecified.
+
+Own only p06-t01 versions/canonical owner metadata and owning-command project-generated projections/catalog/docs; preserve setup96c470 content, p05 sweep wording and all hashed recap/original bytes. One normal-hook exact-file taskcommit and TASK_DONE RELEASE/HOLD for root receipt; core tracking/logs, final gates/reviews/HiLL/ticketcloseout/owncompletion/onePR root-owned. Recovery default10,nooverride,used0,remaining10,pendingnull,phase-standing eligible mechanical append-only only; failed attempts terminal despite capacity, accepted target exact/history/counters preserved, no ambiguous/scope/credential/destructive/unverified recovery. Thirteen Lows/one Medium remain final-owned, no waiver or silent final fix.
