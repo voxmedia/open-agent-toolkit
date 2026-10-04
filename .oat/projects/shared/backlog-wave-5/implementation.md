@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t03
+oat_current_task_id: p06-t04
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 7     | 2/7       |
+| Phase 6 | in_progress | 8     | 3/8       |
 
-**Total:** 33/38 tasks completed
+**Total:** 34/39 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -327,7 +327,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t03: Reconcile final inventory composition
 
-**Status:** pending
+**Status:** completed
+**Commit:** 01ed25a231c24483ff5dc5b77089fecfebc9e4d9
+
+**Outcome/Verification:** Seven old coverage keys replaced with nine current keys, prior classifications preserved including REVIEWRECEIVE-07; seven narrow non-executing rows. Scanner/negative/unchanged autonomy keeper conserved. Direct41tests pre/post pass; canonical66/skill-bumps39owners/fresh2taskbuild/format/lint exit0. Six bundled vendors equal canonical. Root verified exacttwo paths/soleparent/Gitreadback/approval7 and all explicit exits. Evidence analysis/p06/t03/task-report.md,postcommit-proof.json and verification-results.json. Recovery0/10pendingnull.
 
 ### Task p06-t04: Exercise real helper failure and bookkeeping contracts
 
@@ -342,6 +345,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 **Status:** pending
 
 ### Task p06-t07: Clarify legacy recap evidence and durable links
+
+**Status:** pending
+
+### Task p06-t08: Refresh final generated projections and bundled parity
 
 **Status:** pending
 
@@ -4255,3 +4262,7 @@ CLI validation-only output consumed with its actual validated-only status; root 
   }
 }
 ```
+
+### Root t03 receipt and final generation boundary
+
+Author RELEASE/HOLD received. Root initially looked for the t02 readback filename in t03 evidence; absent file was not proof. Actual named postcommit-proof.json and explicit exits were then read and independently corroborated; no falsepass or recovery. Final p06-t08 appended under operator continuation authority for owning-command provider regeneration after semantic guidance corrections, keeping every owner at its single PR-scoped bump. All canonical/HTML/original evidence bytes outside exacttask unchanged. Next t04 is real-helper harness correction.

@@ -627,6 +627,18 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `docs(recap): clarify legacy evidence and durable links`
 
+### Task p06-t08: Refresh final generated projections and bundled parity
+
+**Files:** Only exact generated provider paths and manifest/catalog/index outputs reported by owning branch sync/docs commands; no manual projection edits, no canonical metadata/public version changes. Build assets remain ignored. Preserve setup manifest fields unless the owning command mechanically updates them.
+
+**Dependencies:** p06-t07 complete.
+
+**Change:** Regenerate project provider views with the current branch sync command after the approved guidance corrections. Verify all changed canonical owners and six autonomy-doc vendors match bundled bytes, including reviewer materialized variants. Check docs catalog/index/nav and regenerate only if their owning commands report drift. Inspect the exact resulting path list before the normal-hook commit; if zero tracked paths change, report settled-noop for root rather than fabricate a commit.
+
+**Verification:** Owning sync dry-run reports no remaining drift, provider/canonical and bundle/vendor parity, skill-bump/public-version/release validation, docs catalog/validation, scoped lint/format and actual generated path conservation. Root then restarts the full ordered final gates. One PR-scoped bump per owner remains.
+
+**Commit:** `chore(sync): refresh final wave guidance projections`
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -800,9 +812,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 7 tasks — versions/generated outputs, three approved final-test corrections and three delegated final guidance/evidence corrections. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 8 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections and final owning-command regeneration. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 38 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 39 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

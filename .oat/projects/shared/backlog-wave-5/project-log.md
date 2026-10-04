@@ -224,6 +224,10 @@ wave5-final-test-stop-f4c51653 final pnpm test exited1 with34CLI failures, repro
 
 wave5-p06-t02-receipt-11da300e7 verified two-file literal-only version correction and353direct tests pre/post; root appends delegated final guidance/evidence tasks and individual carried-finding dispositions; final gates remain pending.
 
+### 2026-10-04 · structural · oat-project-implement · p06-t03
+
+wave5-p06-t03-receipt-01ed25a23 exact two-file inventory correction verified,41direct tests pre/post and all scoped gates pass; prior approval classifications intact; final generation task now declared and final gates pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
