@@ -1,15 +1,16 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  ['p03 review cap: operator disposition required after complexity assessment']
 oat_last_updated: 2026-10-03
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; fresh native review and the configured independent gate remain pending.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; native round 3 passed; independent gate blocks with 1 High, 2 Medium and 1 Low. Four corrections are pending operator disposition at the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -17,12 +18,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 5     | 5/5       |
-| Phase 4 | pending     | 3     | 0/3       |
+| Phase 3 | in_progress | 9     | 5/9       |
+| Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 15/22 tasks completed
+**Total:** 15/27 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -166,6 +167,26 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Outcome:** Existing locked committed-receipt guard now checks actual Git parent before settlement; valid root commits retain empty-parent representation. Three exact approved files, one append-only commit through source helper and normal hooks. No new recovery framework or test-only hook.
 **Verification:** Three pre-fix keeper cases failed for false-parent acceptance; fixed ordinary/root helper and public migration controls pass. Author committed-HEAD direct1090/13files, CLI check/types/fresh build, captured refusal and both public recovery probes all exit0. Root independently repeated29tests/2files and captured actual probe: refused, foreign receipt and pending marker retained, accepted normal migration and literal unrelated state preserved. Evidence `analysis/p03/fix-r2-*`, `analysis/p03-fix-r2-root-tests.log`, `p03-fix-r2-root-gap.json`. Clean worktree; recovery1/10,pendingnull unchanged. Fresh review/gate still required.
 
+### Task p03-t06: (review) Support unrelated nested repositories and gitlinks
+
+**Status:** pending — operator disposition required
+**Commit:** -
+
+### Task p03-t07: (review) Accept staged tracked removals and both rename sides
+
+**Status:** pending — operator disposition required
+**Commit:** -
+
+### Task p03-t08: (review) Settle operation-owned resources on termination
+
+**Status:** pending — operator disposition required
+**Commit:** -
+
+### Task p03-t09: (review) Finalize settled record markers before fresh operations
+
+**Status:** pending — operator disposition required
+**Commit:** -
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 **Status:** pending
@@ -184,6 +205,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 **Status:** pending
 **Commit:** -
+
+### Task p04-t04: Offer and persist Plain Markdown in guided init
+
+**Status:** pending
+**Commit:** -
+**Requirement:** User-added U1; actual menu choice and real config persistence proof required.
 
 ## Phase 5: Flat recap export and complete historical migration
 
@@ -1595,3 +1622,111 @@ Accepted native reviewer `/root/wave5_phase3_review_r3` (Kepler), exact configur
 Exactly one terminal Reconnaissance not-attempted consumed before validation/bookkeeping. Entire artifact read, invocationauto/fullSHA/narrowrange/priorcoverage validated; no orchestration section/log. Existing shared guard positively checks actual parent, including valid empty root parent; M1resolved. Reviewer independently executed29tests and allthree captured actual CLI refusal/accepted recovery probes. Root independently verified source,29tests and gap/accepted/preservation probe. No new task or deferral.
 
 Phase3 converged after two bounded review corrections; no further same-scope standard review requested. Original product/task/recovery commits immutable,15/22tasks, recovery1/10pendingnull. Phase remainsin_progress solely for selected independent Opus-high gate; Phase4 launch remains dependent on its valid received verdict. Fullphase inheritedcoverage chain is preserved in allthree native artifacts, not a claim that narrowed reviewers repeated unrelated boundaries. Fivep01Lowfinaldeferralsremain.
+
+### Review received: p03 / independent gate round 1 blocked
+
+**Artifact:** `reviews/archived/p03-review-2026-10-04T051023Z.md`
+**Reviewed head:** `6fa4f0d5947faf15fc2bda64410f534c8b85a3fe`
+**Reviewed range:** `d1fd3642a15cd442163de75be28b10c30cf7bc53..6fa4f0d5947faf15fc2bda64410f534c8b85a3fe`
+**Invocation/target/run:** gate / claude-opus-5-5-high / 61054dee-de7b-4241-ad14-dfc73e1c76cb.
+**Result:** Valid receiveEligible blocking envelope, exit1, 0 Critical/1 High/2 Medium/1 Low. No launch or artifact-validation failure.
+
+Root personally read the complete original artifact and judged every finding. H1 agrees: preservation snapshot/hook guard read directories as files, breaking commits in repos with nested Git/submodules; convert p03-t06. M1 agrees: real-index-only tracked-removal test rejects staged git rm/mv; convert p03-t07. M2 agrees with executed gate termination evidence: own lock may orphan while child Git commits; convert p03-t08 with coordinated cancellation/settlement, not naive signal unlock. L1 agrees with source-only adapter gap; convert p03-t09, reproduce the actual recurrence before coding. Reviewer suggestions are not mandatory architecture; optional PID metadata is unapproved machinery.
+
+Root independently repeated normal accepted commit, nested-repo EISDIR refusal, staged rename rejection and accepted filesystem rename using real source CLI; unrelated index/worktree preservation verified. Repeatable ignored `analysis/p03-root-gate-r1-probe.py` and `.json`. Root did not independently repeat submodule or termination, and the L1 public recurrence remains unexecuted. Gate independently passed611tests/9files and real normal/idempotent/foreign-lock/wrong-parent/hook-failure/concurrent-index controls. Do not turn these limits into a claim of complete coverage.
+
+Exactly one terminal `**Reconnaissance:** not-attempted` recovered from the matched Claude child terminal before artifact validation/bookkeeping (session 6dd809d3-6fa0-451a-a6b7-0f9742be0eef; exact gate prompt/head and terminal artifact/counts matched). No orchestration section or nested recon. Original review was preserved in immutable commit44abf0448, then archived byte-for-byte. Original gate log entry remains unchanged.
+
+The scope has three standard native reviews (gate excluded), two bounded correction rounds and settled recovery usage1/10 pendingnull. Review-receive Step8 cap blocks further automated standard rounds. Required read-only complexity assessment is pending; no operator disposition selected, no corrective implementation or Phase4 launch authorized by this assessment. Proposed four tasks plus user U1 bring totals15/27; five p01 Low final deferrals remain. No PR, merge or release.
+
+### Dispatch wave5-p03-complexity-r1
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-complexity-r1",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Assess necessity and minimum sufficient correction for exhausted p03 loop; no correctness re-review.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T05:20:17.528489Z"
+  },
+  "authority": "read-only-inline-report",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_complexity"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Accepted /root/wave5_phase3_complexity (Confucius); HOLD acknowledged. No writes/probes/nested launches; same resolved Sol6.1/high reviewer ceiling."
+  ],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Required complexity assessment of assurance-bearing Git preservation/recovery at the three-cycle cap.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```

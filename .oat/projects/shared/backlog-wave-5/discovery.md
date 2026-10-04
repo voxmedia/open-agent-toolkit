@@ -85,3 +85,7 @@ No unresolved material product questions. Implementation must escalate unexpecte
 Authoritative requirements are the ten item files under `.oat/repo/pjm/backlog/items/` listed with titles in `plan.md`. Current source inspected includes shared skill-bump validation, docs Markdown parser/validator, PJM init/migrate, control-plane parser/status consumers, project-log commit recovery, scaffold/promote/ref-sync, backlog archive, knowledge refresh, recap export/report, completion scripts, autonomy and reviewer contracts, and decision `DR-260911-explainers-are-agent-authored`.
 
 Root has completed discovery through the owning CLI and reviews the canonical plan with normal Sol-high self-review and independent Opus-high review, records results without deleting review rows, and only then marks the plan implementation-ready. Discovery has been marked complete through the owning CLI; the plan remains in progress until its review/readiness transition.
+
+## User-added Requirement — 2026-10-04
+
+U1: Existing-docs setup during `oat init` must offer Plain Markdown and persist `documentation.tooling: "markdown"` plus the selected docs root. User explicitly requested this after clarifying the gap was in guided init, not `$oat-docs-bootstrap`. Preserve other common existing-framework choices; no automatic Markdown detection, additional framework support or factory-platform modification. Include as p04-t04 in the same Quick wave/PR; exactly ten original backlog closures remain.

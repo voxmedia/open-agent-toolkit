@@ -299,6 +299,62 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `fix(git): verify committed receipt parent before settlement`
 
+### Task p03-t06: (review) Support unrelated nested repositories and gitlinks
+
+**Finding:** H1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Declare any additional need before editing.
+
+**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+
+**Change:** Handle directory entries in both preservation snapshot and hook guard without readFile/EISDIR. Preserve literal unrelated index/worktree state and containment; do not silently weaken C2 by skipping directories without a justified contract.
+
+**Verification:** Real-Git nested repository and tracked submodule accepted controls, with unrelated staged/worktree state preserved; pre-fix commands fail EISDIR. Existing invalid owned-directory refusal still passes. Existing owning-family tests, CLI check/type-check/fresh build; direct execution and proportional negative/accepted controls.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on actual edited files.
+
+### Task p03-t07: (review) Accept staged tracked removals and both rename sides
+
+**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Declare any additional need before editing.
+
+**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+
+**Change:** Positively recognize HEAD-tracked removals absent from the real index after git rm/git mv. Commit both old/new names; preserve unrelated staging and existing literal path validation.
+
+**Verification:** Actual staged git rm and git mv both-side controls must fail on the reviewed implementation and pass after correction; normal filesystem rename and untracked-missing refusal remain valid. Existing owning-family tests, CLI check/type-check/fresh build; direct execution and proportional negative/accepted controls.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on actual edited files.
+
+### Task p03-t08: (review) Settle operation-owned resources on termination
+
+**Finding:** M2 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`; `packages/cli/src/commands/internal/commit-paths.ts`, `commit-paths.test.ts` only if owning CLI signal handling is needed`. Declare any additional need before editing.
+
+**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+
+**Change:** Bound termination handling to the active operation. Coordinate cancellation/settlement of child Git before inode-verified owned lock/temp cleanup; never unlock while a surviving child can commit, and never remove foreign/replaced resources. No new PID database or generic recovery framework unless separately justified.
+
+**Verification:** Real child/hook SIGTERM and SIGINT probes show no orphaned owned index.lock or stale unreported commit/index state, valid retry finalizes safely, and replacement/foreign locks remain. Gate signal finding is independently executed evidence; root has not repeated it yet. Existing owning-family tests, CLI check/type-check/fresh build; direct execution and proportional negative/accepted controls.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on actual edited files.
+
+### Task p03-t09: (review) Finalize settled record markers before fresh operations
+
+**Finding:** L1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+
+**Files:** `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`. Declare any additional need before editing.
+
+**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+
+**Change:** Close the existing adapter/helper settlement gap using positively verified owning finalization or settled-marker reconciliation. Preserve foreign marker/receipt and idempotent matching retries; safely allow a later distinct content operation with the same message/paths.
+
+**Verification:** Exercise the public record-commit recovery followed by changed-content recurrence, matching repeat and foreign/replaced-marker refusals through actual helper. Gate recurrence is source-only evidence; reproduce before choosing the correction. Existing owning-family tests, CLI check/type-check/fresh build; direct execution and proportional negative/accepted controls.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on actual edited files.
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
@@ -342,6 +398,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 **Format:** Scoped formatter on the four named text files.
 
 **Commit:** `fix(knowledge): preserve manual files during refresh`
+
+### Task p04-t04: Offer and persist Plain Markdown in guided init
+
+**Requirement:** U1 — user explicitly requested Plain Markdown in the existing-docs menu, saving the choice in config (2026-10-04). This is a direct addition to the approved Quick wave, not an eleventh backlog closure.
+
+**Files:** `packages/cli/src/commands/init/index.ts`, `guided-setup.test.ts`; `apps/oat-docs/docs/getting-started/bootstrap.md`.
+
+**Dependencies:** p03 received/cleared before Phase 4 launch.
+
+**Change:** Add `Plain Markdown` with literal value `markdown` to existing-documentation tooling choices. Preserve common existing-framework choices and existing default. Persist `documentation.tooling: "markdown"` and selected normalized root through the existing config merge, preserving unrelated documentation/config fields. No automatic Markdown detection or framework scaffold changes.
+
+**Verification:** Extend the existing guided setup family using the actual supplied menu choices and real config IO in a temporary repository. Select the actual Markdown option, run `init --setup --scope project`, and read persisted `.oat/config.json` to verify tooling/root plus unrelated setting preservation. A mock that returns markdown regardless of offered choices is insufficient: the keeper must fail pre-fix because the option is absent. Run focused guided-setup tests, CLI check/types/build and applicable docs checks.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on the three edited files.
+
+**Commit:** `fix(init): offer plain Markdown documentation tooling`
 
 ## Phase 5: Flat recap export and complete historical migration
 
@@ -438,7 +510,7 @@ Also run `pnpm lint`, `pnpm format`, `pnpm docs:validate`, `pnpm docs:skills:che
 
 **Files:** The exact ten source/destination item paths in the Scope table, `.oat/repo/pjm/backlog/completed.md`, `backlog/index.md`, rewritten references actually reported by archive, existing matching `.oat/repo/pjm/handoffs/<ID>.md` deletions, and `current-state.md` only if shipping changes its operating picture. Root owns canonical plan/state/tracking rewrites.
 
-**Prerequisites:** All implementation phases, final verification and required code/gate reviews passed; all 40 acceptance rows have verified evidence. Root executes closeout in the owning lifecycle tail after review fixes, without marking unverified items complete. Any later finding that invalidates acceptance stops publication and requires the same item’s completion record to be reconciled; it cannot remain falsely complete.
+**Prerequisites:** All implementation phases, final verification and required code/gate reviews passed; all 40 original acceptance rows plus U1 have verified evidence. Root executes closeout in the owning lifecycle tail after review fixes, without marking unverified items complete. Any later finding that invalidates acceptance stops publication and requires the same item’s completion record to be reconciled; it cannot remain falsely complete.
 
 **Change:** Run `oat pjm doctor --json`, inspect full adoption, then use the branch archive command for each exact ID with a nonblank outcome summary. Archive terminal states/ledger/index/refs as one complete caller-owned operation, format reported paths and stage old/new names with the shared helper; delete only existing corresponding kickoff handoffs. Preserve the approved recap ticket amendment in the archived record. Do not close deferred issues/items. Reconcile rewrite overlap serially, then regenerate the backlog index with its owner and refresh current state only where necessary.
 
@@ -514,6 +586,12 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 | S1  | Archive no staging, complete source/destination/ledger/index/refs report        | p04-t01: real index equality and exact affected-path report                                                                             |
 | S2  | Caller commits entire operation via helper; unrelated staged work intact        | p04-t02, root backlog closeout: real archive/helper composition and actual closeout paths                                               |
 
+## User-added Acceptance
+
+| ID  | Criterion                                                                                                              | Task and proof                                                                   |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| U1  | Existing-docs guided init offers Plain Markdown and persists markdown tooling/root without discarding unrelated config | p04-t04: actual offered choice and real persisted-config keeper, pre-fix failure |
+
 ## Reviews
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
@@ -543,6 +621,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md           | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T032627Z.md           | 0ab95601abdd58e124c37b4d9770e07aaade5b09 | auto       | -                    |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T050037Z.md           | de854f7bc9e11e3a3b7a8f5ffaa02e75fbd8bec9 | auto       | -                    |
+| p03    | code     | received        | 2026-10-04 | reviews/archived/p03-review-2026-10-04T051023Z.md           | 6fa4f0d5947faf15fc2bda64410f534c8b85a3fe | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -554,14 +633,14 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 5 tasks — shared primitive and CLI/skill adoption plus bounded recovery and receipt-parent corrections.
-- Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
+- Phase 3: 9 tasks — shared primitive and CLI/skill adoption plus bounded recovery and receipt-parent corrections.
+- Phase 4: 4 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 22 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 27 tasks across 6 phases.** This is a planning total, not a completion claim.
 
-Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
+Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
 ## References
 
