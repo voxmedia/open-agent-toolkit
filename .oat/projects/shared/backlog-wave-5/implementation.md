@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p04-t04
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -249,7 +249,7 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ## Phase 5: Flat recap export and complete historical migration
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p05-t01: Export one page while verifying the full source package
 
@@ -3195,3 +3195,105 @@ Passing-gate non-pausing judgment sweep, ordered per-finding decisions:
 - p04-gate-r1-L4: generated-knowledge report visibility across shell calls/temp cleanup; source T155932Z Low4.
 
 Phase4 complete4/4: all native dispositions settled, configured gate passed with durable default final deferrals.26/30 tasks, native1/gate1, review-fix0; recoveryused1/10pendingnull unchanged. Ten Low findings and one prior Medium now final-owned, none dropped. Phase5 next; Phase6 versions/projections and full final gates/onePR remain pending.
+
+### Phase 5 dispatch — wave5-p05-implement-r1
+
+Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p05-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Execute three approved Phase5 tasks: verified flat recap export, actual completion/resume consumers and fully preserved seven-package historical migration.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p05",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-04T16:04:05.089237Z"
+  },
+  "authority": "phase-five-declared-product-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 14400,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase5"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD before committed phase START"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Original archive evidence conservation, atomic export rollback and actual terminal receipt consumers require bounded consequential implementation and independent review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Exact native accepted handle `/root/wave5_phase5`, HOLD until acceptance commit. Phase base a49abbf525f3de8f2ee28781a51b7d88aa3c5097. Current main fetch found no drift in declared Phase5 paths; ignored analysis/p05-main-drift.json. Complete phase classified consequential: original evidence conservation, atomic write/rollback, real report and terminal retry/resume consumers. Native schema/materialized role plus fresh live T3 catalog support exact Sol6.1/high; service tier unspecified/default, runtime confirmation not reported. Resolver notices[]. Three sequential tasks, exact product ownership and per-task commit/root ledger handshake; no nested workers/live calls. Root owns tracking/log/reviews/publication, Phase6 versions/projections.
+
+Effective recovery projectdefault10/phase10/sourceprojectdefault/used0/remaining10/pendingnull from authoritative state ledger. Capacity does not grant repeated failed attempts. Ten Low findings and one stored-receipt diagnostic Medium remain final-owned; automatic rewritten-history recovery deferred. Root corrected four earlier task status scalars complete→completed to the project reader vocabulary, independently confirmed project status26/30, preserving actual commits/phase status/counters. No task replay.

@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t04
+oat_current_task: p05-t01
 oat_last_commit: 8158a6035a02f87be1e4330f0320acf4f464747e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T16:03:23.927088Z
+oat_project_state_updated: 2026-10-04T16:05:08.717545Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — Phase 5 ready
+**Status:** In progress — Phase 5
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 4 complete; Phase 5 recap export and historical migration ready
+Implement - Phase 5 flat recap export, consumer composition and historical migration
 
 ## Artifacts
 
