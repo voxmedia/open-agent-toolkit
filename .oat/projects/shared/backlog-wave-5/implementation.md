@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 3     | 0/3       |
+| Phase 5 | in_progress | 3     | 1/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 26/30 tasks completed
+**Total:** 27/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -253,8 +253,15 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p05-t01: Export one page while verifying the full source package
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1e53c9ca759309a42a562410278b5f09b492d5ea
+**Recovery commit:** 7e4def32528a6e5e8ff0f12f90911628334220e5
+
+**Outcome:** Full captured v2/legacy packages are verified and preserved, with exactly one transformed HTML export and run/page/original/exported hash report; matching retry is idempotent and mismatching output refuses. The six-file original task commit remains immutable. Mutable historical build-record attestation is distinguished from the complete immutable byte-hash map; legacy canonical fact-base/theme identities are verified through the captured writer's canonical-object contract, not incorrectly equated with raw bytes. No original evidence was rewritten.
+
+**Verification:** Author directly ran original 142 archive tests, four authentic package probes, CLI check/types/fresh build and focused postcommit controls. Exact self-contained exported bytes rendered in T3: root Wave4 desktop/System view and author July desktop/architecture/mobile, with valid IDs/fragments and no overflow. HTTP preview routing failed and is not claimed verified; byte-fed rendering and filesystem link oracles are distinct. Recovery committed-head reruns: 153 archive tests across four families, 86 completion tests, nine focused controls, skills66/docs/CLI check/types/direct build all exit0. Root independently inspected exact candidate/parent/paths and terminal ledger, repeated six cleanup keepers and the real opened-file/path-replacement observer (foreign literal and source survive, exit0). Ignored evidence: analysis/p05/t01-evidence-summary.json, root-t01-render-evidence.json, r01-post-\* and root-r01-reconciled-race.json. Final CI/release/version gates remain pending.
+
+**Recovery:** Root reproduced rollback deleting a different writer's replacement while readFile returned old inode bytes. The same accepted exact phase handle reserved attempt1/10 before editing and made one append-only bounded correction: claim the pathname into an exclusive private namespace before identity/hash inspection; remove owned claims only; restore foreign regular files without clobbering a third writer; retain unsafe foreign directory/collision claims with explicit fail-closed diagnostics. Author committed completed marker and reran relevant verification before RELEASE. Root reconciled every reservation field and immutable history, then cleared only matching pending; used1/10 remains consumed. Consumers remain p05-t02-owned.
 
 ### Task p05-t02: Compose report, completion/resume, summary and documentation
 
@@ -3299,3 +3306,18 @@ Exact native accepted handle `/root/wave5_phase5`, HOLD until acceptance commit.
 Effective recovery projectdefault10/phase10/sourceprojectdefault/used0/remaining10/pendingnull from authoritative state ledger. Capacity does not grant repeated failed attempts. Ten Low findings and one stored-receipt diagnostic Medium remain final-owned; automatic rewritten-history recovery deferred. Root corrected four earlier task status scalars complete→completed to the project reader vocabulary, independently confirmed project status26/30, preserving actual commits/phase status/counters. No task replay.
 
 Root START alignment: match Progress Overview by cell content after hook formatting; Phase5 row in_progress agrees with its section/resume pointer. Phase3 section and row complete agree with received native r7/configured r5 outcome and12/12 task ledger; preserve event history and counters. No product edit.
+
+### Recovery Event wave5-p05-r01-export-cleanup-ownership
+
+- Phase/task: p05 / p05-t01
+- Original request: wave5-p05-implement-r1
+- Original commit: 1e53c9ca759309a42a562410278b5f09b492d5ea
+- Defect class: composition
+- Discovered by: root-t01-rollback-race.ts
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: 7e4def32528a6e5e8ff0f12f90911628334220e5
+- Verification: Author committed-head actual race and9controls pass; archive153/153, completion86/86, skills/docs/check/types/freshbuild pass before candidate and at committed HEAD. Root real race and six focused cleanup keepers pass.
+- Reason: Root reproduced old opened-file bytes plus real public-path rename deleting foreign replacement. Same accepted handle/exact target; mechanically bounded existing export/temp cleanup ownership correction, one pre-edit authoritative reservation, no changed source evidence/public requirements/architecture. Original task commit preserved at same history position; terminal completed marker committed and validated before root settlement. Author RELEASE/HOLD consumed; task2 resumes only after committed BOOKKEEPING_DONE.

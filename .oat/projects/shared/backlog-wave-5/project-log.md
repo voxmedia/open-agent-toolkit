@@ -188,6 +188,10 @@ wave5-p04-complete-r1: native r1 zero findings and configured Opus-high r1 passe
 
 wave5-p04-task-status-reader-alignment: root receipt task rows used complete instead of parser-owned completed; project status counted22 despite four committed Phase4 tasks. Correct only four task status scalars, preserving phasecomplete, task commits, evidence and26/30 ledger. No product or recovery change.
 
+### 2026-10-04 · structural · oat-project-implement · p05-t01
+
+wave5-p05-t01-root-settlement: p05-t01 and recovery1/10 validated; immutable original1e53c9ca, bounded recovery7e4def325 and committed-head controls passed; matching pending cleared, task2 release awaits this bookkeeping commit.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

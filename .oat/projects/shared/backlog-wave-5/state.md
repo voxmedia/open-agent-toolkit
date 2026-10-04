@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 8158a6035a02f87be1e4330f0320acf4f464747e
+oat_current_task: p05-t02
+oat_last_commit: 7e4def32528a6e5e8ff0f12f90911628334220e5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T16:05:08.717545Z
+oat_project_state_updated: 2026-10-04T16:33:18.121225Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -116,16 +116,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p05:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: wave5-p05-r01-export-cleanup-ownership
-        original_request_id: wave5-p05-implement-r1
-        original_task_id: p05-t01
-        original_commit: 1e53c9ca759309a42a562410278b5f09b492d5ea
-        discovered_by: root-t01-rollback-race.ts
-        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
-        reservation_head: 1e53c9ca759309a42a562410278b5f09b492d5ea
-        status: completed
+      pending_attempt: null
     p06:
       used_attempts: 0
       pending_attempt: null
