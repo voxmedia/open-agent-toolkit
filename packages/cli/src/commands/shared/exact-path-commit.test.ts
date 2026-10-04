@@ -580,6 +580,63 @@ printf "FOREIGN temporary bytes" > "$temporary/foreign"`,
     );
   });
 
+  it.each(['published', 'staged', 'parent', 'tree'] as const)(
+    'recognizes a superseded receipt without republishing its tree (%s)',
+    async (condition) => {
+      const root = await repo();
+      const owned = join(root, 'owned.md');
+      await writeFile(owned, 'old owned literal\n');
+      const original = {
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: superseded receipt',
+        identity: 'superseded-receipt',
+      };
+      const first = await commitExactPaths(original);
+      expect(first.outcome).toBe('committed');
+      await writeFile(owned, 'later owned literal\n');
+      const later = await commitExactPaths({
+        ...original,
+        identity: 'later-receipt',
+      });
+      expect(later.outcome).toBe('committed');
+      // The producer may return to exactly the old artifact. That is a fresh
+      // generation, never permission for the old identity to republish it.
+      await writeFile(owned, 'old owned literal\n');
+      if (condition === 'staged') git(root, ['add', 'owned.md']);
+      if (condition === 'parent' || condition === 'tree') {
+        const receipt = JSON.parse(await readFile(first.receipt!, 'utf8'));
+        await writeFile(
+          first.receipt!,
+          JSON.stringify({
+            ...receipt,
+            [condition]: '0000000000000000000000000000000000000000',
+          }),
+        );
+      }
+      const receipt = await readFile(first.receipt!);
+      const index = await readFile(join(root, '.git/index'));
+      const result = await commitExactPaths(original);
+      expect(result).toMatchObject({
+        outcome: 'failed',
+        commit: first.commit,
+        error: expect.stringContaining(
+          condition === 'parent' || condition === 'tree'
+            ? 'Receipt does not positively match'
+            : 'Owned artifact changed since',
+        ),
+      });
+      expect(result.settledCommit).toBe(
+        condition === 'published' ? first.commit : undefined,
+      );
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(later.commit);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(await readFile(first.receipt!)).toEqual(receipt);
+      expect(await readFile(owned, 'utf8')).toBe('old owned literal\n');
+      preservation(root);
+    },
+  );
+
   it('reproduces broad staged leakage and pathspec hook dirt in the baseline', async () => {
     const broad = await repo();
     await writeFile(join(broad, 'owned.md'), 'changed\n');

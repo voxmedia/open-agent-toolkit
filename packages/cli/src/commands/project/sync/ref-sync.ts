@@ -1138,8 +1138,9 @@ export async function commitRecordChange(
       identity: reservation.identity,
     });
     // A public helper repair can settle Git while leaving our reservation. Only
-    // its narrow positive publication proof authorizes one new generation for
-    // fresh unstaged producer bytes. A migration's finalization remains mandatory.
+    // its positive prior/current publication proof authorizes retiring that
+    // reservation before one fresh generation. Never republish a superseded
+    // tree; a migration's finalization remains mandatory.
     if (
       !settlement &&
       reservationAttempt === 0 &&

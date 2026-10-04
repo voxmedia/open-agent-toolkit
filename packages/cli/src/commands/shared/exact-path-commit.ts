@@ -32,8 +32,8 @@ export interface ExactPathCommitResult {
   attempts: number;
   commit?: string;
   /** A fully verified resumed receipt whose owned real-index entries remain
-   * published, but whose worktree now carries different bytes. Failed outcome
-   * stays failed; only the marker-owning adapter may finalize that reservation. */
+   * published, or whose later generation is published at current HEAD. Failed
+   * outcome stays failed; only the marker owner may retire that reservation. */
   settledCommit?: string;
   receipt?: string;
   error?: string;
@@ -456,21 +456,6 @@ export async function commitExactPaths(
               'Receipt does not positively match the committed artifact.',
             );
           await git(root, ['merge-base', '--is-ancestor', commit, 'HEAD']);
-          if (
-            (
-              await git(root, [
-                'diff',
-                '--name-only',
-                commit,
-                'HEAD',
-                '--',
-                ...paths,
-              ])
-            ).length
-          )
-            throw new Error(
-              'Owned artifact changed since this operation committed; use a new identity.',
-            );
           verifiedCommittedReceipt = true;
         } else if (receipt) {
           // Recover the window after Git wrote the commit but before receipt publication.
@@ -645,6 +630,45 @@ export async function commitExactPaths(
           throw new Error(
             'Verified receipt was replaced; replacement preserved for inspection.',
           );
+        if (
+          resuming &&
+          (
+            await git(root, [
+              'diff',
+              '--name-only',
+              commit,
+              head,
+              '--',
+              ...paths,
+            ])
+          ).length
+        ) {
+          // A later owned generation cannot authorize republishing the old tree.
+          // Only a validated receipt and the current published HEAD allow its
+          // marker owner to retire the obsolete reservation, even when the new
+          // producer worktree equals the old tree (prune -> recreate -> prune).
+          const current = join(temporary, 'current');
+          if (snapshot) await writeFile(current, snapshot);
+          else await git(root, ['read-tree', '--empty'], current);
+          if (
+            verifiedCommittedReceipt &&
+            !(
+              await git(
+                root,
+                ['diff', '--cached', '--name-only', head, '--', ...paths],
+                current,
+              )
+            ).length &&
+            (await bytes(indexPath))?.equals(snapshot ?? Buffer.alloc(0)) &&
+            (await bytes(receiptPath))?.equals(receiptBytes!) &&
+            (await git(root, ['rev-parse', '--verify', 'HEAD'])) === head &&
+            (await stillOwnLock())
+          )
+            settledCommit = commit;
+          throw new Error(
+            'Owned artifact changed since this operation committed; use a new identity.',
+          );
+        }
         if (!verifiedCommittedReceipt) await writeReceipt(receiptPath, receipt);
         // Copy current index into a disposable merge, never into the live index.
         // Only owned entries are reset to the verified hook-final tree.

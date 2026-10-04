@@ -2015,15 +2015,39 @@ describe('commitRecordChange', () => {
     'parent',
     'foreign-marker',
     'replacement',
+    'intervening',
+    'prune-recreate',
+    'intervening-staged',
+    'intervening-parent',
+    'intervening-foreign-marker',
+    'intervening-unresolved',
   ])(
     'reconciles advertised public recovery before record recurrence (%s)',
     async (condition) => {
+      const refusal = condition.startsWith('intervening-')
+        ? condition.slice('intervening-'.length)
+        : condition;
+      const superseded =
+        condition.startsWith('intervening') || condition === 'prune-recreate';
+      const accepted = ['accepted', 'intervening', 'prune-recreate'].includes(
+        condition,
+      );
       const fixture = await createSyncedFixture();
       try {
         const root = fixture.cloneA;
         const recordPath = join(root, '.oat/projects/synced/recovered.json');
         await mkdir(dirname(recordPath), { recursive: true });
         await writeFile(recordPath, '{"slug":"first"}\n');
+        if (condition === 'prune-recreate') {
+          await commitRecordChange(
+            root,
+            [recordPath],
+            'chore: seed record',
+            defaultGitRunner,
+            { projectRoots: defaultProjectRoots(root) },
+          );
+          await rm(recordPath);
+        }
         await writeFile(join(root, 'README.md'), 'STAGED literal\n');
         git(root, ['add', 'README.md']);
         await writeFile(join(root, 'README.md'), 'UNSTAGED literal\n');
@@ -2082,7 +2106,7 @@ describe('commitRecordChange', () => {
           outcome: 'blocked',
           committed: true,
         });
-        if (condition !== 'unresolved') {
+        if (refusal !== 'unresolved' || superseded) {
           const settled = spawnSync('/bin/sh', ['-c', command], {
             cwd: root,
             encoding: 'utf8',
@@ -2104,11 +2128,32 @@ describe('commitRecordChange', () => {
         const markerDir = join(root, '.git/oat-record-commit-pending');
         expect(await readdir(markerDir)).toHaveLength(1);
         await rm(join(root, '.git/hooks/pre-commit'));
-        await writeFile(recordPath, '{"slug":"second"}\n');
+        if (superseded) {
+          await writeFile(recordPath, '{"slug":"intervening"}\n');
+          const intervening = await commitRecordChange(
+            root,
+            [recordPath],
+            'chore: intervening record',
+            defaultGitRunner,
+            { projectRoots: defaultProjectRoots(root) },
+          );
+          expect(intervening?.sha).toBeTruthy();
+        }
+        const previousHead = git(root, ['rev-parse', 'HEAD']);
+        if (condition === 'prune-recreate') await rm(recordPath);
+        else await writeFile(recordPath, '{"slug":"second"}\n');
+        if (condition === 'intervening-unresolved')
+          git(root, [
+            'reset',
+            '--quiet',
+            pending.commit,
+            '--',
+            '.oat/projects/synced/recovered.json',
+          ]);
         const markerPath = join(markerDir, (await readdir(markerDir))[0]!);
-        if (condition === 'staged')
+        if (refusal === 'staged')
           git(root, ['add', '.oat/projects/synced/recovered.json']);
-        if (condition === 'parent') {
+        if (refusal === 'parent') {
           const receipt = JSON.parse(await readFile(pending.receipt, 'utf8'));
           await writeFile(
             `${pending.receipt}.foreign`,
@@ -2119,7 +2164,7 @@ describe('commitRecordChange', () => {
           );
           await rename(`${pending.receipt}.foreign`, pending.receipt);
         }
-        if (condition === 'foreign-marker') {
+        if (refusal === 'foreign-marker') {
           const marker = JSON.parse(await readFile(markerPath, 'utf8'));
           await writeFile(
             `${markerPath}.foreign`,
@@ -2127,7 +2172,7 @@ describe('commitRecordChange', () => {
           );
           await rename(`${markerPath}.foreign`, markerPath);
         }
-        if (condition === 'replacement') {
+        if (refusal === 'replacement') {
           const replacer = join(root, '.git/replace-record-marker.cjs');
           await writeFile(
             replacer,
@@ -2139,7 +2184,7 @@ describe('commitRecordChange', () => {
             { mode: 0o755 },
           );
         }
-        if (condition !== 'accepted') {
+        if (!accepted) {
           const markerBytes = await readFile(markerPath);
           const receiptBytes = await readFile(pending.receipt);
           const beforeIndex = await readFile(index);
@@ -2152,19 +2197,21 @@ describe('commitRecordChange', () => {
               { projectRoots: defaultProjectRoots(root) },
             ),
           ).rejects.toThrow(
-            condition === 'parent'
+            refusal === 'parent'
               ? 'Receipt does not positively match'
-              : condition === 'foreign-marker'
+              : refusal === 'foreign-marker'
                 ? 'Unreconciled lifecycle'
-                : condition === 'replacement'
+                : refusal === 'replacement'
                   ? 'replacement preserved'
-                  : 'Committed owned bytes differ',
+                  : superseded
+                    ? 'Owned artifact changed since'
+                    : 'Committed owned bytes differ',
           );
-          if (condition !== 'replacement') {
+          if (refusal !== 'replacement') {
             expect(await readFile(markerPath)).toEqual(markerBytes);
             expect(await readFile(pending.receipt)).toEqual(receiptBytes);
             expect(await readFile(index)).toEqual(beforeIndex);
-            expect(git(root, ['rev-parse', 'HEAD'])).toBe(pending.commit);
+            expect(git(root, ['rev-parse', 'HEAD'])).toBe(previousHead);
           } else expect(await readdir(markerDir)).toHaveLength(1);
           expect(await readFile(recordPath, 'utf8')).toBe(
             '{"slug":"second"}\n',
@@ -2186,9 +2233,21 @@ describe('commitRecordChange', () => {
           { projectRoots: defaultProjectRoots(root) },
         );
         expect(fresh?.sha).not.toBe(pending.commit);
-        expect(
-          git(root, ['show', 'HEAD:.oat/projects/synced/recovered.json']),
-        ).toBe('{"slug":"second"}');
+        if (condition === 'prune-recreate') {
+          expect(
+            git(root, [
+              'ls-tree',
+              '--name-only',
+              'HEAD',
+              '--',
+              '.oat/projects/synced/recovered.json',
+            ]),
+          ).toBe('');
+        } else
+          expect(
+            git(root, ['show', 'HEAD:.oat/projects/synced/recovered.json']),
+          ).toBe('{"slug":"second"}');
+        expect(fresh?.sha).not.toBe(previousHead);
         expect(git(root, ['status', '--porcelain', '--', recordPath])).toBe('');
         expect(await readdir(markerDir)).toEqual([]);
         expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
