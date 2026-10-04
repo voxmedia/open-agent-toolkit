@@ -1,5 +1,15 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
+import {
+  access,
+  copyFile,
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -129,6 +139,279 @@ describe('createProjectMigrateCommand', () => {
   });
   afterEach(() => {
     process.exitCode = previousExitCode;
+  });
+
+  it('finalizes a verified pending migration through the public command without recopying or losing concurrent staging', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const root = fixture.cloneA;
+      const git = (args: string[]) =>
+        execFileSync('git', args, {
+          cwd: root,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trimEnd();
+      const source = await addTrackedMigrationSource(root, 'pending');
+      await writeOatLocalConfig(root, {
+        version: 1,
+        activeProject: '.oat/projects/shared/pending',
+      });
+      await writeFile(join(root, 'unrelated.txt'), 'BASE\n');
+      git(['add', 'unrelated.txt']);
+      git(['commit', '-qm', 'unrelated base']);
+      const base = git(['rev-parse', 'HEAD']);
+      await writeFile(join(root, 'unrelated.txt'), 'STAGED\n');
+      git(['add', 'unrelated.txt']);
+      await writeFile(join(root, 'unrelated.txt'), 'WORKTREE\n');
+      const alternate = join(root, '.git/concurrent-index');
+      await copyFile(join(root, '.git/index'), alternate);
+      await writeFile(join(root, 'concurrent.txt'), 'CONCURRENT\n');
+      execFileSync('git', ['add', 'concurrent.txt'], {
+        cwd: root,
+        env: { ...process.env, GIT_INDEX_FILE: alternate },
+      });
+      const hook = join(root, '.git/hooks/pre-commit');
+      await writeFile(
+        hook,
+        `#!/bin/sh\ncp '${alternate}' '${join(root, '.git/index')}'\n`,
+        { mode: 0o755 },
+      );
+      const target = buildSyncTarget(root, '.oat/projects/shared', 'pending');
+      await expect(
+        migrateSharedToSynced(target, defaultGitRunner, {
+          sourcePath: source,
+          commit: true,
+        }),
+      ).rejects.toThrow(/Concurrent real-index change detected/);
+      await rm(hook);
+      const committed = git(['rev-parse', 'HEAD']);
+      expect(committed).not.toBe(base);
+      await expect(access(source)).rejects.toThrow();
+      const markerDir = join(root, '.git/oat-record-commit-pending');
+      const markerPath = join(markerDir, (await readdir(markerDir))[0]!);
+      const markerBytes = await readFile(markerPath, 'utf8');
+      const indexBytes = await readFile(join(root, '.git/index'));
+      const capture = createLoggerCapture();
+      let runner = defaultGitRunner;
+      const invoke = () =>
+        run(
+          createProjectMigrateCommand({
+            buildCommandContext: (): CommandContext => ({
+              scope: 'project',
+              dryRun: false,
+              verbose: false,
+              json: true,
+              cwd: root,
+              home: root,
+              interactive: false,
+              logger: capture.logger,
+            }),
+            processEnv: {},
+            gitRunner: runner,
+          }),
+          [source, '--to', 'synced'],
+        );
+      // A foreign replacement cannot select a different operation or removal set.
+      await writeFile(
+        markerPath,
+        JSON.stringify({ ...JSON.parse(markerBytes), identity: 'foreign' }),
+      );
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(await readFile(markerPath, 'utf8')).toContain('foreign');
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      await writeFile(markerPath, markerBytes);
+      const marker = JSON.parse(markerBytes) as {
+        identity: string;
+        paths: string[];
+      };
+      await writeFile(
+        markerPath,
+        JSON.stringify({
+          ...marker,
+          paths: [...marker.paths, 'unrelated.txt'],
+        }),
+      );
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(await readFile(markerPath, 'utf8')).toContain('unrelated.txt');
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      await writeFile(markerPath, markerBytes);
+      const receipts = join(root, '.git/oat-exact-path-commits');
+      const receiptPath = join(receipts, (await readdir(receipts))[0]!);
+      const receiptBytes = await readFile(receiptPath, 'utf8');
+      await writeFile(
+        receiptPath,
+        JSON.stringify({
+          ...JSON.parse(receiptBytes),
+          tree: '0000000000000000000000000000000000000000',
+        }),
+      );
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(await readFile(receiptPath, 'utf8')).toContain(
+        '0000000000000000000000000000000000000000',
+      );
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      await writeFile(receiptPath, receiptBytes);
+      const foreignHead = git([
+        'commit-tree',
+        `${committed}^{tree}`,
+        '-p',
+        committed,
+        '-m',
+        'foreign descendant',
+      ]);
+      git(['update-ref', 'HEAD', foreignHead, committed]);
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(git(['rev-parse', 'HEAD'])).toBe(foreignHead);
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      git(['update-ref', 'HEAD', committed, foreignHead]);
+      const published = git(['rev-parse', target.ref]);
+      const foreignRemote = git([
+        'commit-tree',
+        `${published}^{tree}`,
+        '-p',
+        published,
+        '-m',
+        'foreign published update',
+      ]);
+      git(['push', 'origin', `${foreignRemote}:refs/probe/competitor`]);
+      execFileSync('git', [
+        '--git-dir',
+        fixture.originDir,
+        'update-ref',
+        target.ref,
+        foreignRemote,
+        published,
+      ]);
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(git(['rev-parse', target.ref])).toBe(published);
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      execFileSync('git', [
+        '--git-dir',
+        fixture.originDir,
+        'update-ref',
+        target.ref,
+        published,
+        foreignRemote,
+      ]);
+      // Existing nested bytes must still be the published migration, not another checkout.
+      await writeFile(join(target.projectPath, 'state.md'), 'FOREIGN NESTED\n');
+      await invoke();
+      expect(process.exitCode).not.toBe(0);
+      expect(await readFile(join(target.projectPath, 'state.md'), 'utf8')).toBe(
+        'FOREIGN NESTED\n',
+      );
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      git(['-C', target.projectPath, 'checkout', '--', 'state.md']);
+      // Replace the marker after finalization validation but before the adapter reads it.
+      let replaced = false;
+      runner = {
+        run: async (args, options) => {
+          if (
+            !replaced &&
+            args[0] === 'rev-parse' &&
+            args[1] === '--is-inside-work-tree'
+          ) {
+            replaced = true;
+            const replacement = `${markerPath}.replacement`;
+            await writeFile(replacement, markerBytes);
+            await rename(replacement, markerPath);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      await invoke();
+      expect(replaced).toBe(true);
+      expect(process.exitCode).not.toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'error',
+        message: expect.stringMatching(/marker was replaced/),
+      });
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      expect(await readOatLocalConfig(root)).toMatchObject({
+        activeProject: '.oat/projects/shared/pending',
+      });
+      runner = defaultGitRunner;
+      // A receipt replaced during validation cannot erase the pending reservation.
+      let receiptReplaced = false;
+      runner = {
+        run: async (args, options) => {
+          if (
+            !receiptReplaced &&
+            args[0] === 'rev-parse' &&
+            args[1] === '--is-inside-work-tree'
+          ) {
+            receiptReplaced = true;
+            await writeFile(
+              receiptPath,
+              JSON.stringify({
+                identity: marker.identity,
+                paths: marker.paths,
+                parent: committed,
+              }),
+            );
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      await invoke();
+      expect(receiptReplaced).toBe(true);
+      expect(process.exitCode).not.toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'error',
+        message: expect.stringMatching(/Exact-path lifecycle commit failed/),
+      });
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      await writeFile(receiptPath, receiptBytes);
+      runner = defaultGitRunner;
+      // A failed local-pointer write keeps the verified reservation for owning retry.
+      await expect(
+        migrateSharedToSynced(target, defaultGitRunner, {
+          sourcePath: source,
+          commit: true,
+          writeOatLocalConfig: async () => {
+            throw new Error('local config write failed');
+          },
+        }),
+      ).rejects.toThrow('local config write failed');
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(git(['rev-parse', 'HEAD'])).toBe(committed);
+      await invoke();
+      expect(process.exitCode).toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'migrated',
+        lifecycleCommit: committed,
+      });
+      expect(git(['rev-parse', 'HEAD'])).toBe(committed);
+      expect(await readdir(markerDir)).toEqual([]);
+      expect(await readOatLocalConfig(root)).toMatchObject({
+        activeProject: '.oat/projects/synced/pending',
+      });
+      expect(git(['show', ':unrelated.txt'])).toBe('STAGED');
+      expect(git(['show', ':concurrent.txt'])).toBe('CONCURRENT');
+      expect(await readFile(join(root, 'unrelated.txt'), 'utf8')).toBe(
+        'WORKTREE\n',
+      );
+      expect(
+        git([
+          'status',
+          '--porcelain',
+          '--',
+          '.oat/projects/shared/pending',
+          '.oat/projects/synced/pending.json',
+        ]),
+      ).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('rejects migration targets other than synced', async () => {

@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import {
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
@@ -389,6 +390,119 @@ describe('oat project promote', () => {
     });
     return repoRoot;
   }
+
+  it.each(['foreign-lock', 'concurrent-index'] as const)(
+    'exposes executable persistence recovery for %s without rerendering Quick artifacts',
+    async (failure) => {
+      const root = await createRepo();
+      const { projectPath, projectRoot } = await seedRepo(root);
+      const git = (args: string[]) =>
+        execFileSync('git', args, {
+          cwd: root,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trimEnd();
+      await writeFile(join(root, 'unrelated.txt'), 'BASE\n');
+      git(['add', '.']);
+      git(['commit', '-qm', 'authored lite']);
+      const base = git(['rev-parse', 'HEAD']);
+      await writeFile(join(root, 'unrelated.txt'), 'STAGED\n');
+      git(['add', 'unrelated.txt']);
+      await writeFile(join(root, 'unrelated.txt'), 'WORKTREE\n');
+      const lock = join(root, '.git/index.lock');
+      const hook = join(root, '.git/hooks/pre-commit');
+      if (failure === 'foreign-lock') await writeFile(lock, 'FOREIGN LOCK\n');
+      else {
+        const alternate = join(root, '.git/concurrent-index');
+        await copyFile(join(root, '.git/index'), alternate);
+        await writeFile(join(root, 'concurrent.txt'), 'CONCURRENT\n');
+        execFileSync('git', ['add', 'concurrent.txt'], {
+          cwd: root,
+          env: { ...process.env, GIT_INDEX_FILE: alternate },
+        });
+        await writeFile(
+          hook,
+          `#!/bin/sh\ncp '${alternate}' '${join(root, '.git/index')}'\n`,
+          { mode: 0o755 },
+        );
+      }
+      const harness = createHarness(root, true);
+      await runCommand(harness.command, projectPath, 'quick', true);
+      const refused = harness.capture.jsonPayloads.at(-1) as {
+        reason: string;
+        recovery?: {
+          outcome: string;
+          attempts: number;
+          identity: string;
+          receipt: string;
+          lockClass?: string;
+          command: string;
+          committed: boolean;
+        };
+      };
+      expect(refused.reason).toBe('persistence-failed');
+      expect(refused.recovery).toMatchObject({
+        outcome: 'blocked',
+        identity: `promote:${projectRoot}:lite-to-quick`,
+        committed: failure === 'concurrent-index',
+      });
+      expect(refused.recovery!.attempts).toBeGreaterThan(0);
+      expect(refused.recovery!.receipt).toContain('oat-exact-path-commits');
+      const committedBefore = git(['rev-parse', 'HEAD']);
+      if (failure === 'foreign-lock') {
+        expect(refused.recovery!.lockClass).toBe('persistent-index-lock');
+        expect(await readFile(lock, 'utf8')).toBe('FOREIGN LOCK\n');
+        await rm(lock);
+        expect(committedBefore).toBe(base);
+      } else {
+        expect(committedBefore).not.toBe(base);
+        await rm(hook);
+      }
+      const files = [
+        'discovery.md',
+        'references/lite-plan.md',
+        'plan.md',
+        'state.md',
+      ];
+      const produced = await Promise.all(
+        files.map((file) => readFile(join(projectRoot, file), 'utf8')),
+      );
+      const cli = resolve(import.meta.dirname, '../../../../dist/index.js');
+      const quoted = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+      const execute = () =>
+        execFileSync(
+          'bash',
+          [
+            '-c',
+            `oat() { ${quoted(process.execPath)} ${quoted(cli)} --json "$@"; }; ${refused.recovery!.command}`,
+          ],
+          { cwd: root, encoding: 'utf8', stdio: 'pipe' },
+        );
+      const recovered = JSON.parse(execute());
+      expect(recovered.outcome).toBe(
+        failure === 'foreign-lock' ? 'committed' : 'already-matching',
+      );
+      const committed = git(['rev-parse', 'HEAD']);
+      expect(JSON.parse(execute())).toMatchObject({
+        outcome: 'already-matching',
+        commit: committed,
+      });
+      if (failure === 'concurrent-index') {
+        expect(committed).toBe(committedBefore);
+        expect(git(['show', ':concurrent.txt'])).toBe('CONCURRENT');
+      }
+      expect(
+        await Promise.all(
+          files.map((file) => readFile(join(projectRoot, file), 'utf8')),
+        ),
+      ).toEqual(produced);
+      expect(git(['status', '--porcelain', '--', projectPath])).toBe('');
+      expect(git(['show', ':unrelated.txt'])).toBe('STAGED');
+      expect(await readFile(join(root, 'unrelated.txt'), 'utf8')).toBe(
+        'WORKTREE\n',
+      );
+    },
+  );
 
   it.each(['minimal', 'product', 'technical', 'both'] as const)(
     'parses the %s adaptive lite content shape as a pure operation',
