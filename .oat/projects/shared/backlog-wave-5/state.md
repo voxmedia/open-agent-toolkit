@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t03
-oat_last_commit: 4cb7576e04eece80952d67bf1f35f56aa3659659
+oat_current_task: p04-t01
+oat_last_commit: 99a1a8ac0718e7624bb2eb83b78980e5421c5fc0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 tasks 1 and 2 complete; skill lifecycle adoption is next
+Implement - Phase 3 tasks complete; root and independent reviews pending
 
 ## Artifacts
 
@@ -158,4 +158,4 @@ None.
 
 ## Next Milestone
 
-Implement and review Phase 3 shared exact-path commit primitive and adopters
+Review Phase 3 before starting archive and knowledge consumers

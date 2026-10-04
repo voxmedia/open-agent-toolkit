@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 is in progress; the shared exact-path primitive is committed and independently verified.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 tasks are complete and verified; root and configured independent phase reviews are pending.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 3     | 2/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 12/20 tasks completed
+**Total:** 13/20 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -146,8 +146,10 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t03: Adopt exact-path commits across skill lifecycle owners
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 99a1a8ac0718e7624bb2eb83b78980e5421c5fc0
+
+**Outcome:** Exact 39-file task commit adopts 59 helper instruction sites with producer-owned lists, stable per-operation identities, scope/synced/error handling and update guidance. Four existing contract files pass 466 tests; skill suite passes 693 tests, source skill validation 66, CLI check/types/build, root lint (10 tasks, zero cache hits plus actual root oxlint), format and docs validation pass. Root matched all committed paths to the declared manifest, repeated 466 tests and the verbatim quick-start source probe. Actual snippet proves hook-final ownership and partial unrelated Git-state preservation plus matching retry; scope and push-failure branches are simulated shell failure controls, while normal scope/helper execution is real. Eight invalid public writer controls fail against old validator and pass with restored guards. Sync scratch captures real create-copy/removal fields; guidance uses actual plans/providerPath/member evidence, not invented operation paths. Versions/projections remain p06; archive/knowledge remain p04. Prior five Low findings remain deferred, none silently claimed moot.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1060,7 +1062,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1071,7 +1073,9 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Complete DONE phase report validated; same-handle read-only range correction confirms d1fd3642a15cd442163de75be28b10c30cf7bc53..99a1a8ac0718e7624bb2eb83b78980e5421c5fc0. Three task commits, one recovery, usage1/null; no nested dispatches."
+  ],
   "continuation_events": [
     {
       "event_id": "wave5-p03-recovery-1",
@@ -1158,3 +1162,46 @@ Before editing additional tests, root declared the three existing CLI skill-cont
 - Reason: extensionless Git hook launcher now execs an explicit CommonJS companion with safely quoted Node/path, preserving hook argv/env and ownership guards. Existing fixture now matches the canonical type-module boundary; pre-fix keeper and source probe fail for require-is-not-defined, with original HEAD/index/worktree preserved.
 
 Root validated DONE report, exact same handle/target/axes, original immutable history, three-file candidate range, committed completed marker and authoritative postcommit results before clearing pending. Used attempts stays 1, remaining 9. The failed root scope-amendment created no commit. Before recovery, all 31 known pending paths were sealed into a verified artifact; restore returned the base clean except the reservation. After repair, original/current blobs for all parked paths were confirmed unchanged, artifact manifest digest rechecked and patch checked before reapplying. Artifact: `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/wave5-p03-recovery-1-parked-6abyon_y/capture`; digest `50dddab3e64951b00cd503b4692c1236c841573a9257e35e6da21a93d70d6a93`; size 96436. Original parked skill/root edits are restored without duplicating a task commit. Evidence remains ignored; the same accepted author resumes p03-t03 after this bookkeeping.
+
+### Phase 3 skill caller adoption
+
+| Owner                                                                        | Explicit helper sites |
+| ---------------------------------------------------------------------------- | --------------------- |
+| `.agents/skills/oat-project-autonomous/SKILL.md`                             | 2                     |
+| `.agents/skills/oat-project-discover/SKILL.md`                               | 1                     |
+| `.agents/skills/oat-project-document/SKILL.md`                               | 2                     |
+| `.agents/skills/oat-project-new/SKILL.md`                                    | 1                     |
+| `.agents/skills/oat-project-capture/SKILL.md`                                | 1                     |
+| `.agents/skills/oat-project-design/SKILL.md`                                 | 4                     |
+| `.agents/skills/oat-project-lite/SKILL.md`                                   | 2                     |
+| `.agents/skills/oat-project-quick-start/SKILL.md`                            | 6                     |
+| `.agents/skills/oat-project-import-plan/SKILL.md`                            | 2                     |
+| `.agents/skills/oat-project-revise/SKILL.md`                                 | 2                     |
+| `.agents/skills/oat-project-promote-spec-driven/SKILL.md`                    | 1                     |
+| `.agents/skills/oat-project-plan/SKILL.md`                                   | 2                     |
+| `.agents/skills/oat-project-review-receive-remote/SKILL.md`                  | 1                     |
+| `.agents/skills/oat-project-review-provide/SKILL.md`                         | 1                     |
+| `.agents/skills/oat-project-reconcile/SKILL.md`                              | 1                     |
+| `.agents/skills/oat-project-spec/SKILL.md`                                   | 1                     |
+| `.agents/skills/oat-project-retro-file/SKILL.md`                             | 1                     |
+| `.agents/skills/oat-project-review-receive/SKILL.md`                         | 2                     |
+| `.agents/skills/oat-project-summary/SKILL.md`                                | 3                     |
+| `.agents/skills/oat-wave-execute/SKILL.md`                                   | 1                     |
+| `.agents/skills/oat-brainstorm/SKILL.md`                                     | 5                     |
+| `.agents/skills/oat-agent-instructions-apply/SKILL.md`                       | 1                     |
+| `.agents/skills/oat-docs-apply/SKILL.md`                                     | 1                     |
+| `.agents/skills/oat-review-provide/SKILL.md`                                 | 1                     |
+| `.agents/skills/oat-review-receive-remote/SKILL.md`                          | 1                     |
+| `.agents/skills/oat-project-implement/references/phase-execution.md`         | 2                     |
+| `.agents/skills/oat-project-implement/references/completion-and-closeout.md` | 2                     |
+| `.agents/skills/oat-project-retro/references/apply-procedure.md`             | 3                     |
+| `.agents/skills/oat-wave-execute/assets/wrapper-plan-template.md`            | 1                     |
+| `.agents/skills/oat-project-complete/SKILL.md`                               | 2                     |
+| `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`                        | 1                     |
+| `.agents/agents/oat-phase-implementer.md`                                    | 2                     |
+
+59 explicit sites. Synced push remains its ref/worktree transaction; historical read-only Git evidence is excluded. Entry skills without direct commits route to the adopted references. Archive/PJM and knowledge-specific callers remain p04; generated projections and owner/package versions remain p06. Complete inventory and concrete 39-path manifest are in ignored `analysis/p03/t03-adoption-summary.md` and `t03-files.json`. Root evidence: `analysis/p03-t03-root-tests.log`, `p03-t03-root-source-probe.json`.
+
+### Phase 3 pre-review baseline
+
+Validated complete DONE report and same-handle clerical full-range correction: authoritative phase base `d1fd3642a15cd442163de75be28b10c30cf7bc53`, final product head `99a1a8ac0718e7624bb2eb83b78980e5421c5fc0`. All three planned task commits and one recovery remain immutable; total 13/20 tasks. Final direct phase composition passes 1067 tests across 12 files; source snippet rerun and all declared package/skill/docs checks pass. Phase row remains in progress until native root review and configured Opus-high gate dispositions pass. Next incomplete pointer p04-t01 does not authorize its launch before those reviews.
