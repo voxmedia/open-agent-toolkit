@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phase 6 versions/generated integration and the one-PR tail remain pending.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32tasks are complete; Phase6 final review/gate and the one-PR closeout tail remain pending.
 
 ## Progress Overview
 
@@ -22,7 +22,7 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 5 | complete | 5     | 5/5       |
 | Phase 6 | pending  | 1     | 0/1       |
 
-**Total:** 31/32 tasks completed
+**Total:** 32/32 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,12 +307,16 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ## Phase 6: Versions and generated integration
 
-**Status:** pending
+**Status:** in_progress — all tasks done; lifecycle final-review boundary and configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1eee2ec14d6834cfcb8630b062d3b316718460bc
+
+**Outcome:** Public lockstep0.3.17>current main0.3.16;37skill/2agent owners bumped once, including6changed-shared-doc vendors. Owning project sync generated131outputs; bundle versionmap+three necessary additive docs updates, total179exactpaths. Setup manifest preserved except owner oatVersion, no lockfile change. Catalog71current/indexcurrent/navunchanged, drysync0planned/0failed; all39bundleowners and6vendordocs equal canonical. No original/hashedHTML/product/test/coretracking change.
+
+**Verification:** All7planned gates pre/post0; forcedfive-package build0/fivebypasses/no replay; canonicalvalidation/docsMarkdownlint0. Prelint/format5executed+5cached, post10cached with directrootpasses; releasevalidation internalbuild cache not observable, no broadfreshclaim. Root independently verified parenta91fc6e5,sole179pathcommit/everyfileGitreadback/version-only39owners+5manifests/setupfield-only/ten-ticketmap/clean. Evidence analysis/p06/implementation-report.md,postcommit-results.json,scoped-results.json,version-inventory.json,docs-coverage.md and analysis/p06-root-receipt-verification.json. Recovery0/10pendingnull,no nested/findingfix.
 
 ## Orchestration Runs
 
@@ -346,7 +350,15 @@ final gates have passed.
 
 ## Final Summary (for PR/docs)
 
-Pending implementation and verified closeout.
+Implements the approved ten maintenance tickets and the Plain Markdown guided-init amendment. Documentation validation requires exactly one Markdown/MDX H1; the skill-bump gate follows changed shared-doc vendors; autonomous/reviewer guidance names effective limits, hard stops and proportional evidence. PJM reruns preserve unowned settings; status preserves structured blockers and visibly reports malformed entries.
+
+One shared hook-safe exact-path commit primitive preserves unrelated index/worktree state and supports receipt-bound retries across actual CLI/skill callers. Backlog archive reports complete caller-owned result paths without staging; knowledge refresh protects manual notes, collisions and unrelated staged changes. Recap archival verifies the full original package but exports one dated self-contained HTML page, with matching retry/refusal/owned rollback and real report/resume readers. Seven historical packages plus the stray fact base were fully preserved before migration; four explicitly approved derived SVG pages remove only30erroneous quote pairs/60bytes. Original evidence and historical receipts stay intact.
+
+Main surfaces: CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer roles/shared docs, project provider projections and reference docs/recaps. Five public packages are0.3.17;37skills/two roles bumped, generated outputs current at the p06 task boundary.
+
+Verification so far: received native and independent Opus reviews for Phases1–5; source-derived negative/accepted controls and real Git/hooks/producer-reader probes recorded per task. Phase6's seven pre/post checks and forced scoped package build pass. Full ordered final CI gates, fresh isolated-home test reruns, final native/configured reviews and implementation exit gate are pending. Thirteen Low findings/one stored-receipt diagnostic Medium require explicit final disposition. Browser evidence covers the migrated pages and30restored SVG marker references, with screenshot/mobile/HTTP limitations recorded; no full visual, live-provider or liveS3 claim.
+
+Accepted deltas: approved review corrections, user-added Plain Markdown choice and exact four derived-page refresh; no framework/schema/authoring-policy expansion. Automatic rewritten-history recovery remains deferred. Final ticket closeout, own recap, stored preapproval steps and one mergeable PR remain authorized after required reviews/approval; no merge or release.
 
 ## Planning dispatch
 
@@ -3979,7 +3991,7 @@ Phase5 complete5/5 after full native r3/configured r1 received and all phase dis
     "task_name": "wave5_phase6"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3995,6 +4007,11 @@ Phase5 complete5/5 after full native r3/configured r1 received and all phase dis
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted HOLD; Maxwell; bounded p06-t01, no edits/checks/commit/nesting until START"
+    },
+    {
+      "source": "native-terminal-result",
+      "commit": "1eee2ec14d6834cfcb8630b062d3b316718460bc",
+      "result": "DONE one179path normal-hook taskcommit,7pre/postgates0,forced5packagebuild0,clean; RELEASE/HOLD,recovery0/10pendingnull,no nesting"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -4035,3 +4052,9 @@ Phase5 complete5/5 after full native r3/configured r1 received and all phase dis
 Accepted native /root/wave5_phase6 (Maxwell), exact materialized Sol6.1/high phase implementer,freshforknone,HOLD acknowledged; no nested dispatch. Project high policy/ceiling, explicit hard-reasoning/high task classification, exact candidate branch and resolver notices[]. Fresh origin/main6ec5313b91e2595893eb89bb6372c028c0284ab4 has no planned-path drift since integration base. Phasebasec9dee2a0; root supplies newer committed acceptanceHEAD at START. Preflight canonical-role wrapper evidence lookup corrected before launch, no route/fallback or child change. Current canonical role digest and generic prelaunch/accepted records validated-only, runtimeidentitynot-reported/service tier unspecified.
 
 Own only p06-t01 versions/canonical owner metadata and owning-command project-generated projections/catalog/docs; preserve setup96c470 content, p05 sweep wording and all hashed recap/original bytes. One normal-hook exact-file taskcommit and TASK_DONE RELEASE/HOLD for root receipt; core tracking/logs, final gates/reviews/HiLL/ticketcloseout/owncompletion/onePR root-owned. Recovery default10,nooverride,used0,remaining10,pendingnull,phase-standing eligible mechanical append-only only; failed attempts terminal despite capacity, accepted target exact/history/counters preserved, no ambiguous/scope/credential/destructive/unverified recovery. Thirteen Lows/one Medium remain final-owned, no waiver or silent final fix.
+
+### Phase 6 task receipt and final closeout baseline — 2026-10-04
+
+Root owns the worktree after sameaccepted author TASK_DONE RELEASE/HOLD. All32taskscomplete, currenttaskpointersnull, implementation/p06remainin_progress until finalverification/review/selectedp06gate/implementationexitgate and approval-aware tail. No duplicate final-only phase native review: follow lifecycle finalboundary plus configured allphasep06gate. Original40criteria+U1 draft mapping retained with pendingfinal labels; no acceptance inferred solely from suitegreen. Thirteen Lows/one Medium preserved; none silentlyfixed/waived. Currentlasttaskcommit1eee2ec14.
+
+Phase6 preflight event wrapper lookup corrected before launch; root receipt read initially guessed absent proof.json, then read actual named precommit-proof/postcommit-readback, no discarded proof or falsepass. Unsupported completed-HOLD interruption rejected without effects; same handle continued through followup, no cleanup/replacement. Generic completed record validated-only preserves accepted originalroleversion/digest and exactselectors; runtimeidentity/tier not-reported. All commits/counters monotonic. Full final gates next on this committed baseline.
