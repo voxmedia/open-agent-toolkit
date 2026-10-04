@@ -267,6 +267,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `fix(skills): use shared exact-path lifecycle commits`
 
+### Task p03-t04: Reconcile lifecycle commit recovery (p03-review)
+
+**Findings:** H1/H2 in `reviews/archived/p03-review-2026-10-04T022902Z.md`; root agrees with both independently repeated real-caller probes.
+
+**Files:** Only `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`; `packages/cli/src/commands/project/promote/promote.ts`, `promote.test.ts`; `packages/cli/src/commands/project/log/append.ts`, `append.test.ts`; and `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts` if narrow reservation/receipt reconciliation requires shared-owner changes. Declare any need beyond these eight paths before editing.
+
+**Dependencies:** p03-t01/t02/t03 committed; same accepted phase author; fix iteration 1 of 2, independent of settled recovery1/10. One append-only fix-round commit, no original task/recovery amendments.
+
+**Change:** Recover actual committed-but-blocked migration after owning compensation without retaining a receipt whose commit is no longer an ancestor. Either reconcile only verified operation-owned pending state after proven complete rollback or preserve the verified committed state with concrete pending finalization; preserve foreign/replaced markers and positive ancestor/tree/identity verification. Expose promotion helper outcome, attempts, lock class, stable identity, receipt and safely quoted executable exact-path recovery command in public JSON/human persistence refusal. Following that instruction after lock release finalizes already-produced Quick artifacts and deduplicates a committed-but-pending promotion. Preserve existing refusal/synced/local semantics.
+
+**Verification:** Add owning-family regressions failing on reviewed code for the actual failures; real Git/hooks, offline bare remote, actual CLI output, executable returned recovery instruction, committed-but-blocked retry, foreign/replaced marker retention and literal unrelated staged/unstaged/concurrent preservation. Saved baseline probes: `analysis/p03/review-r1-migration-retry.mjs` and `review-r1-promotion-recovery.mjs`; normal accepted controls pass. Bad outcomes are reproduction evidence, never product acceptance oracles. Run full Phase 3 twelve-file composition plus fresh CLI check/types/build; direct execution, no Turbo replay. No new harness or test-only hooks.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on exact edited files.
+
+**Commit:** `fix(git): retain recoverable lifecycle commit state`
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
@@ -509,6 +525,8 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p02    | code     | received        | 2026-10-04 | reviews/p02-review-2026-10-04T004538Z.md                    | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004538Z.md           | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 
+| p03 | code | fixes_added | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto | - |
+
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
 Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass. Fresh run `4fc38012-9f90-4a0a-b665-853396e48d9f` returned a valid matched envelope, was received with its Low formatting correction resolved, and establishes the independent plan pass; complexity review found no further changes.
@@ -519,12 +537,12 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 3 tasks — shared primitive and CLI/skill lifecycle adoption.
+- Phase 3: 4 tasks — shared primitive and CLI/skill adoption plus bounded recovery correction.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 20 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 21 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

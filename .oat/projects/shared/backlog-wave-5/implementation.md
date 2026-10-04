@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 tasks are complete and verified; root and configured independent phase reviews are pending.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks are verified; native review found two recovery gaps. Bounded fix p03-t04 precedes fresh root review and the independent phase gate.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 3     | 3/3       |
+| Phase 3 | in_progress | 4     | 3/4       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 13/20 tasks completed
+**Total:** 13/21 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -150,6 +150,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Commit:** 99a1a8ac0718e7624bb2eb83b78980e5421c5fc0
 
 **Outcome:** Exact 39-file task commit adopts 59 helper instruction sites with producer-owned lists, stable per-operation identities, scope/synced/error handling and update guidance. Four existing contract files pass 466 tests; skill suite passes 693 tests, source skill validation 66, CLI check/types/build, root lint (10 tasks, zero cache hits plus actual root oxlint), format and docs validation pass. Root matched all committed paths to the declared manifest, repeated 466 tests and the verbatim quick-start source probe. Actual snippet proves hook-final ownership and partial unrelated Git-state preservation plus matching retry; scope and push-failure branches are simulated shell failure controls, while normal scope/helper execution is real. Eight invalid public writer controls fail against old validator and pass with restored guards. Sync scratch captures real create-copy/removal fields; guidance uses actual plans/providerPath/member evidence, not invented operation paths. Versions/projections remain p06; archive/knowledge remain p04. Prior five Low findings remain deferred, none silently claimed moot.
+
+### Task p03-t04: Reconcile lifecycle commit recovery (p03-review)
+
+**Status:** pending
+**Commit:** -
+**Outcome:** H1/H2 converted to one bounded fix-round task.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1086,6 +1092,15 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "status": "completed",
       "recovery_commit": "4cb7576e04eece80952d67bf1f35f56aa3659659",
       "reason": "Same accepted handle; verified canonical type-module hook launcher recovery, usage1/10."
+    },
+    {
+      "event_id": "wave5-p03-fix-continuation-r1",
+      "original_request_id": "wave5-p03-implement-r1",
+      "phase": "p03",
+      "task_ids": ["p03-t04"],
+      "review_artifact": "reviews/archived/p03-review-2026-10-04T022902Z.md",
+      "status": "planned",
+      "reason": "Same accepted Sol-high handle; two High recovery findings; append-only fix1/2 independent of recovery1/10, no task replay."
     }
   ],
   "task_class": "consequential",
@@ -1251,7 +1266,7 @@ Exact project review ceiling resolved to Sol 6.1 high, native materialized role;
     "task_name": "wave5_phase3_review_r1"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1262,7 +1277,9 @@ Exact project review ceiling resolved to Sol 6.1 high, native materialized role;
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Single Reconnaissance not-attempted signal consumed before validation. Fully read valid scope/head/full range artifact; 0C/2H/0M/0L, both root-reproduced and converted to p03-t04. No review-orchestration log entry."
+  ],
   "continuation_events": [],
   "task_class": "consequential",
   "model_class_floor": "consequential",
@@ -1297,3 +1314,16 @@ Exact project review ceiling resolved to Sol 6.1 high, native materialized role;
 ```
 
 Accepted native review handle `/root/wave5_phase3_review_r1`; exact materialized Sol-high role. No fallback/runtime self-disclosure claimed. Reviewer holds tests/artifact mutation until root START with this committed acceptance baseline.
+
+### Review received: p03 / native round 1
+
+**Date:** 2026-10-04
+**Artifact:** `reviews/archived/p03-review-2026-10-04T022902Z.md`
+**Findings:** 0 Critical, 2 High, 0 Medium, 0 Low.
+
+- H1 -> convert / p03-t04: agree; actual compensation restores HEAD/source but retains identity bound to a rolled-back verified commit. Root repeated saved real-Git/local-remote negative and valid controls; retry fails ancestry, literal unrelated state survives.
+- H2 -> convert / p03-t04: agree; actual promotion changes artifacts to Quick before lock exhaustion, discards recovery details; command retry refuses not-lite. Root repeated actual CLI negative and unlocked accepted control.
+
+Exactly one valid `**Reconnaissance:** not-attempted` signal consumed before validation/bookkeeping. No Review Orchestration section; no log append at this boundary. Artifact timestamp/scope/invocation/full SHA/complete d1fd3642..48cb84b4 range validated; root read entire report and source/probes. Reviewer independently ran1050 tests; these omitted the two newly reproduced recovery paths. No design/spec drift or new requirements; fix protects existing C3/C4. Prior five p01 Low deferrals remain final.
+
+Same author continuation planned at exact Sol6.1/high. Explicit candidate resolver has no notices; earlier missing-candidate warning displayed and corrected. Fresh main fetch found no changes in bounded fix paths. Fix iteration1/2 independent of settled recovery1/null. Fresh native review and configured Opus-high gate required before Phase4. Total13/21, nextp03-t04; original task/recovery history immutable. Root baseline evidence: `analysis/p03-root-migration-baseline.json`, `p03-root-promotion-baseline.json`.
