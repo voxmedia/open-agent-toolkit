@@ -1,18 +1,15 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: root-final-verification
-    reason: 'Final pnpm test failed: 34 failures across seven files; bounded test/inventory task amendment requires operator direction before final closeout.'
-    since: '2026-10-04T22:32:04.408053Z'
+oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: null
+oat_current_task_id: p06-t02
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32tasks are complete; Phase6 final review/gate and the one-PR closeout tail remain pending.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; three approved final-test tasks and Phase6 final review/gate/one-PR closeout remain.
 
 ## Progress Overview
 
@@ -23,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 1     | 1/1       |
+| Phase 6 | in_progress | 4     | 1/4       |
 
-**Total:** 32/32 tasks completed
+**Total:** 32/35 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -320,6 +317,18 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 **Outcome:** Public lockstep0.3.17>current main0.3.16;37skill/2agent owners bumped once, including6changed-shared-doc vendors. Owning project sync generated131outputs; bundle versionmap+three necessary additive docs updates, total179exactpaths. Setup manifest preserved except owner oatVersion, no lockfile change. Catalog71current/indexcurrent/navunchanged, drysync0planned/0failed; all39bundleowners and6vendordocs equal canonical. No original/hashedHTML/product/test/coretracking change.
 
 **Verification:** All7planned gates pre/post0; forcedfive-package build0/fivebypasses/no replay; canonicalvalidation/docsMarkdownlint0. Prelint/format5executed+5cached, post10cached with directrootpasses; releasevalidation internalbuild cache not observable, no broadfreshclaim. Root independently verified parenta91fc6e5,sole179pathcommit/everyfileGitreadback/version-only39owners+5manifests/setupfield-only/ten-ticketmap/clean. Evidence analysis/p06/implementation-report.md,postcommit-results.json,scoped-results.json,version-inventory.json,docs-coverage.md and analysis/p06-root-receipt-verification.json. Recovery0/10pendingnull,no nested/findingfix.
+
+### Task p06-t02: Propagate version pins into retained contract tests
+
+**Status:** pending
+
+### Task p06-t03: Reconcile final inventory composition
+
+**Status:** pending
+
+### Task p06-t04: Exercise real helper failure and bookkeeping contracts
+
+**Status:** pending
 
 ## Orchestration Runs
 
@@ -4079,3 +4088,7 @@ Root independently verified the original final/focused receipts, version metadat
 3. Real-helper harness adaptation: modify only `packages/cli/src/commands/init/tools/shared/project-log-staging-behavior.test.ts`, `packages/cli/src/commands/pjm/init.test.ts`, and `packages/cli/src/commands/project/prune/index.test.ts`. Supply retained unique identities and execute the real branch helper in disposable repos; retain omitted-log negative control, handoff deletion ownership, all unrelated index/worktree preservation and both prune retry/refusal scenarios. Inject actual failing Git hooks instead of bypassed commit spies. Establish observed owned-deletion/pending-receipt state through the real failure, without guessing staged status or mocking success. Stop for direction if a product defect appears; this proposal authorizes no production correction. Run these three direct suites and prove failure guards execute.
 
 Exactly six existing test files plus one canonical inventory document, with root tracking and owning-command build/generated updates only when mechanically reported. No source/API/schema, template directive, recap bytes, deferred-finding fix, counter reset, history rewrite, additional vendor version bump, merge or release is included. Each approved task would use one normal-hook exact-path commit plus root bookkeeping; full ordered gates restart into new evidence paths preserving the failed run, then required native/configured review and final disposition/HiLL continue. Under the approved Root Lifecycle Tail, final-gate fixes require new bounded tasks; the implementation skill forbids unapproved scope expansion/plan restructuring and repository instructions require asking before expansion. Pending operator approval, root records this boundary and parks without product edits.
+
+### Approved final-test continuation —2026-10-04T22:51:26.979001Z
+
+User approved the three proposed corrections and delegated routine continuation through finish, asking only when root needs consequential direction. Plan now has35tasks,32complete. p06-t02/t03/t04 run sequentially with the same accepted Sol6.1/high author; root receipts/bookkeeping separate after each. Prior failed receipts, history, counters and final-owned findings are preserved; current blocker cleared by this explicit decision, not by a test-pass claim. Fresh main fetch has no affected-path drift; resolver target oat-phase-implementer-gpt-6-1-sol-high, model_axis selected:gpt-6.1-sol/effort_axis selected:high, managed high, notices[]. Live T3 catalog supports exact controls. Continuation cont-backlog-wave-5-p06-final-tests links original wave5-p06-implement-r1 and handle /root/wave5_phase6; mode implement, newly approved tasks, no recovery reservation. Root owns eventual all-finding dispositions and verified routine HiLL completion under the latest explicit delegation.

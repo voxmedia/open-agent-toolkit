@@ -555,6 +555,42 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `chore(release): bump wave 5 bundled contracts`
 
+### Task p06-t02: Propagate version pins into retained contract tests
+
+**Files:** `packages/cli/src/validation/skills.test.ts`; `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`.
+
+**Dependencies:** p06-t01 complete. Operator approved the bounded final-test amendment and delegated routine continuation on2026-10-04.
+
+**Change:** Update only literal version expectations for the committed p06 owner inventory. Preserve all behavior assertions, fixed pin counts and independently known expected versions; inspect newly unmasked failures before expanding. No version bump or product change.
+
+**Verification:** Direct Vitest run of both existing files, before and after commit; scoped format; diff conservation.
+
+**Commit:** `test(skills): align final bundled version contracts`
+
+### Task p06-t03: Reconcile final inventory composition
+
+**Files:** `.agents/docs/autonomy-contract.md` HEAD coverage cells; `packages/cli/src/validation/named-skill-load-contract.test.ts` CALL_SITE_MATRIX rows.
+
+**Dependencies:** p06-t02 complete. Same explicit approval.
+
+**Change:** Reconcile nine unmapped and seven stale prompt fingerprints with unchanged gate classifications. In particular90001dadf75f→e30e06f39281 retains REVIEWRECEIVE-07, overriding the diagnostic's erroneous NG recommendation. Classify only seven evidenced reference/ownership/operation-identity mentions as non-executing. Preserve scanner/load-required/negative controls; do not change autonomy-gate-inventory.test.ts. Existing PR-scoped vendor bumps remain unchanged.
+
+**Verification:** Both existing inventory suites, canonical validation and skill-bump gate, scoped format, source/destination vendor parity through owning build; all pre/post-commit exits recorded. No hand-written provider projections.
+
+**Commit:** `fix(skills): reconcile final autonomy inventories`
+
+### Task p06-t04: Exercise real helper failure and bookkeeping contracts
+
+**Files:** `packages/cli/src/commands/init/tools/shared/project-log-staging-behavior.test.ts`; `packages/cli/src/commands/pjm/init.test.ts`; `packages/cli/src/commands/project/prune/index.test.ts`.
+
+**Dependencies:** p06-t03 complete. Same explicit approval.
+
+**Change:** Supply stable unique fixture identities and execute the real branch helper in disposable repos. Preserve omitted-log negative control, filesystem handoff deletion/owned tracked removal in the shipping PR, unrelated staged blobs/worktree bytes and both prune retry/refusal scenarios. Inject actual failing Git hooks instead of bypassed commit spies; observe the owned deletion/pending receipt and same-operation retry rather than guessing staged status or mocking success. If a real product defect appears, report the exact evidence for root-scoped correction; do not hide it with a test change.
+
+**Verification:** Three existing direct suites, real failure/accepted/retry controls and exact Git conservation, scoped format; repeat after commit. Root subsequently restarts all final gates into new receipt paths.
+
+**Commit:** `test(git): exercise lifecycle helpers through real hooks`
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -728,9 +764,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 4 tasks — versions/generated outputs and three approved final-test composition corrections. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 32 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 35 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
@@ -751,3 +787,7 @@ Eleven phase tasks are committed. Operator approved p03-t12 diagnostics-only cor
 ### Operator disposition — 2026-10-04
 
 Approved diagnostics-only corrective revision p03-t12 and ONE fresh native Sol6.1/high r7 plus configured Opus5.5/high r5 gate. Automatic recovery after rewritten provenance is deferred as a separate contract decision; safety refusal remains mandatory. Six Lows stay final-owned. Prior six native/four configured rounds and recovery1/10 pendingnull remain durable, not reset. Original phase handle unavailable after runtime restart; lifecycle permits one fresh same-target bounded fix continuation linked to wave5-p03-implement-r1. After this correction/review cycle passes, continue the remaining approved sequential wave and one-PR lifecycle tail; any remaining unresolved blocking disposition returns to operator.
+
+### Operator continuation authority —2026-10-04
+
+Operator approved the three final-test correction tasks and directed root to take this project across the finish line, asking only when needed. Root may resolve ordinary scoped corrections, review dispositions and routine checkpoints from verified evidence without another permission prompt. Existing ten-ticket requirements, exact targets, immutable history, all verification/gates and no-merge/no-release boundary remain. This delegates judgment; it neither waives findings nor permits false gate/acceptance claims. Consequential new product/security/destructive decisions and unresolvable external blockers still require operator input.

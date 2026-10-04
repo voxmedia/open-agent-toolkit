@@ -1,10 +1,7 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t02
 oat_last_commit: 1eee2ec14d6834cfcb8630b062d3b316718460bc
-oat_blockers:
-  - task_id: root-final-verification
-    reason: 'Final pnpm test failed: 34 failures across seven files; bounded test/inventory task amendment requires operator direction before final closeout.'
-    since: '2026-10-04T22:32:04.408053Z'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -132,7 +129,7 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — tasks complete; final test correction direction required
+**Status:** In progress — approved final-test corrections
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
@@ -157,12 +154,14 @@ Implementation - Tasks complete; awaiting final verification and review
 
 ## Blockers
 
-Final ordered pnpm test failed34/8303, reproduced34/439in focused suites. Await operator approval for the seven-path test/inventory amendment described in implementation.md#final-verification-boundary--direction-required. No product fix or recovery attempt made. Approved SVG page correction is committed and independently reviewed; thirteen Lows/one diagnostic Medium remain final-owned.
+None. User approved three serial final-test tasks and delegated routine continuation. Prior failed verification remains evidence; no final pass inferred.
 
 ## Next Milestone
 
-Approve the three serial bounded test/inventory correction tasks, then restart final ordered gates before native final review, configured p06/implementation gates, explicit prior-finding dispositions and preapproval/HiLL/one-PR tail. All32original tasks remain complete; no PR created.
+Execute approved p06-t02/t03/t04, then restart final ordered gates before native final review, configured p06/implementation gates, explicit prior-finding dispositions and preapproval/HiLL/one-PR tail. All32original tasks remain complete; no PR created.
 
 ### Approved continuation — 2026-10-04
 
 Resume p03-t12 diagnostics-only correction and one further exact native/configured review cycle. Automatic rewritten-history recovery deferred; six Lows final-owned. No counter reset. Required decision now settled; remaining sequential wave continues after this cycle passes.
+
+Latest operator direction: take project through verified completion/one mergeable PR; ask only if consequential judgment or external blocker requires user. No merge or release authorized.
