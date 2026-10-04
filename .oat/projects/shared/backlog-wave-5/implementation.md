@@ -785,3 +785,99 @@ Accepted native handle `/root/wave5_phase2`; exact configured role/model/effort,
 ### Phase p02 mechanical API documentation scope
 
 Package AGENTS requires README reflection for public API changes. Root verified that contract and added only the blocker-union documentation at packages/control-plane/README.md to p02-t02 ownership before continuation. This is a mechanically derived same-boundary documentation addition, with no new requirement, task, model or recovery. Consumer inventory otherwise requires no outside-file code changes.
+
+### Phase p02 resumed composed verification
+
+Resumed in T3 Code on the same clean branch and checkout. Prior native phase handle is unavailable in this runtime; no accepted review round existed and no implementation was replayed. Root verified both task commits against the declared eight/nine-file scopes, existing baseline/neutralization evidence and recovery ledger 0/null, then independently reran actual init/migrate and parser-to-CLI probes (all six categorical controls accepted) and directly executed 54 CLI plus 47 control-plane tests (exit 0, no Turbo cache). Current main has no new commits in Phase 2 paths. Current task ledger baseline b1bfa9e22 is committed.
+
+#### Dispatch wave5-p02-review-r1
+
+Dispatch stamp: Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p02-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "p02",
+  "objective": "Review Phase 2 settings and structured blocker preservation, exact producer/consumer behavior and evidence.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T00:38:31.748404Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase2_review_r1"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of assurance-bearing adopted settings and workflow data preservation.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native handle `/root/wave5_phase2_review_r1`; explicit variant accepted with configured Sol/high controls, runtime identity not reported. Full range 819e105fb..b1bfa9e22, no nested lanes requested. Root retains review disposition and independent gate.
