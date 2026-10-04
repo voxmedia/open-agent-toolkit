@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | in_progress | 2     | 2/2       |
+| Phase 2 | in_progress | 3     | 2/3       |
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 9/19 tasks completed
+**Total:** 9/20 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -116,6 +116,11 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Outcome:** Public ProjectBlocker union preserves literal task_id/reason/since records alongside legacy strings. Human status renders fields; field/shell selectors retain JSON. Malformed entries are skipped deliberately. Actual consumer inventory required no outside-scope code changes; raw refresh and recommender semantics unchanged. Package README mechanically aligned as required.
 
 **Verification:** Real parser/project baseline fails three controls and real reader status baseline fails one with object coercion. Neutralized blocker route fails three keepers; restored 47 control-plane and 21 status tests pass. Fresh control-plane then CLI builds execute the exact canonical completion YAML producer through parser/project JSON/status JSON/field/shell/human for documented, legacy, empty and mixed-malformed inputs. Root independently repeated all four probes and inspected exact nine-file commit and clean worktree. Both direct checks/type-checks/builds, docs validation, scoped Markdown lint/format/diff executed/pass. Full lint executed all 10 tasks; full format replayed five unaffected package tasks while edited surfaces/root checks executed. Evidence: analysis/p02/t02-command-probe.mjs, t02-consumers.log and t02-\*.log. No recovery; used0/pendingnull.
+
+### Task p02-t03: (review) Keep malformed blockers visible to completion
+
+**Status:** pending
+**Commit:** -
 
 ## Phase 3: Shared hook-safe exact-path commits
 
@@ -885,3 +890,9 @@ Accepted native handle `/root/wave5_phase2_review_r1`; explicit variant accepted
 ### Review Received: p02 root review
 
 Source artifact reviews/archived/p02-review-2026-10-04T004034Z.md; immutable original preserved in preceding artifact commit. Exactly one not-attempted reconnaissance confirmation received; no orchestration section. Scope, full head/range and all four zero severity counts validated. No findings, tasks or deferrals. Root review passes with fix loops 0; Phase 2 remains in_progress until configured Opus gate passes.
+
+### Review Received: p02 independent passing-gate sweep
+
+Gate a55ea550-1835-4638-8274-bc4c32b27213 returned ok/exit 0, receiveEligible true, nonnull handoff and matched run/project/invocation; exact Opus 5.5/high configuration. Reviewed head 787c6acb9d8223191979c02cb12e75addf00f45c. Original artifact preserved by gate commit a94386c9f; archived at reviews/archived/p02-review-2026-10-04T004538Z.md. Findings 0 Critical, 0 High, 1 Medium, 1 Low.
+
+M1: agree, address now as p02-t03. Root independently inspected auto-completion hard stop (`project.blockers` nonempty), parser dropping malformed entries and existing producer probe. A small diagnostic string preserves the existing hard stop and union without widening completion policy; documented deliberate handling does not require dropping data. L1: agree, address now in the same correction, substituting the literal unquoted producer date. These are small, contained passing-gate sweep fixes; no standard reviewer or phase re-gate is required unless a Critical/High concern emerges. Final independent review will cover the resulting integration. No Medium/Low deferrals added. The original native phase handle is unavailable after runtime handoff; one fresh exact Sol/high bounded fix continuation may execute p02-t03, linked to wave5-p02-implement-r1. Recovery ledger remains used0/pendingnull; this is review-fix work, not implementation recovery.

@@ -209,6 +209,20 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `fix(state): preserve structured project blockers (p02-t02)`
 
+### Task p02-t03: (review) Keep malformed blockers visible to completion
+
+**Files:** Modify `packages/control-plane/src/state/parser.ts`, `state/parser.test.ts`, `packages/cli/src/commands/project/status.test.ts`, `packages/control-plane/README.md`, `.agents/skills/oat-project-progress/SKILL.md`, and `apps/oat-docs/docs/reference/project-artifacts.md` only. Existing ignored p02 command-probe evidence may be refreshed; no new production hook or completion policy change.
+
+**Dependencies:** p02-t02.
+
+**Change:** Address passing gate M1/L1 from `reviews/archived/p02-review-2026-10-04T004538Z.md`: valid records and legacy strings remain literal; malformed list entries remain visible as a diagnostic legacy string containing their JSON, so the existing non-empty blocker hard stop remains effective. Preserve existing legacy-string normalization. Update the three ignore claims. Substitute the documented bare date in the real-reader producer fixture. This corrects a same-boundary preservation gap, not a new completion feature.
+
+**Verification:** Existing parser/project/status test families and actual branch-built parser-to-CLI probe. The prior malformed-record-only state yields an empty blocker list; corrected state must produce a diagnostic blocker in JSON/field/shell/human and keep the canonical auto-completion nonempty-list predicate true, without invoking completion. Documented structured record with bare date, legacy string and empty-list controls still pass. Record categorical before/after outcomes and literal malformed JSON oracle; do not mock the reader or change product temporarily during review.
+
+**Format:** `pnpm exec oxfmt --write` on only the owned actual changed files; scoped diff/check/type-check/build/docs validation.
+
+**Commit:** `fix(state): keep malformed blocker entries visible (p02-t03)`.
+
 ## Phase 3: Shared hook-safe exact-path commits
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
@@ -493,6 +507,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p01    | code     | passed          | 2026-10-03 | reviews/archived/p01-review-2026-10-03T232906Z.md           | 2a173c4ab68e02fdf02ed2777dfd36958f86ca80 | gate       | claude-opus-5-5-high |
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004034Z.md           | b1bfa9e22aa1da9c029c0b438f8685afc1e41061 | auto       | -                    |
 | p02    | code     | received        | 2026-10-04 | reviews/p02-review-2026-10-04T004538Z.md                    | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
+| p02    | code     | received        | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004538Z.md           | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -503,13 +518,13 @@ Planning recovery: the original findings were reformatted without content/proven
 **Planned task totals:**
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
-- Phase 2: 2 tasks — PJM settings and structured blockers.
+- Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
 - Phase 3: 3 tasks — shared primitive and CLI/skill lifecycle adoption.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 19 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 20 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
