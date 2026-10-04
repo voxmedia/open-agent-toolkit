@@ -708,7 +708,7 @@ Completion requires evidence for all 40 original acceptance rows plus U1, exactl
 
 ## Phase 3 review boundary — 2026-10-04
 
-Eleven phase tasks are committed; the approved native r6/configured r4 cycle is consumed. The refreshed necessity report `reviews/archived/complexity-p03-2026-10-04T142327Z.md` recommends a condition-specific diagnostic correction while retaining unbound-provenance refusal and separately deferring automatic rewritten-history recovery. Operator disposition is pending; no new task, correctness cycle or Phase4 launch is authorized. Six Low findings remain final-owned; total21/29 committed. This assessment is not a Reviews event.
+Eleven phase tasks are committed. Operator approved p03-t12 diagnostics-only correction and ONE native r7/configured r5 cycle; automatic rewritten-history recovery deferred. Six Lows remain final-owned; 21/30 committed. Prior counts and recovery1/10 pendingnull unchanged.
 
 ### Operator disposition — 2026-10-04
 

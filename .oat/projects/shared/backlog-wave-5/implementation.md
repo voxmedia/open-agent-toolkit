@@ -2681,3 +2681,109 @@ Accepted independent read-only necessity assessor; new review artifacts require 
 ### Operator approval and p03-t12 start — 2026-10-04
 
 User approved the recommended diagnostics-only corrective revision and ONE additional fresh exact Sol6.1/high native review plus configured Opus5.5/high gate. Refreshed report: reviews/archived/complexity-p03-2026-10-04T142327Z.md, Partially compliant/provisional rewritten-history scope. Automatic rewritten-history recovery is explicitly deferred; all preservation/provenance/marker/migration guards remain mandatory. Six Low findings remain final-owned. Prior counts6native/4gate and recovery1/10pendingnull unchanged. Original completed fix handle /root/wave5_phase3_t11_continuation cannot be resumed (native followup: not found); one fresh same-target bounded fix continuation is eligible under lifecycle contract, linked to original wave5-p03-implement-r1. Fetch origin/main found no integration drift in the four authorized product paths. No code edited before this committed scope.
+
+### Dispatch wave5-p03-t12-fix
+
+Dispatch: scope=p03-t12 action=fix role=implementer model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-t12-fix",
+  "caller": "oat-project-implement",
+  "scope": "p03-t12",
+  "objective": "Implement only approved truthful unbound-provenance diagnostics while preserving all safety and migration guards.",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-t12",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T14:35:30.258583Z"
+  },
+  "authority": "four-path-bounded-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_t12"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "original_request_id": "wave5-p03-implement-r1",
+      "kind": "completed-phase-fix-continuation",
+      "reason": "Original completed fix handle unavailable; operator approved bounded new p03-t12 scope at unchanged target."
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Safety-bearing recovery diagnostics must retain positively verified provenance and user Git state; operator scope is condition-specific.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Native same-target bounded continuation accepted HOLD; root commits scope/acceptance before releasing product ownership. Original request wave5-p03-implement-r1, four product paths, one task, no nested agents.
