@@ -12,7 +12,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is blocked for operator disposition after completed p03-t10 and its approved r5 native/r3 configured-gate cycle. The latest gate meets its Critical/High threshold but independently reproduces an adjacent recovered-unrecorded receipt M1. A refreshed necessity assessment is pending. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phases 1 and 2 are complete. Phase 3 is blocked at the operator disposition boundary after p03-t10 and its authorized r5 native/r3 configured-gate cycle. The native review passed with zero findings; the configured gate passed its Critical/High threshold but found an adjacent recovered-unrecorded receipt Medium, independently reproduced by root and queued as p03-t11. The refreshed complexity assessment is complete and recommends a bounded corrective revision under the original recovery contract. No further correction or review allowance is authorized. Six prior Low findings remain final-owned. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -2214,7 +2214,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2227,6 +2227,13 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
       "source": "native-followup-acceptance",
       "target": "<redacted-path>",
       "result": "accepted; child acknowledged HOLD; no replacement or recovery"
+    },
+    {
+      "source": "native-terminal-result",
+      "target": "<redacted-path>",
+      "result": "completed full read-only inline report; exactly one Reconnaissance:not-attempted consumed; no orchestration block; no test/probe/write/launch",
+      "report": ".oat/projects/shared/backlog-wave-5/reviews/archived/complexity-p03-2026-10-04T131142Z.md",
+      "sha256": "c04ae8b5e8f00f8bdc552ad8603c8c43c725130e25ca4ead20d435f3f63d0cbe"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -2274,3 +2281,15 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 Planned read-only refreshed necessity assessment at already-resolved reviewer ceiling; reuse original assessor when available. No correctness round, probes, writes, nested lanes or operator disposition selection.
 
 Acceptance: original assessor /root/wave5_phase3_complexity resumed and acknowledged HOLD. No replacement, recovery, correctness-cycle increment or product authority. Root acceptance commit will bind START to its exact HEAD.
+
+### Phase 3 refreshed necessity assessment and operator boundary — 2026-10-04
+
+Full read-only assessor report saved verbatim at `reviews/archived/complexity-p03-2026-10-04T131142Z.md`; SHA256 `c04ae8b5e8f00f8bdc552ad8603c8c43c725130e25ca4ead20d435f3f63d0cbe`; bound target `e75688df127c99675c79108dc937b0edd9909ce5`. Original assessor completed request `wave5-p03-complexity-r3`; no replacement/recovery or correctness cycle. Root consumed exactly one `**Reconnaissance:** not-attempted` terminal signal before save/validation/bookkeeping and read the full report. No Review Orchestration block.
+
+Verdict: **Partially compliant**. Central helper/index/receipt design is operator-reaffirmed and necessary; sharing prior-operation verification across stored and recovered commits is the minimum sufficient simplification. Latest M1 is **accepted-requirement**, adjacent to existing C3/C4 recovery and not introduced by p03-t10. Direct old-identity refusal, no old-tree publication, current index/HEAD/receipt/lock stability, inode/device/byte-owned marker clearing, bounded fresh reservation and mandatory migration finalization remain required. Root verified the cited recovery flag/refusal/receipt-write order and settlement invalidation against current source, plus independently captured immediate/later-generation acceptance and literal preservation evidence. No new execution was claimed for the assessment.
+
+Dissolvable: M1 through shared positive recovered-commit recognition and existing owner/publication checks; signal Low through proportionate stop propagation after a real owning-consumer probe in final scope. No new command, receipt field, duplicate validator, PID registry or unrestricted review campaign.
+
+Recommended disposition: **corrective revision**, pending operator. Operator options: manually choose findings; accept the recovery limitation through an explicit override/proceed decision; authorize bounded p03-t11 plus a specified further native/configured-gate allowance; or accept simplification through the normal fix/review path. No disposition or waiver selected. Retain the six final Low findings, including signal Low, unless operator explicitly changes timing.
+
+Boundary: five native correctness reviews have occurred; three configured gates are excluded from that count. The separately approved single additional cycle is consumed. Recovery remains 1/10, pending null. No sixth native review, fourth gate, corrective author dispatch, counter reset or Phase 4 launch. Phase 3 remains 10/11, total 20/29. Remaining phases 4–6 and the one-PR closeout stay pending. Operator input is required by review-receive Step 8 and the complexity fallback, not by an automatic approval rejection.
