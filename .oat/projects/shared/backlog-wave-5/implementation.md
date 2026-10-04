@@ -3067,3 +3067,103 @@ DONE from exact original native phase handle/target, no nested workers. Base d88
 Final-composition author verification: direct archive/index/guided/exact-helper86/86, actual knowledge6/6, direct skill699/699; CLI check/types/fresh directbuild, skill66, docs/docs-package, rootlint/format all0. Lint6executed/4cachedbuilddependencies, format5executed/5cacheddependencies; rootoxlint/oxfmt executed. Task4docsbuild6executed/0cached. Finaldiff/clean passed. Negative controls and authenticated real-contributor IO/caller snippets remain in ignored analysis/p04. Root read task diffs/evidence and independently ran settled-noop preservation keeper; broader suite execution stays author-attributed.
 
 Phase4 remains in_progress4/4 until independent native/code review and configured Opus-high gate pass and every disposition is settled.26/30 task commits. Prior six Lows + one stored-receipt diagnostic Medium final-owned; no task replay, new scope, version/projection claim or broad workspace gate claim.
+
+### Phase 4 root review dispatch — wave5-p04-review-r1
+
+Dispatch: scope=p04 action=review role=reviewer model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p04-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "p04",
+  "objective": "Independently review four Phase4 producer/consumer changes and actual Git/manual/config preservation controls.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p04-review",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-04T15:44:52.452901Z"
+  },
+  "authority": "one-phase-four-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase4_review"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD before committed review head"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Archive operation ownership and manual-file/index preservation need independent adversarial judgment of actual producer-to-consumer evidence.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Native exact target accepted HOLD; source/live catalog and canonical role event validated before launch. Independent bounded Phase4 product/consumer correctness and real controls; no nested agents, live calls, product or tracking changes. Root supplies immutable reviewed head only after this acceptance is committed. Four tasks and recovery settled in prior ledger. Root receives/archives dispositions and configured gate; prior final-owned items remain outside current p04 scope.
