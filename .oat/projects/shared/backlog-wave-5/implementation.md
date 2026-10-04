@@ -896,3 +896,105 @@ Source artifact reviews/archived/p02-review-2026-10-04T004034Z.md; immutable ori
 Gate a55ea550-1835-4638-8274-bc4c32b27213 returned ok/exit 0, receiveEligible true, nonnull handoff and matched run/project/invocation; exact Opus 5.5/high configuration. Reviewed head 787c6acb9d8223191979c02cb12e75addf00f45c. Original artifact preserved by gate commit a94386c9f; archived at reviews/archived/p02-review-2026-10-04T004538Z.md. Findings 0 Critical, 0 High, 1 Medium, 1 Low.
 
 M1: agree, address now as p02-t03. Root independently inspected auto-completion hard stop (`project.blockers` nonempty), parser dropping malformed entries and existing producer probe. A small diagnostic string preserves the existing hard stop and union without widening completion policy; documented deliberate handling does not require dropping data. L1: agree, address now in the same correction, substituting the literal unquoted producer date. These are small, contained passing-gate sweep fixes; no standard reviewer or phase re-gate is required unless a Critical/High concern emerges. Final independent review will cover the resulting integration. No Medium/Low deferrals added. The original native phase handle is unavailable after runtime handoff; one fresh exact Sol/high bounded fix continuation may execute p02-t03, linked to wave5-p02-implement-r1. Recovery ledger remains used0/pendingnull; this is review-fix work, not implementation recovery.
+
+#### Dispatch wave5-p02-fix-r1
+
+Dispatch stamp: Dispatch: scope=p02-malformed-blocker-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p02-fix-r1",
+  "caller": "oat-project-implement",
+  "scope": "p02-malformed-blocker-fix",
+  "objective": "Execute only p02-t03: malformed entry visibility and bare documented date keeper.",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T00:50:21.863216Z"
+  },
+  "authority": "phase-scoped-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase2_fix"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p02-sweep-fix-continuation-r1",
+      "original_request_id": "wave5-p02-implement-r1",
+      "phase": "p02",
+      "task_ids": ["p02-t03"],
+      "review_artifact": "reviews/archived/p02-review-2026-10-04T004538Z.md",
+      "status": "running",
+      "reason": "Original completed phase native handle unavailable after handoff; one fresh same-target bounded passing-gate correction."
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Adopted authority settings and structured workflow blocker data must not silently disappear; preservation is assurance-bearing.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:2db1e0c63c9a76c912e59cb8b3a3ccf29e0d9860293f6551b1dedcb63dde2fa9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native handle `/root/wave5_phase2_fix`; unchanged exact Sol/high target and six-file p02-t03 boundary. No replacement/replay of earlier task commits, no nested agents. Root retains lifecycle writes; child holds mutations until START from committed acceptance baseline.
