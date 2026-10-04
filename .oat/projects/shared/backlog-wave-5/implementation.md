@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and the bounded recovery fix are verified; fresh native review and the configured independent phase gate remain pending.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and recovery fix are verified; native re-review found one Medium receipt-parent gap, converted to p03-t05 before fresh review and the configured independent phase gate.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 4     | 4/4       |
+| Phase 3 | in_progress | 5     | 4/5       |
 | Phase 4 | pending     | 3     | 0/3       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 14/21 tasks completed
+**Total:** 14/22 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -158,6 +158,11 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Outcome:** Both Highs corrected in five declared paths: public migration command/tests, promotion/tests and ref-sync. Verified committed migration is retained with public finalization; original identity/bytes/inode/device and expected commit bound through settlement, local pointer failure retains marker. Foreign identity/path/tree/HEAD/remote/nested bytes and marker/receipt replacement refuse without index loss. Promotion JSON/human exposes structured helper result and quoted cwd-aware recovery; direct command finalizes existing Quick bytes and deduplicates committed-pending success. Original source confinement and hooks-disabled nested producer policy preserved.
 
 **Verification:** Author pre/postcommitted HEAD direct composition1088/13files, CLI check/types/fresh build and actual public probes pass. Root repeated54/54 migration/promotion tests plus actual returned recovery commands, preserving literal unrelated/concurrent state and same-SHA retries (`analysis/p03-fix-r1-root-tests.log`, `p03-fix-r1-root-migration.json`, `p03-fix-r1-root-promotion.json`). Pre-fix owning keepers fail for reported reason; duplicated early promotion block removed (3 distinct cases, not5). One immutable fix-round commit, exact5paths, normal source-helper hooks, clean tree; recovery1/null unchanged. Phase remains in progress for fresh native review and Opus-high gate.
+
+### Task p03-t05: (review) Verify committed receipt parents before settlement
+
+**Status:** pending
+**Commit:** -
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1109,6 +1114,22 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "fix_commit": "ef26eb5100f980955ab09ae5bc89d16066a99b23",
       "execution_base": "089f9a75975c1405b8e36d382f68bd7c1c3241b7",
       "outcome": "DONE; H1/H2 fixed, direct1088 tests/13files and actual returned CLI recovery commands pass; root54tests/probes repeat, clean tree, recovery1/null."
+    },
+    {
+      "event_id": "wave5-p03-fix-continuation-r2",
+      "original_request_id": "wave5-p03-implement-r1",
+      "phase": "p03",
+      "task_ids": ["p03-t05"],
+      "review_artifact": "reviews/archived/p03-review-2026-10-04T032627Z.md",
+      "status": "planned",
+      "reason": "Same accepted Sol6.1/high handle; bounded Medium receipt-parent correction, second review correction independent of recovery1/10. No original task replay.",
+      "accepted_handle": "/root/wave5_phase3",
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "candidate_files": [
+        "packages/cli/src/commands/shared/exact-path-commit.ts",
+        "packages/cli/src/commands/shared/exact-path-commit.test.ts",
+        "packages/cli/src/commands/project/migrate/index.test.ts"
+      ]
     }
   ],
   "task_class": "consequential",
@@ -1393,7 +1414,7 @@ Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenan
     "task_name": "wave5_phase3_review_r2"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1404,8 +1425,18 @@ Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenan
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
-  "continuation_events": [],
+  "diagnostics": [
+    "Host interruption resumed through same accepted handle, original context retained; no replacement round. Terminal single Reconnaissance not-attempted consumed before validation; full artifact read, exact scope/head/range validated:0C/0H/1M/0L. Root reproduced M1; converted to p03-t05."
+  ],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p03-review-r2-resume-1",
+      "original_request_id": "wave5-p03-review-r2",
+      "accepted_handle": "/root/wave5_phase3_review_r2",
+      "status": "completed",
+      "reason": "Same-handle context-preserving continuation after host turn interruption; baseline unchanged."
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
@@ -1439,3 +1470,13 @@ Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenan
 ```
 
 Accepted fresh native reviewer `/root/wave5_phase3_review_r2` (Feynman), exact Sol-high materialized role; holds tests/artifact mutation until root START with committed acceptance head. Primary fix range089f9a75..START, prior artifact/head/full phase context supplied, no fallback/runtime self-disclosure claim.
+
+### Review received: p03 / native round 2
+
+**Artifact:** `reviews/archived/p03-review-2026-10-04T032627Z.md`
+**Reviewed head:** `0ab95601abdd58e124c37b4d9770e07aaade5b09`
+**Findings:** 0 Critical,0 High,1 Medium,0 Low.
+
+M1 / Moderate / convert to p03-t05: agree. Root repeated the exact real-Git/offline-remote probe, exit1 because wrong-parent replacement is accepted and pending marker cleared. Commit/tree remain valid; no lost-index/wrong-artifact inference. Existing shared helper positively verifies committed receipt tree/trailer/ancestry but omits actual-parent comparison; add that narrow check and owning regression, preserving root-commit empty parent and foreign evidence. Root evidence: `analysis/p03-root-review-r2-receipt-gap.json`. No design/spec drift, new requirement or new recovery framework.
+
+Exactly one valid terminal `**Reconnaissance:** not-attempted` consumed before any validation/bookkeeping; no orchestration section or project-log append. Fully read artifact, exact full SHA/fix range and prior context validated. Same accepted reviewer resumed after host interruption, retained context, independently passed143tests/5files plus both actual public accepted recovery probes. Original H1/H2 are corrected. Second bounded review correction on same author, separately counted from recovery1/null. Fresh main fetch found no changes in the three declared correction paths. Total14/22, nextp03-t05; fresh native review and configured Opus phase gate remain required before Phase4. Five p01 Low final deferrals preserved.

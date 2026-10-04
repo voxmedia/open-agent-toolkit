@@ -283,6 +283,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Commit:** `fix(git): retain recoverable lifecycle commit state`
 
+### Task p03-t05: (review) Verify committed receipt parents before settlement
+
+**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T032627Z.md`; root repeated the real receipt-replacement probe and agrees with the bounded provenance finding. The exercised commit/tree remain correct; no index-loss claim.
+
+**Files:** Only `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`, and `packages/cli/src/commands/project/migrate/index.test.ts`. Declare any additional need before editing.
+
+**Dependencies:** p03-t04 committed; same accepted Sol6.1/high phase author. Second bounded review correction, independent of settled recovery usage1/10. One append-only task commit; no original amendments.
+
+**Change:** Add positive actual-parent verification in the existing committed-receipt resume branch before index/receipt settlement. Preserve the existing empty-parent representation for valid root commits. Reject a committed receipt replacement with a conflicting parent, retain the migration marker and replacement evidence, and preserve literal unrelated Git state. Keep existing identity/tree/trailer/ancestor/path checks and caller recovery unchanged; no new recovery framework.
+
+**Verification:** Extend the existing helper and owning public migration families with the captured wrong-parent replacement and valid accepted controls, using real collaborators. Reproduce pre-fix failure for the stated reason; rebuild CLI and repeat `analysis/p03/review-r2-receipt-gap.mjs` expecting refusal with marker/foreign receipt retained. Repeat both saved actual public recovery probes and the existing Phase3 thirteen-file composition, fresh CLI check/types/build, scoped formatting/diff. Direct execution; no new harness or test-only production hook.
+
+**Format:** Scoped `pnpm exec oxfmt --write` on exact edited files.
+
+**Commit:** `fix(git): verify committed receipt parent before settlement`
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
@@ -524,8 +540,8 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004034Z.md           | b1bfa9e22aa1da9c029c0b438f8685afc1e41061 | auto       | -                    |
 | p02    | code     | received        | 2026-10-04 | reviews/p02-review-2026-10-04T004538Z.md                    | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004538Z.md           | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
-
-| p03 | code | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto | - |
+| p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md           | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto       | -                    |
+| p03    | code     | fixes_added     | 2026-10-04 | reviews/archived/p03-review-2026-10-04T032627Z.md           | 0ab95601abdd58e124c37b4d9770e07aaade5b09 | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -537,12 +553,12 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 4 tasks — shared primitive and CLI/skill adoption plus bounded recovery correction.
+- Phase 3: 5 tasks — shared primitive and CLI/skill adoption plus bounded recovery and receipt-parent corrections.
 - Phase 4: 3 tasks — caller-owned archive staging and safe knowledge refresh.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 21 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 22 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 acceptance rows, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
