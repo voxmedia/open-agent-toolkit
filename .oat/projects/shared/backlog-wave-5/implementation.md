@@ -221,7 +221,7 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
 
-**Status:** complete
+**Status:** completed
 **Commit:** 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
 **Recovery:** 48f51c65af3fc9c7aaf4eb89507e6ef4e9a0a6c6 (append-only phase attempt1, original task immutable).
 **Effective files:** six original task paths; mechanically added archive command index.test.ts for typed/result JSON propagation and rewrite-references.ts for complete interrupted-operation paths, root accepted before edits.
@@ -229,20 +229,20 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p04-t02: Commit complete archive operations in lifecycle callers
 
-**Status:** complete
+**Status:** completed
 **Commit:** 8aee49c5f1f624b51c1fcafce0f4cf1c0abe9acf
 **Effective files:** thirteen declared guidance/template/docs/owning-test paths; actual scoped inventory found no additional lifecycle callers.
 **Verification:** author archive34/34 pre/post commit0, actual full archive→format→shared helper→owned handoff deletion accepted; omitted-old and omitted-destination controls reject incomplete operation by independent HEAD oracle; normal hook marker and literal unrelated staged/unstaged preservation checked. Skill suite693/0fail, skill validation66pass, CLI check/types, docs validate/docs-package check, root format/lint all0; lint package results cached and not called fresh execution. Initial precommit macOS temp alias fixture mismatch corrected by repository-relative path conversion; no product recovery event. PJM doctor1/adoptiondeclared with existing completed-ledger warning, not claimed globally healthy. Versions/projections remain Phase6. Ignored analysis/p04/t02-\*.
 
 ### Task p04-t03: Preserve manual knowledge and staged user work
 
-**Status:** complete
+**Status:** completed
 **Commit:** 0866f1f8e52b9d2441ad05e012aae6d5f5824001
 **Verification:** six real ownership/caller tests pre/post0: actual prepare and commit snippets through branch CLI, literal nine-path generated/deleted tree oracle, manual/staged/unstaged preservation; collision stops before deletion/index changes, missing/unmarked outputs and symlink ancestor/output escapes rejected. Historical broad-delete and broad-commit controls reproduce losses; deletion guard and actual skill broad-commit neutralizations each break the owning keeper1, exact restore then six pass0. Skill validator66, docs/docs-package, scoped/root lint/format and fresh CLI build all0. Four declared files only; no provider generation or persistent ownership manifest. Root read actual script and consumer diff, verified sole commit/parent/boundary and clean readback. Evidence analysis/p04/t03-\*.
 
 ### Task p04-t04: Offer and persist Plain Markdown in guided init
 
-**Status:** complete
+**Status:** completed
 **Commit:** 8158a6035a02f87be1e4330f0320acf4f464747e
 **Verification:** actual supplied option keeper selects only offered Plain Markdown/markdown, preserves existing default/five frameworks, exercises real config reader/writer and literal persisted tooling/root/unrelated fields. Pre-option baseline1 for absent actual choice; thirteen guided tests pre/post0. Scoped format/diff, CLI check/types/build, docs/docs-package and actual build:docs0 (six executed,zero cached). Precommit test style correction and postcommit mistyped filter matching no packages are nonacceptance; corrected actual package ran13/13exit0. Root verified sole three-path task commit/parent, one-line menu change, real option/config assertions and clean readback. Analysis/p04/t04-\*; no new recovery/event, versions/projections remain Phase6.
 **Requirement:** User-added U1; actual menu choice and real config persistence proof required.

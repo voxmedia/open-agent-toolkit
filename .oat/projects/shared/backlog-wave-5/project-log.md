@@ -184,6 +184,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 wave5-p04-complete-r1: native r1 zero findings and configured Opus-high r1 passed0C0H0M4L; four Low decisions durably deferred to final, ten Lows plus prior Medium retained.4/4 phase tasks,26/30 total, recovery1/10pendingnull unchanged; Phase5 ready.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-task-status-reader-alignment: root receipt task rows used complete instead of parser-owned completed; project status counted22 despite four committed Phase4 tasks. Correct only four task status scalars, preserving phasecomplete, task commits, evidence and26/30 ledger. No product or recovery change.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
