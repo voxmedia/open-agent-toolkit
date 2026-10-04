@@ -3307,7 +3307,9 @@ Dispatch: scope=p05 action=implementation role=implementer producer=unknown prov
       "handle": "<redacted-path>",
       "dispatch_target": "oat-phase-implementer-gpt-6-1-sol-high",
       "review_artifact": "reviews/archived/p05-review-2026-10-04T171337Z.md",
-      "status": "planned"
+      "status": "accepted",
+      "acceptance": "native-followup accepted HOLD",
+      "base_head": "c5934162ec90d28be95c11792fa6436f4feac661"
     }
   ],
   "task_class": "consequential",
@@ -3483,3 +3485,5 @@ Exactly one terminal `**Reconnaissance:** not-attempted` was consumed before any
 M1 disposition: code_fix_required, Task Scope Minor, new p05-t04. Root independently reproduced success with unavailable unquoted project-source href retained while quoted equivalent removed; actual destination absent. Existing R4 owns consistent valid HTML syntax/asset handling. Original negative observer and root result preserved; no new product choice. Same original accepted Sol6.1/high author resumes bounded fix; resolver notices[], exact target unchanged, no fallback/nesting. Review cycle1 and fix iteration1/2, recoveryused1 pendingnull unchanged. Phase remains in_progress pending correction, fresh independent review and configured gate; prior ten Lows/one stored-receipt diagnostic Medium remain final-owned.
 
 Root probe initially ran from pnpm-filter package cwd and failed ENOENT without product mutation; corrected repository-root tsx invocation independently reproduced the defect. A second unsupported completed-reviewer interruption attempt returned unsupported call without effects; no retry/replacement/cleanup. Only the supported original-author continuation is used. Full conserved source hashes, authentic producer/consumers and final gates remain owning acceptance boundaries.
+
+Original phase handle accepted bounded fix HOLD via supported native followup. Exact target/axes retained; generic continuation validated-only before root START. Acceptance baselinec5934162, reviewfix1/2, no recovery reservation or counter changes.
