@@ -3,26 +3,26 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-03
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 tasks are committed; composed verification and root/independent reviews remain pending.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 is ready.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | in_progress | 3     | 2/3       |
-| Phase 3 | pending     | 3     | 0/3       |
-| Phase 4 | pending     | 3     | 0/3       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | pending  | 3     | 0/3       |
+| Phase 4 | pending  | 3     | 0/3       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
-**Total:** 9/20 tasks completed
+**Total:** 10/20 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -95,7 +95,7 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ## Phase 2: Preserve PJM settings and structured state
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p02-t01: Preserve unowned PJM settings through real command reruns
 
@@ -119,8 +119,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p02-t03: (review) Keep malformed blockers visible to completion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d10b21caadde19d3cf2be6c948ec23ad99abec0b
+
+**Outcome:** Malformed blocker list entries retain diagnostic legacy strings containing their literal JSON, preserving the existing nonempty-list completion stop. Valid object/string/empty behavior is conserved; producer test pins bare date. Three docs now agree. Supersedes p02-t02's deliberate malformed-entry dropping.
+
+**Verification:** Missing-since-only state produced [] and false stop predicate on baseline; real-reader regression failed for that reason. Fresh built fixed parser/project/CLI JSON/field/shell/human preserves the exact diagnostic and stop predicate true; five controls pass. 47 control-plane and 22 status tests, both package checks/types/fresh builds, docs validation, full lint/format (zero cached) and skills validation passed. Root independently repeated all five exact CLI controls and inspected the committed six-file scope, literal parser diagnostic, docs and clean tree. Predicate evidence covers the input contract, not a live completion run. Ignored evidence analysis/p02/t03-verification.md and t03-\*. No recovery; used0/pendingnull.
 
 ## Phase 3: Shared hook-safe exact-path commits
 
@@ -942,7 +946,7 @@ Dispatch stamp: Dispatch: scope=p02-malformed-blocker-fix action=fix role=fix pr
     "task_name": "wave5_phase2_fix"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -961,7 +965,7 @@ Dispatch stamp: Dispatch: scope=p02-malformed-blocker-fix action=fix role=fix pr
       "phase": "p02",
       "task_ids": ["p02-t03"],
       "review_artifact": "reviews/archived/p02-review-2026-10-04T004538Z.md",
-      "status": "running",
+      "status": "completed",
       "reason": "Original completed phase native handle unavailable after handoff; one fresh same-target bounded passing-gate correction."
     }
   ],
@@ -998,3 +1002,7 @@ Dispatch stamp: Dispatch: scope=p02-malformed-blocker-fix action=fix role=fix pr
 ```
 
 Accepted native handle `/root/wave5_phase2_fix`; unchanged exact Sol/high target and six-file p02-t03 boundary. No replacement/replay of earlier task commits, no nested agents. Root retains lifecycle writes; child holds mutations until START from committed acceptance baseline.
+
+### Phase p02 terminal outcome
+
+DONE fix report validated: original request/continuation/exact Sol-high target, execution base 625f8bda01d5e96f0d9670bade5aec56d7804f83 and single six-file fix commit d10b21caadde19d3cf2be6c948ec23ad99abec0b, passing controls and clean tree. Gate M1/L1 address-now dispositions settled; independent passing-gate sweep requires no phase re-review for this contained Medium/Low correction. No Critical/High concern emerged, no new deferral, fix iteration 1, recovery 0/null. Phase 2 complete; final review will include corrected integration. Next p03-t01.
