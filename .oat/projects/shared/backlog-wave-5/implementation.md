@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 p03-t11 is committed and verified; the approved native/configured cycle is consumed with a new rewritten-history diagnostic finding. Execution waits for refreshed necessity assessment and operator disposition under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
+Phases 1 and 2 are complete. Phase 3 has eleven committed tasks and has consumed the approved native/configured review cycle. The original p03-t11 gap is closed; one new Medium remains for misleading retry guidance after provenance-changing history rewrites. The refreshed necessity report recommends a condition-specific diagnostic correction and deferring automatic rewritten-history recovery. Operator disposition is pending. Six Low findings remain final-owned; phases 4–6, including U1, and the one-PR tail remain pending.
 
 ## Progress Overview
 
@@ -2597,7 +2597,7 @@ Dispatch: scope=p03 action=review role=reviewer model_axis=selected:gpt-6.1-sol 
     "task_name": "wave5_phase3_complexity_r4"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2613,6 +2613,14 @@ Dispatch: scope=p03 action=review role=reviewer model_axis=selected:gpt-6.1-sol 
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted; HOLD until immutable committed START head"
+    },
+    {
+      "source": "native-terminal-result",
+      "handle": "<redacted-path>",
+      "result": "completed; exactly one Reconnaissance:not-attempted; full inline report; no correctness probes, writes or nested agents",
+      "reviewed_head": "27d1ef8f0f88f273e5e49f3048ccf28d0ca1a128",
+      "report": ".oat/projects/shared/backlog-wave-5/reviews/archived/complexity-p03-2026-10-04T142327Z.md",
+      "report_sha256": "36f5716cbbc2ccd68a002642f4214e061efe33910176dc495e9786e4eb6abf4a"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -2651,3 +2659,15 @@ Dispatch: scope=p03 action=review role=reviewer model_axis=selected:gpt-6.1-sol 
 ```
 
 Accepted independent read-only necessity assessor; new review artifacts require refreshed report under the exhausted-loop fallback. Native exact role/HOLD; no product writes, tests, probes, nested agents, correctness-cycle or recovery increment. Root owns verdict disposition and artifacts. START is bound to this acceptance commit.
+
+### STOP boundary: p03 necessity refresh r4 received — 2026-10-04
+
+**Report:** `reviews/archived/complexity-p03-2026-10-04T142327Z.md`; SHA256 `36f5716cbbc2ccd68a002642f4214e061efe33910176dc495e9786e4eb6abf4a`; full inline report saved verbatim, Method through END REPORT, terminal reconnaissance signal excluded. Root consumed exactly one `**Reconnaissance:** not-attempted` before validation/save/bookkeeping and personally read the full report. No Review Orchestration block, generated/review frontmatter or Reviews row; ignored archive remains local-only. Reviewed immutable HEAD27d1ef8f0f88f273e5e49f3048ccf28d0ca1a128. Exact native assessor completed with no writes, tests, probes or nested agents; runtime identity not reported.
+
+**Verdict:** Partially compliant, provisional on rewritten-history support. Root independently checked original ticket matching-artifact recovery and resumable lock exhaustion, actual parent refusal, unconditional resumable result, generic owning-adapter retry and saved independent root H1/H2/H3/A1 observations. Safe unbound-parent refusal remains Keep. Baseline nothing is not successful acceptance. Useful diagnostic guidance is accepted-requirement; automatic retirement/rebinding without parent-bound proof is new-hardening, requiring a separate contract decision.
+
+**Recommended disposition, not selected:** corrective revision limited to explicit unbound-provenance inspection guidance through existing result/error handling. Preserve receipt, marker, HEAD, index, worktree and every provenance/publication guard; do not promise automatic same-identity retry, diagnose a rebase as certain, rotate/delete an unverified marker, add a schema/command/registry, or broaden migration compensation. Minimal proof is the existing real rewritten-history refusal plus no-rewrite accepted control and retained forged-provenance/prior-recovery/migration controls. Suggested allowance: one bounded p03-t12 diagnostic task and ONE fresh exact Sol6.1/high native review plus configured Opus5.5/high gate; neither task nor allowance is authorized until operator disposition.
+
+**Operator decisions:** authorize that diagnostic revision and specified allowance, or explicitly accept the diagnostic limitation and continue the remaining approved wave; manual finding selection and simplify through the normal revision path are also available. Separately decide whether to defer automatic rewritten-history recovery or adopt a new contract; recommendation is defer. Six prior Lows retain final ownership and timing. Diagnostic M1 is dissolvable by this narrow correction; broader recovery demand leaves this scope only with explicit defer.
+
+**Stop reason:** review-receive Step8 cap (six native reviews, four configured gates excluded), consumed scope-bound extra-cycle approval, and refreshed report newer than all reviewed artifacts. Agents never select the disposition. Recovery1/10pendingnull unchanged. Phase3 remains blocked with11/11 task commits,total21/29; Phase4–6 and PR tail pending. No further product/review/gate launch, counter reset, push, merge or release. Operator approval was not rejected by automatic review; this is the explicit lifecycle boundary.

@@ -689,3 +689,7 @@ Completion requires evidence for all 40 original acceptance rows plus U1, exactl
 - Deliberate testing: `/Users/tstang/.agents/skills/deliberate-testing/SKILL.md` (author mode; named public boundaries, independent oracles, proportional controls).
 - Current source evidence and choices table above; approved scope/base/dirty-state evidence in discovery and root setup commits.
 - Root-owned review artifacts and short implementation evidence references will be added as actual results exist. No spec/design/external-plan artifact is required or authorized by this Quick plan.
+
+## Phase 3 review boundary — 2026-10-04
+
+Eleven phase tasks are committed; the approved native r6/configured r4 cycle is consumed. The refreshed necessity report `reviews/archived/complexity-p03-2026-10-04T142327Z.md` recommends a condition-specific diagnostic correction while retaining unbound-provenance refusal and separately deferring automatic rewritten-history recovery. Operator disposition is pending; no new task, correctness cycle or Phase4 launch is authorized. Six Low findings remain final-owned; total21/29 committed. This assessment is not a Reviews event.

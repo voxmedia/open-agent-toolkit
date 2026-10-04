@@ -3,7 +3,7 @@ oat_current_task: p03-t11
 oat_last_commit: 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
 oat_blockers:
   [
-    'Phase 3 rewritten-history finding: refreshed necessity assessment and operator disposition pending.',
+    'Phase 3 diagnostic finding: refreshed necessity report received; operator disposition pending.',
   ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T14:14:50.358968Z
+oat_project_state_updated: 2026-10-04T14:25:57.608656Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -138,7 +138,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 approved cycle consumed; rewritten-history diagnostic finding awaits refreshed assessment/operator disposition
+Implement - Phase 3 approved cycle consumed; rewritten-history diagnostic finding awaits operator disposition; necessity refresh r4 received
 
 ## Artifacts
 
@@ -157,8 +157,8 @@ Implement - Phase 3 approved cycle consumed; rewritten-history diagnostic findin
 
 ## Blockers
 
-The approved native r6/configured r4 cycle is consumed. Original p03-t11 gap is closed; a new rewritten-history provenance/refusal diagnostic finding is reproduced. Required refreshed necessity assessment and operator disposition precede further correction/review or Phase 4. Six Low findings remain final-owned.
+The approved native r6/configured r4 cycle is consumed. Original p03-t11 gap is closed; a new rewritten-history provenance/refusal diagnostic finding is reproduced. Refreshed necessity report recommends diagnostics-only correction and separate defer of automatic history-rewrite recovery; operator disposition precedes further correction/review or Phase 4. Six Low findings remain final-owned.
 
 ## Next Milestone
 
-Receive the refreshed necessity assessment and present the concrete operator decision; no additional product or correctness-cycle authority.
+Await operator decision on diagnostics-only correction and explicit review allowance, or acceptance of the residual limitation; no additional product or correctness-cycle authority.

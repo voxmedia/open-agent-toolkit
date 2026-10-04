@@ -132,6 +132,14 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 
 wave5-p03-opus-r4-received configured gate passed Critical/High threshold with0C0H1M1L; priorM1closed, rewritten-history diagnostics reproduced, L1trackingaligned; native6/gates4excluded/recovery1/10pendingnull; refreshed necessity/operator boundary; artifact .oat/projects/shared/backlog-wave-5/reviews/archived/p03-review-2026-10-04T140803Z.md
 
+### 2026-10-04 · structural · oat-project-implement · p03
+
+wave5-p03-complexity-r4-received exact native necessity assessor completed at27d1ef8; report reviews/archived/complexity-p03-2026-10-04T142327Z.md, Partially compliant/provisional rewrite scope, diagnostic-only corrective revision recommended, safe refusal Keep; no probes/writes or correctness-cycle/recovery increment.
+
+### 2026-10-04 · structural · oat-project-implement · stop
+
+wave5-p03-complexity-r4-stop operator disposition pending after six native/four configured reviews and consumed approval; diagnostic-only correction versus residual acceptance and separate rewrite-policy defer presented from refreshed necessity report; no disposition self-selected, recovery1/10pendingnull,11/11p03,total21/29,phase4–6/onePRtail pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
