@@ -301,11 +301,11 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p03-t06: (review) Support unrelated nested repositories and gitlinks
 
-**Finding:** H1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+**Finding:** H1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded corrective revision explicitly approved by the operator on 2026-10-04.
 
 **Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Declare any additional need before editing.
 
-**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+**Dependencies:** p03-t05 committed. User explicitly approved these four corrections and one additional native review plus configured Opus gate; further blocking findings return to the operator. One append-only correction commit per task, original commits immutable.
 
 **Change:** Handle directory entries in both preservation snapshot and hook guard without readFile/EISDIR. Preserve literal unrelated index/worktree state and containment; do not silently weaken C2 by skipping directories without a justified contract.
 
@@ -315,11 +315,11 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p03-t07: (review) Accept staged tracked removals and both rename sides
 
-**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded corrective revision explicitly approved by the operator on 2026-10-04.
 
 **Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Declare any additional need before editing.
 
-**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+**Dependencies:** p03-t05 committed. User explicitly approved these four corrections and one additional native review plus configured Opus gate; further blocking findings return to the operator. One append-only correction commit per task, original commits immutable.
 
 **Change:** Positively recognize HEAD-tracked removals absent from the real index after git rm/git mv. Commit both old/new names; preserve unrelated staging and existing literal path validation.
 
@@ -329,11 +329,11 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p03-t08: (review) Settle operation-owned resources on termination
 
-**Finding:** M2 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+**Finding:** M2 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded corrective revision explicitly approved by the operator on 2026-10-04.
 
-**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`; `packages/cli/src/commands/internal/commit-paths.ts`, `commit-paths.test.ts` only if owning CLI signal handling is needed`. Declare any additional need before editing.
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`; `packages/cli/src/commands/internal/commit-paths.ts`, `commit-paths.test.ts` only if owning CLI signal handling is needed. Declare any additional need before editing.
 
-**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+**Dependencies:** p03-t05 committed. User explicitly approved these four corrections and one additional native review plus configured Opus gate; further blocking findings return to the operator. One append-only correction commit per task, original commits immutable.
 
 **Change:** Bound termination handling to the active operation. Coordinate cancellation/settlement of child Git before inode-verified owned lock/temp cleanup; never unlock while a surviving child can commit, and never remove foreign/replaced resources. No new PID database or generic recovery framework unless separately justified.
 
@@ -343,11 +343,11 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p03-t09: (review) Finalize settled record markers before fresh operations
 
-**Finding:** L1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded correction proposed pending operator review-cap disposition.
+**Finding:** L1 in `reviews/archived/p03-review-2026-10-04T051023Z.md`; root disposition agrees, bounded corrective revision explicitly approved by the operator on 2026-10-04.
 
 **Files:** `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`. Declare any additional need before editing.
 
-**Dependencies:** p03-t05 committed. Execution is blocked at the three-standard-review cap; no fourth round or corrective dispatch without operator disposition. One append-only correction commit per task, original commits immutable.
+**Dependencies:** p03-t05 committed. User explicitly approved these four corrections and one additional native review plus configured Opus gate; further blocking findings return to the operator. One append-only correction commit per task, original commits immutable.
 
 **Change:** Close the existing adapter/helper settlement gap using positively verified owning finalization or settled-marker reconciliation. Preserve foreign marker/receipt and idempotent matching retries; safely allow a later distinct content operation with the same message/paths.
 

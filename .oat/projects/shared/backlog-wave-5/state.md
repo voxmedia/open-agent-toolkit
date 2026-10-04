@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T05:27:31.554233Z
+oat_project_state_updated: 2026-10-04T05:42:38.531688Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -138,7 +138,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 gate blocked; review cap reached; complexity assessment complete; operator disposition pending
+Implement - Phase 3 corrective revision approved; same author continuation accepted
 
 ## Artifacts
 
@@ -157,8 +157,8 @@ Implement - Phase 3 gate blocked; review cap reached; complexity assessment comp
 
 ## Blockers
 
-Phase 3 independent gate: 1 High, 2 Medium, 1 Low. Three standard native reviews reached the review-receive cap; operator disposition is required after the complexity assessment.
+None requiring user input. Four Phase 3 gate corrections and one additional native review/Opus gate cycle are explicitly approved.
 
 ## Next Milestone
 
-Receive operator disposition on the completed complexity assessment; then clear bounded Phase 3 corrections before Phase 4, including U1 Plain Markdown guided-init support.
+Complete the approved bounded Phase 3 corrections and additional review/gate cycle before Phase 4, including U1 Plain Markdown guided-init support.

@@ -96,6 +96,10 @@ wave5-p03-gate-blocked-cap-61054dee: STOP at three-standard-review cap; independ
 
 wave5-p03-complexity-stop-20261004: STOP at three-standard-review cap; complexity verdict partially compliant recommends bounded corrective revision for1H/2M/1L, central helper retained and marker settlement simplified; operator disposition pending, no waiver/counter reset. Evidence implementation.md and reviews/archived/complexity-p03-2026-10-04T052701Z.md.
 
+### 2026-10-04 · structural · oat-project-implement · p03
+
+wave5-p03-operator-approval-20261004: User approved corrective revision p03-t06..t09 and one additional native review plus configured Opus gate; explicit scope-bound cap override, counters unchanged; same original phase author resumed HOLD. Continue later wave and one mergeable PR on pass; no merge/release. Evidence implementation.md and reviews/archived/complexity-p03-2026-10-04T052701Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

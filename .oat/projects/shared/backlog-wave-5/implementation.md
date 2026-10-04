@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  ['p03 review cap: operator disposition required after complexity assessment']
+oat_blockers: []
 oat_last_updated: 2026-10-04
 oat_current_task_id: p03-t06
 oat_generated: false
@@ -10,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; native round 3 passed; independent gate blocks with 1 High, 2 Medium and 1 Low. Four corrections are pending operator disposition at the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks and both bounded review corrections are committed and verified; native round 3 passed; independent gate blocks with 1 High, 2 Medium and 1 Low. User approved the four corrections, one additional native review and configured Opus gate after the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -169,22 +168,22 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t06: (review) Support unrelated nested repositories and gitlinks
 
-**Status:** pending — operator disposition required
+**Status:** pending — approved corrective revision
 **Commit:** -
 
 ### Task p03-t07: (review) Accept staged tracked removals and both rename sides
 
-**Status:** pending — operator disposition required
+**Status:** pending — approved corrective revision
 **Commit:** -
 
 ### Task p03-t08: (review) Settle operation-owned resources on termination
 
-**Status:** pending — operator disposition required
+**Status:** pending — approved corrective revision
 **Commit:** -
 
 ### Task p03-t09: (review) Finalize settled record markers before fresh operations
 
-**Status:** pending — operator disposition required
+**Status:** pending — approved corrective revision
 **Commit:** -
 
 ## Phase 4: Archive and knowledge-refresh consumers
@@ -1104,7 +1103,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "completed",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1163,6 +1162,18 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "acceptance_evidence": "Same native handle acknowledged HOLD; exact configured target preserved, root owns ledger until START baseline.",
       "fix_commit": "6819854106e6f7c98a87160397731d9353122194",
       "outcome": "DONE;exact3paths,1090tests/13files and real public refusal/accepted recovery probes pass; root29tests/capturedprobe repeat,clean tree,recovery1/null."
+    },
+    {
+      "event_id": "wave5-p03-fix-continuation-r3",
+      "original_request_id": "wave5-p03-implement-r1",
+      "phase": "p03",
+      "task_ids": ["p03-t06", "p03-t07", "p03-t08", "p03-t09"],
+      "review_artifact": "reviews/archived/p03-review-2026-10-04T051023Z.md",
+      "complexity_report": "reviews/archived/complexity-p03-2026-10-04T052701Z.md",
+      "status": "accepted",
+      "accepted_handle": "/root/wave5_phase3",
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "reason": "User explicitly approved bounded corrective revision and one additional native review plus configured Opus gate; original handle resumed, HOLD acknowledged. No counter reset or standing policy alteration."
     }
   ],
   "task_class": "consequential",
@@ -1741,3 +1752,12 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 **Operator questions:** Authorize continuation beyond the cap for these four corrections and one fresh native review plus configured Opus gate; accept the bounded marker-owning settlement simplification or explicitly accept residual L1. No waiver of C1-C5 and no PID persistence is recommended. Further blocking findings after the authorized additional cycle return to the operator; monotonic counters/history do not reset.
 **Choices offered:** Manual finding disposition; proceed with current findings (requires explicit risk/gate waiver and leaves mergeable-PR goal unsatisfied until settled); explicit override for the recommended bounded corrective revision; or selected simplification then fresh review. Operator has not selected any option.
 **State:** Stopped pending operator disposition.15/27 tasks completed; U1 Plain Markdown init menu/config task pending, no product changes yet. Five p01 Low final deferrals remain. No PR, merge or release. No review-count or recovery-budget override self-issued.
+
+### Operator disposition and continuation — 2026-10-04 / p03
+
+**Exhaustion point:** review-receive Step8 three-standard-review cap; native3, correction rounds2, gate1. Counters/history remain monotonic.
+**Complexity verdict/report:** Partially compliant; `reviews/archived/complexity-p03-2026-10-04T052701Z.md`.
+**Operator choice:** User replied “approve, what all is left in the wave?” to the concrete four-correction/one-additional-native-review/configured-Opus-gate proposal. Chosen disposition: corrective revision with explicit scope-bound review-cap override. Accept existing-owner record settlement simplification; no requirement waiver or PID persistence.
+**Authorized scope:** p03-t06..t09, one additional fresh native review and configured Opus gate. If new blocking findings remain after that additional cycle, return to operator; no new automatic iteration beyond this approval. On pass, continue the already-approved later phases and lifecycle tail through one mergeable PR, no merge/release.
+**Continuation:** Original `/root/wave5_phase3` successfully resumed and acknowledged HOLD; original request `wave5-p03-implement-r1`, event `wave5-p03-fix-continuation-r3`. No replacement launch or inferred loss of original handle. Fresh origin/main fetch found no new commits in six declared correction paths; exact implementer resolver Sol6.1/high has no notices. Root owns bookkeeping until committed START head.
+Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
