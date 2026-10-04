@@ -162,7 +162,9 @@ supersedes the "execution deferred by operator on 2026-08-19" record.
   run `run-2200b576-00c1-4803-8a1a-e3563c96d4e2`, recipe `program-recap@1`,
   outcome `built-durable` (artifact commit `776d4d1a`, attestation
   `10d0756f`; supplied fact base
-  `.oat/repo/reference/project-recaps/2026-08-19-defect-wave-program.fact-base.json`
+  `.oat/repo/reference/explainers/2026-08-19-defect-wave-program-recap/source/fact-base.json`
+  (the exact supplied bytes, preserved in the consuming run; immutable input
+  records retain the historical locator)
   — 13 sources pinned at `f2917165`, 81 cited claims, 5 unresolved claims
   recorded honestly). A first attempt, run
   `run-9bf4ae62-205b-4aed-a638-d0dc0e4152c5`, failed at the visual-review
