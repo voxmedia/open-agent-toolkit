@@ -12,8 +12,9 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
+import { commitExactPaths } from '@commands/shared/exact-path-commit';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { archiveBacklogItem, BacklogArchiveError } from './archive';
@@ -600,6 +601,138 @@ describe('archiveBacklogItem', () => {
     });
     expect(Array.isArray(result.warnings)).toBe(true);
   });
+
+  it.each(['full', 'omit-old', 'omit-destination'] as const)(
+    'commits an archive lifecycle with independent completeness control: %s',
+    async (mode) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-archive-consumer-'));
+      tempDirs.push(root);
+      const backlogRoot = join(root, '.oat/repo/pjm/backlog');
+      await initializeBacklog(backlogRoot);
+      const id = 'BL-260705-consumer';
+      await seedItem(backlogRoot, id);
+      await regenerateBacklogIndex(backlogRoot);
+      const reference = join(root, '.oat/repo/reference/plan.md');
+      const handoff = join(root, '.oat/repo/pjm/handoffs', `${id}.md`);
+      await mkdir(dirname(reference), { recursive: true });
+      await mkdir(dirname(handoff), { recursive: true });
+      await writeFile(
+        reference,
+        `Work: [item](../pjm/backlog/items/${id}.md).\n`,
+      );
+      await writeFile(handoff, 'Owned one-shot kickoff.\n');
+      await writeFile(join(root, 'user.txt'), 'BASE user literal\n');
+      const git = (...args: string[]) =>
+        execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+      git('init', '-q');
+      git('config', 'user.email', 'a@b.co');
+      git('config', 'user.name', 'tester');
+      git('add', '.');
+      git('commit', '-qm', 'seed archive lifecycle');
+      await writeFile(join(root, 'user.txt'), 'STAGED user literal\n');
+      git('add', 'user.txt');
+      await writeFile(join(root, 'user.txt'), 'UNSTAGED user literal\n');
+      await writeFile(
+        join(root, '.git/hooks/pre-commit'),
+        '#!/bin/sh\nset -eu\nprintf "enabled" > .git/archive-hook-ran\n',
+      );
+      await chmod(join(root, '.git/hooks/pre-commit'), 0o700);
+      const oldPath = join(backlogRoot, 'items', `${id}.md`);
+      const destination = join(backlogRoot, 'archived', `${id}.md`);
+      const result = await archiveBacklogItem(backlogRoot, id, {
+        summary: 'Consumer shipped',
+        now: FIXED_NOW,
+      });
+      await rm(handoff);
+      const paths = [...new Set([...result.affectedPaths, handoff])];
+      const existingText = paths.filter(
+        (path) => path !== oldPath && path !== handoff,
+      );
+      execFileSync(
+        resolve(import.meta.dirname, '../../../../../node_modules/.bin/oxfmt'),
+        ['--write', ...existingText],
+        { cwd: root },
+      );
+      const passedPaths = paths.filter((path) =>
+        mode === 'omit-old'
+          ? path !== oldPath
+          : mode === 'omit-destination'
+            ? path !== destination
+            : true,
+      );
+      const committed = await commitExactPaths({
+        repoRoot: root,
+        paths: passedPaths.map((path) => relative(root, path)),
+        identity: `archive-${mode}`,
+        message: 'chore(pjm): archive complete operation',
+      });
+      expect(committed, JSON.stringify(committed)).toMatchObject({
+        outcome: 'committed',
+      });
+      const expectedOperation = [
+        `.oat/repo/pjm/backlog/items/${id}.md`,
+        `.oat/repo/pjm/backlog/archived/${id}.md`,
+        '.oat/repo/pjm/backlog/completed.md',
+        '.oat/repo/pjm/backlog/index.md',
+        '.oat/repo/reference/plan.md',
+        `.oat/repo/pjm/handoffs/${id}.md`,
+      ].sort();
+      expect(paths.map((path) => relative(root, path)).sort()).toEqual(
+        expectedOperation,
+      );
+      const actualCommit = git(
+        'diff-tree',
+        '--no-commit-id',
+        '--name-only',
+        '--no-renames',
+        '-r',
+        'HEAD',
+      )
+        .trim()
+        .split('\n')
+        .sort();
+      // The helper commits only given paths; the consumer owns operation
+      // completeness. Each omitted rename side must fail this independent oracle.
+      expect(
+        JSON.stringify(actualCommit) === JSON.stringify(expectedOperation),
+      ).toBe(mode === 'full');
+      if (mode === 'full') {
+        expect(
+          git('show', `HEAD:.oat/repo/pjm/backlog/archived/${id}.md`),
+        ).toContain('status: closed');
+        expect(
+          git('show', 'HEAD:.oat/repo/pjm/backlog/completed.md'),
+        ).toContain('Consumer shipped');
+        expect(
+          git('show', 'HEAD:.oat/repo/pjm/backlog/index.md'),
+        ).not.toContain(id);
+        expect(git('show', 'HEAD:.oat/repo/reference/plan.md')).toContain(
+          `archived/${id}.md`,
+        );
+        expect(
+          git(
+            'ls-tree',
+            '--name-only',
+            'HEAD',
+            '--',
+            `.oat/repo/pjm/backlog/items/${id}.md`,
+            `.oat/repo/pjm/handoffs/${id}.md`,
+          ),
+        ).toBe('');
+      }
+      expect(await readFile(join(root, '.git/archive-hook-ran'), 'utf8')).toBe(
+        'enabled',
+      );
+      expect(git('show', ':user.txt')).toBe('STAGED user literal\n');
+      expect(git('show', 'HEAD:user.txt')).toBe('BASE user literal\n');
+      expect(await readFile(join(root, 'user.txt'), 'utf8')).toBe(
+        'UNSTAGED user literal\n',
+      );
+      expect(git('status', '--porcelain', '--', 'user.txt').trim()).toBe(
+        'MM user.txt',
+      );
+    },
+  );
 
   describe('inbound reference rewriting', () => {
     const id = 'BL-260705-linked';

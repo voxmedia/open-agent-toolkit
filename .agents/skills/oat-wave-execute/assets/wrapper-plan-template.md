@@ -152,7 +152,13 @@ oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for
 - [ ] { N }/{ N } phases, { M }/{ M } tasks complete
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
 - [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
-      `oat backlog archive` with real outcome summaries for { backlog IDs }, one commit
+      `oat backlog archive --json` with real outcome summaries for { backlog IDs }.
+      Union complete returned `affectedPaths` (tracked old deletions, new
+      destinations, ledger/index/references), append owned handoff filesystem
+      deletions, format existing text with the repo command, and create one
+      `oat internal commit-paths` commit with enabled hooks and a retained unique
+      identity. Stop on unavailable/blocked/failed helper; preserve unrelated
+      staged/unstaged work.
 - [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
       before any archive step
 - [ ] Full DoD gates green on the integration branch

@@ -397,8 +397,16 @@ archive anything first.
    `summary.md`** (this is the "before any archive step" gate): convention
    verdicts with evidence, adjustments-as-rules for later waves, graduated-entries
    ledger, rolled into `summary.md` `## Workflow Observations`.
-3. **Serialized backlog archival** — `oat backlog archive` with real summaries,
-   one commit.
+3. **Serialized backlog archival** — run `oat backlog archive --json` for
+   each item with its real outcome summary. Union and deduplicate all returned
+   `affectedPaths`, including tracked old item deletions, new destinations,
+   ledger/index and rewritten references; append owned handoff filesystem
+   deletions. Format existing supported text with the repository command,
+   then use `oat internal commit-paths` for one exact-operation commit with
+   enabled hooks and the unique retained `COMMIT_IDENTITY`. Stop if the helper
+   is unavailable or blocked/failed; unrelated staged/unstaged work survives.
+   A settled noop returns only actual repairs; do not infer paths from every
+   archived link or commit only the old missing path.
 4. **Closeout gate run** — after the archival commit, and after ANY later commit
    that touches a gated surface (`.oat/repo/**`, `.agents/**`, `packages/**`,
    `apps/**`), re-run the integration DoD gates with cache bypass. The last

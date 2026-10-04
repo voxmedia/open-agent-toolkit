@@ -223,6 +223,16 @@ State the adoption state (`declared`, `inferred-legacy`, `partial-initialization
 | `pjm:remote_schema`, `pjm:remote_binding_ids`, `pjm:remote_metadata_state`, `pjm:remote_storage_content`, `pjm:remote_policy`, `pjm:remote_concurrent_intents`, `pjm:remote_operations`, `pjm:remote_retention`, `pjm:remote_host_capability` | emitted only when a remote binding is adopted: `oat-pjm-remote` (reconcile or refresh) and `workflows/backlog-and-planning/remote-project-management.md`                                          |
 | any other `pjm:*` name                                                                                                                                                                                                                        | `info` with the check's message; no fix path is invented                                                                                                                                          |
 
+When applying a backlog close-out fix, use `oat backlog archive <id> --summary
+"outcome" --json` (or the agreed `--wont-do` outcome). Capture its complete
+`affectedPaths`, append only an owned handoff's filesystem deletion, format
+existing affected text with the repository command, and commit the exact paths
+via `oat internal commit-paths` with a unique retained identity and enabled
+hooks. Include tracked old/new item names, ledger/index and rewritten
+references. Verify helper availability and stop on an unavailable or
+blocked/failed helper; preserve unrelated staged/unstaged work. Follow the
+repository's PJM Backlog Lifecycle; do not stage only the missing old path.
+
 #### Agent instructions dive
 
 Explain the sync strategy in use (`oat instructions validate --json` `.strategy`: `none`, the default, keeps no CLAUDE.md because Claude Code reads AGENTS.md itself; `pointer`, `symlink`, and `copy` keep a shim beside each AGENTS.md) and each non-`ok` entry and leftover-CLAUDE.md warning with its path. Explain each missing heading: what the CLI writes there and why an agent needs it (`getting-started/bootstrap.md` for `## Tool Packs`; `workflows/backlog-and-planning/backlog-lifecycle.md` § Adoption comes first for the PJM sections). Offer `oat instructions sync`, `oat tools guidance` (read-only: prints the `OAT tools` block to add), or `oat pjm init` (appends absent PJM blocks) as the finding names; for wording and coverage beyond presence, hand off to `oat-agent-instructions-analyze` then `oat-agent-instructions-apply`.

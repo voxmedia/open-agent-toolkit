@@ -259,7 +259,7 @@ This step mirrors the **Project Kickoff Handoffs** section of the pjm instructio
 - the recommended project mode (`oat-project-lite` for single-sitting work, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work), including which artifacts (spec/design/plan) to pre-populate from existing research when it exists;
 - authoritative input pointers (research directories, decision records, code paths);
 - repo conventions and verification gates the item file does not restate;
-- a close-out section requiring (a) the **Backlog Lifecycle** — `oat backlog archive <id>` — executed in the same PR that ships the item, and (b) deletion of the handoff file (`git rm`) in that same PR.
+- a close-out section requiring (a) the **Backlog Lifecycle** — `oat backlog archive <id> --summary "outcome" --json` — in the same PR that ships the item, and (b) filesystem deletion of its owned handoff. Consume the complete returned `affectedPaths`, append the tracked handoff deletion, format existing text with the repository command, and commit the exact list via `oat internal commit-paths` with a unique retained identity and enabled hooks; stop if unavailable or blocked/failed. Include both old/new item names, ledger, index and rewritten references; preserve unrelated staged/unstaged work.
 
 **Staleness:** if this alignment pass drops an item from the kickoff stack, delete its handoff (`git rm .oat/repo/pjm/handoffs/<BL-id>.md`) in the same pass rather than letting it drift.
 

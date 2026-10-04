@@ -55,11 +55,23 @@ A single `oat backlog archive` run performs the whole close-out so its parts can
 
 1. Sets the terminal `status` (`closed` by default, `wont_do` with `--wont-do`) and stamps `updated`.
 2. Validates and trims a nonblank `--summary` before mutating a `closed` item, then appends its canonical (standard OAT format) newest-first `completed.md` entry. `wont_do` items may omit the summary and get an entry only when one is provided.
-3. Moves `items/<id>.md` into `archived/` — with `git mv` inside a work tree, or a plain rename outside git.
+3. Moves `items/<id>.md` into `archived/` with a filesystem rename, leaving Git staging to the caller.
 4. Rewrites inbound references to the moved file across Markdown under `.oat/repo/**` (tracked and untracked files that Git does not ignore; a code span whose whole content is the item's path, such as an external plan's source citation, is rewritten, while other code spans and fenced code are left as written with a warning) — external plans, decision records, and other backlog items — so no link dangles at `items/<id>.md`, and reports each rewritten file. A reference it cannot resolve is left alone with a warning.
 5. Regenerates the managed backlog index.
 
 The command is safe to re-run: an item already in `archived/` produces a no-op warning and only retries the reference rewrite and index regeneration, so an interrupted close-out finishes on the next run. A missing closed-item summary or an out-of-enum current status (for example a hand-set `done`) is a hard error before mutation and includes recovery guidance. See the [command reference](../../reference/config-and-local-state.md#oat-backlog-archive) for exit codes and the `--json` payload.
+
+The archive result includes normalized absolute `affectedPaths` for the whole
+operation. Capture `--json` for each item, union the lists, and include owned
+handoff deletions. Format existing affected text with the repository's
+formatter, then use `oat internal commit-paths` with a unique retained identity
+and the exact list. Include the old tracked item deletion and new destination
+as well as ledger/index/references; staging only the old missing path fails.
+Hooks remain enabled, and unrelated staged/unstaged work stays intact. Verify
+helper availability first, stop on failure, and follow its retry diagnostics.
+Settled noops claim only actual repairs; pending Git retries recover earlier
+operation outputs from HEAD evidence. See [exact-path maintenance
+commits](../../reference/cli-reference.md#exact-path-maintenance-commits).
 
 ## Catching lifecycle drift
 
@@ -323,7 +335,7 @@ sanity check distinguishes valid active paths from retired references.
 the curated overview, and backlog item files under `.oat/repo/pjm/` as it
 judges applicable, with no separate approval step. It runs
 `oat backlog archive` for completed items, which moves each item file into
-`archived/` (with `git mv` inside a Git work tree), and it creates decision
+`archived/` with a filesystem rename, and it creates decision
 records with `oat decision new`. Its workflow has no commit or push step,
 so review the working-tree diff afterwards. If the backlog index markers
 are missing, it stops and tells you to repair the repository with

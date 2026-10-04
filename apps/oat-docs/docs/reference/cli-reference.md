@@ -66,6 +66,18 @@ pnpm --silent run cli -- internal commit-paths --identity "$COMMIT_IDENTITY" --m
 
 A `dist` invocation requires a fresh build after the latest CLI source changes.
 
+For `oat backlog archive --json`, use the complete returned `affectedPaths`
+array as the archive-owned list, converting absolute paths to literal
+repository-relative files against the same repository root. Union per-item
+results, append an owned
+handoff's filesystem deletion, and format only existing supported text with
+the repository command before the helper commit. Include both old/new item
+paths and every ledger/index/reference output; never stage only the old
+missing name. A settled noop may return no paths and needs no commit. Pending
+Git retries include prior outputs only with HEAD ownership evidence, while
+no-Git retries report current-pass mutations. See [Backlog
+Lifecycle](../workflows/backlog-and-planning/backlog-lifecycle.md).
+
 ## Command Groups
 
 | Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                                   |
