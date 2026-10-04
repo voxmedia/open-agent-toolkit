@@ -84,6 +84,10 @@ wave5-p02-terminal-outcome: root review and independent Opus gate passed; M1/L1 
 
 wave5-p03-native-outcome-r3: native phase review passed after two bounded corrections;15/22 tasks, recovery1/10 pendingnull; independent Opus-high gate pending. Evidence implementation.md and reviews/archived/p03-review-2026-10-04T050037Z.md.
 
+### 2026-10-04 · structural · oat gate review · p03
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:1,medium:2,low:1 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T051023Z.md run=61054dee-de7b-4241-ad14-dfc73e1c76cb
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
