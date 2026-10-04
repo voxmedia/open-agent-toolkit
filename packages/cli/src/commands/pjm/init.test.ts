@@ -545,7 +545,11 @@ describe('pjm instruction template source content', () => {
     expect(content).toContain('never invent variants like `done`');
     // The handoffs section references the convention doc and its deletion rule.
     expect(content).toContain('handoffs/<BL-id>.md');
-    expect(content).toContain('git rm');
+    expect(content).toContain('deletion of the handoff file');
+    expect(content).toContain(
+      'filesystem removal, included as an owned tracked deletion',
+    );
+    expect(content).toContain('the same exact-path commit) in that same PR');
   });
 
   it('defers the close-out workflow to ../pjm/AGENTS.md in reference-agents.md', async () => {
