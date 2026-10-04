@@ -279,6 +279,8 @@ export async function commitExactPaths(
       if (receipt?.commit) {
         commit = receipt.commit;
         if (
+          (await git(root, ['show', '-s', '--format=%P', commit])) !==
+            receipt.parent ||
           (await git(root, ['rev-parse', `${commit}^{tree}`])) !==
             receipt.tree ||
           !(await git(root, ['show', '-s', '--format=%B', commit])).includes(

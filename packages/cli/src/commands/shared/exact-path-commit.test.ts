@@ -141,6 +141,79 @@ describe('commitExactPaths real Git boundary', () => {
     expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
   }, 15000);
 
+  it.each(['ordinary', 'root'] as const)(
+    'verifies the actual parent of a %s committed receipt before settlement',
+    async (kind) => {
+      let root: string;
+      let parent: string;
+      if (kind === 'ordinary') {
+        root = await repo();
+        parent = git(root, ['rev-parse', 'HEAD']);
+      } else {
+        root = await mkdtemp(join(tmpdir(), 'oat-exact-root-'));
+        roots.push(root);
+        git(root, ['init', '-q']);
+        git(root, ['config', 'user.name', 'OAT Test']);
+        git(root, ['config', 'user.email', 'oat@example.com']);
+        await writeFile(
+          join(root, 'unrelated.md'),
+          'STAGED unrelated literal\n',
+        );
+        git(root, ['add', 'unrelated.md']);
+        await writeFile(
+          join(root, 'unrelated.md'),
+          'UNSTAGED unrelated literal\n',
+        );
+        parent = '';
+      }
+      await writeFile(join(root, 'owned.md'), 'owned parent control\n');
+      const input = {
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: receipt parent',
+        identity: `parent-${kind}`,
+      };
+      const committed = await commitExactPaths(input);
+      expect(committed.outcome).toBe('committed');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const receiptPath = committed.receipt!;
+      const receiptBytes = await readFile(receiptPath, 'utf8');
+      const receipt = JSON.parse(receiptBytes);
+      expect(receipt.parent).toBe(parent);
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'already-matching',
+        commit: head,
+      });
+      const foreign = JSON.stringify({
+        ...receipt,
+        parent: '0000000000000000000000000000000000000000',
+      });
+      await writeFile(`${receiptPath}.foreign`, foreign);
+      await rename(`${receiptPath}.foreign`, receiptPath);
+      const index = await readFile(join(root, '.git/index'));
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'failed',
+        committed: true,
+        error: expect.stringMatching(/Receipt does not positively match/),
+      });
+      expect(await readFile(receiptPath, 'utf8')).toBe(foreign);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(git(root, ['show', ':unrelated.md'])).toBe(
+        'STAGED unrelated literal',
+      );
+      expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated literal\n',
+      );
+      await writeFile(receiptPath, receiptBytes);
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'already-matching',
+        commit: head,
+      });
+      expect(git(root, ['status', '--porcelain', '--', 'owned.md'])).toBe('');
+    },
+  );
+
   it('reproduces broad staged leakage and pathspec hook dirt in the baseline', async () => {
     const broad = await repo();
     await writeFile(join(broad, 'owned.md'), 'changed\n');

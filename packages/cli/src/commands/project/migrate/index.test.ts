@@ -372,6 +372,39 @@ describe('createProjectMigrateCommand', () => {
       expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
       await writeFile(receiptPath, receiptBytes);
       runner = defaultGitRunner;
+      // A complete receipt with the same commit/tree but false parent must also refuse.
+      let committedReceiptReplaced = false;
+      const foreignCommittedReceipt = JSON.stringify({
+        ...JSON.parse(receiptBytes),
+        parent: '0000000000000000000000000000000000000000',
+      });
+      runner = {
+        run: async (args, options) => {
+          if (
+            !committedReceiptReplaced &&
+            args[0] === 'rev-parse' &&
+            args[1] === '--is-inside-work-tree'
+          ) {
+            committedReceiptReplaced = true;
+            await writeFile(`${receiptPath}.foreign`, foreignCommittedReceipt);
+            await rename(`${receiptPath}.foreign`, receiptPath);
+          }
+          return defaultGitRunner.run(args, options);
+        },
+      };
+      await invoke();
+      expect(committedReceiptReplaced).toBe(true);
+      expect(process.exitCode).not.toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'error',
+        message: expect.stringMatching(/Receipt does not positively match/),
+      });
+      expect(await readFile(markerPath, 'utf8')).toBe(markerBytes);
+      expect(await readFile(receiptPath, 'utf8')).toBe(foreignCommittedReceipt);
+      expect(await readFile(join(root, '.git/index'))).toEqual(indexBytes);
+      expect(git(['rev-parse', 'HEAD'])).toBe(committed);
+      await writeFile(receiptPath, receiptBytes);
+      runner = defaultGitRunner;
       // A failed local-pointer write keeps the verified reservation for owning retry.
       await expect(
         migrateSharedToSynced(target, defaultGitRunner, {
