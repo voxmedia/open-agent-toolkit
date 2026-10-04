@@ -2311,3 +2311,106 @@ Boundary: five native correctness reviews have occurred; three configured gates 
 ### Operator approval and p03-t11 start — 2026-10-04
 
 User approved the proposed bounded corrective revision and ONE further Sol6.1/high native review plus configured Opus5.5/high gate. Disposition: corrective revision. Report: `reviews/archived/complexity-p03-2026-10-04T131142Z.md`; verdict Partially compliant; exhausted receive boundary remains historical. Six Low findings retain final ownership. No standing override, review counter reset, merge or release authorization. Original phase handle accepted HOLD for `wave5-p03-fix-continuation-r5`; root owns bookkeeping until committed START head. Fresh origin/main fetch has no new commits in four helper/ref-sync source/test paths. Resolver exact Sol6.1/high consequential floor is satisfied. Recovery stays1/10pendingnull.
+
+#### Dispatch wave5-p03-fix-r5-host-continuation
+
+```json
+{
+  "request_id": "wave5-p03-fix-r5-host-continuation",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Finish only approved p03-t11 interrupted correction and verification, preserving current patch.",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004-host-continuation",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T13:37:30.743186Z"
+  },
+  "authority": "phase-scoped-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "live-native-spawn-acceptance",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "handle": "<redacted-path>",
+      "result": "accepted; HOLD acknowledged"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Complete DONE phase report validated; same-handle read-only range correction confirms d1fd3642a15cd442163de75be28b10c30cf7bc53..99a1a8ac0718e7624bb2eb83b78980e5421c5fc0. Three task commits, one recovery, usage1/null; no nested dispatches.",
+    "Read-only same-handle fix report stamp corrected to action=fix role=fix; all commit/range/proof facts unchanged, no extra iteration/recovery."
+  ],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p03-fix-continuation-r5-resume",
+      "original_request_id": "wave5-p03-implement-r1",
+      "task_ids": ["p03-t11"],
+      "accepted_handle": "<redacted-path>",
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "reason": "Original completed phase handle absent after host restart; list_agents root-only and native followup not found. One fresh same-target bounded fix per implementation lifecycle, preserving interrupted patch. No review or recovery count reset."
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Real Git index, hooks and concurrent writers must preserve user staged blobs and worktree bytes; subtle loss is expensive.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Original phase completed earlier; its p03-t11 continuation was interrupted before committing. Original handle absent, native followup returned not found. One fresh same-target fix accepted HOLD under completed-phase fix continuation rule. Native Sol6.1/high role preserved. Interrupted patch analysis/p03-t11-interrupted.patch SHA256 43175980c8fab5d27f739f0b7c923f301d21eb7d44813bdbaab1c629fef2b951. Adopt only existing dirty helper/ref-sync test edits within four approved files. Root tracking-only commit preserves product edits. Recovery1/10 pendingnull; prior native5/gates3 counts unchanged. No additional scope or review authority.
