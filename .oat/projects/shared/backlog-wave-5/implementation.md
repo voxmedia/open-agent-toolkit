@@ -3546,7 +3546,7 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
     "task_name": "wave5_phase5_fix1_resume"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "needs-context",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3577,6 +3577,11 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "Same accepted handle HOLD; p05-t05 two-file scope; awaiting root START."
+    },
+    {
+      "source": "native-terminal-result",
+      "event": "cont-backlog-wave-5-p05-fix-2",
+      "result": "NEEDS_CONTEXT; 168archive/87completion/check/types/freshbuild0; exact2files uncommitted; RELEASE/HOLD awaiting four derived-page scope approval."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3605,8 +3610,12 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "scope": "two archive source/test files; actual markup attributes only",
       "review_fix_iteration": 2,
       "review_fix_limit": 2,
-      "status": "accepted-hold",
-      "baseline": "157d5523680c38e474579388eecdb002ced7823f"
+      "status": "awaiting-scope-approval",
+      "baseline": "157d5523680c38e474579388eecdb002ced7823f",
+      "verified_uncommitted": true,
+      "task_commit": null,
+      "captured_artifact": "p05-fix2-preapproval-20261004",
+      "manifest_digest": "d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e"
     }
   ],
   "task_class": "consequential",
@@ -3759,3 +3768,13 @@ M1: code_fix_required, Task Scope Minor, new p05-t05. Independent root authentic
 An unsupported completed-reviewer interruption attempt was rejected without effects; no supported interruption/release was available and no cleanup/replacement followed. Root did not alter product paths during receive.
 
 Same accepted /root/wave5_phase5_fix1_resume acknowledged HOLD for cont-backlog-wave-5-p05-fix-2, p05-t05. Exact Sol6.1/high target, fresh resolver notices[], completed prior task evidence and original request linkage preserved. Generic continuation validated-only before START; fix2/2 and recovery1/10 pendingnull unchanged. Root owns immutable START/bookkeeping; child owns only declared two product files.
+
+### Phase 5 fix2 verified scope-approval boundary — 2026-10-04
+
+p05-t05 remains pending and uncommitted. Same accepted author returned NEEDS_CONTEXT, verified RELEASE/HOLD. Exact two-file hashes and ignored phase verification evidence fix2-preapproval-verification.json show baseline5intendedfail/2controls, patched15focused,168archive/87completion,check/types/freshbuild and authentic literal-script/link/asset/public-consumer controls passing. No Turbo cache or final workspace-gate claim. All65original Git bytes,64prior archive files and current seven tracked pages remain conserved. Recovery1/10 pendingnull and fix2/2 unchanged; no failed recovery, new fix author or history rewrite.
+
+Known unresolved compatibility: genuine fresh output differs from four current generated pages ONLY by30SVG marker URL corrupt inner quote pairs (60bytes). Root proved complete-byte equality after that sole removal, independently reproduced all4 exact-old-page retry refusals while existing pages and complete source bytes survive, and inspected T3 DOMParser30actual tags: old url(, new valid fragment references. Full exact-byte Wave4 DOM/layout inspected; two snapshot automation errors prevent a screenshot/visual-review claim. Remaining three fresh outputs are identical. Prior claimed7hash equality is historical evidence, not current acceptance; no silent rebaseline. Scoped correction checks are passing, while current historical-page matching retries remain unresolved.
+
+Prepared, unapplied proposal analysis/p05/fix2-proposed-scope-amendment.md and exact four-page patch/output/hash inventory require explicit user approval because accepted p05-t05 owns only two source/test files and preserves historical page bytes. User asked why refresh is needed; root explained malformed SVG and strict retry identity. That question is not approval. Tracked pages, source originals and task ownership are unchanged pending response. An unsupported completed-agent interruption call was rejected without effects; no release/cleanup/replacement was performed.
+
+For crash resilience, quiescent two-file uncommitted work is sealed outside checkout at ~/.oat/recovery-artifacts/backlog-wave-5/p05-fix2-preapproval-20261004, manifestDigest d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e,size14610,worktree-only,roundtrip proven. No restore/apply occurred; same accepted handle remains available. Capture base is a9a84c95; any future replay must verify actual HEAD or produce a separately proved rebind rather than stale apply. Root tracking-only bookkeeping does not alter the two product bytes; authorized continuation gets its actual current HEAD before resuming.

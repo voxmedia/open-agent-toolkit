@@ -204,6 +204,10 @@ wave5-p05-t03-root-receipt: exact80path commita080adeb verified; root independen
 
 wave5-p05-crash-sealed-continuation: Host restart removed the accepted fix handle after ENOSPC, preserving two uncommitted source/test files. Sealed replay captured the exact patch before cleanup of the worktree; a same-target continuation verified the current-base seal and completed one bounded task commit without losing original evidence or resetting counters.
 
+### 2026-10-04 · structural · oat-project-implement · p05
+
+wave5-p05-fix2-scope-approval-boundary: verified uncommitted p05-t05 awaits explicit four-derived-SVG-page scope approval; see implementation.md and analysis/p05/fix2-proposed-scope-amendment.md; fix2/2, recovery1/10 pendingnull unchanged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
