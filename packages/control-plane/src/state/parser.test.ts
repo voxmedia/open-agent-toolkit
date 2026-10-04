@@ -107,7 +107,7 @@ oat_template: false
       ['nested'],
     ])}'`,
   ])(
-    'preserves typed mixed blockers and skips malformed entries (%s)',
+    'preserves typed mixed blockers and diagnoses malformed entries (%s)',
     (blockers) => {
       expect(parseStateFrontmatter(`---\n${blockers}\n---\n`).blockers).toEqual(
         [
@@ -117,6 +117,13 @@ oat_template: false
             since: '2026-10-03',
           },
           'waiting on review',
+          'Malformed blocker entry: {"task_id":"p01-t04","reason":"missing date"}',
+          'Malformed blocker entry: {"task_id":"p01-t05","reason":42,"since":"2026-10-03"}',
+          'Malformed blocker entry: {"task_id":"","reason":"empty task","since":"2026-10-03"}',
+          'Malformed blocker entry: null',
+          'Malformed blocker entry: 42',
+          'Malformed blocker entry: true',
+          'Malformed blocker entry: ["nested"]',
         ],
       );
     },

@@ -45,9 +45,11 @@ Reads one OAT project directory and returns a full `ProjectState` snapshot, incl
 `ProjectState.blockers` uses the exported `ProjectBlocker` union: a legacy
 reason string or `{ task_id: string, reason: string, since: string }`. Structured
 records retain their literal fields in parsed state and JSON. Empty lists stay
-empty; mixed lists retain valid entries in order. Records missing a nonempty
-string field and other malformed entries are ignored rather than coerced into
-`[object Object]`. Legacy string normalization remains unchanged.
+empty; mixed lists retain entries in order. Records missing a nonempty string
+field and other malformed entries become diagnostic legacy strings:
+`Malformed blocker entry: <JSON>`. They remain visible to blocker checks and
+human output without `[object Object]` coercion. Legacy string normalization
+remains unchanged.
 
 Review ledger entries in `ProjectState.reviews` expose the stable five-column
 event identity (`scope`, `type`, `status`, `date`, and `artifact`) plus optional

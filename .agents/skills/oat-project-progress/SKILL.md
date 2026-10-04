@@ -188,9 +188,11 @@ records. Display strings as their reason; display records as
 than coercing the object to text. `oat project status --json` preserves those
 three literal string fields; `--field project.blockers` and
 `--shell BLOCKERS=project.blockers` serialize the list as JSON. Empty lists mean
-no blockers; mixed lists retain valid strings and records in order. Records
-missing any nonempty string field and other malformed entries are ignored by
-the shared parser. Do not change state or routing merely to render blockers.
+no blockers; mixed lists retain entries in order. Records missing any nonempty
+string field and other malformed entries become diagnostic legacy strings:
+`Malformed blocker entry: <JSON>`. They remain visible to blocker checks and
+human output. Legacy string normalization remains unchanged. Do not change
+state or routing merely to render blockers.
 
 **Display format:**
 

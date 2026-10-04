@@ -95,11 +95,12 @@ shows the task, reason and date for records, and the reason for legacy strings.
 emits a shell-quoted JSON assignment. Select a single field such as
 `--field project.blockers.0.reason` to read a structured reason alone.
 
-Empty lists remain empty. Mixed lists retain valid entries in order, with
+Empty lists remain empty. Mixed lists retain entries in order, with
 legacy string normalization unchanged. Records missing any nonempty string
-field, nested lists and non-string scalars are ignored instead of coerced into
-`[object Object]`. The parser also accepts JSON-encoded blocker lists for
-compatibility. These representations do not change workflow recommendations
+field, nested lists and non-string scalars become diagnostic legacy strings:
+`Malformed blocker entry: <JSON>`. They remain visible to blocker checks and
+human output without `[object Object]` coercion. The parser also accepts
+JSON-encoded blocker lists for compatibility. These representations do not change workflow recommendations
 or the state refresh command's existing raw-frontmatter handling.
 
 ## Supporting artifacts

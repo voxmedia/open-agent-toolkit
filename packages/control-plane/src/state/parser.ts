@@ -271,6 +271,7 @@ function parseBlockers(value: unknown): ProjectBlocker[] {
         treatPlaceholdersAsNull: true,
       });
       if (reason !== null) blockers.push(reason);
+      continue;
     } else if (
       typeof item === 'object' &&
       item !== null &&
@@ -285,15 +286,17 @@ function parseBlockers(value: unknown): ProjectBlocker[] {
         typeof record.since === 'string' &&
         record.since.trim()
       ) {
-        // Preserve the producer's literal fields. Malformed entries are ignored,
-        // never coerced into reason strings such as "[object Object]".
+        // Preserve the producer's literal fields.
         blockers.push({
           task_id: record.task_id,
           reason: record.reason,
           since: record.since,
         });
+        continue;
       }
     }
+    // Keep invalid entries visible to consumers that stop on a nonempty list.
+    blockers.push(`Malformed blocker entry: ${JSON.stringify(item)}`);
   }
   return blockers;
 }
