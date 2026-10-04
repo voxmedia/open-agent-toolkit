@@ -220,6 +220,10 @@ wave5-p05-outcome-opus-r1-91378602 Phase5 complete5/5 after native r3 and config
 
 wave5-final-test-stop-f4c51653 final pnpm test exited1 with34CLI failures, reproduced in direct439-test run; implementation.md records the seven-path correction proposal and preserved REVIEWRECEIVE-07 mapping, awaiting operator direction; no source correction, recovery consumption or final gate pass.
 
+### 2026-10-04 · structural · oat-project-implement · p06-t02
+
+wave5-p06-t02-receipt-11da300e7 verified two-file literal-only version correction and353direct tests pre/post; root appends delegated final guidance/evidence tasks and individual carried-finding dispositions; final gates remain pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t02
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; three approved final-test tasks and Phase6 final review/gate/one-PR closeout remain.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; five remaining final-test/guidance tasks and Phase6 final review/gate/one-PR closeout remain.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 4     | 1/4       |
+| Phase 6 | in_progress | 7     | 2/7       |
 
-**Total:** 32/35 tasks completed
+**Total:** 33/38 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -320,13 +320,28 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t02: Propagate version pins into retained contract tests
 
-**Status:** pending
+**Status:** completed
+**Commit:** 11da300e7a29daeaafaaeb9e7da4a37ad7855258
+
+**Outcome/Verification:** Exactly two test files,51literal pin changes derived from immutable p06 owner commit; all behavior/pin-count assertions conserved. Pre/post direct353tests pass, scopedlint/format/freshforcedhelperbuild exit0. Root independently verified committed SHA256/readback against proof, sole parent/start, exactpaths and exits. Recovery0/10pendingnull. Evidence analysis/p06/t02/task-report.md and named receipts.
 
 ### Task p06-t03: Reconcile final inventory composition
 
 **Status:** pending
 
 ### Task p06-t04: Exercise real helper failure and bookkeeping contracts
+
+**Status:** pending
+
+### Task p06-t05: Close proportional guidance and evidence findings
+
+**Status:** pending
+
+### Task p06-t06: Preserve knowledge refresh reports across shell calls
+
+**Status:** pending
+
+### Task p06-t07: Clarify legacy recap evidence and durable links
 
 **Status:** pending
 
@@ -4092,3 +4107,151 @@ Exactly six existing test files plus one canonical inventory document, with root
 ### Approved final-test continuation —2026-10-04T22:51:26.979001Z
 
 User approved the three proposed corrections and delegated routine continuation through finish, asking only when root needs consequential direction. Plan now has35tasks,32complete. p06-t02/t03/t04 run sequentially with the same accepted Sol6.1/high author; root receipts/bookkeeping separate after each. Prior failed receipts, history, counters and final-owned findings are preserved; current blocker cleared by this explicit decision, not by a test-pass claim. Fresh main fetch has no affected-path drift; resolver target oat-phase-implementer-gpt-6-1-sol-high, model_axis selected:gpt-6.1-sol/effort_axis selected:high, managed high, notices[]. Live T3 catalog supports exact controls. Continuation cont-backlog-wave-5-p06-final-tests links original wave5-p06-implement-r1 and handle /root/wave5_phase6; mode implement, newly approved tasks, no recovery reservation. Root owns eventual all-finding dispositions and verified routine HiLL completion under the latest explicit delegation.
+
+### Root final finding dispositions under delegated authority
+
+Latest operator approved routine judgment and continuation through finish; root resolves each source finding separately, preserving requirements and no-merge/no-release boundary. No blanket waiver or findings deletion. Planned fixes are pending until actual commit/verification/review.
+
+| Source                                                   | Disposition                                                 | Reason / owned evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| p01gateT232906Z L1 immediate target stop wording         | Fix p06-t05                                                 | Clarify owning existing immediate-stop/continuation contract; no policy change.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| p01gateT232906Z L2 existing blocking finding wording     | Fix p06-t05                                                 | Preserve severity model and require raising a finding instead of implying preexistence.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| p01gateT232906Z L3 operational instruction in template   | Fix p06-t05                                                 | Artifact placeholder/prose placement correction, field conservation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| p01gateT232906Z L4 invalid test evidence                 | Fix p06-t05                                                 | Remove self-local assertion, retain real positive keepers; withdraw old claimed deletion-guard evidence.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| p01gateT232906Z L5 vendor edges/deletion parity          | Fix keeper portion p06-t05; defer deletion-policy expansion | Add missing proportional real-Git controls; ACMR deletion parity is existing stated policy and outside V1 wording.                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| p03gateT063659Z signal Low                               | Defer to follow-up                                          | Verified settlement preserves Git state. Multi-step post-settlement signal propagation needs an independently driven owning-caller reproduction and cross-caller exit policy; no multi-step/remote observation is claimed and no new receipt/process framework is introduced in this maintenance wave.                                                                                                                                                                                                                                           |
+| p04gateT155932Z L1 large historical reference reads      | Defer to follow-up                                          | Concrete >1MiB retry limitation retained; current largest tracked reference355KB and actual closeout named files below bound. First pass ownership works; failure taxonomy/large-history policy requires separate focused code work and negative controls.                                                                                                                                                                                                                                                                                       |
+| p04gateT155932Z L2 never-tracked omission short guidance | Defer to follow-up                                          | Long-form authoritative Backlog Lifecycle already specifies omission only when Git proves never tracked; helper fails closed with clear error. Root closeout carries tracked ten-ticket paths and checks ownership, so no current closeout path is affected.                                                                                                                                                                                                                                                                                     |
+| p04gateT155932Z L3 untracked rewritten draft ownership   | Retain approved S1 contract; defer policy change            | Complete affectedPaths includes every rewritten reference as explicitly approved. Changing scanner eligibility or silently dropping results requires a future product choice; current root checkout/closeout has no unrelated untracked reference draft.                                                                                                                                                                                                                                                                                         |
+| p04gateT155932Z L4 report shell lifetime                 | Fix p06-t06                                                 | Actual snippet must emit retained ownership across separate calls and clean attempt-owned temp state.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| p05gateT215406Z L1 resource attrs/unquoted fragments     | Defer to follow-up                                          | R4 explicitly names href/src; all actual seven pages/43 refs pass and none uses these forms. Record the compatibility limitation; unknown attribute policy needs bounded exporter work without changing preserved HTML or evidence.                                                                                                                                                                                                                                                                                                              |
+| p05gateT215406Z L2 legacy evidence description           | Fix p06-t07                                                 | Document existing verified v1 smaller evidence contract; retain required July compatibility and v2-only completion selection. No new eligibility restriction.                                                                                                                                                                                                                                                                                                                                                                                    |
+| p05gateT215406Z L3 branch-pinned recap URLs              | Fix p06-t07                                                 | Four maintained summary targets become durable relative links, preserving all other text and original evidence.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| p03gateT150535Z M1 stored commit not on current ancestry | Explicit post-release deferral by delegated root judgment   | Safety refusal/data conservation hold; only diagnostic guidance is affected outside C1-C5 and the approved unrecorded-receipt correction. Another checked-out branch can legitimately recover by returning to the original branch, whereas rewritten history needs the already-deferred provenance policy. Keep the receipt/marker untouched and do not claim unchanged retry resolves the rewrite. Follow-up must distinguish these cases with real branch-return/rewrite negative controls; automatic rewrite reconciliation remains deferred. |
+
+The p05gate fourth wording Low was already fixed/verified at its receive; it is not counted among the13carriedLows. Above Medium deferral is a distinct operator-delegated disposition with its own reason, not an inference from gate threshold. Final reviews must assess these decisions and actual implemented fixes. Routine checkpoint delegation does not bypass failing gates or consequential input boundaries.
+
+### Generic p06 continuation record
+
+CLI validation-only output consumed with its actual validated-only status; root initial wrapper-status assertion corrected before record write, no launch/target or authority change. Original accepted role/model/effort provenance retained; continuation carries actual task authority and result.
+
+```json
+{
+  "request_id": "wave5-p06-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p06",
+  "objective": "Execute approved p06-t01: public lockstep and canonical skill/agent owner versions, project-generated projections/catalog/docs integration; one bounded normal-hook commit.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p06",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-04T22:01:02.417154Z"
+  },
+  "authority": "phase-six-declared-versions-generated-docs-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 14400,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase6"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state+invocation-ceiling"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD; Maxwell; bounded p06-t01, no edits/checks/commit/nesting until START"
+    },
+    {
+      "source": "native-terminal-result",
+      "commit": "1eee2ec14d6834cfcb8630b062d3b316718460bc",
+      "result": "DONE one179path normal-hook taskcommit,7pre/postgates0,forced5packagebuild0,clean; RELEASE/HOLD,recovery0/10pendingnull,no nesting"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "cont-backlog-wave-5-p06-final-tests",
+      "original_request_id": "wave5-p06-implement-r1",
+      "handle": "<redacted-path>",
+      "mode": "implement",
+      "authority": "operator-approved-final-test-and-delegated-routine-closeout",
+      "task_ids": [
+        "p06-t02",
+        "p06-t03",
+        "p06-t04",
+        "p06-t05",
+        "p06-t06",
+        "p06-t07"
+      ],
+      "start_head": "d7fb52b17828774fa912ad9da579bdfd95d0622d",
+      "completed_task": "p06-t02",
+      "completed_commit": "11da300e7a29daeaafaaeb9e7da4a37ad7855258",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high"
+    }
+  ],
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Final bundled-owner attribution, symlink-vendor versions and generated integration require reconciliation across reviewed surfaces without changing product behavior.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```

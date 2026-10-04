@@ -591,6 +591,42 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `test(git): exercise lifecycle helpers through real hooks`
 
+### Task p06-t05: Close proportional guidance and evidence findings
+
+**Files:** `.agents/skills/oat-project-autonomous/SKILL.md`; `.agents/agents/oat-reviewer.md`; `.agents/skills/oat-project-review-provide/SKILL.md`; `.agents/skills/oat-project-review-provide-remote/SKILL.md`; `packages/cli/src/validation/skills.test.ts`; `.agents/docs/autonomy-contract.md` only if changed prompt fingerprints require same-policy coverage reconciliation.
+
+**Dependencies:** p06-t04 complete. Operator delegated scoped final finding resolution on2026-10-04.
+
+**Change:** Address p01gate five Lows. Split immediate exact-target loss from authorized same-handle/same-target continuation stops using owning terms. Require a blocking finding under the existing severity model, not a pre-existing finding. Move the probe-record operational instruction out of the fenced artifact body or replace it with a placeholder, conserving fields. Remove the self-local withoutStop assertions as invalid shipped evidence; retain the real positive contract keepers and positive separate-future-policy assertion rather than a brittle negative phrase scan. Add chained vendor, top-level tests-only and aliased-document cases to the existing real-Git keeper as needed after inspecting existing coverage. Preserve the existing ACMR deletion policy as a recorded limitation; do not change production validator behavior. Reconcile only fingerprints affected by these guidance edits, retaining each gate classification. No additional metadata bump: changed owners already bumped once in this PR.
+
+**Verification:** Deliberate-testing protection accounting for removed controls; direct skills/autonomy/named-call inventory suites, real Git unbumped rejection and bumped accepted control; canonical validation, docs validation, scoped lint/format and CLI check/types. Existing positive guards remain. Owning final generation refreshes providers/bundle; do not hand-edit outputs.
+
+**Commit:** `fix(guidance): resolve final review evidence findings`
+
+### Task p06-t06: Preserve knowledge refresh reports across shell calls
+
+**Files:** `.agents/skills/oat-repo-knowledge-index/SKILL.md`; `.agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs`.
+
+**Dependencies:** p06-t05 complete.
+
+**Change:** Address p04gate Low4. Make the actual prepare snippet emit the exact JSON report so its affectedPaths remain available to the agent across separate shell calls; clean up only its owned temporary file on successful and failed execution. Commit guidance consumes the retained reported paths rather than depending on an ambient shell variable. Preserve ownership detection/collision refusals/manual files and existing generated outputs. Prefer eliminating the temporary file if direct printed helper output provides the same contract. Keep existing PR-scoped metadata bump unchanged.
+
+**Verification:** Adapt the existing keeper to execute the actual prepare and commit guidance in separate shell processes, without appending its own hidden report cat. Existing eight-output, removed-extra-generated, collision, manual-file and unrelated staged/worktree guards remain. Direct existing skill test file, scoped lint/format/canonical validation; prove actual prepare output is independently parseable and commit includes retained removed paths.
+
+**Commit:** `fix(knowledge): retain refresh ownership across shell calls`
+
+### Task p06-t07: Clarify legacy recap evidence and durable links
+
+**Files:** `apps/oat-docs/docs/reference/project-artifacts.md`; `.oat/repo/reference/project-summaries/20260722-wave-skills-promotion.md`; `.oat/repo/reference/project-summaries/20260914-agent-authored-recap.md`; `.oat/repo/reference/project-summaries/20260927-triage-correctness-wave.md`; `.oat/repo/reference/project-summaries/20261003-backlog-wave-4.md`.
+
+**Dependencies:** p06-t06 complete.
+
+**Change:** Address p05gate Low2/Low3. Document existing direct-CLI v1 compatibility: exact inventory/hashes plus canonical fact-base/theme and build-record run/outcome agreement are verified under the v1 contract; v2 additionally requires ledger/QA coverage and completion selects v2. No eligibility-policy or code change. Replace exactly four recap href targets pinned to the temporary wave branch with durable relative ../project-recaps/<stem>.html destinations, preserving all link text, narrative and limitations. Leave historical archives and all HTML bytes untouched.
+
+**Verification:** Documentation conservation diff and real code/probe cross-check for the v1/v2 distinction; four exact target replacements, all tracked destinations exist, seven-summary/recap link oracle and docs validation. One final independent review covers the docs edits. No new test suite or baseline.
+
+**Commit:** `docs(recap): clarify legacy evidence and durable links`
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -764,9 +800,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 4 tasks — versions/generated outputs and three approved final-test composition corrections. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 7 tasks — versions/generated outputs, three approved final-test corrections and three delegated final guidance/evidence corrections. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 35 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 38 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
