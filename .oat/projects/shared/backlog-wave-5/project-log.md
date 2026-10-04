@@ -216,6 +216,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 wave5-p05-outcome-opus-r1-91378602 Phase5 complete5/5 after native r3 and configured Opus-high gate91378602-fe33-4788-bd3e-4b818837343e passed0C0H0M4L; two bounded review fixes and recovery1/10pendingnull retained; L4 wording addressed in receive, three Lows final-owned, source reviews/archived/p05-review-2026-10-04T215406Z.md; Phase6 and final integration continue.
 
+### 2026-10-04 · structural · oat-project-implement · root-final-verification
+
+wave5-final-test-stop-f4c51653 final pnpm test exited1 with34CLI failures, reproduced in direct439-test run; implementation.md records the seven-path correction proposal and preserved REVIEWRECEIVE-07 mapping, awaiting operator direction; no source correction, recovery consumption or final gate pass.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

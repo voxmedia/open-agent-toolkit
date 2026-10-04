@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: root-final-verification
+    reason: 'Final pnpm test failed: 34 failures across seven files; bounded test/inventory task amendment requires operator direction before final closeout.'
+    since: '2026-10-04T22:32:04.408053Z'
 oat_last_updated: 2026-10-04
 oat_current_task_id: null
 oat_generated: false
@@ -13,14 +16,14 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 12    | 12/12     |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | complete | 5     | 5/5       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 12    | 12/12     |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | complete    | 5     | 5/5       |
+| Phase 6 | in_progress | 1     | 1/1       |
 
 **Total:** 32/32 tasks completed
 
@@ -348,6 +351,8 @@ Final version bumps, provider projections and the complete CI/release/docs-build
 gate set remain Phase 6/root closeout work. Phase results do not claim those
 final gates have passed.
 
+Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm check` exit0 (five cache-hit mentions), `pnpm type-check` exit0 (five cache-hit mentions), `pnpm test` exit1 after230.3seconds, CLI34failed/8269passed/8303. The sequence stopped at test; later gates and fresh isolated-home runs did not execute. A direct seven-file rerun reproduced34failed/405passed/439, exit1, without Turbo. Original receipts remain in `analysis/final/`; no claim that final verification passed.
+
 ## Final Summary (for PR/docs)
 
 Implements the approved ten maintenance tickets and the Plain Markdown guided-init amendment. Documentation validation requires exactly one Markdown/MDX H1; the skill-bump gate follows changed shared-doc vendors; autonomous/reviewer guidance names effective limits, hard stops and proportional evidence. PJM reruns preserve unowned settings; status preserves structured blockers and visibly reports malformed entries.
@@ -356,7 +361,7 @@ One shared hook-safe exact-path commit primitive preserves unrelated index/workt
 
 Main surfaces: CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer roles/shared docs, project provider projections and reference docs/recaps. Five public packages are0.3.17;37skills/two roles bumped, generated outputs current at the p06 task boundary.
 
-Verification so far: received native and independent Opus reviews for Phases1–5; source-derived negative/accepted controls and real Git/hooks/producer-reader probes recorded per task. Phase6's seven pre/post checks and forced scoped package build pass. Full ordered final CI gates, fresh isolated-home test reruns, final native/configured reviews and implementation exit gate are pending. Thirteen Low findings/one stored-receipt diagnostic Medium require explicit final disposition. Browser evidence covers the migrated pages and30restored SVG marker references, with screenshot/mobile/HTTP limitations recorded; no full visual, live-provider or liveS3 claim.
+Verification so far: received native and independent Opus reviews for Phases1–5; source-derived negative/accepted controls and real Git/hooks/producer-reader probes recorded per task. Phase6's seven pre/post checks and forced scoped package build pass. The ordered final run stopped on34test failures; check/types passed with cache replay noted. A focused rerun reproduced the failures. Remaining final gates, fresh isolated-home test reruns, final native/configured reviews and implementation exit gate are blocked pending the bounded correction-task decision. Thirteen Low findings/one stored-receipt diagnostic Medium require explicit final disposition. Browser evidence covers the migrated pages and30restored SVG marker references, with screenshot/mobile/HTTP limitations recorded; no full visual, live-provider or liveS3 claim.
 
 Accepted deltas: approved review corrections, user-added Plain Markdown choice and exact four derived-page refresh; no framework/schema/authoring-policy expansion. Automatic rewritten-history recovery remains deferred. Final ticket closeout, own recap, stored preapproval steps and one mergeable PR remain authorized after required reviews/approval; no merge or release.
 
@@ -4058,3 +4063,19 @@ Own only p06-t01 versions/canonical owner metadata and owning-command project-ge
 Root owns the worktree after sameaccepted author TASK_DONE RELEASE/HOLD. All32taskscomplete, currenttaskpointersnull, implementation/p06remainin_progress until finalverification/review/selectedp06gate/implementationexitgate and approval-aware tail. No duplicate final-only phase native review: follow lifecycle finalboundary plus configured allphasep06gate. Original40criteria+U1 draft mapping retained with pendingfinal labels; no acceptance inferred solely from suitegreen. Thirteen Lows/one Medium preserved; none silentlyfixed/waived. Currentlasttaskcommit1eee2ec14.
 
 Phase6 preflight event wrapper lookup corrected before launch; root receipt read initially guessed absent proof.json, then read actual named precommit-proof/postcommit-readback, no discarded proof or falsepass. Unsupported completed-HOLD interruption rejected without effects; same handle continued through followup, no cleanup/replacement. Generic completed record validated-only preserves accepted originalroleversion/digest and exactselectors; runtimeidentity/tier not-reported. All commits/counters monotonic. Full final gates next on this committed baseline.
+
+### Final verification boundary — direction required
+
+The approved four derived recap pages are committed at2eef4f1b544c268083b76c2156d514f928466fe3 and preserve all original evidence. All32approved tasks remain done. Root final validation is blocked; no final/native/p06/exit gate pass, acceptance closeout, PR, merge or release is inferred.
+
+Read-only same-handle diagnostic continuation of wave5-p06-implement-r1 used /root/wave5_phase6, exact accepted Sol6.1/high role, no nesting or tracked writes. It returned RELEASE/HOLD with `analysis/final/test-failure-diagnosis.md`, the direct439-test receipt and unchanged f4c51653/clean tracked tree. No task or recovery reservation was made; all counters and thirteen Lows/one Medium remain unchanged and final-owned. Root retains the tracked writer. Runtime again surfaced an unsupported collaborationinterrupt_agent cleanup call after the terminal diagnostic; it had no effect and was not retried.
+
+Root independently verified the original final/focused receipts, version metadata evidence, required identity/scope-only bookkeeping stub, actual commitRecordChange→commitExactPaths subprocess path, current PJM handoff deletion directive and prior coverage classifications. One diagnostic recommendation is corrected: the old review-receive fingerprint90001dadf75f is mapped to REVIEWRECEIVE-07, not NG. Its replacemente30e06f39281 must retain REVIEWRECEIVE-07. The original diagnostic stays intact; root correction is authoritative. This prevents an approval boundary being silently downgraded.
+
+**Proposed plan amendment — not approved or executed:** Three serial p06 corrective tasks, final task IDs to be added only after operator approval:
+
+1. Version-pin propagation: modify only `packages/cli/src/validation/skills.test.ts` and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`. Update literals for committed p06 owner versions; preserve all subsequent behavioral assertions and inspect previously masked failures. Existing two direct suites must pass.
+2. Inventory composition: modify only `.agents/docs/autonomy-contract.md` HEAD fingerprint cells and `packages/cli/src/validation/named-skill-load-contract.test.ts` narrow call-site rows. Replace9unmapped/7stale fingerprints with their unchanged semantic classifications; REVIEWRECEIVE-07 remains REVIEWRECEIVE-07. Classify only seven evidenced reference/ownership/operation-identity mentions as non-executing. Keep autonomy-gate-inventory.test.ts unchanged; preserve all scanner/negative/load-required controls. Run both inventories, canonical validation and skill-bump gate; existing PR-scoped vendor bumps remain one per owner.
+3. Real-helper harness adaptation: modify only `packages/cli/src/commands/init/tools/shared/project-log-staging-behavior.test.ts`, `packages/cli/src/commands/pjm/init.test.ts`, and `packages/cli/src/commands/project/prune/index.test.ts`. Supply retained unique identities and execute the real branch helper in disposable repos; retain omitted-log negative control, handoff deletion ownership, all unrelated index/worktree preservation and both prune retry/refusal scenarios. Inject actual failing Git hooks instead of bypassed commit spies. Establish observed owned-deletion/pending-receipt state through the real failure, without guessing staged status or mocking success. Stop for direction if a product defect appears; this proposal authorizes no production correction. Run these three direct suites and prove failure guards execute.
+
+Exactly six existing test files plus one canonical inventory document, with root tracking and owning-command build/generated updates only when mechanically reported. No source/API/schema, template directive, recap bytes, deferred-finding fix, counter reset, history rewrite, additional vendor version bump, merge or release is included. Each approved task would use one normal-hook exact-path commit plus root bookkeeping; full ordered gates restart into new evidence paths preserving the failed run, then required native/configured review and final disposition/HiLL continue. Under the approved Root Lifecycle Tail, final-gate fixes require new bounded tasks; the implementation skill forbids unapproved scope expansion/plan restructuring and repository instructions require asking before expansion. Pending operator approval, root records this boundary and parks without product edits.

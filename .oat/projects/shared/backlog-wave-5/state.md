@@ -1,7 +1,10 @@
 ---
 oat_current_task: null
 oat_last_commit: 1eee2ec14d6834cfcb8630b062d3b316718460bc
-oat_blockers: []
+oat_blockers:
+  - task_id: root-final-verification
+    reason: 'Final pnpm test failed: 34 failures across seven files; bounded test/inventory task amendment requires operator direction before final closeout.'
+    since: '2026-10-04T22:32:04.408053Z'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T22:18:21.413025Z
+oat_project_state_updated: 2026-10-04T22:32:04.408053Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,7 +132,7 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — tasks complete; final closeout pending
+**Status:** In progress — tasks complete; final test correction direction required
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
@@ -154,11 +157,11 @@ Implementation - Tasks complete; awaiting final verification and review
 
 ## Blockers
 
-None. User approved exact four derived SVG page refresh within p05-t05; correction committed and independently reviewed. Phases1–5 complete; thirteen Lows and one diagnostic Medium final-owned. Automatic rewrite recovery deferred.
+Final ordered pnpm test failed34/8303, reproduced34/439in focused suites. Await operator approval for the seven-path test/inventory amendment described in implementation.md#final-verification-boundary--direction-required. No product fix or recovery attempt made. Approved SVG page correction is committed and independently reviewed; thirteen Lows/one diagnostic Medium remain final-owned.
 
 ## Next Milestone
 
-Phase5 full native r3 and configured Opus gate passed and received. All32tasks complete. Root final ordered gates/fresh tests, native final review, configured p06/implementation gates, explicit deferred-finding dispositions and preapproval/HiLL/one-PR tail remain.
+Approve the three serial bounded test/inventory correction tasks, then restart final ordered gates before native final review, configured p06/implementation gates, explicit prior-finding dispositions and preapproval/HiLL/one-PR tail. All32original tasks remain complete; no PR created.
 
 ### Approved continuation — 2026-10-04
 
