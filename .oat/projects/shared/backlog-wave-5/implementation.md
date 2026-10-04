@@ -2430,3 +2430,101 @@ Original phase completed earlier; its p03-t11 continuation was interrupted befor
 ### Phase 3 p03-t11 verified host continuation outcome — 2026-10-04
 
 Original completed-phase handle unavailable after host restart; one fresh same-target bounded fix completed under the lifecycle continuation rule. Exact execution range 1761128904e3fe14c71191900cc044837d1b648c..1f7e5842377a119b47d4b5cd598a8b9108ee22cb contains one task commit/two approved paths and identical captured patch. Author evidence is attributed above; root actual acceptance repeated independently. Six Low findings remain final-owned. Phase stays in_progress: ONE approved fresh native r6 and configured Opus r4 gate remain required. Native prior5/gates3excluded, recovery1/10pendingnull; no counter reset or additional scope. Original interrupted dispatch preserved with link to terminal continuation; terminal record payload task name corrected to actual accepted native task. Root owns this pre-review bookkeeping.
+
+#### Dispatch wave5-p03-review-r6
+
+```json
+{
+  "request_id": "wave5-p03-review-r6",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Independently review bounded p03-t11 unrecorded commit recovery and phase composition while preserving provenance and publication safeguards.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004-host-continuation",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T13:47:51.055606Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r6"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "handle": "<redacted-path>",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted; HOLD requested pending committed START head"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+ONE approved additional independent native review accepted at exact Sol6.1/high consequential target. Reviewer holds pending root START bound to acceptance commit. Scope is committed p03-t11 and Phase3 composition, prior eight reports and three complexity assessments; six Lows remain final-owned. Root pre-review task ledger f75952ec07ac927c90006fed6dcfcf93321808d3, correction 1f7e5842377a119b47d4b5cd598a8b9108ee22cb. No additional correctness review authorization, no count reset, recovery1/10pendingnull unchanged.
