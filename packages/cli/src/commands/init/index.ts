@@ -636,6 +636,7 @@ const DOCS_TOOLING_CHOICES: SelectChoice<string>[] = [
   { label: 'Docusaurus', value: 'docusaurus' },
   { label: 'VitePress', value: 'vitepress' },
   { label: 'Nextra', value: 'nextra' },
+  { label: 'Plain Markdown', value: 'markdown' },
 ];
 
 function trimDocsRoot(pathValue: string): string {
