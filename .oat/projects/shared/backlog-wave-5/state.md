@@ -3,7 +3,7 @@ oat_current_task: p03-t10
 oat_last_commit: ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c
 oat_blockers:
   [
-    'p03 M1 later-generation record recovery; operator disposition required after approved additional gate and complexity assessment',
+    'p03 M1 later-generation record recovery; operator disposition required; approved additional review/gate and refreshed complexity assessment complete',
   ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T06:43:27.878380Z
+oat_project_state_updated: 2026-10-04T06:51:35.972068Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -138,7 +138,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 blocked at approved extra-cycle boundary; refreshed complexity assessment pending
+Implement - Phase 3 blocked at approved extra-cycle boundary; refreshed complexity assessment complete
 
 ## Artifacts
 
@@ -157,8 +157,8 @@ Implement - Phase 3 blocked at approved extra-cycle boundary; refreshed complexi
 
 ## Blockers
 
-Further corrective implementation/review requires operator disposition. The approved extra native/gate cycle is complete. Both corroborate M1; Opus also reports one Low deferred to final. Refreshed complexity assessment and operator disposition are required.
+Further corrective implementation/review requires operator disposition. The approved extra native/gate cycle is complete. Both corroborate M1; Opus also reports one Low deferred to final. Refreshed complexity assessment is complete (Partially compliant; corrective revision recommended); operator disposition remains required.
 
 ## Next Milestone
 
-Finish the mandatory refreshed complexity assessment and present the operator decision before further implementation, review or Phase4.
+Obtain operator disposition on bounded record-recovery correction and further review allowance before implementation, review or Phase 4. Signal Low remains in final scope.

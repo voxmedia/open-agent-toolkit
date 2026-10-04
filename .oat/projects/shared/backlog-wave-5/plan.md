@@ -361,13 +361,13 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Status:** Pending operator disposition at the scope-bound override boundary; implementation and another standard review cycle are not authorized.
 
-**Files:** Proposed existing `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`, `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Final bounded route follows the required new complexity assessment and operator disposition; declare any additional need before editing.
+**Files:** Proposed existing `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`, `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. The refreshed assessment recommends narrowly verified superseded-reservation retirement through the shared owner; operator disposition remains required. Declare any additional need before editing.
 
 **Dependencies:** p03-t09 committed; explicit operator disposition required before corrective implementation or Phase4 launch. Preserve all original commits and counters.
 
 **Change:** Complete the existing marker-owning recovery boundary so a later valid committed generation cannot strand a stale identity. Do not remove the helper's changed-HEAD safety guard or rotate arbitrary failures. Preserve actual parent/tree/trailer/ancestry/emitted ownership, unresolved-publication and foreign/replaced-marker refusal, migration finalization and unrelated Git state.
 
-**Verification:** Extend the existing owning record family with exact saved `analysis/p03/review-r4-intervening-record.mjs` sequence. Expected acceptance currently fails exit1; after correction it must succeed while the no-intervening control and refusal/preservation controls still pass. Direct committed-head composition, CLI check/types/fresh build and actual public recovery probes; fresh standard review and configured gate require operator authorization.
+**Verification:** Extend the existing owning record family with exact saved `analysis/p03/review-r4-intervening-record.mjs` sequence. Expected acceptance currently fails exit1; after correction it must succeed while the no-intervening control and refusal/preservation controls still pass. Include removal/recreation where final worktree absence equals the original receipt but HEAD contains the recreated record; retirement proof binds validated history/current publication/marker ownership. Direct committed-head composition, CLI check/types/fresh build and actual public recovery probes; fresh standard review and configured gate require operator authorization.
 
 **Format:** Scoped formatter on actual owned files.
 

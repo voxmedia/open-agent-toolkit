@@ -1,7 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  [
+    'p03 M1 record recovery; operator disposition required after consumed additional review cycle',
+  ]
 oat_last_updated: 2026-10-04
 oat_current_task_id: p03-t10
 oat_generated: false
@@ -9,7 +12,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase3 is blocked for the required refreshed complexity assessment and operator disposition. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is blocked for operator disposition; the required refreshed complexity assessment is complete and recommends bounded corrective revision. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -1954,7 +1957,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2008,4 +2011,13 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
 }
 ```
 
-Prepared one read-only reviewer-class refreshed necessity assessment at the already-resolved Sol6.1/high ceiling. Existing exact-bound assessor handle may be resumed; no writes/probes/nested launches or correctness review round. Return full report inline; root saves it only after authority is clear.
+Accepted original exact-bound assessor returned its complete read-only inline report. No writes, probes, nested launches, correctness review round, fallback or replacement. Root saved the full returned report verbatim and personally read it after completion.
+
+### STOP: refreshed Phase 3 complexity assessment received — 2026-10-04
+
+- **Report:** `reviews/archived/complexity-p03-2026-10-04T065100Z.md`; SHA256 `db87011cd36ad9ab2ca0a900648e3b52ecc07191ec7751621932f9ed79eeb1dd`. Original accepted `/root/wave5_phase3_complexity`, request `wave5-p03-complexity-r2`, bound committed head `7bf2718937afe796250910f7fa0a068b22998168`; exact Sol6.1/high role retained, runtime identity not reported. Full inline report saved verbatim, newer than both additional reviews, no Reviews-table row or correctness-cycle increment. Root personally read the full report.
+- **Verdict:** Partially compliant; recommended disposition **corrective revision**. Retain the operator-reaffirmed helper/index/receipt design. M1 is an incomplete accepted requirement, dissolvable by narrow positively verified superseded-reservation retirement through the existing shared owner. Preserve strict old-identity refusal to republish outdated content. Add the removal/recreation variant: retirement must not require worktree bytes to differ from the old receipt.
+- **Low L1:** Regression; single-step signal exit0 observed, multi-step continuation remains source-only. Keep its already-recorded final-owned deferral, with a real owning consumer probe before choosing stop propagation; no persistent process framework. Five prior p01 Low deferrals remain open, six total.
+- **Required operator decision:** Authorize bounded p03-t10 corrective revision and an explicit further native/configured-gate allowance, or explicitly accept the remaining recovery limitation. Recommended: one bounded correction plus one fresh Sol6.1/high native and configured Opus5.5/high cycle; retain signal Low in final scope. No operator disposition selected.
+- **Stop authority:** The user's last approval covered four corrections and ONE additional native/gate cycle, now consumed. Review-receive Step8 says further automated review cycles are blocked at the cap and agents never select disposition. Four standard reviews, two excluded gates; recovery1/10pendingnull unchanged. No fifth review, further correction, Phase4 launch or PR follows automatically.
+- **Remaining wave:** 19/28 implementation tasks complete: p03-t10 pending; Phase4 four tasks (archive mutations/callers, generated knowledge ownership, U1 Plain Markdown guided-init config); Phase5 three tasks (flat export, real consumers, seven tracked package migrations); Phase6 version/generated integration. Additionally six Low findings need final dispositions/closure, then ordered integration gates, final native/Opus review, exact ten-ticket archive, verified completion/flat recap and one PR. No merge or release.
