@@ -3617,3 +3617,101 @@ User requested resume after suspected machine crash. Current host tstang-mini.lo
 Data volume now33GiB free versus pre-interruption116MiB/ENOSPC. No disk cleanup, original archive deletion or retained evidence disposal occurred. Last author focused logs retain five expected baseline failures, three valid quoted controls and patched8pass; authentic replay never started and is not counted. Captured dirty artifact outside checkout at ~/.oat/recovery-artifacts/backlog-wave-5/p05-fix1-20261004T195456Z (digest5f14acc6b6675391f922b776ce2a9e696f5c9fb2ba657d509f2680cb962d3166,size15787,worktree-only,two declared paths) passed actual sealed replay/current-base verification before exact restorePlan returned the tree clean. Original artifact remains unchanged. After this tracking-only commit, root supplies a separately sealed same-byte patch bound to START HEAD, proving both product paths unchanged across bookkeeping; no stale-base apply. The unfinished correction stays one bounded p05-t04 fix commit; no accepted task/recovery commit existed for it. Fix iteration1/2 and recovery1/10 pendingnull preserved. Root owns subsequent bookkeeping and full independent native/configured reviews.
 
 Root received completed p05-t04 and validated original/current-base immutable seals plus both unchanged product bases. One failed empty-index apply and one full-index formatting assertion occurred only in disposable replay; corrected actual component/diff options yielded byte-identical current-base seal, with root product paths never mutated by the rebind. A subsequent unsupported completed-agent interruption call was rejected without effects; no retry, replacement or cleanup followed. Generic completed continuation is validated-only; native runtime identity not reported. Fresh full-phase native r2 and configured gate remain pending; Phase5 stays in_progress.
+
+### Phase 5 native review — wave5-p05-review-r2
+
+```json
+{
+  "request_id": "wave5-p05-review-r2",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Fresh full Phase5 review including bounded p05-t04 syntax fix, preserved crash continuation, all export/rollback/consumer/migration requirements and prior M1 resolution.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p05-review-r2",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-04T20:15:19.789775Z"
+  },
+  "authority": "one-phase-five-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase5_review_r2"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD; full phase r2, no nested/recon"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Full source and original archive preservation, atomic rollback and genuine producer-to-resume identity composition require independent adversarial review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native /root/wave5_phase5_review_r2 (Chandrasekhar), exact Sol6.1/high materialized reviewer, fresh fork none and resolver notices[]. Full phase basea49abbf5 through committed START; all four tasks/recovery/crash patch conservation and original r1 M1 response included, never narrowed to correction. Task ledger30/31 current; Phase5 in_progress pending full native/configured outcomes. Reviewer owns one timestamped report, scratch only; product/core/log read-only, no nested/recon/remote calls. Review-outcome bookkeeping excluded; task ledger included. Exactly one terminal reconnaissance signal must be consumed before artifact validation/receive/log; runtime model identity not reported, no tier/default service inference.
