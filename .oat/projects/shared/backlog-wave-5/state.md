@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T06:20:05.706736Z
+oat_project_state_updated: 2026-10-04T06:43:27.878380Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -132,13 +132,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** Implementing — Phase 3
+**Status:** Blocked — Phase 3
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 3 additional review received; remaining recovery gap, configured gate pending
+Implement - Phase 3 blocked at approved extra-cycle boundary; refreshed complexity assessment pending
 
 ## Artifacts
 
@@ -157,8 +157,8 @@ Implement - Phase 3 additional review received; remaining recovery gap, configur
 
 ## Blockers
 
-Further corrective implementation/review requires operator disposition. The approved additional native review found M1; its configured Opus gate and mandatory refreshed complexity assessment are pending.
+Further corrective implementation/review requires operator disposition. The approved extra native/gate cycle is complete. Both corroborate M1; Opus also reports one Low deferred to final. Refreshed complexity assessment and operator disposition are required.
 
 ## Next Milestone
 
-Complete the approved additional Opus gate and refreshed complexity assessment, then return the remaining Phase3 recovery gap to the operator before further implementation or Phase4.
+Finish the mandatory refreshed complexity assessment and present the operator decision before further implementation, review or Phase4.

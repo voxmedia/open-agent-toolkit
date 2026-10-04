@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate remains pending. Further implementation/review requires a new operator disposition. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase3 is blocked for the required refreshed complexity assessment and operator disposition. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 10    | 9/10      |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | blocked  | 10    | 9/10      |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 19/28 tasks completed
 
@@ -128,7 +128,7 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ## Phase 3: Shared hook-safe exact-path commits
 
-**Status:** in_progress
+**Status:** blocked
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
 
@@ -1896,3 +1896,107 @@ Exactly one valid terminal `**Reconnaissance:** not-attempted` consumed before a
 M1 accepted: complete record recovery across intervening committed generations. Saved `analysis/p03/review-r4-intervening-record.mjs` executes the displayed helper repair, matching repeat, real different-message record commit, then fresh unstaged original-message recurrence; expected acceptance fails exit1 with unchanged-owned-HEAD guard before settlement proof. Root independently repeated the exact probe (`analysis/p03-r4-root-intervening-record.json/.err`) and confirmed marker retained, no data loss, literal unrelated/concurrent state preserved. Immediate no-intervening control passes. This is an incomplete accepted t09/L1 outcome, distinct from disclosed already-staged refusal. Newp03-t10 queued, no corrective implementation or further review authorized.
 
 Native threshold0Critical/High is met, but this remaining Medium is an accepted correction requirement and prevents phase completion. The explicitly authorized configured Opus gate is still run as the final independent check of this additional cycle; neither a sub-threshold gate pass nor task commit count can erase M1. After that check, return to operator with a new complexity report newer than all scope artifacts. Native standard cycles4 (gate excluded), prior correction rounds2 plus the explicit four-task continuation; recovery1/10 pendingnull unchanged. No fifth standard review, new fix dispatch, Phase4 launch, PR, merge or release authorized here.
+
+### Review received: p03 configured gate round2 — 2026-10-04
+
+Configured run `f771c346-2338-4882-8c88-3a96c53fb8d5`, target `claude-opus-5-5-high`, exact exec-target-config provenance, statusok/receiveEligibletrue/non-nullhandoff/exit0. Envelope project/run/invocation corroboration matched. Bound review head `12a8da785036595cade0e1f1a739763911bb20ee`, full Phase3 ranged1fd3642..12a8da78; counts0C0H1M1L, thresholdhigh. Root consumed exactly one terminal `**Reconnaissance:** not-attempted` from uniquely matched actual Claude child session `9759fb64-a057-42c8-baba-de7468515110` before artifact validation/bookkeeping (`analysis/p03-opus-gate-r2-terminal-signal.json`); no orchestration section. Root read the entire report and validated full provenance/counts. Source original preserved by exact-path commit before byte-identical local-only archive `reviews/archived/p03-review-2026-10-04T063659Z.md`. Gate producer owns its structural log commitf8cc6cdb; root did not duplicate it or rewrite history.
+
+Passing-gate non-pausing judgment sweep: M1 is the same independently reproduced accepted later-generation recovery gap, already queuedp03-t10; no duplicate task, no risk waiver or final deferral. Its unresolved requirement plus consumed scope-bound extra-cycle approval prevents phase completion/Phase4 launch even though the gate meets its severity threshold. LowL1 is recorded below with default final deferral; no immediate source fix or further standard review authorized. Standardnativecount4,gates2excluded, original review history/recovery1/10pendingnull unchanged. The scope-bound override authorized these four corrections and ONE additional native/gate cycle; that cycle is now complete. Refreshed necessity assessment required because the prior complexity report predates both new artifacts; after assessment return to operator, not another automatic fix loop.
+
+Independent Opus evidence:108tests/3families executed directly with isolated subprocess HOME, nine saved controls and its own G1/G2/G3/G5/G6 source-CLI probes. Nested/deinitialized/dirty-Gitlink and staged-removal controls pass, nested hook mutation refuses, forged parent/tree and staged recurrence produce no settlement proof, unrelated later commit remains recoverable; owned-path later commit reproducesM1 with literal data retained. Wider1107/13 and check/types/build remain author/native evidence, not claimed as Opus execution. Its LowL1 multi-step caller behavior is source-only; only direct single-step signal exit0 was observed, not a live multi-step cancellation/push. No providerfeature/AWS/live remote probes or testcampaign.
+
+### Deferred finding: p03 gate round2 Low
+
+- **p03-gate-r2-L1 / Low / bounded final scope:** Signal absorption after verified commit settlement. Source `reviews/archived/p03-review-2026-10-04T063659Z.md`, runf771c346, head12a8da78. Default passing-gate defer-to-final disposition: operation handlers record SIGTERM/INT, successful settlement returnscommitted with signal only inerror, then current callers continue on success. Single-step CLI exit0 is independently observed; multi-step caller cancellation is not executed. Before final acceptance, verify an actual owning multi-step boundary and decide whether to stop after safe settlement, preserving receipts/owned-resource cleanup and resumable results. New necessity assessment classifies the proposed correction; do not introduce a receipt field/process framework or silently claim a demonstrated remote push. This is additional to the five still-openp01Lowdeferrals; none are dropped.
+
+#### Dispatch wave5-p03-complexity-r2
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-complexity-r2",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Refresh necessity and minimum sufficient record-owner recovery disposition after the approved additional p03 review/gate cycle; no correctness re-review.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T06:34:32.158655Z"
+  },
+  "authority": "read-only-inline-report",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "tool": "followup_task",
+    "target": "<redacted-path>",
+    "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Required complexity assessment of assurance-bearing Git preservation/recovery at the three-cycle cap.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Prepared one read-only reviewer-class refreshed necessity assessment at the already-resolved Sol6.1/high ceiling. Existing exact-bound assessor handle may be resumed; no writes/probes/nested launches or correctness review round. Return full report inline; root saves it only after authority is clear.
