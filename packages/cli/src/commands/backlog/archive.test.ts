@@ -444,41 +444,77 @@ describe('archiveBacklogItem', () => {
     expect(completed).toContain('Recovered');
   });
 
-  it('uses git mv inside a git work tree so the move is a staged rename', async () => {
+  it('leaves the real index and unrelated staged/unstaged bytes unchanged through archive and retry', async () => {
     const tempRoot = await mkdtemp(join(tmpdir(), 'oat-archive-git-'));
     tempDirs.push(tempRoot);
     const backlogRoot = join(tempRoot, '.oat', 'repo', 'pjm', 'backlog');
     await initializeBacklog(backlogRoot);
     const id = 'BL-260705-demo';
     await seedItem(backlogRoot, id);
+    await regenerateBacklogIndex(backlogRoot);
+    const reference = join(tempRoot, '.oat/repo/reference/plan.md');
+    await mkdir(dirname(reference), { recursive: true });
+    await writeFile(
+      reference,
+      `Work: [item](../pjm/backlog/items/${id}.md).\n`,
+    );
+    await writeFile(join(tempRoot, 'user.txt'), 'committed user bytes\n');
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: tempRoot, encoding: 'utf8' });
+    git('init', '-q');
+    git('config', 'user.email', 'a@b.co');
+    git('config', 'user.name', 'tester');
+    git('add', '.');
+    git('commit', '-qm', 'seed');
+    await writeFile(join(tempRoot, 'user.txt'), 'staged user bytes\n');
+    git('add', 'user.txt');
+    await writeFile(join(tempRoot, 'user.txt'), 'unstaged user bytes\n');
+    const indexBefore = await readFile(join(tempRoot, '.git/index'));
+    const cachedBefore = git('diff', '--cached', '--raw');
+    const oldPath = join(backlogRoot, 'items', `${id}.md`);
+    const newPath = join(backlogRoot, 'archived', `${id}.md`);
+    const expectedPaths = [
+      oldPath,
+      newPath,
+      join(backlogRoot, 'completed.md'),
+      join(backlogRoot, 'index.md'),
+      reference,
+    ].sort();
 
-    execFileSync('git', ['init', '-q'], { cwd: tempRoot });
-    execFileSync('git', ['config', 'user.email', 'a@b.co'], { cwd: tempRoot });
-    execFileSync('git', ['config', 'user.name', 'tester'], { cwd: tempRoot });
-    execFileSync('git', ['add', '.'], { cwd: tempRoot });
-    execFileSync('git', ['commit', '-qm', 'seed'], { cwd: tempRoot });
-
-    await archiveBacklogItem(backlogRoot, id, {
-      summary: 'via git mv',
+    const result = await archiveBacklogItem(backlogRoot, id, {
+      summary: 'Filesystem archive',
       now: FIXED_NOW,
     });
+    expect(await readFile(join(tempRoot, '.git/index'))).toEqual(indexBefore);
+    expect(git('diff', '--cached', '--raw')).toBe(cachedBefore);
+    expect(git('show', ':user.txt')).toBe('staged user bytes\n');
+    expect(await readFile(join(tempRoot, 'user.txt'), 'utf8')).toBe(
+      'unstaged user bytes\n',
+    );
+    expect(await fileExists(oldPath)).toBe(false);
+    expect(await readFile(newPath, 'utf8')).toContain('status: closed');
+    expect(result.affectedPaths.slice().sort()).toEqual(expectedPaths);
 
-    expect(await fileExists(join(backlogRoot, 'archived', `${id}.md`))).toBe(
-      true,
+    // A late reference exercises the real retry tail without staging any path.
+    await writeFile(
+      reference,
+      `Work: [item](../pjm/backlog/items/${id}.md).\n`,
     );
-    expect(await fileExists(join(backlogRoot, 'items', `${id}.md`))).toBe(
-      false,
+    const retry = await archiveBacklogItem(backlogRoot, id);
+    expect(retry.result).toBe('noop');
+    expect(retry.affectedPaths.slice().sort()).toEqual(expectedPaths);
+    expect(await readFile(reference, 'utf8')).toContain(`archived/${id}.md`);
+    const settled = await archiveBacklogItem(backlogRoot, id);
+    expect(settled.rewrittenReferences).toEqual([]);
+    expect(settled.affectedPaths.slice().sort()).toEqual(expectedPaths);
+    expect(await readFile(join(tempRoot, '.git/index'))).toEqual(indexBefore);
+    expect(git('diff', '--cached', '--raw')).toBe(cachedBefore);
+    expect(await readFile(join(tempRoot, 'user.txt'), 'utf8')).toBe(
+      'unstaged user bytes\n',
     );
-    const status = execFileSync('git', ['status', '--porcelain'], {
-      cwd: tempRoot,
-      encoding: 'utf8',
-    });
-    // A staged rename (R) — not an untracked (??) plain-filesystem move.
-    expect(status).toMatch(/^R/m);
-    expect(status).not.toMatch(/^\?\?.*archived/m);
   });
 
-  it('falls back to a filesystem rename outside a git work tree', async () => {
+  it('uses a filesystem rename outside a git work tree', async () => {
     const backlogRoot = await freshBacklog('oat-archive-nogit-');
     const id = 'BL-260705-demo';
     await seedItem(backlogRoot, id);
@@ -947,6 +983,8 @@ describe('archiveBacklogItem', () => {
         root,
         '.oat/repo/reference/decisions/DR-260705-demo.md',
       );
+      const repairedEarly = join(root, '.oat/repo/pjm/early.md');
+      await writeFile(repairedEarly, `Work: [item](backlog/items/${id}.md).\n`);
       await chmod(blocked, 0o000);
 
       try {
@@ -959,6 +997,9 @@ describe('archiveBacklogItem', () => {
       } finally {
         await chmod(blocked, 0o644);
       }
+      expect(await readFile(repairedEarly, 'utf8')).toContain(
+        `backlog/archived/${id}.md`,
+      );
       // The move landed but the index and the blocked link did not.
       expect(await fileExists(join(backlogRoot, 'archived', `${id}.md`))).toBe(
         true,
@@ -979,6 +1020,13 @@ describe('archiveBacklogItem', () => {
       expect(retry.rewrittenReferences).toContain(
         '.oat/repo/reference/decisions/DR-260705-demo.md',
       );
+      // Earlier repaired files remain operation-owned after partial failure.
+      expect(retry.affectedPaths).toContain(
+        join(root, '.oat/repo/pjm/backlog/archived', `${id}.md`),
+      );
+      expect(retry.affectedPaths).toContain(blocked);
+      expect(retry.affectedPaths).toContain(repairedEarly);
+      expect(retry.rewrittenReferences).not.toContain('.oat/repo/pjm/early.md');
       expect(await readFile(blocked, 'utf8')).toBe(
         `Tracked by [the item](../../pjm/backlog/archived/${id}.md).\n`,
       );

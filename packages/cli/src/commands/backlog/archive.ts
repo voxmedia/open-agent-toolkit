@@ -1,7 +1,5 @@
-import { execFile } from 'node:child_process';
 import { access, readFile, rename, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { promisify } from 'node:util';
+import { join, resolve } from 'node:path';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import YAML from 'yaml';
@@ -14,8 +12,6 @@ import {
   extractBacklogStatus,
   isValidBacklogStatus,
 } from './shared/item-status';
-
-const execFileAsync = promisify(execFile);
 
 const COMPLETED_HEADING = '## Completed Items';
 
@@ -46,6 +42,9 @@ export interface ArchiveBacklogItemResult {
    * repository root.
    */
   rewrittenReferences: string[];
+  /** Normalized absolute paths owned by this operation, including the old
+   * item deletion and retry outputs. Archive never stages any of these paths. */
+  affectedPaths: string[];
   warnings: string[];
 }
 
@@ -82,15 +81,6 @@ async function pathExists(path: string): Promise<boolean> {
     if (code !== 'ENOENT') {
       throw error;
     }
-    return false;
-  }
-}
-
-async function isInsideGitWorkTree(cwd: string): Promise<boolean> {
-  try {
-    await execFileAsync('git', ['rev-parse', '--is-inside-work-tree'], { cwd });
-    return true;
-  } catch {
     return false;
   }
 }
@@ -177,25 +167,31 @@ function insertCompletedEntry(
   return { content, scaffolded: false, warning: null };
 }
 
-async function moveItemFile(
+async function collectAffectedPaths(
   backlogRoot: string,
-  fromPath: string,
-  toPath: string,
-  warnings: string[],
-): Promise<void> {
-  if (await isInsideGitWorkTree(backlogRoot)) {
-    try {
-      await execFileAsync('git', ['mv', fromPath, toPath], {
-        cwd: backlogRoot,
-      });
-      return;
-    } catch {
-      warnings.push(
-        `\`git mv\` failed for ${fromPath}; falling back to a plain filesystem rename (the move is no longer staged).`,
-      );
+  id: string,
+  references: string[],
+): Promise<string[]> {
+  const paths = [
+    resolve(backlogRoot, 'items', `${id}.md`),
+    resolve(backlogRoot, 'archived', `${id}.md`),
+    resolve(backlogRoot, 'index.md'),
+  ];
+  const completedPath = resolve(backlogRoot, 'completed.md');
+  // Include this operation's existing ledger entry on retry, but do not claim
+  // an unrelated ledger for a wont_do archive that never wrote an entry.
+  if (await pathExists(completedPath)) {
+    const completed = await readFile(completedPath, 'utf8');
+    if (
+      completed
+        .split('\n')
+        .some((line) => line.startsWith('- ') && line.includes(` — ${id} — `))
+    ) {
+      paths.push(completedPath);
     }
   }
-  await rename(fromPath, toPath);
+  paths.push(...references);
+  return [...new Set(paths)].sort();
 }
 
 /**
@@ -259,6 +255,11 @@ export async function archiveBacklogItem(
       movedTo: archivedPath,
       indexRegenerated: true,
       rewrittenReferences: references.rewritten,
+      affectedPaths: await collectAffectedPaths(
+        backlogRoot,
+        id,
+        references.affectedPaths,
+      ),
       warnings,
     };
   }
@@ -325,8 +326,8 @@ export async function archiveBacklogItem(
       scaffoldedFile || inserted.scaffolded ? 'scaffolded' : 'written';
   }
 
-  // 6. Move items/<id>.md -> archived/<id>.md (git mv with rename fallback).
-  await moveItemFile(backlogRoot, itemsPath, archivedPath, warnings);
+  // 6. Filesystem-only move: the caller owns staging the complete operation.
+  await rename(itemsPath, archivedPath);
 
   // 7. Rewrite inbound references so no `.oat/repo` link dangles at items/.
   const references = await rewriteInboundReferences(
@@ -348,6 +349,11 @@ export async function archiveBacklogItem(
     movedTo: archivedPath,
     indexRegenerated: true,
     rewrittenReferences: references.rewritten,
+    affectedPaths: await collectAffectedPaths(
+      backlogRoot,
+      id,
+      references.affectedPaths,
+    ),
     warnings,
   };
 }

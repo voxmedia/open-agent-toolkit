@@ -50,7 +50,7 @@ The command validates all inputs before creating the scaffold or writing an item
 
 - Validates the item's current `status` against the enum (`open | in_progress | closed | wont_do`); an out-of-enum value such as `done` is a hard error with a fix hint. Archiving is legal from any valid status — a `closed` item still in `items/` just gets its move finished.
 - For the default `closed` path, validates and trims a nonblank `--summary` before any file or index mutation. The `wont_do` path may omit the summary and completion-ledger entry.
-- Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
+- Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with a filesystem rename. Archive leaves the Git index unchanged on initial archive and retry; callers own formatting, staging and committing the complete operation.
 - `closed` archives append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`). `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
 - Rewrites inbound references to the moved file across Markdown under `.oat/repo/**` — tracked and untracked files that Git does not ignore, or every `.md` file outside a Git work tree — (external plans, decision records, other backlog items): relative links, `.oat/repo`-relative and repository-root path strings (including `oat_external_plan_sources` frontmatter) that resolve to `items/<id>.md` now point at `archived/<id>.md`, and the moved item's own relative links (inline links with any title form, and reference-style definitions; never footnotes or prose) are rebased when their target exists, so they keep resolving. An inline code span whose whole content is a path to the item (optionally with an `#anchor`), such as an external plan's `Source artifact or scope` citation, is rewritten; any other code span or fenced code block that mentions `items/<id>.md` is left as written with a warning, so recorded commands keep their meaning. Only references that resolve to the item's former `items/<id>.md` path change, and a link that already resolves to a different existing file is never repointed; URLs are never touched, and symlinked Markdown files are skipped so nothing outside `.oat/repo` is read or written. Each rewritten file is reported; a reference that names `items/<id>.md` but cannot be resolved is left untouched with a warning.
 - Regenerates the managed backlog index after the move.
@@ -77,11 +77,18 @@ On success the payload is the archive result object:
   "rewrittenReferences": [
     ".oat/repo/reference/external-plans/2026-07-05-example-plan.md"
   ],
+  "affectedPaths": [
+    "/repo/.oat/repo/pjm/backlog/items/BL-260705-example.md",
+    "/repo/.oat/repo/pjm/backlog/archived/BL-260705-example.md",
+    "/repo/.oat/repo/pjm/backlog/completed.md",
+    "/repo/.oat/repo/pjm/backlog/index.md",
+    "/repo/.oat/repo/reference/external-plans/2026-07-05-example-plan.md"
+  ],
   "warnings": []
 }
 ```
 
-`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (on a no-op this lists anything the retried rewrite changed, and the human output prints each file on both paths). On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
+`result` is `archived` or `noop` (already archived); `completedEntry` is `written`, `scaffolded`, or `skipped` (e.g. a `wont_do` archive without `--summary`); `movedTo` is the destination path or `null`; `rewrittenReferences` lists the repository-relative Markdown files whose references to the moved item were rewritten (on a no-op this lists anything the retried rewrite changed, and the human output prints each file on both paths). `affectedPaths` is the deduplicated, normalized absolute operation path list: old item path (a tracked deletion), archived destination, index, the completed ledger when it contains this item’s entry, and every reference resolving to this item (including references already repaired before an interruption). Retries include the old/new item paths and existing ledger entry so callers can commit a prior uncommitted move alongside tail repairs. A `wont_do` archive without an entry does not claim unrelated ledger changes. Format existing affected text paths, then pass the complete list to `oat internal commit-paths` plus any caller-owned handoff deletion; never stage only the missing old path. On an actionable failure the payload is `{ "result": "error", "id": "<id>", "message": "<why + fix>" }`.
 
 For full project-management repo-reference setup, use [`oat pjm init`](../getting-started/tool-packs.md#install-vs-initialize). It scaffolds the two-layer PJM surface (`pjm/current-state.md`, `pjm/roadmap.md`, `reference/decisions/`, and AGENTS guides) and delegates the backlog sub-surface to `oat backlog init`.
 
