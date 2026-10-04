@@ -156,6 +156,10 @@ wave5-p03-complete-r5: Phase3 passed native r7 and configured Opus-high r5;12/12
 
 wave5-p04-t01-received: task1 committed78b2326 and same-target append-only recovery48f51c6 verified; overly broad settled archive ownership rejected by negative keeper,45 focusedtests and CLI/docs pre/post checks0, root keeper0. Recovery1/10 pendingnull settled,23/30 tasks. Task2 ready after bookkeeping.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-t02-received: complete archive lifecycle guidance8 owners adopted in13 declared files; actual full archive/helper accepted and omitted-side controls incomplete,34 archivekeepers and693skills passed. Task2 commit8aee49c verified,24/30. Recovery1/10 pendingnull unchanged; knowledge refresh next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
