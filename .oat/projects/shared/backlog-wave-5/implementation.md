@@ -2974,7 +2974,7 @@ Dispatch: scope=p04 action=implementation role=implementer model_axis=selected:g
     "task_name": "wave5_phase4"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3059,3 +3059,11 @@ Exact four-path task commit and current script/actual-consumer guidance verified
 ### Phase 4 task4 root receipt and pre-review boundary
 
 Four task commits completed plus one eligible append-only recovery,26/30 total. Phase4 remains in_progress until phase composition, native review and configured gate receive settle. Recovery1/10 remaining9/pendingnull unchanged. Exact U1 menu/root/config preservation met in actual offered-choice/real IO keeper; no automatic detection/default/framework changes. Final phase-wide composition release follows this separate committed ledger; no task replay or phase completion inferred from task count.
+
+### Phase 4 terminal author report received before review
+
+DONE from exact original native phase handle/target, no nested workers. Base d882efb69bfc79800bc74f6c2919bf97798a19aa, START60a446268a8eb368e421bd72919fde8f3a9e2f59, final task-ledgerHEADda2f0a0ae6212b913364c66a9c62306457bad958. Four task commits + one append-only recovery match immutable history and declared effective paths; root separately committed bookkeeping after each handoff. Ledger1/10pendingnull reconciles the already root-settled event, no new attempt.
+
+Final-composition author verification: direct archive/index/guided/exact-helper86/86, actual knowledge6/6, direct skill699/699; CLI check/types/fresh directbuild, skill66, docs/docs-package, rootlint/format all0. Lint6executed/4cachedbuilddependencies, format5executed/5cacheddependencies; rootoxlint/oxfmt executed. Task4docsbuild6executed/0cached. Finaldiff/clean passed. Negative controls and authenticated real-contributor IO/caller snippets remain in ignored analysis/p04. Root read task diffs/evidence and independently ran settled-noop preservation keeper; broader suite execution stays author-attributed.
+
+Phase4 remains in_progress4/4 until independent native/code review and configured Opus-high gate pass and every disposition is settled.26/30 task commits. Prior six Lows + one stored-receipt diagnostic Medium final-owned; no task replay, new scope, version/projection claim or broad workspace gate claim.

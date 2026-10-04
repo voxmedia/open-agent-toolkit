@@ -168,6 +168,10 @@ wave5-p04-t03-received: manual-safe knowledge refresh0866f1f committed, six actu
 
 wave5-p04-t04-received: Plain Markdown actual offered option8158a60 and real config preservation verified,13 guidedtests pre/post0, fresh docs build6 executed/0cached.26/30 tasks; four Phase4 tasks committed, composition/reviews pending. Recovery1/10 pendingnull unchanged.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-author-terminal: exact native phase request completed4 tasks plus verified recovery1; direct86CLI/6knowledge/699skills and CLI/docs/validator composition pass.26/30tasks, native review/configuredgate pending. Recovery1/10 pendingnull preserved, all product scopes clean.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
