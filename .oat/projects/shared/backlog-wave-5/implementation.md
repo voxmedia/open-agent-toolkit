@@ -1121,7 +1121,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "phase": "p03",
       "task_ids": ["p03-t05"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T032627Z.md",
-      "status": "planned",
+      "status": "accepted",
       "reason": "Same accepted Sol6.1/high handle; bounded Medium receipt-parent correction, second review correction independent of recovery1/10. No original task replay.",
       "accepted_handle": "/root/wave5_phase3",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
@@ -1129,7 +1129,9 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
         "packages/cli/src/commands/shared/exact-path-commit.ts",
         "packages/cli/src/commands/shared/exact-path-commit.test.ts",
         "packages/cli/src/commands/project/migrate/index.test.ts"
-      ]
+      ],
+      "execution_base": "ec6a0a2db711ea24352236488b24b657fed6c81f",
+      "acceptance_evidence": "Same native handle acknowledged HOLD; exact configured target preserved, root owns ledger until START baseline."
     }
   ],
   "task_class": "consequential",
