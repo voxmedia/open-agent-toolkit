@@ -1785,6 +1785,98 @@ Original request `wave5-p03-implement-r1`, same accepted `/root/wave5_phase3`, c
 
 Authoritative author checks: `analysis/p03/r3-phase-post.log`1107/13 direct tests with isolated subprocess HOME; `r3-check-post.log`, `r3-types-post.log`, `r3-build-post.log` exit0. Ten actual committed-head source/built/public controls passed: nested preservation, removal/rename, real signals, record repair/recurrence, migration/promotion recovery and captured wrong-parent refusal. Pre-fix logs t06..t09 show the reported categories. Neutralized owned-index publication guard breaks helper and public unresolved-record keepers, then exact bytes restored before passing checks. These are author execution claims; root's independent results are recorded below.
 
-Root independently executed saved directory and removal source commands, built real SIGTERM/SIGINT/terminal-group/prelaunch controls, and built public record repair/recurrence: all exit0, literal unrelated/concurrent state preserved, matching retries deduplicated and expected refusals observed. Evidence `analysis/p03-r3-root-{directory,removal,signal,record}.json`; stderr empty. Focused root test result follows before the pre-review commit.
+Root independently executed saved directory and removal source commands, built real SIGTERM/SIGINT/terminal-group/prelaunch controls, and built public record repair/recurrence: all exit0, literal unrelated/concurrent state preserved, matching retries deduplicated and expected refusals observed. Evidence `analysis/p03-r3-root-{directory,removal,signal,record}.json`; stderr empty. Root directly executed107/107 focused helper/ref-sync tests in two files with isolated subprocess HOME; exit0, no Turbo replay (`analysis/p03-r3-root-tests.log` and `.exit`).
 
 Limits: a nonterminating hook may delay catchable termination indefinitely; SIGKILL/abrupt-death reclamation remains deferred. Already-staged later record recurrence conservatively refuses marker rotation; ordinary unstaged producer recurrence succeeds. Nested inventory excludes ignored bytes and does not follow symlinks. No new receipt schema, PID registry, framework or requirement waiver. All9 Phase3 tasks are complete, phase remainsin_progress for the authorized additional native review and configured Opus gate. Next pointerp04-t01 is dependency-gated until both pass. Fivep01Lowdeferrals remain mandatory final scope.
+
+#### Dispatch wave5-p03-review-r4
+
+Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-review-r4",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Independently review the four operator-approved Phase 3 corrections and composition with the full phase, including real nested repositories, staged removals, signal settlement and complete record recovery.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T06:09:56.728123Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r4"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Authorized additional standard review after explicit cap override. Native registered materialized Sol6.1/high target, fresh context, read-only product and sole review artifact write. Root retains all tracking/log/commit ownership. Await exact native acceptance; no replacement route authorized.
