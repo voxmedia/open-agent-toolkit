@@ -2060,6 +2060,30 @@ describe('scaffoldProject', () => {
     tempDirs.push(repoRoot);
     initGitRepo(repoRoot);
 
+    await writeFile(join(repoRoot, 'partial.md'), 'BASE unrelated literal\n');
+    execFileSync('git', ['add', 'partial.md'], { cwd: repoRoot });
+    execFileSync('git', ['commit', '-qm', 'base'], { cwd: repoRoot });
+    await writeFile(join(repoRoot, 'partial.md'), 'STAGED unrelated literal\n');
+    execFileSync('git', ['add', 'partial.md'], { cwd: repoRoot });
+    await writeFile(
+      join(repoRoot, 'partial.md'),
+      'UNSTAGED unrelated literal\n',
+    );
+    const formatter = join(repoRoot, '.git/format.cjs');
+    await writeFile(
+      formatter,
+      "const fs=require('node:fs');for(const p of process.argv.slice(2))fs.writeFileSync(p,fs.readFileSync(p,'utf8').trim()+'\\n<!-- hook-final -->\\n');",
+    );
+    const config = join(repoRoot, '.git/lint-staged.json');
+    await writeFile(
+      config,
+      JSON.stringify({ '*.md': `${process.execPath} ${formatter}` }),
+    );
+    await writeFile(
+      join(repoRoot, '.git/hooks/pre-commit'),
+      `#!/bin/sh\nset -eu\n"${process.execPath}" "${join(REPO_ROOT, 'node_modules/lint-staged/bin/lint-staged.js')}" --config "${config}" --quiet\n`,
+      { mode: 0o755 },
+    );
     // An unrelated untracked file elsewhere in the repo must remain untracked.
     await writeFile(join(repoRoot, 'unrelated.txt'), 'do not stage me', 'utf8');
 
@@ -2094,6 +2118,34 @@ describe('scaffoldProject', () => {
       { cwd: repoRoot, encoding: 'utf8' },
     );
     expect(status).toContain('?? unrelated.txt');
+    expect(
+      execFileSync('git', ['show', ':partial.md'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }),
+    ).toBe('STAGED unrelated literal\n');
+    expect(await readFile(join(repoRoot, 'partial.md'), 'utf8')).toBe(
+      'UNSTAGED unrelated literal\n',
+    );
+    const paths = result.createdFiles.map(
+      (file) => `.oat/projects/shared/commit-demo/${file}`,
+    );
+    expect(
+      execFileSync('git', ['status', '--porcelain', '--', ...paths], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+      }).trim(),
+    ).toBe('');
+    expect(
+      execFileSync(
+        'git',
+        ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'],
+        { cwd: repoRoot, encoding: 'utf8' },
+      )
+        .trim()
+        .split('\n')
+        .sort(),
+    ).toEqual(paths.sort());
   }, 15_000);
 
   it('skips commit safely when not inside a git work tree', async () => {

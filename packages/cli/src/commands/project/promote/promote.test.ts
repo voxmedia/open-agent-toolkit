@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -378,6 +379,14 @@ describe('oat project promote', () => {
   async function createRepo(): Promise<string> {
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-promote-'));
     tempDirs.push(repoRoot);
+    execFileSync('git', ['init', '-q'], { cwd: repoRoot });
+    execFileSync('git', ['config', 'user.name', 'OAT'], { cwd: repoRoot });
+    execFileSync('git', ['config', 'user.email', 'oat@example.com'], {
+      cwd: repoRoot,
+    });
+    execFileSync('git', ['commit', '--allow-empty', '-qm', 'base'], {
+      cwd: repoRoot,
+    });
     return repoRoot;
   }
 
@@ -521,20 +530,31 @@ describe('oat project promote', () => {
         'plan.md',
         'state.md',
       ].map((file) => relative(repoRoot, join(projectRoot, file)));
-      expect(gitRunner.run).toHaveBeenNthCalledWith(
-        1,
-        ['add', '--', ...exactPaths],
-        { cwd: repoRoot },
-      );
-      expect(gitRunner.run).toHaveBeenNthCalledWith(
-        2,
-        [
-          'commit',
-          '-m',
-          'chore(oat): promote demo to quick',
-          '--',
-          ...exactPaths,
-        ],
+      expect(
+        execFileSync(
+          'git',
+          [
+            'diff-tree',
+            '--root',
+            '--no-commit-id',
+            '--name-only',
+            '-r',
+            'HEAD',
+          ],
+          { cwd: repoRoot, encoding: 'utf8' },
+        )
+          .trim()
+          .split('\n')
+          .sort(),
+      ).toEqual(exactPaths.sort());
+      expect(
+        execFileSync('git', ['status', '--porcelain', '--', ...exactPaths], {
+          cwd: repoRoot,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('');
+      expect(gitRunner.run).toHaveBeenCalledWith(
+        ['rev-parse', '--is-inside-work-tree'],
         { cwd: repoRoot },
       );
       expect(

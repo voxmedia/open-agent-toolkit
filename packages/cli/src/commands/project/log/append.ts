@@ -33,6 +33,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { commitExactPaths } from '@commands/shared/exact-path-commit';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -612,17 +613,6 @@ function lockMtimeMs(lockPath: string): number | undefined {
   }
 }
 
-function resolveIndexLockPath(repoRoot: string): string {
-  try {
-    return join(
-      runGit(repoRoot, ['rev-parse', '--absolute-git-dir']),
-      'index.lock',
-    );
-  } catch {
-    return join(repoRoot, '.git', 'index.lock');
-  }
-}
-
 /**
  * Classifies a failed git invocation as an index-lock contention or a real
  * failure.
@@ -876,106 +866,74 @@ async function commitLockedProjectLog(
     return { outcome: 'nothing-to-commit', committed: false, attempts: 0 };
   }
 
-  const lockPath = resolveIndexLockPath(input.repoRoot);
-  let lockObserved = false;
-  let firstLockMtimeMs: number | undefined;
-  let lastError = '';
-  let attempt = 0;
-
-  while (attempt < dependencies.attempts) {
-    attempt += 1;
-    let staged = false;
-    try {
-      run(['add', '--', input.logPath]);
-      staged = true;
-      run(['commit', '-m', message, '--', input.logPath]);
-      // A nominally successful commit is not a successful finalization. A
-      // caller that named its entry gets `committed` only when HEAD is read and
-      // positively carries that entry: `absent` means an overlapping writer
-      // clobbered the append before it was staged, and `unknown` means the
-      // verification could not be performed at all. Settling on unread evidence
-      // is what would let both writers succeed with one run id missing, so
-      // neither state settles — both route to the same idempotent recovery.
-      const verified =
-        input.identity === undefined
-          ? 'present'
-          : committedInputIdentityState(run, input);
-      if (verified !== 'present') {
-        return {
-          outcome:
-            verified === 'absent'
-              ? 'entry-missing-after-commit'
-              : 'commit-unverified',
-          committed: false,
-          attempts: attempt,
-          error:
-            verified === 'absent'
-              ? entryMissingMessage(input)
-              : `the commit succeeded but the committed project log could not be read back to confirm this entry (${input.identity?.key ?? 'unknown'})`,
-        };
-      }
-      return { outcome: 'committed', committed: true, attempts: attempt };
-    } catch (error) {
-      if (staged) {
-        try {
-          // A failed commit (hook, signing, identity) would otherwise leave the
-          // log staged, which is a worse state than the dirty tree we started
-          // in.
-          run(['reset', '--quiet', '--', input.logPath]);
-        } catch {
-          // Best effort: the reported commit failure already tells the caller
-          // the log needs attention.
-        }
-      }
-      lastError = gitFailureMessage(error);
-      if (classifyGitLockFailure(lastError, lockPath) === 'other') {
-        // A retry can race a competing writer: once it commits our appended
-        // entry and releases the lock, our next `git commit` fails with
-        // "nothing to commit", which is settlement rather than a failure.
-        // Settlement demands a moved HEAD and a clean log that still carries
-        // this entry, so a genuine failure — where the log stays dirty — can
-        // never be reclassified by this branch.
-        if (settledByAnotherWriter(run, snapshot, input)) {
-          return {
-            outcome: 'already-committed',
-            committed: false,
-            attempts: attempt,
-          };
-        }
-        return {
-          outcome: 'failed',
-          committed: false,
-          attempts: attempt,
-          error: lastError,
-          lockClass: 'other',
-        };
-      }
-      if (!lockObserved) {
-        // Record the first observation even when the lock is already gone: an
-        // absent baseline means the lock changed during the window, which is
-        // contention rather than a stuck lock.
-        lockObserved = true;
-        firstLockMtimeMs = lockMtimeMs(lockPath);
-      }
-      if (attempt < dependencies.attempts) {
-        await dependencies.sleep(dependencies.retryDelaysMs[attempt - 1] ?? 0);
-      }
-    }
+  const artifact = input.identity
+    ? `${input.logPath}:${input.identity.key}`
+    : `${input.logPath}:${createHash('sha256')
+        .update(await readFile(input.logPath))
+        .digest('hex')}`;
+  const result = await commitExactPaths(
+    {
+      repoRoot: input.repoRoot,
+      paths: [
+        relative(await realpath(input.repoRoot), await realpath(input.logPath)),
+      ],
+      message,
+      identity: `project-log:${artifact}`,
+    },
+    {
+      attempts: dependencies.attempts,
+      retryDelaysMs: dependencies.retryDelaysMs,
+      sleep: dependencies.sleep,
+    },
+  );
+  if (
+    result.outcome === 'committed' ||
+    result.outcome === 'already-matching' ||
+    result.outcome === 'nothing'
+  ) {
+    const verified =
+      input.identity === undefined
+        ? 'present'
+        : committedInputIdentityState(run, input);
+    if (verified !== 'present')
+      return {
+        outcome:
+          verified === 'absent'
+            ? 'entry-missing-after-commit'
+            : 'commit-unverified',
+        committed: false,
+        attempts: result.attempts,
+        error:
+          verified === 'absent'
+            ? entryMissingMessage(input)
+            : `the committed project log could not be read back to confirm this entry (${input.identity?.key ?? 'unknown'})`,
+      };
+    return {
+      outcome:
+        result.outcome === 'committed'
+          ? 'committed'
+          : result.outcome === 'already-matching' ||
+              settledByAnotherWriter(run, snapshot, input)
+            ? 'already-committed'
+            : 'nothing-to-commit',
+      committed: result.outcome === 'committed',
+      attempts: result.attempts,
+    };
   }
-
-  if (settledByAnotherWriter(run, snapshot, input)) {
+  // Caller-owned entry verification remains authoritative even when another
+  // writer finished during the helper's inspected lock window.
+  if (!result.committed && settledByAnotherWriter(run, snapshot, input))
     return {
       outcome: 'already-committed',
       committed: false,
-      attempts: attempt,
+      attempts: result.attempts,
     };
-  }
   return {
-    outcome: 'blocked-by-index-lock',
+    outcome: result.outcome === 'blocked' ? 'blocked-by-index-lock' : 'failed',
     committed: false,
-    attempts: attempt,
-    error: lastError,
-    lockClass: classifyGitLockFailure(lastError, lockPath, firstLockMtimeMs),
+    attempts: result.attempts,
+    error: result.error,
+    lockClass: result.lockClass,
   };
 }
 
@@ -985,7 +943,7 @@ async function commitLockedProjectLog(
  *
  * The log is tracked, so an uncommitted append leaves the worktree dirty for
  * whatever runs next — including a dispatched subagent whose preflight requires
- * a clean tree. The commit is pathspec-scoped to the log alone so unrelated
+ * a clean tree. The shared helper commits exact log paths with enabled hooks so unrelated
  * working-tree changes are never swept in.
  *
  * Scope note: this commits the whole log file, so a log that was already dirty
@@ -997,8 +955,7 @@ async function commitLockedProjectLog(
  * Never throws, and never deletes, moves, or forces an index lock: a lock this
  * process did not take is another process's, and only its owner may clear it.
  * Git failures are reported to the caller, which degrades to a diagnostic
- * rather than altering any exit status. On failure the index is restored so a
- * partially staged log is not left behind.
+ * rather than altering any exit status. The helper preserves the real index on failure; pending evidence remains resumable.
  *
  * Exactly one outcome is derived from a single pre-action snapshot (entry HEAD
  * plus entry dirtiness) rather than from eligibility re-sampled after the

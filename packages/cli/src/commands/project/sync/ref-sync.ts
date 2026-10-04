@@ -1,6 +1,10 @@
+import { createHash, randomUUID } from 'node:crypto';
 import {
   lstat,
+  link,
   mkdir,
+  mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
@@ -11,6 +15,7 @@ import {
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
+import { commitExactPaths } from '@commands/shared/exact-path-commit';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   canonicalizePath,
@@ -1000,7 +1005,11 @@ export async function abortSynced(
 }
 
 function normalizedPathspecs(repoRoot: string, pathspecs: string[]): string[] {
-  return pathspecs.map((pathspec) => repoRelativePath(repoRoot, pathspec));
+  return [
+    ...new Set(
+      pathspecs.map((pathspec) => repoRelativePath(repoRoot, pathspec)),
+    ),
+  ].sort();
 }
 
 export async function commitRecordChange(
@@ -1012,21 +1021,97 @@ export async function commitRecordChange(
 ): Promise<{ sha: string } | null> {
   assertAllowlistedPathspecs(repoRoot, pathspecs, options);
   const normalized = normalizedPathspecs(repoRoot, pathspecs);
-  await git.run(['add', '--', ...normalized], { cwd: repoRoot });
-  const changed = await git.run(
-    ['diff', '--cached', '--quiet', '--', ...normalized],
-    { cwd: repoRoot, allowFailure: true },
-  );
-  assertExpectedGitResult('git diff --cached --quiet', changed, [0, 1]);
-  if (changed.code === 0) {
+  await git.run(['rev-parse', '--is-inside-work-tree'], { cwd: repoRoot });
+  const gitDir = (
+    await git.run(['rev-parse', '--absolute-git-dir'], { cwd: repoRoot })
+  ).stdout;
+  const pendingDir = join(gitDir, 'oat-record-commit-pending');
+  await mkdir(pendingDir, { recursive: true });
+  const operation = createHash('sha256')
+    .update(JSON.stringify([message, normalized]))
+    .digest('hex');
+  const pendingPath = join(pendingDir, `${operation}.json`);
+  if ((await readOptionalFile(pendingPath)) === null) {
+    const identity = `project-record:${operation}:${randomUUID()}`;
+    const temporary = await mkdtemp(join(pendingDir, 'reservation-'));
+    const complete = join(temporary, 'pending.json');
+    try {
+      await writeFile(
+        complete,
+        JSON.stringify({ identity, paths: normalized, message }),
+      );
+      try {
+        await link(complete, pendingPath);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      }
+    } finally {
+      await rm(temporary, { recursive: true, force: true });
+    }
+  }
+  const file = await open(pendingPath, 'r');
+  const markerIdentity = await file.stat();
+  let markerBytes: string;
+  try {
+    markerBytes = await file.readFile('utf8');
+  } finally {
+    await file.close();
+  }
+  const reservation = JSON.parse(markerBytes) as {
+    identity: string;
+    paths: string[];
+    message: string;
+  };
+  const clearPending = async (): Promise<void> => {
+    const current = await lstat(pendingPath).catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return undefined;
+        throw error;
+      },
+    );
+    if (!current) return;
+    if (
+      current.ino !== markerIdentity.ino ||
+      current.dev !== markerIdentity.dev ||
+      (await readOptionalFile(pendingPath)) !== markerBytes
+    )
+      throw new CliError(
+        `Verified commit exists, but the pending marker at ${pendingPath} was replaced; replacement preserved for inspection.`,
+        2,
+      );
+    await rm(pendingPath);
+  };
+  if (
+    reservation.message !== message ||
+    JSON.stringify(reservation.paths) !== JSON.stringify(normalized) ||
+    !reservation.identity.startsWith(`project-record:${operation}:`)
+  )
+    throw new CliError(
+      `Unreconciled lifecycle commit marker at ${pendingPath}; preserve it and inspect before retrying.`,
+      2,
+    );
+
+  const result = await commitExactPaths({
+    repoRoot,
+    paths: normalized,
+    message,
+    identity: reservation.identity,
+  });
+  if (result.outcome === 'nothing') {
+    await clearPending();
     return null;
   }
-
-  await git.run(['commit', '-m', message, '--', ...normalized], {
-    cwd: repoRoot,
-  });
-  const sha = (await git.run(['rev-parse', 'HEAD'], { cwd: repoRoot })).stdout;
-  return { sha };
+  if (
+    (result.outcome === 'committed' || result.outcome === 'already-matching') &&
+    result.commit
+  ) {
+    await clearPending();
+    return { sha: result.commit };
+  }
+  throw new CliError(
+    `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
+    result.outcome === 'blocked' ? 1 : 2,
+  );
 }
 
 export async function preflightSyncedCheckout(
@@ -1523,19 +1608,14 @@ export async function pruneSynced(
       if (!options.commit) {
         return { status: 'pruned', lifecycleCommit: null };
       }
-      await git.run(
-        [
-          'commit',
-          '-m',
-          `chore(oat): prune synced project ${target.slug}`,
-          '--',
-          relativeRecordPath,
-        ],
-        { cwd: target.repoRoot },
+      const committed = await commitRecordChange(
+        target.repoRoot,
+        [relativeRecordPath],
+        `chore(oat): prune synced project ${target.slug}`,
+        git,
+        { projectRoots: target },
       );
-      const lifecycleCommit = (
-        await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
-      ).stdout;
+      const lifecycleCommit = committed?.sha ?? null;
       return { status: 'pruned', lifecycleCommit };
     }
   }
@@ -1679,6 +1759,14 @@ export async function migrateSharedToSynced(
   const sourcePath = resolve(options.sourcePath);
   await assertConfinedMigrationSource(target, sourcePath);
   const sourceRelative = repoRelativePath(target.repoRoot, sourcePath);
+  const sourceFiles = (
+    await git.run(
+      ['--literal-pathspecs', 'ls-files', '-z', '--', sourceRelative],
+      { cwd: target.repoRoot },
+    )
+  ).stdout
+    .split('\0')
+    .filter(Boolean);
   const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   const destinationRelative = repoRelativePath(
     target.repoRoot,
@@ -1786,7 +1874,11 @@ export async function migrateSharedToSynced(
     if (options.commit) {
       const committed = await commitRecordChange(
         target.repoRoot,
-        [sourcePath, recordPath, ...(gitignoreChanged ? [gitignorePath] : [])],
+        [
+          ...sourceFiles,
+          recordPath,
+          ...(gitignoreChanged ? [gitignorePath] : []),
+        ],
         `chore(oat): migrate ${target.slug} to synced scope`,
         git,
         { projectRoots: target },

@@ -876,14 +876,8 @@ export async function scaffoldProject(
           2,
         );
       }
-      const relativeRecordPath = relative(
-        canonicalizePath(options.repoRoot),
-        recordPath,
-      )
-        .split('\\')
-        .join('/');
       throw new CliError(
-        `Synced project ${options.projectName} and its discovery record were written, but the parent commit failed: ${detail}. Repair Git, then run git add -- '${relativeRecordPath}'${gitignoreChanged ? " '.gitignore'" : ''} && git commit -m 'chore(oat): scaffold ${options.projectName}' -- '${relativeRecordPath}'${gitignoreChanged ? " '.gitignore'" : ''}; do not rerun project creation.`,
+        `Synced project ${options.projectName} and its discovery record were written, but the parent commit failed: ${detail}. Use the exact identity and paths in the reported recovery command; do not rerun project creation.`,
         2,
       );
     }

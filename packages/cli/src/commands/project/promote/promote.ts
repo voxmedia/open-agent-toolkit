@@ -19,6 +19,7 @@ import {
   type PushResult,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
+import { commitExactPaths } from '@commands/shared/exact-path-commit';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { resolveProjectsRoot as defaultResolveProjectsRoot } from '@commands/shared/oat-paths';
@@ -332,13 +333,19 @@ async function persistPromotion(
   const pathspecs = PROMOTED_FILES.map((file) =>
     repoRelativePath(repoRoot, join(projectRoot, file)),
   );
-  await dependencies.gitRunner.run(['add', '--', ...pathspecs], {
+  await dependencies.gitRunner.run(['rev-parse', '--is-inside-work-tree'], {
     cwd: repoRoot,
   });
-  await dependencies.gitRunner.run(
-    ['commit', '-m', message, '--', ...pathspecs],
-    { cwd: repoRoot },
-  );
+  const result = await commitExactPaths({
+    repoRoot,
+    paths: pathspecs,
+    message,
+    identity: `promote:${projectRoot}:lite-to-quick`,
+  });
+  if (!['committed', 'already-matching', 'nothing'].includes(result.outcome))
+    throw new Error(
+      `Exact-path promotion commit ${result.outcome}: ${result.error}; receipt ${result.receipt ?? 'unavailable'}`,
+    );
 }
 
 async function promoteProject(
