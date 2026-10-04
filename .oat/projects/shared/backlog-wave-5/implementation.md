@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t03
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 3     | 1/3       |
+| Phase 5 | in_progress | 3     | 2/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 27/30 tasks completed
+**Total:** 28/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -265,8 +265,14 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p05-t02: Compose report, completion/resume, summary and documentation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3308825f097c359fa00fc937e85ea6b674f1e25a
+
+**Outcome:** Current completion executor and shell-field reader accept the actual flat report and validate run, page and hashes against preserved archived source and tracked export. Original versus archived sourceRunRoot and /var versus /private/var aliases are canonicalized within strict owning roots. Historical manifest receipts remain readable; terminal lifecycle receipt schema is unchanged. Summary export links to the flat page and records run/original/exported hashes while preserving the original archived summary and matching retry. Complete and explainer lifecycle guidance, two docs pages and existing decision amendment agree. Inclusive ref-sync allowlist already accepts the reported page; production behavior was retained and the actual equality/neighbor test proves it.
+
+**Verification:** Author real rebuilt public CLI first-pass and recordless-retry JSON from authentic Wave4 package passes both readers; each rejects run/page/original/exported-hash mismatches. Root independently repeated the full real producer/consumer probe and two existing legacy/flat transition keepers, all exit0. Author broader CLI228/228, final archive129/129, completion87/87, direct CLI build/check/types, skill66/docs, full uncached lint10tasks and format passed; neutralized flat keeper failed1 then restored passed0. Root read exact eleven-file commit, parent630e51c2, reader/summary/test/guidance/docs/decision diffs and clean hook readback. Evidence analysis/p05/t02-_ plus root-t02-probe/_; no live remote/provider/S3 claim. PJM doctor confirmed adoptiondeclared; exit1 is solely pre-existing completed-unarchived warnings outside this wave, not absent/partial adoption. Owning decision index regeneration passed/no diff. Version/projection work remains Phase6. No new recovery; p05 used1/10 pendingnull.
+
+**Bounded file adaptation:** Existing .agents/skills/oat-explainer-kit/references/lifecycle-contract.md is a real old-manifest reader, and ref-sync.test.ts exercises current exact flat-page allowlist equality. Root approved these mechanically derived within-task files before edit; no production sync change or public terminal-schema expansion.
 
 ### Task p05-t03: Migrate every tracked recap after evidence preservation
 
