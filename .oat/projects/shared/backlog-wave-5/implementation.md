@@ -3803,3 +3803,101 @@ User explicitly confirmed old generated recaps then authorized “alright sure, 
 Same accepted author /root/wave5_phase5_fix1_resume acknowledged HOLD; generic continuation prevalidated and acceptedvalidated-only; fresh resolver notices[], exact Sol6.1/high target. Already-present two-file patch SHAs remain unchanged across root tracking-only commits. Preapproval capture is a preserved older-base backup, never stale-applied/restored. Root supplies current STARTHEAD for one task commit of six exact paths after derived-page/newhash/retry/conservation/render verification. Fix2/2 and recovery1/10 pendingnull unchanged; no fresh worker/counter reset. Root then full native r3/configured gate and remaining sequential phases.
 
 Root received p05-t05 DONE and preserved original/current captures and prior failure observers. Actual taskcommit2eef4f1b is one bounded fix, not implementation recovery or counter reset. Two initial r3 resolver preflight requests incorrectly included implementer-only candidate/classification flags and were rejected before any child launch; corrected reviewer-ceiling invocation resolves exact Sol6.1/high notices[]. This is argument correction, not a new route/fallback or accepted-child replacement. Fresh full five-task native r3 and configured gate follow; all prior ten Lows/one Medium remain final-owned.
+
+### Phase 5 native review — wave5-p05-review-r3
+
+```json
+{
+  "request_id": "wave5-p05-review-r3",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Full Phase5 five-task review after actual-markup correction and explicitly approved four derived SVG page refresh; preserve original bytes, real producer/readers and all prior findings/responses.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p05-review-r3",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-04T21:13:04.291576Z"
+  },
+  "authority": "one-phase-five-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase5_review_r3"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD, full five-task Phase5r3, no nesting/recon; current ledger31/32."
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Full source and original archive preservation, atomic rollback and genuine producer-to-resume identity composition require independent adversarial review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native /root/wave5_phase5_review_r3 (Ramanujan), exact Sol6.1/high reviewer materialized role,fresh fork none,resolvernotices[]. Full phase basea49abbf5 through root committed STARTHEAD includes all5tasks/recovery/crash conservations/user-approved four-derived-SVG-page correction and prior full r1/r2 findings/responses. Currenttaskledger31/32,p05 5/5in_progress,Phase6pending. Review-outcome bookkeeping excluded, taskledgerincluded. Generic currentcanonicalrole andprelaunch/accepted recordsvalidated-only; runtimeidentitynot-reported. Reviewer owns one timestamped report plus ignoredscratch; no product/core/log writes,nesting/recon/remote/provider/AWS or broadcampaign. Terminal exactlyone reconnaissance signal consumed before artifactvalidation; no final counters/waivers assumed.
