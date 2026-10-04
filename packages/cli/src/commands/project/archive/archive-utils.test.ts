@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import fsPromises from 'node:fs/promises';
 import {
   access,
   cp,
@@ -7,10 +8,12 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
 } from 'node:fs/promises';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -354,6 +357,162 @@ describe('archive utils', () => {
       await expect(access(projectPath)).resolves.toBeUndefined();
     },
   );
+
+  it('preserves a public replacement while cleanup reads old claimed-file bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    const originalRead = fsPromises.readFile;
+    let fired = false;
+    // Real fs read and rename: keep old opened-file bytes while replacing the public path.
+    // This reproduces root-t01-rollback-race.ts on the original commit and protects
+    // the same interleaving when the old inode has first moved into a private claim.
+    fsPromises.readFile = (async (...args: Parameters<typeof originalRead>) => {
+      const bytes = await Reflect.apply(originalRead, fsPromises, args);
+      const readPath = String(args[0]);
+      if (
+        !fired &&
+        (readPath === page ||
+          (readPath.includes('.recap-cleanup-claim-') &&
+            basename(readPath) === basename(page)))
+      ) {
+        fired = true;
+        const replacement = `${page}.other-writer`;
+        await writeFile(replacement, 'FOREIGN REPLACEMENT LITERAL');
+        await rename(replacement, page);
+      }
+      return bytes;
+    }) as typeof originalRead;
+    syncBuiltinESMExports();
+    try {
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: recap.relativeRunPath,
+            s3SyncOnComplete: false,
+          },
+          {
+            timestamp: () => '2026-04-01T12:34:56Z',
+            copyDirectory: async () => {
+              throw new Error('injected archive-copy failure');
+            },
+          },
+        ),
+      ).rejects.toThrow('injected archive-copy failure');
+    } finally {
+      fsPromises.readFile = originalRead;
+      syncBuiltinESMExports();
+    }
+    expect(fired).toBe(true);
+    expect(await readFile(page, 'utf8')).toBe('FOREIGN REPLACEMENT LITERAL');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('retains foreign claimed bytes without overwriting a third public writer', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          timestamp: () => '2026-04-01T12:34:56Z',
+          copyDirectory: async () => {
+            const foreign = `${page}.foreign`;
+            await writeFile(foreign, 'FOREIGN CLAIMED BYTES');
+            await rename(foreign, page);
+            throw new Error('archive-copy failure');
+          },
+          renamePath: async (source, destination) => {
+            await rename(source, destination);
+            if (source === page) await writeFile(page, 'THIRD PUBLIC WRITER');
+          },
+        },
+      ),
+    ).rejects.toThrow(/preserved foreign content.*refusing to overwrite/);
+    expect(await readFile(page, 'utf8')).toBe('THIRD PUBLIC WRITER');
+    const claims = (await readdir(dirname(page))).filter((name) =>
+      name.startsWith('.recap-cleanup-claim-'),
+    );
+    expect(claims).toHaveLength(1);
+    expect(
+      await readFile(join(dirname(page), claims[0]!, basename(page)), 'utf8'),
+    ).toBe('FOREIGN CLAIMED BYTES');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('preserves a foreign temporary directory in its diagnostic claim and fails closed', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    let foreignRoot = '';
+    let replaced = false;
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          timestamp: () => '2026-04-01T12:34:56Z',
+          copySingleFile: async (source, destination) => {
+            if (!replaced) {
+              replaced = true;
+              foreignRoot = destination.slice(
+                0,
+                destination.indexOf('/', destination.indexOf('.tmp-')),
+              );
+              await rename(foreignRoot, `${foreignRoot}.owned-moved-away`);
+              await mkdir(foreignRoot);
+              await writeFile(
+                join(foreignRoot, 'foreign.txt'),
+                'FOREIGN TEMPORARY DIRECTORY',
+              );
+              throw new Error('staging failure after directory replacement');
+            }
+            await copyFile(source, destination);
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /preserved a foreign replacement.*no-clobber directory restoration/,
+    );
+    const parent = dirname(foreignRoot);
+    const claims = (await readdir(parent)).filter((name) =>
+      name.startsWith('.recap-cleanup-claim-'),
+    );
+    expect(claims).toHaveLength(1);
+    expect(
+      await readFile(
+        join(parent, claims[0]!, basename(foreignRoot), 'foreign.txt'),
+        'utf8',
+      ),
+    ).toBe('FOREIGN TEMPORARY DIRECTORY');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
 
   it('refuses a different existing flat page without changing its bytes', async () => {
     const repoRoot = await createRepoRoot();

@@ -115,8 +115,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p05:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: wave5-p05-r01-export-cleanup-ownership
+        original_request_id: wave5-p05-implement-r1
+        original_task_id: p05-t01
+        original_commit: 1e53c9ca759309a42a562410278b5f09b492d5ea
+        discovered_by: root-t01-rollback-race.ts
+        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
+        reservation_head: 1e53c9ca759309a42a562410278b5f09b492d5ea
+        status: completed
     p06:
       used_attempts: 0
       pending_attempt: null

@@ -3,6 +3,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   link,
   lstat,
+  mkdir,
+  mkdtemp,
   readFile,
   readdir,
   realpath,
@@ -193,7 +195,7 @@ export interface ArchiveProjectRecapExportV1 {
 interface AttemptProjectRecapExport {
   export: ArchiveProjectRecapExportV1;
   createdByAttempt: boolean;
-  identity?: { dev: number; ino: number };
+  identity?: { dev: number; ino: number; birthtimeMs: number };
 }
 
 export interface ArchiveProjectOnCompletionResult {
@@ -1622,21 +1624,73 @@ async function transformRecapPage(
   return css(html, sourcePage);
 }
 
+async function cleanupOwnedRecapPath(
+  target: string,
+  identity: { dev: number; ino: number; birthtimeMs: number },
+  removePath: NonNullable<ArchiveProjectOnCompletionDependencies['removePath']>,
+  renamePath: typeof rename,
+  expectedHash?: string,
+): Promise<void> {
+  if (!(await pathExists(target))) return;
+  // Claim into a private, exclusively created namespace before inspecting bytes.
+  // Other writers retain the original public pathname; deletion uses only our claim.
+  const claimRoot = await mkdtemp(
+    join(dirname(target), '.recap-cleanup-claim-'),
+  );
+  const claimedPath = join(claimRoot, basename(target));
+  try {
+    await renamePath(target, claimedPath);
+  } catch (error) {
+    await rm(claimRoot, { recursive: true, force: true });
+    if (isRecord(error) && error.code === 'ENOENT') return;
+    throw error;
+  }
+  const stat = await lstat(claimedPath);
+  const owned =
+    stat.dev === identity.dev &&
+    stat.ino === identity.ino &&
+    stat.birthtimeMs === identity.birthtimeMs &&
+    (expectedHash === undefined
+      ? stat.isDirectory()
+      : stat.isFile() && sha256(await readFile(claimedPath)) === expectedHash);
+  if (owned) {
+    await removePath(claimedPath, { recursive: true, force: true });
+    await rm(claimRoot, { recursive: true, force: true });
+    return;
+  }
+  if (stat.isFile()) {
+    try {
+      // link is an atomic no-clobber restoration, even if a third writer arrives.
+      await link(claimedPath, target);
+    } catch (error) {
+      throw new CliError(
+        `Recap cleanup preserved foreign content at ${claimedPath}; refusing to overwrite ${target}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    await rm(claimedPath);
+    await rm(claimRoot, { recursive: true, force: true });
+    return;
+  }
+  // Node has no portable atomic no-clobber rename for a directory. Keep its
+  // bytes in the diagnostic claim rather than overwriting any new public path.
+  throw new CliError(
+    `Recap cleanup preserved a foreign replacement at ${claimedPath}; safe no-clobber directory restoration is unavailable for ${target}.`,
+  );
+}
+
 async function removeAttemptRecapExport(
   attempt: AttemptProjectRecapExport | null,
   removePath: NonNullable<ArchiveProjectOnCompletionDependencies['removePath']>,
+  renamePath: typeof rename,
 ): Promise<void> {
   if (!attempt?.createdByAttempt || !attempt.identity) return;
-  const page = attempt.export.exportRoot;
-  if (!(await pathExists(page))) return;
-  const stat = await lstat(page);
-  if (
-    stat.isFile() &&
-    stat.dev === attempt.identity.dev &&
-    stat.ino === attempt.identity.ino &&
-    sha256(await readFile(page)) === attempt.export.page.exportedSha256
-  )
-    await removePath(page, { recursive: true, force: true });
+  await cleanupOwnedRecapPath(
+    attempt.export.exportRoot,
+    attempt.identity,
+    removePath,
+    renamePath,
+    attempt.export.page.exportedSha256,
+  );
 }
 
 async function exportSelectedProjectRecap(
@@ -1673,6 +1727,8 @@ async function exportSelectedProjectRecap(
     dependencies.removePath ??
     (async (target, removeOptions) => rm(target, removeOptions));
   await makeDir(dirname(exportRoot));
+  await mkdir(temporaryRoot);
+  const temporaryIdentity = await lstat(temporaryRoot);
   try {
     // Stage and re-verify the complete source, even though only its page is exported.
     for (const file of verified.packagePaths) {
@@ -1730,10 +1786,19 @@ async function exportSelectedProjectRecap(
     return {
       export: report,
       createdByAttempt: true,
-      identity: { dev: identity.dev, ino: identity.ino },
+      identity: {
+        dev: identity.dev,
+        ino: identity.ino,
+        birthtimeMs: identity.birthtimeMs,
+      },
     };
   } finally {
-    await removePath(temporaryRoot, { recursive: true, force: true });
+    await cleanupOwnedRecapPath(
+      temporaryRoot,
+      temporaryIdentity,
+      removePath,
+      dependencies.renamePath ?? rename,
+    );
   }
 }
 
@@ -1939,7 +2004,11 @@ export async function archiveProjectOnCompletion(
       });
     } catch (error) {
       await removePath(archivePath, { recursive: true, force: true });
-      await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
+      await removeAttemptRecapExport(
+        attemptedProjectRecapExport,
+        removePath,
+        dependencies.renamePath ?? rename,
+      );
       throw error;
     }
   }
@@ -1966,7 +2035,11 @@ export async function archiveProjectOnCompletion(
       await removePath(options.projectPath, { recursive: true, force: true });
     }
   } catch (error) {
-    await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
+    await removeAttemptRecapExport(
+      attemptedProjectRecapExport,
+      removePath,
+      dependencies.renamePath ?? rename,
+    );
     throw error;
   }
 
@@ -1985,7 +2058,11 @@ export async function archiveProjectOnCompletion(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (syncTarget) {
-        await removeAttemptRecapExport(attemptedProjectRecapExport, removePath);
+        await removeAttemptRecapExport(
+          attemptedProjectRecapExport,
+          removePath,
+          dependencies.renamePath ?? rename,
+        );
         throw new CliError(
           `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
           1,
