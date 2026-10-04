@@ -72,6 +72,10 @@ Normalized config readers/writers discard unknown PJM keys, so spreading the nor
 
 wave5-p02-root-review-outcome-r1: root review passed with zero findings, fix loops 0; independent phase gate pending; artifact reviews/archived/p02-review-2026-10-04T004034Z.md.
 
+### 2026-10-04 · structural · oat gate review · p02
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p02-review-2026-10-04T004538Z.md run=a55ea550-1835-4638-8274-bc4c32b27213
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
