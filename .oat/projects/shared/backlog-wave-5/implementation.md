@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -18,11 +18,11 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | in_progress | 4     | 0/4       |
+| Phase 4 | in_progress | 4     | 1/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 22/30 tasks completed
+**Total:** 23/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -217,12 +217,15 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
+**Recovery:** 48f51c65af3fc9c7aaf4eb89507e6ef4e9a0a6c6 (append-only phase attempt1, original task immutable).
+**Effective files:** six original task paths; mechanically added archive command index.test.ts for typed/result JSON propagation and rewrite-references.ts for complete interrupted-operation paths, root accepted before edits.
+**Verification:** real baseline index keeper1; original task44tests/check/types/build/docs0. Transition probe exposed over-broad settled-reference ownership; original committed t01 new keeper1. Bounded current-pass plus HEAD-evidenced pending archive recovery passes45tests/check/types/freshbuild/docs before and after candidate commit; root independently reran settled-noop keeper1test0 with isolated childHOME. Author partial-retry control preserves already repaired refs and complete producer output; pre-existing settled core/reference edits excluded. All normal hooks enabled, literal user index/worktree preserved. Logs ignored analysis/p04/t01-_ and r01-_.
 
 ### Task p04-t02: Commit complete archive operations in lifecycle callers
 
@@ -3013,3 +3016,22 @@ Dispatch: scope=p04 action=implementation role=implementer model_axis=selected:g
 ```
 
 Exact native accepted handle `/root/wave5_phase4`, HOLD until this acceptance is committed. Phase base d882efb69bfc79800bc74f6c2919bf97798a19aa. Root fetched main and found no Phase4 path drift; evidence `analysis/p04-main-drift.json`. Four planned tasks sequential, task commits and root bookkeeping handshakes; no nested workers/live calls. Recovery default10/phase10/used0/remaining10/pendingnull from authoritative ledger; capacity does not grant repeated failed attempts. Root owns project tracking/log/reviews/publication. Prior six Lows and gate-r5 Medium retain final ownership. Native resolver notices[]; current schema/live T3 catalog expose exact role/model/effort, runtime identity not reported.
+
+### Recovery Event wave5-p04-r01-archive-ownership
+
+- Phase/task: p04 / p04-t01
+- Original request: wave5-p04-implement-r1
+- Original commit: 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
+- Defect class: composition
+- Discovered by: node --input-type=module (settled-archive ownership transition control)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-6-1-sol-high
+- Recovery commit: 48f51c65af3fc9c7aaf4eb89507e6ef4e9a0a6c6
+- Verification: focused archive/index45/45; CLI check/type-check/fresh build and docs validation all0 pre/post candidate; root settled-noop keeper1/1exit0.
+- Reason: archive reference association did not prove mutation ownership and could capture unrelated pre-existing reference/core edits. Actual-current-pass mutations now own their paths; prior interrupted outputs require HEAD old-item/destination-absent and transformed reference/ledger/index evidence. No-Git has no historical ownership claims. No new persistent manifest/schema/scan policy. Root approved mechanically bounded same-target in-phase recovery before edit, verified original/candidate parent, five-path recovery diff, canonical event, authoritative completed marker and postcommit evidence, then settled pendingnull preserving used1.
+
+### Phase 4 task1 root receipt
+
+One task commit plus one permitted immutable recovery, clean handoff. Original exact six-path diff and candidate exact four product paths plus narrow ledger verified; task counted once, 23/30 overall. Phase4 recovery1/10 remaining9/pendingnull; no review-fix/gate count consumed. Root requested the settled-noop control after inspecting producer semantics, confirmed defect before author edit, and independently read candidate/record/test evidence before clearing terminal marker. Task2 release follows separate bookkeeping commit. Phase6 owns prior projection warning and version integration.

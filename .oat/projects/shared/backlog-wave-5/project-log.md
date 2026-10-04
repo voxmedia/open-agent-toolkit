@@ -152,6 +152,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,l
 
 wave5-p03-complete-r5: Phase3 passed native r7 and configured Opus-high r5;12/12 task commits,22/30 overall. Gate M1 stored-receipt diagnostic deferred to final, L1 task-count wording resolved now. Native7/gates5, one approved cycle consumed; recovery1/10 pendingnull unchanged. Phase4 ready.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-t01-received: task1 committed78b2326 and same-target append-only recovery48f51c6 verified; overly broad settled archive ownership rejected by negative keeper,45 focusedtests and CLI/docs pre/post checks0, root keeper0. Recovery1/10 pendingnull settled,23/30 tasks. Task2 ready after bookkeeping.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: c13e4faedd4e896b127b176592e4307544825a48
+oat_current_task: p04-t02
+oat_last_commit: 48f51c65af3fc9c7aaf4eb89507e6ef4e9a0a6c6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T15:11:14.539155Z
+oat_project_state_updated: 2026-10-04T15:23:32.104945Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -113,16 +113,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: wave5-p04-r01-archive-ownership
-        original_request_id: wave5-p04-implement-r1
-        original_task_id: p04-t01
-        original_commit: 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
-        discovered_by: node --input-type=module (settled-archive ownership transition control)
-        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
-        reservation_head: 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
-        status: completed
+      pending_attempt: null
     p05:
       used_attempts: 0
       pending_attempt: null
@@ -144,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 4 p04-t01 starting with accepted Sol6.1/high implementer
+Implement - Phase 4 p04-t02 next; t01 and same-target recovery verified
 
 ## Artifacts
 

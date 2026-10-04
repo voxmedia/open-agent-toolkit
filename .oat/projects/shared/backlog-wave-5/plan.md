@@ -409,7 +409,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
 
-**Files:** Modify `packages/cli/src/commands/backlog/archive.ts`, `archive.test.ts`, and the archive command wrapper in `packages/cli/src/commands/backlog/index.ts` if result printing requires it; update `apps/oat-docs/docs/reference/config-and-local-state.md` for the result contract.
+**Files:** Modify `packages/cli/src/commands/backlog/archive.ts`, `archive.test.ts`, and the archive command wrapper in `packages/cli/src/commands/backlog/index.ts` if result printing requires it; update `apps/oat-docs/docs/reference/config-and-local-state.md` for the result contract. Mechanically derived effective additions: `index.test.ts` typed/JSON result propagation and `rewrite-references.ts` interrupted-operation path ownership through the existing scanner; accepted by root before edit.
 
 **Dependencies:** p03 complete.
 
