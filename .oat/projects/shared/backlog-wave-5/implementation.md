@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p05-t03
+oat_current_task_id: p05-t04
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 3     | 3/3       |
+| Phase 5 | in_progress | 4     | 3/4       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 29/30 tasks completed
+**Total:** 29/31 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -284,6 +284,13 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 **Verification:** Author full inventory matches root's independent pre-migration baseline65files/23,767,148bytes. Seven actual producer exports pass matching retry, foreign-conflict refusal/no overwrite and owned rollback. Author pre/postcommit oracle verifies every original/preserved and existing archive hash, emitted hashes, narrative conservation, relative links/fragments, exact flat contents and maintained references; archive101/101, docs validation and scoped eight-Markdown format/diff passed. Normal-hook helper committed exact80paths (Git detects7HTML renames,73displayed paths); root independently matched the no-renames pathset to65removals+7newpages+8maintained refs and full parentff27b0b1/clean readback. Root fully reread all65 preserved files against its own pre-migration hashes, checked all recorded existing archive versions unchanged, independently checked seven reported output hashes and43relative href/src targets/fragments and duplicate IDs, all pass. Root repeated genuine public producer first-pass/recordless retry and identity mismatches plus old-opened-file/current rollback race from exact preserved Wave4 source, all acceptance controls0. Evidence analysis/p05/root-original-tracked-recap-hashes.json, root-t03-committed-conservation.json, root-t02-post-migration-probe/\*, root-r01-post-migration-race.json; author t03-proof-summary.json contains full mappings and repeatable named post-migration probe commands, original probes/results remain unchanged.
 
 **Rendered artifacts:** Author T3 exact-byte about:blank renders all seven desktop pages, clicks all seven architecture pivots (sectiontop within1px), and measures seven320px mobile views with no duplicate IDs/broken fragments/overflow; Wave4 mobile screenshot inspected. Root visually inspected authentic committed-byte triage/Wave4 screenshots and previously inspected identical Wave4 SHA desktop/System view. One transient automation-host error is retained; later same-tab proof succeeds. No HTTP-route or live S3 claim. All large hash inventories and screenshots remain ignored; no tracked baseline, sidecar, original evidence change or product scope expansion. Phase5 remains in_progress pending composed handoff and required independent reviews. Recovery1/10 pendingnull unchanged.
+
+### Task p05-t04: (review) Repair valid unquoted recap links and assets
+
+**Status:** pending
+**Commit:** -
+
+**Scope:** Confirmed p05 native r1 M1; only archive-utils.ts and its existing tests. Original source and seven migrated HTML exports remain byte-for-byte conserved. Review fix iteration1/2; recovery1/10 pendingnull unchanged.
 
 ## Phase 6: Versions and generated integration
 
@@ -3291,7 +3298,18 @@ Dispatch: scope=p05 action=implementation role=implementer producer=unknown prov
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
-  "continuation_events": [],
+  "continuation_events": [
+    {
+      "event_id": "cont-backlog-wave-5-p05-fix-1",
+      "original_request_id": "wave5-p05-implement-r1",
+      "mode": "fix",
+      "task_id": "p05-t04",
+      "handle": "<redacted-path>",
+      "dispatch_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "review_artifact": "reviews/archived/p05-review-2026-10-04T171337Z.md",
+      "status": "planned"
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
@@ -3396,7 +3414,7 @@ Dispatch stamp: Dispatch: scope=p05 action=review role=reviewer producer=unknown
     "task_name": "wave5_phase5_review"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3412,6 +3430,13 @@ Dispatch stamp: Dispatch: scope=p05 action=review role=reviewer producer=unknown
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "Accepted; HOLD acknowledged; fresh fork none; product read-only and one p05 artifact."
+    },
+    {
+      "source": "native-terminal-result",
+      "artifact": "reviews/archived/p05-review-2026-10-04T171337Z.md",
+      "commit": "6ceef44fdf3e71e119e24f491f4322a0bdac7ddb",
+      "reconnaissance": "not-attempted",
+      "counts": "0C/0H/1M/0L"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3450,3 +3475,11 @@ Dispatch stamp: Dispatch: scope=p05 action=review role=reviewer producer=unknown
 ```
 
 Accepted native reviewer handle /root/wave5_phase5_review (Bacon), exact registered Sol6.1/high materialized role and fresh fork none. Product/core tracking/log read-only plus ONE p05 timestamped artifact write. Full Phase5basea49abbf5; root acceptance bookkeeping supplies immutable reviewedHEAD before START. Resolver notices[], fresh live T3/native schema supports exact target; runtime identity not reported. No nested/recon, model substitution, provider fallback or live remote calls; root consumes required terminal reconnaissance signal before artifact validation/receive.
+
+## Phase 5 native review r1 received — 2026-10-04
+
+Exactly one terminal `**Reconnaissance:** not-attempted` was consumed before any artifact validation/bookkeeping; no Review Orchestration or reconnaissance log. Sole artifact commit6ceef44f, complete source/range a49abbf5..a7dcb825, full report and async branch parser agree0C/0H/1M/0L. Archive reference: reviews/archived/p05-review-2026-10-04T171337Z.md. No placeholder or prior review event replaced.
+
+M1 disposition: code_fix_required, Task Scope Minor, new p05-t04. Root independently reproduced success with unavailable unquoted project-source href retained while quoted equivalent removed; actual destination absent. Existing R4 owns consistent valid HTML syntax/asset handling. Original negative observer and root result preserved; no new product choice. Same original accepted Sol6.1/high author resumes bounded fix; resolver notices[], exact target unchanged, no fallback/nesting. Review cycle1 and fix iteration1/2, recoveryused1 pendingnull unchanged. Phase remains in_progress pending correction, fresh independent review and configured gate; prior ten Lows/one stored-receipt diagnostic Medium remain final-owned.
+
+Root probe initially ran from pnpm-filter package cwd and failed ENOENT without product mutation; corrected repository-root tsx invocation independently reproduced the defect. A second unsupported completed-reviewer interruption attempt returned unsupported call without effects; no retry/replacement/cleanup. Only the supported original-author continuation is used. Full conserved source hashes, authentic producer/consumers and final gates remain owning acceptance boundaries.

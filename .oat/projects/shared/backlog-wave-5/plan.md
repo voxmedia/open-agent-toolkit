@@ -511,6 +511,20 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `refactor(recaps): migrate tracked packages to flat pages`
 
+### Task p05-t04: (review) Repair valid unquoted recap links and assets
+
+**Files:** Only `packages/cli/src/commands/project/archive/archive-utils.ts` and its existing `archive-utils.test.ts` family. Preserve every retained original package and migrated HTML byte; no new dependency/parser subsystem, report/receipt schema or authoring policy.
+
+**Dependencies:** p05-t01/t02/t03 complete; original accepted phase handle `wave5-p05-implement-r1`, continuation `cont-backlog-wave-5-p05-fix-1`. Review fix iteration 1 of 2; independent of recovery used1/10 pendingnull.
+
+**Change:** Confirmed native p05 r1 M1: valid unquoted href/src bypass quoted-only rewriting, leaving a successful flat export with a nonexistent destination. Apply the existing containment, asset inlining, target and fragment rules consistently to valid quoted and unquoted attribute syntax. Remove/repair unavailable project-source links, embed required local assets and preserve valid tracked/external links. No original source/page transformation in place.
+
+**Verification:** Retain original negative observer `analysis/p05/review-r1-link-syntax.*` and independent root reproduction. Run focused existing-family regressions on the reviewed baseline (must fail), then repaired implementation (must pass), checking emitted destination link/asset validity with quoted accepted comparisons and source-byte conservation. Use a honestly labelled derivative of the captured authentic package, not an invented external manifest. Rerun the four archive/report/offline sync Vitest families, all existing completion tests, CLI check/type-check and fresh CLI build. Repeat authentic seven-package output/hash conservation and real producer/consumer controls as relevant. No live remote/provider/AWS call, test-only hook or broad test audit.
+
+**Format:** Scoped repository formatter on the two owned source/test files; never format hashed HTML/original evidence.
+
+**Commit:** `fix(archive): repair unquoted recap links and assets`
+
 ## Phase 6: Versions and generated integration
 
 ### Task p06-t01: Finalize versions, generated projections and docs
@@ -682,6 +696,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T150535Z.md           | 5dbd2c71540a98c21f0c90684522588c56b605e6 | gate       | claude-opus-5-5-high |
 | p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T154829Z.md           | 977689cd913df72029fb0388802307cb3d7696f2 | auto       | -                    |
 | p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T155932Z.md           | 6a5f522c3d5da9bd747aefdffc52cb43f397c257 | gate       | claude-opus-5-5-high |
+| p05    | code     | fixes_added     | 2026-10-04 | reviews/archived/p05-review-2026-10-04T171337Z.md           | a7dcb82521fe426cc0e1b1accdf182b6e8aa02e0 | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -695,10 +710,10 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
-- Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
+- Phase 5: 4 tasks — flat recap producer, consumers, full historical migration and valid unquoted link/asset repair.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 30 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 31 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

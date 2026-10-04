@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t03
+oat_current_task: p05-t04
 oat_last_commit: a080adeb7324d74fddeb4166bc1375bb7b8d0dfd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -158,7 +158,7 @@ None. Phases 1–4 received and cleared; ten Lows and one stored-receipt diagnos
 
 ## Next Milestone
 
-Execute Phase 5 flat recap producer, completion/resume consumers and verified historical migration.
+Complete bounded p05-t04 unquoted link/asset correction on the original accepted phase author, then fresh native review and configured gate; Phase6/root final tail remain pending.
 
 ### Approved continuation — 2026-10-04
 
