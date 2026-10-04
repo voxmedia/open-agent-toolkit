@@ -18,11 +18,11 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | in_progress | 4     | 3/4       |
+| Phase 4 | in_progress | 4     | 4/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 25/30 tasks completed
+**Total:** 26/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -242,8 +242,9 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 
 ### Task p04-t04: Offer and persist Plain Markdown in guided init
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 8158a6035a02f87be1e4330f0320acf4f464747e
+**Verification:** actual supplied option keeper selects only offered Plain Markdown/markdown, preserves existing default/five frameworks, exercises real config reader/writer and literal persisted tooling/root/unrelated fields. Pre-option baseline1 for absent actual choice; thirteen guided tests pre/post0. Scoped format/diff, CLI check/types/build, docs/docs-package and actual build:docs0 (six executed,zero cached). Precommit test style correction and postcommit mistyped filter matching no packages are nonacceptance; corrected actual package ran13/13exit0. Root verified sole three-path task commit/parent, one-line menu change, real option/config assertions and clean readback. Analysis/p04/t04-\*; no new recovery/event, versions/projections remain Phase6.
 **Requirement:** User-added U1; actual menu choice and real config persistence proof required.
 
 ## Phase 5: Flat recap export and complete historical migration
@@ -3054,3 +3055,7 @@ Root verified exact thirteen-path sole task commit, parent, clean handoff and ac
 ### Phase 4 task3 root receipt
 
 Exact four-path task commit and current script/actual-consumer guidance verified. Prepare checks every expected output collision before removing marked regular Markdown; output/root symlink containment is explicit. Retained operation result identifies only removed generated/expected output paths; verify requires every expected marker before exact-path commit. Existing knowledge tracking workflow retained. Root added knowledge caller adoption to existing table without changing historical Phase3 site counts. Recovery1/10 remaining9/pendingnull unchanged;25/30. Task4 U1 release follows separate tracking commit.
+
+### Phase 4 task4 root receipt and pre-review boundary
+
+Four task commits completed plus one eligible append-only recovery,26/30 total. Phase4 remains in_progress until phase composition, native review and configured gate receive settle. Recovery1/10 remaining9/pendingnull unchanged. Exact U1 menu/root/config preservation met in actual offered-choice/real IO keeper; no automatic detection/default/framework changes. Final phase-wide composition release follows this separate committed ledger; no task replay or phase completion inferred from task count.
