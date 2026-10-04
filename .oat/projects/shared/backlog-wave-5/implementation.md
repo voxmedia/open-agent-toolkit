@@ -1205,3 +1205,93 @@ Root validated DONE report, exact same handle/target/axes, original immutable hi
 ### Phase 3 pre-review baseline
 
 Validated complete DONE report and same-handle clerical full-range correction: authoritative phase base `d1fd3642a15cd442163de75be28b10c30cf7bc53`, final product head `99a1a8ac0718e7624bb2eb83b78980e5421c5fc0`. All three planned task commits and one recovery remain immutable; total 13/20 tasks. Final direct phase composition passes 1067 tests across 12 files; source snippet rerun and all declared package/skill/docs checks pass. Phase row remains in progress until native root review and configured Opus-high gate dispositions pass. Next incomplete pointer p04-t01 does not authorize its launch before those reviews.
+
+### Phase 3 root review dispatch — wave5-p03-review-r1
+
+Exact project review ceiling resolved to Sol 6.1 high, native materialized role; no notices/fallback. Consequential review classification, no model substitution. Full phase range starts d1fd3642a15cd442163de75be28b10c30cf7bc53 and ends at the committed acceptance baseline supplied in START. Task ledger and recovery evidence are in scope; this review outcome/ledger/log writes are excluded.
+
+```json
+{
+  "request_id": "wave5-p03-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Review complete shared exact-path primitive, CLI/skill producers and consumers, runtime recovery and preservation evidence.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T02:17:01.852070Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r1"
+  },
+  "launch_status": "planned",
+  "child_outcome": null,
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
