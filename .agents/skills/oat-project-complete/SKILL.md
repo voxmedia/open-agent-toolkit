@@ -1429,7 +1429,7 @@ Expected changes may include:
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions; synced archive record deletion is already sealed by
   the archive-owned lifecycle commit
-- The complete tracked recap export and tracked summary export reported by
+- The tracked recap page and tracked summary export reported by
   archive (if present)
 
 Initialize `COMPLETION_OUTPUT_PATHS=()` before closeout writes. Each producer
@@ -1628,7 +1628,7 @@ Show user:
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
 - Include the lifecycle bookkeeping commit hash and the single push result.
-- Report the final recap outcome and tracked reference root.
+- Report the final recap outcome and tracked recap page path.
 - Report every absorbed-project retirement finding from the Step 3.7 sweep with
   its disposition. This is the required destination whenever the sweep could not
   append them to the project log — an absent log, or a resume whose log is

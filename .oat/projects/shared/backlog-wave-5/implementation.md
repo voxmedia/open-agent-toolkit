@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p05-t05
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Ten Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phase 5 is in progress; Phase 6 and the one-PR tail remain pending.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. Phase 6 versions/generated integration and the one-PR tail remain pending.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 5     | 5/5       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 12    | 12/12     |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | complete | 5     | 5/5       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 31/32 tasks completed
 
@@ -249,7 +249,7 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ## Phase 5: Flat recap export and complete historical migration
 
-**Status:** in_progress
+**Status:** complete
 
 ### Task p05-t01: Export one page while verifying the full source package
 
@@ -3914,3 +3914,24 @@ Exactly one terminal `**Reconnaissance:** not-attempted` consumed/persisted befo
 L1 accepted artifact_alignment_required, Task Scope Negligible: static Implementation Complete totals omitted p05-t05. Root restored five Phase5 tasks/32total and its task description in this receive's mandatory Step6 plan-invariant bookkeeping, cross-checked actual headings and authoritative implementation31/32. This is the same required root-owned accounting update, not an additional product fix task/phase-author iteration or deferred defect. Existing IDs/history/unknown review columns preserved. No unresolved Low from this native event; original ten prior Lows/one diagnostic Medium remain final-owned without waiver. Configured gate remains required before Phase5 completion.
 
 Configured/runtime identity remain distinct; native completion record validated-only, exact Sol6.1/high unchanged. An unsupported completed-reviewer interruption call returned unsupported without effects; no cleanup/replacement occurred. Root owns metadata only; accepted task2eef4f1b and all earlier task/recovery commits unchanged. Current7exports214874bytes/all65originals/prior64archives/43links and honest browser limits remain accepted attributed/independent evidence. Recovery1/10 pendingnull and authorfix2/2 unchanged.
+
+### Phase 5 configured Opus r1 received — 2026-10-04
+
+**Artifact:** `reviews/archived/p05-review-2026-10-04T215406Z.md`; immutable reviewed HEADa016b5adb2c222adf5401c50151152fc6a141da2/basea49abbf525f3de8f2ee28781a51b7d88aa3c5097, full five-task range, invocation gate, run91378602-fe33-4788-bd3e-4b818837343e. Exact configured claude-opus-5-5-high/runtimeclaude/modelclaude-opus-5-5/efforthigh, exit0/statusok/receiveEligibletrue/non-nullhandoff; matched envelope/branch parser/provenance0C0H0M4L, passed High threshold. Exactly one terminal not-attempted signal consumed/persisted BEFORE artifact access/validation/bookkeeping/log; unique provider session1b785333-d9bd-485d-bd56-cc1daf245370. Artifact-onlyca98ee6e and gate-owned structural log7503c9f commits/clean tree verified. No Review Orchestration/recon log. Configured invocation is proven; runtime model identity remains not-reported.
+
+Independent reviewer executed168archive/87completion/check/types/scopedformat/lint and genuine7 producer replay/conservation65originals/43links/real-reader9mismatchclasses with retained-source provenance. Rendering/freshbuild/public-CLI original race and other earlier proof are honestly attributed; no full browser/HTTP/liveS3 claim. Root separately repeated gate Low1 derivative under root-opus-r1 prefixes and asserted categorical unknown-resource pass-through/unquoted-fragment stripping, with accepted quoted-fragment/src/script controls. Observer0 proves the observations, not corrected bad behavior. Root read exact source and current docs/summary links; all original evidence unchanged.
+
+Passing-gate non-pausing judgment sweep, ordered dispositions:
+
+- **L1 — defer to final.** Reproduced uncommon resource attributes and unquoted fragment IDs. Existing approved R4 href/src forms and all seven real pages pass; this requires a bounded compatibility/product decision about additional forms, not a silent exporter expansion or authoring restriction. Preserve the concrete bad/valid controls for final disposition.
+- **L2 — defer to final.** Agree that direct CLI legacy-v1 acceptance has its authentic smaller evidence contract and docs omit the exception. Current historical readability is intentional and fully verified; deciding whether to document continuing direct archival or restrict eligibility is a product choice. Do not change that policy in a passing sweep.
+- **L3 — defer to final/publication verification.** Four links use the existing head-branch blob convention and must be checked against the actual pushed PR branch before publication; current local generated-page/old-path checks do not establish remote availability. A durable-relative conversion is an alternative for final judgment, not automatically selected here.
+- **L4 — address now.** Two stale package-era phrases in oat-project-complete now say tracked recap page/page path; exact two prose replacements only, source behavior and owned path contract unchanged. This small low-risk wording alignment is the judgment-sweep exception, no review-fix task/counter/re-gate. Canonical metadata bump remains the existing p06-t01 PR-scoped owner-version task; current-skill version is not silently waived. Scoped formatting and87/87 existing completion tests passed (direct node test, no Turbo cache) for this receive delta.
+
+#### Deferred Findings (Low) — Phase 5 gate r1
+
+- p05-gate-r1-L1: unhandled resource attributes/SVG image and valid unquoted fragment-ID compatibility; source T215406Z Low1, root categorical observer reproduced.
+- p05-gate-r1-L2: legacy-v1 direct archival policy/docs exception; source T215406Z Low2, final product choice pending.
+- p05-gate-r1-L3: four branch-pinned recap-summary URLs; source T215406Z Low3, actual pushed-branch serving check required at publication or approved relative conversion.
+
+Phase5 complete5/5 after full native r3/configured r1 received and all phase dispositions settled. Original t01–t05/recovery commits immutable, reviewfix2/2 and recoveryused1/10pendingnull unchanged. Thirteen prior/p05 Low findings plus one stored-receipt diagnostic Medium remain FINAL-owned; no silent waiver. Phase6 dependency now satisfied; one task and root final gates/reviews/HiLL/ten-ticket closeout/verified own recap/one mergeable PR remain authorized. No merge or release.

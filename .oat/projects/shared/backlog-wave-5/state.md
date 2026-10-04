@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t05
+oat_current_task: p06-t01
 oat_last_commit: 2eef4f1b544c268083b76c2156d514f928466fe3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T16:58:27.860623Z
+oat_project_state_updated: 2026-10-04T21:58:30.298427Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — Phase 5
+**Status:** In progress — Phase 6
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 5 flat recap export, consumer composition and historical migration
+Implement - Phase 6 versions and generated integration
 
 ## Artifacts
 
@@ -154,11 +154,11 @@ Implement - Phase 5 flat recap export, consumer composition and historical migra
 
 ## Blockers
 
-None. User approved exact four derived SVG page refresh within p05-t05; same author resumes verified correction. Phases1–4 complete; ten Lows and one diagnostic Medium final-owned. Automatic rewrite recovery deferred.
+None. User approved exact four derived SVG page refresh within p05-t05; correction committed and independently reviewed. Phases1–5 complete; thirteen Lows and one diagnostic Medium final-owned. Automatic rewrite recovery deferred.
 
 ## Next Milestone
 
-Full five-task native r3 passed0C/0H/0M/1L; root accounting Low resolved in mandatory receive bookkeeping. Configured Opus gate next; Phase6/root final tail pending.
+Phase5 full native r3 and configured Opus gate passed and received. Phase6 p06-t01 versions/generated integration next, then root final verification/review/HiLL and one-PR tail.
 
 ### Approved continuation — 2026-10-04
 
