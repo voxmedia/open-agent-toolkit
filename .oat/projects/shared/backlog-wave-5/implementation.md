@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
   ['p03 review cap: operator disposition required after complexity assessment']
-oat_last_updated: 2026-10-03
+oat_last_updated: 2026-10-04
 oat_current_task_id: p03-t06
 oat_generated: false
 ---
@@ -1684,7 +1684,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "task_name": "wave5_phase3_complexity"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1696,7 +1696,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
-    "Accepted /root/wave5_phase3_complexity (Confucius); HOLD acknowledged. No writes/probes/nested launches; same resolved Sol6.1/high reviewer ceiling."
+    "Read-only assessment completed; full inline report saved verbatim reviews/archived/complexity-p03-2026-10-04T052701Z.md. Root personally read full report; no correctness review event, probes, writes or nested launch. Verdict partially compliant; corrective revision recommended; operator disposition pending."
   ],
   "continuation_events": [],
   "task_class": "consequential",
@@ -1730,3 +1730,14 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
   }
 }
 ```
+
+### STOP boundary: p03 complexity assessment received — operator disposition pending
+
+**Date:** 2026-10-04
+**Exhaustion:** review-receive Step8 three-standard-review cap (native3, gate excluded); native correction rounds2, independent gate round1 blocks1H/2M/1L; recovery usage1/10 pendingnull is separate and unchanged.
+**Report:** `reviews/archived/complexity-p03-2026-10-04T052701Z.md` (saved verbatim, local-only; no generated/review metadata, no Reviews event).
+**Verdict:** Partially compliant. Root personally read the full inline report; central helper/temporary index/real-index ownership/receipt design is justified by C1-C5. Three input/resource-lifetime regressions require bounded correction; L1 can be dissolved by completing record recovery through its existing marker owner. Optional persistent PID ownership is deferred until separately captured abrupt-death evidence demonstrates a need.
+**Recommended disposition:** corrective revision: p03-t06..t09 in their existing scopes, coordinated child settlement before owned-resource cleanup, public recurrence reproduction before L1 correction. No broader framework, persisted process registry, test campaign or requirement waiver.
+**Operator questions:** Authorize continuation beyond the cap for these four corrections and one fresh native review plus configured Opus gate; accept the bounded marker-owning settlement simplification or explicitly accept residual L1. No waiver of C1-C5 and no PID persistence is recommended. Further blocking findings after the authorized additional cycle return to the operator; monotonic counters/history do not reset.
+**Choices offered:** Manual finding disposition; proceed with current findings (requires explicit risk/gate waiver and leaves mergeable-PR goal unsatisfied until settled); explicit override for the recommended bounded corrective revision; or selected simplification then fresh review. Operator has not selected any option.
+**State:** Stopped pending operator disposition.15/27 tasks completed; U1 Plain Markdown init menu/config task pending, no product changes yet. Five p01 Low final deferrals remain. No PR, merge or release. No review-count or recovery-budget override self-issued.

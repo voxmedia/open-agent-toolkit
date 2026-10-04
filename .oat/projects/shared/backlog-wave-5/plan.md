@@ -633,8 +633,8 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 9 tasks — shared primitive and CLI/skill adoption plus bounded recovery and receipt-parent corrections.
-- Phase 4: 4 tasks — caller-owned archive staging and safe knowledge refresh.
+- Phase 3: 9 tasks — shared primitive and CLI/skill adoption, two settled review corrections and four pending gate corrections.
+- Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
