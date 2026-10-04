@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 p03-t11 is in progress under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
+Phases 1 and 2 are complete. Phase 3 p03-t11 is committed and verified, awaiting the one fresh native/configured-gate cycle under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phases 1 and 2 are complete. Phase 3 p03-t11 is in progress under the user-appro
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 11    | 10/11     |
+| Phase 3 | in_progress | 11    | 11/11     |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 20/29 tasks completed
+**Total:** 21/29 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -203,9 +203,10 @@ Phases 1 and 2 are complete. Phase 3 p03-t11 is in progress under the user-appro
 
 ### Task p03-t11: (review) Recover superseded record reservations with an unrecorded commit
 
-**Status:** in_progress
-**Commit:** -
-**Finding:** Opus gate r3 M1; real post-commit failure leaves an unrecorded receipt, a later same-record generation strands the original reservation. Root reproduced the actual adapter and independently applied the desired acceptance oracle (exit1); immediate control and literal preservation pass. Refreshed necessity assessment complete; user approved bounded correction plus one further native/configured-gate cycle.
+**Status:** completed
+**Commit:** 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
+**Outcome:** Shared positive prior-commit verification covers stored and history-recovered receipts; persistence state remains separate. Parent/tree/trailer/ancestry/emitted-path and current publication checks precede narrow settledCommit proof. Stored/intervening/prune controls, strict old-identity refusal, sole marker owner and migration finalization remain intact. Two authorized files; preserved interrupted patch committed unchanged.
+**Verification:** Fresh same-target author21keepers0; 1122/13 direct isolated-child-HOME composition before/after commit0; CLI check/types/freshbuild0; fifteen source/built/public probes before and nine core after0. Captured pre-fix acceptance/keeper1 and tree-guard-neutralized1 are inherited evidence, restored guard passes fresh suites. Root independently repeated built unrecorded acceptance0 and verified exact patch SHA256 43175980c8fab5d27f739f0b7c923f301d21eb7d44813bdbaab1c629fef2b951, normal-hook operation trailer, one commit/two paths/clean tree. Short TMPDIR resolved pre-product tsx socket launch failure; no product repair. Evidence analysis/p03/t11-continuation-evidence.json and p03-t11-root-unrecorded-built.\*. Recovery1/10 pendingnull unchanged.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1124,7 +1125,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "interrupted",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1232,10 +1233,12 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "task_ids": ["p03-t11"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T125636Z.md",
       "complexity_report": "reviews/archived/complexity-p03-2026-10-04T131142Z.md",
-      "status": "accepted-hold",
+      "status": "interrupted-host-continuation",
       "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
-      "reason": "User approved bounded p03-t11 corrective revision plus ONE fresh native Sol6.1/high review and configured Opus5.5/high gate; six Low findings stay final-owned. No standing override or counter reset."
+      "reason": "User approved bounded p03-t11 corrective revision plus ONE fresh native Sol6.1/high review and configured Opus5.5/high gate; six Low findings stay final-owned. No standing override or counter reset.",
+      "continued_by": "wave5-p03-fix-r5-host-continuation",
+      "fix_commit": "1f7e5842377a119b47d4b5cd598a8b9108ee22cb"
     }
   ],
   "task_class": "consequential",
@@ -2352,10 +2355,10 @@ User approved the proposed bounded corrective revision and ONE further Sol6.1/hi
   "payload": {
     "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
     "fork_turns": "none",
-    "task_name": "wave5_phase3"
+    "task_name": "wave5_phase3_t11_continuation"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "live-native-spawn-acceptance",
@@ -2364,6 +2367,12 @@ User approved the proposed bounded corrective revision and ONE further Sol6.1/hi
       "effort": "high",
       "handle": "<redacted-path>",
       "result": "accepted; HOLD acknowledged"
+    },
+    {
+      "source": "native-terminal-result",
+      "target": "<redacted-path>",
+      "result": "DONE; exact two-file append-only normal-hook commit; 1122/13 direct pre/post and fresh probes0; clean tree",
+      "fix_commit": "1f7e5842377a119b47d4b5cd598a8b9108ee22cb"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -2378,7 +2387,10 @@ User approved the proposed bounded corrective revision and ONE further Sol6.1/hi
       "task_ids": ["p03-t11"],
       "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
-      "reason": "Original completed phase handle absent after host restart; list_agents root-only and native followup not found. One fresh same-target bounded fix per implementation lifecycle, preserving interrupted patch. No review or recovery count reset."
+      "reason": "Original completed phase handle absent after host restart; list_agents root-only and native followup not found. One fresh same-target bounded fix per implementation lifecycle, preserving interrupted patch. No review or recovery count reset.",
+      "status": "completed",
+      "fix_commit": "1f7e5842377a119b47d4b5cd598a8b9108ee22cb",
+      "execution_base": "1761128904e3fe14c71191900cc044837d1b648c"
     }
   ],
   "task_class": "consequential",
@@ -2414,3 +2426,7 @@ User approved the proposed bounded corrective revision and ONE further Sol6.1/hi
 ```
 
 Original phase completed earlier; its p03-t11 continuation was interrupted before committing. Original handle absent, native followup returned not found. One fresh same-target fix accepted HOLD under completed-phase fix continuation rule. Native Sol6.1/high role preserved. Interrupted patch analysis/p03-t11-interrupted.patch SHA256 43175980c8fab5d27f739f0b7c923f301d21eb7d44813bdbaab1c629fef2b951. Adopt only existing dirty helper/ref-sync test edits within four approved files. Root tracking-only commit preserves product edits. Recovery1/10 pendingnull; prior native5/gates3 counts unchanged. No additional scope or review authority.
+
+### Phase 3 p03-t11 verified host continuation outcome — 2026-10-04
+
+Original completed-phase handle unavailable after host restart; one fresh same-target bounded fix completed under the lifecycle continuation rule. Exact execution range 1761128904e3fe14c71191900cc044837d1b648c..1f7e5842377a119b47d4b5cd598a8b9108ee22cb contains one task commit/two approved paths and identical captured patch. Author evidence is attributed above; root actual acceptance repeated independently. Six Low findings remain final-owned. Phase stays in_progress: ONE approved fresh native r6 and configured Opus r4 gate remain required. Native prior5/gates3excluded, recovery1/10pendingnull; no counter reset or additional scope. Original interrupted dispatch preserved with link to terminal continuation; terminal record payload task name corrected to actual accepted native task. Root owns this pre-review bookkeeping.
