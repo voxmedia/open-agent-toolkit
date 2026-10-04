@@ -395,6 +395,8 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Dependencies:** p03-t11 committed. Automatic rewritten-history recovery is explicitly deferred; six Low findings retain final ownership. Original request `wave5-p03-implement-r1`; same exact Sol6.1/high target.
 
+**Status:** Completed atc13e4faed; authorized native r7/configured r5 pending.
+
 **Change:** For trailer candidates that cannot bind the receipt parent, preserve safe refusal and retained evidence, but use existing result/error fields to state an inspection/reconciliation stop. Do not advertise unchanged same-identity retry as sufficient or infer that rebase is certain. Preserve every parent/tree/trailer/ancestry/path/publication/marker ownership guard, migration compensation and mandatory finalization. No automatic marker/receipt deletion or rotation, new command/schema/registry or broader failure-semantic redesign.
 
 **Verification:** Extend the existing owning real-Git record regression with saved `analysis/p03/gate-r4-rewritten-history.mjs` input. Pre-fix assertions must fail for misleading retryability/guidance, post-fix must refuse truthfully while marker/receipt/HEAD/index/worktree/unrelated literals are unchanged. No-rewrite accepted control passes. Retain forged-provenance, recovered/unrecorded, intervening/prune-recreate/direct-oldidentity and migration controls. CLI check/types/freshbuild plus direct phase composition; ONE fresh native Sol6.1/high review (r7) and configured Opus5.5/high gate (r5) are authorized. Further unresolved findings return to operator; counts never reset.
@@ -675,7 +677,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T124703Z.md           | 317a07e9566fab4bf8d92f60754bb8af708c6ba4 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T125636Z.md           | 9e790ffdcd43afd41fac6bc2414b89a7929caf2c | gate       | claude-opus-5-5-high |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T135302Z.md           | 2057385d4bfc4d2c43b8ae0a7d4e81dd52e19628 | auto       | -                    |
-| p03    | code     | received        | 2026-10-04 | reviews/archived/p03-review-2026-10-04T140803Z.md           | e6e1f3592b892cad0a2c56d4898649bc4ef4a34d | gate       | claude-opus-5-5-high |
+| p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T140803Z.md           | e6e1f3592b892cad0a2c56d4898649bc4ef4a34d | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

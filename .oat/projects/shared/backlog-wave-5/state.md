@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t12
-oat_last_commit: 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
+oat_last_commit: c13e4faedd4e896b127b176592e4307544825a48
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T14:36:37.966750Z
+oat_project_state_updated: 2026-10-04T14:45:00.448243Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 p03-t12 approved diagnostic correction in progress
+Implement - Phase 3 p03-t12 committed; authorized native/configured review pending
 
 ## Artifacts
 

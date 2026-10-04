@@ -17,12 +17,12 @@ Phases 1 and 2 are complete. Phase 3 resumes the operator-approved diagnostics-o
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 12    | 11/12     |
+| Phase 3 | in_progress | 12    | 12/12     |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 21/30 tasks completed
+**Total:** 22/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -210,9 +210,10 @@ Phases 1 and 2 are complete. Phase 3 resumes the operator-approved diagnostics-o
 
 ### Task p03-t12: (review) Make unbound-provenance refusal diagnostics truthful
 
-**Status:** pending
-**Commit:** -
-**Scope:** Four named helper/record source/test paths; operator approved diagnostics-only correction. Automatic rewritten-history recovery deferred. One fresh exact native r7/configured r5 cycle; six Lows final-owned.
+**Status:** completed
+**Commit:** c13e4faedd4e896b127b176592e4307544825a48
+**Outcome:** Unbound trailer-parent candidates retain safe refusal/evidence and return resumable:false with inspection/reconciliation guidance; marker-owning adapter suppresses ineffective unchanged retry. Existing result fields only; no rotation/schema/command or weakened safety/migration checks. Automatic rewritten-history recovery deferred.
+**Verification:** Pre-fix owning rewrite keeper1 for misleading diagnostics; post-fix focused12tests0; direct1123/13composition0; CLI check/types/freshbuild0. Actual source/built rewrite and no-rewrite recovery, intervening/prune/directoldidentity, migration/forgedreceipt controls0; focused committed-head keeper/probe0. Tested/committed bytes identical, exact three authorized files/one normal-hook append-only commit/clean checkout. Two nonacceptance launcher/historical-oracle failures are separately preserved, not acceptance. Evidence analysis/p03/t12-evidence.json. Recovery1/10pendingnull unchanged. Native r7 and configured r5 pending.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -2787,3 +2788,7 @@ Dispatch: scope=p03-t12 action=fix role=implementer model_axis=selected:gpt-6.1-
 ```
 
 Native same-target bounded continuation accepted HOLD; root commits scope/acceptance before releasing product ownership. Original request wave5-p03-implement-r1, four product paths, one task, no nested agents.
+
+### p03-t12 handoff verified before review — 2026-10-04
+
+Root verified parent/base, exact bounded one-commit range, clean tree and actual three product paths. Declared evidence separates pre-fix failure, post-fix accepted controls and two irrelevant launcher/historical-oracle failures. Phase3 now12/12 tasks,22/30overall; review allowance native r7/configured r5 not yet consumed. Producer owns no further writes; root commits this ledger before independent review.
