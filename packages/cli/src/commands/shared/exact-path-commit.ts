@@ -272,11 +272,22 @@ async function exactPaths(
     });
     if (info?.isDirectory())
       throw new Error(`Directories are not exact file paths: ${value}`);
+    const headEntry = !info
+      ? await git(root, ['ls-tree', '-z', 'HEAD', '--', path]).catch(() => '')
+      : '';
+    const trackedHeadFile = headEntry
+      .split('\0')
+      .some(
+        (entry) =>
+          /^(100644|100755|120000) blob [a-f0-9]+\t/.test(entry) &&
+          entry.slice(entry.indexOf('\t') + 1) === path,
+      );
     if (
       !info &&
       !receiptPaths.includes(path) &&
-      !(await git(root, ['ls-files', '--error-unmatch', '--', path]).then(
-        () => true,
+      !trackedHeadFile &&
+      !(await git(root, ['ls-files', '-z', '--error-unmatch', '--', path]).then(
+        (output) => output.split('\0').includes(path),
         () => false,
       ))
     )

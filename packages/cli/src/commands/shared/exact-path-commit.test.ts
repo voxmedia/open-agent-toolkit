@@ -185,6 +185,43 @@ describe('commitExactPaths real Git boundary', () => {
     },
   );
 
+  it.each(['rm', 'mv'])(
+    'commits both literal sides of staged git %s without losing unrelated bytes',
+    async (operation) => {
+      const root = await repo();
+      git(
+        root,
+        operation === 'rm' ? ['rm', 'old.md'] : ['mv', 'old.md', 'renamed.md'],
+      );
+      const input = {
+        repoRoot: root,
+        paths: operation === 'rm' ? ['old.md'] : ['old.md', 'renamed.md'],
+        message: 'feat: staged removal',
+        identity: `staged-${operation}`,
+      };
+      const result = await commitExactPaths(input);
+      expect(result, JSON.stringify(result)).toMatchObject({
+        outcome: 'committed',
+      });
+      expect(
+        git(root, ['ls-tree', '--name-only', 'HEAD', '--', 'old.md']),
+      ).toBe('');
+      if (operation === 'mv')
+        expect(git(root, ['show', 'HEAD:renamed.md'])).toBe('rename bytes');
+      expect(git(root, ['status', '--porcelain', '--', ...input.paths])).toBe(
+        '',
+      );
+      expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated literal\n',
+      );
+      preservation(root);
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'already-matching',
+        commit: result.commit,
+      });
+    },
+  );
+
   it('protects partially staged unrelated bytes and hook-final owned create/modify/delete/rename, with verified retry', async () => {
     const root = await repo();
     await lintHook(root);
