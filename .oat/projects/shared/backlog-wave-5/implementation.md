@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 4     | 3/4       |
+| Phase 5 | in_progress | 4     | 4/4       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 29/31 tasks completed
+**Total:** 30/31 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -287,10 +287,14 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p05-t04: (review) Repair valid unquoted recap links and assets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 01b1a496db73c322428fd2ef2bbbf0e92090f73d
 
 **Scope:** Confirmed p05 native r1 M1; only archive-utils.ts and its existing tests. Original source and seven migrated HTML exports remain byte-for-byte conserved. Review fix iteration1/2; recovery1/10 pendingnull unchanged.
+
+**Outcome:** Valid quoted/unquoted href/src receive the same existing destination, asset and containment rules. Unavailable project-source links are removed, required CSS/JS/image bytes embedded, outside-package src refused, valid tracked/external targets retained. No new parser/dependency/schema/authoring restriction; original archived packages and seven migrated HTML pages unchanged.
+
+**Verification:** Author fresh baseline5expectedfail/3quotedpass, patched8pass; direct committed161archive/87completion and CLIcheck0, precommittypes/freshbuild0. Authentic9case derivative categorically demonstrates old bad acceptance and fixed link removal/asset embedding/containment refusal, preserving original and copied source bytes. Genuine7package retry/conflict/rollback/outputSHA/size and public rebuilt first-pass/recordless retry with four mismatch classes at both readers pass. Root independently reran baseline/patched authentic9case categories and current original M1 observer, all source hashes conserved;8focusedkeepers0; independently re-enumerated65Git-base originals and64existingarchiveversions,7output hashes/narrative/43targets/fragments, all pass. Exact two-file commit,parent78ef151d, immutable accepted ancestry and clean hook readback verified. Evidence analysis/p05/root-fix1-authentic-_,root-fix1-committed-link-syntax._,root-fix1-focused-vitest.log plus authorfix1-resume-\*. Observerbaseline exit0 means successful bad-state reproduction, not acceptance. Preparation/first oracle errors are retained and excluded; no Turbo cache/live/provider/AWS claims. Recovery1/10 pendingnull and fixiteration1/2 unchanged.
 
 ## Phase 6: Versions and generated integration
 
@@ -3535,7 +3539,7 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
     "task_name": "wave5_phase5_fix1_resume"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3551,6 +3555,12 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted HOLD; native host restart made original handle unavailable"
+    },
+    {
+      "source": "native-terminal-result",
+      "task_id": "p05-t04",
+      "commit": "01b1a496db73c322428fd2ef2bbbf0e92090f73d",
+      "result": "DONE; exact two paths; committed161archive/87completion, authentic9controls and source/export conservation pass; clean RELEASE."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3563,7 +3573,11 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "mode": "fix",
       "task_id": "p05-t04",
       "reason": "original native handle unavailable after host restart",
-      "captured_base": "5dd7b8e6220de7306e2d587386a81b88417c3442"
+      "captured_base": "5dd7b8e6220de7306e2d587386a81b88417c3442",
+      "status": "completed",
+      "commit": "01b1a496db73c322428fd2ef2bbbf0e92090f73d",
+      "start_artifact": "p05-fix1-start-20261004T200103Z",
+      "manifest_digest": "c580d3bcb5b27134b797a2be0b5f95a9a5e621e0c702e3b8359048b3a61c4827"
     }
   ],
   "task_class": "consequential",
@@ -3601,3 +3615,5 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
 User requested resume after suspected machine crash. Current host tstang-mini.local, same checkout/branch, HEAD5dd7b8e, only original author two-file uncommitted fix present. Former native handle unavailable (live list root only); one fresh same-target bounded fix continuation authorized by plan/resume and phase contract, not provider fallback or counter reset. Native accepted /root/wave5_phase5_fix1_resume HOLD, exact Sol6.1/high role, fresh catalog and resolver notices[]. No new standalone thread/worktree or relocation.
 
 Data volume now33GiB free versus pre-interruption116MiB/ENOSPC. No disk cleanup, original archive deletion or retained evidence disposal occurred. Last author focused logs retain five expected baseline failures, three valid quoted controls and patched8pass; authentic replay never started and is not counted. Captured dirty artifact outside checkout at ~/.oat/recovery-artifacts/backlog-wave-5/p05-fix1-20261004T195456Z (digest5f14acc6b6675391f922b776ce2a9e696f5c9fb2ba657d509f2680cb962d3166,size15787,worktree-only,two declared paths) passed actual sealed replay/current-base verification before exact restorePlan returned the tree clean. Original artifact remains unchanged. After this tracking-only commit, root supplies a separately sealed same-byte patch bound to START HEAD, proving both product paths unchanged across bookkeeping; no stale-base apply. The unfinished correction stays one bounded p05-t04 fix commit; no accepted task/recovery commit existed for it. Fix iteration1/2 and recovery1/10 pendingnull preserved. Root owns subsequent bookkeeping and full independent native/configured reviews.
+
+Root received completed p05-t04 and validated original/current-base immutable seals plus both unchanged product bases. One failed empty-index apply and one full-index formatting assertion occurred only in disposable replay; corrected actual component/diff options yielded byte-identical current-base seal, with root product paths never mutated by the rebind. A subsequent unsupported completed-agent interruption call was rejected without effects; no retry, replacement or cleanup followed. Generic completed continuation is validated-only; native runtime identity not reported. Fresh full-phase native r2 and configured gate remain pending; Phase5 stays in_progress.

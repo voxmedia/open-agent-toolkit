@@ -200,6 +200,10 @@ wave5-p05-t02-root-receipt: bounded commit3308825f verified, real first-pass and
 
 wave5-p05-t03-root-receipt: exact80path commita080adeb verified; root independently conserved all65 original files, unchanged archive versions, seven output hashes and43relative targets;29/30 tasks complete, Phase5 independent review remains pending.
 
+### 2026-10-04 · project · friction · Phase5 crash continuation
+
+wave5-p05-crash-sealed-continuation: Host restart removed the accepted fix handle after ENOSPC, preserving two uncommitted source/test files. Sealed replay captured the exact patch before cleanup of the worktree; a same-target continuation verified the current-base seal and completed one bounded task commit without losing original evidence or resetting counters.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
