@@ -1,15 +1,18 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  [
+    'p03 recovered-unrecorded receipt M1; operator disposition required after approved additional review/gate cycle',
+  ]
 oat_last_updated: 2026-10-04
-oat_current_task_id: p03-t10
+oat_current_task_id: p03-t11
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is in progress under the explicit approved bounded p03-t10 correction and one additional native/configured-gate cycle; the refreshed complexity assessment recommends corrective revision. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is blocked for operator disposition after completed p03-t10 and its approved r5 native/r3 configured-gate cycle. The latest gate meets its Critical/High threshold but independently reproduces an adjacent recovered-unrecorded receipt M1. A refreshed necessity assessment is pending. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -17,12 +20,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 7     | 7/7       |
 | Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | active   | 10    | 10/10     |
+| Phase 3 | blocked  | 11    | 10/11     |
 | Phase 4 | pending  | 4     | 0/4       |
 | Phase 5 | pending  | 3     | 0/3       |
 | Phase 6 | pending  | 1     | 0/1       |
 
-**Total:** 20/28 tasks completed
+**Total:** 20/29 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -200,6 +203,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Commit:** 47e441ace6540f6c0f537dec6b4379c7f4005d52
 **Outcome:** Existing shared receipt owner verifies superseded history and current publication before exposing narrow settledCommit proof; strict old-identity result remains failed and never resets/publishes the old tree. Existing record adapter retires only matching marker inode/dev/bytes and at most one fresh reservation. Migration finalization unchanged. No new command, receipt field, validator duplication or process framework.
 **Verification:** Captured baseline and new intervening/prune-recreate keepers fail1 before fix; immediate accepted control0. Fixed16/16 selected tests pass0. Current-publication guard neutralization breaks both protection keepers1; exact restore. Committed-head author1117/13 direct tests with isolated child HOME, CLI check/types/freshbuild0; twelve source/built/actual adapter+emittedCLI probes0. Root independently16/16 selected tests0 and intervening/prune-recreate/immediate probes0, literal unrelated/concurrent state preserved. Evidence analysis/p03/t10-_ and analysis/p03-t10-root-_. No full scaffold/prune CLI claim. Recovery1/10pendingnull unchanged, signal Low final-owned, four exact files/one append-only normal-hook commit, clean handoff.
+
+### Task p03-t11: (review) Recover superseded record reservations with an unrecorded commit
+
+**Status:** pending_operator
+**Commit:** -
+**Finding:** Opus gate r3 M1; real post-commit failure leaves an unrecorded receipt, a later same-record generation strands the original reservation. Root reproduced the actual adapter and independently applied the desired acceptance oracle (exit1); immediate control and literal preservation pass. New necessity assessment/operator disposition required; no product changes authorized.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -2149,3 +2158,112 @@ Accepted fresh native handle `/root/wave5_phase3_review_r5`; root owns acceptanc
 Fresh accepted `/root/wave5_phase3_review_r5`, request wave5-p03-review-r5, exactSol6.1/high, fullhead317a07e9566fab4bf8d92f60754bb8af708c6ba4, primaryccc4599a4..317a07e9/fullphased1fd3642..317a07e9, parser0C0H0M0L. Exactly ONE terminal not-attempted reconnaissance signal consumed before artifact validation/bookkeeping; no orchestration section/log append. Root read complete report and validated project/scope/type/head/range/auto/counts against branch built parser. Normal-hook exact-path original preservation followed by byte-identical ignored archive reviews/archived/p03-review-2026-10-04T124703Z.md; SHA256 505b072f8c1a39a9cf91ca6c4d8b536188411b019335247d4a0b88eb0e7fd1b4.
 
 Reviewer independently172/172 direct isolatedchildHOME tests/fivefamilies and sevenactualCLIcontrols0, including directoldidentityfailedexit2 with unchangedHEAD/index/receipt/worktree then successfuladapterrecurrence. Wider1117/13/check/types/build/twelveprobes are attributed author evidence; root16keepers/threeprobes likewise attributed. No new finding, requirement/task/deferral. M1 closed; prior signalLow remains final-owned, plus fivep01Lows. Current approvednativecycle consumed, configuredOpusr3 gate next. Standardcount5/gates2excluded/recovery1/10pendingnull unchanged; no self-issuedoverride/counterreset. Explicit operator allowance permits this received cycle and continuedwave after clearedgate; any remainingacceptedgap aftergate returnsoperator.
+
+### Review received: p03 configured gate r3 — 2026-10-04
+
+Run122ded8c-cb1d-4e45-a327-ec546b358f6b, targetclaude-opus-5-5-high/configuredclaude-opus-5-5/high/exec-target-config, statusok/exit0/receiveEligibletrue/non-nullhandoff. Run/project/invocationcorroborationmatched; boundhead9e790ffdcd43afd41fac6bc2414b89a7929caf2c, fullphased1fd3642..9e790ffd, counts0C0H1M1L, highthreshold/nonblocking. Root consumed exactly one not-attempted terminal signal from uniquelymatchedactualClaudechildc1f872bb-7e0b-4885-a4bd-baf2f67e91ad BEFORE artifact validation/bookkeeping; no orchestrationsection. Full artifact personallyread; original normal-hook exact-pathpreserved then byte-identical localarchive reviews/archived/p03-review-2026-10-04T125636Z.md, SHA256 5aa8b17641e01c0ea0095d5d90df7b1c79fb3a7227ef7858ce18fd27abddd0ce. Producerprojectlogcommitc207ed301 is gate-owned; no duplicate/rewrite.
+
+Passing-gate sweep: M1 accepted as incomplete recovered-prior-operation recognition under C3/C4 and existing later-generation marker recovery family; p03-t10's named recorded-receipt cases are complete and not undone. Queuep03-t11 pending operator. Reviewer observation-only adapter script exits0 printing categories; root independently reran inside an attempt-owned temporary parent, preserved literalindex/WT, immediate accepted control passes, expectedlaterfreshSHA/zero-marker assertion fails1 with oldmarkerretained. Evidence analysis/p03-gate-r3-root-unrecorded.\*. No data loss, oldtreepublication or automatic correction. Priorrefusal controls and recordedintervening/prune/directoldidentity controls remainpassing.
+
+LowL1 accepted/resolve_in_artifact now: root-created blank separator orphaned latestnative Reviews row from table. Remove exact blankseparator and append gate row contiguously, reformat and check rendering structurally; branchparserrouting alreadyretained row. Tracking-only, no new final deferral. PrevioussignalLow plus fivep01Lowdeferrals remain six final findings.
+
+Independentgate118directtests/3files/isolatedchildHOME0, ten saved source/builtcontrols0, sevenpublichelperprobes and immediate/interveningunrecordedadapter cases. Wider1117/13/check/types/build are attributedauthor evidence. NewM1 actualpostcommitfailure and laterdeadendreproduced; speculative ordinarymigrationstalerotation note is source-only, no promotedfinding or productscopeexpansion. The ONE approvednative/gatecycle is consumed: nativecount5/gates3excluded/recovery1/10pendingnullunchanged. Required refreshednecessityassessment and operatordisposition before furthercorrection/review/Phase4. No waiver, standingoverride or budgetreset.
+
+#### Dispatch wave5-p03-complexity-r3
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-complexity-r3",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Refresh necessity and operator disposition after p03-t10 closes recorded-receipt recovery but latest configured gate reproduces recovered-but-unrecorded receipt stranding; read-only assessment, no correctness re-review.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T13:02:39.998665Z"
+  },
+  "authority": "read-only-inline-report",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "tool": "followup_task",
+    "target": "<redacted-path>",
+    "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p03-complexity-refresh-r3",
+      "original_request_id": "wave5-p03-complexity-r1",
+      "accepted_handle": "<redacted-path>",
+      "reason": "New r5 native and r3 configured gate artifacts require refreshed necessity assessment; no standard correctness-cycle increment."
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Required complexity assessment of assurance-bearing Git preservation/recovery at the three-cycle cap.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Planned read-only refreshed necessity assessment at already-resolved reviewer ceiling; reuse original assessor when available. No correctness round, probes, writes, nested lanes or operator disposition selection.

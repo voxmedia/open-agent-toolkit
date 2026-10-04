@@ -371,6 +371,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Format:** Scoped formatter on actual owned files.
 
+### Task p03-t11: (review) Recover superseded record reservations with an unrecorded commit
+
+**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T125636Z.md`, independently reproduced by root. A post-commit unowned-file mutation leaves the initial receipt without commit/tree; immediate retry recovers successfully. After a valid different-message same-record commit, the original message/path pair fails repeatedly, with no retirement proof and its marker retained.
+
+**Status:** Pending operator disposition after the approved r5 native/r3 configured-gate cycle; no correction or further review authorized.
+
+**Files:** Proposed existing four helper/ref-sync source/test paths used by p03-t10. The refreshed necessity assessment and operator disposition establish the minimal route; declare any additional scope before editing.
+
+**Dependencies:** p03-t10 complete; mandatory refreshed complexity assessment and explicit operator disposition before correction or Phase 4.
+
+**Change:** Complete positively recovered prior-operation recognition through its existing shared verification owner, preserving strict direct old-identity refusal, current publication/receipt/index/HEAD/lock checks, matching marker inode/device/bytes, bounded fresh reservation and migration mandatory finalization. No old-tree publication, arbitrary failure rotation, weaker duplicate validator, new recovery framework or receipt schema.
+
+**Verification:** Saved `analysis/p03/gate-r3-adapter-unrecorded.mjs` has observation-only exit0; its immediate accepted control passes and later-generation output reproduces the dead end. Root captures output and applies an independent expected fresh-SHA/zero-marker acceptance oracle: `analysis/p03-gate-r3-root-unrecorded-acceptance.exit` currently1; unrelated literal preservation passes. Extend the existing record regression with this captured real-Git post-commit failure, then retain staged/forged/foreign/replaced/current-publication refusals and prior intervening/prune-recreate/direct-oldidentity controls. Direct phase composition/check/types/freshbuild and authorized fresh review/gate only after operator decision.
+
+**Format:** Scoped formatter on actual owned files.
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
@@ -640,8 +656,8 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T051023Z.md           | 6fa4f0d5947faf15fc2bda64410f534c8b85a3fe | gate       | claude-opus-5-5-high |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T062815Z.md           | aba8d06dd34a1ae60718a8f6738aea72cd08d99f | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T063659Z.md           | 12a8da785036595cade0e1f1a739763911bb20ee | gate       | claude-opus-5-5-high |
-
-| p03 | code | passed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T124703Z.md | 317a07e9566fab4bf8d92f60754bb8af708c6ba4 | auto | - |
+| p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T124703Z.md           | 317a07e9566fab4bf8d92f60754bb8af708c6ba4 | auto       | -                    |
+| p03    | code     | received        | 2026-10-04 | reviews/archived/p03-review-2026-10-04T125636Z.md           | 9e790ffdcd43afd41fac6bc2414b89a7929caf2c | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
