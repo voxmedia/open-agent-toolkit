@@ -3,24 +3,24 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p03-t12
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 resumes the operator-approved diagnostics-only p03-t12 correction and one further native/configured cycle. Automatic rewritten-history recovery is deferred; six Low findings remain final-owned. Phases 4–6 and the one-PR tail remain pending.
+Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed native r7 and configured gate r5. Automatic rewritten-history recovery remains deferred. Six Low findings and one newly deferred Medium require final-scope disposition. Phases 4–6 and the one-PR tail remain pending.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 12    | 12/12     |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 12    | 12/12     |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 22/30 tasks completed
 
@@ -2898,3 +2898,18 @@ Operator-approved seventh native round accepted HOLD, exact independent target a
 **Artifact:** `reviews/archived/p03-review-2026-10-04T145112Z.md`; reviewed head ca5633822b83ea54d08a66b3dce7fc721d550ed7, base d1fd3642a15cd442163de75be28b10c30cf7bc53, invocation auto. Exact native Sol6.1/high reviewer completed with zero Critical/High/Medium/Low findings. Root consumed exactly one terminal `**Reconnaissance:** not-attempted` before parsing, personally read the full artifact, and validated current branch parser verdict (all zero, blocking false). No Review Orchestration block or reconnaissance log. Independently executed 178 tests/five families and nine recovery controls, all exit0; broader author suite/build evidence remains attributed.
 
 Diagnostic M1 closed; automatic rewritten-history recovery remains operator-deferred and six Low findings remain final-owned. Standard native count7, configured gates4 before authorized r5; recovery1/10 pendingnull unchanged. No eighth native round or sixth gate inferred. Both t12 and r7 dispatch records now terminal-completed. Phase3 remains in progress pending the authorized configured Opus5.5/high gate; 22/30 task commits verified.
+
+### Phase 3 configured Opus r5 received — 2026-10-04
+
+**Artifact:** `reviews/archived/p03-review-2026-10-04T150535Z.md`; invocation gate, reviewed HEAD5dbd2c71540a98c21f0c90684522588c56b605e6/base d1fd3642a15cd442163de75be28b10c30cf7bc53, run8ddca7aa-1eae-452a-adab-880054c268e5, exact claude-opus-5-5-high/runtimeclaude/modelclaude-opus-5-5/efforthigh from configured target. Exit0/statusok/receiveEligibletrue/non-nullhandoff, zeroCritical/High, oneMedium/Low; branch parser and envelope provenance/counts agree. Root consumed exactly one terminal not-attempted reconnaissance before artifact validation, read the full report and independently repeated its observer with explicit branch-built CLI (exit0): current unbound diagnostics/public refusal and accepted no-rewrite controls confirmed, adjacent stored-receipt rewrite diagnostic reproduced with retained state. Observer0 means observations, not acceptance. Initial root observer lacked the required CLI environment and failed before public loading; corrected invocation0. Initial root parser call passed text instead of artifact path; corrected awaited path parse0. Neither is a product failure or recovery event.
+
+Passing-gate judgment sweep, ordered dispositions:
+
+- **M1 — defer to final.** Agree with independently reproduced pre-existing stored-receipt ancestry diagnostic: history rewriting can leave raw merge-base failure plus a same-identity retry recipe. This is outside approved p03-t12 unbound-candidate condition, violates no stated C1–C5 clause, preserves fail-closed receipt/marker/index/worktree behavior, and needs a distinction between returning to the original branch (potentially valid retry) and rewritten history. Further product change is outside the ONE consumed corrective cycle; final ownership preserves the issue without broadening it or claiming it fixed. No automatic rewritten-history reconciliation is authorized.
+- **L1 — address now, resolved_in_artifact.** Agree; Phase3 has nine corrections p03-t04–p03-t12, not eight. Correct the narrative count in plan; totals12/30 remain accurate. Tracking-only, no product task or additional re-review/gate.
+
+#### Deferred Findings (Medium)
+
+- **p03 gate r5 M1 (T150535Z), final owner:** stored committed receipt whose commit is no longer an ancestor of currentHEAD can repeatedly advertise insufficient retry guidance. Evidence `analysis/p03/gate-r5-diagnostics.mjs` P2/P3 rewrite and matching controls; root repeated observer in `analysis/p03-gate-r5-root-diagnostics.json`. At final, require explicit operator choice: bounded diagnostic correction or accepted post-release deferral with rationale. Phase-level default deferral is not final approval.
+
+Nativecount7/configuredgates5; ONE operator extra cycle consumed, no counter reset/new allowance. Recovery1/10pendingnull unchanged. All Phase3 dispositions settled for phase scope; gate passed at configuredhighthreshold. Phase3 complete12/12, total22/30; Phase4 p04-t01 next. Six previous Lows remain final-owned, plus the Medium above.

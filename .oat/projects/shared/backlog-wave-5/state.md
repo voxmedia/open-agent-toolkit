@@ -1,5 +1,5 @@
 ---
-oat_current_task: p03-t12
+oat_current_task: p04-t01
 oat_last_commit: c13e4faedd4e896b127b176592e4307544825a48
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -87,7 +87,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T14:45:00.448243Z
+oat_project_state_updated: 2026-10-04T15:11:14.539155Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — Phase 3
+**Status:** In progress — Phase 4
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 3 p03-t12 committed; native r7 passed, authorized configured gate r5 pending
+Implement - Phase 4 p04-t01 ready; Phase 3 passed native r7 and configured r5
 
 ## Artifacts
 
@@ -154,11 +154,11 @@ Implement - Phase 3 p03-t12 committed; native r7 passed, authorized configured g
 
 ## Blockers
 
-None. Operator approved diagnostics-only correction and one further native/configured review cycle; automatic rewrite recovery deferred.
+None. Phase 3 received and cleared; six Lows and one stored-receipt diagnostic Medium final-owned. Automatic rewrite recovery deferred.
 
 ## Next Milestone
 
-Receive configured Opus-high gate r5, then continue Phase 4 if every disposition is settled.
+Execute Phase 4 archive staging, lifecycle callers, manual-safe knowledge refresh and Plain Markdown setup.
 
 ### Approved continuation — 2026-10-04
 
