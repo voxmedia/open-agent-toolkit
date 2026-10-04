@@ -255,68 +255,186 @@ describe('archive utils', () => {
     },
   );
 
-  it('uses the real legacy renderedPath and embeds assets while repairing destination links and fragments', async () => {
-    const repoRoot = await createRepoRoot();
-    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
-    await mkdir(projectPath, { recursive: true });
-    await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
-    const decision = join(repoRoot, '.oat/repo/reference/decisions/DR-test.md');
-    await mkdir(dirname(decision), { recursive: true });
-    await writeFile(decision, '# Decision\n');
-    const page = `<html><head><link rel="stylesheet" href="style.css"></head><body id="valid"><a href="#valid">pivot</a><a href="#missing">bad pivot</a><a href="index.html#missing">bad self pivot</a><a href="../../../../../summary.md#summary">Summary</a><a href="../../../../../../../../repo/reference/decisions/DR-test.md#decision">Decision</a><a href="../../../../../plan.md">Source</a><a href="https://github.com/voxmedia/open-agent-toolkit/pull/1">PR</a><img src="asset.svg"><script src="local.js"></script></body></html>`;
-    const run = await createLegacyRecap(projectPath, page);
-    const root = join(projectPath, run);
-    const manifest = JSON.parse(
-      await readFile(join(root, 'manifest.json'), 'utf8'),
-    );
-    const parent = dirname(manifest.artifacts[0].renderedPath);
-    for (const [name, bytes] of Object.entries({
-      'style.css': '.hero{background:url(asset.svg)}',
-      'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
-      'local.js': 'document.body.dataset.ready="yes";',
-    })) {
-      const file = `${parent}/${name}`;
-      await writeFile(join(root, file), bytes);
-      manifest.immutableHashes[file] =
-        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
-    }
-    await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
-    const result = await archiveProjectOnCompletion(
-      {
+  it.each(['double quoted', 'single quoted', 'unquoted'] as const)(
+    'uses the real legacy renderedPath and repairs %s destination links and fragments',
+    async (syntax) => {
+      const attribute = (value: string) =>
+        syntax === 'double quoted'
+          ? `"${value}"`
+          : syntax === 'single quoted'
+            ? `'${value}'`
+            : value;
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
+      const decision = join(
         repoRoot,
-        projectPath,
-        projectName: 'demo',
-        projectsRoot: '.oat/projects/shared',
-        summaryExportPath: '.oat/repo/reference/project-summaries',
-        projectRecapRun: run,
-        s3SyncOnComplete: false,
-      },
-      { timestamp: () => '2026-04-01T12:34:56Z' },
-    );
-    const exported = await readFile(
-      result.projectRecapExport!.exportRoot,
-      'utf8',
-    );
-    expect(exported).toContain('href="#valid"');
-    expect(exported).not.toContain('href="#missing"');
-    expect(exported).toContain('../project-summaries/20260401-demo.md#summary');
-    expect(exported).toContain('../decisions/DR-test.md#decision');
-    expect(exported).not.toContain('plan.md');
-    expect(exported).toContain(
-      'https://github.com/voxmedia/open-agent-toolkit/pull/1',
-    );
-    expect(exported).toContain('data:image/svg+xml;base64,');
-    expect(exported).toContain('document.body.dataset.ready="yes";');
-    expect(exported).not.toMatch(
-      /(?:src|href)="(?:asset.svg|style.css|local.js)"/,
-    );
-    expect(
-      await readFile(
-        join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+        '.oat/repo/reference/decisions/DR-test.md',
+      );
+      await mkdir(dirname(decision), { recursive: true });
+      await writeFile(decision, '# Decision\n');
+      const page = `<html><head><link rel="stylesheet" href="style.css"></head><body id="valid"><a href=${attribute('#valid')}>pivot</a><a href=${attribute('#missing')}>bad pivot</a><a href=${attribute('index.html#missing')}>bad self pivot</a><a href=${attribute('../../../../../summary.md#summary')}>Summary</a><a href=${attribute('../../../../../../../../repo/reference/decisions/DR-test.md#decision')}>Decision</a><a href=${attribute('../../../../../plan.md')}>Source</a><a href=${attribute('https://github.com/voxmedia/open-agent-toolkit/pull/1')}>PR</a><img src="asset.svg"><script src="local.js"></script></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifest = JSON.parse(
+        await readFile(join(root, 'manifest.json'), 'utf8'),
+      );
+      const parent = dirname(manifest.artifacts[0].renderedPath);
+      for (const [name, bytes] of Object.entries({
+        'style.css': '.hero{background:url(asset.svg)}',
+        'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'local.js': 'document.body.dataset.ready="yes";',
+      })) {
+        const file = `${parent}/${name}`;
+        await writeFile(join(root, file), bytes);
+        manifest.immutableHashes[file] =
+          `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      }
+      await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          summaryExportPath: '.oat/repo/reference/project-summaries',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
         'utf8',
-      ),
-    ).toBe(page);
-  });
+      );
+      expect(exported).toContain(`href=${attribute('#valid')}`);
+      expect(exported).not.toContain('#missing');
+      expect(exported).toContain(
+        '../project-summaries/20260401-demo.md#summary',
+      );
+      expect(exported).toContain('../decisions/DR-test.md#decision');
+      expect(exported).not.toContain('plan.md');
+      expect(exported).toContain(
+        'https://github.com/voxmedia/open-agent-toolkit/pull/1',
+      );
+      expect(exported).toContain('data:image/svg+xml;base64,');
+      expect(exported).toContain('document.body.dataset.ready="yes";');
+      expect(exported).not.toMatch(
+        /(?:src|href)="(?:asset.svg|style.css|local.js)"/,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  // These pages/assets are controlled derivatives of the captured legacy declarations
+  // documented above, not original captured HTML. The real-package replay separately
+  // copies the authentic Wave4/July packages without changing the retained originals.
+  it.each([
+    ['image', '<img src=asset.svg>', 'data:image/svg+xml;base64,'],
+    ['stylesheet', '<link rel=stylesheet href=style.css>', '<style>.hero'],
+    [
+      'script',
+      '<script src=local.js></script>',
+      'document.body.dataset.ready="yes";',
+    ],
+  ])(
+    'embeds a required unquoted %s asset into the emitted flat page',
+    async (_kind, tag, expected) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const page = `<html><head>${tag}</head><body></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const parent = dirname(manifest.artifacts[0].renderedPath);
+      const assets = {
+        'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'style.css': '.hero{background:url(asset.svg)}',
+        'local.js': 'document.body.dataset.ready="yes";',
+      };
+      for (const [name, bytes] of Object.entries(assets)) {
+        const file = `${parent}/${name}`;
+        await writeFile(join(root, file), bytes);
+        manifest.immutableHashes[file] =
+          `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      }
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain(expected);
+      expect(exported).not.toMatch(
+        /(?:src|href)=(?:asset.svg|style.css|local.js)/,
+      );
+      if (_kind === 'stylesheet')
+        expect(exported).toContain('data:image/svg+xml;base64,');
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      for (const [name, bytes] of Object.entries(assets)) {
+        expect(
+          await readFile(join(result.archivePath, run, parent, name), 'utf8'),
+        ).toBe(bytes);
+      }
+    },
+  );
+
+  it.each(['"../../../../../plan.md"', '../../../../../plan.md'])(
+    'rejects an asset outside the verified package with src=%s',
+    async (src) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const page = `<html><body><img src=${src}></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      await writeFile(join(projectPath, 'plan.md'), 'foreign project source');
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: run,
+            s3SyncOnComplete: false,
+          },
+          { timestamp: () => '2026-04-01T12:34:56Z' },
+        ),
+      ).rejects.toThrow(/asset escapes its verified package/);
+      expect(await readFile(join(projectPath, 'plan.md'), 'utf8')).toBe(
+        'foreign project source',
+      );
+      await expect(
+        access(
+          join(
+            repoRoot,
+            '.oat/repo/reference/project-recaps/20260401-demo.html',
+          ),
+        ),
+      ).rejects.toThrow();
+    },
+  );
 
   it.each(['different bytes', 'same bytes'] as const)(
     'preserves another writer replacement with %s during archive rollback',

@@ -1551,40 +1551,46 @@ async function transformRecapPage(
     );
   html = await replaceAsync(
     html,
-    /<link\b[^>]*\bhref\s*=\s*(['"])(.*?)\1[^>]*>/gi,
+    /<link\b[^>]*\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))[^>]*>/gi,
     async (match) => {
+      const url = match[1] ?? match[2] ?? match[3]!;
       if (
-        !/\brel\s*=\s*(['"])stylesheet\1/i.test(match[0]) ||
-        external(match[2]!)
+        !/\brel\s*=\s*(?:"stylesheet"|'stylesheet'|stylesheet(?=[\s/>]))/i.test(
+          match[0],
+        ) ||
+        external(url)
       )
         return match[0];
-      const file = resolve(dirname(sourcePage), match[2]!);
-      await asset(match[2]!, sourcePage); // Enforce containment before reading CSS.
+      const file = resolve(dirname(sourcePage), url);
+      await asset(url, sourcePage); // Enforce containment before reading CSS.
       return `<style>${await css(await readFile(join(stagedRoot, relative(sourceRunRoot, file)), 'utf8'), file)}</style>`;
     },
   );
   html = await replaceAsync(
     html,
-    /<script\b[^>]*\bsrc\s*=\s*(['"])(.*?)\1[^>]*>\s*<\/script\s*>/gi,
+    /<script\b[^>]*\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))[^>]*>\s*<\/script\s*>/gi,
     async (match) => {
-      if (external(match[2]!)) return match[0];
-      await asset(match[2]!, sourcePage);
+      const url = match[1] ?? match[2] ?? match[3]!;
+      if (external(url)) return match[0];
+      await asset(url, sourcePage);
       return match[0]
-        .replace(/\s+src\s*=\s*(['"])(.*?)\1/i, '')
+        .replace(/\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))/i, '')
         .replace(
           />\s*<\/script/i,
-          `>${(await readFile(join(stagedRoot, relative(sourceRunRoot, resolve(dirname(sourcePage), match[2]!))), 'utf8')).replace(/<\/script/gi, '<\\/script')}</script`,
+          `>${(await readFile(join(stagedRoot, relative(sourceRunRoot, resolve(dirname(sourcePage), url))), 'utf8')).replace(/<\/script/gi, '<\\/script')}</script`,
         );
     },
   );
   html = await replaceAsync(
     html,
-    /\s+(href|src)\s*=\s*(['"])(.*?)\2/gi,
+    /\s+(href|src)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+))/gi,
     async (match) => {
-      const url = match[3]!;
+      const url = match[2] ?? match[3] ?? match[4]!;
       if (external(url)) return match[0];
-      if (match[1]!.toLowerCase() === 'src')
-        return ` src=${match[2]}${await asset(url, sourcePage)}${match[2]}`;
+      if (match[1]!.toLowerCase() === 'src') {
+        const quote = match[3] !== undefined ? "'" : '"';
+        return ` src=${quote}${await asset(url, sourcePage)}${quote}`;
+      }
       const [pathname, fragment] = url.split('#');
       if (!pathname) {
         if (
