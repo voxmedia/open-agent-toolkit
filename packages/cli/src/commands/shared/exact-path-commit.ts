@@ -419,7 +419,8 @@ export async function commitExactPaths(
       let published = false;
       let startedParent: string | undefined;
       let settledCommit: string | undefined;
-      let verifiedCommittedReceipt = false;
+      let storedCommittedReceipt = false;
+      let verifiedPriorCommit = false;
       try {
         if (interrupted)
           throw new Error(
@@ -443,20 +444,7 @@ export async function commitExactPaths(
           );
         if (receipt?.commit) {
           commit = receipt.commit;
-          if (
-            (await git(root, ['show', '-s', '--format=%P', commit])) !==
-              receipt.parent ||
-            (await git(root, ['rev-parse', `${commit}^{tree}`])) !==
-              receipt.tree ||
-            !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
-              `Oat-Operation: ${digest(input.identity)}`,
-            )
-          )
-            throw new Error(
-              'Receipt does not positively match the committed artifact.',
-            );
-          await git(root, ['merge-base', '--is-ancestor', commit, 'HEAD']);
-          verifiedCommittedReceipt = true;
+          storedCommittedReceipt = true;
         } else if (receipt) {
           // Recover the window after Git wrote the commit but before receipt publication.
           const candidates = (
@@ -471,7 +459,7 @@ export async function commitExactPaths(
             .filter(Boolean);
           for (const candidate of candidates) {
             if (
-              (await git(root, ['rev-parse', `${candidate}^`]).catch(
+              (await git(root, ['show', '-s', '--format=%P', candidate]).catch(
                 () => '',
               )) === receipt.parent
             ) {
@@ -479,12 +467,30 @@ export async function commitExactPaths(
               break;
             }
           }
-          if (commit)
-            receipt = {
-              ...receipt,
-              commit,
-              tree: await git(root, ['rev-parse', `${commit}^{tree}`]),
-            };
+          if (candidates.length && !commit)
+            throw new Error(
+              'Receipt does not positively match the committed artifact.',
+            );
+        }
+        if (commit && receipt) {
+          // Resolution and persistence are separate: history recovery must pass
+          // the same provenance checks without pretending metadata was stored.
+          const tree = await git(root, ['rev-parse', `${commit}^{tree}`]);
+          if (
+            (await git(root, ['show', '-s', '--format=%P', commit])) !==
+              receipt.parent ||
+            ((storedCommittedReceipt || receipt.tree !== undefined) &&
+              tree !== receipt.tree) ||
+            !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
+              `Oat-Operation: ${digest(input.identity)}`,
+            )
+          )
+            throw new Error(
+              'Receipt does not positively match the committed artifact.',
+            );
+          await git(root, ['merge-base', '--is-ancestor', commit, head]);
+          receipt = { ...receipt, commit, tree };
+          verifiedPriorCommit = true;
         }
         const resuming = commit !== undefined;
         temporary = await mkdtemp(join(dirname(indexPath), 'oat-commit-'));
@@ -623,10 +629,7 @@ export async function commitExactPaths(
           throw new Error(
             'Committed artifact contains unowned paths; manual inspection required.',
           );
-        if (
-          verifiedCommittedReceipt &&
-          !(await bytes(receiptPath))?.equals(receiptBytes!)
-        )
+        if (resuming && !(await bytes(receiptPath))?.equals(receiptBytes!))
           throw new Error(
             'Verified receipt was replaced; replacement preserved for inspection.',
           );
@@ -651,7 +654,7 @@ export async function commitExactPaths(
           if (snapshot) await writeFile(current, snapshot);
           else await git(root, ['read-tree', '--empty'], current);
           if (
-            verifiedCommittedReceipt &&
+            verifiedPriorCommit &&
             !(
               await git(
                 root,
@@ -669,14 +672,14 @@ export async function commitExactPaths(
             'Owned artifact changed since this operation committed; use a new identity.',
           );
         }
-        if (!verifiedCommittedReceipt) await writeReceipt(receiptPath, receipt);
+        if (!storedCommittedReceipt) await writeReceipt(receiptPath, receipt);
         // Copy current index into a disposable merge, never into the live index.
         // Only owned entries are reset to the verified hook-final tree.
         const merged = join(temporary, 'merged');
         if (snapshot) await writeFile(merged, snapshot);
         else await git(root, ['read-tree', '--empty'], merged);
         const ownedEntriesSettled =
-          verifiedCommittedReceipt &&
+          storedCommittedReceipt &&
           !(
             await git(
               root,

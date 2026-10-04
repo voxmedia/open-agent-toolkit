@@ -2263,6 +2263,171 @@ describe('commitRecordChange', () => {
     },
   );
 
+  // Captured gate-r3-adapter-unrecorded.mjs boundary: real post-commit mutation
+  // leaves identity/paths/parent persisted, but no commit/tree. Stored-receipt
+  // recovery keepers cannot detect this history-resolution eligibility gap.
+  it.each(['immediate', 'intervening', 'staged', 'parent', 'tree'] as const)(
+    'recovers a record whose landed commit was not recorded in its receipt (%s)',
+    async (condition) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const root = fixture.cloneA;
+        const record = join(root, '.oat/projects/synced/unrecorded.json');
+        await mkdir(dirname(record), { recursive: true });
+        await writeFile(join(root, 'other.txt'), 'other\n');
+        git(root, ['add', 'other.txt']);
+        git(root, ['commit', '-qm', 'seed post-commit observer']);
+        await writeFile(join(root, 'README.md'), 'STAGED literal\n');
+        git(root, ['add', 'README.md']);
+        await writeFile(join(root, 'README.md'), 'UNSTAGED literal\n');
+        const index = join(root, '.git/index');
+        const writer = join(root, '.git/unrecorded-writer-index');
+        await writeFile(writer, await readFile(index));
+        await writeFile(join(root, 'concurrent.txt'), 'CONCURRENT literal\n');
+        execFileSync('git', ['add', 'concurrent.txt'], {
+          cwd: root,
+          env: { ...process.env, GIT_INDEX_FILE: writer },
+        });
+        await writeFile(record, '{"slug":"first"}\n');
+        await writeFile(
+          join(root, '.git/hooks/post-commit'),
+          `#!/bin/sh\nprintf "x\\n" >> other.txt\ncp "${writer}" "${index}"\n`,
+          { mode: 0o755 },
+        );
+        let failure: { receipt?: string } | undefined;
+        try {
+          await commitRecordChange(
+            root,
+            [record],
+            'chore: unrecorded record',
+            defaultGitRunner,
+            { projectRoots: defaultProjectRoots(root) },
+          );
+        } catch (error) {
+          expect(String(error)).toContain(
+            'Unowned worktree path changed during hooks',
+          );
+          failure = (error as { result: { receipt?: string } }).result;
+        }
+        expect(failure?.receipt).toBeTruthy();
+        const receiptPath = failure!.receipt!;
+        const pendingReceipt = JSON.parse(await readFile(receiptPath, 'utf8'));
+        expect(pendingReceipt.commit).toBeUndefined();
+        expect(pendingReceipt.tree).toBeUndefined();
+        expect(await readFile(join(root, 'other.txt'), 'utf8')).toBe(
+          'other\nx\n',
+        );
+        const landed = git(root, ['rev-parse', 'HEAD']);
+        expect(git(root, ['show', '-s', '--format=%P', landed])).toBe(
+          pendingReceipt.parent,
+        );
+        const pendingDir = join(root, '.git/oat-record-commit-pending');
+        expect(await readdir(pendingDir)).toHaveLength(1);
+        await rm(join(root, '.git/hooks/post-commit'));
+        await writeFile(join(root, 'other.txt'), 'other\n');
+        if (condition !== 'immediate') {
+          await writeFile(record, '{"slug":"intervening"}\n');
+          expect(
+            await commitRecordChange(
+              root,
+              [record],
+              'chore: intervening record',
+              defaultGitRunner,
+              { projectRoots: defaultProjectRoots(root) },
+            ),
+          ).not.toBeNull();
+          await writeFile(record, '{"slug":"second"}\n');
+        }
+        if (condition === 'staged')
+          git(root, ['add', '.oat/projects/synced/unrecorded.json']);
+        if (condition === 'parent' || condition === 'tree')
+          await writeFile(
+            receiptPath,
+            JSON.stringify({
+              ...pendingReceipt,
+              [condition]: '0000000000000000000000000000000000000000',
+            }),
+          );
+        if (
+          condition === 'staged' ||
+          condition === 'parent' ||
+          condition === 'tree'
+        ) {
+          const markerPath = join(pendingDir, (await readdir(pendingDir))[0]!);
+          const marker = await readFile(markerPath);
+          const receipt = await readFile(receiptPath);
+          const beforeIndex = await readFile(index);
+          const beforeHead = git(root, ['rev-parse', 'HEAD']);
+          await expect(
+            commitRecordChange(
+              root,
+              [record],
+              'chore: unrecorded record',
+              defaultGitRunner,
+              { projectRoots: defaultProjectRoots(root) },
+            ),
+          ).rejects.toThrow(
+            condition === 'parent' || condition === 'tree'
+              ? 'Receipt does not positively match'
+              : 'Owned artifact changed since',
+          );
+          expect(await readFile(markerPath)).toEqual(marker);
+          expect(await readFile(receiptPath)).toEqual(receipt);
+          expect(await readFile(index)).toEqual(beforeIndex);
+          expect(git(root, ['rev-parse', 'HEAD'])).toBe(beforeHead);
+        } else {
+          const result = await commitRecordChange(
+            root,
+            [record],
+            'chore: unrecorded record',
+            defaultGitRunner,
+            { projectRoots: defaultProjectRoots(root) },
+          );
+          expect(result?.sha).toBeTruthy();
+          if (condition === 'immediate') {
+            expect(result!.sha).toBe(landed);
+            expect(
+              JSON.parse(await readFile(receiptPath, 'utf8')),
+            ).toMatchObject({
+              commit: landed,
+              tree: git(root, ['rev-parse', `${landed}^{tree}`]),
+            });
+          } else {
+            expect(result!.sha).not.toBe(landed);
+            expect(
+              git(root, ['show', 'HEAD:.oat/projects/synced/unrecorded.json']),
+            ).toBe('{"slug":"second"}');
+            // Superseded recognition does not need to persist the resolved
+            // metadata or republish the obsolete tree before marker retirement.
+            expect(JSON.parse(await readFile(receiptPath, 'utf8'))).toEqual(
+              pendingReceipt,
+            );
+          }
+          expect(await readdir(pendingDir)).toEqual([]);
+          expect(git(root, ['status', '--porcelain', '--', record])).toBe('');
+          expect(
+            await commitRecordChange(
+              root,
+              [record],
+              'chore: unrecorded record',
+              defaultGitRunner,
+              { projectRoots: defaultProjectRoots(root) },
+            ),
+          ).toBeNull();
+        }
+        expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
+        expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+          'UNSTAGED literal\n',
+        );
+        expect(git(root, ['show', ':concurrent.txt'])).toBe(
+          'CONCURRENT literal',
+        );
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+  );
+
   it('preserves a replaced pending marker after verified commit settlement', async () => {
     const fixture = await createSyncedFixture();
     try {
