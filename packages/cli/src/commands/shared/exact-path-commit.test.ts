@@ -1,9 +1,11 @@
-import { execFile, execFileSync } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   chmod,
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rename,
   rm,
   symlink,
@@ -221,6 +223,180 @@ describe('commitExactPaths real Git boundary', () => {
       });
     },
   );
+
+  it.each([
+    ['SIGTERM', false, false, false],
+    ['SIGINT', false, false, false],
+    ['SIGINT', true, false, false],
+    ['SIGTERM', false, true, false],
+    ['SIGTERM', false, false, true],
+  ] as const)(
+    'settles a real CLI %s (terminal group=%s, replacement=%s, before commit=%s) before owned cleanup',
+    async (signal, terminal, replacement, before) => {
+      const root = await repo();
+      await writeFile(join(root, 'owned.md'), 'signal candidate\n');
+      await hook(
+        root,
+        `printf ready > .git/hook-ready
+sleep 0.6
+${replacement ? 'printf "FOREIGN replacement lock" > .git/replacement-lock; mv .git/replacement-lock .git/index.lock' : ''}
+printf "HOOK final\\n" > owned.md
+git add owned.md`,
+      );
+      const identity = `signal-${signal}-${terminal}-${replacement}-${before}`;
+      const args = [
+        '--cwd',
+        root,
+        '--json',
+        'internal',
+        'commit-paths',
+        '--identity',
+        identity,
+        '--message',
+        'feat: signal settlement',
+        '--',
+        'owned.md',
+      ];
+      const child = spawn(
+        process.execPath,
+        [
+          '--import',
+          'tsx',
+          join(workspace, 'packages/cli/src/index.ts'),
+          ...args,
+        ],
+        {
+          cwd: workspace,
+          detached: true,
+          env: {
+            ...process.env,
+            TSX_TSCONFIG_PATH: join(workspace, 'packages/cli/tsconfig.json'),
+          },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
+      let stdout = '';
+      let stderr = '';
+      child.stdout.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
+      child.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+      const closed = new Promise<{
+        code: number | null;
+        signal: NodeJS.Signals | null;
+      }>((done, reject) => {
+        child.once('error', reject);
+        child.once('close', (code, received) =>
+          done({ code, signal: received }),
+        );
+      });
+      for (
+        let tries = 0;
+        !existsSync(
+          join(root, before ? '.git/index.lock' : '.git/hook-ready'),
+        ) && tries < 5000;
+        tries++
+      )
+        await new Promise((done) => setTimeout(done, 1));
+      expect(
+        existsSync(join(root, before ? '.git/index.lock' : '.git/hook-ready')),
+        stderr,
+      ).toBe(true);
+      process.kill(terminal ? -child.pid! : child.pid!, signal);
+      const exit = await closed;
+      if (exit.signal) await new Promise((done) => setTimeout(done, 900));
+      const resources = {
+        lock: existsSync(join(root, '.git/index.lock')),
+        temporary: (await readdir(join(root, '.git'))).filter((entry) =>
+          entry.startsWith('oat-commit-'),
+        ),
+      };
+      expect(
+        resources,
+        JSON.stringify({
+          exit,
+          stdout,
+          stderr,
+          resources,
+          head: git(root, ['rev-parse', 'HEAD']),
+        }),
+      ).toEqual({ lock: replacement, temporary: [] });
+      preservation(root);
+      expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated literal\n',
+      );
+      const result = JSON.parse(stdout) as {
+        outcome: string;
+        commit?: string;
+        committed: boolean;
+      };
+      if (!terminal && !replacement && !before)
+        expect(result).toMatchObject({ outcome: 'committed', committed: true });
+      if (before) {
+        expect(result).toMatchObject({ outcome: 'failed', committed: false });
+        expect(existsSync(join(root, '.git/hook-ready'))).toBe(false);
+      }
+      if (replacement) {
+        expect(result).toMatchObject({ outcome: 'failed', committed: true });
+        expect(await readFile(join(root, '.git/index.lock'), 'utf8')).toBe(
+          'FOREIGN replacement lock',
+        );
+        await rm(join(root, '.git/index.lock'));
+      }
+      await rm(join(root, '.git/hooks/pre-commit'));
+      const retry = await commitExactPaths({
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: signal settlement',
+        identity,
+      });
+      expect(retry.outcome).toBe(
+        result.commit ? 'already-matching' : 'committed',
+      );
+      if (result.commit) expect(retry.commit).toBe(result.commit);
+      expect(git(root, ['status', '--porcelain', '--', 'owned.md'])).toBe('');
+      preservation(root);
+    },
+    15000,
+  );
+
+  it('preserves a hook replacement of the operation temporary directory', async () => {
+    const root = await repo();
+    await writeFile(join(root, 'owned.md'), 'owned candidate\n');
+    await hook(
+      root,
+      `temporary="\${GIT_INDEX_FILE%/*}"
+printf "%s" "$temporary" > .git/replaced-temp-path
+mv "$temporary" .git/parked-temp
+mkdir "$temporary"
+cp .git/parked-temp/index "$temporary/index"
+cp -R .git/parked-temp/hooks "$temporary/hooks"
+printf "FOREIGN temporary bytes" > "$temporary/foreign"`,
+    );
+    const result = await commitExactPaths({
+      repoRoot: root,
+      paths: ['owned.md'],
+      message: 'feat: temporary replacement',
+      identity: 'temporary-replacement',
+    });
+    expect(result).toMatchObject({
+      outcome: 'failed',
+      committed: true,
+      resumable: true,
+    });
+    expect(result.error).toContain('temporary directory was replaced');
+    const temporary = await readFile(
+      join(root, '.git/replaced-temp-path'),
+      'utf8',
+    );
+    expect(await readFile(join(temporary, 'foreign'), 'utf8')).toBe(
+      'FOREIGN temporary bytes',
+    );
+    expect(existsSync(join(root, '.git/index.lock'))).toBe(false);
+    preservation(root);
+  });
 
   it('protects partially staged unrelated bytes and hook-final owned create/modify/delete/rename, with verified retry', async () => {
     const root = await repo();

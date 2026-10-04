@@ -345,318 +345,434 @@ export async function commitExactPaths(
       lockClass: 'other',
     };
   }
-  const lockPath = `${indexPath}.lock`;
-  let firstMtime: number | undefined;
-  while (attempts < policy.attempts) {
-    attempts++;
-    let lock: Awaited<ReturnType<typeof open>>;
-    try {
-      lock = await open(lockPath, 'wx');
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST')
+  // Catchable termination must not strand our lock or release it while Git's
+  // enabled hooks can still write. An in-flight child is awaited normally;
+  // terminal-delivered signals may also stop Git, whose close settles its pipes.
+  // A nonterminating hook can delay this settlement indefinitely. Abrupt death
+  // is deliberately outside this operation-scoped handler.
+  let interrupted: 'SIGTERM' | 'SIGINT' | undefined;
+  const onTerm = () => {
+    interrupted ??= 'SIGTERM';
+  };
+  const onInt = () => {
+    interrupted ??= 'SIGINT';
+  };
+  process.on('SIGTERM', onTerm);
+  process.on('SIGINT', onInt);
+  try {
+    const lockPath = `${indexPath}.lock`;
+    let firstMtime: number | undefined;
+    while (attempts < policy.attempts) {
+      if (interrupted)
         return {
           outcome: 'failed',
           committed: false,
           attempts,
-          error: detail(error),
+          receipt: receiptPath,
+          resumable: true,
+          error: `${interrupted} received before commit; retry the same identity.`,
+          lockClass: 'other',
         };
-      const current = await stat(lockPath).catch(() => undefined);
-      if (attempts === 1) firstMtime = current?.mtimeMs;
-      if (attempts < policy.attempts) {
-        await policy.sleep(policy.retryDelaysMs[attempts - 1] ?? 0);
-        continue;
-      }
-      return {
-        outcome: 'blocked',
-        committed: false,
-        attempts,
-        receipt: receiptPath,
-        resumable: true,
-        lockClass:
-          firstMtime !== undefined && firstMtime === current?.mtimeMs
-            ? 'persistent-index-lock'
-            : 'transient-index-lock',
-        error: `Git index lock remains at ${lockPath}. Its owner must finish; retry the same identity. No lock was removed.`,
-      };
-    }
-    const ownedLock = await lock.stat();
-    const stillOwnLock = async (): Promise<boolean> => {
-      const current = await stat(lockPath).catch(() => undefined);
-      return current?.ino === ownedLock.ino && current.dev === ownedLock.dev;
-    };
-    let temporary: string | undefined;
-    let published = false;
-    try {
-      const snapshot = await bytes(indexPath);
-      const head = await git(root, ['rev-parse', '--verify', 'HEAD']).catch(
-        () => '',
-      );
-      const receiptBytes = await bytes(receiptPath);
-      let receipt: Receipt | undefined = receiptBytes
-        ? (JSON.parse(receiptBytes.toString()) as Receipt)
-        : undefined;
-      if (
-        receipt &&
-        (receipt.identity !== input.identity ||
-          JSON.stringify(receipt.paths) !== JSON.stringify(paths))
-      )
-        throw new Error(
-          'Operation identity already names different owned paths; supply a distinct identity.',
-        );
-      if (receipt?.commit) {
-        commit = receipt.commit;
-        if (
-          (await git(root, ['show', '-s', '--format=%P', commit])) !==
-            receipt.parent ||
-          (await git(root, ['rev-parse', `${commit}^{tree}`])) !==
-            receipt.tree ||
-          !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
-            `Oat-Operation: ${digest(input.identity)}`,
-          )
-        )
-          throw new Error(
-            'Receipt does not positively match the committed artifact.',
-          );
-        await git(root, ['merge-base', '--is-ancestor', commit, 'HEAD']);
-        if (
-          (
-            await git(root, [
-              'diff',
-              '--name-only',
-              commit,
-              'HEAD',
-              '--',
-              ...paths,
-            ])
-          ).length
-        )
-          throw new Error(
-            'Owned artifact changed since this operation committed; use a new identity.',
-          );
-      } else if (receipt) {
-        // Recover the window after Git wrote the commit but before receipt publication.
-        const candidates = (
-          await git(root, [
-            'log',
-            '--format=%H',
-            '--fixed-strings',
-            `--grep=Oat-Operation: ${digest(input.identity)}`,
-          ])
-        )
-          .split('\n')
-          .filter(Boolean);
-        for (const candidate of candidates) {
-          if (
-            (await git(root, ['rev-parse', `${candidate}^`]).catch(
-              () => '',
-            )) === receipt.parent
-          ) {
-            commit = candidate;
-            break;
-          }
+      attempts++;
+      let lock: Awaited<ReturnType<typeof open>>;
+      try {
+        lock = await open(lockPath, 'wx');
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST')
+          return {
+            outcome: 'failed',
+            committed: false,
+            attempts,
+            error: detail(error),
+          };
+        const current = await stat(lockPath).catch(() => undefined);
+        if (attempts === 1) firstMtime = current?.mtimeMs;
+        if (attempts < policy.attempts) {
+          await policy.sleep(policy.retryDelaysMs[attempts - 1] ?? 0);
+          continue;
         }
-        if (commit)
+        return {
+          outcome: 'blocked',
+          committed: false,
+          attempts,
+          receipt: receiptPath,
+          resumable: true,
+          lockClass:
+            firstMtime !== undefined && firstMtime === current?.mtimeMs
+              ? 'persistent-index-lock'
+              : 'transient-index-lock',
+          error: `Git index lock remains at ${lockPath}. Its owner must finish; retry the same identity. No lock was removed.`,
+        };
+      }
+      const ownedLock = await lock.stat();
+      const stillOwnLock = async (): Promise<boolean> => {
+        const current = await stat(lockPath).catch(() => undefined);
+        return current?.ino === ownedLock.ino && current.dev === ownedLock.dev;
+      };
+      let temporary: string | undefined;
+      let temporaryIdentity: { ino: number; dev: number } | undefined;
+      let operationResult: ExactPathCommitResult | undefined;
+      let published = false;
+      let startedParent: string | undefined;
+      try {
+        if (interrupted)
+          throw new Error(
+            `${interrupted} received before commit; no commit was launched.`,
+          );
+        const snapshot = await bytes(indexPath);
+        const head = await git(root, ['rev-parse', '--verify', 'HEAD']).catch(
+          () => '',
+        );
+        const receiptBytes = await bytes(receiptPath);
+        let receipt: Receipt | undefined = receiptBytes
+          ? (JSON.parse(receiptBytes.toString()) as Receipt)
+          : undefined;
+        if (
+          receipt &&
+          (receipt.identity !== input.identity ||
+            JSON.stringify(receipt.paths) !== JSON.stringify(paths))
+        )
+          throw new Error(
+            'Operation identity already names different owned paths; supply a distinct identity.',
+          );
+        if (receipt?.commit) {
+          commit = receipt.commit;
+          if (
+            (await git(root, ['show', '-s', '--format=%P', commit])) !==
+              receipt.parent ||
+            (await git(root, ['rev-parse', `${commit}^{tree}`])) !==
+              receipt.tree ||
+            !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
+              `Oat-Operation: ${digest(input.identity)}`,
+            )
+          )
+            throw new Error(
+              'Receipt does not positively match the committed artifact.',
+            );
+          await git(root, ['merge-base', '--is-ancestor', commit, 'HEAD']);
+          if (
+            (
+              await git(root, [
+                'diff',
+                '--name-only',
+                commit,
+                'HEAD',
+                '--',
+                ...paths,
+              ])
+            ).length
+          )
+            throw new Error(
+              'Owned artifact changed since this operation committed; use a new identity.',
+            );
+        } else if (receipt) {
+          // Recover the window after Git wrote the commit but before receipt publication.
+          const candidates = (
+            await git(root, [
+              'log',
+              '--format=%H',
+              '--fixed-strings',
+              `--grep=Oat-Operation: ${digest(input.identity)}`,
+            ])
+          )
+            .split('\n')
+            .filter(Boolean);
+          for (const candidate of candidates) {
+            if (
+              (await git(root, ['rev-parse', `${candidate}^`]).catch(
+                () => '',
+              )) === receipt.parent
+            ) {
+              commit = candidate;
+              break;
+            }
+          }
+          if (commit)
+            receipt = {
+              ...receipt,
+              commit,
+              tree: await git(root, ['rev-parse', `${commit}^{tree}`]),
+            };
+        }
+        const resuming = commit !== undefined;
+        temporary = await mkdtemp(join(dirname(indexPath), 'oat-commit-'));
+        temporaryIdentity = await lstat(temporary);
+        const isolated = join(temporary, 'index');
+        if (!commit) {
+          await git(
+            root,
+            head ? ['read-tree', head] : ['read-tree', '--empty'],
+            isolated,
+          );
+          await git(root, ['add', '-A', '--', ...paths], isolated);
+          if (!(await git(root, ['diff', '--cached', '--name-only'], isolated)))
+            return (operationResult = {
+              outcome: 'nothing',
+              committed: false,
+              attempts,
+            });
+          const unrelated = (
+            await git(root, [
+              'ls-files',
+              '-z',
+              '--cached',
+              '--others',
+              '--exclude-standard',
+            ])
+          )
+            .split('\0')
+            .filter((path) => path && !paths.includes(path));
+          const worktree = Object.fromEntries(
+            await Promise.all(
+              [...new Set(unrelated)].map(async (path) => [
+                path,
+                fileIdentity(join(root, path), root),
+              ]),
+            ),
+          );
+          const configured = await git(root, [
+            'config',
+            '--get',
+            'core.hooksPath',
+          ]).catch(() => '');
+          const originalHooks = configured
+            ? resolve(root, configured)
+            : resolve(
+                root,
+                await git(root, ['rev-parse', '--git-path', 'hooks']),
+              );
+          const hooks = join(temporary, 'hooks');
+          await mkdir(hooks);
+          const shellQuote = (value: string) =>
+            `'${value.replaceAll("'", "'\"'\"'")}'`;
+          // Delegate original executable hooks, then guard the emitted tree before
+          // Git accepts it. Hooks see their original argv and the isolated index.
+          for (const name of [
+            'pre-commit',
+            'prepare-commit-msg',
+            'commit-msg',
+            'post-commit',
+          ]) {
+            const source = join(originalHooks, name);
+            const executable = await access(source, constants.X_OK).then(
+              () => true,
+              () => false,
+            );
+            if (!executable && name === 'post-commit') continue;
+            const script = `#!/usr/bin/env node\nconst {spawnSync}=require('node:child_process');const fs=require('node:fs');const crypto=require('node:crypto');const path=require('node:path');\n// tsx retains inferred function names with this identity decorator.\nconst __name=(fn)=>fn;\n${preservationIdentity.toString()}\n${executable ? `const hook=spawnSync(${JSON.stringify(source)},process.argv.slice(2),{stdio:'inherit'});if(hook.error||hook.status!==0)process.exit(hook.status||1);` : ''}\n${name !== 'post-commit' ? `const owned=${JSON.stringify(paths)};const staged=spawnSync('git',['diff','--cached','--name-only','-z'],{encoding:'utf8'});if(staged.status!==0||staged.stdout.split('\\0').some(p=>p&&!owned.includes(p))){process.stderr.write('Exact-path ownership guard: hook staged an unowned path.\\n');process.exit(1);}const before=${JSON.stringify(worktree)};for(const [p,expected]of Object.entries(before)){const actual=preservationIdentity(path.resolve(p),${JSON.stringify(root)},{fs,path,spawnSync,createHash:crypto.createHash});if(actual!==expected){process.stderr.write('Exact-path preservation guard: unowned worktree path changed: '+p+'\\n');process.exit(1);}}` : ''}\n`;
+            // Git requires extensionless hook names. Launch an explicitly CommonJS
+            // companion so the repository's package type cannot reinterpret it.
+            const companion = join(hooks, `${name}.cjs`);
+            await writeFile(companion, script);
+            await writeFile(
+              join(hooks, name),
+              `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(companion)} "$@"\n`,
+              { mode: 0o700 },
+            );
+          }
+          if (interrupted)
+            throw new Error(
+              `${interrupted} received before commit; no commit was launched.`,
+            );
+          receipt = { identity: input.identity, paths, parent: head };
+          await writeReceipt(receiptPath, receipt);
+          if (interrupted)
+            throw new Error(
+              `${interrupted} received before commit; no commit was launched.`,
+            );
+          startedParent = head;
+          await git(
+            root,
+            [
+              '-c',
+              `core.hooksPath=${hooks}`,
+              'commit',
+              '-m',
+              `${input.message}\n\nOat-Operation: ${digest(input.identity)}`,
+            ],
+            isolated,
+          );
+          commit = await git(root, ['rev-parse', 'HEAD']);
+          if (
+            (await git(root, ['rev-parse', `${commit}^`]).catch(() => '')) !==
+              head ||
+            !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
+              `Oat-Operation: ${digest(input.identity)}`,
+            )
+          )
+            throw new Error('Commit identity/parent could not be verified.');
+          for (const [path, before] of Object.entries(worktree)) {
+            if (fileIdentity(join(root, path), root) !== before)
+              throw new Error(
+                `Unowned worktree path changed during hooks: ${path}; current bytes preserved for inspection.`,
+              );
+          }
           receipt = {
             ...receipt,
             commit,
             tree: await git(root, ['rev-parse', `${commit}^{tree}`]),
           };
-      }
-      const resuming = commit !== undefined;
-      temporary = await mkdtemp(join(dirname(indexPath), 'oat-commit-'));
-      const isolated = join(temporary, 'index');
-      if (!commit) {
-        await git(
-          root,
-          head ? ['read-tree', head] : ['read-tree', '--empty'],
-          isolated,
-        );
-        await git(root, ['add', '-A', '--', ...paths], isolated);
-        if (!(await git(root, ['diff', '--cached', '--name-only'], isolated)))
-          return { outcome: 'nothing', committed: false, attempts };
-        const unrelated = (
+        }
+        const emitted = (
           await git(root, [
-            'ls-files',
+            'diff-tree',
+            '--root',
+            '--no-commit-id',
+            '-r',
+            '--no-renames',
+            '--name-only',
             '-z',
-            '--cached',
-            '--others',
-            '--exclude-standard',
+            commit,
           ])
         )
           .split('\0')
-          .filter((path) => path && !paths.includes(path));
-        const worktree = Object.fromEntries(
-          await Promise.all(
-            [...new Set(unrelated)].map(async (path) => [
-              path,
-              fileIdentity(join(root, path), root),
-            ]),
-          ),
-        );
-        const configured = await git(root, [
-          'config',
-          '--get',
-          'core.hooksPath',
-        ]).catch(() => '');
-        const originalHooks = configured
-          ? resolve(root, configured)
-          : resolve(
-              root,
-              await git(root, ['rev-parse', '--git-path', 'hooks']),
-            );
-        const hooks = join(temporary, 'hooks');
-        await mkdir(hooks);
-        const shellQuote = (value: string) =>
-          `'${value.replaceAll("'", "'\"'\"'")}'`;
-        // Delegate original executable hooks, then guard the emitted tree before
-        // Git accepts it. Hooks see their original argv and the isolated index.
-        for (const name of [
-          'pre-commit',
-          'prepare-commit-msg',
-          'commit-msg',
-          'post-commit',
-        ]) {
-          const source = join(originalHooks, name);
-          const executable = await access(source, constants.X_OK).then(
-            () => true,
-            () => false,
+          .filter(Boolean);
+        if (emitted.some((path) => !paths.includes(path)))
+          throw new Error(
+            'Committed artifact contains unowned paths; manual inspection required.',
           );
-          if (!executable && name === 'post-commit') continue;
-          const script = `#!/usr/bin/env node\nconst {spawnSync}=require('node:child_process');const fs=require('node:fs');const crypto=require('node:crypto');const path=require('node:path');\n// tsx retains inferred function names with this identity decorator.\nconst __name=(fn)=>fn;\n${preservationIdentity.toString()}\n${executable ? `const hook=spawnSync(${JSON.stringify(source)},process.argv.slice(2),{stdio:'inherit'});if(hook.error||hook.status!==0)process.exit(hook.status||1);` : ''}\n${name !== 'post-commit' ? `const owned=${JSON.stringify(paths)};const staged=spawnSync('git',['diff','--cached','--name-only','-z'],{encoding:'utf8'});if(staged.status!==0||staged.stdout.split('\\0').some(p=>p&&!owned.includes(p))){process.stderr.write('Exact-path ownership guard: hook staged an unowned path.\\n');process.exit(1);}const before=${JSON.stringify(worktree)};for(const [p,expected]of Object.entries(before)){const actual=preservationIdentity(path.resolve(p),${JSON.stringify(root)},{fs,path,spawnSync,createHash:crypto.createHash});if(actual!==expected){process.stderr.write('Exact-path preservation guard: unowned worktree path changed: '+p+'\\n');process.exit(1);}}` : ''}\n`;
-          // Git requires extensionless hook names. Launch an explicitly CommonJS
-          // companion so the repository's package type cannot reinterpret it.
-          const companion = join(hooks, `${name}.cjs`);
-          await writeFile(companion, script);
-          await writeFile(
-            join(hooks, name),
-            `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(companion)} "$@"\n`,
-            { mode: 0o700 },
-          );
-        }
-        receipt = { identity: input.identity, paths, parent: head };
         await writeReceipt(receiptPath, receipt);
-        await git(
-          root,
-          [
-            '-c',
-            `core.hooksPath=${hooks}`,
-            'commit',
-            '-m',
-            `${input.message}\n\nOat-Operation: ${digest(input.identity)}`,
-          ],
-          isolated,
-        );
-        commit = await git(root, ['rev-parse', 'HEAD']);
+        // Copy current index into a disposable merge, never into the live index.
+        // Only owned entries are reset to the verified hook-final tree.
+        const merged = join(temporary, 'merged');
+        if (snapshot) await writeFile(merged, snapshot);
+        else await git(root, ['read-tree', '--empty'], merged);
+        await git(root, ['reset', '--quiet', commit, '--', ...paths], merged);
         if (
-          (await git(root, ['rev-parse', `${commit}^`]).catch(() => '')) !==
-            head ||
-          !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
-            `Oat-Operation: ${digest(input.identity)}`,
-          )
+          (
+            await git(
+              root,
+              ['diff', '--name-only', commit, '--', ...paths],
+              merged,
+            )
+          ).length
         )
-          throw new Error('Commit identity/parent could not be verified.');
-        for (const [path, before] of Object.entries(worktree)) {
-          if (fileIdentity(join(root, path), root) !== before)
-            throw new Error(
-              `Unowned worktree path changed during hooks: ${path}; current bytes preserved for inspection.`,
-            );
-        }
-        receipt = {
-          ...receipt,
-          commit,
-          tree: await git(root, ['rev-parse', `${commit}^{tree}`]),
-        };
-      }
-      const emitted = (
-        await git(root, [
-          'diff-tree',
-          '--root',
-          '--no-commit-id',
-          '-r',
-          '--no-renames',
-          '--name-only',
-          '-z',
-          commit,
-        ])
-      )
-        .split('\0')
-        .filter(Boolean);
-      if (emitted.some((path) => !paths.includes(path)))
-        throw new Error(
-          'Committed artifact contains unowned paths; manual inspection required.',
-        );
-      await writeReceipt(receiptPath, receipt);
-      // Copy current index into a disposable merge, never into the live index.
-      // Only owned entries are reset to the verified hook-final tree.
-      const merged = join(temporary, 'merged');
-      if (snapshot) await writeFile(merged, snapshot);
-      else await git(root, ['read-tree', '--empty'], merged);
-      await git(root, ['reset', '--quiet', commit, '--', ...paths], merged);
-      if (
-        (
-          await git(
-            root,
-            ['diff', '--name-only', commit, '--', ...paths],
-            merged,
-          )
-        ).length
-      )
-        throw new Error(
-          'Committed owned bytes differ from the worktree; inspect changes before retrying.',
-        );
-      if (
-        !(await bytes(indexPath))?.equals(snapshot ?? Buffer.alloc(0)) &&
-        (snapshot !== undefined || (await bytes(indexPath)) !== undefined)
-      )
-        return {
-          outcome: 'blocked',
+          throw new Error(
+            'Committed owned bytes differ from the worktree; inspect changes before retrying.',
+          );
+        if (
+          !(await bytes(indexPath))?.equals(snapshot ?? Buffer.alloc(0)) &&
+          (snapshot !== undefined || (await bytes(indexPath)) !== undefined)
+        )
+          return (operationResult = {
+            outcome: 'blocked',
+            committed: true,
+            commit,
+            attempts,
+            receipt: receiptPath,
+            resumable: true,
+            error:
+              'Concurrent real-index change detected. The verified commit exists; current index was preserved. Retry the same identity to finalize owned entries.',
+          });
+        if (!(await stillOwnLock()))
+          throw new Error(
+            'Owned index lock was replaced; current index and foreign lock preserved. Retry after inspection.',
+          );
+        await lock.writeFile(await readFile(merged));
+        await lock.close();
+        await rename(lockPath, indexPath);
+        published = true;
+        return (operationResult = {
+          outcome: resuming ? 'already-matching' : 'committed',
           committed: true,
           commit,
           attempts,
           receipt: receiptPath,
+          ...(interrupted
+            ? {
+                error: `${interrupted} received; committed identity and owned index were verified and settled before cleanup.`,
+              }
+            : {}),
+        });
+      } catch (error) {
+        // A terminal signal can stop Git after its ref update. Report only a
+        // positively matched commit; the existing receipt retry owns publication.
+        if (interrupted && !commit && startedParent !== undefined) {
+          const candidate = await git(root, [
+            'rev-parse',
+            '--verify',
+            'HEAD',
+          ]).catch(() => '');
+          if (candidate) {
+            const parent = await git(root, [
+              'show',
+              '-s',
+              '--format=%P',
+              candidate,
+            ]).catch(() => undefined);
+            const message = await git(root, [
+              'show',
+              '-s',
+              '--format=%B',
+              candidate,
+            ]).catch(() => '');
+            const emitted = await git(root, [
+              'diff-tree',
+              '--root',
+              '--no-commit-id',
+              '-r',
+              '--no-renames',
+              '--name-only',
+              '-z',
+              candidate,
+            ]).catch(() => undefined);
+            if (
+              parent === startedParent &&
+              message.includes(`Oat-Operation: ${digest(input.identity)}`) &&
+              emitted !== undefined &&
+              emitted
+                .split('\0')
+                .filter(Boolean)
+                .every((entry) => paths.includes(entry))
+            )
+              commit = candidate;
+          }
+        }
+        return (operationResult = {
+          outcome: 'failed',
+          committed: commit !== undefined,
+          commit,
+          attempts,
+          receipt: receiptPath,
           resumable: true,
-          error:
-            'Concurrent real-index change detected. The verified commit exists; current index was preserved. Retry the same identity to finalize owned entries.',
-        };
-      if (!(await stillOwnLock()))
-        throw new Error(
-          'Owned index lock was replaced; current index and foreign lock preserved. Retry after inspection.',
-        );
-      await lock.writeFile(await readFile(merged));
-      await lock.close();
-      await rename(lockPath, indexPath);
-      published = true;
-      return {
-        outcome: resuming ? 'already-matching' : 'committed',
-        committed: true,
-        commit,
-        attempts,
-        receipt: receiptPath,
-      };
-    } catch (error) {
-      return {
-        outcome: 'failed',
-        committed: commit !== undefined,
-        commit,
-        attempts,
-        receipt: receiptPath,
-        resumable: true,
-        error: detail(error),
-        lockClass: 'other',
-      };
-    } finally {
-      if (!published) {
-        await lock.close().catch(() => undefined);
-        if (await stillOwnLock()) await rm(lockPath, { force: true });
+          error: `${detail(error)}${interrupted ? ` ${interrupted} received; active Git settled before owned cleanup. Retry the same identity to finalize any reported commit.` : ''}`,
+          lockClass: 'other',
+        });
+      } finally {
+        if (!published) {
+          await lock.close().catch(() => undefined);
+          if (await stillOwnLock()) await rm(lockPath, { force: true });
+        }
+        if (temporary && temporaryIdentity) {
+          const current = await lstat(temporary).catch(
+            (error: NodeJS.ErrnoException) => {
+              if (error.code === 'ENOENT') return undefined;
+              throw error;
+            },
+          );
+          if (
+            current?.ino === temporaryIdentity.ino &&
+            current.dev === temporaryIdentity.dev
+          )
+            await rm(temporary, { recursive: true, force: true });
+          else if (operationResult) {
+            operationResult.outcome = 'failed';
+            operationResult.resumable = true;
+            operationResult.error =
+              `${operationResult.error ?? ''} Operation temporary directory was replaced or removed; replacement preserved for inspection: ${temporary}`.trim();
+          }
+        }
       }
-      if (temporary) await rm(temporary, { recursive: true, force: true });
     }
+    return {
+      outcome: 'blocked',
+      committed: false,
+      attempts,
+      resumable: true,
+      error: 'Commit attempt budget must be positive.',
+    };
+  } finally {
+    process.off('SIGTERM', onTerm);
+    process.off('SIGINT', onInt);
   }
-  return {
-    outcome: 'blocked',
-    committed: false,
-    attempts,
-    resumable: true,
-    error: 'Commit attempt budget must be positive.',
-  };
 }
