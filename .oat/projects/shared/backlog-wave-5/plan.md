@@ -525,6 +525,20 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `fix(archive): repair unquoted recap links and assets`
 
+### Task p05-t05: (review) Restrict recap rewriting to actual HTML attributes
+
+**Files:** Only `packages/cli/src/commands/project/archive/archive-utils.ts` and its existing `archive-utils.test.ts` family. Preserve every retained original package and migrated HTML byte; no new parser framework/dependency, report schema, authoring restriction or product policy.
+
+**Dependencies:** p05-t01 through p05-t04 complete. Same accepted author `wave5-p05-fix1-crash-resume`, linked original request `wave5-p05-implement-r1`, continuation `cont-backlog-wave-5-p05-fix-2`. Review fix iteration 2 of 2; recovery used1/10 pendingnull unchanged.
+
+**Change:** Confirmed native p05 r2 M1: whole-document unquoted href/src matching changes valid inline JavaScript and can refuse a valid export. Restrict relevant href/src, CSS and script replacement paths to actual markup attributes; preserve inline/inlined script/style bodies and non-attribute text, including tag-shaped strings/comments. Keep existing quoted/unquoted link repair, asset inlining, target/fragment and containment rules.
+
+**Verification:** Preserve reviewer and independent root inline-script baseline/current observers. On reviewed baseline prove the literal href/src script controls fail preservation/execution while unrelated value control passes; repaired output must preserve and execute all three to 123. Extend the existing export test family proportionally for relevant raw bodies/non-attribute text and retain quoted/unquoted links/assets/containment. Use honestly labelled derivatives of retained authentic packages; originals stay byte-identical. Rerun four archive/report/offline-sync test families, completion tests, CLI check/type-check and fresh CLI build. Repeat genuine seven-package output/hash conservation and real public producer/readers as relevant. No live remote/provider/AWS call, test-only production hook or broad parser/test audit.
+
+**Format:** Scoped repository formatter on the two owned files; never format hashed pages/original evidence.
+
+**Commit:** `fix(archive): preserve script bodies during recap rewriting`
+
 ## Phase 6: Versions and generated integration
 
 ### Task p06-t01: Finalize versions, generated projections and docs
@@ -697,6 +711,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T154829Z.md           | 977689cd913df72029fb0388802307cb3d7696f2 | auto       | -                    |
 | p04    | code     | passed          | 2026-10-04 | reviews/archived/p04-review-2026-10-04T155932Z.md           | 6a5f522c3d5da9bd747aefdffc52cb43f397c257 | gate       | claude-opus-5-5-high |
 | p05    | code     | fixes_completed | 2026-10-04 | reviews/archived/p05-review-2026-10-04T171337Z.md           | a7dcb82521fe426cc0e1b1accdf182b6e8aa02e0 | auto       | -                    |
+| p05    | code     | fixes_added     | 2026-10-04 | reviews/archived/p05-review-2026-10-04T202926Z.md           | 386fd8f2845ba0e10da257f730d2357669a37b5a | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

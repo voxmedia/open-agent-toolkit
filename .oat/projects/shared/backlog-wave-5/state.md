@@ -158,7 +158,7 @@ None. Phases 1–4 received and cleared; ten Lows and one stored-receipt diagnos
 
 ## Next Milestone
 
-p05-t04 is committed and verified after sealed crash continuation; receive fresh full-phase native r2 and configured gate next. Phase6/root final tail remain pending.
+p05-t05 corrects independently confirmed native r2 inline-script regression; same accepted author fix2/2 next. Full native/configured acceptance and Phase6/root final tail remain pending.
 
 ### Approved continuation — 2026-10-04
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p05-t04
+oat_current_task_id: p05-t05
 oat_generated: false
 ---
 
@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 4     | 4/4       |
+| Phase 5 | in_progress | 5     | 4/5       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 30/31 tasks completed
+**Total:** 30/32 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -295,6 +295,13 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 **Outcome:** Valid quoted/unquoted href/src receive the same existing destination, asset and containment rules. Unavailable project-source links are removed, required CSS/JS/image bytes embedded, outside-package src refused, valid tracked/external targets retained. No new parser/dependency/schema/authoring restriction; original archived packages and seven migrated HTML pages unchanged.
 
 **Verification:** Author fresh baseline5expectedfail/3quotedpass, patched8pass; direct committed161archive/87completion and CLIcheck0, precommittypes/freshbuild0. Authentic9case derivative categorically demonstrates old bad acceptance and fixed link removal/asset embedding/containment refusal, preserving original and copied source bytes. Genuine7package retry/conflict/rollback/outputSHA/size and public rebuilt first-pass/recordless retry with four mismatch classes at both readers pass. Root independently reran baseline/patched authentic9case categories and current original M1 observer, all source hashes conserved;8focusedkeepers0; independently re-enumerated65Git-base originals and64existingarchiveversions,7output hashes/narrative/43targets/fragments, all pass. Exact two-file commit,parent78ef151d, immutable accepted ancestry and clean hook readback verified. Evidence analysis/p05/root-fix1-authentic-_,root-fix1-committed-link-syntax._,root-fix1-focused-vitest.log plus authorfix1-resume-\*. Observerbaseline exit0 means successful bad-state reproduction, not acceptance. Preparation/first oracle errors are retained and excluded; no Turbo cache/live/provider/AWS claims. Recovery1/10 pendingnull and fixiteration1/2 unchanged.
+
+### Task p05-t05: (review) Restrict recap rewriting to actual HTML attributes
+
+**Status:** pending
+**Commit:** -
+
+**Outcome:** Native p05 r2 M1 confirmed independently; same accepted author continuation, reviewfix2/2.
 
 ## Phase 6: Versions and generated integration
 
@@ -3661,7 +3668,7 @@ Root received completed p05-t04 and validated original/current-base immutable se
     "task_name": "wave5_phase5_review_r2"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3677,6 +3684,11 @@ Root received completed p05-t04 and validated original/current-base immutable se
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted HOLD; full phase r2, no nested/recon"
+    },
+    {
+      "source": "native-terminal-result",
+      "commit": "d7232ba37aa5b542ce752de6f9cc10d234498862",
+      "result": "Full p05 0C/0H/1M/0L; sole report; clean; reconnaissance not-attempted consumed first."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3715,3 +3727,11 @@ Root received completed p05-t04 and validated original/current-base immutable se
 ```
 
 Accepted native /root/wave5_phase5_review_r2 (Chandrasekhar), exact Sol6.1/high materialized reviewer, fresh fork none and resolver notices[]. Full phase basea49abbf5 through committed START; all four tasks/recovery/crash patch conservation and original r1 M1 response included, never narrowed to correction. Task ledger30/31 current; Phase5 in_progress pending full native/configured outcomes. Reviewer owns one timestamped report, scratch only; product/core/log read-only, no nested/recon/remote calls. Review-outcome bookkeeping excluded; task ledger included. Exactly one terminal reconnaissance signal must be consumed before artifact validation/receive/log; runtime model identity not reported, no tier/default service inference.
+
+## Phase 5 native review r2 received — 2026-10-04
+
+Exactly one terminal `**Reconnaissance:** not-attempted` was consumed and persisted before artifact validation, parser, bookkeeping or log. Full artifact/range/sole normal-hook report commit and clean tree validated; branch parser agrees0C/0H/1M/0L. Archive: reviews/archived/p05-review-2026-10-04T202926Z.md. Prior r1 M1 resolved; no Review Orchestration/recon log.
+
+M1: code_fix_required, Task Scope Minor, new p05-t05. Independent root authentic derivative reproduces literal href script corruption and src asset-resolution refusal while unrelated value script remains valid; extracted pre-fix module preserves and executes all three to123. Actual markup attribute ownership must preserve authored raw bodies/non-attribute text across existing replacement paths. Original source bytes and seven historical hashes remain conserved. This is within R1/R4; no framework/dependency/schema/authoring-policy expansion. Same accepted crash-continuation author resumes fix2/2, linked original request; recovery1/10 pendingnull unchanged. All earlier accepted commits and negative probes remain immutable. Phase5 remains in_progress pending correction/full native review/configured gate; prior ten Lows and one diagnostic Medium remain final-owned.
+
+An unsupported completed-reviewer interruption attempt was rejected without effects; no supported interruption/release was available and no cleanup/replacement followed. Root did not alter product paths during receive.
