@@ -228,6 +228,10 @@ wave5-p06-t02-receipt-11da300e7 verified two-file literal-only version correctio
 
 wave5-p06-t03-receipt-01ed25a23 exact two-file inventory correction verified,41direct tests pre/post and all scoped gates pass; prior approval classifications intact; final generation task now declared and final gates pending.
 
+### 2026-10-04 · structural · oat-project-implement · p06-t04
+
+wave5-root-t04-receipt-a1a7f4f6: Root verified exact three-file task commit, direct45tests and real hook state preservation; p06 progress35/39, next t05 under delegated operator authority.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

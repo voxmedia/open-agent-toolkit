@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t04
+oat_current_task_id: p06-t05
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; five remaining final-test/guidance tasks and Phase6 final review/gate/one-PR closeout remain.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; four remaining final guidance/generated tasks and Phase6 final review/gate/one-PR closeout remain.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 8     | 3/8       |
+| Phase 6 | in_progress | 8     | 4/8       |
 
-**Total:** 34/39 tasks completed
+**Total:** 35/39 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,7 +307,7 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — all tasks done; lifecycle final-review boundary and configured phase gate pending
+**Status:** in_progress — final guidance/generated tasks remain; final-review boundary and configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -334,7 +334,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t04: Exercise real helper failure and bookkeeping contracts
 
-**Status:** pending
+**Status:** completed
+**Commit:** a1a7f4f666722fb05a97050da6bb2b2d3583c28a
+
+**Outcome/Verification:** Exact three test files; all45cases retained and direct pre/post45/45 pass, four focused controls pass, fresh helper build2tasks/0cached and scoped lint/format exit0. Real rejecting Git hooks preserve HEAD/full index/unrelated staged and worktree bytes; same-operation valid retry settles retained identity and remote-error refusal preserves marker/receipt. Original omitted-log negative retained; real bookkeeping subprocess replaces bypassed spy. No production defect exposed. Root independently verified parent, exact paths, committed/working SHA256 and every exit. Evidence analysis/p06/t04/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 ### Task p06-t05: Close proportional guidance and evidence findings
 
@@ -4266,3 +4269,7 @@ CLI validation-only output consumed with its actual validated-only status; root 
 ### Root t03 receipt and final generation boundary
 
 Author RELEASE/HOLD received. Root initially looked for the t02 readback filename in t03 evidence; absent file was not proof. Actual named postcommit-proof.json and explicit exits were then read and independently corroborated; no falsepass or recovery. Final p06-t08 appended under operator continuation authority for owning-command provider regeneration after semantic guidance corrections, keeping every owner at its single PR-scoped bump. All canonical/HTML/original evidence bytes outside exacttask unchanged. Next t04 is real-helper harness correction.
+
+### Root t04 receipt
+
+Author RELEASE/HOLD received and actual named evidence corroborated. Unsupported host-generated collaborationinterrupt_agent recurred after terminal response; no cancellation/retry/replacement was performed. Accepted handle retained. Next t05 closes the five scoped p01 guidance/evidence findings under delegated operator authority.
