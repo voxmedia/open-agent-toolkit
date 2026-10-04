@@ -1,5 +1,7 @@
+import { execFile } from 'node:child_process';
 import { access, readFile, rename, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
+import { promisify } from 'node:util';
 
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import YAML from 'yaml';
@@ -12,6 +14,8 @@ import {
   extractBacklogStatus,
   isValidBacklogStatus,
 } from './shared/item-status';
+
+const execFileAsync = promisify(execFile);
 
 const COMPLETED_HEADING = '## Completed Items';
 
@@ -167,30 +171,55 @@ function insertCompletedEntry(
   return { content, scaffolded: false, warning: null };
 }
 
-async function collectAffectedPaths(
+async function readHeadFile(
+  backlogRoot: string,
+  path: string,
+): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync(
+      'git',
+      ['show', `HEAD:./${relative(resolve(backlogRoot), resolve(path))}`],
+      { cwd: backlogRoot },
+    );
+    return stdout;
+  } catch {
+    // No Git/HEAD or absent path gives no evidence of a prior operation.
+    return null;
+  }
+}
+
+function hasCompletedEntry(content: string | null, id: string): boolean {
+  return (
+    content !== null &&
+    content
+      .split('\n')
+      .some((line) => line.startsWith('- ') && line.includes(` — ${id} — `))
+  );
+}
+
+function hasIndexEntry(content: string | null, id: string): boolean {
+  return (
+    content !== null &&
+    content
+      .split('\n')
+      .some((line) => line.startsWith('|') && line.split('|')[1]?.trim() === id)
+  );
+}
+
+function collectAffectedPaths(
   backlogRoot: string,
   id: string,
   references: string[],
-): Promise<string[]> {
-  const paths = [
-    resolve(backlogRoot, 'items', `${id}.md`),
-    resolve(backlogRoot, 'archived', `${id}.md`),
-    resolve(backlogRoot, 'index.md'),
-  ];
-  const completedPath = resolve(backlogRoot, 'completed.md');
-  // Include this operation's existing ledger entry on retry, but do not claim
-  // an unrelated ledger for a wont_do archive that never wrote an entry.
-  if (await pathExists(completedPath)) {
-    const completed = await readFile(completedPath, 'utf8');
-    if (
-      completed
-        .split('\n')
-        .some((line) => line.startsWith('- ') && line.includes(` — ${id} — `))
-    ) {
-      paths.push(completedPath);
-    }
-  }
-  paths.push(...references);
+  changes: { item: boolean; completed: boolean; index: boolean },
+): string[] {
+  const paths = [...references];
+  if (changes.item)
+    paths.push(
+      resolve(backlogRoot, 'items', `${id}.md`),
+      resolve(backlogRoot, 'archived', `${id}.md`),
+    );
+  if (changes.completed) paths.push(resolve(backlogRoot, 'completed.md'));
+  if (changes.index) paths.push(resolve(backlogRoot, 'index.md'));
   return [...new Set(paths)].sort();
 }
 
@@ -210,6 +239,8 @@ export async function archiveBacklogItem(
   const itemsPath = join(backlogRoot, 'items', `${id}.md`);
   const archivedPath = join(backlogRoot, 'archived', `${id}.md`);
   const warnings: string[] = [];
+  const completedPath = join(backlogRoot, 'completed.md');
+  const indexPath = join(backlogRoot, 'index.md');
 
   // Already archived: no status, completed-log, or move writes; only the
   // idempotent reference rewrite and index regeneration are retried.
@@ -238,11 +269,25 @@ export async function archiveBacklogItem(
     // Retry the idempotent tail of a close-out: a run that failed during the
     // reference rewrite (or an item archived before the rewrite existed)
     // still gets its inbound links repointed and the index regenerated.
+    const [headItem, headArchived, headCompleted, headIndex] =
+      await Promise.all([
+        readHeadFile(backlogRoot, itemsPath),
+        readHeadFile(backlogRoot, archivedPath),
+        readHeadFile(backlogRoot, completedPath),
+        readHeadFile(backlogRoot, indexPath),
+      ]);
+    const pendingMove = headItem !== null && headArchived === null;
+    const indexBefore = await readFile(indexPath, 'utf8').catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return null;
+        throw error;
+      },
+    );
     const references = await rewriteInboundReferences(
       backlogRoot,
       itemsPath,
       archivedPath,
-      { rebaseMovedItem: false },
+      { rebaseMovedItem: false, recoverPendingArchive: pendingMove },
     );
     warnings.push(...references.warnings);
     const regeneration = await regenerateBacklogIndex(backlogRoot);
@@ -255,10 +300,30 @@ export async function archiveBacklogItem(
       movedTo: archivedPath,
       indexRegenerated: true,
       rewrittenReferences: references.rewritten,
-      affectedPaths: await collectAffectedPaths(
+      affectedPaths: collectAffectedPaths(
         backlogRoot,
         id,
         references.affectedPaths,
+        {
+          item: pendingMove,
+          completed:
+            pendingMove &&
+            hasCompletedEntry(
+              await readFile(completedPath, 'utf8').catch(
+                (error: NodeJS.ErrnoException) => {
+                  if (error.code === 'ENOENT') return '';
+                  throw error;
+                },
+              ),
+              id,
+            ) &&
+            !hasCompletedEntry(headCompleted, id),
+          index:
+            indexBefore !== (await readFile(indexPath, 'utf8')) ||
+            (pendingMove &&
+              hasIndexEntry(headIndex, id) &&
+              !hasIndexEntry(await readFile(indexPath, 'utf8'), id)),
+        },
       ),
       warnings,
     };
@@ -307,7 +372,6 @@ export async function archiveBacklogItem(
   if (shouldWriteEntry) {
     const entryLine = `- ${entryDate} — ${id} — ${title} — ${summary}`;
 
-    const completedPath = join(backlogRoot, 'completed.md');
     let scaffoldedFile = false;
     let existing: string;
     if (await pathExists(completedPath)) {
@@ -349,10 +413,11 @@ export async function archiveBacklogItem(
     movedTo: archivedPath,
     indexRegenerated: true,
     rewrittenReferences: references.rewritten,
-    affectedPaths: await collectAffectedPaths(
+    affectedPaths: collectAffectedPaths(
       backlogRoot,
       id,
       references.affectedPaths,
+      { item: true, completed: shouldWriteEntry, index: true },
     ),
     warnings,
   };

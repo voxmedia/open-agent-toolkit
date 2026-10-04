@@ -55,6 +55,8 @@ export interface RewriteInboundReferencesOptions {
    * because its links were rebased (or written) against `archived/` already.
    */
   rebaseMovedItem?: boolean;
+  /** True only when the archive caller proved an uncommitted old/new move in HEAD. */
+  recoverPendingArchive?: boolean;
 }
 
 interface ScanLayout {
@@ -698,8 +700,35 @@ export async function rewriteInboundReferences(
       await replaceAtomically(absoluteFile, next, identity);
       rewritten.push(context.fileName);
     }
-    if (context.affectedReference) {
+    if (next !== content) {
       affectedPaths.push(absoluteFile);
+    } else if (options.recoverPendingArchive && context.affectedReference) {
+      // Existing archived links are not ownership evidence. Recover a prior
+      // repaired reference only when HEAD's same grammar still names the old
+      // item and this pending move has not yet been committed.
+      try {
+        const { stdout: headContent } = await execFileAsync(
+          'git',
+          [
+            'show',
+            `HEAD:./${toPosix(relative(layout.scanRoot, absoluteFile))}`,
+          ],
+          { cwd: layout.scanRoot },
+        );
+        const historicalContext = {
+          ...context,
+          baseDirectory: dirname(absoluteFile),
+          warnings: [],
+          affectedReference: false,
+        };
+        if (
+          rewriteContent(headContent, historicalContext, false) !== headContent
+        ) {
+          affectedPaths.push(absoluteFile);
+        }
+      } catch {
+        // Without historical file bytes there is no proof of prior ownership.
+      }
     }
   }
 

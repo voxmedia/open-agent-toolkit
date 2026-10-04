@@ -112,8 +112,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p04:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: wave5-p04-r01-archive-ownership
+        original_request_id: wave5-p04-implement-r1
+        original_task_id: p04-t01
+        original_commit: 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
+        discovered_by: node --input-type=module (settled-archive ownership transition control)
+        dispatch_target: oat-phase-implementer-gpt-6-1-sol-high
+        reservation_head: 78b2326a80f72e36fd4ac1ffde85c6f7d50feee1
+        status: completed
     p05:
       used_attempts: 0
       pending_attempt: null

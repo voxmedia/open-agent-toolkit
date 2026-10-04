@@ -514,6 +514,53 @@ describe('archiveBacklogItem', () => {
     );
   });
 
+  it('does not claim unrelated edits in settled archived items, ledgers, indexes or references on noop', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-archive-settled-'));
+    tempDirs.push(root);
+    const backlogRoot = join(root, '.oat/repo/pjm/backlog');
+    await initializeBacklog(backlogRoot);
+    const id = 'BL-260705-settled';
+    await seedItem(backlogRoot, id);
+    const ref = join(root, '.oat/repo/reference/prior.md');
+    await mkdir(dirname(ref), { recursive: true });
+    await writeFile(ref, `Work: [item](../pjm/backlog/items/${id}.md).\n`);
+    await archiveBacklogItem(backlogRoot, id, {
+      summary: 'Prior work',
+      now: FIXED_NOW,
+    });
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+    git('init', '-q');
+    git('config', 'user.email', 'a@b.co');
+    git('config', 'user.name', 'tester');
+    git('add', '.');
+    git('commit', '-qm', 'settled archive');
+    const paths = [
+      join(backlogRoot, 'archived', `${id}.md`),
+      join(backlogRoot, 'completed.md'),
+      join(backlogRoot, 'index.md'),
+      ref,
+    ];
+    const bytes: string[] = [];
+    for (const path of paths) {
+      const edited = `${await readFile(path, 'utf8')}\nUNRELATED USER EDIT.\n`;
+      await writeFile(path, edited);
+      bytes.push(edited);
+    }
+    git('add', '--', ref);
+    await writeFile(ref, `${bytes[3]}UNSTAGED USER EDIT.\n`);
+    bytes[3] += 'UNSTAGED USER EDIT.\n';
+    const before = await readFile(join(root, '.git/index'));
+    const result = await archiveBacklogItem(backlogRoot, id);
+    expect(result.result).toBe('noop');
+    expect(result.rewrittenReferences).toEqual([]);
+    expect(result.affectedPaths).toEqual([]);
+    expect(await readFile(join(root, '.git/index'))).toEqual(before);
+    for (const [i, path] of paths.entries()) {
+      expect(await readFile(path, 'utf8')).toBe(bytes[i]);
+    }
+  });
+
   it('uses a filesystem rename outside a git work tree', async () => {
     const backlogRoot = await freshBacklog('oat-archive-nogit-');
     const id = 'BL-260705-demo';
@@ -975,7 +1022,7 @@ describe('archiveBacklogItem', () => {
     });
 
     it('retries a failed reference rewrite and index regeneration on re-run', async () => {
-      const { root, backlogRoot } = await linkedRepository({ git: false });
+      const { root, backlogRoot } = await linkedRepository({ git: true });
       await regenerateBacklogIndex(backlogRoot);
       const indexPath = join(backlogRoot, 'index.md');
       expect(await readFile(indexPath, 'utf8')).toContain(id);
@@ -985,6 +1032,10 @@ describe('archiveBacklogItem', () => {
       );
       const repairedEarly = join(root, '.oat/repo/pjm/early.md');
       await writeFile(repairedEarly, `Work: [item](backlog/items/${id}.md).\n`);
+      execFileSync('git', ['add', '.'], { cwd: root });
+      execFileSync('git', ['commit', '-qm', 'pending archive baseline'], {
+        cwd: root,
+      });
       await chmod(blocked, 0o000);
 
       try {
