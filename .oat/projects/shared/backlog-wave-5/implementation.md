@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 7     | 7/7       |
 | Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | active   | 10    | 9/10      |
+| Phase 3 | active   | 10    | 10/10     |
 | Phase 4 | pending  | 4     | 0/4       |
 | Phase 5 | pending  | 3     | 0/3       |
 | Phase 6 | pending  | 1     | 0/1       |
 
-**Total:** 19/28 tasks completed
+**Total:** 20/28 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -196,9 +196,10 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ### Task p03-t10: (review) Complete record recovery across committed generations
 
-**Status:** pending — operator disposition required
-**Commit:** -
-**Finding:** M1 from native p03/r4; original later-generation recovery remains incomplete, no data loss observed.
+**Status:** completed
+**Commit:** 47e441ace6540f6c0f537dec6b4379c7f4005d52
+**Outcome:** Existing shared receipt owner verifies superseded history and current publication before exposing narrow settledCommit proof; strict old-identity result remains failed and never resets/publishes the old tree. Existing record adapter retires only matching marker inode/dev/bytes and at most one fresh reservation. Migration finalization unchanged. No new command, receipt field, validator duplication or process framework.
+**Verification:** Captured baseline and new intervening/prune-recreate keepers fail1 before fix; immediate accepted control0. Fixed16/16 selected tests pass0. Current-publication guard neutralization breaks both protection keepers1; exact restore. Committed-head author1117/13 direct tests with isolated child HOME, CLI check/types/freshbuild0; twelve source/built/actual adapter+emittedCLI probes0. Root independently16/16 selected tests0 and intervening/prune-recreate/immediate probes0, literal unrelated/concurrent state preserved. Evidence analysis/p03/t10-_ and analysis/p03-t10-root-_. No full scaffold/prune CLI claim. Recovery1/10pendingnull unchanged, signal Low final-owned, four exact files/one append-only normal-hook commit, clean handoff.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1117,7 +1118,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1205,10 +1206,13 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "task_ids": ["p03-t10"],
       "review_artifact": "reviews/archived/p03-review-2026-10-04T062815Z.md",
       "complexity_report": "reviews/archived/complexity-p03-2026-10-04T065100Z.md",
-      "status": "accepted-hold",
+      "status": "completed",
       "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
-      "reason": "User explicitly approved bounded M1 corrective revision and one additional native/configured gate cycle; signal Low stays final-owned. No counter reset or standing override."
+      "reason": "User explicitly approved bounded M1 corrective revision and one additional native/configured gate cycle; signal Low stays final-owned. No counter reset or standing override.",
+      "execution_base": "ccc4599a4d2ad518bae28ba65d8c29f767a9b4bf",
+      "fix_commit": "47e441ace6540f6c0f537dec6b4379c7f4005d52",
+      "outcome": "DONE; one four-file task commit; direct1117/13, actual12controls0; root16keepers+threeactualprobes0; clean, recovery1/null unchanged, product authority released."
     }
   ],
   "task_class": "consequential",
@@ -2038,3 +2042,99 @@ User replied **Approve** to bounded p03-t10 corrective revision plus ONE further
 Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
 
 Resolver explicit gpt-6.1-sol/high candidate, consequential floor, completed Dispatch Report, no notices. Same original request wave5-p03-implement-r1; continuation wave5-p03-fix-continuation-r4. Native schema and current T3 catalog admit exact route; runtime identity not reported. Generic original run record updated in place and validated through CLI, no duplicate launch ledger.
+
+### Approved p03-t10 continuation received — 2026-10-04
+
+Original exact-bound phase author returned DONE; execution range ccc4599a4..47e441ace contains exactly one append-only four-file commit. Root inspected committed production/test composition and normal-hook trailer, clean status and diff check, and independently repeated16/16 changed-boundary keepers with isolated child HOME plus actual intervening/prune-recreate/immediate saved probes, all0. Author1117/13 plus twelve source/built/public probes and check/types/freshbuild0 are attributed author evidence. Root probe stderr empty. Direct oldidentity remainsfailed, superseded tree never republished, marker/receipt/publication safeguards retained. Phase3 ten tasks complete; scope stays in_progress for the ONE approved additional fresh native r5 review and configured Opus r3 gate. No additional recovery or budget reset. Six Low final findings retained; on successful acceptance proceed Phase4.
+
+#### Dispatch wave5-p03-review-r5
+
+Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-review-r5",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Independently review bounded p03-t10 superseded-record retirement and full phase composition without weakening old-identity or publication safeguards.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T12:07:33.052539Z"
+  },
+  "authority": "read-only-product-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_review_r5"
+  },
+  "launch_status": "planned",
+  "child_outcome": "not-started",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing phase review of hook/index preservation and concurrent writers plus executable skill ownership/scope contracts; subtle misses lose user Git state.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Planned fresh exact-target r5 review; no nested lanes. Completed resolver report has no notices; canonical role/current native schema and T3 catalog validated. Root task ledger is committed before launch; review outcome bookkeeping remains root-owned after return.

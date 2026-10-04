@@ -359,7 +359,7 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Finding:** M1 in `reviews/archived/p03-review-2026-10-04T062815Z.md`, independently reproduced by root. The no-intervening accepted control passes; a real different-message commit to the same record followed by the original fresh unstaged operation fails with its stale identity. This is the original L1 prune/re-scaffold/prune case, not the disclosed staged-recurrence limitation.
 
-**Status:** Approved bounded corrective revision plus one additional fresh native/configured-gate cycle on 2026-10-04; signal Low remains final-owned.
+**Status:** Correction completed at47e441ace; one additional fresh native/configured-gate cycle authorized and pending. Signal Low remains final-owned.
 
 **Files:** Proposed existing `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`, `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. The refreshed assessment recommends narrowly verified superseded-reservation retirement through the shared owner; operator approved this bounded route. Declare any additional need before editing.
 
