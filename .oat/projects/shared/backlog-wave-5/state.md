@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t07
-oat_last_commit: 8b320cbce96353b322eb4af310b506dd2d2bd9eb
+oat_current_task: p06-t08
+oat_last_commit: b1ed6503bb60136fe8427bdfd38ab6dfe825cb58
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -158,7 +158,7 @@ None. User approved three serial final-test tasks and delegated routine continua
 
 ## Next Milestone
 
-Execute remaining approved/delegated p06-t07 through t08, then restart final ordered gates before native final review, configured p06/implementation gates, explicit prior-finding dispositions and preapproval/HiLL/one-PR tail. All32original tasks remain complete; no PR created.
+Execute remaining approved/delegated p06-t08, then restart final ordered gates before native final review, configured p06/implementation gates, explicit prior-finding dispositions and preapproval/HiLL/one-PR tail. All32original tasks remain complete; no PR created.
 
 ### Approved continuation — 2026-10-04
 

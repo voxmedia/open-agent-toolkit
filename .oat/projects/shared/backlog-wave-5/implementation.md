@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t07
+oat_current_task_id: p06-t08
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; 2 remaining final guidance/generated tasks and Phase6 final review/gate/one-PR closeout remain.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; 1 remaining generated task and Phase6 final review/gate/one-PR closeout remain.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 8     | 6/8       |
+| Phase 6 | in_progress | 8     | 7/8       |
 
-**Total:** 37/39 tasks completed
+**Total:** 38/39 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -355,7 +355,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t07: Clarify legacy recap evidence and durable links
 
-**Status:** pending
+**Status:** completed
+**Commit:** b1ed6503bb60136fe8427bdfd38ab6dfe825cb58
+
+**Outcome/Verification:** Five docs files resolve p05gate Low2/Low3. Root independently checked actual v1/v2 code and completion selector, exact intended paragraph/four href replacements and four tracked targets. Seven HTML bytes and narratives/limitations conserved. Pre/post existing oracle/docs validation/lint/format exit0, committed/working hashes and parent/path evidence verified. Evidence analysis/p06/t07/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 ### Task p06-t08: Refresh final generated projections and bundled parity
 
@@ -4283,3 +4286,7 @@ Author RELEASE/HOLD received and actual named evidence corroborated. Unsupported
 ### Root t05 findings disposition
 
 p01gate L1-L4 are resolved at80109a77 by owning-term/no-policy-expansion wording, existing-severity finding wording, placeholder evidence fields and invalid local-string evidence removal. L5 keeper gap resolved by actual chained/alias/tests-only real-Git controls; ACMR deletion expansion remains the previously justified separate deferral. Root explicitly withdraws the historical p01-t04 stop-clause deletion-guard claim: it did not exercise shipped behavior. Actual missing-contract baseline, positive shipped-text keepers and current306tests remain accepted bounded evidence; no live-model efficacy inferred. Root CLI t04 receipt initially rejected invalid slug/absent guessed log path without mutation; actual project-path/project-log.md corrected before one normal receipt commit.
+
+### Root t07 receipt correction
+
+Root receipt script expected string exits but this author emitted numeric exits0. Assertion rejected before task tracking mutation; the structural log alone was committed6086f1b5. Root then read actual numeric receipts, independently verified paths/hashes/conservation/code and completed tracking here. No failed gate accepted, no task commit/recovery/history changed.
