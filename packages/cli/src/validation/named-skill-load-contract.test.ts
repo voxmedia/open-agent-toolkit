@@ -824,6 +824,77 @@ const PLAN_WRITING_CONTRACT_CLAUSE =
   'load the current `oat-project-plan-writing/SKILL.md` and follow that contract as written';
 
 const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
+  // Non-executing reference, ownership and commit operation identity mentions.
+  {
+    file: '.agents/skills/oat-project-autonomous/SKILL.md',
+    anchor: 'Step 1.5: Disclose Effective Limits and Hard Stops',
+    match:
+      'Before lifecycle execution, read the owning contracts: the vendored autonomy contract/gate inventory, `oat-project-implement/references/phase-execution.md` and `oat-phase-implementer` recovery contract',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Names a reference file to read before execution, rather than invoking the owning skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+    anchor: 'Kickoff disclosure',
+    match:
+      '`oat-project-autonomous` owns the kickoff report; phase dispatch and resume refresh it from `state.md` using the phase-execution contract.',
+    classification: 'non-executing',
+    skills: ['oat-project-autonomous'],
+    reason:
+      'Declares report ownership; the dispatch verb does not invoke the named owner.',
+  },
+  {
+    file: '.agents/skills/oat-project-import-plan/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-import-plan:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-import-plan'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Artifact Persistence (Required)',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-lite:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-lite'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-lite:2"',
+    classification: 'non-executing',
+    skills: ['oat-project-lite'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-new/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-new:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-new'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-quick-start:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-quick-start'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
   // ---------------------------------------------------------------------- lite
   {
     file: '.agents/skills/oat-project-lite/SKILL.md',
