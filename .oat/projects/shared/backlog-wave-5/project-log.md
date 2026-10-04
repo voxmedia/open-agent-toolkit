@@ -68,6 +68,10 @@ wave5-p01-complete-3e2d6cf2: Phase 1 complete after root review and configured i
 
 Normalized config readers/writers discard unknown PJM keys, so spreading the normalized object cannot preserve all unowned settings. Task p02-t01 validates normally and overlays only adoption markers onto raw persisted JSON; real init/migrate probes preserve literal remote and future settings. Evidence: implementation.md p02-t01; wave5-p02-raw-preservation.
 
+### 2026-10-04 · structural · oat-project-implement · p02
+
+wave5-p02-root-review-outcome-r1: root review passed with zero findings, fix loops 0; independent phase gate pending; artifact reviews/archived/p02-review-2026-10-04T004034Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
