@@ -128,7 +128,7 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ## Phase 3: Shared hook-safe exact-path commits
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
 
@@ -1006,3 +1006,99 @@ Accepted native handle `/root/wave5_phase2_fix`; unchanged exact Sol/high target
 ### Phase p02 terminal outcome
 
 DONE fix report validated: original request/continuation/exact Sol-high target, execution base 625f8bda01d5e96f0d9670bade5aec56d7804f83 and single six-file fix commit d10b21caadde19d3cf2be6c948ec23ad99abec0b, passing controls and clean tree. Gate M1/L1 address-now dispositions settled; independent passing-gate sweep requires no phase re-review for this contained Medium/Low correction. No Critical/High concern emerged, no new deferral, fix iteration 1, recovery 0/null. Phase 2 complete; final review will include corrected integration. Next p03-t01.
+
+### Phase p03 preflight and accepted execution
+
+Fresh origin/main has no new commits in planned helper/internal/CLI lifecycle/skill/agent/shared-contract/validator/docs paths. Tier 1 native exact Sol/high under managed high policy; user exact implementer constraint retained. Three sequential tasks, no concurrent index writers or phase lanes. Recovery default10, durable used0, pendingnull; separate review-fix/gate budgets and all owning stops remain binding. Root owns per-task bookkeeping/reviews/publication; phase handle owns product writes only between explicit START/RELEASE handshakes.
+
+#### Dispatch wave5-p03-implement-r1
+
+Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Implement shared hook-safe exact-path primitive, CLI adopters and named lifecycle skill instructions.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261003",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T01:00:25.342510Z"
+  },
+  "authority": "phase-scoped-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Real Git index, hooks and concurrent writers must preserve user staged blobs and worktree bytes; subtle loss is expensive.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:2db1e0c63c9a76c912e59cb8b3a3ccf29e0d9860293f6551b1dedcb63dde2fa9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native handle `/root/wave5_phase3`; explicit materialized-role invocation, runtime identity not reported. Phase base before dispatch c9130a4b8c1cd01e2d91a9bff9a974687721631a; actual clean execution base follows acceptance bookkeeping. No nested lanes requested. Worker holds product writes until START.
