@@ -3350,3 +3350,103 @@ Root START alignment: match Progress Overview by cell content after hook formatt
 Validated original native phase report wave5-p05-implement-r1: DONE, exact target oat-phase-implementer-gpt-6-1-sol-high, three planned task commits in order plus one append-only bounded recovery. Phasebasea49abbf525f3de8f2ee28781a51b7d88aa3c5097/START1c58b4f88d202a5138a6aa0fc32d54fff31de5a7; full root-bookkept handoff HEADcc127687fe14a446b151216a8a98a03f3bc18291 clean. Exact6/11/80taskpaths and narrow3pathrecovery checked at each root receipt. Used1/10 pendingnull; no nested dispatch, no original history/source evidence rewrite, no changed provider/model/effort or live remote/S3 calls.
 
 Author direct composition154archive/report and87completion tests, freshCLIbuild/check/types, skillvalidation66/docs passed0. Seven authentic exports pass matching retry/conflict/ownedrollback and outputhash match; four authentic integrity probes and actual publicCLI first-pass/recordless retry readers+mismatch controls pass. Full65file conservation/link oracle0 and T3 seven desktop/mobile actual-byte render evidence attributed. Root separately repeated full65hash/output/path/link checks plus publicCLI reader/race and inspected styled images; task receipts distinguish independent from author evidence. Ignored analysis/p05/phase-verification.json contains exact counts/logs/limitations and phase-owned-paths.json exact paths. Final8gates, versions/projections, existing10Lows+stored-receipt diagnosticMedium remain root/Phase6 owned. Phase stays in_progress until native review and configured gate dispositions settle. Unsupported unnecessary completed-agent interrupt returned unsupported/no effects; no retry/replacement or residency claim.
+
+#### Dispatch wave5-p05-review-r1
+
+Dispatch stamp: Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p05-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Independently review full Phase5 export, current/legacy consumers and conservation of all historical sources through flat migration.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-live-T3-20261004-p05-review",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-04T16:59:34.785172Z"
+  },
+  "authority": "one-phase-five-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase5_review"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "handle": "<redacted-path>",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "Accepted; HOLD acknowledged; fresh fork none; product read-only and one p05 artifact."
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Full source and original archive preservation, atomic rollback and genuine producer-to-resume identity composition require independent adversarial review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted native reviewer handle /root/wave5_phase5_review (Bacon), exact registered Sol6.1/high materialized role and fresh fork none. Product/core tracking/log read-only plus ONE p05 timestamped artifact write. Full Phase5basea49abbf5; root acceptance bookkeeping supplies immutable reviewedHEAD before START. Resolver notices[], fresh live T3/native schema supports exact target; runtime identity not reported. No nested/recon, model substitution, provider fallback or live remote calls; root consumes required terminal reconnaissance signal before artifact validation/receive.
