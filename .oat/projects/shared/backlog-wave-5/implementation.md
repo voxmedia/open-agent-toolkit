@@ -19,10 +19,10 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | in_progress | 5     | 4/5       |
+| Phase 5 | in_progress | 5     | 5/5       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 30/32 tasks completed
+**Total:** 31/32 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -298,10 +298,12 @@ Phases 1–4 are complete. Phase 4 passed native r1 and configured Opus-high gat
 
 ### Task p05-t05: (review) Restrict recap rewriting to actual HTML attributes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2eef4f1b544c268083b76c2156d514f928466fe3
 
 **Outcome:** Native p05 r2 M1 confirmed independently; same accepted author continuation, reviewfix2/2.
+
+**Verification:** One normal-hook exact six-path commit,parent0ddcb589,clean readback. Source/test SHA256s match already-verified168archive/87completion/check/types/freshbuild and public producer/readers; committed focused15 and genuine7replay retry/conflict/rollback pass. Root independently verified exactsixpaths, samecodeSHA, complete old/new four-page quote-only comparison, literal3scripts preserve/execute123,7newhashes/214874bytes,all65original/priorarchivebytes and43links/fragments/IDs/narratives. Seven root raw-script focused keepers pass. Original old outputs/receipts remain historical; other three pages unchanged. New current export identities retained in analysis/p05/fix2-approved-committed-handoff.json and root-fix2-final-oracle.json. T3 actual four desktop pages/pivots/computed30marker references and three320px layouts pass; initial Wave4 top screenshot inspected by author/root. Diagram/mobile capture failures and final Wave3 mobile preview-host loss retained; no complete visual/screenshot claim. Phase5 stays in_progress pending full native r3/configured gate; fix2/2,recovery1/10 pendingnull unchanged.
 
 ## Phase 6: Versions and generated integration
 
@@ -3546,7 +3548,7 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
     "task_name": "wave5_phase5_fix1_resume"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3587,6 +3589,12 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "source": "native-followup-acceptance",
       "event": "cont-backlog-wave-5-p05-fix-2",
       "result": "Same accepted handle HOLD after explicit user four-page extension approval; exacttarget unchanged; existing verified two-file patch preserved."
+    },
+    {
+      "source": "native-terminal-result",
+      "task_id": "p05-t05",
+      "commit": "2eef4f1b544c268083b76c2156d514f928466fe3",
+      "result": "DONE exact6paths; sourceSHA unchanged; 168archive/87completion/check/types/build0;7matchingoutputs/43links/originals conserved; T3limits recorded; clean RELEASE."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3615,14 +3623,16 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "scope": "archive-utils source/test and four approved derived SVG recap pages",
       "review_fix_iteration": 2,
       "review_fix_limit": 2,
-      "status": "approved-resume-accepted-hold",
+      "status": "completed",
       "baseline": "157d5523680c38e474579388eecdb002ced7823f",
-      "verified_uncommitted": true,
+      "verified_uncommitted": false,
       "task_commit": null,
       "captured_artifact": "p05-fix2-preapproval-20261004",
       "manifest_digest": "d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e",
       "approval": "User: alright sure, apply it; exact four SVG generated pages + prior two code files",
-      "approval_baseline": "429742afb61fa2a7e1559e36726cf7e0a6b0a972"
+      "approval_baseline": "429742afb61fa2a7e1559e36726cf7e0a6b0a972",
+      "commit": "2eef4f1b544c268083b76c2156d514f928466fe3",
+      "parent": "0ddcb589fddf7988306fa51e40a7b2071a277aa8"
     }
   ],
   "task_class": "consequential",
@@ -3791,3 +3801,5 @@ For crash resilience, quiescent two-file uncommitted work is sealed outside chec
 User explicitly confirmed old generated recaps then authorized “alright sure, apply it”. Root amended only p05-t05 ownership to the exact four preserved genuine fresh exports plus prior two source/test files. Sole30SVG inner quote pairs/60removedbytes; original evidence and other three pages remain immutable. Complete page content/hash comparisons, actual four old-page refusal controls and browser DOM marker evidence are retained in analysis/p05/fix2-proposed-scope-amendment.md/root-fix2-historical-page-delta.json. No mismatch exception, schema/authoring change or original attestation rewrite. Prior scope pause remains historical; blocker settled by explicit approval.
 
 Same accepted author /root/wave5_phase5_fix1_resume acknowledged HOLD; generic continuation prevalidated and acceptedvalidated-only; fresh resolver notices[], exact Sol6.1/high target. Already-present two-file patch SHAs remain unchanged across root tracking-only commits. Preapproval capture is a preserved older-base backup, never stale-applied/restored. Root supplies current STARTHEAD for one task commit of six exact paths after derived-page/newhash/retry/conservation/render verification. Fix2/2 and recovery1/10 pendingnull unchanged; no fresh worker/counter reset. Root then full native r3/configured gate and remaining sequential phases.
+
+Root received p05-t05 DONE and preserved original/current captures and prior failure observers. Actual taskcommit2eef4f1b is one bounded fix, not implementation recovery or counter reset. Two initial r3 resolver preflight requests incorrectly included implementer-only candidate/classification flags and were rejected before any child launch; corrected reviewer-ceiling invocation resolves exact Sol6.1/high notices[]. This is argument correction, not a new route/fallback or accepted-child replacement. Fresh full five-task native r3 and configured gate follow; all prior ten Lows/one Medium remain final-owned.
