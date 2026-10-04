@@ -2551,3 +2551,103 @@ Prior gate M1 closed: p03-t11 named recovered-unrecorded sequence and guards pas
 Root judgment pending refreshed necessity assessment/operator: actual-parent/provenance refusal is a retained hard constraint; automatically clearing unbound reservations or restoring weaker fall-through is not authorized by the existing positive-proof/no-arbitrary-rotation contract. Confirmed resumable:true plus same-identity guidance merits a narrow diagnostic-contract assessment; fully automatic history-rewrite recovery is a separate product/contract choice. No requirement waiver or new correction selected. L1 accepted/resolved in root tracking: p03-t10/r3 and p03-t11 completion lines now reflect committed/received events. Six prior Low findings remain final-owned.
 
 ONE approved extra cycle consumed: nativecount6, gates4excluded, recovery1/10pendingnull unchanged. Fourth refreshed complexity assessment required because latestgate is newer than priorassessment T131142Z. Phase3 eleven tasks committed; Phase4–6 and one-PR tail remain pending. No p03-t12 product authority, seventh correctness review or fifth gate.
+
+### Dispatch wave5-p03-complexity-r4
+
+Dispatch: scope=p03 action=review role=reviewer model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p03-complexity-r4",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Assess necessity and operator disposition after the approved p03-t11 cycle closes named recovery but exposes misleading same-identity retry after provenance-breaking history rewrite; no correctness re-review.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-tool-schema-20261004-host-continuation",
+    "source": "tool-schema",
+    "observed_at": "2026-10-04T14:17:47.651627Z"
+  },
+  "authority": "read-only-inline-report",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 1800,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase3_complexity_r4"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "handle": "<redacted-path>",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted; HOLD until immutable committed START head"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Necessity assessment at exhausted correctness-loop cap for assurance-bearing Git provenance and user-state preservation; root retains operator disposition.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.10",
+      "contentDigest": "sha256:7cf5669b54d7833d623e116cb8980e3cfcb6d8633bed14a2f74fd003feb26042",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Accepted independent read-only necessity assessor; new review artifacts require refreshed report under the exhausted-loop fallback. Native exact role/HOLD; no product writes, tests, probes, nested agents, correctness-cycle or recovery increment. Root owns verdict disposition and artifacts. START is bound to this acceptance commit.
