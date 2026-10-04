@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
@@ -111,6 +113,7 @@ test('archive continuation carries only the exported manifest receipt', async ()
     [
       'archivePath',
       'exportedManifestPath',
+      'exportedPagePath',
       'lifecycleCommit',
       'projectRecapExport',
       'rejoinStep',
@@ -258,4 +261,102 @@ test('skill keeps the synced archive resume route and one bookkeeping push', asy
   assert.ok(bookkeeping > rejoin);
   assert.ok(confirmation > bookkeeping);
   assert.doesNotMatch(guidance, /EVIDENCE_COMMIT|attest final project recap/);
+});
+
+// The package is the existing p01 v2-package controlled fixture. The archive producer
+// computes the recap report; terminal lifecycle metadata is a controlled seam.
+// Full public CLI first-pass/recordless retry acceptance is recorded separately
+// in the repeatable t02-real-producer probe using preserved Wave4 package bytes
+// and actual local Git receipts. This fixture is not an original package capture.
+test('consumes producer JSON flat-page identity and rejects mismatched continuation receipts', async () => {
+  const { archiveProjectOnCompletion } =
+    await import('../../../../packages/cli/dist/commands/project/archive/archive-utils.js');
+  const repoRoot = await mkdtemp(join(tmpdir(), 'oat-flat-resume-'));
+  try {
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const run = 'explainers/captured';
+    await mkdir(join(projectPath, 'explainers'), { recursive: true });
+    await cp(
+      new URL(
+        '../../../../packages/cli/src/commands/project/archive/fixtures/v2-package/',
+        import.meta.url,
+      ),
+      join(projectPath, run),
+      { recursive: true },
+    );
+    const produced = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-08-31T00:00:00Z' },
+    );
+    const report = JSON.parse(
+      JSON.stringify(
+        archiveReport({
+          ...produced,
+          snapshotId: '20260831-demo',
+          lifecycleCommit,
+          completedRef: 'refs/oat/completed/demo',
+          verifiedSourceSha: sourceSha,
+          activeAliasDisposition: 'removed',
+          recordRetired: true,
+        }),
+      ),
+    );
+    const consume = (value) =>
+      executeSyncedArchiveEntry({
+        record: null,
+        projectName: 'demo',
+        projectPath,
+        repoRoot,
+        archiveProject: async () => value,
+        validateArchive: async ({ archiveReport: receipt }) =>
+          validateSyncedArchiveTerminalReport(receipt, 'demo'),
+      });
+    for (const root of [
+      produced.projectRecapExport.sourceRunRoot,
+      join(produced.archivePath, run),
+    ]) {
+      report.projectRecapExport.sourceRunRoot = root;
+      const result = await consume(report);
+      const fields = parseSyncedArchiveResumeFields(
+        JSON.parse(JSON.stringify(result)),
+      );
+      assert.equal(
+        fields.EXPORTED_PAGE_PATH,
+        '.oat/repo/reference/project-recaps/20260831-demo.html',
+      );
+      assert.equal(fields.EXPORTED_MANIFEST_PATH, '');
+      for (const field of [
+        'runId',
+        'sourceRelativePath',
+        'originalSha256',
+        'exportedSha256',
+      ]) {
+        const bad = structuredClone(report);
+        if (field === 'runId') bad.projectRecapExport.runId = 'foreign';
+        else
+          bad.projectRecapExport.page[field] =
+            field === 'sourceRelativePath'
+              ? 'site/foreign.html'
+              : `sha256:${'0'.repeat(64)}`;
+        await assert.rejects(consume(bad), /identity failed/);
+        const saved = structuredClone(result);
+        saved.continuation.projectRecapExport = bad.projectRecapExport;
+        assert.throws(
+          () => parseSyncedArchiveResumeFields(saved),
+          /no verified/,
+        );
+      }
+    }
+    await writeFile(produced.projectRecapExport.exportRoot, 'foreign page');
+    await assert.rejects(consume(report), /identity failed/);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
 });

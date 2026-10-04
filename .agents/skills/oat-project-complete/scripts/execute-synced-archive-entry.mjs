@@ -1,7 +1,17 @@
 import { execFile as execFileCallback } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { isAbsolute, posix, relative, sep, resolve } from 'node:path';
+import {
+  isAbsolute,
+  posix,
+  relative,
+  sep,
+  resolve,
+  join,
+  dirname,
+  basename,
+} from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -23,45 +33,112 @@ async function buildPostArchiveContinuation(
 ) {
   let selectedProjectRecapRun = '';
   let exportedManifestPath = '';
-  if (archiveReport.projectRecapExport != null) {
-    const sourceRunRoot = archiveReport.projectRecapExport?.sourceRunRoot;
-    const exportRoot = archiveReport.projectRecapExport?.exportRoot;
-    const manifestPath =
-      archiveReport.projectRecapExport?.manifest?.relativePath;
+  let exportedPagePath = '';
+  const canonicalPath = (value) => {
+    try {
+      return realpathSync(value);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      const parent = dirname(value);
+      if (parent === value) throw error;
+      return join(canonicalPath(parent), basename(value));
+    }
+  };
+  const recap = archiveReport.projectRecapExport;
+  if (recap != null) {
+    const inside = (root, target) => {
+      if (typeof target !== 'string' || !isAbsolute(target)) return null;
+      const child = relative(canonicalPath(root), canonicalPath(target))
+        .split(sep)
+        .join('/');
+      return child && !/^\.\.(?:[/\\]|$)/.test(child) && !isAbsolute(child)
+        ? child
+        : null;
+    };
+    selectedProjectRecapRun =
+      inside(projectPath, recap.sourceRunRoot) ??
+      inside(archiveReport.archivePath, recap.sourceRunRoot);
+    const exportRelative = inside(
+      join(repoRoot, '.oat/repo/reference/project-recaps'),
+      recap.exportRoot,
+    );
     if (
-      typeof sourceRunRoot !== 'string' ||
-      typeof exportRoot !== 'string' ||
-      manifestPath !== 'manifest.json'
+      !selectedProjectRecapRun?.startsWith('explainers/') ||
+      !exportRelative
     ) {
       throw executionError(
-        'Archive resume report has an invalid project recap export receipt.',
+        'Archive resume recap source or export is outside its allowed root.',
       );
     }
-    selectedProjectRecapRun = relative(projectPath, sourceRunRoot)
+    const repoRelativeExport = relative(
+      canonicalPath(repoRoot),
+      canonicalPath(recap.exportRoot),
+    )
       .split(sep)
       .join('/');
     if (
-      selectedProjectRecapRun.length === 0 ||
-      /^\.\.(?:[/\\]|$)/.test(selectedProjectRecapRun) ||
-      isAbsolute(selectedProjectRecapRun)
+      recap.manifest?.relativePath === 'manifest.json' &&
+      recap.page == null
     ) {
-      throw executionError(
-        'Archive resume recap source is outside the original project path.',
+      // Persisted pre-flat-export receipts remain readable.
+      exportedManifestPath = posix.join(repoRelativeExport, 'manifest.json');
+    } else {
+      const page = recap.page;
+      const sourcePage = page?.sourceRelativePath;
+      if (
+        exportRelative !== `${archiveReport.snapshotId}.html` ||
+        typeof recap.runId !== 'string' ||
+        !recap.runId ||
+        !Number.isInteger(recap.verifiedArtifactCount) ||
+        recap.verifiedArtifactCount < 1 ||
+        typeof sourcePage !== 'string' ||
+        !sourcePage.startsWith('site/') ||
+        !sourcePage.endsWith('.html') ||
+        sourcePage.split('/').some((part) => part === '..') ||
+        !/^sha256:[0-9a-f]{64}$/.test(page?.originalSha256) ||
+        !/^sha256:[0-9a-f]{64}$/.test(page?.exportedSha256)
+      )
+        throw executionError(
+          'Archive resume report has an invalid flat recap receipt.',
+        );
+      const archivedRun = join(
+        archiveReport.archivePath,
+        selectedProjectRecapRun,
       );
+      const hash = (bytes) =>
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      try {
+        if (
+          !inside(archiveReport.archivePath, archivedRun) ||
+          !inside(archivedRun, join(archivedRun, sourcePage)) ||
+          !inside(archivedRun, join(archivedRun, 'manifest.json'))
+        )
+          throw new Error('archived source escapes its root');
+        const manifest = JSON.parse(
+          await readFile(join(archivedRun, 'manifest.json'), 'utf8'),
+        );
+        const original = await readFile(join(archivedRun, sourcePage));
+        const exported = await readFile(recap.exportRoot);
+        if (
+          manifest.runId !== recap.runId ||
+          Object.keys(manifest.immutableHashes).length !==
+            recap.verifiedArtifactCount ||
+          !manifest.artifacts.some(
+            (artifact) =>
+              (artifact.renderedPath ?? artifact.contentPath) === sourcePage,
+          ) ||
+          manifest.immutableHashes[sourcePage] !== page.originalSha256 ||
+          hash(original) !== page.originalSha256 ||
+          hash(exported) !== page.exportedSha256
+        )
+          throw new Error('run, page, or hash mismatch');
+      } catch (error) {
+        throw executionError(
+          `Archive resume flat recap identity failed: ${error.message}`,
+        );
+      }
+      exportedPagePath = repoRelativeExport;
     }
-    const exportRootRelative = relative(repoRoot, exportRoot)
-      .split(sep)
-      .join('/');
-    if (
-      exportRootRelative.length === 0 ||
-      /^\.\.(?:[/\\]|$)/.test(exportRootRelative) ||
-      isAbsolute(exportRootRelative)
-    ) {
-      throw executionError(
-        'Archive resume recap export is outside the repository root.',
-      );
-    }
-    exportedManifestPath = posix.join(exportRootRelative, manifestPath);
   }
   return {
     required: true,
@@ -73,6 +150,7 @@ async function buildPostArchiveContinuation(
     selectedProjectRecapRun,
     projectRecapExport: archiveReport.projectRecapExport ?? null,
     exportedManifestPath,
+    exportedPagePath,
   };
 }
 

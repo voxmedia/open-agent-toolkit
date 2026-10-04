@@ -2499,6 +2499,53 @@ describe('archive utils', () => {
     expect(result.s3Path).toBeNull();
   });
 
+  it('exports the reported flat recap identity in the summary while preserving the original', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const original =
+      '# Summary\n\n## Explainer Outcome\n\nbuilt-needs-review: [Recap](explainers/old/site/index.html)\n\n## Other\n\nKeep this claim.\n';
+    await writeFile(join(projectPath, 'summary.md'), original);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const summary = await readFile(result.summaryExportFile!, 'utf8');
+    expect(summary).toContain('[Recap](../project-recaps/20260401-demo.html)');
+    expect(summary).toContain(result.projectRecapExport!.runId);
+    expect(summary).toContain(result.projectRecapExport!.page.originalSha256);
+    expect(summary).toContain(result.projectRecapExport!.page.exportedSha256);
+    expect(summary).toContain('built-needs-review');
+    expect(summary).toContain('Keep this claim.');
+    expect(summary).not.toContain('explainers/old');
+    expect(await readFile(join(result.archivePath, 'summary.md'), 'utf8')).toBe(
+      original,
+    );
+    await cp(result.archivePath, projectPath, { recursive: true });
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(await readFile(retried.summaryExportFile!, 'utf8')).toBe(summary);
+  });
+
   it('copies summary.md to the configured summary export path', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

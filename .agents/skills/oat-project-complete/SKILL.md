@@ -1241,21 +1241,23 @@ another lifecycle commit. `removed` is the completed-only terminal shape;
 `retained` is the equally terminal same-SHA active alias shape. A differing-SHA
 state is never a successful report.
 
-When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
-`projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
-`projectRecapExport.manifest.relativePath === "manifest.json"`. Confirm the
-reported source is the selected run under the pre-archive project path and the
-export root is inside the tracked
-`.oat/repo/reference/project-recaps/` root. Record:
+When `SELECTED_PROJECT_RECAP_RUN` is non-empty, require the report's
+`projectRecapExport.sourceRunRoot`, `exportRoot`, `runId`,
+`page.sourceRelativePath`, `page.originalSha256`, `page.exportedSha256`, and
+positive `verifiedArtifactCount`. The export is one tracked
+`.oat/repo/reference/project-recaps/<snapshotId>.html` page. Confirm the source
+is the selected run under the pre-archive project path, or under `archivePath`
+on a terminal retry. Verify the run ID and manifest-declared original page/hash
+against the retained archived run, and the exported hash against the tracked
+page. Record `exportRoot` as the final page, never as a package directory.
 
-- `sourceRunRoot` as the relocation source;
-- `exportRoot` as the final recap run root; and
-- `exportRoot/manifest.relativePath` as the final manifest.
-
-Do not infer or reconstruct the recap export root. The archive report is
-authoritative. A missing, malformed, mismatched, outside-root, or gitignored
-export report is an archive failure; stop before lifecycle bookkeeping.
-Never use the gitignored archive as evidence or a link target.
+The archive report is authoritative. A missing, malformed, mismatched,
+outside-root, or gitignored export report is an archive failure; stop before
+lifecycle bookkeeping. Link only to the tracked page. The full original run,
+including source, manifest, and QA evidence, remains in the archived project;
+it is retained evidence rather than a remote link target. Persisted older
+receipts with `manifest.relativePath === "manifest.json"` remain readable as
+legacy package receipts; new exports never create a tracked manifest sidecar.
 
 SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for durable projects, local-scope projects never pass a recap archive argument.
 
@@ -1290,12 +1292,12 @@ final synced links,
 dashboard refresh, the required bookkeeping push, tracked-PR closeout when
 applicable, and final confirmation.
 
-Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport.exportRoot`; do not derive them from the local archive.
+Rewrite recap links in the tracked summary export and the PR description body from the reported HTML `projectRecapExport.exportRoot`; do not derive them from the local archive. Preserve the reported run ID and original/exported page hashes in the summary outcome. On resume use `EXPORTED_PAGE_PATH`; `EXPORTED_MANIFEST_PATH` is populated only for a persisted legacy package receipt.
 Use a repository-relative path under
 `.oat/repo/reference/project-recaps/` and a blob URL on the current head branch
 while the PR is open. If `summaryExportFile` is non-null, update its concise
 `Explainer Outcome` recap link. Update the archived PR-description artifact
-used by Step 11 or 11.5 so its recap reference points to the same tracked root.
+used by Step 11 or 11.5 so its recap reference points to the same tracked HTML page.
 Omit either link when its containing artifact does not exist.
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.

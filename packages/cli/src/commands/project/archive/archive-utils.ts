@@ -879,6 +879,7 @@ async function exportProjectSummary(
   summaryExportPath: string,
   repoRoot: string,
   dependencies: ArchiveProjectOnCompletionDependencies,
+  recapExport: ArchiveProjectRecapExportV1 | null,
 ): Promise<string | null> {
   const summarySource = join(archivePath, 'summary.md');
   const exists = dependencies.fileExists ?? fileExists;
@@ -888,12 +889,37 @@ async function exportProjectSummary(
 
   const summaryTarget = join(repoRoot, summaryExportPath, `${snapshotName}.md`);
   const copySummary = dependencies.copySingleFile ?? copySingleFile;
+  const sourceContents = await readFile(summarySource);
+  let expectedContents = sourceContents;
+  if (recapExport) {
+    const pageLink = relative(dirname(summaryTarget), recapExport.exportRoot)
+      .split(sep)
+      .join('/');
+    const receipt = `Recap: [View the recap](${pageLink})\n\nRun: \`${recapExport.runId}\`  \nOriginal page SHA-256: \`${recapExport.page.originalSha256}\`  \nExported page SHA-256: \`${recapExport.page.exportedSha256}\`\n`;
+    const text = sourceContents.toString('utf8');
+    const outcome =
+      /(^## Explainer Outcome[^\n]*\n)([\s\S]*?)(?=^## |$(?![\s\S]))/m;
+    const rewriteLinks = (body: string) =>
+      body.replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        (markdownLink, label: string, href: string) =>
+          /(?:explainers\/|project-recaps\/)/.test(href)
+            ? `[${label}](${pageLink})`
+            : markdownLink,
+      );
+    expectedContents = Buffer.from(
+      outcome.test(text)
+        ? text.replace(
+            outcome,
+            (_match, heading: string, body: string) =>
+              `${heading}${rewriteLinks(body).trimEnd()}\n\n${receipt}\n`,
+          )
+        : `${text.trimEnd()}\n\n## Explainer Outcome\n\n${receipt}`,
+    );
+  }
   if (await pathExists(summaryTarget)) {
-    const [sourceContents, targetContents] = await Promise.all([
-      readFile(summarySource),
-      readFile(summaryTarget),
-    ]);
-    if (!sourceContents.equals(targetContents)) {
+    const targetContents = await readFile(summaryTarget);
+    if (!expectedContents.equals(targetContents)) {
       throw new CliError(
         `Existing summary export \`${summaryTarget}\` does not match persisted snapshot \`${snapshotName}\`; refusing to overwrite it.`,
       );
@@ -901,6 +927,7 @@ async function exportProjectSummary(
     return summaryTarget;
   }
   await copySummary(summarySource, summaryTarget);
+  if (recapExport) await writeFile(summaryTarget, expectedContents);
   return summaryTarget;
 }
 
@@ -2054,6 +2081,7 @@ export async function archiveProjectOnCompletion(
         options.summaryExportPath,
         options.repoRoot,
         dependencies,
+        projectRecapExport,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

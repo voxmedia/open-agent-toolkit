@@ -15,6 +15,21 @@ function shellQuote(value) {
 export function parseSyncedArchiveResumeFields(result) {
   const continuation = result?.continuation;
   const hasRecapExport = continuation?.projectRecapExport !== null;
+  const recap = continuation?.projectRecapExport;
+  const flatPage = `.oat/repo/reference/project-recaps/${result?.archiveReport?.snapshotId}.html`;
+  const invalidFlat =
+    recap?.page &&
+    (typeof recap.runId !== 'string' ||
+      !recap.runId ||
+      typeof recap.page.sourceRelativePath !== 'string' ||
+      !recap.page.sourceRelativePath.startsWith('site/') ||
+      !/^sha256:[0-9a-f]{64}$/.test(recap.page.originalSha256) ||
+      !/^sha256:[0-9a-f]{64}$/.test(recap.page.exportedSha256) ||
+      !Number.isInteger(recap.verifiedArtifactCount) ||
+      recap.verifiedArtifactCount < 1 ||
+      continuation.exportedPagePath !== flatPage ||
+      typeof recap.exportRoot !== 'string' ||
+      !recap.exportRoot.endsWith(`/${flatPage}`));
   const allowedContinuationFields = new Set([
     'required',
     'rejoinStep',
@@ -25,6 +40,7 @@ export function parseSyncedArchiveResumeFields(result) {
     'selectedProjectRecapRun',
     'projectRecapExport',
     'exportedManifestPath',
+    'exportedPagePath',
   ]);
   if (
     !continuation ||
@@ -42,10 +58,20 @@ export function parseSyncedArchiveResumeFields(result) {
     continuation.archivePath.length === 0 ||
     typeof continuation.lifecycleCommit !== 'string' ||
     !/^[0-9a-f]{40}$/.test(continuation.lifecycleCommit) ||
+    invalidFlat ||
     (hasRecapExport &&
-      (typeof continuation.exportedManifestPath !== 'string' ||
-        continuation.exportedManifestPath.length === 0)) ||
-    (!hasRecapExport && continuation.exportedManifestPath !== '')
+      (JSON.stringify(continuation.projectRecapExport) !==
+        JSON.stringify(result.archiveReport?.projectRecapExport) ||
+        (continuation.projectRecapExport?.page
+          ? typeof continuation.exportedPagePath !== 'string' ||
+            !continuation.exportedPagePath.endsWith('.html') ||
+            continuation.exportedManifestPath !== ''
+          : typeof continuation.exportedManifestPath !== 'string' ||
+            !continuation.exportedManifestPath.endsWith('/manifest.json') ||
+            Boolean(continuation.exportedPagePath)))) ||
+    (!hasRecapExport &&
+      (continuation.exportedManifestPath !== '' ||
+        Boolean(continuation.exportedPagePath)))
   ) {
     throw fieldsError(
       'Synced archive resume result has no verified post-archive continuation.',
@@ -66,6 +92,7 @@ export function parseSyncedArchiveResumeFields(result) {
       continuation.projectRecapExport ?? null,
     ),
     EXPORTED_MANIFEST_PATH: continuation.exportedManifestPath,
+    EXPORTED_PAGE_PATH: continuation.exportedPagePath ?? '',
     PROJECT_REF_COMMIT: '',
     SHOULD_OPEN_PR: 'false',
   };

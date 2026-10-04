@@ -127,9 +127,12 @@ different retention contracts:
   the tracked branch with the active project tree. It remains only in the local
   archived project.
 - A selected final `project-recap` is a durable completion record. Before a
-  shared project is removed, archive copies the complete selected run to
-  `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies its
-  package inventory and hashes, and reports that tracked export path. Summary
+  shared project is removed, archive verifies the complete selected run and
+  exports one self-contained HTML page to
+  `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>.html`. The
+  report identifies the run, original page/hash, exported hash, and verified
+  artifact count. The full original run, manifest, source, and QA evidence
+  remain in the archived project. Summary
   and PR links use this export, never the gitignored local archive. Lifecycle
   callers identify the selected project-relative run with:
 
@@ -138,8 +141,10 @@ different retention contracts:
     --project-recap-run explainers/<recap-slug>
   ```
 
-The archive exports at most one selected recap package. It rejects an existing
-dated destination and requires the selected path to stay under the project's
+The archive exports at most one selected recap page, with local assets embedded
+and unavailable project-source links removed. It adopts a byte-identical dated
+page on retry and refuses a differing existing destination without overwriting
+it. It creates no tracked manifest, fact-base, QA, or hash sidecar and requires the selected path to stay under the project's
 `explainers/` directory with a `project-recap` manifest. Verification checks
 the manifest's exact inventory, every declared file byte, the fact base and
 ledger, resolved theme, authored page, and QA result before deleting the active

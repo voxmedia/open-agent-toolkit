@@ -685,6 +685,28 @@ describe('mutation invariants', () => {
     }
   });
 
+  it('allows exactly the reported flat recap page at the recap allowlist boundary', () => {
+    const repoRoot = '/repo';
+    const page = '.oat/repo/reference/project-recaps/20261003-demo.html';
+    const options = {
+      recapExportRoot: `${repoRoot}/${page}`,
+      projectRoots: {
+        sharedRoot: '/repo/.oat/projects/shared',
+        syncedRoot: '/repo/.oat/projects/synced',
+      },
+    };
+    expect(() =>
+      assertAllowlistedPathspecs(repoRoot, [page], options),
+    ).not.toThrow();
+    expect(() =>
+      assertAllowlistedPathspecs(
+        repoRoot,
+        ['.oat/repo/reference/project-recaps/20261003-other.html'],
+        options,
+      ),
+    ).toThrow(CliError);
+  });
+
   it('keeps add -A nested and normal worktree removal unforced', async () => {
     const fixture = await createSyncedFixture();
     try {
