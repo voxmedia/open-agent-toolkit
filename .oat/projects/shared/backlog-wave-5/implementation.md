@@ -1953,8 +1953,8 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     "target": "<redacted-path>",
     "bound_agent_type": "oat-reviewer-gpt-6-1-sol-high"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
+  "launch_status": "accepted",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1965,8 +1965,17 @@ Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unkn
     }
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
-  "continuation_events": [],
+  "diagnostics": [
+    "Existing exact-bound /root/wave5_phase3_complexity resumed through native followup_task for one read-only refreshed necessity assessment; START bound7bf2718937afe796250910f7fa0a068b22998168. No correctness round, writes/probes/nested lanes, fallback or replacement. Root may commit only acceptance metadata while assessor reads committed target."
+  ],
+  "continuation_events": [
+    {
+      "event_id": "wave5-p03-complexity-refresh-r2",
+      "original_request_id": "wave5-p03-complexity-r1",
+      "accepted_handle": "/root/wave5_phase3_complexity",
+      "reason": "New native/gate scope artifacts require a newer necessity report; exact original role/model/effort preserved."
+    }
+  ],
   "task_class": "consequential",
   "model_class_floor": "consequential",
   "classification_source": "caller",
