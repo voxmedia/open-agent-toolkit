@@ -199,7 +199,7 @@ Archived in p04-t02 (`a90da4f49`):
 - Project recap: `built` (host browser rung, visual verdict pass), run
   `bb64ea32-d55b-47b9-9612-a1843856e52c`, regenerated at completion from the
   final inputs:
-  [.oat/repo/reference/project-recaps/20260927-triage-correctness-wave.html](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/reference/project-recaps/20260927-triage-correctness-wave.html)
+  [.oat/repo/reference/project-recaps/20260927-triage-correctness-wave.html](../project-recaps/20260927-triage-correctness-wave.html)
   (full original source, manifest, and QA evidence are retained in the archived project).
 
 ## Workflow Observations

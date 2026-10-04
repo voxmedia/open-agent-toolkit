@@ -161,7 +161,7 @@ returned a zero-regression acceptance pass (11/11 lanes), with an Orc
 ## Explainer Outcome
 
 - **project-recap:** built-not-durable —
-  [.oat/repo/reference/project-recaps/20260722-wave-skills-promotion.html](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/reference/project-recaps/20260722-wave-skills-promotion.html) (run-ea0647db;
+  [.oat/repo/reference/project-recaps/20260722-wave-skills-promotion.html](../project-recaps/20260722-wave-skills-promotion.html) (run-ea0647db;
   Opus-authored via the enforced author seam; default clean-neutral style;
   durability attestation follows at completion bookkeeping)
 

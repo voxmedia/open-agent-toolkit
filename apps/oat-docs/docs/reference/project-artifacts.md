@@ -146,9 +146,11 @@ and unavailable project-source links removed. It adopts a byte-identical dated
 page on retry and refuses a differing existing destination without overwriting
 it. It creates no tracked manifest, fact-base, QA, or hash sidecar and requires the selected path to stay under the project's
 `explainers/` directory with a `project-recap` manifest. Verification checks
-the manifest's exact inventory, every declared file byte, the fact base and
-ledger, resolved theme, authored page, and QA result before deleting the active
-project.
+the manifest version's exact inventory and raw immutable file-byte hashes before
+deleting the active project. Direct CLI archive also accepts legacy v1 recaps:
+the v1 contract verifies canonical fact-base and resolved-theme JSON identities
+and build-record run/outcome agreement. The v2 contract additionally requires
+ledger and QA evidence coverage. Project completion selects v2 recap runs.
 
 Both `built` and `built-needs-review` are complete, archivable outcomes.
 `built-needs-review` means the browser rung was unavailable or found an issue;
