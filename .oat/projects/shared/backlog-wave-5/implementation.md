@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p04-t03
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -18,11 +18,11 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
 | Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | in_progress | 4     | 2/4       |
+| Phase 4 | in_progress | 4     | 3/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 24/30 tasks completed
+**Total:** 25/30 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -236,8 +236,9 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 
 ### Task p04-t03: Preserve manual knowledge and staged user work
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** 0866f1f8e52b9d2441ad05e012aae6d5f5824001
+**Verification:** six real ownership/caller tests pre/post0: actual prepare and commit snippets through branch CLI, literal nine-path generated/deleted tree oracle, manual/staged/unstaged preservation; collision stops before deletion/index changes, missing/unmarked outputs and symlink ancestor/output escapes rejected. Historical broad-delete and broad-commit controls reproduce losses; deletion guard and actual skill broad-commit neutralizations each break the owning keeper1, exact restore then six pass0. Skill validator66, docs/docs-package, scoped/root lint/format and fresh CLI build all0. Four declared files only; no provider generation or persistent ownership manifest. Root read actual script and consumer diff, verified sole commit/parent/boundary and clean readback. Evidence analysis/p04/t03-\*.
 
 ### Task p04-t04: Offer and persist Plain Markdown in guided init
 
@@ -1330,49 +1331,50 @@ Root validated DONE report, exact same handle/target/axes, original immutable hi
 
 ### Phase 3 skill caller adoption
 
-| Owner                                                                        | Explicit helper sites | Phase 4 archive adoption |
-| ---------------------------------------------------------------------------- | --------------------- | ------------------------ |
-| `.agents/skills/oat-project-autonomous/SKILL.md`                             | 2                     | -                        |
-| `.agents/skills/oat-project-discover/SKILL.md`                               | 1                     | -                        |
-| `.agents/skills/oat-project-document/SKILL.md`                               | 2                     | -                        |
-| `.agents/skills/oat-project-new/SKILL.md`                                    | 1                     | -                        |
-| `.agents/skills/oat-project-capture/SKILL.md`                                | 1                     | -                        |
-| `.agents/skills/oat-project-design/SKILL.md`                                 | 4                     | -                        |
-| `.agents/skills/oat-project-lite/SKILL.md`                                   | 2                     | -                        |
-| `.agents/skills/oat-project-quick-start/SKILL.md`                            | 6                     | -                        |
-| `.agents/skills/oat-project-import-plan/SKILL.md`                            | 2                     | -                        |
-| `.agents/skills/oat-project-revise/SKILL.md`                                 | 2                     | -                        |
-| `.agents/skills/oat-project-promote-spec-driven/SKILL.md`                    | 1                     | -                        |
-| `.agents/skills/oat-project-plan/SKILL.md`                                   | 2                     | -                        |
-| `.agents/skills/oat-project-review-receive-remote/SKILL.md`                  | 1                     | -                        |
-| `.agents/skills/oat-project-review-provide/SKILL.md`                         | 1                     | -                        |
-| `.agents/skills/oat-project-reconcile/SKILL.md`                              | 1                     | -                        |
-| `.agents/skills/oat-project-spec/SKILL.md`                                   | 1                     | -                        |
-| `.agents/skills/oat-project-retro-file/SKILL.md`                             | 1                     | -                        |
-| `.agents/skills/oat-project-review-receive/SKILL.md`                         | 2                     | -                        |
-| `.agents/skills/oat-project-summary/SKILL.md`                                | 3                     | -                        |
-| `.agents/skills/oat-wave-execute/SKILL.md`                                   | 1                     | complete p04-t02         |
-| `.agents/skills/oat-brainstorm/SKILL.md`                                     | 5                     | -                        |
-| `.agents/skills/oat-agent-instructions-apply/SKILL.md`                       | 1                     | -                        |
-| `.agents/skills/oat-docs-apply/SKILL.md`                                     | 1                     | -                        |
-| `.agents/skills/oat-review-provide/SKILL.md`                                 | 1                     | -                        |
-| `.agents/skills/oat-review-receive-remote/SKILL.md`                          | 1                     | -                        |
-| `.agents/skills/oat-project-implement/references/phase-execution.md`         | 2                     | -                        |
-| `.agents/skills/oat-project-implement/references/completion-and-closeout.md` | 2                     | -                        |
-| `.agents/skills/oat-project-retro/references/apply-procedure.md`             | 3                     | -                        |
-| `.agents/skills/oat-wave-execute/assets/wrapper-plan-template.md`            | 1                     | complete p04-t02         |
-| `.agents/skills/oat-project-complete/SKILL.md`                               | 2                     | -                        |
-| `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`                        | 1                     | -                        |
-| `.agents/agents/oat-phase-implementer.md`                                    | 2                     | -                        |
-| `.oat/repo/pjm/AGENTS.md`                                                    | -                     | complete p04-t02         |
-| `.oat/templates/pjm-agents.md`                                               | -                     | complete p04-t02         |
-| `.oat/templates/repo-agents.md`                                              | -                     | complete p04-t02         |
-| `.oat/templates/repo-readme.md`                                              | -                     | complete p04-t02         |
-| `.agents/skills/oat-pjm-update-repo-reference/SKILL.md`                      | -                     | complete p04-t02         |
-| `.agents/skills/oat-pjm-review-backlog/SKILL.md`                             | -                     | complete p04-t02         |
-| `.agents/skills/oat-doctor/SKILL.md`                                         | -                     | complete p04-t02         |
+| Owner                                                                        | Explicit helper sites | Phase 4 scoped caller adoption |
+| ---------------------------------------------------------------------------- | --------------------- | ------------------------------ |
+| `.agents/skills/oat-project-autonomous/SKILL.md`                             | 2                     | -                              |
+| `.agents/skills/oat-project-discover/SKILL.md`                               | 1                     | -                              |
+| `.agents/skills/oat-project-document/SKILL.md`                               | 2                     | -                              |
+| `.agents/skills/oat-project-new/SKILL.md`                                    | 1                     | -                              |
+| `.agents/skills/oat-project-capture/SKILL.md`                                | 1                     | -                              |
+| `.agents/skills/oat-project-design/SKILL.md`                                 | 4                     | -                              |
+| `.agents/skills/oat-project-lite/SKILL.md`                                   | 2                     | -                              |
+| `.agents/skills/oat-project-quick-start/SKILL.md`                            | 6                     | -                              |
+| `.agents/skills/oat-project-import-plan/SKILL.md`                            | 2                     | -                              |
+| `.agents/skills/oat-project-revise/SKILL.md`                                 | 2                     | -                              |
+| `.agents/skills/oat-project-promote-spec-driven/SKILL.md`                    | 1                     | -                              |
+| `.agents/skills/oat-project-plan/SKILL.md`                                   | 2                     | -                              |
+| `.agents/skills/oat-project-review-receive-remote/SKILL.md`                  | 1                     | -                              |
+| `.agents/skills/oat-project-review-provide/SKILL.md`                         | 1                     | -                              |
+| `.agents/skills/oat-project-reconcile/SKILL.md`                              | 1                     | -                              |
+| `.agents/skills/oat-project-spec/SKILL.md`                                   | 1                     | -                              |
+| `.agents/skills/oat-project-retro-file/SKILL.md`                             | 1                     | -                              |
+| `.agents/skills/oat-project-review-receive/SKILL.md`                         | 2                     | -                              |
+| `.agents/skills/oat-project-summary/SKILL.md`                                | 3                     | -                              |
+| `.agents/skills/oat-wave-execute/SKILL.md`                                   | 1                     | complete p04-t02               |
+| `.agents/skills/oat-brainstorm/SKILL.md`                                     | 5                     | -                              |
+| `.agents/skills/oat-agent-instructions-apply/SKILL.md`                       | 1                     | -                              |
+| `.agents/skills/oat-docs-apply/SKILL.md`                                     | 1                     | -                              |
+| `.agents/skills/oat-review-provide/SKILL.md`                                 | 1                     | -                              |
+| `.agents/skills/oat-review-receive-remote/SKILL.md`                          | 1                     | -                              |
+| `.agents/skills/oat-project-implement/references/phase-execution.md`         | 2                     | -                              |
+| `.agents/skills/oat-project-implement/references/completion-and-closeout.md` | 2                     | -                              |
+| `.agents/skills/oat-project-retro/references/apply-procedure.md`             | 3                     | -                              |
+| `.agents/skills/oat-wave-execute/assets/wrapper-plan-template.md`            | 1                     | complete p04-t02               |
+| `.agents/skills/oat-project-complete/SKILL.md`                               | 2                     | -                              |
+| `.agents/skills/oat-worktree-bootstrap-auto/SKILL.md`                        | 1                     | -                              |
+| `.agents/agents/oat-phase-implementer.md`                                    | 2                     | -                              |
+| `.oat/repo/pjm/AGENTS.md`                                                    | -                     | complete p04-t02               |
+| `.oat/templates/pjm-agents.md`                                               | -                     | complete p04-t02               |
+| `.oat/templates/repo-agents.md`                                              | -                     | complete p04-t02               |
+| `.oat/templates/repo-readme.md`                                              | -                     | complete p04-t02               |
+| `.agents/skills/oat-pjm-update-repo-reference/SKILL.md`                      | -                     | complete p04-t02               |
+| `.agents/skills/oat-pjm-review-backlog/SKILL.md`                             | -                     | complete p04-t02               |
+| `.agents/skills/oat-doctor/SKILL.md`                                         | -                     | complete p04-t02               |
+| `.agents/skills/oat-repo-knowledge-index/SKILL.md`                           | -                     | complete p04-t03 (knowledge)   |
 
-59 explicit Phase3 sites (historical verified count; the added p04 archive column does not recount them). Eight archive guidance owners/nine concrete guide and asset files are adopted in p04-t02. Synced push remains its ref/worktree transaction; historical read-only Git evidence is excluded. Entry skills without direct commits route to the adopted references. Archive/PJM callers are complete at p04-t02; knowledge-specific caller remains p04-t03; generated projections and owner/package versions remain p06. Complete inventory and concrete 39-path manifest are in ignored `analysis/p03/t03-adoption-summary.md` and `t03-files.json`. Root evidence: `analysis/p03-t03-root-tests.log`, `p03-t03-root-source-probe.json`.
+59 explicit Phase3 sites (historical verified count; the added p04 archive column does not recount them). Eight archive guidance owners/nine concrete guide and asset files are adopted in p04-t02. Synced push remains its ref/worktree transaction; historical read-only Git evidence is excluded. Entry skills without direct commits route to the adopted references. Archive/PJM callers are complete at p04-t02; knowledge-specific caller is complete at p04-t03; generated projections and owner/package versions remain p06. Complete inventory and concrete 39-path manifest are in ignored `analysis/p03/t03-adoption-summary.md` and `t03-files.json`. Root evidence: `analysis/p03-t03-root-tests.log`, `p03-t03-root-source-probe.json`.
 
 ### Phase 3 pre-review baseline
 
@@ -3048,3 +3050,7 @@ One task commit plus one permitted immutable recovery, clean handoff. Original e
 ### Phase 4 task2 root receipt
 
 Root verified exact thirteen-path sole task commit, parent, clean handoff and actual producer/consumer test/guidance composition. Existing archive adoption table advanced without overwriting historical Phase3 counts. Exclusions are stale handoff deletion outside archive closeout and read-only historical commands, not missing archive consumers. Recovery1/10 remaining9/pendingnull unchanged. Task3 begins only after separate tracking commit;24/30 tasks.
+
+### Phase 4 task3 root receipt
+
+Exact four-path task commit and current script/actual-consumer guidance verified. Prepare checks every expected output collision before removing marked regular Markdown; output/root symlink containment is explicit. Retained operation result identifies only removed generated/expected output paths; verify requires every expected marker before exact-path commit. Existing knowledge tracking workflow retained. Root added knowledge caller adoption to existing table without changing historical Phase3 site counts. Recovery1/10 remaining9/pendingnull unchanged;25/30. Task4 U1 release follows separate tracking commit.

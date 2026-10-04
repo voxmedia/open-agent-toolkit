@@ -160,6 +160,10 @@ wave5-p04-t01-received: task1 committed78b2326 and same-target append-only recov
 
 wave5-p04-t02-received: complete archive lifecycle guidance8 owners adopted in13 declared files; actual full archive/helper accepted and omitted-side controls incomplete,34 archivekeepers and693skills passed. Task2 commit8aee49c verified,24/30. Recovery1/10 pendingnull unchanged; knowledge refresh next.
 
+### 2026-10-04 · structural · oat-project-implement · p04
+
+wave5-p04-t03-received: manual-safe knowledge refresh0866f1f committed, six actual ownership/caller controls pass and broad delete/commit negative keepers fail then restored. Four declared files,25/30 tasks; recovery1/10 pendingnull unchanged. Plain Markdown U1 next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
