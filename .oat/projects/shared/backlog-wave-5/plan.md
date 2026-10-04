@@ -658,6 +658,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T063659Z.md           | 12a8da785036595cade0e1f1a739763911bb20ee | gate       | claude-opus-5-5-high |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T124703Z.md           | 317a07e9566fab4bf8d92f60754bb8af708c6ba4 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T125636Z.md           | 9e790ffdcd43afd41fac6bc2414b89a7929caf2c | gate       | claude-opus-5-5-high |
+| p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T135302Z.md           | 2057385d4bfc4d2c43b8ae0a7d4e81dd52e19628 | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -669,12 +670,12 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 10 tasks — shared primitive and CLI/skill adoption, six committed corrections and one remaining later-generation recovery correction pending operator disposition.
+- Phase 3: 11 tasks — shared primitive and CLI/skill adoption, plus eight committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 28 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 29 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

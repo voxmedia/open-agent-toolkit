@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 p03-t11 committed and verified; approved native review and gate pending
+Implement - Phase 3 native r6 received; approved configured gate pending
 
 ## Artifacts
 
@@ -158,4 +158,4 @@ None. User approved bounded p03-t11 correction and one further native/configured
 
 ## Next Milestone
 
-Receive the one approved fresh native review and configured gate; Phase 4 remains pending.
+Run and receive the approved configured Opus r4 gate; Phase 4 remains pending.

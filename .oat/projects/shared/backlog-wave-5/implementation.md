@@ -2474,7 +2474,7 @@ Original completed-phase handle unavailable after host restart; one fresh same-t
     "task_name": "wave5_phase3_review_r6"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -2490,6 +2490,13 @@ Original completed-phase handle unavailable after host restart; one fresh same-t
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted; HOLD requested pending committed START head"
+    },
+    {
+      "source": "native-terminal-result",
+      "target": "<redacted-path>",
+      "result": "completed; exact one Reconnaissance:not-attempted; no Review Orchestration; 177 direct tests and seven actual controls0; 0C0H0M1L",
+      "artifact": ".oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T135302Z.md",
+      "reviewed_head": "2057385d4bfc4d2c43b8ae0a7d4e81dd52e19628"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -2528,3 +2535,9 @@ Original completed-phase handle unavailable after host restart; one fresh same-t
 ```
 
 ONE approved additional independent native review accepted at exact Sol6.1/high consequential target. Reviewer holds pending root START bound to acceptance commit. Scope is committed p03-t11 and Phase3 composition, prior eight reports and three complexity assessments; six Lows remain final-owned. Root pre-review task ledger f75952ec07ac927c90006fed6dcfcf93321808d3, correction 1f7e5842377a119b47d4b5cd598a8b9108ee22cb. No additional correctness review authorization, no count reset, recovery1/10pendingnull unchanged.
+
+### Phase 3 native r6 received — 2026-10-04
+
+Root consumed exactly one terminal **Reconnaissance:** not-attempted before validating artifact/bookkeeping; no Review Orchestration block, no reviewer-orchestration log entry. Full artifact read and branch-source parser validated0C0H0M1L, scopep03/invocationauto/head2057385d4bfc4d2c43b8ae0a7d4e81dd52e19628/base d1fd3642a15cd442163de75be28b10c30cf7bc53/explicit correction range. Original normal-hook preservation commit 463c8b5fbd75b39a36329f5b363ebd21a3a05696; archived byte-identically at reviews/archived/p03-review-2026-10-04T135302Z.md; SHA256 0c7b07fbac7eebc3a44ed7a2d5d2146f2e32eaff73207c62c380c526baa0933f.
+
+M1 closed: independent reviewer177/5 direct isolated-child-HOME tests0 and seven actual controls0, including recovered public oldidentity failedexit2 with unchangedHEAD/index/receipt/marker/worktree and valid fresh adapter generation. Wider1122/13 and check/types/build/probes are attributed author evidence; root built acceptance repeated0. L1 accepted and resolved in this root-owned artifact alignment: existing plan completion summary now p03 eleven tasks/total29; all task headings/ledger counts agree. No product task/test or further correctness round is needed for that prose correction. Six prior Lows remain final-owned. Native count6; configured gates3 excluded; recovery1/10pendingnullunchanged. ONE authorized Opus r4 gate remains before p03 terminal acceptance/Phase4.
