@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t10
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review and configured Opus gate remain pending after the three-standard-review cap. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate remains pending. Further implementation/review requires a new operator disposition. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -17,12 +17,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 9     | 9/9       |
+| Phase 3 | in_progress | 10    | 9/10      |
 | Phase 4 | pending     | 4     | 0/4       |
 | Phase 5 | pending     | 3     | 0/3       |
 | Phase 6 | pending     | 1     | 0/1       |
 
-**Total:** 19/27 tasks completed
+**Total:** 19/28 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -193,6 +193,12 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 **Commit:** ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c
 **Outcome:** A narrow fully verified receipt/publication proof permits the marker-owning adapter to make at most one fresh reservation for changed unstaged record bytes. Migration settlement never rotates. Forged receipt, unresolved index and replaced marker refuse.
 **Verification:** Final committed-head direct composition 1107/1107 tests across 13 files; CLI check/types/fresh build and all ten author source/built/public probes exit0. Task-specific pre-fix failures and accepted/ownership controls are retained in `analysis/p03/`; see the continuation receive entry below.
+
+### Task p03-t10: (review) Complete record recovery across committed generations
+
+**Status:** pending — operator disposition required
+**Commit:** -
+**Finding:** M1 from native p03/r4; original later-generation recovery remains incomplete, no data loss observed.
 
 ## Phase 4: Archive and knowledge-refresh consumers
 
@@ -1834,7 +1840,7 @@ Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown
     "task_name": "wave5_phase3_review_r4"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1846,7 +1852,7 @@ Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown
   ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [
-    "Exact native materialized target accepted as /root/wave5_phase3_review_r4; complete fresh-context brief and HOLD acknowledged before review execution. Root owns acceptance ledger until clean START head. Runtime identity not reported; no nested lane, fallback or replacement."
+    "Exactly one terminal Reconnaissance not-attempted consumed before artifact validation/bookkeeping; no orchestration section. Full bound artifact read and exact head/range/timestamp/scope/counts validated:0C0H1M0L. Independent1107/13 and seven saved controls pass; new intervening-owned-HEAD recurrence fails and root repeats same expected-acceptance failure. No source/tracking edits, fallback or replacement."
   ],
   "continuation_events": [],
   "task_class": "consequential",
@@ -1882,3 +1888,11 @@ Dispatch stamp: Dispatch: scope=p03 action=review role=reviewer producer=unknown
 ```
 
 Authorized additional standard review after explicit cap override. Native registered materialized Sol6.1/high target, fresh context, read-only product and sole review artifact write. Root retains all tracking/log/commit ownership. Await exact native acceptance; no replacement route authorized.
+
+### Review received: p03 native round4 — 2026-10-04
+
+Exactly one valid terminal `**Reconnaissance:** not-attempted` consumed before artifact validation/bookkeeping. No orchestration section; no orchestration log entry. Root read the entire immutable report, validated full reviewed head `aba8d06dd34a1ae60718a8f6738aea72cd08d99f`, primary rangec6fbc643..aba8d06d/fullphase contextd1fd3642..aba8d06d, timestamp/scope/invocation and counts0C0H1M0L. Original report preserved in its exact-path commit before byte-identical local-only archive.
+
+M1 accepted: complete record recovery across intervening committed generations. Saved `analysis/p03/review-r4-intervening-record.mjs` executes the displayed helper repair, matching repeat, real different-message record commit, then fresh unstaged original-message recurrence; expected acceptance fails exit1 with unchanged-owned-HEAD guard before settlement proof. Root independently repeated the exact probe (`analysis/p03-r4-root-intervening-record.json/.err`) and confirmed marker retained, no data loss, literal unrelated/concurrent state preserved. Immediate no-intervening control passes. This is an incomplete accepted t09/L1 outcome, distinct from disclosed already-staged refusal. Newp03-t10 queued, no corrective implementation or further review authorized.
+
+Native threshold0Critical/High is met, but this remaining Medium is an accepted correction requirement and prevents phase completion. The explicitly authorized configured Opus gate is still run as the final independent check of this additional cycle; neither a sub-threshold gate pass nor task commit count can erase M1. After that check, return to operator with a new complexity report newer than all scope artifacts. Native standard cycles4 (gate excluded), prior correction rounds2 plus the explicit four-task continuation; recovery1/10 pendingnull unchanged. No fifth standard review, new fix dispatch, Phase4 launch, PR, merge or release authorized here.

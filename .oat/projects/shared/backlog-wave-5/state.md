@@ -1,7 +1,10 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p03-t10
 oat_last_commit: ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c
-oat_blockers: []
+oat_blockers:
+  [
+    'p03 M1 later-generation record recovery; operator disposition required after approved additional gate and complexity assessment',
+  ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -135,7 +138,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 corrections committed; additional review and gate pending
+Implement - Phase 3 additional review received; remaining recovery gap, configured gate pending
 
 ## Artifacts
 
@@ -154,8 +157,8 @@ Implement - Phase 3 corrections committed; additional review and gate pending
 
 ## Blockers
 
-None requiring user input. Four Phase 3 gate corrections and one additional native review/Opus gate cycle are explicitly approved.
+Further corrective implementation/review requires operator disposition. The approved additional native review found M1; its configured Opus gate and mandatory refreshed complexity assessment are pending.
 
 ## Next Milestone
 
-Complete the approved bounded Phase 3 corrections and additional review/gate cycle before Phase 4, including U1 Plain Markdown guided-init support.
+Complete the approved additional Opus gate and refreshed complexity assessment, then return the remaining Phase3 recovery gap to the operator before further implementation or Phase4.

@@ -355,6 +355,22 @@ Machine logs, timing, hash ledgers and temporary fixtures belong in ignored `.oa
 
 **Format:** Scoped `pnpm exec oxfmt --write` on actual edited files.
 
+### Task p03-t10: (review) Complete record recovery across committed generations
+
+**Finding:** M1 in `reviews/archived/p03-review-2026-10-04T062815Z.md`, independently reproduced by root. The no-intervening accepted control passes; a real different-message commit to the same record followed by the original fresh unstaged operation fails with its stale identity. This is the original L1 prune/re-scaffold/prune case, not the disclosed staged-recurrence limitation.
+
+**Status:** Pending operator disposition at the scope-bound override boundary; implementation and another standard review cycle are not authorized.
+
+**Files:** Proposed existing `packages/cli/src/commands/project/sync/ref-sync.ts`, `ref-sync.test.ts`, `packages/cli/src/commands/shared/exact-path-commit.ts`, `exact-path-commit.test.ts`. Final bounded route follows the required new complexity assessment and operator disposition; declare any additional need before editing.
+
+**Dependencies:** p03-t09 committed; explicit operator disposition required before corrective implementation or Phase4 launch. Preserve all original commits and counters.
+
+**Change:** Complete the existing marker-owning recovery boundary so a later valid committed generation cannot strand a stale identity. Do not remove the helper's changed-HEAD safety guard or rotate arbitrary failures. Preserve actual parent/tree/trailer/ancestry/emitted ownership, unresolved-publication and foreign/replaced-marker refusal, migration finalization and unrelated Git state.
+
+**Verification:** Extend the existing owning record family with exact saved `analysis/p03/review-r4-intervening-record.mjs` sequence. Expected acceptance currently fails exit1; after correction it must succeed while the no-intervening control and refusal/preservation controls still pass. Direct committed-head composition, CLI check/types/fresh build and actual public recovery probes; fresh standard review and configured gate require operator authorization.
+
+**Format:** Scoped formatter on actual owned files.
+
 ## Phase 4: Archive and knowledge-refresh consumers
 
 ### Task p04-t01: Make backlog archive mutations staging-neutral
@@ -622,6 +638,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T032627Z.md           | 0ab95601abdd58e124c37b4d9770e07aaade5b09 | auto       | -                    |
 | p03    | code     | passed          | 2026-10-04 | reviews/archived/p03-review-2026-10-04T050037Z.md           | de854f7bc9e11e3a3b7a8f5ffaa02e75fbd8bec9 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T051023Z.md           | 6fa4f0d5947faf15fc2bda64410f534c8b85a3fe | gate       | claude-opus-5-5-high |
+| p03    | code     | fixes_added     | 2026-10-04 | reviews/archived/p03-review-2026-10-04T062815Z.md           | aba8d06dd34a1ae60718a8f6738aea72cd08d99f | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -633,12 +650,12 @@ Planning recovery: the original findings were reformatted without content/proven
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
 - Phase 2: 3 tasks — PJM settings, structured blockers and the malformed-entry preservation correction.
-- Phase 3: 9 tasks — shared primitive and CLI/skill adoption, two settled review corrections and four pending gate corrections.
+- Phase 3: 10 tasks — shared primitive and CLI/skill adoption, six committed corrections and one remaining later-generation recovery correction pending operator disposition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 3 tasks — flat recap producer, consumers and full historical migration.
 - Phase 6: 1 task — versions/generated outputs. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 27 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 28 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
