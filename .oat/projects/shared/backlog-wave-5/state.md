@@ -1,7 +1,10 @@
 ---
 oat_current_task: p03-t11
 oat_last_commit: 1f7e5842377a119b47d4b5cd598a8b9108ee22cb
-oat_blockers: []
+oat_blockers:
+  [
+    'Phase 3 rewritten-history finding: refreshed necessity assessment and operator disposition pending.',
+  ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-04T13:47:07.203607Z
+oat_project_state_updated: 2026-10-04T14:14:50.358968Z
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -129,13 +132,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — Phase 3
+**Status:** Blocked — Phase 3
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implement - Phase 3 native r6 received; approved configured gate pending
+Implement - Phase 3 approved cycle consumed; rewritten-history diagnostic finding awaits refreshed assessment/operator disposition
 
 ## Artifacts
 
@@ -154,8 +157,8 @@ Implement - Phase 3 native r6 received; approved configured gate pending
 
 ## Blockers
 
-None. User approved bounded p03-t11 correction and one further native/configured-gate cycle after refreshed necessity assessment. Six Low findings remain final-owned.
+The approved native r6/configured r4 cycle is consumed. Original p03-t11 gap is closed; a new rewritten-history provenance/refusal diagnostic finding is reproduced. Required refreshed necessity assessment and operator disposition precede further correction/review or Phase 4. Six Low findings remain final-owned.
 
 ## Next Milestone
 
-Run and receive the approved configured Opus r4 gate; Phase 4 remains pending.
+Receive the refreshed necessity assessment and present the concrete operator decision; no additional product or correctness-cycle authority.

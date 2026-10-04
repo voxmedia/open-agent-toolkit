@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phases 1 and 2 are complete. Phase 3 p03-t11 is committed and verified, awaiting the one fresh native/configured-gate cycle under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
+Phases 1 and 2 are complete. Phase 3 p03-t11 is committed and verified; the approved native/configured cycle is consumed with a new rewritten-history diagnostic finding. Execution waits for refreshed necessity assessment and operator disposition under the user-approved bounded corrective revision and one further fresh native/configured-gate cycle. The prior native review passed; the configured gate passed its Critical/High threshold and found the independently reproduced recovered-unrecorded receipt Medium. The refreshed complexity assessment recommends completing shared prior-operation verification within the existing design. Six Low findings remain final-owned. Phases 4–6, including U1 guided-init Markdown choice/config persistence, stay pending.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | in_progress | 11    | 11/11     |
-| Phase 4 | pending     | 4     | 0/4       |
-| Phase 5 | pending     | 3     | 0/3       |
-| Phase 6 | pending     | 1     | 0/1       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | blocked  | 11    | 11/11     |
+| Phase 4 | pending  | 4     | 0/4       |
+| Phase 5 | pending  | 3     | 0/3       |
+| Phase 6 | pending  | 1     | 0/1       |
 
 **Total:** 21/29 tasks completed
 
@@ -2541,3 +2541,13 @@ ONE approved additional independent native review accepted at exact Sol6.1/high 
 Root consumed exactly one terminal **Reconnaissance:** not-attempted before validating artifact/bookkeeping; no Review Orchestration block, no reviewer-orchestration log entry. Full artifact read and branch-source parser validated0C0H0M1L, scopep03/invocationauto/head2057385d4bfc4d2c43b8ae0a7d4e81dd52e19628/base d1fd3642a15cd442163de75be28b10c30cf7bc53/explicit correction range. Original normal-hook preservation commit 463c8b5fbd75b39a36329f5b363ebd21a3a05696; archived byte-identically at reviews/archived/p03-review-2026-10-04T135302Z.md; SHA256 0c7b07fbac7eebc3a44ed7a2d5d2146f2e32eaff73207c62c380c526baa0933f.
 
 M1 closed: independent reviewer177/5 direct isolated-child-HOME tests0 and seven actual controls0, including recovered public oldidentity failedexit2 with unchangedHEAD/index/receipt/marker/worktree and valid fresh adapter generation. Wider1122/13 and check/types/build/probes are attributed author evidence; root built acceptance repeated0. L1 accepted and resolved in this root-owned artifact alignment: existing plan completion summary now p03 eleven tasks/total29; all task headings/ledger counts agree. No product task/test or further correctness round is needed for that prose correction. Six prior Lows remain final-owned. Native count6; configured gates3 excluded; recovery1/10pendingnullunchanged. ONE authorized Opus r4 gate remains before p03 terminal acceptance/Phase4.
+
+### Phase 3 configured Opus r4 received — 2026-10-04
+
+Run c4aeefbf-6e7d-4b69-a639-aa5063501a78, targetclaude-opus-5-5-high/runtimeclaude/modelclaude-opus-5-5/efforthigh/sourceexec-target-config. Envelope statusok/receiveEligibletrue/non-nullhandoff, matchedrun/project/invocation, reviewedhead e6e1f3592b892cad0a2c56d4898649bc4ef4a34d. Root consumed exactly one terminal **Reconnaissance:** not-attempted from correlation-matched provider session e2e55c76-849f-4c9b-ba4d-5102ee3c3588 before artifact validation/bookkeeping. No Review Orchestration block or reviewer-orchestration log. Full report read; branch-source parser0C0H1M1L. Original normal-hook preservation commit 9d10272e89c99e6eda55f747c72c1657f5accd0e; byte-identical archive reviews/archived/p03-review-2026-10-04T140803Z.md SHA256 34cca167d0e138202eb36d12e24ca030a54771cc2b6a46dcc47d3bc139cd594c.
+
+Prior gate M1 closed: p03-t11 named recovered-unrecorded sequence and guards passed independent177/5 and13savedcontrols0. New M1 root reproduced through captured actual helper/record observer: landed unrecorded commit is re-parented with original message, receipt parent no longer binds any reachable candidate; helper refuses twice, record marker remains and returned same-identity retry repeats refusal. Immediate no-rewrite control returns originalSHA; unrelated staged/unstaged literals preserved. Observer0 reports observations, not successful recovery. Evidence analysis/p03-gate-r4-root-rewrite.\*. Baseline nothing is NOT an acceptance oracle: report states unpublished owned index and marker cleared without validated prior success.
+
+Root judgment pending refreshed necessity assessment/operator: actual-parent/provenance refusal is a retained hard constraint; automatically clearing unbound reservations or restoring weaker fall-through is not authorized by the existing positive-proof/no-arbitrary-rotation contract. Confirmed resumable:true plus same-identity guidance merits a narrow diagnostic-contract assessment; fully automatic history-rewrite recovery is a separate product/contract choice. No requirement waiver or new correction selected. L1 accepted/resolved in root tracking: p03-t10/r3 and p03-t11 completion lines now reflect committed/received events. Six prior Low findings remain final-owned.
+
+ONE approved extra cycle consumed: nativecount6, gates4excluded, recovery1/10pendingnull unchanged. Fourth refreshed complexity assessment required because latestgate is newer than priorassessment T131142Z. Phase3 eleven tasks committed; Phase4–6 and one-PR tail remain pending. No p03-t12 product authority, seventh correctness review or fifth gate.
