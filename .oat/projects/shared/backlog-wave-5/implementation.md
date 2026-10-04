@@ -1392,9 +1392,17 @@ Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenan
     "fork_turns": "none",
     "task_name": "wave5_phase3_review_r2"
   },
-  "launch_status": "planned",
-  "child_outcome": "not-started",
-  "configured_invocation_evidence": [],
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    }
+  ],
   "runtime_confirmation": "not-reported",
   "diagnostics": [],
   "continuation_events": [],
@@ -1429,3 +1437,5 @@ Review Dispatch: scope=p03 action=review role=reviewer producer=unknown provenan
   }
 }
 ```
+
+Accepted fresh native reviewer `/root/wave5_phase3_review_r2` (Feynman), exact Sol-high materialized role; holds tests/artifact mutation until root START with committed acceptance head. Primary fix range089f9a75..START, prior artifact/head/full phase context supplied, no fallback/runtime self-disclosure claim.
