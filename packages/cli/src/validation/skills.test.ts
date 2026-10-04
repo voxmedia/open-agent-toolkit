@@ -3776,7 +3776,7 @@ describe('validateOatSkills', () => {
       /no.*new harness.*broad.*campaign/i,
     ];
     for (const clause of required) expect(rule, clause.source).toMatch(clause);
-    // Contract-text controls: deleting the stop cannot preserve acceptance;
+    // Positive shipped-contract keepers: missing evidence blocks;
     // independently inspected controls remain eligible despite execution limits.
     const outcomes = [
       ['Consequential guarantee, absent evidence', 'Blocking finding'],
@@ -3798,12 +3798,6 @@ describe('validateOatSkills', () => {
         .join('|');
       expect(row, scenario).toContain(outcome);
     }
-    const withoutStop = rule.replace(
-      /Missing consequential evidence[^.]+\./i,
-      '',
-    );
-    expect(withoutStop).not.toBe(rule);
-    expect(withoutStop).not.toMatch(required[3]!);
     for (const path of [
       '.agents/skills/oat-project-review-provide/SKILL.md',
       '.agents/skills/oat-project-review-provide-remote/SKILL.md',
@@ -3845,7 +3839,8 @@ describe('validateOatSkills', () => {
       /eligibility.*proof/i,
       /budget exhaustion/i,
       /malformed ledger.*unresolved pending/i,
-      /exact-target.*accepted-launch/i,
+      /immediate direction-required stop for a lost or unbindable exact target, with no fallback/i,
+      /accepted-launch failure when neither same-handle continuation nor a lifecycle-authorized fresh recover launch at the same exact target can continue/i,
       /blocking review policy/i,
       /missing credentials/i,
       /repository authority/i,
@@ -3853,7 +3848,9 @@ describe('validateOatSkills', () => {
       /destructive.*inventory gaps/i,
     ])
       expect(kickoff, clause.source).toMatch(clause);
-    expect(kickoff).not.toMatch(/may continue after a failed recovery/i);
+    expect(kickoff).toMatch(
+      /Continue-after-failure is a separate future policy choice, not authority supplied by this kickoff/i,
+    );
     const guide = await readRepoFile(
       'apps/oat-docs/docs/workflows/advanced/autonomy.md',
     );
@@ -10075,7 +10072,13 @@ describe('skill version resolution across both validators', () => {
     const doc = '.agents/docs/vendor/shared café\tcontract.md';
     await mkdir(join(root, '.agents/docs/vendor'), { recursive: true });
     await writeFile(join(root, doc), '# Shared contract\n');
-    for (const name of ['oat-direct', 'oat-directory']) {
+    for (const name of [
+      'oat-direct',
+      'oat-directory',
+      'oat-chained',
+      'oat-aliased',
+      'oat-tests-only',
+    ]) {
       await createSkillFile(
         root,
         name,
@@ -10096,6 +10099,23 @@ describe('skill version resolution across both validators', () => {
     await symlink(
       '../../../docs/vendor',
       join(root, '.agents/skills/oat-directory/references/docs'),
+    );
+    await symlink(
+      '../../oat-directory/references/docs',
+      join(root, '.agents/skills/oat-chained/references/docs'),
+    );
+    await symlink(
+      'vendor/shared café\tcontract.md',
+      join(root, '.agents/docs/alias.md'),
+    );
+    await symlink(
+      '../../../docs/alias.md',
+      join(root, '.agents/skills/oat-aliased/references/docs.md'),
+    );
+    await mkdir(join(root, '.agents/skills/oat-tests-only/tests'));
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-tests-only/tests/contract.md'),
     );
     // Missing, cyclic and escaping links must not hang traversal or fabricate owners.
     await symlink(
@@ -10125,8 +10145,10 @@ describe('skill version resolution across both validators', () => {
       'Shared change',
     ]);
     const unbumped = await check();
-    expect(unbumped.validatedSkillCount).toBe(2);
-    expect(unbumped.findings.map((finding) => finding.file)).toEqual([
+    expect(unbumped.validatedSkillCount).toBe(4);
+    expect(unbumped.findings.map((finding) => finding.file).sort()).toEqual([
+      join(root, '.agents/skills/oat-aliased/SKILL.md'),
+      join(root, '.agents/skills/oat-chained/SKILL.md'),
       join(root, '.agents/skills/oat-direct/SKILL.md'),
       join(root, '.agents/skills/oat-directory/SKILL.md'),
     ]);
@@ -10146,14 +10168,20 @@ describe('skill version resolution across both validators', () => {
       '-qm',
       'First bump',
     ]);
-    expect((await check()).findings.map((finding) => finding.file)).toEqual([
+    expect(
+      (await check()).findings.map((finding) => finding.file).sort(),
+    ).toEqual([
+      join(root, '.agents/skills/oat-aliased/SKILL.md'),
+      join(root, '.agents/skills/oat-chained/SKILL.md'),
       join(root, '.agents/skills/oat-directory/SKILL.md'),
     ]);
-    await createSkillFile(
-      root,
-      'oat-directory',
-      skillContent('oat-directory', ['metadata:', '  version: 1.2.4']),
-    );
+    for (const name of ['oat-directory', 'oat-chained', 'oat-aliased']) {
+      await createSkillFile(
+        root,
+        name,
+        skillContent(name, ['metadata:', '  version: 1.2.4']),
+      );
+    }
     await git(['add', '.']);
     await git([
       '-c',

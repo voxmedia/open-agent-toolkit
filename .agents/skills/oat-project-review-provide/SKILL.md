@@ -634,7 +634,8 @@ Build the "Review Scope" metadata for the reviewer:
   any concrete execution limitation. Independently inspected implementer
   failing and accepted controls may count when the reviewer cannot execute;
   unsupported assertions cannot count.
-- Missing consequential evidence requires an existing blocking finding, with
+- Missing consequential evidence requires a blocking finding under the existing
+  severity model, with
   the unresolved guarantee and smallest missing proof. Docs-only changes with
   no credible changed boundary require no manufactured probes.
 - Preserve containment, independence, dispatch policy, severity and output

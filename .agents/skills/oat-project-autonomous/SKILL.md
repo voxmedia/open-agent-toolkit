@@ -272,8 +272,10 @@ usage. An unavailable or malformed policy/ledger stops before dispatch.
 Capacity is not permission. A `failed-attempt` disposition is terminal even
 with remaining capacity. Applicable hard stops include recovery eligibility or
 proof failure; budget exhaustion for a new attempt; malformed ledger or
-unresolved pending attempt; exact-target loss or accepted-launch failure after
-its owning identical-target continuation is exhausted; blocking review policy;
+unresolved pending attempt; immediate direction-required stop for a lost or
+unbindable exact target, with no fallback; accepted-launch failure when neither
+same-handle continuation nor a lifecycle-authorized fresh recover launch at the
+same exact target can continue; blocking review policy;
 missing credentials; repository authority or ownership limits; unresolved
 product judgment; unauthorized destructive risk; and inventory gaps. Apply the
 owning gate's validated `block`/`prompt`/`warn` semantics without weakening its
