@@ -13,14 +13,14 @@ Phases 1–3 are complete; Phase 4 is next. Approved p03-t12 diagnostics passed 
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 12    | 12/12     |
-| Phase 4 | pending  | 4     | 0/4       |
-| Phase 5 | pending  | 3     | 0/3       |
-| Phase 6 | pending  | 1     | 0/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 12    | 12/12     |
+| Phase 4 | in_progress | 4     | 0/4       |
+| Phase 5 | pending     | 3     | 0/3       |
+| Phase 6 | pending     | 1     | 0/1       |
 
 **Total:** 22/30 tasks completed
 
@@ -2913,3 +2913,103 @@ Passing-gate judgment sweep, ordered dispositions:
 - **p03 gate r5 M1 (T150535Z), final owner:** stored committed receipt whose commit is no longer an ancestor of currentHEAD can repeatedly advertise insufficient retry guidance. Evidence `analysis/p03/gate-r5-diagnostics.mjs` P2/P3 rewrite and matching controls; root repeated observer in `analysis/p03-gate-r5-root-diagnostics.json`. At final, require explicit operator choice: bounded diagnostic correction or accepted post-release deferral with rationale. Phase-level default deferral is not final approval.
 
 Nativecount7/configuredgates5; ONE operator extra cycle consumed, no counter reset/new allowance. Recovery1/10pendingnull unchanged. All Phase3 dispositions settled for phase scope; gate passed at configuredhighthreshold. Phase3 complete12/12, total22/30; Phase4 p04-t01 next. Six previous Lows remain final-owned, plus the Medium above.
+
+### Phase 4 dispatch — wave5-p04-implement-r1
+
+Dispatch: scope=p04 action=implementation role=implementer model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+```json
+{
+  "request_id": "wave5-p04-implement-r1",
+  "caller": "oat-project-implement",
+  "scope": "p04",
+  "objective": "Execute four approved Phase4 tasks: staging-neutral complete archive operations, lifecycle consumers, manual-safe knowledge refresh, and guided Plain Markdown init.",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261004-p04",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-04T14:58:06.161899Z"
+  },
+  "authority": "phase-four-declared-product-write",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-03",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 14400,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase4"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD before committed START"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Git-index/manual-content preservation and archive completion require explicit ownership, real negative controls and independent review.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<loaded>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.6",
+      "contentDigest": "sha256:9543ff6128c260e409fb462f9ee3a33620e1a99341090f54c4de95db92ef7dc9",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Exact native accepted handle `/root/wave5_phase4`, HOLD until this acceptance is committed. Phase base d882efb69bfc79800bc74f6c2919bf97798a19aa. Root fetched main and found no Phase4 path drift; evidence `analysis/p04-main-drift.json`. Four planned tasks sequential, task commits and root bookkeeping handshakes; no nested workers/live calls. Recovery default10/phase10/used0/remaining10/pendingnull from authoritative ledger; capacity does not grant repeated failed attempts. Root owns project tracking/log/reviews/publication. Prior six Lows and gate-r5 Medium retain final ownership. Native resolver notices[]; current schema/live T3 catalog expose exact role/model/effort, runtime identity not reported.

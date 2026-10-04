@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 4 p04-t01 ready; Phase 3 passed native r7 and configured r5
+Implement - Phase 4 p04-t01 starting with accepted Sol6.1/high implementer
 
 ## Artifacts
 
