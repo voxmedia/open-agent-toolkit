@@ -1,5 +1,6 @@
-import { execFile } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import * as nodeFs from 'node:fs';
 import { constants } from 'node:fs';
 import {
   access,
@@ -8,13 +9,13 @@ import {
   mkdtemp,
   open,
   readFile,
-  readlink,
   realpath,
   rename,
   rm,
   stat,
   writeFile,
 } from 'node:fs/promises';
+import * as nodePath from 'node:path';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -95,15 +96,130 @@ async function bytes(path: string): Promise<Buffer | undefined> {
     throw error;
   }
 }
-async function fileIdentity(path: string): Promise<string> {
+// Serialized into the hook companion as well: only Git-emitted directory
+// boundaries recurse, and links remain literal. Ignored files retain Git's
+// ordinary inventory semantics; no nested metadata is refreshed or written.
+function preservationIdentity(
+  full: string,
+  boundary: string,
+  dependencies: {
+    fs: typeof nodeFs;
+    path: typeof nodePath;
+    spawnSync: typeof spawnSync;
+    createHash: typeof createHash;
+  },
+): string {
+  const {
+    fs: fileSystem,
+    path: paths,
+    spawnSync: runCommand,
+    createHash: hashFactory,
+  } = dependencies;
+  const hash = (value: string | Buffer) =>
+    hashFactory('sha256').update(value).digest('hex');
+  let info;
   try {
-    const info = await lstat(path);
-    if (info.isSymbolicLink()) return `symlink:${await readlink(path)}`;
-    return `${info.mode}:${digest(await readFile(path))}`;
+    info = fileSystem.lstatSync(full);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 'absent';
     throw error;
   }
+  if (info.isSymbolicLink()) return `symlink:${fileSystem.readlinkSync(full)}`;
+  const physical = fileSystem.realpathSync(full);
+  const confined = paths.relative(boundary, physical);
+  if (
+    confined === '..' ||
+    confined.startsWith('../') ||
+    paths.isAbsolute(confined)
+  )
+    throw new Error(`Unowned inventory escapes repository: ${full}`);
+  if (!info.isDirectory())
+    return `${info.mode}:${hash(fileSystem.readFileSync(full))}`;
+  const env: NodeJS.ProcessEnv = { ...process.env, GIT_OPTIONAL_LOCKS: '0' };
+  for (const key of [
+    'GIT_DIR',
+    'GIT_WORK_TREE',
+    'GIT_INDEX_FILE',
+    'GIT_COMMON_DIR',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_NAMESPACE',
+  ])
+    delete env[key];
+  const run = (args: string[]) =>
+    runCommand('git', ['--literal-pathspecs', ...args], {
+      cwd: full,
+      env,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  const top = run(['rev-parse', '--show-toplevel']);
+  if (
+    top.status !== 0 ||
+    fileSystem.realpathSync(top.stdout.trimEnd()) !== physical
+  ) {
+    if (fileSystem.readdirSync(full).length === 0)
+      return `${info.mode}:empty-directory`;
+    throw new Error(
+      `Directory inventory is not a nested Git boundary: ${full}`,
+    );
+  }
+  const inventory = run([
+    'ls-files',
+    '-z',
+    '--cached',
+    '--others',
+    '--exclude-standard',
+  ]);
+  const index = run(['rev-parse', '--git-path', 'index']);
+  const head = run(['rev-parse', '--verify', 'HEAD']);
+  if (inventory.status !== 0 || index.status !== 0)
+    throw new Error(`Cannot inspect nested Git inventory: ${full}`);
+  let indexBytes: Buffer | undefined;
+  try {
+    indexBytes = fileSystem.readFileSync(
+      paths.resolve(full, index.stdout.trimEnd()),
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  const entries = [...new Set(inventory.stdout.split('\0').filter(Boolean))]
+    .sort()
+    .map((entry) => {
+      const child = paths.resolve(full, entry);
+      const childRelative = paths.relative(full, child);
+      if (
+        !childRelative ||
+        childRelative === '..' ||
+        childRelative.startsWith('../') ||
+        paths.isAbsolute(childRelative)
+      )
+        throw new Error(`Invalid nested Git inventory path: ${entry}`);
+      let parent = paths.dirname(child);
+      while (!fileSystem.existsSync(parent)) parent = paths.dirname(parent);
+      const ancestor = paths.relative(
+        boundary,
+        fileSystem.realpathSync(parent),
+      );
+      if (
+        ancestor === '..' ||
+        ancestor.startsWith('../') ||
+        paths.isAbsolute(ancestor)
+      )
+        throw new Error(
+          `Nested inventory traverses an external link: ${entry}`,
+        );
+      return [entry, preservationIdentity(child, boundary, dependencies)];
+    });
+  return `${info.mode}:git:${hash(JSON.stringify([head.status === 0 ? head.stdout.trimEnd() : '', indexBytes ? hash(indexBytes) : 'absent', entries]))}`;
+}
+function fileIdentity(full: string, boundary: string): string {
+  return preservationIdentity(full, boundary, {
+    fs: nodeFs,
+    path: nodePath,
+    spawnSync,
+    createHash,
+  });
 }
 async function writeReceipt(
   path: string,
@@ -362,7 +478,7 @@ export async function commitExactPaths(
           await Promise.all(
             [...new Set(unrelated)].map(async (path) => [
               path,
-              await fileIdentity(join(root, path)),
+              fileIdentity(join(root, path), root),
             ]),
           ),
         );
@@ -395,7 +511,7 @@ export async function commitExactPaths(
             () => false,
           );
           if (!executable && name === 'post-commit') continue;
-          const script = `#!/usr/bin/env node\nconst {spawnSync}=require('node:child_process');const fs=require('node:fs');const crypto=require('node:crypto');const path=require('node:path');\n${executable ? `const hook=spawnSync(${JSON.stringify(source)},process.argv.slice(2),{stdio:'inherit'});if(hook.error||hook.status!==0)process.exit(hook.status||1);` : ''}\n${name !== 'post-commit' ? `const owned=${JSON.stringify(paths)};const staged=spawnSync('git',['diff','--cached','--name-only','-z'],{encoding:'utf8'});if(staged.status!==0||staged.stdout.split('\\0').some(p=>p&&!owned.includes(p))){process.stderr.write('Exact-path ownership guard: hook staged an unowned path.\\n');process.exit(1);}const before=${JSON.stringify(worktree)};for(const [p,expected]of Object.entries(before)){let actual;try{const full=path.resolve(p);const info=fs.lstatSync(full);actual=info.isSymbolicLink()?'symlink:'+fs.readlinkSync(full):info.mode+':'+crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');}catch(e){if(e.code!=='ENOENT')throw e;actual='absent';}if(actual!==expected){process.stderr.write('Exact-path preservation guard: unowned worktree path changed: '+p+'\\n');process.exit(1);}}` : ''}\n`;
+          const script = `#!/usr/bin/env node\nconst {spawnSync}=require('node:child_process');const fs=require('node:fs');const crypto=require('node:crypto');const path=require('node:path');\n// tsx retains inferred function names with this identity decorator.\nconst __name=(fn)=>fn;\n${preservationIdentity.toString()}\n${executable ? `const hook=spawnSync(${JSON.stringify(source)},process.argv.slice(2),{stdio:'inherit'});if(hook.error||hook.status!==0)process.exit(hook.status||1);` : ''}\n${name !== 'post-commit' ? `const owned=${JSON.stringify(paths)};const staged=spawnSync('git',['diff','--cached','--name-only','-z'],{encoding:'utf8'});if(staged.status!==0||staged.stdout.split('\\0').some(p=>p&&!owned.includes(p))){process.stderr.write('Exact-path ownership guard: hook staged an unowned path.\\n');process.exit(1);}const before=${JSON.stringify(worktree)};for(const [p,expected]of Object.entries(before)){const actual=preservationIdentity(path.resolve(p),${JSON.stringify(root)},{fs,path,spawnSync,createHash:crypto.createHash});if(actual!==expected){process.stderr.write('Exact-path preservation guard: unowned worktree path changed: '+p+'\\n');process.exit(1);}}` : ''}\n`;
           // Git requires extensionless hook names. Launch an explicitly CommonJS
           // companion so the repository's package type cannot reinterpret it.
           const companion = join(hooks, `${name}.cjs`);
@@ -429,7 +545,7 @@ export async function commitExactPaths(
         )
           throw new Error('Commit identity/parent could not be verified.');
         for (const [path, before] of Object.entries(worktree)) {
-          if ((await fileIdentity(join(root, path))) !== before)
+          if (fileIdentity(join(root, path), root) !== before)
             throw new Error(
               `Unowned worktree path changed during hooks: ${path}; current bytes preserved for inspection.`,
             );

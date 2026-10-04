@@ -6,6 +6,7 @@ import {
   readFile,
   rename,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -86,6 +87,104 @@ afterEach(async () => {
 });
 
 describe('commitExactPaths real Git boundary', () => {
+  it.each(['nested repository', 'submodule'])(
+    'preserves Git-enumerated state in an unrelated %s and refuses hook changes',
+    async (kind) => {
+      const root = await repo();
+      const source = await mkdtemp(join(tmpdir(), 'oat-nested-'));
+      roots.push(source);
+      git(source, ['init', '-q']);
+      git(source, ['config', 'user.name', 'OAT Test']);
+      git(source, ['config', 'user.email', 'oat@example.com']);
+      await writeFile(join(source, 'literal.md'), 'nested base\n');
+      git(source, ['add', 'literal.md']);
+      git(source, ['commit', '-qm', 'nested base']);
+      if (kind === 'submodule') {
+        git(root, [
+          '-c',
+          'protocol.file.allow=always',
+          'submodule',
+          'add',
+          '-q',
+          source,
+          'nested',
+        ]);
+        git(root, [
+          'commit',
+          '-qm',
+          'submodule',
+          '--',
+          '.gitmodules',
+          'nested',
+        ]);
+      } else git(root, ['clone', '-q', source, 'nested']);
+      const nested = join(root, 'nested');
+      await writeFile(join(nested, 'literal.md'), 'NESTED STAGED literal\n');
+      git(nested, ['add', 'literal.md']);
+      await writeFile(join(nested, 'literal.md'), 'NESTED UNSTAGED literal\n');
+      await writeFile(
+        join(nested, 'untracked.md'),
+        'NESTED untracked literal\n',
+      );
+      const nestedIndexPath = resolve(
+        nested,
+        git(nested, ['rev-parse', '--git-path', 'index']),
+      );
+      const nestedIndex = await readFile(nestedIndexPath);
+      await writeFile(
+        resolve(
+          nested,
+          git(nested, ['rev-parse', '--git-path', 'info/exclude']),
+        ),
+        'ignored.md\n',
+      );
+      await writeFile(join(nested, 'ignored.md'), 'ignored baseline\n');
+      await symlink(join(source, 'literal.md'), join(nested, 'literal-link'));
+      await writeFile(join(nested, 'space\nname.md'), 'literal newline path\n');
+      await hook(root, 'printf "ignored hook change\\n" > nested/ignored.md');
+      await writeFile(join(root, 'owned.md'), 'owned accepted\n');
+      const input = {
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: nested preservation',
+        identity: 'nested-accepted',
+      };
+      const result = await commitExactPaths(input);
+      expect(result, JSON.stringify(result)).toMatchObject({
+        outcome: 'committed',
+      });
+      expect(await readFile(nestedIndexPath)).toEqual(nestedIndex);
+      expect(await readFile(join(nested, 'literal.md'), 'utf8')).toBe(
+        'NESTED UNSTAGED literal\n',
+      );
+      expect(await readFile(join(nested, 'untracked.md'), 'utf8')).toBe(
+        'NESTED untracked literal\n',
+      );
+      preservation(root);
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'already-matching',
+        commit: result.commit,
+      });
+      await writeFile(join(root, 'owned.md'), 'owned refused\n');
+      await hook(root, 'printf "HOOK changed nested\\n" > nested/literal.md');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const index = await readFile(join(root, '.git/index'));
+      const refusal = await commitExactPaths({
+        ...input,
+        identity: 'nested-refused',
+      });
+      expect(refusal).toMatchObject({ outcome: 'failed', committed: false });
+      expect(refusal.error).toContain('preservation guard');
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(await readFile(nestedIndexPath)).toEqual(nestedIndex);
+      expect(await readFile(join(nested, 'literal.md'), 'utf8')).toBe(
+        'HOOK changed nested\n',
+      );
+      preservation(root);
+    },
+  );
+
   it('protects partially staged unrelated bytes and hook-final owned create/modify/delete/rename, with verified retry', async () => {
     const root = await repo();
     await lintHook(root);
