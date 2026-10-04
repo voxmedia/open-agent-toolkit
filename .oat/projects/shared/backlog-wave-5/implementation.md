@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t06
+oat_current_task_id: p06-t07
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; 3 remaining final guidance/generated tasks and Phase6 final review/gate/one-PR closeout remain.
+Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; 2 remaining final guidance/generated tasks and Phase6 final review/gate/one-PR closeout remain.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 8     | 5/8       |
+| Phase 6 | in_progress | 8     | 6/8       |
 
-**Total:** 36/39 tasks completed
+**Total:** 37/39 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -348,7 +348,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t06: Preserve knowledge refresh reports across shell calls
 
-**Status:** pending
+**Status:** completed
+**Commit:** 8b320cbce96353b322eb4af310b506dd2d2bd9eb
+
+**Outcome/Verification:** Exact two files resolve p04gate Low4. Actual shipped snippets print independently parseable JSON and consume the retained nine-path array across separate shell processes. Six keepers and41inventorytests pre/post pass, canonical/bump/lint/format exit0; actual immutable old guidance fails on empty stdout in focused keeper, independently corroborated by root. Manual/collision/unrelated staging and tracked generated deletion protections retained; no helper/version/output change. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t06/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 ### Task p06-t07: Clarify legacy recap evidence and durable links
 

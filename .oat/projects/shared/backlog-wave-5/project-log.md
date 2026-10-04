@@ -236,6 +236,10 @@ wave5-root-t04-receipt-a1a7f4f6: Root verified exact three-file task commit, dir
 
 wave5-root-t05-receipt-80109a77: Root verified five-file correction and306tests; separately resolved five p01 Lows except recorded deletion-policy deferral, withdrawn invalid deletion-guard claim; progress36/39, next t06.
 
+### 2026-10-04 · structural · oat-project-implement · p06-t06
+
+wave5-root-t06-receipt-8b320cbc: Root verified actual old guidance failure and accepted separate-shell handoff; p04Low4 resolved, progress37/39, next t07.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
