@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  [
-    'p03 M1 record recovery; operator disposition required after consumed additional review cycle',
-  ]
+oat_blockers: []
 oat_last_updated: 2026-10-04
 oat_current_task_id: p03-t10
 oat_generated: false
@@ -12,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is blocked for operator disposition; the required refreshed complexity assessment is complete and recommends bounded corrective revision. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
+Phase 1 complete with root and independent review, seven tasks committed, and five Low findings durably deferred to final. Phase 2 is complete after root review, passing independent gate and the verified malformed-entry correction; Phase 3 original tasks, prior corrections and all four operator-approved gate corrections are committed and verified. The authorized additional native review found one remaining Medium later-generation record recovery gap; the configured Opus gate passed its Critical/High threshold and corroborated that Medium, plus one Low deferred to final. Phase 3 is in progress under the explicit approved bounded p03-t10 correction and one additional native/configured-gate cycle; the refreshed complexity assessment recommends corrective revision. User-added U1 guided-init Markdown choice/config persistence is queued in Phase 4.
 
 ## Progress Overview
 
@@ -20,7 +17,7 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 | ------- | -------- | ----- | --------- |
 | Phase 1 | complete | 7     | 7/7       |
 | Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | blocked  | 10    | 9/10      |
+| Phase 3 | active   | 10    | 9/10      |
 | Phase 4 | pending  | 4     | 0/4       |
 | Phase 5 | pending  | 3     | 0/3       |
 | Phase 6 | pending  | 1     | 0/1       |
@@ -131,7 +128,7 @@ Phase 1 complete with root and independent review, seven tasks committed, and fi
 
 ## Phase 3: Shared hook-safe exact-path commits
 
-**Status:** blocked
+**Status:** in_progress
 
 ### Task p03-t01: Implement the narrow shared primitive and skill entry
 
@@ -1120,7 +1117,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
     "task_name": "wave5_phase3"
   },
   "launch_status": "accepted",
-  "child_outcome": "completed",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -1154,7 +1151,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "review_artifact": "reviews/archived/p03-review-2026-10-04T022902Z.md",
       "status": "completed",
       "reason": "Same accepted Sol-high handle; two High recovery findings; append-only fix1/2 independent of recovery1/10, no task replay.",
-      "accepted_handle": "/root/wave5_phase3",
+      "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
       "fix_commit": "ef26eb5100f980955ab09ae5bc89d16066a99b23",
       "execution_base": "089f9a75975c1405b8e36d382f68bd7c1c3241b7",
@@ -1168,7 +1165,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "review_artifact": "reviews/archived/p03-review-2026-10-04T032627Z.md",
       "status": "completed",
       "reason": "Same accepted Sol6.1/high handle; bounded Medium receipt-parent correction, second review correction independent of recovery1/10. No original task replay.",
-      "accepted_handle": "/root/wave5_phase3",
+      "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
       "candidate_files": [
         "packages/cli/src/commands/shared/exact-path-commit.ts",
@@ -1188,7 +1185,7 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
       "review_artifact": "reviews/archived/p03-review-2026-10-04T051023Z.md",
       "complexity_report": "reviews/archived/complexity-p03-2026-10-04T052701Z.md",
       "status": "completed",
-      "accepted_handle": "/root/wave5_phase3",
+      "accepted_handle": "<redacted-path>",
       "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
       "reason": "User explicitly approved bounded corrective revision and one additional native review plus configured Opus gate; original handle resumed, HOLD acknowledged. No counter reset or standing policy alteration.",
       "execution_base": "c6fbc6436292d0562059f9168b9074c5d93fb92d",
@@ -1200,6 +1197,18 @@ Dispatch stamp: Dispatch: scope=p03 action=implementation role=implementer produ
         "ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c"
       ],
       "outcome": "DONE; four exact task commits, direct1107/13 and actual probes pass; clean worktree, recovery1/10 pendingnull unchanged, product-write authority released."
+    },
+    {
+      "event_id": "wave5-p03-fix-continuation-r4",
+      "original_request_id": "wave5-p03-implement-r1",
+      "phase": "p03",
+      "task_ids": ["p03-t10"],
+      "review_artifact": "reviews/archived/p03-review-2026-10-04T062815Z.md",
+      "complexity_report": "reviews/archived/complexity-p03-2026-10-04T065100Z.md",
+      "status": "accepted-hold",
+      "accepted_handle": "<redacted-path>",
+      "configured_target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "reason": "User explicitly approved bounded M1 corrective revision and one additional native/configured gate cycle; signal Low stays final-owned. No counter reset or standing override."
     }
   ],
   "task_class": "consequential",
@@ -2021,3 +2030,11 @@ Accepted original exact-bound assessor returned its complete read-only inline re
 - **Required operator decision:** Authorize bounded p03-t10 corrective revision and an explicit further native/configured-gate allowance, or explicitly accept the remaining recovery limitation. Recommended: one bounded correction plus one fresh Sol6.1/high native and configured Opus5.5/high cycle; retain signal Low in final scope. No operator disposition selected.
 - **Stop authority:** The user's last approval covered four corrections and ONE additional native/gate cycle, now consumed. Review-receive Step8 says further automated review cycles are blocked at the cap and agents never select disposition. Four standard reviews, two excluded gates; recovery1/10pendingnull unchanged. No fifth review, further correction, Phase4 launch or PR follows automatically.
 - **Remaining wave:** 19/28 implementation tasks complete: p03-t10 pending; Phase4 four tasks (archive mutations/callers, generated knowledge ownership, U1 Plain Markdown guided-init config); Phase5 three tasks (flat export, real consumers, seven tracked package migrations); Phase6 version/generated integration. Additionally six Low findings need final dispositions/closure, then ordered integration gates, final native/Opus review, exact ten-ticket archive, verified completion/flat recap and one PR. No merge or release.
+
+### Operator disposition and continuation — 2026-10-04 / p03 M1
+
+User replied **Approve** to bounded p03-t10 corrective revision plus ONE further fresh Sol6.1/high native review and configured Opus5.5/high gate, keeping signal Low in final scope. Exhaustion is review-receive Step8 after four standard reviews and two excluded gates. Refreshed report `reviews/archived/complexity-p03-2026-10-04T065100Z.md`, verdict Partially compliant, recommendation corrective revision, chosen disposition corrective revision with this scope-bound allowance. No requirement waiver, counter reset, policy change or process framework. Original phase handle resumed through followup_task; accepted HOLD, root retains bookkeeping until START. If the authorized cycle leaves an accepted requirement unresolved, return for operator disposition. On pass continue the already-approved later wave phases and lifecycle tail through one PR, no merge/release. Recovery1/10 pendingnull unchanged. Fresh main inspection found no new commits in the four owned correction files.
+
+Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Resolver explicit gpt-6.1-sol/high candidate, consequential floor, completed Dispatch Report, no notices. Same original request wave5-p03-implement-r1; continuation wave5-p03-fix-continuation-r4. Native schema and current T3 catalog admit exact route; runtime identity not reported. Generic original run record updated in place and validated through CLI, no duplicate launch ledger.
