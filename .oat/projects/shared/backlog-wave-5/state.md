@@ -135,7 +135,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implement - Phase 3 p03-t12 committed; authorized native/configured review pending
+Implement - Phase 3 p03-t12 committed; native r7 passed, authorized configured gate r5 pending
 
 ## Artifacts
 
@@ -158,7 +158,7 @@ None. Operator approved diagnostics-only correction and one further native/confi
 
 ## Next Milestone
 
-Complete and review p03-t12, then continue Phase 4 if every disposition is settled.
+Receive configured Opus-high gate r5, then continue Phase 4 if every disposition is settled.
 
 ### Approved continuation — 2026-10-04
 
