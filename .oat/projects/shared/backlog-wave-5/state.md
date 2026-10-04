@@ -1,10 +1,7 @@
 ---
 oat_current_task: p05-t04
 oat_last_commit: 01b1a496db73c322428fd2ef2bbbf0e92090f73d
-oat_blockers:
-  - task_id: p05-t05
-    reason: Explicit approval needed to extend two-file correction to four generated SVG recap pages.
-    since: '2026-10-04'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -157,11 +154,11 @@ Implement - Phase 5 flat recap export, consumer composition and historical migra
 
 ## Blockers
 
-p05-t05 awaits explicit four-generated-page scope approval. Two-file correction verified and sealed, uncommitted; same author HOLD. Phases1–4 complete; ten Lows and one diagnostic Medium final-owned. Automatic rewrite recovery deferred.
+None. User approved exact four derived SVG page refresh within p05-t05; same author resumes verified correction. Phases1–4 complete; ten Lows and one diagnostic Medium final-owned. Automatic rewrite recovery deferred.
 
 ## Next Milestone
 
-Resolve four-generated-page scope approval, then resume same accepted author p05-t05 fix2/2. Full native/configured acceptance and Phase6/root final tail pending.
+Apply approved four-page refresh and finish same-author p05-t05 fix2/2; full native/configured acceptance and Phase6/root final tail pending.
 
 ### Approved continuation — 2026-10-04
 

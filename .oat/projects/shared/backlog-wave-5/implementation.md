@@ -3546,7 +3546,7 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
     "task_name": "wave5_phase5_fix1_resume"
   },
   "launch_status": "accepted",
-  "child_outcome": "needs-context",
+  "child_outcome": "running",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -3582,6 +3582,11 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "source": "native-terminal-result",
       "event": "cont-backlog-wave-5-p05-fix-2",
       "result": "NEEDS_CONTEXT; 168archive/87completion/check/types/freshbuild0; exact2files uncommitted; RELEASE/HOLD awaiting four derived-page scope approval."
+    },
+    {
+      "source": "native-followup-acceptance",
+      "event": "cont-backlog-wave-5-p05-fix-2",
+      "result": "Same accepted handle HOLD after explicit user four-page extension approval; exacttarget unchanged; existing verified two-file patch preserved."
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -3607,15 +3612,17 @@ Original phase handle accepted bounded fix HOLD via supported native followup. E
       "mode": "fix",
       "task_id": "p05-t05",
       "finding": "p05-r2-M1",
-      "scope": "two archive source/test files; actual markup attributes only",
+      "scope": "archive-utils source/test and four approved derived SVG recap pages",
       "review_fix_iteration": 2,
       "review_fix_limit": 2,
-      "status": "awaiting-scope-approval",
+      "status": "approved-resume-accepted-hold",
       "baseline": "157d5523680c38e474579388eecdb002ced7823f",
       "verified_uncommitted": true,
       "task_commit": null,
       "captured_artifact": "p05-fix2-preapproval-20261004",
-      "manifest_digest": "d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e"
+      "manifest_digest": "d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e",
+      "approval": "User: alright sure, apply it; exact four SVG generated pages + prior two code files",
+      "approval_baseline": "429742afb61fa2a7e1559e36726cf7e0a6b0a972"
     }
   ],
   "task_class": "consequential",
@@ -3778,3 +3785,9 @@ Known unresolved compatibility: genuine fresh output differs from four current g
 Prepared, unapplied proposal analysis/p05/fix2-proposed-scope-amendment.md and exact four-page patch/output/hash inventory require explicit user approval because accepted p05-t05 owns only two source/test files and preserves historical page bytes. User asked why refresh is needed; root explained malformed SVG and strict retry identity. That question is not approval. Tracked pages, source originals and task ownership are unchanged pending response. An unsupported completed-agent interruption call was rejected without effects; no release/cleanup/replacement was performed.
 
 For crash resilience, quiescent two-file uncommitted work is sealed outside checkout at ~/.oat/recovery-artifacts/backlog-wave-5/p05-fix2-preapproval-20261004, manifestDigest d776b1972bf885d1abe16d3490d5c1b8d305654299158266a5b8cf9d56f7288e,size14610,worktree-only,roundtrip proven. No restore/apply occurred; same accepted handle remains available. Capture base is a9a84c95; any future replay must verify actual HEAD or produce a separately proved rebind rather than stale apply. Root tracking-only bookkeeping does not alter the two product bytes; authorized continuation gets its actual current HEAD before resuming.
+
+### Phase 5 fix2 four-page scope extension approved — 2026-10-04
+
+User explicitly confirmed old generated recaps then authorized “alright sure, apply it”. Root amended only p05-t05 ownership to the exact four preserved genuine fresh exports plus prior two source/test files. Sole30SVG inner quote pairs/60removedbytes; original evidence and other three pages remain immutable. Complete page content/hash comparisons, actual four old-page refusal controls and browser DOM marker evidence are retained in analysis/p05/fix2-proposed-scope-amendment.md/root-fix2-historical-page-delta.json. No mismatch exception, schema/authoring change or original attestation rewrite. Prior scope pause remains historical; blocker settled by explicit approval.
+
+Same accepted author /root/wave5_phase5_fix1_resume acknowledged HOLD; generic continuation prevalidated and acceptedvalidated-only; fresh resolver notices[], exact Sol6.1/high target. Already-present two-file patch SHAs remain unchanged across root tracking-only commits. Preapproval capture is a preserved older-base backup, never stale-applied/restored. Root supplies current STARTHEAD for one task commit of six exact paths after derived-page/newhash/retry/conservation/render verification. Fix2/2 and recovery1/10 pendingnull unchanged; no fresh worker/counter reset. Root then full native r3/configured gate and remaining sequential phases.
