@@ -885,6 +885,8 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
+**Current acceptance:** 44/44 tasks and six phases verified; native final r3, renewed p06 and configured exit r2 passed. Configured summary/document/PR sequence and standing user approval are recorded complete. PR #356 is open. R9 awaits the actual own recap archive/export proof; the other 40 criteria including U1 are accepted. No merge or release.
+
 **Planned task totals:**
 
 - Phase 1: 7 tasks — four original tasks and three bounded artifact/MDX review corrections.
