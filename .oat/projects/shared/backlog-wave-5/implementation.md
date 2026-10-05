@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t13
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-56/57 tasks are implemented. Current configured phase review exposed one concrete low-impact raw-text traversal regression; p07-t13 is queued on the same implementer. Previous full checks and native phase round2 are preserved prior-basis evidence; fresh composed verification/review will follow. Original completed archive and S3 are unchanged.
+All57 tasks are implemented. The final raw-text traversal correction is verified; current composed verification, fresh phase7 round3 review/configured gate3 and final/exit qualification precede publication. Original completion/archive/S3 and review/recovery history remain unchanged.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ oat_generated: false
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 13    | 12/13     |
+| Phase 7 | in_progress | 13    | 13/13     |
 
-**Total:** 56/57 tasks completed
+**Total:** 57/57 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5309,3 +5309,10 @@ The exact pre-publication guard rejected two historical inline plan self-review 
 ## Configured phase7 r2 received — a23d1b57-f8bb-48bf-96d9-da9459661c3c
 
 Exactly one not-attempted terminal signal consumed before full artifact/envelope validation. Current gate passed high threshold with0C0H0M1L; narrowed range/prior gate coverage is explicitly inherited. Root agrees with Low1: matchAll can consume an unterminated comment opener inside raw text beyond its closing tag, losing a real later target. Convert to bounded p07-t13 instead of retaining a known new navigation regression. Original t11/t12 receipts remain immutable. Third prior permalink Low remains individually deferred. Gate independently owning148/check/types/skillbumps/versions0, full DoD not rerun. Native phase round3 and second bounded gate correction are next; original final cap3, recovery0/10/null and exit remediation1/2 unchanged. Operational marker cleanup is normal; accepted marker fields were observed before completion and retained. Stale milestone and counts are corrected in root bookkeeping.
+
+### Task p07-t13: (review) Resume fragment scanning after raw-text elements
+
+**Status:** completed
+**Commit:** 69b765bacd5db0a39fec6636db5771b3eba06ff9
+
+**Outcome/Verification:** Root independently reproduced the seven authentic public cases, eight named keeper/composition controls and five inherited decoded-fragment controls, all exit0. Three author baseline regressions fail exit1; owning archive151/151 and scoped format/check/type/build exit0. Post-hook bytes match tested input, raw-text cursor resynchronization preserves real later targets and rejects opaque/absent targets, and original package bytes/hash receipts remain conserved. Evidence `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t13/evidence.json`. Root verified exact two files, full sole parent, matching HEAD and clean tree; original canonical implementer and hooks enabled. Prior task receipts remain immutable; no phase acceptance is inferred.
