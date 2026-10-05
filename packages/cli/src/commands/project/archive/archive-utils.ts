@@ -1550,16 +1550,39 @@ async function transformRecapPage(
     }
     return text;
   };
+  const decodeCssUrl = (url: string) =>
+    url.replace(
+      /\\(?:([0-9a-f]{1,6})(?:\r\n|[ \t\n\r\f])?|\r\n|[\n\r\f]|([\s\S]))/gi,
+      (_match, hex: string | undefined, escaped: string | undefined) => {
+        if (hex === undefined) return escaped ?? '';
+        const codePoint = Number.parseInt(hex, 16);
+        return String.fromCodePoint(
+          codePoint === 0 ||
+            codePoint > 0x10ffff ||
+            (codePoint >= 0xd800 && codePoint <= 0xdfff)
+            ? 0xfffd
+            : codePoint,
+        );
+      },
+    );
+  const quoteCssUrl = (url: string) =>
+    `"${url.replace(/["\\<\p{Cc}]/gu, (character) =>
+      character === '"' || character === '\\'
+        ? `\\${character}`
+        : `\\${character.charCodeAt(0).toString(16)} `,
+    )}"`;
   const css = async (text: string, base: string) =>
     replaceAsync(
       text,
       // Consume CSS comments/strings before recognizing a resource URL. Text in
       // those bodies can describe markup or url(...) without referencing an asset.
-      /\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|(?<![\w-])url\(\s*(['"]?)([^)'"\s]+)\1\s*\)/gi,
-      async (match) =>
-        match[2] === undefined
+      /\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|(?<![\w-])url\(\s*(?:"((?:\\[\s\S]|[^"\\])+)"|'((?:\\[\s\S]|[^'\\])+)'|((?:\\[\s\S]|[^)'"\\\s])+))\s*\)/gi,
+      async (match) => {
+        const url = match[1] ?? match[2] ?? match[3];
+        return url === undefined
           ? match[0]
-          : `url("${await asset(match[2], base)}")`,
+          : `url(${quoteCssUrl(await asset(decodeCssUrl(url), base))})`;
+      },
     );
   // Match complete attributes, including unrelated quoted values. Looking only
   // for href/src would also find those strings inside title/data attributes.

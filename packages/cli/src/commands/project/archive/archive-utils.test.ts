@@ -480,11 +480,92 @@ describe('archive utils', () => {
     },
   );
 
+  it.each([
+    ['literal space', 'url("asset space.svg")', 'asset space.svg'],
+    ['single-quoted space', "url('asset space.svg')", 'asset space.svg'],
+    [
+      'hex-escaped space',
+      String.raw`url("asset\20 space.svg")`,
+      'asset space.svg',
+    ],
+    ['escaped quote', String.raw`url("asset\"quote.svg")`, 'asset"quote.svg'],
+  ])(
+    'embeds the verified bytes of a quoted CSS URL with %s',
+    async (_name, url, assetName) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      // Controlled derivative of the captured July legacy contract above.
+      const page = `<html><head><style>.hero{background:${url}}</style></head><body></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const file = `${dirname(manifest.artifacts[0].renderedPath)}/${assetName}`;
+      const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg"><title>quoted URL</title></svg>';
+      await writeFile(join(root, file), svg);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(svg).digest('hex')}`;
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      await verifySelectedProjectRecapForArchive(projectPath, run);
+
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+      expect(exported).toContain(
+        `<style>.hero{background:url("${dataUrl}")}</style>`,
+      );
+      expect(result.warnings).toEqual([]);
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('safely quotes external CSS URLs after decoding CSS escapes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page = String.raw`<html><head><style>.hero{background:url("https://example.com/asset\22 quote.svg")} .safe{background:url("https://example.com/\3c /style>\5c path\a end")}</style></head><body></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(
+      await readFile(result.projectRecapExport!.exportRoot, 'utf8'),
+    ).toContain(
+      String.raw`<style>.hero{background:url("https://example.com/asset\"quote.svg")} .safe{background:url("https://example.com/\3c /style>\\path\a end")}</style>`,
+    );
+  });
+
   it('preserves raw bodies and non-attribute text while embedding actual CSS resources', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat/projects/shared/demo');
     const script = String.raw`const tag='<img src=missing.svg><link rel=stylesheet href=missing.css><script src=missing.js><\/script>'; const text='url(missing.svg)'; globalThis.recapValue=123;`;
-    const style = `.note::before{content:" href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg)"} /* <link rel=stylesheet href=missing.css> url(missing.svg) */ .hero{background:url(asset.svg)}`;
+    const style = String.raw`.note::before{content:" href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg) url(\"missing space.svg\")"} /* <link rel=stylesheet href=missing.css> url(missing.svg) url("missing space.svg") */ .hero{background:url(asset.svg)}`;
     const text = '<p>href=missing.md src=missing.svg url(missing.svg)</p>';
     const comment =
       '<!-- <img src=missing.svg><script src=missing.js></script> url(missing.svg) -->';
@@ -555,6 +636,10 @@ describe('archive utils', () => {
 
   it.each([
     ['quoted image', '<img src="../../../../../plan.md">'],
+    [
+      'CSS escaped traversal',
+      String.raw`<style>.hero{background:url("\2e \2e /../../../../plan.md")}</style>`,
+    ],
     ['unquoted image', '<img src=../../../../../plan.md>'],
     ['query script', '<script src="../../../../../plan.md?v=1"></script>'],
     [
