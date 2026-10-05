@@ -182,7 +182,7 @@ oat_implement_exit_gate:
 
 ## Current Phase
 
-Implementation - all44tasks verified; fresh final-r5 checks passed; renewed native/phase/exit reviews and lifecycle closeout pending
+Implementation - all44tasks verified; fresh final-r5 checks passed; native final r3 passed; renewed phase/exit reviews and lifecycle closeout pending
 
 ## Artifacts
 
@@ -201,7 +201,7 @@ Implementation - all44tasks verified; fresh final-r5 checks passed; renewed nati
 
 ## Blockers
 
-None. All44tasks and three exit correction controls are verified. Final-r5 passes all18invocations; renewed native final/p06/exit reviews and approved lifecycle closeout remain pending.
+None. All44tasks and three exit correction controls are verified. Final-r5 passes all18invocations; native final r3 passed; renewed p06/exit reviews and approved lifecycle closeout remain pending.
 
 ## Next Milestone
 
