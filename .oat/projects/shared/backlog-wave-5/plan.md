@@ -1069,3 +1069,7 @@ Approved diagnostics-only corrective revision p03-t12 and ONE fresh native Sol6.
 ### Operator continuation authority —2026-10-04
 
 Operator approved the three final-test correction tasks and directed root to take this project across the finish line, asking only when needed. Root may resolve ordinary scoped corrections, review dispositions and routine checkpoints from verified evidence without another permission prompt. Existing ten-ticket requirements, exact targets, immutable history, all verification/gates and no-merge/no-release boundary remain. This delegates judgment; it neither waives findings nor permits false gate/acceptance claims. Consequential new product/security/destructive decisions and unresolvable external blockers still require operator input.
+
+## Revision tracking correction
+
+Task2 and task3 product commits and proof are verified. Root repaired the implementation-pointer/ledger write omission and synchronized plan/implementation/state to p07-t04; history60158b69 and6735b011 is preserved. See the root bookkeeping correction in implementation.md.

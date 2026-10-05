@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t02
+oat_current_task_id: p07-t04
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 1/10      |
+| Phase 7 | in_progress | 10    | 3/10      |
 
-**Total:** 45/54 tasks completed
+**Total:** 47/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5059,3 +5059,23 @@ Request: `pr356-r1-phase7-t3-20261005`. Canonical role: `.agents/agents/oat-phas
 **Outcome:** Refuses repository-wide active Git operations before receipt/index mutation, resolves linked-worktree metadata through Git, and requires the exact expected parent list before index publication.
 
 **Verification:** Baseline accepted the conflicting merge; all10 corrected regression oracles failed against the baseline. Corrected public CLI refuses with preserved HEAD/index/worktree/operation state; valid linked-worktree controls commit. Author keeper suite38 passed, postcommit controls10 passed; root independently reran38/38 (exit0). Scoped format/lint/type-check/build and hook-enabled task commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t01/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t02`; phase incomplete.
+
+## Root bookkeeping correction — 2026-10-05T04:51:11.233959+00:00
+
+The ignored root progress script incorrectly nested the implementation-ledger write under its first-task dispatch branch. Task2 plan/state advanced at6735b011 but implementation remained at task2; task3 pointer precheck then failed after its plan write, and the shell continued into a bounded plan-only commit60158b69. Both commits remain immutable history. Root stopped continuation, verified product commits/proofs and corrected all three tracking files in this append-only repair. The script now checks both pointers before any write and writes every task ledger outside the first-task block. No code rollback, counter reset, archive mutation or acceptance waiver. Original phase recovery usage remains0; this is root tracking correction.
+
+## Task p07-t02 root receipt — 2026-10-05T04:51:11.233959+00:00
+
+**Commit:** `f218fe6e44d17814aaf7f908298c1e321d2e6dd4`
+
+**Outcome:** Executable Git hooks are delegated with original protocols while the four commit guards remain.
+
+**Verification:** Four regressions failed baseline; ordinary/OAT refusing and accepting controls passed. Full42/42 and postcommit4/4 passed, root independently4/4 exit0. Format/lint/type/build/public/commit exit0. Root verified exact listed files, sole expected parent, clean worktree, baseline logs and manifest. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t02/evidence.json`. Recovery0/10 used, pendingnull.
+
+## Task p07-t03 root receipt — 2026-10-05T04:51:11.233959+00:00
+
+**Commit:** `f2b8e49921b11fbf6d1a1b077b7ba61103dc0955`
+
+**Outcome:** One owning verifier proves migration retention and finalization, including full parents, invocation binding, emitted owned tree and published checkout. Unverified metadata stops without compensation; hook drift is preserved with tested restore/finalize guidance.
+
+**Verification:** Baseline rollback poisoned retry reproduced. Full122/122 and postcommit4/4 passed; root independently4/4 exit0. Guard neutralization failed and guard restored. Format/lint/type/build/public/commit exit0. Root verified exact listed files, sole expected parent, clean worktree, baseline logs and manifest. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t03/evidence.json`. Recovery0/10 used, pendingnull.
