@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: null
+oat_current_task_id: p07-t11
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-All 54 tasks are implemented, including the ten remote PR corrections. Phase 7 remains in progress until composed review and the configured phase gate pass. Full ordered revision checks have passed; fresh exit qualification and PR publication remain pending. The original completed generation, archive and S3 evidence are preserved. No merge or release.
+The ten remote PR corrections are implemented; two independently found exporter fixes are now queued. 54/56 tasks are complete. Phase 7 remains in progress until composed review and the configured phase gate pass. Full ordered revision checks have passed; fresh exit qualification and PR publication remain pending. The original completed generation, archive and S3 evidence are preserved. No merge or release.
 
 ## Progress Overview
 
@@ -21,9 +21,9 @@ All 54 tasks are implemented, including the ten remote PR corrections. Phase 7 r
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 10/10     |
+| Phase 7 | in_progress | 12    | 10/12     |
 
-**Total:** 54/54 tasks completed
+**Total:** 54/56 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5259,3 +5259,13 @@ Root read the complete `reviews/archived/p07-review-2026-10-05T062339Z.md` and t
 Historical review recovery restored all33 linked paths:30 exact committed source blobs and3 original provider writer payloads. These are source recoveries, not claims that the unavailable post-format/received copies were reconstructed byte-for-byte. Their evidence manifests are `analysis/wave5-final-closeout/remote-r1/historical-review-restoration.json` and `analysis/wave5-final-closeout/remote-r1/historical-review-payload-restoration.json` under `.oat/repo/`. Existing review statuses, provenance, counters and operator dispositions are unchanged.
 
 The rehydrated original log was already sealed. It remains byte-for-byte in `project-log-original-completed.md` and in the immutable original archive; its SHA and conservation proof are retained in `.oat/repo/analysis/wave5-final-closeout/remote-r1/revision-log-generation.json`. The current `project-log.md` is a fresh remote-revision generation scaffolded from the canonical template, so owning CLI append can record current phase/gate outcomes without altering, unsealing or resealing the original.
+
+## Phase 7 configured gate r1 received — 36ba16e5-6bcc-4702-8048-c1a937bb77e5
+
+Root consumed the unique not-attempted signal before artifact validation, read the complete artifact and structured envelope, and used the branch verdict parser. Run/project/invocation match; configured Claude Opus5.5/high gate returned ok/receiveEligible with a corroborated handoff, exit0, counts0C0H0M3L. Producer runtime identity is unknown in this envelope; the configured reviewer route is verified and differs from the recorded Codex author route, without relabeling missing telemetry. Artifact: `reviews/archived/p07-review-2026-10-05T064042Z.md`.
+
+- L1: agree with the source-derived fragment regression; fix now as p07-t11, with a real public exporter reproduction and decoded-target accepted controls.
+- L2: agree that foreign/adopted output is correctly preserved but the double failure hides the summary cause; fix the diagnostic now as p07-t12 without weakening refusal or cleanup.
+- L3: accept as a pre-existing Low follow-up, individually retained in `BL-261005-resolve-deferred-wave-5`. The approved derived correction fixed the broken path and conserved original evidence; durable branch-versus-commit link policy belongs with the exporter and historical-reference policy, not a second ad-hoc rewrite of original evidence. Assess supported permalink policy separately after this PR. No blanket waiver or new blocker is inferred.
+
+Phase remains in_progress with two declared fixes; this passing threshold does not mark the phase complete. Existing original final cap, operator continuation, individual Medium/Low dispositions and recovery counters stay unchanged. Gate r1 remains a received/fixes_added event until both tasks settle. Earlier composed checks passed on the prior product basis; repeat required DoD after these corrections before fresh qualification or publication.

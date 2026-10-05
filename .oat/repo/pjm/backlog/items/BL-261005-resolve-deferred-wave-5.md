@@ -27,3 +27,5 @@ Track separately bounded follow-ups from the Wave 5 review disposition table: p0
 - [ ] Make the knowledge commit snippet recompute or guard MERGE_BASE_SHA in its own shell, with a real separate-process control.
 - [ ] Record supported/unsupported resource attributes and historical-reference bounds; preserve original recap evidence.
 - [ ] Keep Git ownership and receipt guarantees intact; policy changes require their own settled contract and proportional controls.
+
+- [ ] Assess durable branch/commit permalink policy for exporter-generated and historical recap guidance links; p07 gate r1 Low3 carries the existing wave-branch footer link. Preserve immutable original packages and apply any settled change through the owning exporter.

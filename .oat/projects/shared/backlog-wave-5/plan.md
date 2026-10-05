@@ -974,6 +974,24 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 
 **Commit:** `fix(p07-t10): repair the derived recap artifact-guidance footer`
 
+### Task p07-t11: (review) Preserve decoded same-page fragment targets
+
+**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
+**Source:** p07 independent gate p07-review-2026-10-05T064042Z.md, Low 1.
+**Dependencies:** Sequential after p07-t10; root bookkeeping before each continuation.
+**Status:** pending
+
+Compare same-page and same-file fragments against decoded real id/name attributes, preserving plain accepted anchors and stripping genuinely absent targets; keep raw CSS/script content out of target inventory. Reproduce the actual public exporter failure, make the smallest owning correction, and protect it with proportional named existing-family regressions and valid accepted controls. Use deliberate-testing; preserve original archive/S3 and unrelated bytes. Run scoped owning verification and one hook-enabled exact-path task commit. Root owns full composed DoD and fresh required reviews.
+
+### Task p07-t12: (review) Retain the summary cause when recap repair refuses
+
+**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
+**Source:** p07 independent gate p07-review-2026-10-05T064042Z.md, Low 2.
+**Dependencies:** Sequential after p07-t10; root bookkeeping before each continuation.
+**Status:** pending
+
+When a summary failure is followed by a recap rebuild refusal, include both categorical errors and actionable repair-and-retry guidance while preserving the existing adopted/foreign page and original archive. Reproduce the actual public exporter failure, make the smallest owning correction, and protect it with proportional named existing-family regressions and valid accepted controls. Use deliberate-testing; preserve original archive/S3 and unrelated bytes. Run scoped owning verification and one hook-enabled exact-path task commit. Root owns full composed DoD and fresh required reviews.
+
 ## Reviews
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
@@ -1026,7 +1044,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T025900Z.md         | 29c8e57117141f7a97544d804610c7ab633cf1b9 | gate       | claude-opus-5-5-high |
 | final  | remote   | fixes_completed | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto       | -                    |
 | p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T062339Z.md           | 70aba3729da11d717e2f1aff05ff7ef0fc38d5e7 | auto       | -                    |
-| p07    | code     | received        | 2026-10-05 | reviews/p07-review-2026-10-05T064042Z.md                    | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
+| p07    | code     | fixes_added     | 2026-10-05 | reviews/archived/p07-review-2026-10-05T064042Z.md           | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -1045,9 +1063,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
 - Phase 6: 13 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction and the final-review normalized asset embedding correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-- Phase 7: 10 remote review correction tasks.
+- Phase 7: 10 remote review correction tasks and two bounded independent-gate fixes.
 
-**Total: 54 tasks across 7 phases.** This is a planning total, not a completion claim.
+**Total: 56 tasks across 7 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
