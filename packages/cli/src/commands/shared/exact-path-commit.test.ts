@@ -89,6 +89,110 @@ afterEach(async () => {
 });
 
 describe('commitExactPaths real Git boundary', () => {
+  it.each(['tilde', 'absolute', 'repository-relative'] as const)(
+    'honors refusing and accepting hooks at a Git-expanded %s path',
+    async (kind) => {
+      const root = await repo();
+      const childHome = await mkdtemp(join(tmpdir(), 'oat-hook-home-'));
+      roots.push(childHome);
+      const hooks =
+        kind === 'repository-relative'
+          ? join(root, '.git/custom-hooks')
+          : join(childHome, 'hooks');
+      await mkdir(hooks);
+      const configured =
+        kind === 'tilde'
+          ? '~/hooks'
+          : kind === 'absolute'
+            ? hooks
+            : '.git/custom-hooks';
+      git(root, ['config', 'core.hooksPath', configured]);
+      const preCommit = join(hooks, 'pre-commit');
+      await writeFile(
+        preCommit,
+        '#!/bin/sh\nprintf "original hook ran\\n" >&2\nexit 1\n',
+      );
+      await chmod(preCommit, 0o700);
+      await writeFile(join(root, 'owned.md'), 'owned candidate\n');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const index = await readFile(join(root, '.git/index'));
+      const env = {
+        ...process.env,
+        HOME: childHome,
+        GIT_INDEX_FILE: undefined,
+      };
+      // Git itself is the independent oracle for expansion of the configured
+      // path; the helper runs in a child so this test never changes our HOME.
+      await expect(
+        exec('git', ['commit', '-qm', 'plain Git control', '--', 'owned.md'], {
+          cwd: root,
+          env,
+        }),
+      ).rejects.toMatchObject({
+        stderr: expect.stringContaining('original hook ran'),
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      const run = async () => {
+        const { stdout } = await exec(
+          process.execPath,
+          [
+            '--import',
+            'tsx',
+            '--input-type=module',
+            '-e',
+            `const { commitExactPaths } = await import(${JSON.stringify(join(import.meta.dirname, 'exact-path-commit.ts'))});
+process.stdout.write(JSON.stringify(await commitExactPaths(${JSON.stringify({
+              repoRoot: root,
+              paths: ['owned.md'],
+              message: 'feat: configured hook control',
+              identity: `configured-hook-${kind}`,
+            })})));`,
+          ],
+          { cwd: workspace, env },
+        );
+        return JSON.parse(stdout);
+      };
+      expect(await run()).toMatchObject({
+        outcome: 'failed',
+        committed: false,
+        error: expect.stringContaining('original hook ran'),
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(await readFile(join(root, 'owned.md'), 'utf8')).toBe(
+        'owned candidate\n',
+      );
+      expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated literal\n',
+      );
+      preservation(root);
+      await writeFile(
+        preCommit,
+        '#!/bin/sh\nprintf "accepted original hook\\n" > .git/hook-accepted\n',
+      );
+      const accepted = await run();
+      expect(accepted).toMatchObject({ outcome: 'committed', committed: true });
+      expect(await readFile(join(root, '.git/hook-accepted'), 'utf8')).toBe(
+        'accepted original hook\n',
+      );
+      expect(git(root, ['show', '-s', '--format=%P', 'HEAD'])).toBe(head);
+      expect(
+        git(root, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']),
+      ).toBe('owned.md');
+      expect(git(root, ['status', '--porcelain', '--', 'owned.md'])).toBe('');
+      preservation(root);
+      expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated literal\n',
+      );
+      expect(await run()).toMatchObject({
+        outcome: 'already-matching',
+        commit: accepted.commit,
+      });
+    },
+    15000,
+  );
+
   it.each(['nested repository', 'submodule'])(
     'preserves Git-enumerated state in an unrelated %s and refuses hook changes',
     async (kind) => {

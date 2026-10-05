@@ -533,6 +533,7 @@ export async function commitExactPaths(
           );
           const configured = await git(root, [
             'config',
+            '--path',
             '--get',
             'core.hooksPath',
           ]).catch(() => '');
