@@ -126,7 +126,7 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-10-03T20:51:11.414Z'
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -136,41 +136,32 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: cb81d0884d40fdcfb15e051723b64dcd08f7f1d2
+  reviewed_head: 0f80dcc1e340c9ad90748dfa1ebf05a04af646c4
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:3ca8e7dfa752d40ee4da66f331dfcee7cf3ba6f10401fe2affed60bd024d0d1f
-  freshness_head: cb81d0884d40fdcfb15e051723b64dcd08f7f1d2
-  freshness_fingerprint: sha256:effective-delta-v2:3ca8e7dfa752d40ee4da66f331dfcee7cf3ba6f10401fe2affed60bd024d0d1f
+  implementation_fingerprint: sha256:effective-delta-v2:aa12921771062b9e2510c16786eec6d0fc6191faf45b9eb2dbeaff45d3c9c59a
+  freshness_head: 0f80dcc1e340c9ad90748dfa1ebf05a04af646c4
+  freshness_fingerprint: sha256:effective-delta-v2:aa12921771062b9e2510c16786eec6d0fc6191faf45b9eb2dbeaff45d3c9c59a
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: 6a8a2bc1-a0b4-4731-a048-d4e37c22e71c
-  launch_started_at: '2026-10-05T01:46:00.242249Z'
-  launch_result_receipt: analysis/implementation-exit-gate-r1.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/618a7f2c-8019-454f-84c1-8f737d6450f6.json
-  gate_run_id: 618a7f2c-8019-454f-84c1-8f737d6450f6
-  envelope_status: blocked
-  artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md
-  handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md before treating this gate review as consumed.
-  receive_state: completed
-  receive_correlation:
-    runId: 618a7f2c-8019-454f-84c1-8f737d6450f6
-    handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md before treating this gate review as consumed.
-    sourceArtifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md
-    scope: final
-    type: code
-    sourceFilename: final-review-2026-10-05T015008Z.md
-  receive_source_artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md
-  receive_archived_artifact: .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T015008Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    sourceFilename: final-review-2026-10-05T015008Z.md
-  receive_pre_head: 6a8d3629307a98e4904f080dfd2ea03c0917709c
-  receive_commit: d228b3e0490282575d9529e645e837e26f29180e
-  receive_eligible: true
-  receive_completed: true
-  failure: bounded p06-t11..t13 remediation complete; changed basis requires new final verification and lifecycle review
-  updated_at: '2026-10-05T02:19:58.264073Z'
+  launch_state: intent_persisted
+  launch_attempt_id: 86f843ae-f978-4c5b-a47f-988cc05bdc3d
+  launch_started_at: '2026-10-05T02:56:19.927811Z'
+  launch_result_receipt: analysis/implementation-exit-gate-r2.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-10-05T02:56:19.927977Z'
   decided_at: '2026-10-05T01:56:03.092661Z'
 ---
 
