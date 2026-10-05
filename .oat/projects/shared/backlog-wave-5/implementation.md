@@ -5399,3 +5399,7 @@ Original allowed generation was marked stale by remote corrections. Its complete
 ## Remote revision exit transition intent
 
 {"attemptId": "796626c6-c833-4d15-9ebc-2e66763eafa3", "launch": "intent_persisted", "receipt": ".oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json", "receive": "not_started", "receiveCommit": null, "runId": null, "status": "pending"}
+
+## Remote revision exit transition accepted
+
+{"attemptId": "796626c6-c833-4d15-9ebc-2e66763eafa3", "launch": "accepted", "receipt": ".oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json", "receive": "not_started", "receiveCommit": null, "runId": "15ac619e-5287-4199-b06f-0661758068a5", "status": "pending"}

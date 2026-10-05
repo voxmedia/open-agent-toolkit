@@ -124,12 +124,12 @@ oat_implement_exit_gate:
   freshness_head: af5019594f10f3dd0bf0e348a20b43ae61160421
   freshness_fingerprint: sha256:effective-delta-v2:f1a5a617195738020cc6fec326e9a0b069abb09d0609a6441bd3b46d47b09e2d
   waivers: []
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 796626c6-c833-4d15-9ebc-2e66763eafa3
   launch_started_at: '2026-10-05T08:36:07.153926Z'
   launch_result_receipt: .oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/15ac619e-5287-4199-b06f-0661758068a5.json
+  gate_run_id: 15ac619e-5287-4199-b06f-0661758068a5
   envelope_status: null
   artifact: null
   handoff: null
@@ -143,7 +143,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-10-05T08:36:07.154070Z'
+  updated_at: '2026-10-05T08:36:37.522948Z'
   decided_at: null
 oat_post_implement_sequence:
   status: complete
