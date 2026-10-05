@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
 oat_generated: true
-oat_summary_last_task: p06-t13
+oat_summary_last_task: p07-t13
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -13,16 +13,16 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-Delivery scope: 44 tasks implement ten approved maintenance tickets plus the requested Plain Markdown option in guided init. The six implementation phases are complete. Five public packages are prepared at 0.3.17; publication and merge remain outside this project’s authority. The Quick workflow intentionally has no separate specification or design artifact.
+Delivery scope: 57 tasks across seven phases implement ten approved maintenance tickets, the requested Plain Markdown option in guided init, all ten actionable PR #356 findings and three further exporter corrections from independent phase review. Five public packages are prepared at 0.3.17. The Quick workflow uses discovery, plan and implementation evidence; separate spec/design artifacts are intentionally absent. The original completed archive and S3 snapshot remain preserved; this revision updates the same open PR. Merge and package publication are outside the authorized endpoint.
 
 ## What Was Implemented
 
 - **Validator boundaries:** Markdown and MDX require exactly one H1, including nested headings; code and frontmatter are excluded. Shared-document file and directory vendors all require a PR-scoped skill version bump.
 - **Lifecycle guidance:** Autonomous kickoff discloses effective recovery limits, override sources, consumed capacity and owning hard stops. Reviewer guidance requires credible proportional probes, accepted controls and honest evidence limits under the existing severity model.
-- **State preservation:** PJM init and migrate overlay their owned adoption markers without dropping unowned remote/storage/future fields. Structured blockers preserve task_id, reason and since for JSON consumers while legacy strings and malformed entries stay visible. Guided init offers Plain Markdown for existing documentation.
-- **Commit ownership:** A shared hook-safe exact-path primitive serves CLI and skill callers. Git-expanded hook paths, per-promotion identities, truthful scaffold recovery diagnostics, enabled hooks, real index restoration, receipt identity, retry settlement and unrelated staged/unstaged bytes are preserved. Backlog archive performs its atomic lifecycle write without staging and reports complete affected paths. Knowledge refresh preserves manual files and refuses collisions with unmarked output paths.
-- **Recap exports:** Archive verifies the complete original package and emits one dated self-contained HTML page. Validated normalized asset paths own script and stylesheet embedding; matching retries, conflict refusal and attempt-owned rollback retain their safety checks. All seven historical recap packages and the stray fact base were conserved before migration. The separately approved derived SVG correction removes only erroneous quote pairs; original source and QA evidence remain unchanged.
-- **Integration:** Canonical owner versions, provider projections, docs catalog and release metadata agree. Public documentation covers the ten tickets and the separate guided-init amendment.
+- **State preservation:** PJM init and migrate overlay their owned adoption markers without dropping unowned remote/storage/future fields. Cyclic real YAML blocker aliases produce safe diagnostics through control-plane and CLI consumers. Structured blockers preserve task_id, reason and since for JSON consumers while legacy strings and malformed entries stay visible. Guided init offers Plain Markdown for existing documentation.
+- **Commit ownership:** A shared hook-safe exact-path primitive serves CLI and skill callers. Active merge/sequencer/unmerged states are refused, all commit parents are verified, and executable hooks including reference-transaction retain argv, raw stdin and refusal behavior. Migration retry independently verifies owning receipts, current HEAD/parents, emitted trees and source removal; committed:true alone cannot authorize cleanup. Git-expanded hook paths, per-promotion identities, truthful scaffold recovery diagnostics, enabled hooks, real index restoration, receipt identity, retry settlement and unrelated staged/unstaged bytes are preserved. Backlog archive performs its atomic lifecycle write without staging and reports complete affected paths. Knowledge refresh preserves manual files and refuses collisions with unmarked output paths.
+- **Recap exports:** Archive verifies the complete original package and emits one dated self-contained HTML page. Quoted CSS URLs with spaces and escapes, decoded HTML resource attributes, and decoded real id/name fragments are preserved; raw bodies and comments cannot invent targets or consume later real targets. Failed summary exports cannot publish unavailable links; matching verified retries are adopted unchanged, while differing adopted/foreign bytes are protected. Local fallback double-fault errors retain both causes and destination-repair/retry guidance. Validated normalized asset paths own script and stylesheet embedding; matching retries, conflict refusal and attempt-owned rollback retain their safety checks. All seven historical recap packages and the stray fact base were conserved before migration. The separately approved derived SVG correction removes only erroneous quote pairs; original source and QA evidence remain unchanged.
+- **Integration:** Canonical owner versions, provider projections, docs catalog and release metadata agree. Docs disclose automatic exact-path backlog closeout commits; the knowledge preservation oracle checks structured AssertionError fields in both color modes. CLI declares its existing locked entities6.0.1 runtime dependency. Public documentation covers the ten tickets and the separate guided-init amendment.
 
 Backlog closeout: 10 tickets are closed and archived through the staging-neutral CLI and one complete exact-path commit. The two separately scoped review follow-ups remain open.
 
@@ -34,284 +34,83 @@ Backlog closeout: 10 tickets are closed and archived through the staging-neutral
 
 ## Verification
 
-Final verification: all 18 root final-r5 invocations passed, including the ordered CI/release/docs gates plus applicable lint, format and documentation validators. Ordinary Turbo gates include cache replay and are distinguished from fresh evidence. All 13 closeout-r6 invocations also passed after the final PJM documentation clarification, including the required CI/release/docs sequence.
+Current composed revision verification passed all eight CI/release/docs gates in their required order, plus main fetch before version checks and applicable lint, format and docs validation. All twelve invocations have explicit exit0 receipts in `.oat/repo/analysis/wave5-final-closeout/remote-r1/composed-dod-r3/results.json`.
 
-Fresh package tests: 8533 tests passed through forced Turbo with isolated child HOME and zero cached tasks. Fresh smoke tests: 163 passed. Fresh skill tests: 700 passed. Fresh worktree scripts: one passed; canonical skill validation also passed. The source and built CLI agree on authentic asset embedding and traversal-refusal controls. Independent native and configured Opus reviews assessed product changes and individual finding dispositions. Native final r3 passed with no new findings. Renewed full Phase 6 review passed; configured cross-family final exit r2 passed with no new findings, independently verifying the three exit corrections. Earlier failed exit r1 remains historical and fixes_completed; no gate waiver was used.
+Fresh forced tests executed 8,580 public-package tests (CLI8,363/control-plane156/theme20/transforms31/config10), zero cached Turbo jobs with isolated child HOME; docs85, smoke163, skills700 and worktree-script1 also passed. Public authentic July recap controls and actual Git/migration/state CLI controls reproduce pre-fix failures, reject the same bad states after correction and accept valid controls. The original package bytes remain conserved. Colored and uncolored knowledge tests passed on Node25.9.0; Node24 was not run.
 
-The original failed final-suite receipts remain preserved. Bounded corrective tasks repaired stale version pins, evidence classification and hook-failure injection before final-r5. Self-local guard checks that did not reach shipped guidance were withdrawn instead of counted as assurance. Browser evidence is limited to the recorded migrated-page checks; no complete visual, HTTP or live-S3 feature-acceptance claim is made.
+Fresh native Phase7 round3 and configured Opus-high Phase7 round3 passed, followed by current independent final qualification and the configured implementation exit gate. Their full reports, immutable heads, correlation and receive commits are retained in the Reviews ledger and implementation record. The prior native final cap3/operator continuation and consumed exit remediation1/2 are unchanged; no fourth ordinary native final cycle or gate waiver was used. Earlier failed verification and gate receipts remain historical. Original workflow observations remain in `project-log-original-completed.md`.
 
 ## Tradeoffs and Follow-ups
 
 - **Stored-receipt diagnostic Medium:** Deferred by delegated root judgment to [Distinguish stored receipt branch return from rewritten history](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/pjm/backlog/items/BL-261005-distinguish-stored-receipt.md). The operation fails closed and preserves receipt/marker/state. Returning to the original branch and rewritten history need different guidance and real controls; automatic rewritten-history reconciliation is excluded.
-- **Maintenance edge cases:** [Resolve deferred Wave 5 maintenance edge cases](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/pjm/backlog/items/BL-261005-resolve-deferred-wave-5.md) tracks ACMR deletion-policy expansion, owning-caller signal continuation, large historical-reference retry bounds, never-tracked omission guidance, rewritten untracked-draft policy, additional resource attributes/unquoted fragments and knowledge commit-message shell lifetime and positional-argument guidance. Each remains separately scoped; no blanket waiver or counter reset applies.
+- **Maintenance edge cases:** [Resolve deferred Wave 5 maintenance edge cases](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/pjm/backlog/items/BL-261005-resolve-deferred-wave-5.md) tracks ACMR deletion-policy expansion, owning-caller signal continuation, large historical-reference retry bounds, never-tracked omission guidance, rewritten untracked-draft policy, additional resource attributes/unquoted and percent-encoded fragment forms, knowledge commit-message shell lifetime and positional-argument guidance, and a durable policy for branch-pinned recap footer permalinks. The permalink finding is individually deferred until the owning exporter/historical-link policy is settled; originals remain immutable. Each remains separately scoped; no blanket waiver or counter reset applies.
 - Quick-mode requirements are carried by discovery, plan and implementation receipts. Routine closeout decisions are delegated by the user; this does not authorize merge, release or unverified gate success.
 
 ## Workflow Observations
 
-### 2026-10-03 · structural · oat gate review · plan
+### 2026-10-05 · structural · oat-project-implement · p07
 
-target=claude-opus-5-5-high threshold=high exit=1 status=artifact_validation_failed artifact=.oat/projects/shared/backlog-wave-5/reviews/artifact-plan-review-2026-10-03T211958Z.md run=7abeb986-214b-460e-8ec3-ccbb4cae81a1
+pr356-r1-p07-native-pass-20261005: all ten task commits and canonical54/54 ledger verified; native Sol6.1/high review passed0C0H0M0L at70aba3729da11d717e2f1aff05ff7ef0fc38d5e7; zero fix iterations, recovery0/10 pendingnull, no nested recon. Artifact reviews/archived/p07-review-2026-10-05T062339Z.md; configured phase gate pending. Original sealed log retained byte-for-byte as project-log-original-completed.md.
 
-### 2026-10-03 · structural · oat gate review · plan
+### 2026-10-05 · structural · oat gate review · p07
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:3 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/artifact-plan-review-2026-10-03T220910Z.md run=7e5ea925-786c-4298-9cc7-575ab6a4ee09
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:3 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p07-review-2026-10-05T064042Z.md run=36ba16e5-6bcc-4702-8048-c1a937bb77e5
 
-### 2026-10-03 · structural · oat gate review · plan
+### 2026-10-05 · structural · oat-project-implement · p07
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/artifact-plan-review-2026-10-03T221441Z.md run=4fc38012-9f90-4a0a-b665-853396e48d9f
+pr356-r1-p07-gate-r1-receive: configured Opus5.5/high gate36ba16e5 passed0C0H0M3L; L1/L2 queued as p07-t11/t12, L3 individually retained in BL-261005-resolve-deferred-wave-5.54/56 tasks, phasein_progress, recovery0/10 pendingnull and original final cap unchanged; artifact reviews/archived/p07-review-2026-10-05T064042Z.md.
 
-### 2026-10-03 · structural · oat-project-implement · p01
+### 2026-10-05 · structural · oat-project-implement · p07
 
-wave5-p01-root-review-outcome-r2-23d54bef: Root review passed 0 Critical/High threshold; three bounded review tasks settled, no deferred findings, zero Critical/High fix loops; independent phase gate pending. Evidence: implementation.md and reviews/archived/p01-review-2026-10-03T231742Z.md.
+p07-native-r2: Current native phase7 round2 passed0C0H0M0L; all56tasks verified, originalfinal cap3 and recovery0/null unchanged; configured phase gate and final/exit qualification pending. Evidence .oat/projects/shared/backlog-wave-5/reviews/archived/p07-review-2026-10-05T074041Z.md.
 
-### 2026-10-03 · structural · oat gate review · p01
+### 2026-10-05 · structural · oat gate review · p07
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:5 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p01-review-2026-10-03T232906Z.md run=3e2d6cf2-58a6-4a21-81b9-bb660e92f21f
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p07-review-2026-10-05T074551Z.md run=a23d1b57-f8bb-48bf-96d9-da9459661c3c
 
-### 2026-10-03 · structural · oat-project-implement · p01
+### 2026-10-05 · structural · oat-project-implement · p07
 
-wave5-p01-complete-3e2d6cf2: Phase 1 complete after root review and configured independent gate passed; 7 tasks complete, recovery 0/null, zero Critical/High fix loops. Five Low gate findings deferred to final in implementation.md; review artifact reviews/archived/p01-review-2026-10-03T232906Z.md.
+p07-native-r3: Native phase7 round3 passed0C0H0M1L with Low current-plan totals corrected; all57tasks complete, existing caps retained; configured phase and final/exit qualification pending. Evidence .oat/projects/shared/backlog-wave-5/reviews/archived/p07-review-2026-10-05T081847Z.md.
 
-### 2026-10-03 · project · bug · PJM raw-setting preservation
+### 2026-10-05 · structural · oat gate review · p07
 
-Normalized config readers/writers discard unknown PJM keys, so spreading the normalized object cannot preserve all unowned settings. Task p02-t01 validates normally and overlays only adoption markers onto raw persisted JSON; real init/migrate probes preserve literal remote and future settings. Evidence: implementation.md p02-t01; wave5-p02-raw-preservation.
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p07-review-2026-10-05T082440Z.md run=afeaa4d9-9e54-4d2d-bf77-04f8edcf1d9a
 
-### 2026-10-04 · structural · oat-project-implement · p02
+### 2026-10-05 · structural · oat-project-implement · p07
 
-wave5-p02-root-review-outcome-r1: root review passed with zero findings, fix loops 0; independent phase gate pending; artifact reviews/archived/p02-review-2026-10-04T004034Z.md.
-
-### 2026-10-04 · structural · oat gate review · p02
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p02-review-2026-10-04T004538Z.md run=a55ea550-1835-4638-8274-bc4c32b27213
-
-### 2026-10-04 · structural · oat-project-implement · p02
-
-wave5-p02-terminal-outcome: root review and independent Opus gate passed; M1/L1 contained correction d10b21caa verified, fix iterations 1, recovery used0/pendingnull; Phase 2 complete.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-native-outcome-r3: native phase review passed after two bounded corrections;15/22 tasks, recovery1/10 pendingnull; independent Opus-high gate pending. Evidence implementation.md and reviews/archived/p03-review-2026-10-04T050037Z.md.
-
-### 2026-10-04 · structural · oat gate review · p03
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:1,medium:2,low:1 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T051023Z.md run=61054dee-de7b-4241-ad14-dfc73e1c76cb
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-gate-blocked-cap-61054dee: STOP at three-standard-review cap; independent gate blocked 1H/2M/1L, four bounded correction tasks pending operator disposition; read-only complexity assessment accepted /root/wave5_phase3_complexity exact Sol6.1/high, HOLD;15/27 tasks including user U1 Markdown init option/config, recovery1/10 pendingnull, no PR. Evidence implementation.md and reviews/archived/p03-review-2026-10-04T051023Z.md.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-complexity-stop-20261004: STOP at three-standard-review cap; complexity verdict partially compliant recommends bounded corrective revision for1H/2M/1L, central helper retained and marker settlement simplified; operator disposition pending, no waiver/counter reset. Evidence implementation.md and reviews/archived/complexity-p03-2026-10-04T052701Z.md.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-operator-approval-20261004: User approved corrective revision p03-t06..t09 and one additional native review plus configured Opus gate; explicit scope-bound cap override, counters unchanged; same original phase author resumed HOLD. Continue later wave and one mergeable PR on pass; no merge/release. Evidence implementation.md and reviews/archived/complexity-p03-2026-10-04T052701Z.md.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-corrections-received-20261004: four approved correction commits ba72bb2f6a5b0ad92452d3e43acb22cd59897e0c; author1107/13 and root107/2 plus actual command controls passed, recovery1/null; implementation.md records evidence and limits, additional native review and configured Opus gate pending.
-
-### 2026-10-04 · structural · oat gate review · p03
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T063659Z.md run=f771c346-2338-4882-8c88-3a96c53fb8d5
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-complexity-r2-stop: approved additional native/gate cycle and refreshed complexity assessment complete; Partially compliant, bounded corrective revision recommended; operator disposition required before p03-t10 or Phase4; report reviews/archived/complexity-p03-2026-10-04T065100Z.md; 19/28 tasks complete and six Low findings retained for final.
-
-### 2026-10-04 · structural · oat gate review · p03
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T125636Z.md run=122ded8c-cb1d-4e45-a327-ec546b358f6b
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-complexity-r3-stop STOP: p03-t10 verified; native5/gates3 complete, latest recovered-unrecorded M1 accepted under C3/C4. Complexity Partially compliant recommends bounded corrective revision; operator disposition/further allowance pending. Full report reviews/archived/complexity-p03-2026-10-04T131142Z.md; p03-t11 pending, 20/29 tasks, six Low final-owned, recovery1/10pendingnull. No further correction/review/Phase4 dispatch.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-native-r6-received native r6 passed 0C0H0M1L; L1 completion totals aligned; correction1f7e5842 verified; approved configured gate pending, count6/gates3excluded/recovery1/10pendingnull; artifact .oat/projects/shared/backlog-wave-5/reviews/archived/p03-review-2026-10-04T135302Z.md
-
-### 2026-10-04 · structural · oat gate review · p03
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T140803Z.md run=c4aeefbf-6e7d-4b69-a639-aa5063501a78
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-opus-r4-received configured gate passed Critical/High threshold with0C0H1M1L; priorM1closed, rewritten-history diagnostics reproduced, L1trackingaligned; native6/gates4excluded/recovery1/10pendingnull; refreshed necessity/operator boundary; artifact .oat/projects/shared/backlog-wave-5/reviews/archived/p03-review-2026-10-04T140803Z.md
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-complexity-r4-received exact native necessity assessor completed at27d1ef8; report reviews/archived/complexity-p03-2026-10-04T142327Z.md, Partially compliant/provisional rewrite scope, diagnostic-only corrective revision recommended, safe refusal Keep; no probes/writes or correctness-cycle/recovery increment.
-
-### 2026-10-04 · structural · oat-project-implement · stop
-
-wave5-p03-complexity-r4-stop operator disposition pending after six native/four configured reviews and consumed approval; diagnostic-only correction versus residual acceptance and separate rewrite-policy defer presented from refreshed necessity report; no disposition self-selected, recovery1/10pendingnull,11/11p03,total21/29,phase4–6/onePRtail pending.
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-r7-outcome: native r7 passed with zero findings; approved diagnostic task completed and terminal dispatch records settled. Native count7, configured gates4 pending authorized r5; recovery1/10 pendingnull unchanged. Six Lows final-owned, automatic rewrite recovery deferred.
-
-### 2026-10-04 · structural · oat gate review · p03
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:1,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p03-review-2026-10-04T150535Z.md run=8ddca7aa-1eae-452a-adab-880054c268e5
-
-### 2026-10-04 · structural · oat-project-implement · p03
-
-wave5-p03-complete-r5: Phase3 passed native r7 and configured Opus-high r5;12/12 task commits,22/30 overall. Gate M1 stored-receipt diagnostic deferred to final, L1 task-count wording resolved now. Native7/gates5, one approved cycle consumed; recovery1/10 pendingnull unchanged. Phase4 ready.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-t01-received: task1 committed78b2326 and same-target append-only recovery48f51c6 verified; overly broad settled archive ownership rejected by negative keeper,45 focusedtests and CLI/docs pre/post checks0, root keeper0. Recovery1/10 pendingnull settled,23/30 tasks. Task2 ready after bookkeeping.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-t02-received: complete archive lifecycle guidance8 owners adopted in13 declared files; actual full archive/helper accepted and omitted-side controls incomplete,34 archivekeepers and693skills passed. Task2 commit8aee49c verified,24/30. Recovery1/10 pendingnull unchanged; knowledge refresh next.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-t03-received: manual-safe knowledge refresh0866f1f committed, six actual ownership/caller controls pass and broad delete/commit negative keepers fail then restored. Four declared files,25/30 tasks; recovery1/10 pendingnull unchanged. Plain Markdown U1 next.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-t04-received: Plain Markdown actual offered option8158a60 and real config preservation verified,13 guidedtests pre/post0, fresh docs build6 executed/0cached.26/30 tasks; four Phase4 tasks committed, composition/reviews pending. Recovery1/10 pendingnull unchanged.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-author-terminal: exact native phase request completed4 tasks plus verified recovery1; direct86CLI/6knowledge/699skills and CLI/docs/validator composition pass.26/30tasks, native review/configuredgate pending. Recovery1/10 pendingnull preserved, all product scopes clean.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-native-r1-received: four tasks and recovery settled; exact native review r1 passed zero findings, independent61 CLI and6 knowledge controls0.26/30 tasks, configured Opus-high gate pending; recovery1/10pendingnull unchanged, seven final-owned items retained.
-
-### 2026-10-04 · structural · oat gate review · p04
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:4 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p04-review-2026-10-04T155932Z.md run=2ccc9d2d-871c-4368-84dd-78fe51622f5b
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-complete-r1: native r1 zero findings and configured Opus-high r1 passed0C0H0M4L; four Low decisions durably deferred to final, ten Lows plus prior Medium retained.4/4 phase tasks,26/30 total, recovery1/10pendingnull unchanged; Phase5 ready.
-
-### 2026-10-04 · structural · oat-project-implement · p04
-
-wave5-p04-task-status-reader-alignment: root receipt task rows used complete instead of parser-owned completed; project status counted22 despite four committed Phase4 tasks. Correct only four task status scalars, preserving phasecomplete, task commits, evidence and26/30 ledger. No product or recovery change.
-
-### 2026-10-04 · structural · oat-project-implement · p05-t01
-
-wave5-p05-t01-root-settlement: p05-t01 and recovery1/10 validated; immutable original1e53c9ca, bounded recovery7e4def325 and committed-head controls passed; matching pending cleared, task2 release awaits this bookkeeping commit.
-
-### 2026-10-04 · structural · oat-project-implement · p05-t02
-
-wave5-p05-t02-root-receipt: bounded commit3308825f verified, real first-pass and archived retry identity controls independently pass; legacy receipts preserved, migration release awaits committed bookkeeping.
-
-### 2026-10-04 · structural · oat-project-implement · p05-t03
-
-wave5-p05-t03-root-receipt: exact80path commita080adeb verified; root independently conserved all65 original files, unchanged archive versions, seven output hashes and43relative targets;29/30 tasks complete, Phase5 independent review remains pending.
-
-### 2026-10-04 · project · friction · Phase5 crash continuation
-
-wave5-p05-crash-sealed-continuation: Host restart removed the accepted fix handle after ENOSPC, preserving two uncommitted source/test files. Sealed replay captured the exact patch before cleanup of the worktree; a same-target continuation verified the current-base seal and completed one bounded task commit without losing original evidence or resetting counters.
-
-### 2026-10-04 · structural · oat-project-implement · p05
-
-wave5-p05-fix2-scope-approval-boundary: verified uncommitted p05-t05 awaits explicit four-derived-SVG-page scope approval; see implementation.md and analysis/p05/fix2-proposed-scope-amendment.md; fix2/2, recovery1/10 pendingnull unchanged.
-
-### 2026-10-04 · structural · oat gate review · p05
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:4 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p05-review-2026-10-04T215406Z.md run=91378602-fe33-4788-bd3e-4b818837343e
-
-### 2026-10-04 · structural · oat-project-implement · p05
-
-wave5-p05-outcome-opus-r1-91378602 Phase5 complete5/5 after native r3 and configured Opus-high gate91378602-fe33-4788-bd3e-4b818837343e passed0C0H0M4L; two bounded review fixes and recovery1/10pendingnull retained; L4 wording addressed in receive, three Lows final-owned, source reviews/archived/p05-review-2026-10-04T215406Z.md; Phase6 and final integration continue.
-
-### 2026-10-04 · structural · oat-project-implement · root-final-verification
-
-wave5-final-test-stop-f4c51653 final pnpm test exited1 with34CLI failures, reproduced in direct439-test run; implementation.md records the seven-path correction proposal and preserved REVIEWRECEIVE-07 mapping, awaiting operator direction; no source correction, recovery consumption or final gate pass.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t02
-
-wave5-p06-t02-receipt-11da300e7 verified two-file literal-only version correction and353direct tests pre/post; root appends delegated final guidance/evidence tasks and individual carried-finding dispositions; final gates remain pending.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t03
-
-wave5-p06-t03-receipt-01ed25a23 exact two-file inventory correction verified,41direct tests pre/post and all scoped gates pass; prior approval classifications intact; final generation task now declared and final gates pending.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t04
-
-wave5-root-t04-receipt-a1a7f4f6: Root verified exact three-file task commit, direct45tests and real hook state preservation; p06 progress35/39, next t05 under delegated operator authority.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t05
-
-wave5-root-t05-receipt-80109a77: Root verified five-file correction and306tests; separately resolved five p01 Lows except recorded deletion-policy deferral, withdrawn invalid deletion-guard claim; progress36/39, next t06.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t06
-
-wave5-root-t06-receipt-8b320cbc: Root verified actual old guidance failure and accepted separate-shell handoff; p04Low4 resolved, progress37/39, next t07.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t07
-
-wave5-root-t07-receipt-b1ed6503: Root verified five-doc conservation and actual v1/v2 contract, p05Low2/Low3 resolved; progress38/39, next final owning generation t08.
-
-### 2026-10-04 · structural · oat-project-implement · p06-t07
-
-wave5-root-t07-receipt-final: Numeric exit0 schema verified; exact task commit/conservation/code corroborated, task tracking settled38/39, t08 next. Prior root log-only commit retained without rewrite.
-
-### 2026-10-05 · structural · oat-project-implement · p06
-
-wave5-root-final-baseline-r2: All39tasks complete; verified65projection/118bundle/39owner parity and individual finding dispositions; full final gates/reviews/exitgate/closeout pending. Operator delegates routine scoped choices; no merge/release.
-
-### 2026-10-05 · structural · oat-project-implement · p06-t09
-
-wave5-final-r2-smoke-alignment: CLI8303tests pass; smoke1failure flags approved legacy-only references. Add exact one-file task9 under operator-delegated scoped authority; preserve original fixture bytes and live retirement guards. Root final r2 stops, later gates unrun; no counter reset.
-
-### 2026-10-05 · structural · oat-project-implement · p06
-
-wave5-root-final-baseline-r3: Root verified task9 exact smoke compatibility exceptions and negative/valid protections, reader/captured bytes conserved; all40tasks complete. Restart ordered finalr3 before independent reviews/gates/closeout. Prior failures retained.
-
-### 2026-10-05 · structural · oat-project-implement · final
-
-wave5-final-r3-verified: Full finalr3 verification passed all18 ordered invocations; forced12task tests0cache and fresh smoke/skills/scripts. Earlier failed sequences retained; final independent review and closeout pending.
-
-### 2026-10-05 · structural · oat-project-implement · final
-
-wave5-final-r1-l1-received: Full native final review0C0H0M1L received; root reproduces normalized script/CSS raw-file refusal, converts L1 to p06-t10 under delegated routine authority. Prior individual dispositions retained; fresh verification/review required, no phase completion or publication claim.
-
-### 2026-10-05 · structural · oat-project-implement · p06-t10
-
-wave5-root-p06-t10-receive: all41 tasks implemented. Root verified exact two-file commit4fc29874, hashes and explicit exits; authentic July plain/query/encoded controls now embed literal script/CSS and preserve originals. Prior final r1 event fixes_completed; fresh full gates and qualified independent re-review required. Recovery0/10 pendingnull; operator delegation permits routine continuation.
-
-### 2026-10-05 · structural · oat-project-implement · final
-
-wave5-final-r2-received: native final re-review passed0C0H0M1L; sole stale-label Low corrected in receive-owned bookkeeping. Product archive/authentic controls pass, inherited broad coverage explicit, every carried disposition assessed separately. Immutable reviewedhead retained, fullfinalr4 valid; configured p06/exit gates and tail continue.
-
-### 2026-10-05 · structural · oat gate review · p06
-
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p06-review-2026-10-05T013729Z.md run=41132106-3f21-4a47-9ee3-30a45690532f
-
-### 2026-10-05 · structural · oat-project-implement · p06
-
-wave5-p06-gate-passed-receive: full phase gate passed and consumed; 41 tasks and all six phases complete; two Lows have durable dispositions and tracked follow-ups; configured exit review and lifecycle tail remain.
+p07-phase-gate-r3: Phase7 accepted13/13 after fresh native round3 and configured gate3; all57tasks implemented and current fullDoD passed. Final/exit qualification remains pending. Evidence .oat/projects/shared/backlog-wave-5/reviews/archived/p07-review-2026-10-05T082440Z.md.
 
 ### 2026-10-05 · structural · oat gate review · final
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:1,medium:0,low:2 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md run=618a7f2c-8019-454f-84c1-8f737d6450f6
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083054Z.md run=03c204f9-266b-4ceb-a52b-8788ac2592de
 
-### 2026-10-05 · structural · oat gate review · p06
+### 2026-10-05 · structural · oat-project-implement · final
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:3 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/p06-review-2026-10-05T025051Z.md run=59caa5e5-1eaf-4f1b-81a4-ff8091b53592
-
-### 2026-10-05 · structural · oat-project-implement · p06
-
-wave5-p06-r2-complete: all13phase6tasks/all44projecttasks complete; renewed independent phase gate passed; configured exit and lifecycle tail pending.
+final-qualification: Current final qualification passed after individual Low percent-fragment follow-up; no new blocking findings, current composed checks passed, fresh configured implementation exit gate pending. Evidence .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T083054Z.md.
 
 ### 2026-10-05 · structural · oat gate review · final
 
-target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md run=b7782415-6c88-4764-876f-da5ee4ee8b19
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md run=15ac619e-5287-4199-b06f-0661758068a5
 
-### 2026-10-05 · structural · oat-project-complete · retirement-sweep
+### 2026-10-05 · structural · oat-project-implement · final
 
-Retirement sweep: no absorbed projects recorded. wave5-retirement-empty
+implementation-exit-gate-r3: Configured implementation exit current generation passed0C0H0M0L; all57tasks/7phases accepted with fresh current checks; original completed sequence retained. Root summary/PR publication preparation follows. Evidence .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T083744Z.md.
+
+### 2026-10-05 · structural · oat-project-implement · final
+
+pr356-revision-completion: Current revision accepted: 57 tasks across seven phases, thirteen bounded corrections, current full ordered checks, phase reviews, final qualification and configured implementation exit passed. The original completed archive, sealed log and S3 snapshot are retained. Summary and same-PR publication preparation follow; no merge or release.
 
 ## Explainer Outcome
 
-Generated — needs review. Run `backlog-wave-5-final-20261005` is recorded as `built-needs-review`; all seven browser-free QA checks passed. T3 preview previously returned unavailable/NoHost; no visual acceptance is claimed. Archive will export the verified page and retain this original package. The run binds the implementation checkpoint at `5cf0aa4d4346f1f210870df60425f55ee35a2b5a`; later closeout prose does not alter its original inputs.
+- **project-recap:** generated — needs review — `.oat/projects/archived/backlog-wave-5/explainers/backlog-wave-5-final-20261005` (historical original generation, built-needs-review, seven static QA checks passed; T3 NoHost, no visual acceptance). Its checkpoint5cf0aa4 remains historical. The derived footer was repaired directly with an updated exported hash; the original hash and package are unchanged. This recap does not claim to cover the subsequent PR revision.
+
+## Revision History
+
+PR #356 corrections add thirteen bounded tasks with one product commit per task and separate root bookkeeping. The ten remote findings were fixed, and independent phase review identified three further exporter fixes now implemented; the separate permalink-policy and pre-existing percent-fragment Lows remain individually assigned to the existing maintenance follow-up. Current review and verification qualify the composed revision without changing the original archived run or resetting review/gate history.
+
+## Autonomous Execution Learnings
+
+### Workflow issues
+
+- Retain the approved exact implementation/review routes and owning root verification/archive authority across continuations. See [approved wave and review setup](oat-execution-learnings.md), `2026-10-03T20:51:11.416Z - decision - Approved wave and review setup`.
+- Treat a completed review process, a parser proof and a correlated receive-eligible gate receipt as distinct evidence; preserve rejected output and follow the configured recovery boundary. See [count-format rejection](oat-execution-learnings.md), `2026-10-03T21:23:09.420Z - gotcha - Count-format rejection after independent plan review`, and [bounded planning recovery](oat-execution-learnings.md), `2026-10-03 - decision - Bounded planning recovery`.
