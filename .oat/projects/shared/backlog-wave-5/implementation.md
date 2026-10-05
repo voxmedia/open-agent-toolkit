@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t05
+oat_current_task_id: p07-t06
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 4/10      |
+| Phase 7 | in_progress | 10    | 5/10      |
 
-**Total:** 48/54 tasks completed
+**Total:** 49/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5087,3 +5087,15 @@ The ignored root progress script incorrectly nested the implementation-ledger wr
 **Outcome:** Catches nonserializable malformed blocker values and emits a bounded nonempty diagnostic, preserving ordinary JSON diagnostics and literal valid legacy/structured blockers.
 
 **Verification:** Named real-YAML alias keeper fails the baseline circular JSON TypeError and passes corrected implementation. Real parseStateFrontmatter/getProjectState/listProjects/CLI status JSON and human probes pass; controls preserved. Control-plane156/156, CLIstatus22/22, postcommit1/1, scoped check/type/build/format and hook-enabled commit exit0. Root independently verified the built parser alias diagnostic and accepted legacy control. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t04/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t05`; phase incomplete.
+
+## Task p07-t05 root receipt — 2026-10-05T05:12:41.130579+00:00
+
+**Commit:** `9a195d070450f3756a22d6e14be88438dc16d98d`
+
+**Outcome:** Recognizes quoted CSS URL tokens and decodes CSS escapes before verified resource resolution, then emits safe quoted URLs while preserving comments, ordinary strings and raw bodies.
+
+**Verification:** Authentic July recap derivatives reproduce all3 reported silently unembedded URLs on baseline and embed exact SVG bytes after correction. Six keeper regressions fail baseline; valid original/unquoted/comments controls, archived original bytes and receipt hashes are conserved. Owning129/129 and postcommit7/7 pass; root independently reran7/7 CSS/raw-body controls exit0. Final scoped check/type/build/format and hook-enabled commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t05/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t06`; phase incomplete.
+
+## Task p07-t06 dependency ownership refinement
+
+Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yaml` to task6 ownership to declare the existing locked/installed `entities@6.0.1` attribute decoder as a CLI runtime dependency. Complete HTML character-reference semantics are necessary for the accepted entity-decoding finding; the installed package exposes `decodeHTMLAttribute` with attribute-context ending rules. Avoid a partial hand-maintained entity table. Main fetch found no changes in added paths. No extra product scope or second PR-scoped version bump.

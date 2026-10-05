@@ -893,7 +893,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
 **Source:** M2, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553886.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
-**Status:** pending
+**Status:** completed — `9a195d070450f3756a22d6e14be88438dc16d98d`
 
 1. Analyze the source comment and reproduce the failure at its real Git/YAML/export/assertion boundary; docs take a conservation diff.
 2. Implement the smallest correction within the listed ownership. Preserve original archived evidence and unrelated changes.
@@ -904,7 +904,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 
 ### Task p07-t06: (review) Decode HTML resource attribute character references
 
-**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
+**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`, `packages/cli/package.json`, `pnpm-lock.yaml`.
 **Source:** M3, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553887.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
 **Status:** pending
@@ -915,6 +915,8 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 4. Run scoped formatting and relevant existing suites. Root executes all repository Definition of Done commands in order on the composed phase before review.
 
 **Commit:** `fix(p07-t06): decode html resource attribute character references`
+
+**Implementation choice:** Use `entities@6.0.1` and its `decodeHTMLAttribute` API for complete named/numeric character references with attribute-context rules. This version is already installed and locked elsewhere in the workspace; add it as an explicit CLI runtime dependency with only the owning package importer/manifest changes. Decode both attribute-reading paths before URL/CSS interpretation, then re-escape emitted values; raw script/style bodies remain literal. Existing five-package PR version bump remains applicable. Root verified no main drift in these added paths.
 
 ### Task p07-t07: (review) Publish summary links only after successful export
 
@@ -1031,7 +1033,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original 44 tasks remain recorded; 4/10 remote revision tasks verified (48/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
+**Current acceptance:** Original 44 tasks remain recorded; 5/10 remote revision tasks verified (49/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
 
 **Planned task totals:**
 
