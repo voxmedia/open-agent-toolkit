@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t08
+oat_current_task_id: p07-t09
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 7/10      |
+| Phase 7 | in_progress | 10    | 8/10      |
 
-**Total:** 51/54 tasks completed
+**Total:** 52/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5115,3 +5115,11 @@ Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yam
 **Outcome:** Summary failure rebuilds only attempt-owned pages without unavailable links; verified link-free retries remain unchanged. Adopted or foreign differing pages are preserved and refused.
 
 **Verification:** Five named regressions fail baseline; child archive145/postcommit10 and authentic July3scenarios/8events pass. Root independently reran archive145/145 and the authentic healthy/shared/local obstruction plus retry probe, exit0; hashes and original archive bytes conserved. Child check/type/build and hook-enabled commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t07/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t08`; phase incomplete.
+
+## Task p07-t08 root receipt — 2026-10-05T05:51:55.230074+00:00
+
+**Commit:** `967ab48976935327b4fd3064092b0442d74e4fb1`
+
+**Outcome:** Public backlog lifecycle documentation now discloses automatic hook-enabled commits of exact archive closeout paths and owned handoff deletion; other reference edits remain uncommitted and there is no push step.
+
+**Verification:** Root conservation verifies surrounding bytes, headings and Markdown links unchanged; committed diff agrees with canonical skill. Child scoped formatter/markdownlint/docs validation/catalog and post-hook conservation/verification exit0. Composed independent phase review remains pending. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t08/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t09`; phase incomplete.
