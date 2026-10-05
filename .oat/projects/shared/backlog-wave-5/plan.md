@@ -965,7 +965,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `.oat/repo/reference/project-recaps/20261005-backlog-wave-5.html`, `.oat/repo/reference/project-summaries/20261005-backlog-wave-5.md`.
 **Source:** L1, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553903.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
-**Status:** pending
+**Status:** completed — `f19611efd1cea7690e1a3d35aea04b66fdeeae5f`
 
 1. Analyze the source comment and reproduce the failure at its real Git/YAML/export/assertion boundary; docs take a conservation diff.
 2. Implement the smallest correction within the listed ownership. Preserve original archived evidence and unrelated changes.
@@ -1025,7 +1025,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p06    | code     | passed          | 2026-10-05 | reviews/archived/p06-review-2026-10-05T025051Z.md           | 141a3f91d66e8915a3571c7493d9749e3cd5c830 | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T025900Z.md         | 29c8e57117141f7a97544d804610c7ab633cf1b9 | gate       | claude-opus-5-5-high |
 
-| final | remote | fixes_added | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto | - |
+| final | remote | fixes_completed | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto | - |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -1033,7 +1033,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original 44 tasks remain recorded; 9/10 remote revision tasks verified (53/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
+**Current acceptance:** Original 44 tasks remain recorded; 10/10 remote revision tasks verified (54/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
 
 **Planned task totals:**
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 9/10      |
+| Phase 7 | in_progress | 10    | 10/10     |
 
-**Total:** 53/54 tasks completed
+**Total:** 54/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -416,15 +416,17 @@ Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm 
 
 ## Final Summary (for PR/docs)
 
-Implements ten approved maintenance tickets and the Plain Markdown guided-init amendment. Markdown/MDX docs require exactly one H1; the version gate follows changed shared-doc vendors. Autonomous kickoff discloses effective limits and owning hard stops; reviewers require proportional credible evidence under the existing severity model. PJM reruns preserve unowned settings; structured blockers retain task_id/reason/since and malformed entries remain visible.
+Implements the ten approved maintenance tickets, Plain Markdown guided setup and all ten actionable PR #356 review corrections. All 54 tasks are implemented. Phase 7 is awaiting independent composed review; revised final verification and configured exit qualification remain pending. The original completed generation and its local/S3 evidence remain preserved.
 
-One hook-safe exact-path commit primitive serves CLI and skill callers, preserving unrelated staged/worktree bytes and receipt-bound retries. Backlog archive reports complete caller-owned paths without staging. Knowledge refresh preserves manual notes/collisions and emits the exact ownership report across independent shell calls. Recap archive verifies the original package and exports one dated HTML page with matching retry, conflict refusal and owned rollback. Seven historical packages and the stray fact base were fully preserved before migration. Four expressly approved derived SVG pages remove only30erroneous quote pairs/60bytes; original evidence and receipts remain unchanged. Docs distinguish legacy v1 from completionv2 assurance and four recap links use durable relative destinations.
+The shared exact-path commit helper refuses merge/sequencer/unmerged states and verifies full commit parents. Delegated Git hooks retain their argv, stdin, diagnostics and refusal behavior, including reference-transaction. Migration retention and retry independently verify owning receipts, current HEAD/parents, emitted tree and source removal; a committed flag alone cannot authorize compensation or cleanup. Cyclic YAML blockers return safe diagnostics through real control-plane and CLI consumers.
 
-Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All44tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
+Recap exports recognize quoted CSS URLs and escapes, decode HTML attribute entities before resource resolution and re-escape emitted attributes. Failed summary exports rebuild only attempt-owned pages without unavailable links; matching verified link-free retries are adopted unchanged, while differing adopted/foreign pages remain protected. Public docs disclose automatic exact-path backlog closeout commits without a push step. The knowledge preservation negative control checks structured assertion data in both color modes. The derived wave recap footer has an explicitly recorded direct repair and updated export hash; original run bytes and original hash are unchanged.
 
-Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. Finalr3 at5cada031f72b1dc16b94fe011c4a4dc8ba22b754 passes every ordered CI/release/docs gate and lint/format/docs validators. Fresh isolated-child-HOME forced Turbo executes12tasks with0cached; CLI8303/8303 and four other package suites pass. Fresh smoke/skill/script suites and canonical validation pass. Explicit exits/logs retained in analysis/final-r3/gate-results.json; ordinary gate cache replay is recorded separately. Final native r1 reviewed all40 prior tasks/41criteria and found one Low within R4. Task p06-t10 resolves it through validated asset paths shared by script/CSS reads; pre-fix source-derived failures and post-fix literal embedding controls, 176 archive cases, 13 focused cases and original/export conservation pass. Root independently repeated four authentic controls against the compiled producer, exit0. Finalr4 at4f691b153370a2d31d0abe12bbb1f960858bf261 passes all18 ordered/extra invocations with numeric0 exits. Forced isolated-child-HOME Turbo executes12tasks/0cached and8527tests (CLI8311, control-plane155, theme20, transforms31, config10); fresh smoke163/skills700/scripts1/canonical validation pass. Main6ec5313b/no owned integration drift, tree unchanged/clean. Qualified narrowed native r2 passes product controls and all carried dispositions; its sole stale progress label Low is corrected in root receive. The renewed p06 phase gate and configured implementation exit re-review remain pending after p06-t11..t13. Their owning direct suites/public controls and all18 final-r5 checks pass; forced package suites execute8533cases with0cache. Fresh native final r3 passed0C0H0M0L; renewed phase/exit reviews remain pending. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
+Main surfaces are CLI Git/sync/archive/validation/PJM/maintenance commands, control-plane state parsing, canonical skills and reviewer contracts, docs and derived recaps. Five public package versions remain 0.3.17; existing PR-scoped skill/role bumps and generated provider parity are retained. Runtime dependency entities6.0.1 is explicit in the CLI manifest/lock importer. No merge, package release or deployment is claimed.
 
-Accepted deltas are the approved review corrections, Plain Markdown option, exact four-page refresh and operator-approved final-test/delegated guidance fixes. Seven carried Lows are resolved, one keeper gap is resolved with deletion-policy expansion separately deferred, five Lows remain individually retained/deferred, and the stored-receipt diagnostic Medium has its own scoped deferral. Reasons remain in the root disposition table and task receipts. Automatic rewritten-history recovery is deferred. No blanket waiver or counter reset. Actual ten-ticket closure, own recap, approved sequence and one mergeable PR follow qualified final review/gates. Latest operator direction delegates routine scoped decisions and checkpoints; consequential unresolved choices still require direction. No merge or release.
+Original qualification is historical: final-r5 and closeout-r6 checks, native final r3, configured phase/exit reviews, ten-ticket closure and original archive/S3 verification passed before remote corrections. Phase 7 evidence manifests preserve each pre-fix bad state, corrected behavior and valid accepted control; root independently verified load-bearing cases. Scoped archive suite145/145, ref-sync+migrate122/122, exact-path42/42, control-plane156/156, CLI status22/22 and knowledge color/uncolored6/6 passed on their recorded task commits. These counts are scoped evidence, not a current full-suite result. Node25.9.0 was used for the color reproduction; Node24 was not run. The original recap remains built-needs-review with NoHost and no visual acceptance.
+
+Previously settled Medium/Low follow-ups retain their individual reasons and backlog destinations. All ten new remote findings have implemented corrections, with no dismissals or new deferrals. The original native final three-cycle cap and complexity/operator continuation remain recorded; no fourth ordinary native correctness cycle or counter reset is authorized. Root-owned phase review and independent configured exit qualification remain binding for the revision before pushing corrections to the same PR.
 
 ## Planning dispatch
 
@@ -5131,3 +5133,15 @@ Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yam
 **Outcome:** Broad-commit negative control checks structured AssertionError name/code/actual/expected instead of ANSI-dependent rendered text; independent preservation oracle remains unchanged.
 
 **Verification:** Original Node25.9.0 full file colored5/6 exit1 and uncolored6/6 exit0; corrected child and independent root full file colored6/6 and uncolored6/6 exit0. Real broad commit rejected and exact-owned CLI commit accepted by unchanged oracle. Scoped format/lint exit0; post-hook bytes match tested correction. Node24 not run. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t09/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t10`; phase incomplete.
+
+## Task p07-t10 root receipt — 2026-10-05T06:03:50.855678+00:00
+
+**Commit:** `f19611efd1cea7690e1a3d35aea04b66fdeeae5f`
+
+**Outcome:** Direct derived-only recap footer repair points to tracked project artifact guidance; single exported hash refreshed with explicit task/source/original-run provenance. Original run bytes, hash, QA and historical status remain unchanged.
+
+**Verification:** Root independently reverses the one URL replacement to recover all previous HTML bytes, verifies actual derivative SHA against the single summary receipt, verifies original archived page SHA and the tracked valid target. Child scoped format/conservation/hash/target and post-hook checks exit0. Exporter not rerun; no visual acceptance claimed. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t10/evidence.json`. Recovery0/10 used, pendingnull. Next: `null`; phase incomplete.
+
+## Phase 7 terminal task ledger — pre-review baseline
+
+All ten assigned implementations completed on the accepted Codex gpt-6.1-sol/high handle; task commits and exact file lists are retained in `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t10/phase7-implementation-handoff.json`. Root independently verified each load-bearing boundary and committed task tracking separately. Task pointers are null, phase row remains in_progress (review pending), and recovery usage remains0/10 pendingnull. Full ordered Definition of Done, independent phase review and fresh configured exit qualification precede publication. Original completion receipts and review-cap history remain historical; no gate waiver or reset.
