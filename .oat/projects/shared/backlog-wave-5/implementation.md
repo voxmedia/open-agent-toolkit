@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t13
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 13    | 12/13     |
+| Phase 6 | in_progress | 13    | 13/13     |
 
-**Total:** 43/44 tasks completed
+**Total:** 44/44 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -4666,8 +4666,10 @@ Configured user gate resolved once, declaration hash sha256:023ab163cd770b412403
 
 ### Task p06-t13: (review) Report scaffold recovery guidance that exists
 
-**Status:** pending
-**Commit:** null
+**Status:** completed
+**Commit:** 37388b66275c327bea678d2d11e2601cd28334f6
+
+**Outcome/Verification:** Published scaffold diagnostics distinguish actual recovery commands from inspect-and-repair failures. Root repeated both built public CLI late-failure controls and original command idempotence; expected public exits2, probe exit0, discovery/remote/checkout and unrelated staged/working bytes conserved. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t13/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 **Finding:** Exit gate r1 L2 Low. Exact scope and acceptance controls are recorded in plan.md.
 
