@@ -992,6 +992,15 @@ Compare same-page and same-file fragments against decoded real id/name attribute
 
 When a summary failure is followed by a recap rebuild refusal, include both categorical errors and actionable repair-and-retry guidance while preserving the existing adopted/foreign page and original archive. Reproduce the actual public exporter failure, make the smallest owning correction, and protect it with proportional named existing-family regressions and valid accepted controls. Use deliberate-testing; preserve original archive/S3 and unrelated bytes. Run scoped owning verification and one hook-enabled exact-path task commit. Root owns full composed DoD and fresh required reviews.
 
+### Task p07-t13: (review) Resume fragment scanning after raw-text elements
+
+**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
+**Source:** p07 configured gate r2 p07-review-2026-10-05T074551Z.md, Low 1.
+**Dependencies:** Sequential after p07-t12; same accepted implementer and exact route.
+**Status:** pending
+
+The new target scan must resume after a raw-text closing tag even when its body contains an unterminated HTML-comment opener or other overrunning markup. Use the existing main walk's cursor/exec traversal behavior, preserving decoded actual targets and excluding opaque bodies/comments/descriptions. Reproduce the reported real public export failure and retain an accepted plain/absent control; add a proportionate capable owning keeper. Use deliberate-testing, no new parser/dependency/test-only production hooks. Preserve original archive/QA/S3 and unrelated bytes. Run scoped verification and one hook-enabled exact-path task commit. Root owns full composed verification and fresh required reviews; native phase standard round3 and configured gate correction round2 remain within their unchanged bounds.
+
 ## Reviews
 
 Preserve all existing rows, including spec/design placeholders. They do not imply those artifacts must be created for Quick mode. Append bound review events; never overwrite another artifact's event. Root records actual reviewed head and invocation. Additional fixes use new task IDs; reviews do not count as tasks.
@@ -1046,7 +1055,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T062339Z.md           | 70aba3729da11d717e2f1aff05ff7ef0fc38d5e7 | auto       | -                    |
 | p07    | code     | fixes_completed | 2026-10-05 | reviews/archived/p07-review-2026-10-05T064042Z.md           | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
 | p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T074041Z.md           | a17dcf2428d80702b8a659deddd36645ea157ba2 | auto       | -                    |
-| p07    | code     | received        | 2026-10-05 | reviews/p07-review-2026-10-05T074551Z.md                    | 10043c30e6c2d0399fcbe523c586a817ccb10c6c | gate       | claude-opus-5-5-high |
+| p07    | code     | fixes_added     | 2026-10-05 | reviews/archived/p07-review-2026-10-05T074551Z.md           | 10043c30e6c2d0399fcbe523c586a817ccb10c6c | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -1054,7 +1063,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original44 tasks plus 12/12 phase7 tasks verified (56/56 total). Composed verification and fresh qualification remain pending; original local/S3 archive and review history preserved.
+**Current acceptance:** 56/57 tasks implemented; p07-t13 fixes the reproduced raw-text traversal regression. Phase7 remains in_progress; previous full verification and passing native review are historical for this pending product correction.
 
 **Planned task totals:**
 
