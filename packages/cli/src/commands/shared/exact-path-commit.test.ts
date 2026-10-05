@@ -255,6 +255,190 @@ describe('commitExactPaths real Git boundary', () => {
   });
 
   it.each(['tilde', 'absolute', 'repository-relative'] as const)(
+    'delegates refusing and accepting reference transactions at a %s hooks path',
+    async (kind) => {
+      const root = await repo();
+      const childHome = await mkdtemp(join(tmpdir(), 'oat-transaction-home-'));
+      roots.push(childHome);
+      const hooks =
+        kind === 'repository-relative'
+          ? join(root, '.git/transaction-hooks')
+          : join(childHome, 'hooks');
+      await mkdir(hooks);
+      git(root, [
+        'config',
+        'core.hooksPath',
+        kind === 'tilde'
+          ? '~/hooks'
+          : kind === 'absolute'
+            ? hooks
+            : '.git/transaction-hooks',
+      ]);
+      const calls = join(root, '.git/transaction-calls.jsonl');
+      const refuse = join(root, '.git/refuse-transaction');
+      const recorder = join(hooks, 'record.cjs');
+      await writeFile(
+        recorder,
+        `const fs=require('node:fs');const args=process.argv.slice(2);fs.appendFileSync(${JSON.stringify(calls)},JSON.stringify({args,stdin:fs.readFileSync(0,'utf8')})+'\\n');if(args[0]==='prepared'&&fs.existsSync(${JSON.stringify(refuse)}))process.exit(37);\n`,
+      );
+      const hookPath = join(hooks, 'reference-transaction');
+      await writeFile(
+        hookPath,
+        `#!/bin/sh\nprintf 'stdout-%s\\n' "$1"\nprintf 'stderr-%s\\n' "$1" >&2\nexec "${process.execPath}" "${recorder}" "$@"\n`,
+      );
+      await chmod(hookPath, 0o700);
+      const env = {
+        ...process.env,
+        HOME: childHome,
+        GIT_INDEX_FILE: undefined,
+      };
+      const input = {
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: transaction policy',
+        identity: `transaction-${kind}`,
+      };
+      const run = async () => {
+        const { stdout } = await exec(
+          process.execPath,
+          [
+            '--import',
+            'tsx',
+            '--input-type=module',
+            '-e',
+            `const {commitExactPaths}=await import(${JSON.stringify(join(import.meta.dirname, 'exact-path-commit.ts'))});process.stdout.write(JSON.stringify(await commitExactPaths(${JSON.stringify(input)})));`,
+          ],
+          { cwd: workspace, env },
+        );
+        return JSON.parse(stdout);
+      };
+      const transactions = async () =>
+        (await readFile(calls, 'utf8'))
+          .trim()
+          .split('\n')
+          .filter(Boolean)
+          .map((line) => JSON.parse(line));
+      const verifyPrepared = async (old: string, accepted?: string) => {
+        const records = await transactions();
+        const prepared = records.find(
+          (record) => record.args[0] === 'prepared',
+        );
+        expect(prepared.args).toEqual(['prepared']);
+        const branch = git(root, ['symbolic-ref', 'HEAD']);
+        const update = prepared.stdin
+          .split('\n')
+          .find((line: string) => line.endsWith(` ${branch}`));
+        const [previous, next, ref] = update.split(' ');
+        expect(previous).toBe(old);
+        expect(ref).toBe(branch);
+        expect(next).toMatch(/^[a-f0-9]{40,64}$/);
+        if (accepted) expect(next).toBe(accepted);
+        expect(git(root, ['show', '-s', '--format=%P', next])).toBe(old);
+        expect(
+          records.some(
+            (record) => record.args[0] === (accepted ? 'committed' : 'aborted'),
+          ),
+        ).toBe(true);
+      };
+      await writeFile(join(root, 'owned.md'), 'transaction candidate\n');
+      await writeFile(refuse, 'refuse prepared\n');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      await expect(
+        exec(
+          'git',
+          ['commit', '--only', '-m', 'ordinary refusal', '--', 'owned.md'],
+          { cwd: root, env },
+        ),
+      ).rejects.toMatchObject({
+        stderr: expect.stringContaining('stderr-prepared'),
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      await verifyPrepared(head);
+      await writeFile(calls, '');
+      const index = await readFile(join(root, '.git/index'));
+      const failed = await run();
+      expect(failed).toMatchObject({
+        outcome: 'failed',
+        committed: false,
+        resumable: true,
+        error: expect.stringContaining('stderr-prepared'),
+      });
+      expect(failed.error).toContain('stdout-prepared');
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(
+        JSON.parse(await readFile(failed.receipt, 'utf8')).commit,
+      ).toBeUndefined();
+      await verifyPrepared(head);
+      preservation(root);
+      await rm(refuse);
+      await writeFile(calls, '');
+      // Git's accepting control proves the policy allows a valid transaction.
+      const ordinary = await exec(
+        'git',
+        ['commit', '--only', '-m', 'ordinary acceptance', '--', 'owned.md'],
+        { cwd: root, env },
+      );
+      // Git routes both transaction-hook streams to its stderr.
+      expect(ordinary.stderr).toContain('stdout-prepared');
+      expect(ordinary.stderr).toContain('stderr-prepared');
+      const ordinaryHead = git(root, ['rev-parse', 'HEAD']);
+      await verifyPrepared(head, ordinaryHead);
+      await writeFile(calls, '');
+      await writeFile(
+        join(root, 'owned.md'),
+        'accepted transaction candidate\n',
+      );
+      const accepted = await run();
+      expect(accepted).toMatchObject({ outcome: 'committed', committed: true });
+      await verifyPrepared(ordinaryHead, accepted.commit);
+      expect(git(root, ['show', 'HEAD:owned.md'])).toBe(
+        'accepted transaction candidate',
+      );
+      preservation(root);
+      expect(await run()).toMatchObject({
+        outcome: 'already-matching',
+        commit: accepted.commit,
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(accepted.commit);
+    },
+    20000,
+  );
+
+  it('delegates post-index-change when Git invokes it under the commit hooks path', async () => {
+    const root = await repo();
+    const calls = join(root, '.git/index-change-calls');
+    const hookPath = join(root, '.git/hooks/post-index-change');
+    await writeFile(
+      hookPath,
+      '#!/bin/sh\nprintf "%s:%s:%s\\n" "$(git config --path --get core.hooksPath || git rev-parse --git-path hooks)" "$1" "$2" >> .git/index-change-calls\n',
+    );
+    await chmod(hookPath, 0o700);
+    await writeFile(join(root, 'owned.md'), 'index-hook candidate\n');
+    git(root, [
+      'commit',
+      '--only',
+      '-qm',
+      'ordinary index hook',
+      '--',
+      'owned.md',
+    ]);
+    expect(await readFile(calls, 'utf8')).toMatch(/\.git\/hooks:[01]:[01]/);
+    await writeFile(calls, '');
+    await writeFile(join(root, 'owned.md'), 'accepted index-hook candidate\n');
+    const result = await commitExactPaths({
+      repoRoot: root,
+      paths: ['owned.md'],
+      message: 'feat: index hook control',
+      identity: 'post-index-change',
+    });
+    expect(result.outcome).toBe('committed');
+    const observed = await readFile(calls, 'utf8');
+    expect(observed).toMatch(/oat-commit-[^\n]+\/hooks:[01]:[01]/);
+    preservation(root);
+  });
+
+  it.each(['tilde', 'absolute', 'repository-relative'] as const)(
     'honors refusing and accepting hooks at a Git-expanded %s path',
     async (kind) => {
       const root = await repo();

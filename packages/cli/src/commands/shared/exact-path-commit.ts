@@ -9,6 +9,7 @@ import {
   mkdtemp,
   open,
   readFile,
+  readdir,
   realpath,
   rename,
   rm,
@@ -583,14 +584,42 @@ export async function commitExactPaths(
           await mkdir(hooks);
           const shellQuote = (value: string) =>
             `'${value.replaceAll("'", "'\"'\"'")}'`;
-          // Delegate original executable hooks, then guard the emitted tree before
-          // Git accepts it. Hooks see their original argv and the isolated index.
-          for (const name of [
+          const guardedHooks = [
             'pre-commit',
             'prepare-commit-msg',
             'commit-msg',
             'post-commit',
-          ]) {
+          ];
+          const originalNames = await readdir(originalHooks).catch(
+            (error: NodeJS.ErrnoException) => {
+              // Missing directories and disabled hooksPath=/dev/null have no hooks.
+              if (error.code === 'ENOENT' || error.code === 'ENOTDIR')
+                return [];
+              throw error;
+            },
+          );
+          // Preserve every other executable hook Git may invoke, including ref
+          // transactions and index notifications. Their protocols do not accept
+          // the commit-staging guard: exec preserves argv, streams and exit status.
+          for (const name of originalNames) {
+            if (guardedHooks.includes(name)) continue;
+            const source = join(originalHooks, name);
+            if (
+              !(await access(source, constants.X_OK).then(
+                () => true,
+                () => false,
+              ))
+            )
+              continue;
+            await writeFile(
+              join(hooks, name),
+              `#!/bin/sh\nexec ${shellQuote(source)} "$@"\n`,
+              { mode: 0o700 },
+            );
+          }
+          // Delegate original executable commit hooks, then guard the emitted
+          // tree before Git accepts it. Keep their existing isolated-index guards.
+          for (const name of guardedHooks) {
             const source = join(originalHooks, name);
             const executable = await access(source, constants.X_OK).then(
               () => true,
