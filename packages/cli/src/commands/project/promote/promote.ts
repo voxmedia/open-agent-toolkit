@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   mkdir as defaultMkdir,
   readFile as defaultReadFile,
@@ -334,6 +335,7 @@ async function persistPromotion(
   projectRoot: string,
   projectName: string,
   scope: 'shared' | 'local' | 'synced',
+  identity: string,
   dependencies: ProjectPromoteDependencies,
 ): Promise<void> {
   const message = `chore(oat): promote ${projectName} to quick`;
@@ -359,7 +361,6 @@ async function persistPromotion(
   await dependencies.gitRunner.run(['rev-parse', '--is-inside-work-tree'], {
     cwd: repoRoot,
   });
-  const identity = `promote:${projectRoot}:lite-to-quick`;
   const result = await commitExactPaths({
     repoRoot,
     paths: pathspecs,
@@ -483,6 +484,9 @@ async function promoteProject(
     return { status: 'refused', reason: 'template-unreadable', files: [] };
   }
 
+  // Bind this generation before writes, and retain the exact identity in any
+  // persistence recovery rather than deriving it again from the reusable slug.
+  const identity = `promote:${projectRoot}:lite-to-quick:${randomUUID()}`;
   const writtenFiles: string[] = [];
   try {
     await dependencies.mkdir(join(projectRoot, 'references'), {
@@ -511,6 +515,7 @@ async function promoteProject(
       projectRoot,
       projectName,
       scope,
+      identity,
       dependencies,
     );
   } catch (error) {

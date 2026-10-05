@@ -391,6 +391,87 @@ describe('oat project promote', () => {
     return repoRoot;
   }
 
+  it('promotes distinct Lite generations at the same slug in one Git clone', async () => {
+    const source = await createRepo();
+    const container = await mkdtemp(join(tmpdir(), 'oat-promote-generations-'));
+    tempDirs.push(container);
+    const root = join(container, 'clone');
+    execFileSync('git', ['clone', '-q', source, root]);
+    const git = (args: string[]) =>
+      execFileSync('git', args, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      }).trimEnd();
+    git(['config', 'user.name', 'OAT']);
+    git(['config', 'user.email', 'oat@example.com']);
+    const firstPlan = litePlanContent().replace(
+      'Ship safe behavior.',
+      'Ship first generation.',
+    );
+    const { projectPath, projectRoot } = await seedRepo(root, {
+      plan: firstPlan,
+    });
+    git([
+      'add',
+      '--',
+      `${projectPath}/plan.md`,
+      `${projectPath}/state.md`,
+      '.oat/templates/discovery.md',
+      '.oat/templates/plan.md',
+    ]);
+    git(['commit', '-qm', 'first authored Lite generation']);
+    const first = createHarness(root, true);
+    await runCommand(first.command, projectPath, 'quick', true);
+    expect(first.capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'promoted',
+    });
+    expect(process.exitCode).toBe(0);
+    const firstCommit = git(['rev-parse', 'HEAD']);
+    const firstTrailer = git(['show', '-s', '--format=%B', 'HEAD']).match(
+      /^Oat-Operation: (.+)$/m,
+    )?.[1];
+    expect(firstTrailer).toBeDefined();
+    expect(
+      await readFile(join(projectRoot, 'references/lite-plan.md'), 'utf8'),
+    ).toBe(firstPlan);
+    await rm(projectRoot, { recursive: true });
+    const secondPlan = litePlanContent().replace(
+      'Ship safe behavior.',
+      'Ship second generation.',
+    );
+    await seedRepo(root, { plan: secondPlan });
+    git(['add', '-A', '--', projectPath]);
+    git(['commit', '-qm', 'reuse slug for second authored Lite generation']);
+    const secondBase = git(['rev-parse', 'HEAD']);
+    const second = createHarness(root, true);
+    await runCommand(second.command, projectPath, 'quick', true);
+    expect(second.capture.jsonPayloads.at(-1)).toMatchObject({
+      status: 'promoted',
+    });
+    expect(process.exitCode).toBe(0);
+    expect(git(['rev-parse', 'HEAD'])).not.toBe(firstCommit);
+    expect(git(['show', '-s', '--format=%P', 'HEAD'])).toBe(secondBase);
+    expect(
+      git(['show', '-s', '--format=%B', 'HEAD']).match(
+        /^Oat-Operation: (.+)$/m,
+      )?.[1],
+    ).not.toBe(firstTrailer);
+    expect(
+      await readFile(join(projectRoot, 'references/lite-plan.md'), 'utf8'),
+    ).toBe(secondPlan);
+    expect(
+      git(['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'])
+        .split('\n')
+        .sort(),
+    ).toEqual(
+      ['discovery.md', 'references/lite-plan.md', 'plan.md', 'state.md']
+        .map((file) => `${projectPath}/${file}`)
+        .sort(),
+    );
+    expect(git(['status', '--porcelain'])).toBe('');
+  });
+
   it.each(['foreign-lock', 'concurrent-index'] as const)(
     'exposes executable persistence recovery for %s without rerendering Quick artifacts',
     async (failure) => {
@@ -443,7 +524,9 @@ describe('oat project promote', () => {
       expect(refused.reason).toBe('persistence-failed');
       expect(refused.recovery).toMatchObject({
         outcome: 'blocked',
-        identity: `promote:${projectRoot}:lite-to-quick`,
+        identity: expect.stringContaining(
+          `promote:${projectRoot}:lite-to-quick:`,
+        ),
         committed: failure === 'concurrent-index',
       });
       expect(refused.recovery!.attempts).toBeGreaterThan(0);
@@ -469,6 +552,9 @@ describe('oat project promote', () => {
       );
       const cli = resolve(import.meta.dirname, '../../../../dist/index.js');
       const quoted = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+      expect(refused.recovery!.command).toContain(
+        quoted(refused.recovery!.identity),
+      );
       const execute = () =>
         execFileSync(
           'bash',
