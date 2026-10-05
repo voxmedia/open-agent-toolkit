@@ -477,7 +477,7 @@ Plan author verification: current-source validate-plan, file-scoped formatting a
 - Reviewed plan baseline: abba835844724079a86ff23122fa0f2027f78e2e.
 - CLI runner: branch build 0.3.16; PATH CLI observed 0.3.13. Configured command executed unchanged through branch-built runner, without target injection.
 - Gate result: artifact_validation_failed; process exit 1; receiveEligible false; handoff null.
-- Raw artifact: reviews/artifact-plan-review-2026-10-03T211958Z.md; sha256 60ec6dbe944a8694664909adb72126d90f6837bee049077c55cf802c4c26e894. Artifact retained unmodified, not received or archived.
+- Raw artifact: reviews/archived/artifact-plan-review-2026-10-03T211958Z.md; sha256 60ec6dbe944a8694664909adb72126d90f6837bee049077c55cf802c4c26e894. Artifact retained unmodified, not received or archived.
 - Declared findings: 0 Critical, 0 High, 6 Medium, 4 Low. These are unreceived reviewer claims, not accepted dispositions.
 - Confirmed validation failure: findings use bold paragraphs instead of list items, so the parser tallies zero and rejects counts. Invocation fields are present in the artifact; missing corroboration in the envelope is a downstream result of verdict-parse failure.
 - Gate output and stderr: ignored analysis/plan-gate-r1.json and plan-gate-r1.stderr.log; exit recorded separately.
@@ -5034,3 +5034,7 @@ After every configured pre-approval step and terminal recap verification complet
 ## Implementation complete — 2026-10-05T03:26:51.293134Z
 
 All stored closeout steps and explicit standing-user final approval are durably complete. Actual closeout-check reports complete. Remaining completion owner performs seal, original-package archive, tracked page export and PR link synchronization. Individual debt dispositions persist; R9 is reserved until actual export evidence exists.
+
+## Lifecycle completion prepared — 2026-10-05T03:27:04.384163Z
+
+Retirement sweep found no absorbed projects; owning roll-up reports ok and verified seal is final project-log entry. Optional retro omitted under the approved existing sequence. Historical rejected plan report archived byte-identically with received/ineligible status retained. Original recap remains immutable; actual branch consumer accepted it, rejected a tampered QA copy, then accepted the restored copy. Ready for CLI-owned archive/S3 and exact export receipt verification.

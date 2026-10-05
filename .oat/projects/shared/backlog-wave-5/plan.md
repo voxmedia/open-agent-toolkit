@@ -844,7 +844,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan   | artifact | received        | 2026-10-03 | reviews/artifact-plan-review-2026-10-03T211958Z.md          | -                                        | -          | -                    |
+| plan   | artifact | received        | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T211958Z.md | -                                        | -          | -                    |
 | plan   | artifact | passed          | 2026-10-03 | implementation.md#revised-plan-artifact-self-review         | -                                        | -          | -                    |
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -                                        | -          | -                    |
 | plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -                                        | -          | -                    |
