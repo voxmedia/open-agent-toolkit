@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t11
+oat_current_task_id: p06-t12
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 13    | 10/13     |
+| Phase 6 | in_progress | 13    | 11/13     |
 
-**Total:** 41/44 tasks completed
+**Total:** 42/44 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -4648,8 +4648,10 @@ Configured user gate resolved once, declaration hash sha256:023ab163cd770b412403
 
 ### Task p06-t11: (review) Honor Git-expanded hooks paths
 
-**Status:** pending
-**Commit:** null
+**Status:** completed
+**Commit:** 16ed03f295d14afbc24864ab2242c737ab83af18
+
+**Outcome/Verification:** Git-owned configured-path expansion honors tilde hook directories. Root repeated the public real-Git refusing and accepting controls for tilde, absolute and repository-relative hooks; exit0, unrelated staged and working bytes conserved. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t11/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 **Finding:** Exit gate r1 H1 High. Exact scope and acceptance controls are recorded in plan.md.
 
