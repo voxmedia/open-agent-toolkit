@@ -27,6 +27,7 @@
   - [Tool Packs and Installed Assets](getting-started/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
 - Provider Sync
   - [Provider Sync](provider-sync/index.md) — Standalone adoption lane for canonical assets, provider views, sync commands, and drift management.
+  - [Use OAT Skills in Hosted Amp](provider-sync/amp-hosted-skills.md) — Copy selected bundled OAT skills into Amp personal or workspace repositories while preserving their source owner and execution prerequisites.
   - [Provider Interop Commands](provider-sync/commands.md) — CLI commands for provider status, sync, and drift management.
   - [Sync Config (`.oat/sync/config.json`)](provider-sync/config.md) — Configuration schema and behavior for provider sync in .oat/sync/config.json.
   - [Instruction Sync](provider-sync/instruction-sync.md) — Project-scoped AGENTS.md and CLAUDE.md validation, the no-shim default, opt-in shim strategies, and Claude-only adoption.

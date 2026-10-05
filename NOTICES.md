@@ -5,6 +5,18 @@ into this repository. When you adapt or lift prose from an external
 project into a skill, template, or doc, add an entry here — do not
 add attribution footers to the skill files themselves.
 
+## Amp documentation
+
+**Sources:** https://ampcode.com/docs/customize/skills and
+https://ampcode.com/docs/customize/global-plugins-and-skills
+**Retrieved:** 2026-10-04
+
+Hosted repository layout, limits, scope, import/update, precedence, and reload
+guidance is summarized in
+`apps/oat-docs/docs/provider-sync/amp-hosted-skills.md`. The guide combines these
+documented contracts with OAT's own bundle inventory and prerequisite analysis;
+no Amp implementation or documentation file is copied into the skill payload.
+
 ## Obra Superpowers
 
 **Source:** https://github.com/obra/superpowers

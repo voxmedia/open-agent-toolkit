@@ -119,7 +119,7 @@ verified selectors. Neither selector form is universally valid: every exact-ID
 mapping requires native hook evidence, non-default-rung and invalid-selector
 controls, and an explicit approved registry entry. There is no generic
 pass-through of flat CLI IDs. See the
-[probe runbook](../../../../apps/oat-docs/docs/contributing/verifying-cursor-pins.md).
+[probe runbook](https://voxmedia.github.io/open-agent-toolkit/contributing/verifying-cursor-pins).
 
 ## Historical Opus Cursor Probe Evidence (Retired)
 
