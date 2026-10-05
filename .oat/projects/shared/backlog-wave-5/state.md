@@ -151,7 +151,7 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     runId: b7782415-6c88-4764-876f-da5ee4ee8b19
     handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.
@@ -166,11 +166,11 @@ oat_implement_exit_gate:
     type: code
     sourceFilename: final-review-2026-10-05T025900Z.md
   receive_pre_head: a374a008d672c898aba5cbdbe7f2bd6787d6d159
-  receive_commit: null
+  receive_commit: b43f56dc58fb5b4494fb43c879bbdee68883e50d
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-10-05T03:00:59.308363Z'
+  updated_at: '2026-10-05T03:01:48.609903Z'
   decided_at: '2026-10-05T01:56:03.092661Z'
 ---
 
