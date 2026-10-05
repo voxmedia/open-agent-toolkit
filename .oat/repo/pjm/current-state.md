@@ -45,8 +45,9 @@ copying their content here. -->
   [durable project record](../reference/project-summaries/20261005-backlog-wave-5.md)
   and [verified recap page](../reference/project-recaps/20261005-backlog-wave-5.html).
   The recap remains built-needs-review because browser verification is unavailable.
-  Original run evidence is conserved; configured S3 copying was skipped because
-  AWS access is not configured. PR is open; merge and release are not authorized.
+  Original run evidence is conserved locally and in the configured S3 archive.
+  All 39,682 remote objects match local content; all seven original recap hashes
+  were independently verified from downloads. PR is open; merge and release are not authorized.
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
