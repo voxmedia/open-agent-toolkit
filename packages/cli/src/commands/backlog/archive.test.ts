@@ -12,8 +12,9 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
+import { commitExactPaths } from '@commands/shared/exact-path-commit';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { archiveBacklogItem, BacklogArchiveError } from './archive';
@@ -444,41 +445,124 @@ describe('archiveBacklogItem', () => {
     expect(completed).toContain('Recovered');
   });
 
-  it('uses git mv inside a git work tree so the move is a staged rename', async () => {
+  it('leaves the real index and unrelated staged/unstaged bytes unchanged through archive and retry', async () => {
     const tempRoot = await mkdtemp(join(tmpdir(), 'oat-archive-git-'));
     tempDirs.push(tempRoot);
     const backlogRoot = join(tempRoot, '.oat', 'repo', 'pjm', 'backlog');
     await initializeBacklog(backlogRoot);
     const id = 'BL-260705-demo';
     await seedItem(backlogRoot, id);
+    await regenerateBacklogIndex(backlogRoot);
+    const reference = join(tempRoot, '.oat/repo/reference/plan.md');
+    await mkdir(dirname(reference), { recursive: true });
+    await writeFile(
+      reference,
+      `Work: [item](../pjm/backlog/items/${id}.md).\n`,
+    );
+    await writeFile(join(tempRoot, 'user.txt'), 'committed user bytes\n');
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: tempRoot, encoding: 'utf8' });
+    git('init', '-q');
+    git('config', 'user.email', 'a@b.co');
+    git('config', 'user.name', 'tester');
+    git('add', '.');
+    git('commit', '-qm', 'seed');
+    await writeFile(join(tempRoot, 'user.txt'), 'staged user bytes\n');
+    git('add', 'user.txt');
+    await writeFile(join(tempRoot, 'user.txt'), 'unstaged user bytes\n');
+    const indexBefore = await readFile(join(tempRoot, '.git/index'));
+    const cachedBefore = git('diff', '--cached', '--raw');
+    const oldPath = join(backlogRoot, 'items', `${id}.md`);
+    const newPath = join(backlogRoot, 'archived', `${id}.md`);
+    const expectedPaths = [
+      oldPath,
+      newPath,
+      join(backlogRoot, 'completed.md'),
+      join(backlogRoot, 'index.md'),
+      reference,
+    ].sort();
 
-    execFileSync('git', ['init', '-q'], { cwd: tempRoot });
-    execFileSync('git', ['config', 'user.email', 'a@b.co'], { cwd: tempRoot });
-    execFileSync('git', ['config', 'user.name', 'tester'], { cwd: tempRoot });
-    execFileSync('git', ['add', '.'], { cwd: tempRoot });
-    execFileSync('git', ['commit', '-qm', 'seed'], { cwd: tempRoot });
-
-    await archiveBacklogItem(backlogRoot, id, {
-      summary: 'via git mv',
+    const result = await archiveBacklogItem(backlogRoot, id, {
+      summary: 'Filesystem archive',
       now: FIXED_NOW,
     });
+    expect(await readFile(join(tempRoot, '.git/index'))).toEqual(indexBefore);
+    expect(git('diff', '--cached', '--raw')).toBe(cachedBefore);
+    expect(git('show', ':user.txt')).toBe('staged user bytes\n');
+    expect(await readFile(join(tempRoot, 'user.txt'), 'utf8')).toBe(
+      'unstaged user bytes\n',
+    );
+    expect(await fileExists(oldPath)).toBe(false);
+    expect(await readFile(newPath, 'utf8')).toContain('status: closed');
+    expect(result.affectedPaths.slice().sort()).toEqual(expectedPaths);
 
-    expect(await fileExists(join(backlogRoot, 'archived', `${id}.md`))).toBe(
-      true,
+    // A late reference exercises the real retry tail without staging any path.
+    await writeFile(
+      reference,
+      `Work: [item](../pjm/backlog/items/${id}.md).\n`,
     );
-    expect(await fileExists(join(backlogRoot, 'items', `${id}.md`))).toBe(
-      false,
+    const retry = await archiveBacklogItem(backlogRoot, id);
+    expect(retry.result).toBe('noop');
+    expect(retry.affectedPaths.slice().sort()).toEqual(expectedPaths);
+    expect(await readFile(reference, 'utf8')).toContain(`archived/${id}.md`);
+    const settled = await archiveBacklogItem(backlogRoot, id);
+    expect(settled.rewrittenReferences).toEqual([]);
+    expect(settled.affectedPaths.slice().sort()).toEqual(expectedPaths);
+    expect(await readFile(join(tempRoot, '.git/index'))).toEqual(indexBefore);
+    expect(git('diff', '--cached', '--raw')).toBe(cachedBefore);
+    expect(await readFile(join(tempRoot, 'user.txt'), 'utf8')).toBe(
+      'unstaged user bytes\n',
     );
-    const status = execFileSync('git', ['status', '--porcelain'], {
-      cwd: tempRoot,
-      encoding: 'utf8',
-    });
-    // A staged rename (R) — not an untracked (??) plain-filesystem move.
-    expect(status).toMatch(/^R/m);
-    expect(status).not.toMatch(/^\?\?.*archived/m);
   });
 
-  it('falls back to a filesystem rename outside a git work tree', async () => {
+  it('does not claim unrelated edits in settled archived items, ledgers, indexes or references on noop', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-archive-settled-'));
+    tempDirs.push(root);
+    const backlogRoot = join(root, '.oat/repo/pjm/backlog');
+    await initializeBacklog(backlogRoot);
+    const id = 'BL-260705-settled';
+    await seedItem(backlogRoot, id);
+    const ref = join(root, '.oat/repo/reference/prior.md');
+    await mkdir(dirname(ref), { recursive: true });
+    await writeFile(ref, `Work: [item](../pjm/backlog/items/${id}.md).\n`);
+    await archiveBacklogItem(backlogRoot, id, {
+      summary: 'Prior work',
+      now: FIXED_NOW,
+    });
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+    git('init', '-q');
+    git('config', 'user.email', 'a@b.co');
+    git('config', 'user.name', 'tester');
+    git('add', '.');
+    git('commit', '-qm', 'settled archive');
+    const paths = [
+      join(backlogRoot, 'archived', `${id}.md`),
+      join(backlogRoot, 'completed.md'),
+      join(backlogRoot, 'index.md'),
+      ref,
+    ];
+    const bytes: string[] = [];
+    for (const path of paths) {
+      const edited = `${await readFile(path, 'utf8')}\nUNRELATED USER EDIT.\n`;
+      await writeFile(path, edited);
+      bytes.push(edited);
+    }
+    git('add', '--', ref);
+    await writeFile(ref, `${bytes[3]}UNSTAGED USER EDIT.\n`);
+    bytes[3] += 'UNSTAGED USER EDIT.\n';
+    const before = await readFile(join(root, '.git/index'));
+    const result = await archiveBacklogItem(backlogRoot, id);
+    expect(result.result).toBe('noop');
+    expect(result.rewrittenReferences).toEqual([]);
+    expect(result.affectedPaths).toEqual([]);
+    expect(await readFile(join(root, '.git/index'))).toEqual(before);
+    for (const [i, path] of paths.entries()) {
+      expect(await readFile(path, 'utf8')).toBe(bytes[i]);
+    }
+  });
+
+  it('uses a filesystem rename outside a git work tree', async () => {
     const backlogRoot = await freshBacklog('oat-archive-nogit-');
     const id = 'BL-260705-demo';
     await seedItem(backlogRoot, id);
@@ -517,6 +601,138 @@ describe('archiveBacklogItem', () => {
     });
     expect(Array.isArray(result.warnings)).toBe(true);
   });
+
+  it.each(['full', 'omit-old', 'omit-destination'] as const)(
+    'commits an archive lifecycle with independent completeness control: %s',
+    async (mode) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-archive-consumer-'));
+      tempDirs.push(root);
+      const backlogRoot = join(root, '.oat/repo/pjm/backlog');
+      await initializeBacklog(backlogRoot);
+      const id = 'BL-260705-consumer';
+      await seedItem(backlogRoot, id);
+      await regenerateBacklogIndex(backlogRoot);
+      const reference = join(root, '.oat/repo/reference/plan.md');
+      const handoff = join(root, '.oat/repo/pjm/handoffs', `${id}.md`);
+      await mkdir(dirname(reference), { recursive: true });
+      await mkdir(dirname(handoff), { recursive: true });
+      await writeFile(
+        reference,
+        `Work: [item](../pjm/backlog/items/${id}.md).\n`,
+      );
+      await writeFile(handoff, 'Owned one-shot kickoff.\n');
+      await writeFile(join(root, 'user.txt'), 'BASE user literal\n');
+      const git = (...args: string[]) =>
+        execFileSync('git', args, { cwd: root, encoding: 'utf8' });
+      git('init', '-q');
+      git('config', 'user.email', 'a@b.co');
+      git('config', 'user.name', 'tester');
+      git('add', '.');
+      git('commit', '-qm', 'seed archive lifecycle');
+      await writeFile(join(root, 'user.txt'), 'STAGED user literal\n');
+      git('add', 'user.txt');
+      await writeFile(join(root, 'user.txt'), 'UNSTAGED user literal\n');
+      await writeFile(
+        join(root, '.git/hooks/pre-commit'),
+        '#!/bin/sh\nset -eu\nprintf "enabled" > .git/archive-hook-ran\n',
+      );
+      await chmod(join(root, '.git/hooks/pre-commit'), 0o700);
+      const oldPath = join(backlogRoot, 'items', `${id}.md`);
+      const destination = join(backlogRoot, 'archived', `${id}.md`);
+      const result = await archiveBacklogItem(backlogRoot, id, {
+        summary: 'Consumer shipped',
+        now: FIXED_NOW,
+      });
+      await rm(handoff);
+      const paths = [...new Set([...result.affectedPaths, handoff])];
+      const existingText = paths.filter(
+        (path) => path !== oldPath && path !== handoff,
+      );
+      execFileSync(
+        resolve(import.meta.dirname, '../../../../../node_modules/.bin/oxfmt'),
+        ['--write', ...existingText],
+        { cwd: root },
+      );
+      const passedPaths = paths.filter((path) =>
+        mode === 'omit-old'
+          ? path !== oldPath
+          : mode === 'omit-destination'
+            ? path !== destination
+            : true,
+      );
+      const committed = await commitExactPaths({
+        repoRoot: root,
+        paths: passedPaths.map((path) => relative(root, path)),
+        identity: `archive-${mode}`,
+        message: 'chore(pjm): archive complete operation',
+      });
+      expect(committed, JSON.stringify(committed)).toMatchObject({
+        outcome: 'committed',
+      });
+      const expectedOperation = [
+        `.oat/repo/pjm/backlog/items/${id}.md`,
+        `.oat/repo/pjm/backlog/archived/${id}.md`,
+        '.oat/repo/pjm/backlog/completed.md',
+        '.oat/repo/pjm/backlog/index.md',
+        '.oat/repo/reference/plan.md',
+        `.oat/repo/pjm/handoffs/${id}.md`,
+      ].sort();
+      expect(paths.map((path) => relative(root, path)).sort()).toEqual(
+        expectedOperation,
+      );
+      const actualCommit = git(
+        'diff-tree',
+        '--no-commit-id',
+        '--name-only',
+        '--no-renames',
+        '-r',
+        'HEAD',
+      )
+        .trim()
+        .split('\n')
+        .sort();
+      // The helper commits only given paths; the consumer owns operation
+      // completeness. Each omitted rename side must fail this independent oracle.
+      expect(
+        JSON.stringify(actualCommit) === JSON.stringify(expectedOperation),
+      ).toBe(mode === 'full');
+      if (mode === 'full') {
+        expect(
+          git('show', `HEAD:.oat/repo/pjm/backlog/archived/${id}.md`),
+        ).toContain('status: closed');
+        expect(
+          git('show', 'HEAD:.oat/repo/pjm/backlog/completed.md'),
+        ).toContain('Consumer shipped');
+        expect(
+          git('show', 'HEAD:.oat/repo/pjm/backlog/index.md'),
+        ).not.toContain(id);
+        expect(git('show', 'HEAD:.oat/repo/reference/plan.md')).toContain(
+          `archived/${id}.md`,
+        );
+        expect(
+          git(
+            'ls-tree',
+            '--name-only',
+            'HEAD',
+            '--',
+            `.oat/repo/pjm/backlog/items/${id}.md`,
+            `.oat/repo/pjm/handoffs/${id}.md`,
+          ),
+        ).toBe('');
+      }
+      expect(await readFile(join(root, '.git/archive-hook-ran'), 'utf8')).toBe(
+        'enabled',
+      );
+      expect(git('show', ':user.txt')).toBe('STAGED user literal\n');
+      expect(git('show', 'HEAD:user.txt')).toBe('BASE user literal\n');
+      expect(await readFile(join(root, 'user.txt'), 'utf8')).toBe(
+        'UNSTAGED user literal\n',
+      );
+      expect(git('status', '--porcelain', '--', 'user.txt').trim()).toBe(
+        'MM user.txt',
+      );
+    },
+  );
 
   describe('inbound reference rewriting', () => {
     const id = 'BL-260705-linked';
@@ -939,7 +1155,7 @@ describe('archiveBacklogItem', () => {
     });
 
     it('retries a failed reference rewrite and index regeneration on re-run', async () => {
-      const { root, backlogRoot } = await linkedRepository({ git: false });
+      const { root, backlogRoot } = await linkedRepository({ git: true });
       await regenerateBacklogIndex(backlogRoot);
       const indexPath = join(backlogRoot, 'index.md');
       expect(await readFile(indexPath, 'utf8')).toContain(id);
@@ -947,6 +1163,12 @@ describe('archiveBacklogItem', () => {
         root,
         '.oat/repo/reference/decisions/DR-260705-demo.md',
       );
+      const repairedEarly = join(root, '.oat/repo/pjm/early.md');
+      await writeFile(repairedEarly, `Work: [item](backlog/items/${id}.md).\n`);
+      execFileSync('git', ['add', '.'], { cwd: root });
+      execFileSync('git', ['commit', '-qm', 'pending archive baseline'], {
+        cwd: root,
+      });
       await chmod(blocked, 0o000);
 
       try {
@@ -959,6 +1181,9 @@ describe('archiveBacklogItem', () => {
       } finally {
         await chmod(blocked, 0o644);
       }
+      expect(await readFile(repairedEarly, 'utf8')).toContain(
+        `backlog/archived/${id}.md`,
+      );
       // The move landed but the index and the blocked link did not.
       expect(await fileExists(join(backlogRoot, 'archived', `${id}.md`))).toBe(
         true,
@@ -979,6 +1204,13 @@ describe('archiveBacklogItem', () => {
       expect(retry.rewrittenReferences).toContain(
         '.oat/repo/reference/decisions/DR-260705-demo.md',
       );
+      // Earlier repaired files remain operation-owned after partial failure.
+      expect(retry.affectedPaths).toContain(
+        join(root, '.oat/repo/pjm/backlog/archived', `${id}.md`),
+      );
+      expect(retry.affectedPaths).toContain(blocked);
+      expect(retry.affectedPaths).toContain(repairedEarly);
+      expect(retry.rewrittenReferences).not.toContain('.oat/repo/pjm/early.md');
       expect(await readFile(blocked, 'utf8')).toBe(
         `Tracked by [the item](../../pjm/backlog/archived/${id}.md).\n`,
       );

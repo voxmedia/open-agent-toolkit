@@ -33,3 +33,8 @@ Agent-facing rules live in the `AGENTS.md` files alongside each directory.
 - **Close-out.** When work ships that satisfies a backlog item's acceptance
   criteria, the item is closed and archived in the same commit/PR — run
   `oat backlog archive <id>`. See the Backlog Lifecycle in `pjm/AGENTS.md`.
+
+Backlog archive is staging-neutral. Follow `pjm/AGENTS.md` Backlog Lifecycle:
+consume the complete JSON `affectedPaths`, add any owned handoff deletion,
+format existing text, and commit the exact operation through
+`oat internal commit-paths`, preserving unrelated staged/unstaged work.

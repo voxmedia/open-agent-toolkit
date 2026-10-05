@@ -51,6 +51,46 @@ repository config, user config, or any other durable artifact. A later
 interactive session therefore needs no autonomy cleanup and behaves
 interactively around the state the autonomous run left behind.
 
+## Kickoff limits and hard stops
+
+Kickoff reads the owning recovery, gate and dispatch contracts and reports the
+effective project default and each known phase limit, source/override, prior
+durable usage, remaining capacity and pending-attempt status. For a new project,
+phase values remain unresolved until planning supplies them; the report is
+refreshed before implementation and on resume.
+
+Phase recovery uses `oat_phase_recovery_policy` in `state.md`: a
+`phase_attempt_limits.<pNN>` override wins over `default_attempt_limit`, whose
+owning default is `10`. Limits are integers from `0` through `20`. Usage comes
+from the monotonic `phase_attempt_usage.<pNN>.used_attempts` ledger; remaining
+capacity is `max(0, effective limit - used_attempts)`. A reconciled pending
+reservation finishes that same attempt without another increment, even at the
+limit.
+
+These dry kickoff controls illustrate the unchanged policy, without launching
+a provider:
+
+- Default control: limit 10, used 3, remaining 7; source is the owning default
+  when the project has no override.
+- Phase override control: limit 2, used 1, remaining 1; source is
+  `phase_attempt_limits.p01: 2`, even when the project default is 10.
+- Zero limit: no new automatic attempt; a direction-required stop consumes no
+  attempt.
+
+Capacity is not permission. A failed attempt is terminal even with remaining capacity.
+A continue-after-failure policy remains a separate future choice. Route retries,
+review-fix rounds, gate `maxAttempts`, recovery events and reserved recovery
+attempts are separate counters. An elevated warning at three recovery events
+changes no limit and grants no permission.
+
+Kickoff also names the applicable owning hard stops: recovery eligibility or
+proof failure, new-attempt budget exhaustion, malformed ledger or unresolved
+pending attempt, exact-target/accepted-launch failure, blocking review policy,
+missing credentials, repository authority, unresolved product judgment,
+unauthorized destructive risk and inventory gaps. Each stop retains its owning
+contract and configured gate semantics; the report names evidence and the
+operator action needed to resume.
+
 ## Gate outcomes
 
 Every interactive lifecycle gate has one of two autonomous outcomes:

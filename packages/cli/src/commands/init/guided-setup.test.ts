@@ -1,9 +1,18 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import type { SelectChoice } from '@commands/shared/shared.prompts';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
+import {
+  readOatConfig as readPersistedConfig,
+  writeOatConfig as writePersistedConfig,
+} from '@config/oat-config';
 import { createEmptyManifest } from '@manifest/index';
 import type { ProviderAdapter } from '@providers/shared';
 import type { Scope } from '@shared/types';
@@ -15,6 +24,9 @@ import { createInitCommand } from './index';
 
 function createGuidedSetupHarness(options: {
   interactive?: boolean;
+  repoRoot?: string;
+  realConfigIO?: boolean;
+  documentationChoice?: string;
   hookInstalled?: boolean;
   oatDirExists?: boolean;
   confirmResponses?: boolean[];
@@ -55,7 +67,10 @@ function createGuidedSetupHarness(options: {
   );
   const applyGitignore = vi.fn(async () => ({ action: 'updated' }));
   const runProviderSync = vi.fn(async () => undefined);
-  const writeOatConfig = vi.fn(async () => undefined);
+  const writeOatConfig = vi.fn(
+    options.realConfigIO ? writePersistedConfig : async () => undefined,
+  );
+  const projectRoot = options.repoRoot ?? '/tmp/workspace';
 
   const adapters: ProviderAdapter[] = [
     {
@@ -76,13 +91,13 @@ function createGuidedSetupHarness(options: {
       dryRun: false,
       verbose: false,
       json: false,
-      cwd: '/tmp/workspace',
+      cwd: projectRoot,
       home: '/tmp/home',
       interactive: options.interactive ?? true,
       logger: capture.logger,
     }),
     resolveScopeRoot: vi.fn(async (scope: 'project' | 'user') =>
-      scope === 'project' ? '/tmp/workspace' : '/tmp/home',
+      scope === 'project' ? projectRoot : '/tmp/home',
     ),
     ensureCanonicalDirs: vi.fn(async () => undefined),
     loadManifest: vi.fn(async () => createEmptyManifest()),
@@ -116,12 +131,14 @@ function createGuidedSetupHarness(options: {
       entries: [],
     })),
     dirExists: vi.fn(async () => options.oatDirExists ?? true),
-    readOatConfig: vi.fn(async () => ({
-      version: 1,
-      ...(existingDocsConfig
-        ? { documentation: existingDocsConfig }
-        : undefined),
-    })),
+    readOatConfig: options.realConfigIO
+      ? readPersistedConfig
+      : vi.fn(async () => ({
+          version: 1,
+          ...(existingDocsConfig
+            ? { documentation: existingDocsConfig }
+            : undefined),
+        })),
     resolveLocalPaths: vi.fn(() => [] as string[]),
     addLocalPaths,
     applyGitignore,
@@ -138,7 +155,33 @@ function createGuidedSetupHarness(options: {
       async () => inputWithDefaultResponses.shift() ?? null,
     ),
     selectWithAbort: vi.fn(
-      async () => selectWithAbortResponses.shift() ?? null,
+      async <T extends string>(
+        _message: string,
+        choices: SelectChoice<T>[],
+      ) => {
+        if (options.documentationChoice) {
+          expect(choices[0]?.value).toBe('fumadocs');
+          expect(choices.map((choice) => choice.value)).toEqual(
+            expect.arrayContaining([
+              'fumadocs',
+              'mkdocs',
+              'docusaurus',
+              'vitepress',
+              'nextra',
+            ]),
+          );
+          const selected = choices.find(
+            (choice) => choice.value === options.documentationChoice,
+          );
+          expect(
+            selected,
+            'Requested option must actually be offered',
+          ).toBeDefined();
+          expect(selected?.label).toBe('Plain Markdown');
+          return selected?.value ?? null;
+        }
+        return (selectWithAbortResponses.shift() ?? null) as T | null;
+      },
     ),
     runToolPacks,
     runProviderSync,
@@ -457,6 +500,66 @@ describe('guided setup integration', () => {
         }),
       }),
     );
+  });
+
+  it('offers Plain Markdown and persists the actual choice/root through real config IO while preserving unrelated settings', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-guided-markdown-'));
+    try {
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat/config.json'),
+        JSON.stringify({
+          version: 1,
+          git: { defaultBranch: 'trunk' },
+          localPaths: ['private-notes'],
+          documentation: {
+            config: 'custom-docs.json',
+            index: 'docs/map.md',
+            excludes: ['drafts/**'],
+            requireForProjectCompletion: false,
+          },
+        }),
+      );
+      const { command, capture } = createGuidedSetupHarness({
+        interactive: true,
+        hookInstalled: true,
+        oatDirExists: true,
+        repoRoot: root,
+        realConfigIO: true,
+        documentationChoice: 'markdown',
+        providerSelectResponses: [['claude']],
+        detectedDocs: null,
+        confirmResponses: [true, false],
+        selectResponses: [[]],
+        inputWithDefaultResponses: [`${join(root, 'docs/manual')}/`],
+      });
+      await runInit(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup'],
+      });
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8')),
+      ).toMatchObject({
+        version: 1,
+        git: { defaultBranch: 'trunk' },
+        localPaths: ['private-notes'],
+        documentation: {
+          tooling: 'markdown',
+          root: 'docs/manual',
+          config: 'custom-docs.json',
+          index: 'docs/map.md',
+          excludes: ['drafts/**'],
+          requireForProjectCompletion: false,
+        },
+      });
+      expect(
+        capture.info.some((message) =>
+          message.includes('Stored docs config: markdown at docs/manual'),
+        ),
+      ).toBe(true);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('docs: manual entry when nothing detected and user says they have docs', async () => {

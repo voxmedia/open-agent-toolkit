@@ -6,6 +6,7 @@ import { unified } from 'unified';
 interface MarkdownNode {
   type: string;
   value?: string;
+  depth?: number;
   url?: string;
   identifier?: string;
   children?: MarkdownNode[];
@@ -16,11 +17,25 @@ function headingText(node: MarkdownNode): string {
   return node.value ?? '';
 }
 
-export function markdownAnchors(markdown: string): Set<string> {
-  const tree = unified()
+function parseMarkdown(markdown: string): MarkdownNode {
+  return unified()
     .use(remarkParse)
     .use(remarkGfm)
     .parse(markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ''));
+}
+
+export function markdownH1Count(markdown: string): number {
+  let count = 0;
+  function visit(node: MarkdownNode): void {
+    if (node.type === 'heading' && node.depth === 1) count += 1;
+    node.children?.forEach(visit);
+  }
+  visit(parseMarkdown(markdown));
+  return count;
+}
+
+export function markdownAnchors(markdown: string): Set<string> {
+  const tree = parseMarkdown(markdown);
   const slugger = new Slugger();
   const anchors = new Set<string>();
   function visit(node: MarkdownNode): void {
@@ -55,10 +70,7 @@ export function decodeMarkdownFragment(
 }
 
 export function markdownInlineCode(markdown: string): string[] {
-  const tree = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .parse(markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ''));
+  const tree = parseMarkdown(markdown);
   const values: string[] = [];
   function visit(node: MarkdownNode): void {
     if (node.type === 'inlineCode') values.push(node.value ?? '');
@@ -69,10 +81,7 @@ export function markdownInlineCode(markdown: string): string[] {
 }
 
 export function markdownLinkTargets(markdown: string): string[] {
-  const tree = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .parse(markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, ''));
+  const tree = parseMarkdown(markdown);
   const definitions = new Map<string, string>();
   function collectDefinitions(node: MarkdownNode): void {
     if (

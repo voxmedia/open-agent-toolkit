@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 metadata:
-  version: 1.4.4
+  version: 1.4.5
 ---
 
 # Progress Router
@@ -181,6 +181,18 @@ Read `{project}/state.md` frontmatter:
   deliberately disabled, keyed by gate-aware skill name
 - `oat_implement_exit_gate` - The implementation exit gate record
 - `oat_quick_start_gate` - The quick-start plan gate record
+
+Blockers may be legacy reason strings or structured `{task_id, reason, since}`
+records. Display strings as their reason; display records as
+`{task_id}: {reason} (since {since})`, reading each field deliberately rather
+than coercing the object to text. `oat project status --json` preserves those
+three literal string fields; `--field project.blockers` and
+`--shell BLOCKERS=project.blockers` serialize the list as JSON. Empty lists mean
+no blockers; mixed lists retain entries in order. Records missing any nonempty
+string field and other malformed entries become diagnostic legacy strings:
+`Malformed blocker entry: <JSON>`. They remain visible to blocker checks and
+human output. Legacy string normalization remains unchanged. Do not change
+state or routing merely to render blockers.
 
 **Display format:**
 

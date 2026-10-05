@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.3
+  version: 2.0.4
 ---
 
 # OAT Doctor
@@ -222,6 +222,16 @@ State the adoption state (`declared`, `inferred-legacy`, `partial-initialization
 | `pjm:backlog_invalid_status`, `pjm:backlog_archived_open`, `pjm:backlog_duplicate_id`                                                                                                                                                         | edit the named item's frontmatter (the person), then `oat backlog regenerate-index`                                                                                                               |
 | `pjm:remote_schema`, `pjm:remote_binding_ids`, `pjm:remote_metadata_state`, `pjm:remote_storage_content`, `pjm:remote_policy`, `pjm:remote_concurrent_intents`, `pjm:remote_operations`, `pjm:remote_retention`, `pjm:remote_host_capability` | emitted only when a remote binding is adopted: `oat-pjm-remote` (reconcile or refresh) and `workflows/backlog-and-planning/remote-project-management.md`                                          |
 | any other `pjm:*` name                                                                                                                                                                                                                        | `info` with the check's message; no fix path is invented                                                                                                                                          |
+
+When applying a backlog close-out fix, use `oat backlog archive <id> --summary
+"outcome" --json` (or the agreed `--wont-do` outcome). Capture its complete
+`affectedPaths`, append only an owned handoff's filesystem deletion, format
+existing affected text with the repository command, and commit the exact paths
+via `oat internal commit-paths` with a unique retained identity and enabled
+hooks. Include tracked old/new item names, ledger/index and rewritten
+references. Verify helper availability and stop on an unavailable or
+blocked/failed helper; preserve unrelated staged/unstaged work. Follow the
+repository's PJM Backlog Lifecycle; do not stage only the missing old path.
 
 #### Agent instructions dive
 

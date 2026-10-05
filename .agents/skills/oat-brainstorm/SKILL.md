@@ -5,12 +5,16 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.7
+  version: 1.3.8
 ---
 
 # Brainstorm
 
 Project-independent brainstorming dispatcher. Owns the explicit activation gate (see `## Activation Contract`), the Superpowers-style conversational cadence, the visual-need assessment and conditional visual-companion offer, the destination identification, and the per-destination handoff to existing OAT skills.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Activation Contract
 
@@ -662,8 +666,8 @@ beside another dirty project file must take Step 4.
      FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
      FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
    else
-     git add -- "$ARTIFACT_PATH"
-     git commit -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>"
+     OWNED_COMMIT_PATHS=("$ARTIFACT_PATH")
+     oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:1" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
      FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
    fi
    ```
@@ -690,8 +694,8 @@ failures remain fail-closed.
     CURRENT_ARTIFACT_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "$CURRENT_ARTIFACT_SUBJECT" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     CURRENT_ARTIFACT_COMMIT_SHA=$(parse_synced_push_receipt "$CURRENT_ARTIFACT_PUSH") || { printf '%s\n' "$CURRENT_ARTIFACT_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
-    git add -- "$ARTIFACT_PATH"
-    git commit --only -m "$CURRENT_ARTIFACT_SUBJECT" -- "$ARTIFACT_PATH"
+    OWNED_COMMIT_PATHS=("$ARTIFACT_PATH")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:2" --message "$CURRENT_ARTIFACT_SUBJECT" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
     CURRENT_ARTIFACT_COMMIT_SHA=$(git rev-parse HEAD)
   fi
   ```
@@ -705,8 +709,8 @@ failures remain fail-closed.
     FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$FOLD_BACK_PUSH") || { printf '%s\n' "$FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
-    git add -- "$ARTIFACT_PATH"
-    git commit --only -m "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
+    OWNED_COMMIT_PATHS=("$ARTIFACT_PATH")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:3" --message "chore(oat): integrate brainstorm into <artifact-basename> for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
     FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
   fi
   ```
@@ -722,8 +726,8 @@ failures remain fail-closed.
     MIXED_FOLD_BACK_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
     FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH") || { printf '%s\n' "$MIXED_FOLD_BACK_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
   else
-    git add -- "$ARTIFACT_PATH"
-    git commit --only -m "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" -- "$ARTIFACT_PATH"
+    OWNED_COMMIT_PATHS=("$ARTIFACT_PATH")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:4" --message "chore(oat): integrate brainstorm + prior edits into <artifact-basename> for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
     FOLD_BACK_COMMIT_SHA=$(git rev-parse HEAD)
   fi
   ```
@@ -773,7 +777,7 @@ The filename was confirmed at step 8 (default `YYYY-MM-DD-<topic>.md`). Resolve 
 
 If `<ACTIVE_PROJECT>/brainstorming/` does not exist, create it (`mkdir -p`). The `brainstorming/` subdirectory is parallel to existing `pr/` and `reviews/` subdirectories — explicit purpose, naturally discoverable.
 
-Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to the resolved path.
+Set `REFERENCE_PATH` to the exact resolved file path before writing. Render `${SKILL_DIR}/templates/brainstorm-doc.md` (resolve `${SKILL_DIR}` per the rule in step 3) with the synthesized payload (same shape as the doc-to-path destination) and write to `REFERENCE_PATH`. Retain that produced filename for commit/retry.
 
 After writing, persist the file with the same fail-closed scope guard:
 
@@ -784,13 +788,13 @@ if [ "$PROJECT_SCOPE" = "synced" ]; then
   REFERENCE_PUSH=$(oat project push "$ACTIVE_PROJECT" --message "chore(oat): capture brainstorming reference for <project-name>" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   REFERENCE_COMMIT_SHA=$(parse_synced_push_receipt "$REFERENCE_PUSH") || { printf '%s\n' "$REFERENCE_PUSH" >&2; echo "Recovery: run oat project pull \"$ACTIVE_PROJECT\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
-  git add -- "<active-project-relative-path>"
-  git commit -m "chore(oat): capture brainstorming reference for <project-name>"
+  OWNED_COMMIT_PATHS=("$REFERENCE_PATH")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-brainstorm:5" --message "chore(oat): capture brainstorming reference for <project-name>" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   REFERENCE_COMMIT_SHA=$(git rev-parse HEAD)
 fi
 ```
 
-For shared/local scope, use only `git add -- <path>` so unrelated working-tree changes are not swept into the commit, then capture `git rev-parse --short HEAD`. For synced scope, use the validated push receipt SHA and never stage the artifact on the parent branch. Report the resulting SHA alongside the absolute path written, then end mode assertion.
+For shared/local scope, commit only the exact produced path through `oat internal commit-paths` with the retained operation identity, stop on a nonzero result, then capture `git rev-parse --short HEAD`. For synced scope, use the validated push receipt SHA and never stage the artifact on the parent branch. Report the resulting SHA alongside the absolute path written, then end mode assertion.
 
 For synced projects, the preceding short-hash sentence is superseded by the
 full `REFERENCE_COMMIT_SHA` returned from `oat project push --json`; no parent

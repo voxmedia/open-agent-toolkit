@@ -5,12 +5,16 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.12
+  version: 1.5.13
 ---
 
 # Request Review
 
 Request and execute a code or artifact review for the current project scope.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Purpose
 
@@ -622,6 +626,21 @@ Build the "Review Scope" metadata for the reviewer:
 - Deferred Low count: {DEFERRED_LOW_COUNT}
   {DEFERRED_LEDGER}
 
+**Changed-Boundary Probe Guidance (code review only):**
+
+- Apply the reviewer's proportional changed-boundary probe contract to changed
+  trust/input/size/limit boundaries with credible failure modes.
+- Record exact commands, input/artifact provenance, categorical results and
+  any concrete execution limitation. Independently inspected implementer
+  failing and accepted controls may count when the reviewer cannot execute;
+  unsupported assertions cannot count.
+- Missing consequential evidence requires a blocking finding under the existing
+  severity model, with
+  the unresolved guarantee and smallest missing proof. Docs-only changes with
+  no credible changed boundary require no manufactured probes.
+- Preserve containment, independence, dispatch policy, severity and output
+  schemas; do not start a broad campaign or create a harness.
+
 **Design Drift Review Guidance:**
 
 - If implementation differs from `spec.md`, `design.md`, or `plan.md`, decide whether the code should change or whether the artifact is stale.
@@ -1193,9 +1212,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record {scope} review artifact" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$ACTIVE_REVIEW_PATH"
-  [ -f "$PROJECT_PATH/plan.md" ] && git add "$PROJECT_PATH/plan.md"
-  git diff --cached --quiet || git commit -m "chore(oat): record {scope} review artifact"
+  OWNED_COMMIT_PATHS=("$ACTIVE_REVIEW_PATH")
+  [ -f "$PROJECT_PATH/plan.md" ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/plan.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-review-provide:1" --message "chore(oat): record {scope} review artifact" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

@@ -52,6 +52,10 @@ Documentation should ship with the code it explains. This page covers the core d
 ## Authoring Expectations
 
 - Keep docs aligned with the current repo behavior and current command surface.
+- Give each Markdown or MDX page exactly one document H1. `pnpm docs:validate`
+  reports the file and count when a page has zero or multiple H1s. ATX and
+  Setext headings count, including headings inside blockquotes or lists;
+  frontmatter and fenced code do not.
 - Prefer cross-links over duplicated conceptual content.
 - Use `oat-docs-authoring` for targeted OAT/Fumadocs docs edits; it delegates
   universal page-quality guidance to `authoring-docs` and keeps local

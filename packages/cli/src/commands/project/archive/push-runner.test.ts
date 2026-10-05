@@ -32,10 +32,13 @@ interface HarnessOptions {
     projectRecapExport?: {
       sourceRunRoot: string;
       exportRoot: string;
-      manifest: {
-        relativePath: 'manifest.json';
-        verifiedArtifactCount: number;
+      runId: string;
+      page: {
+        sourceRelativePath: string;
+        originalSha256: string;
+        exportedSha256: string;
       };
+      verifiedArtifactCount: number;
     } | null;
     warnings: string[];
     lifecycleCommit?: string | null;
@@ -639,11 +642,14 @@ describe('oat project archive push', () => {
       sourceRunRoot:
         '/tmp/workspace/open-agent-toolkit/.oat/projects/shared/demo-project/explainers/project-recap/run-20260401',
       exportRoot:
-        '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-recaps/20260401-demo-project',
-      manifest: {
-        relativePath: 'manifest.json' as const,
-        verifiedArtifactCount: 5,
+        '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-recaps/20260401-demo-project.html',
+      runId: 'captured-run-id',
+      page: {
+        sourceRelativePath: 'site/index.html',
+        originalSha256: `sha256:${'a'.repeat(64)}`,
+        exportedSha256: `sha256:${'b'.repeat(64)}`,
       },
+      verifiedArtifactCount: 5,
     };
     const { capture, context, dependencies } = createHarness({
       json: true,

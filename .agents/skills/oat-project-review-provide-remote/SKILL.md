@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.9
+  version: 1.1.10
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -208,6 +208,24 @@ Resolve the workflow mode and the scope token:
 - Parse the scope token from `$ARGUMENTS` (`code <scope>` / `artifact <scope>`), or infer it from PR state (default `code` with the current phase; `final` when the implementation is complete). For `final` scope, also gather the deferred-findings ledger from `implementation.md`.
 
 NEVER mutate, commit, or push any project artifact. This is a read-only project context on machine B.
+
+For code reviews, carry the reviewer's proportional changed-boundary probe
+contract in every Tier 1/2/3 brief: inventory changed trust/input/size/limit
+boundaries and credible failures, record exact commands, input/artifact
+provenance, categorical results and any concrete execution limitation.
+Independently inspected implementer failing and accepted controls may count
+when the reviewer cannot execute; unsupported assertions cannot count. Missing
+consequential evidence requires a blocking finding under the existing severity
+model naming the
+unresolved guarantee and smallest missing proof. Docs-only changes with no
+credible changed boundary require no manufactured probes. Preserve containment,
+independence, dispatch policy and the existing severity/output schemas; no new
+harness, broad campaign or model-efficacy claim.
+
+Put compact results, inspected-control provenance and execution limitations in
+existing `StructuredFindings.summary`/finding bodies, with exact repeatable
+commands in `verification_commands`. Add no schema fields or project artifacts.
+Diff-only context is an execution limitation, not evidence of correctness.
 
 ### Step 4: Detect Prior Reviews + Narrow Scope
 

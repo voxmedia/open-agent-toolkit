@@ -119,8 +119,16 @@ disposition every finding in the phase report. }
 
 **Step { N }: Commit**
 
+Before task edits, initialize `TASK_OWNED_FILES=()` and append the exact files
+at each source-plan producer, including created files, tracked removals and both
+rename sides. Retain the complete list and a stable unique `COMMIT_IDENTITY`
+for this wrapper task through retries; each task uses its own identity/suffix.
+Never infer ownership from the staged index or pass directories. Verify
+`oat internal commit-paths --help` first; if unavailable, stop and update the CLI.
+A nonzero result stops with its receipt and diagnostic; hooks remain enabled.
+
 ```bash
-git commit -m "{type}(p{NN}-t01): { description }"
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-wave-execute:wrapper-plan-template:p{NN}-t01" --message "{type}(p{NN}-t01): { description }" -- "${TASK_OWNED_FILES[@]}" || exit 1
 ```
 
 ---
@@ -144,7 +152,13 @@ git commit -m "{type}(p{NN}-t01): { description }"
 - [ ] { N }/{ N } phases, { M }/{ M } tasks complete
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
 - [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
-      `oat backlog archive` with real outcome summaries for { backlog IDs }, one commit
+      `oat backlog archive --json` with real outcome summaries for { backlog IDs }.
+      Union complete returned `affectedPaths` (tracked old deletions, new
+      destinations, ledger/index/references), append owned handoff filesystem
+      deletions, format existing text with the repo command, and create one
+      `oat internal commit-paths` commit with enabled hooks and a retained unique
+      identity. Stop on unavailable/blocked/failed helper; preserve unrelated
+      staged/unstaged work.
 - [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
       before any archive step
 - [ ] Full DoD gates green on the integration branch

@@ -60,7 +60,7 @@ The project replaced an implementation-tail recap path that depended on five pro
 
 ## Explainer Outcome
 
-- **project-recap:** generated — needs review — [`.oat/repo/reference/project-recaps/20260914-agent-authored-recap/site/index.html`](https://github.com/voxmedia/open-agent-toolkit/blob/explainer-simplify/.oat/repo/reference/project-recaps/20260914-agent-authored-recap/site/index.html) — browser driver unavailable; all browser-free and traceability checks passed.
+- **project-recap:** generated — needs review — [`.oat/repo/reference/project-recaps/20260914-agent-authored-recap.html`](../project-recaps/20260914-agent-authored-recap.html) — browser driver unavailable; all browser-free and traceability checks passed.
 
 ## Workflow Observations
 

@@ -126,9 +126,12 @@ roll back an approved plan.
 
 At project completion, pass only a selected satisfied `project-recap` run to
 `oat project archive --project-recap-run`. Consume
-`projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
-`projectRecapExport.manifest.relativePath` from the archive JSON response. Do
-not infer the dated export path. The archive export is the durable copy.
+`projectRecapExport.sourceRunRoot`, `exportRoot`, `runId`,
+`page.sourceRelativePath`, `page.originalSha256`, `page.exportedSha256`, and
+`verifiedArtifactCount` from the archive JSON response. Do not infer the dated
+export path: `exportRoot` is one tracked HTML page. The complete original run,
+manifest, source, and QA evidence remain in the archived project. Persisted
+legacy package receipts remain readable; new exports have no tracked sidecars.
 
 Project-explainer runs remain active-project working artifacts and are never
 exported as completion reference products. Local-scope projects do not export a

@@ -1,3 +1,4 @@
+import { lstat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, resolve } from 'node:path';
 
 import {
@@ -34,7 +35,6 @@ interface ProjectMigrateDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
   resolveProjectsRoot: typeof resolveProjectsRoot;
-  assertConfinedMigrationSource: typeof assertConfinedMigrationSource;
   migrateSharedToSynced: (
     target: SyncTarget,
     git: GitRunner,
@@ -49,7 +49,6 @@ const DEFAULT_DEPENDENCIES: ProjectMigrateDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveProjectsRoot,
-  assertConfinedMigrationSource,
   migrateSharedToSynced,
   gitRunner: defaultGitRunner,
   processEnv: process.env,
@@ -89,7 +88,13 @@ async function runMigrate(
     const slug = basename(sourcePath);
     assertValidProjectSlug(slug, 1);
     const target = buildSyncTarget(repoRoot, projectsRoot, slug);
-    await dependencies.assertConfinedMigrationSource(target, sourcePath);
+    const source = await lstat(sourcePath).catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return undefined;
+        throw error;
+      },
+    );
+    if (source) await assertConfinedMigrationSource(target, sourcePath);
     if (resolveProjectScope(sourcePath, sharedRoot, repoRoot) !== 'shared') {
       throw new CliError(
         `Project ${projectPath} must be a direct child in shared scope.`,

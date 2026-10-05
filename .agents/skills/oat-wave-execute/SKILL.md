@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.6
+  version: 1.9.7
 ---
 
 # Execute a Wave of External Plans
@@ -24,6 +24,10 @@ waves inherit evidence, not anecdotes.
 Historical `DR-*` and `BL-*` slugs in this skill (including the provenance
 record above) are evidence citations in the source program's repository; they
 are not required artifacts in the consuming repo.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Progress Indicators (User-Facing)
 
@@ -256,6 +260,12 @@ terminal state for gate rows (Orc operator-audit S8).
 Persist the gate artifact and its dispositions through the wrapper project's
 scope-aware bookkeeping route:
 
+Before running the gate, initialize `WAVE_GATE_OUTPUT_PATHS=()` and append the
+exact plan, state, implementation, review and receive-receipt files each gate
+producer actually writes. Include tracked removals and both rename sides, omit
+ignored outputs, and retain the list through retries. Do not discover ownership
+from a project-directory or staged-index diff.
+
 ```bash
 PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
 if [ -z "$PROJECT_PATH" ]; then
@@ -267,14 +277,9 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): record wave plan gate" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  PROJECT_OUTPUT_PATHS=()
-  while IFS= read -r output_path; do
-    PROJECT_OUTPUT_PATHS+=("$output_path")
-  done < <(git diff --name-only -- "$PROJECT_PATH")
-  [ "${#PROJECT_OUTPUT_PATHS[@]}" -gt 0 ] || exit 1
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git diff --cached --quiet -- "${PROJECT_OUTPUT_PATHS[@]}" ||
-    git commit --only -m "chore(oat): record wave plan gate" -- "${PROJECT_OUTPUT_PATHS[@]}"
+  : "${WAVE_GATE_OUTPUT_PATHS:?retain the exact gate producer file list}"
+  OWNED_COMMIT_PATHS=("${WAVE_GATE_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-wave-execute:1" --message "chore(oat): record wave plan gate" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 
@@ -392,8 +397,16 @@ archive anything first.
    `summary.md`** (this is the "before any archive step" gate): convention
    verdicts with evidence, adjustments-as-rules for later waves, graduated-entries
    ledger, rolled into `summary.md` `## Workflow Observations`.
-3. **Serialized backlog archival** — `oat backlog archive` with real summaries,
-   one commit.
+3. **Serialized backlog archival** — run `oat backlog archive --json` for
+   each item with its real outcome summary. Union and deduplicate all returned
+   `affectedPaths`, including tracked old item deletions, new destinations,
+   ledger/index and rewritten references; append owned handoff filesystem
+   deletions. Format existing supported text with the repository command,
+   then use `oat internal commit-paths` for one exact-operation commit with
+   enabled hooks and the unique retained `COMMIT_IDENTITY`. Stop if the helper
+   is unavailable or blocked/failed; unrelated staged/unstaged work survives.
+   A settled noop returns only actual repairs; do not infer paths from every
+   archived link or commit only the old missing path.
 4. **Closeout gate run** — after the archival commit, and after ANY later commit
    that touches a gated surface (`.oat/repo/**`, `.agents/**`, `packages/**`,
    `apps/**`), re-run the integration DoD gates with cache bypass. The last

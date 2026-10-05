@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.0.18
+  version: 1.0.19
 ---
 
 # Autonomous OAT Project
@@ -14,6 +14,10 @@ metadata:
 Run an OAT project from its persisted entry state to final PR by chaining the
 existing lifecycle skills. This skill supplies policy and sequencing; each
 lifecycle skill continues to own its artifacts, gates, reviews, and state.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## When to Use
 
@@ -233,6 +237,57 @@ Select the earliest incomplete lifecycle owner:
 An approved plan enters at implementation. Never replay completed phases solely
 because this is a new session.
 
+### Step 1.5: Disclose Effective Limits and Hard Stops
+
+Before lifecycle execution, read the owning contracts: the vendored autonomy
+contract/gate inventory, `oat-project-implement/references/phase-execution.md`
+and `oat-phase-implementer` recovery contract, the current project dispatch
+adapter and generic dispatch contract, and each applicable lifecycle gate's
+configuration and failure policy. Do not infer permission from an allowance.
+
+For an existing project, resolve `oat_phase_recovery_policy` from `state.md`:
+use `phase_attempt_limits.<pNN>` when present, otherwise
+`default_attempt_limit` (default `10`); require integer limits from `0` through
+`20`. Read prior durable `used_attempts` and `pending_attempt` from
+`phase_attempt_usage.<pNN>` and reconcile pending identities before work. Report
+remaining capacity as `max(0, effective limit - used_attempts)`, the source and
+any phase override. A fully reconciled pending attempt completes the same
+reserved attempt, even at the limit; it receives no new reservation.
+
+Print the effective project default and every known phase's values at kickoff:
+
+```text
+Recovery: project default={limit}; source={state.md | owning default 10}
+Phase {pNN}: effective={limit}; source={phase override | project default | owning default}
+  prior durable usage={used}; remaining capacity={remaining}; pending={none | reconciled attempt/status}
+Dispatch/review: {resolved route retry limit, review-cycle cap, gate maxAttempts and their sources}
+Stops: {applicable owning stop conditions and evidence/next action}
+```
+
+For a new project, disclose the owning defaults and mark phase-specific values
+unresolved until scaffolding/planning supplies them; refresh the report before
+implementation and on resume or a configured limit change. Never invent phase
+usage. An unavailable or malformed policy/ledger stops before dispatch.
+
+Capacity is not permission. A `failed-attempt` disposition is terminal even
+with remaining capacity. Applicable hard stops include recovery eligibility or
+proof failure; budget exhaustion for a new attempt; malformed ledger or
+unresolved pending attempt; immediate direction-required stop for a lost or
+unbindable exact target, with no fallback; accepted-launch failure when neither
+same-handle continuation nor a lifecycle-authorized fresh recover launch at the
+same exact target can continue; blocking review policy;
+missing credentials; repository authority or ownership limits; unresolved
+product judgment; unauthorized destructive risk; and inventory gaps. Apply the
+owning gate's validated `block`/`prompt`/`warn` semantics without weakening its
+operational or provenance stops. Name the exact inventory boundary and its
+owner when reporting a stop.
+
+Route retries, implementation recovery events, reserved recovery attempts,
+review-fix rounds and gate attempts are separate counters. The elevated warning
+at three recovery events does not grant recovery permission or change a limit.
+Remaining allowance covers separate eligible events. Continue-after-failure is
+a separate future policy choice, not authority supplied by this kickoff.
+
 ### Step 2: Select Workflow Mode by Review Density
 
 For a new goal, choose mode as a rigor selector:
@@ -299,8 +354,8 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): persist autonomous explainer intent" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/state.md"
-  git diff --cached --quiet || git commit -m "chore(oat): persist autonomous explainer intent"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/state.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:1" --message "chore(oat): persist autonomous explainer intent" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 
@@ -351,8 +406,8 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): update autonomous execution learnings" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/oat-execution-learnings.md"
-  git diff --cached --quiet || git commit -m "chore(oat): update autonomous execution learnings"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/oat-execution-learnings.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:2" --message "chore(oat): update autonomous execution learnings" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

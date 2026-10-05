@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   mkdir as defaultMkdir,
   readFile as defaultReadFile,
@@ -19,6 +20,10 @@ import {
   type PushResult,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
+import {
+  commitExactPaths,
+  type ExactPathCommitResult,
+} from '@commands/shared/exact-path-commit';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
 import { resolveProjectsRoot as defaultResolveProjectsRoot } from '@commands/shared/oat-paths';
@@ -68,6 +73,25 @@ type PromotionReason =
   | 'write-failed'
   | 'persistence-failed';
 
+interface PromotionRecovery extends ExactPathCommitResult {
+  identity: string;
+  message: string;
+  paths: string[];
+  command: string;
+}
+
+class PromotionPersistenceError extends Error {
+  constructor(readonly recovery: PromotionRecovery) {
+    super(
+      `Exact-path promotion commit ${recovery.outcome}: ${recovery.error ?? 'unverified result'}`,
+    );
+  }
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 export type PromotionResult =
   | {
       status: 'promoted';
@@ -78,6 +102,7 @@ export type PromotionResult =
       status: 'refused';
       reason: Exclude<PromotionReason, 'promoted'>;
       files: string[];
+      recovery?: PromotionRecovery;
     };
 
 interface ProjectPromoteOptions {
@@ -310,6 +335,7 @@ async function persistPromotion(
   projectRoot: string,
   projectName: string,
   scope: 'shared' | 'local' | 'synced',
+  identity: string,
   dependencies: ProjectPromoteDependencies,
 ): Promise<void> {
   const message = `chore(oat): promote ${projectName} to quick`;
@@ -332,13 +358,23 @@ async function persistPromotion(
   const pathspecs = PROMOTED_FILES.map((file) =>
     repoRelativePath(repoRoot, join(projectRoot, file)),
   );
-  await dependencies.gitRunner.run(['add', '--', ...pathspecs], {
+  await dependencies.gitRunner.run(['rev-parse', '--is-inside-work-tree'], {
     cwd: repoRoot,
   });
-  await dependencies.gitRunner.run(
-    ['commit', '-m', message, '--', ...pathspecs],
-    { cwd: repoRoot },
-  );
+  const result = await commitExactPaths({
+    repoRoot,
+    paths: pathspecs,
+    message,
+    identity,
+  });
+  if (!['committed', 'already-matching', 'nothing'].includes(result.outcome))
+    throw new PromotionPersistenceError({
+      ...result,
+      identity,
+      message,
+      paths: pathspecs,
+      command: `oat --cwd ${shellQuote(repoRoot)} internal commit-paths --identity ${shellQuote(identity)} --message ${shellQuote(message)} -- ${pathspecs.map(shellQuote).join(' ')}`,
+    });
 }
 
 async function promoteProject(
@@ -448,6 +484,9 @@ async function promoteProject(
     return { status: 'refused', reason: 'template-unreadable', files: [] };
   }
 
+  // Bind this generation before writes, and retain the exact identity in any
+  // persistence recovery rather than deriving it again from the reusable slug.
+  const identity = `promote:${projectRoot}:lite-to-quick:${randomUUID()}`;
   const writtenFiles: string[] = [];
   try {
     await dependencies.mkdir(join(projectRoot, 'references'), {
@@ -476,13 +515,17 @@ async function promoteProject(
       projectRoot,
       projectName,
       scope,
+      identity,
       dependencies,
     );
-  } catch {
+  } catch (error) {
     return {
       status: 'refused',
       reason: 'persistence-failed',
       files: writtenFiles,
+      ...(error instanceof PromotionPersistenceError
+        ? { recovery: error.recovery }
+        : {}),
     };
   }
 
@@ -521,7 +564,9 @@ export function createProjectPromoteCommand(
         } else if (result.status === 'promoted') {
           context.logger.info(`Promoted ${projectPath} to quick.`);
         } else {
-          context.logger.error(`Promotion refused: ${result.reason}.`);
+          context.logger.error(
+            `Promotion refused: ${result.reason}.${result.recovery ? ` Exact-path persistence ${result.recovery.outcome}; attempts ${result.recovery.attempts}; lock ${result.recovery.lockClass ?? 'none'}; identity ${result.recovery.identity}; receipt ${result.recovery.receipt ?? 'unavailable'}. ${result.recovery.error ?? ''} Recover existing Quick artifacts with: ${result.recovery.command}` : ''}`,
+          );
         }
         process.exitCode = result.status === 'promoted' ? 0 : 1;
       },

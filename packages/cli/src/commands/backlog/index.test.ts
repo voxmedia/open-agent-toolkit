@@ -35,6 +35,13 @@ function createHarness(): {
       status: 'closed' as const,
       completedEntry: 'written' as const,
       movedTo: `/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/${id}.md`,
+      affectedPaths: [
+        `/tmp/workspace/repo/.oat/repo/pjm/backlog/items/${id}.md`,
+        `/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/${id}.md`,
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/completed.md',
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/index.md',
+        '/tmp/workspace/repo/.oat/repo/reference/external-plans/2026-07-05-demo.md',
+      ],
       indexRegenerated: true,
       rewrittenReferences: [
         '.oat/repo/reference/external-plans/2026-07-05-demo.md',
@@ -319,6 +326,12 @@ describe('createBacklogCommand', () => {
     await runCommand(command, 'archive', ['--json'], ['BL-260705-demo']);
 
     expect(capture.jsonPayloads[0]).toMatchObject({
+      affectedPaths: expect.arrayContaining([
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/items/BL-260705-demo.md',
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/completed.md',
+        '/tmp/workspace/repo/.oat/repo/pjm/backlog/index.md',
+      ]),
       id: 'BL-260705-demo',
       result: 'archived',
       status: 'closed',
@@ -341,6 +354,7 @@ describe('createBacklogCommand', () => {
       movedTo:
         '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
       indexRegenerated: false,
+      affectedPaths: [],
       rewrittenReferences: [],
       warnings: ['Backlog item BL-260705-demo is already archived'],
     });
@@ -366,6 +380,7 @@ describe('createBacklogCommand', () => {
       movedTo:
         '/tmp/workspace/repo/.oat/repo/pjm/backlog/archived/BL-260705-demo.md',
       indexRegenerated: true,
+      affectedPaths: ['/tmp/workspace/repo/.oat/repo/reference/late.md'],
       rewrittenReferences: ['.oat/repo/reference/late.md'],
       warnings: ['Backlog item BL-260705-demo is already archived'],
     });

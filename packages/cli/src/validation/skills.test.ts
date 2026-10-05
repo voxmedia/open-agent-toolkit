@@ -5,8 +5,8 @@ import {
   mkdtemp,
   readdir,
   readFile,
-  realpath,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -542,12 +542,76 @@ describe('validateOatSkills', () => {
     await createSkillFile(
       root,
       'oat-project-guarded',
-      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" || exit 1\nelse\n  git add "$PROJECT_PATH/state.md"\n  git commit -m "chore(oat): persist artifacts"\nfi\n\`\`\`\n`,
+      `${validSkillContent('oat-project-guarded')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\nif [[ "$PROJECT_SCOPE" == "synced" ]]; then\n  oat project push "$PROJECT_PATH" --message "chore(oat): persist artifacts" || exit 1\nelse\n  OWNED_FILES=("$PROJECT_PATH/state.md")\n  oat internal commit-paths --identity "stable-operation" --message "chore(oat): persist artifacts" -- "\${OWNED_FILES[@]}" || exit 1\nfi\n\`\`\`\n`,
     );
 
     const result = await validateOatSkills(root);
 
     expect(result.findings).toEqual([]);
+  });
+
+  it.each([
+    [
+      'oat internal commit-paths --message "write" -- "$PROJECT_PATH/state.md" || exit 1',
+      'stable identity',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" || exit 1',
+      'explicit owned file list',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'FILES=("$PROJECT_PATH/reviews/")\nOWNED_FILES=("${FILES[@]}")\noat internal commit-paths --identity "stable" --message "write" -- "${OWNED_FILES[@]}" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/*.md" || exit 1',
+      'concrete owned files',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- "$PROJECT_PATH/state.md"',
+      'nonzero exit',
+    ],
+    [
+      'oat internal commit-paths --identity "stable" --message "write" -- .oat/projects/synced/demo/state.md || exit 1',
+      'use oat project push',
+    ],
+  ])(
+    'rejects an unsafe exact-path public writer: %s',
+    async (writer, message) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+      tempDirs.push(root);
+      const skillPath = await createSkillFile(
+        root,
+        'oat-project-exact-writer',
+        `${validSkillContent('oat-project-exact-writer')}\n\n\`\`\`bash\nPROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || exit 1\n${writer}\n\`\`\`\n`,
+      );
+      const result = await validateOatSkills(root);
+      expect(result.findings).toContainEqual({
+        file: skillPath,
+        message: expect.stringContaining(message),
+      });
+    },
+  );
+
+  it('keeps helper writes behind the same-block scope guard, including multiline messages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const skillPath = await createSkillFile(
+      root,
+      'oat-project-unguarded-exact',
+      `${validSkillContent('oat-project-unguarded-exact')}\n\n\`\`\`bash\noat internal commit-paths --identity "stable" --message "write\ncontinued" -- "$PROJECT_PATH/state.md" || exit 1\n\`\`\`\n`,
+    );
+    const result = await validateOatSkills(root);
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: expect.stringContaining(
+        'scope --format value guard earlier in the same fenced block',
+      ),
+    });
   });
 
   it('rejects a status-blind synced push JSON receipt', async () => {
@@ -910,7 +974,7 @@ describe('validateOatSkills', () => {
       },
     ]);
     expect(skill).toMatch(
-      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else\n  PROJECT_OUTPUT_PATHS=\(\)[\s\S]*?git add -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"[\s\S]*?git commit --only -m "chore\(oat\): record wave plan gate" -- "\$\{PROJECT_OUTPUT_PATHS\[@\]\}"\nfi\n```/,
+      /```bash\nPROJECT_PATH=\$\(oat config get activeProject[\s\S]*?PROJECT_SCOPE=\$\(oat project scope "\$PROJECT_PATH" --format value\)[\s\S]*?if \[ "\$PROJECT_SCOPE" = "synced" \]; then\n  oat project push "\$PROJECT_PATH" --message "chore\(oat\): record wave plan gate"[\s\S]*?else[\s\S]*?OWNED_COMMIT_PATHS=\("\$\{WAVE_GATE_OUTPUT_PATHS\[@\]\}"\)[\s\S]*?oat internal commit-paths --identity [^\n]+--message "chore\(oat\): record wave plan gate" -- "\$\{OWNED_COMMIT_PATHS\[@\]\}" \|\| exit 1\nfi\n```/,
     );
   });
 
@@ -1528,7 +1592,7 @@ describe('validateOatSkills', () => {
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
       ['explainer-kit', '3.0.3'],
-      ['oat-explainer-kit', '1.0.10'],
+      ['oat-explainer-kit', '1.0.11'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -1663,7 +1727,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.10');
+    expect(readDeclaredVersion(content)).toBe('1.2.11');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -2153,7 +2217,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.8',
+        version: '2.2.9',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -2162,7 +2226,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.7',
+        version: '2.3.8',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -2172,7 +2236,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.16',
+        version: '1.4.17',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -2180,7 +2244,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.18',
+        version: '2.3.19',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -2189,7 +2253,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.7',
+        version: '1.1.8',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -2197,7 +2261,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.17',
+        version: '2.3.18',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2698,7 +2762,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.17');
+    expect(readDeclaredVersion(content)).toBe('2.3.18');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2869,7 +2933,7 @@ describe('validateOatSkills', () => {
       '### Step 2: Create or Reuse Worktree',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.6.2');
+    expect(readDeclaredVersion(content)).toBe('1.6.3');
     expect(detectionIndex).toBeGreaterThanOrEqual(0);
     expect(creationIndex).toBeGreaterThan(detectionIndex);
     expect(content).toContain('BOOTSTRAP_MODE=normal');
@@ -3029,7 +3093,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(readDeclaredVersion(content)).toBe('2.3.17');
+    expect(readDeclaredVersion(content)).toBe('2.3.18');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -3127,7 +3191,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('2.3.17');
+    expect(readDeclaredVersion(content)).toBe('2.3.18');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -3146,7 +3210,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.12');
+    expect(readDeclaredVersion(content)).toBe('1.5.13');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3306,14 +3370,14 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.6'],
-      ['.agents/agents/oat-reviewer.md', '1.2.10'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.12'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.8'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.7'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.7'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.8'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.18'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.7'],
+      ['.agents/agents/oat-reviewer.md', '1.2.11'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.13'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.9'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.8'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.8'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.9'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.19'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3624,12 +3688,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(readDeclaredVersion(agent)).toBe('1.1.6');
+    expect(readDeclaredVersion(agent)).toBe('1.1.7');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(readDeclaredVersion(implement)).toBe('2.3.17');
+    expect(readDeclaredVersion(implement)).toBe('2.3.18');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -3638,7 +3702,9 @@ describe('validateOatSkills', () => {
     expect(agent).toMatch(
       /HEAD exactly equals\s+`phase_base_head`[\s\S]{0,300}Never\s+use ancestry from `expected_base_sha` as a substitute/i,
     );
-    expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
+    expect(agent).toContain(
+      'GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null oat internal commit-paths',
+    );
     expect(agent).toContain('`--no-verify`');
     expect(agent).toContain('Phase-Wide Self-Review');
     expect(agent).toMatch(/Ordinary phase tasks are implemented directly/i);
@@ -3686,6 +3752,125 @@ describe('validateOatSkills', () => {
     expect(taskExecution).toMatch(
       /prevention[\s\S]{0,160}(?:does not consume|without consuming)[\s\S]{0,160}recovery attempt/i,
     );
+  });
+
+  it('requires proportional changed-boundary review evidence with blocking and accepted controls', async () => {
+    const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const start = reviewer.indexOf(
+      '### Step 3.5: Probe Changed Consequential Boundaries',
+    );
+    expect(start, 'changed-boundary contract is live').toBeGreaterThan(-1);
+    const rule = reviewer
+      .slice(start, reviewer.indexOf('### Step 4:', start))
+      .replace(/\s+/g, ' ');
+    const required = [
+      /changed trust.*input.*size.*limit boundaries/i,
+      /credible failure.*focused probe/i,
+      /categorical result.*concrete execution limitation/i,
+      /missing consequential evidence.*blocking finding/i,
+      /independently.*inspect.*failing.*accepted controls/i,
+      /exact commands.*artifact provenance.*limitation/i,
+      /unsupported.*assertion.*insufficient/i,
+      /docs-only.*no credible changed boundary.*no manufactured probe/i,
+      /containment.*independence/i,
+      /no.*new harness.*broad.*campaign/i,
+    ];
+    for (const clause of required) expect(rule, clause.source).toMatch(clause);
+    // Positive shipped-contract keepers: missing evidence blocks;
+    // independently inspected controls remain eligible despite execution limits.
+    const outcomes = [
+      ['Consequential guarantee, absent evidence', 'Blocking finding'],
+      [
+        'Inspected failing + accepted controls, reviewer cannot execute',
+        'Eligible evidence',
+      ],
+      ['Unsupported implementer assertion', 'Blocking finding'],
+      [
+        'Docs-only, no credible changed boundary',
+        'No manufactured probe obligation',
+      ],
+    ];
+    for (const [scenario, outcome] of outcomes) {
+      const row = rule
+        .slice(rule.indexOf(`| ${scenario}`))
+        .split('|')
+        .slice(0, 4)
+        .join('|');
+      expect(row, scenario).toContain(outcome);
+    }
+    for (const path of [
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    ]) {
+      const brief = (await readRepoFile(path)).replace(/\s+/g, ' ');
+      expect(brief, path).toMatch(/changed.boundary.*probe/i);
+      expect(brief, path).toMatch(/failing.*accepted controls/i);
+      expect(brief, path).toMatch(/execution limitation/i);
+      expect(brief, path).toMatch(
+        /missing consequential evidence.*blocking finding/i,
+      );
+    }
+    expect(reviewer.replace(/\s+/g, ' ')).toMatch(
+      /Verification Commands[\s\S]*categorical outcomes.*limitations/i,
+    );
+    expect(reviewer).toMatch(/summary.*finding bodies.*results.*limitations/i);
+  });
+
+  it('discloses resolved autonomous recovery capacity and owning hard stops at kickoff', async () => {
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const start = autonomous.indexOf(
+      '### Step 1.5: Disclose Effective Limits and Hard Stops',
+    );
+    expect(start, 'kickoff disclosure is live guidance').toBeGreaterThan(-1);
+    const kickoff = autonomous
+      .slice(start, autonomous.indexOf('### Step 2:', start))
+      .replace(/\s+/g, ' ');
+    for (const clause of [
+      /phase_attempt_limits\.<pNN>/,
+      /default_attempt_limit/,
+      /used_attempts/,
+      /pending_attempt/,
+      /remaining capacity/i,
+      /source.*override/i,
+      /capacity is not permission/i,
+      /failed-attempt.*terminal/i,
+      /eligibility.*proof/i,
+      /budget exhaustion/i,
+      /malformed ledger.*unresolved pending/i,
+      /immediate direction-required stop for a lost or unbindable exact target, with no fallback/i,
+      /accepted-launch failure when neither same-handle continuation nor a lifecycle-authorized fresh recover launch at the same exact target can continue/i,
+      /blocking review policy/i,
+      /missing credentials/i,
+      /repository authority/i,
+      /product judgment/i,
+      /destructive.*inventory gaps/i,
+    ])
+      expect(kickoff, clause.source).toMatch(clause);
+    expect(kickoff).toMatch(
+      /Continue-after-failure is a separate future policy choice, not authority supplied by this kickoff/i,
+    );
+    const guide = await readRepoFile(
+      'apps/oat-docs/docs/workflows/advanced/autonomy.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    expect(phase).toMatch(/default_attempt_limit: 10/);
+    expect(guide).toContain('Default control: limit 10, used 3, remaining 7');
+    expect(guide).toContain(
+      'Phase override control: limit 2, used 1, remaining 1',
+    );
+    expect(guide).toMatch(/failed attempt.*terminal.*remaining capacity/i);
+    for (const path of [
+      '.agents/docs/autonomy-contract.md',
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+      '.agents/agents/oat-phase-implementer.md',
+    ])
+      expect(await readRepoFile(path), path).toMatch(
+        /capacity is not permission/i,
+      );
   });
 
   it('defines dedicated bounded phase recovery and zero-limit behavior', async () => {
@@ -4996,13 +5181,13 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.35'],
-      ['oat-project-review-provide', '1.5.12'],
-      ['oat-project-review-receive', '1.6.8'],
-      ['oat-project-review-receive-remote', '1.5.3'],
-      ['oat-project-implement', '2.3.17'],
-      ['oat-project-pr-final', '1.6.8'],
+      ['oat-project-review-provide', '1.5.13'],
+      ['oat-project-review-receive', '1.6.9'],
+      ['oat-project-review-receive-remote', '1.5.4'],
+      ['oat-project-implement', '2.3.18'],
+      ['oat-project-pr-final', '1.6.9'],
       ['oat-project-pr-progress', '1.3.2'],
-      ['oat-project-complete', '1.7.14'],
+      ['oat-project-complete', '1.7.15'],
       ['oat-project-next', '1.1.5'],
     ] as const;
 
@@ -5078,7 +5263,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.8');
+    expect(readDeclaredVersion(receive)).toBe('1.6.9');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -6120,49 +6305,6 @@ describe('validateOatSkills', () => {
     expect(readDeclaredVersion(next)).toBe('1.1.5');
   });
 
-  it('bumps every skill that ships the autonomy contract', async () => {
-    // check:skill-bumps diffs only paths under .agents/skills, so a change to
-    // the shared contract reaches its vendors through symlinks it never sees.
-    // Pin each vendor's version, and fail when a new vendor goes unlisted.
-    const root = join(process.cwd(), '..', '..');
-    const contract = await realpath(
-      join(root, '.agents/docs/autonomy-contract.md'),
-    );
-    const vendors = new Set<string>();
-    for (const skill of await readdir(join(root, '.agents/skills'))) {
-      const references = join(root, '.agents/skills', skill, 'references');
-      if (!existsSync(references)) continue;
-      const files = await readdir(references, {
-        recursive: true,
-        encoding: 'utf8',
-      });
-      for (const file of files.filter((name) => name.endsWith('.md'))) {
-        const target = await realpath(join(references, file)).catch(() => '');
-        if (target === contract) vendors.add(skill);
-      }
-    }
-    const expectedVersions = [
-      ['oat-project-autonomous', '1.0.18'],
-      ['oat-project-document', '1.8.7'],
-      ['oat-project-implement', '2.3.17'],
-      ['oat-project-lite', '1.1.7'],
-      ['oat-project-pr-final', '1.6.8'],
-      ['oat-project-quick-start', '2.3.18'],
-    ] as const;
-
-    expect([...vendors].sort()).toEqual(
-      expectedVersions.map(([skill]) => skill),
-    );
-    for (const [skill, version] of expectedVersions) {
-      expect(
-        readDeclaredVersion(
-          await readRawRepoFile(`.agents/skills/${skill}/SKILL.md`),
-        ),
-        skill,
-      ).toBe(version);
-    }
-  });
-
   it('reports both lifecycle gate records in next and progress without routing on them', async () => {
     const quickStart = await readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -6235,7 +6377,7 @@ describe('validateOatSkills', () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(readDeclaredVersion(progress)).toBe('1.4.4');
+    expect(readDeclaredVersion(progress)).toBe('1.4.5');
 
     const modeSections = [
       [
@@ -6448,11 +6590,11 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.35'],
-      ['oat-project-plan', '1.4.16'],
-      ['oat-project-quick-start', '2.3.18'],
-      ['oat-project-import-plan', '1.4.19'],
-      ['oat-project-lite', '1.1.7'],
-      ['oat-project-review-provide', '1.5.12'],
+      ['oat-project-plan', '1.4.17'],
+      ['oat-project-quick-start', '2.3.19'],
+      ['oat-project-import-plan', '1.4.20'],
+      ['oat-project-lite', '1.1.8'],
+      ['oat-project-review-provide', '1.5.13'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6521,9 +6663,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.17'],
-      ['oat-project-review-provide', '1.5.12'],
-      ['oat-project-review-provide-remote', '1.1.9'],
+      ['oat-project-implement', '2.3.18'],
+      ['oat-project-review-provide', '1.5.13'],
+      ['oat-project-review-provide-remote', '1.1.10'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -6668,8 +6810,8 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.6'],
-      ['.agents/agents/oat-reviewer.md', '1.2.10'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.7'],
+      ['.agents/agents/oat-reviewer.md', '1.2.11'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.2'],
     ] as const;
 
@@ -7499,7 +7641,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(readDeclaredVersion(content)).toBe('2.3.18');
+    expect(readDeclaredVersion(content)).toBe('2.3.19');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -7552,7 +7694,7 @@ describe('validateOatSkills', () => {
     expect(
       readDeclaredVersion(skillContent),
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toBe('2.3.7');
+    ).toBe('2.3.8');
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -8220,7 +8362,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(readDeclaredVersion(content)).toBe('1.4.19');
+    expect(readDeclaredVersion(content)).toBe('1.4.20');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -8479,8 +8621,8 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(readDeclaredVersion(summary)).toBe('1.5.7');
-    expect(readDeclaredVersion(document)).toBe('1.8.7');
+    expect(readDeclaredVersion(summary)).toBe('1.5.8');
+    expect(readDeclaredVersion(document)).toBe('1.8.8');
   });
 
   it('routes lite projects through progress and next', async () => {
@@ -8694,8 +8836,8 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(true, false)).toBe('BLOCKED');
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
-    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.17');
-    expect(readDeclaredVersion(implementer)).toBe('1.1.6');
+    expect(readDeclaredVersion(implementWorkflow)).toBe('2.3.18');
+    expect(readDeclaredVersion(implementer)).toBe('1.1.7');
   });
 
   it('keeps lite review and PR prerequisites reduced but explicit', async () => {
@@ -9839,6 +9981,7 @@ describe('skill version resolution across both validators', () => {
     expect(args).toContain('--diff-filter=ACMR');
     expect(args).toContain('.agents/skills');
     expect(args).toContain('.agents/agents/*.md');
+    expect(args).toContain('.agents/docs');
   }
 
   function changedSkillGit(skillName: string, baseContent: string) {
@@ -9915,6 +10058,159 @@ describe('skill version resolution across both validators', () => {
       },
     };
   }
+
+  it('requires every shared-doc symlink vendor to bump through real Git diffs', async () => {
+    const root = await createRoot();
+    const git = (args: string[]) =>
+      execFileAsync('git', args, {
+        cwd: root,
+        env: { ...process.env, GIT_CONFIG_NOSYSTEM: '1' },
+      });
+    await git(['init', '-q']);
+    await git(['config', 'user.email', 'fixture@example.invalid']);
+    await git(['config', 'user.name', 'Fixture']);
+    const doc = '.agents/docs/vendor/shared café\tcontract.md';
+    await mkdir(join(root, '.agents/docs/vendor'), { recursive: true });
+    await writeFile(join(root, doc), '# Shared contract\n');
+    for (const name of [
+      'oat-direct',
+      'oat-directory',
+      'oat-chained',
+      'oat-aliased',
+      'oat-tests-only',
+    ]) {
+      await createSkillFile(
+        root,
+        name,
+        skillContent(name, ['metadata:', '  version: 1.2.3']),
+      );
+      await mkdir(join(root, '.agents/skills', name, 'references'), {
+        recursive: true,
+      });
+    }
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-direct/references/gate-inventory.md'),
+    );
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-direct/references/duplicate.md'),
+    );
+    await symlink(
+      '../../../docs/vendor',
+      join(root, '.agents/skills/oat-directory/references/docs'),
+    );
+    await symlink(
+      '../../oat-directory/references/docs',
+      join(root, '.agents/skills/oat-chained/references/docs'),
+    );
+    await symlink(
+      'vendor/shared café\tcontract.md',
+      join(root, '.agents/docs/alias.md'),
+    );
+    await symlink(
+      '../../../docs/alias.md',
+      join(root, '.agents/skills/oat-aliased/references/docs.md'),
+    );
+    await mkdir(join(root, '.agents/skills/oat-tests-only/tests'));
+    await symlink(
+      '../../../docs/vendor/shared café\tcontract.md',
+      join(root, '.agents/skills/oat-tests-only/tests/contract.md'),
+    );
+    // Missing, cyclic and escaping links must not hang traversal or fabricate owners.
+    await symlink(
+      'missing.md',
+      join(root, '.agents/skills/oat-direct/references/missing.md'),
+    );
+    await symlink(
+      '.',
+      join(root, '.agents/skills/oat-direct/references/cycle'),
+    );
+    await symlink(
+      tmpdir(),
+      join(root, '.agents/skills/oat-direct/references/outside'),
+    );
+    await git(['add', '.']);
+    await git(['-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'Base']);
+    const { stdout: base } = await git(['rev-parse', 'HEAD']);
+    const check = () =>
+      validateChangedSkillVersionBumps(root, { baseRef: base.trim() });
+    await writeFile(join(root, doc), '# Changed contract\n');
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Shared change',
+    ]);
+    const unbumped = await check();
+    expect(unbumped.validatedSkillCount).toBe(4);
+    expect(unbumped.findings.map((finding) => finding.file).sort()).toEqual([
+      join(root, '.agents/skills/oat-aliased/SKILL.md'),
+      join(root, '.agents/skills/oat-chained/SKILL.md'),
+      join(root, '.agents/skills/oat-direct/SKILL.md'),
+      join(root, '.agents/skills/oat-directory/SKILL.md'),
+    ]);
+    expect(
+      unbumped.findings.every((finding) => finding.message.includes(doc)),
+    ).toBe(true);
+    await createSkillFile(
+      root,
+      'oat-direct',
+      skillContent('oat-direct', ['metadata:', '  version: 1.2.4']),
+    );
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'First bump',
+    ]);
+    expect(
+      (await check()).findings.map((finding) => finding.file).sort(),
+    ).toEqual([
+      join(root, '.agents/skills/oat-aliased/SKILL.md'),
+      join(root, '.agents/skills/oat-chained/SKILL.md'),
+      join(root, '.agents/skills/oat-directory/SKILL.md'),
+    ]);
+    for (const name of ['oat-directory', 'oat-chained', 'oat-aliased']) {
+      await createSkillFile(
+        root,
+        name,
+        skillContent(name, ['metadata:', '  version: 1.2.4']),
+      );
+    }
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Second bump',
+    ]);
+    expect((await check()).findings).toEqual([]);
+    const { stdout: bumped } = await git(['rev-parse', 'HEAD']);
+    await writeFile(
+      join(root, '.agents/docs/unvendored.md'),
+      '# No consumer\n',
+    );
+    await git(['add', '.']);
+    await git([
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '-qm',
+      'Unvendored doc',
+    ]);
+    expect(
+      await validateChangedSkillVersionBumps(root, { baseRef: bumped.trim() }),
+    ).toEqual({
+      validatedSkillCount: 0,
+      findings: [],
+    });
+  });
 
   it('accepts a metadata-only skill with no alias warning', async () => {
     const root = await createRoot();

@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/cli",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "private": false,
   "description": "Open Agent Toolkit CLI",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/cli",
@@ -46,6 +46,7 @@
     "@open-agent-toolkit/control-plane": "workspace:*",
     "chalk": "^5.6.2",
     "commander": "^12.1.0",
+    "entities": "6.0.1",
     "jsonc-parser": "3.2.1",
     "ora": "^9.0.0",
     "yaml": "2.8.2",

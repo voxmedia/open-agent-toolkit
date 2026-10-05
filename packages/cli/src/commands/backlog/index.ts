@@ -331,6 +331,11 @@ export function createBacklogCommand(
           for (const path of result.rewrittenReferences) {
             context.logger.info(`Rewrote references in ${path}`);
           }
+          for (const path of result.affectedPaths) {
+            context.logger.info(
+              `Affected path (caller-owned staging): ${path}`,
+            );
+          }
         }
         process.exitCode = 0;
       } catch (error) {

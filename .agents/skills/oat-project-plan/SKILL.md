@@ -6,12 +6,16 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.16
+  version: 1.4.17
 ---
 
 # Planning Phase
 
 Transform detailed design into an executable implementation plan with bite-sized tasks.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Prerequisites
 
@@ -301,6 +305,10 @@ For each phase, create bite-sized tasks.
 - Create: `{path/to/new.ts}`
 - Modify: `{path/to/existing.ts}`
 
+Before the first edit, initialize `TASK_OWNED_FILES=()` and append each exact
+created, modified or removed file at its producer, including both rename sides.
+Retain the task list and its unique task identity for commit/retry.
+
 **Step 1: Write test (RED)**
 {Test code or test case description}
 
@@ -317,8 +325,8 @@ Expected: {output}
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p{NN}-t{NN}): {description}"
+OWNED_COMMIT_PATHS=("${TASK_OWNED_FILES[@]}")
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-plan:p{NN}-t{NN}" --message "feat(p{NN}-t{NN}): {description}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 ```
 ````
 
@@ -740,8 +748,8 @@ Total: {N} tasks
 Ready for implementation" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/plan.md" "$PROJECT_PATH/state.md")
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git commit -m "docs: complete implementation plan for {project-name}
+  OWNED_COMMIT_PATHS=("${PROJECT_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-plan:2" --message "docs: complete implementation plan for {project-name}
 
 Phases:
 - Phase 1: {description} ({N} tasks)
@@ -749,7 +757,7 @@ Phases:
 
 Total: {N} tasks
 
-Ready for implementation"
+Ready for implementation" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

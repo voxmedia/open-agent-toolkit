@@ -40,6 +40,9 @@ const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules']);
 export interface RewriteInboundReferencesResult {
   /** Files whose content was rewritten, relative to the repository root. */
   rewritten: string[];
+  /** Normalized absolute reference paths associated with this item, including
+   * links already repaired by an interrupted prior archive pass. */
+  affectedPaths: string[];
   /** One warning per reference that names the item but cannot be resolved. */
   warnings: string[];
 }
@@ -52,6 +55,8 @@ export interface RewriteInboundReferencesOptions {
    * because its links were rebased (or written) against `archived/` already.
    */
   rebaseMovedItem?: boolean;
+  /** True only when the archive caller proved an uncommitted old/new move in HEAD. */
+  recoverPendingArchive?: boolean;
 }
 
 interface ScanLayout {
@@ -287,6 +292,7 @@ interface RewriteContext {
   /** Directory the file lives in after the archive move. */
   currentDirectory: string;
   warnings: string[];
+  affectedReference: boolean;
 }
 
 /**
@@ -303,7 +309,12 @@ function rewriteItemToken(
   if (isRelativeTarget(token)) {
     const fromFile = resolve(context.baseDirectory, token);
     if (fromFile === itemsPath) {
+      context.affectedReference = true;
       return relativeFrom(context.currentDirectory, archivedPath, token);
+    }
+    if (fromFile === archivedPath) {
+      context.affectedReference = true;
+      return null;
     }
     // A token that already resolves to a different, existing file is a
     // working link: never repoint it through a fallback base.
@@ -311,7 +322,12 @@ function rewriteItemToken(
       return null;
     }
     for (const base of [layout.repoRoot, layout.scanRoot]) {
+      if (base !== null && resolve(base, token) === archivedPath) {
+        context.affectedReference = true;
+        return null;
+      }
       if (base !== null && resolve(base, token) === itemsPath) {
+        context.affectedReference = true;
         return toPosix(relative(base, archivedPath));
       }
     }
@@ -654,6 +670,7 @@ export async function rewriteInboundReferences(
   const absoluteArchivedPath = resolve(archivedPath);
   const displayRoot = layout.repoRoot ?? layout.scanRoot;
   const rewritten: string[] = [];
+  const affectedPaths: string[] = [];
   const warnings: string[] = [];
 
   // The moved item goes first, so a failure on a later file never leaves its
@@ -676,13 +693,44 @@ export async function rewriteInboundReferences(
       baseDirectory: moved ? dirname(absoluteItemsPath) : dirname(absoluteFile),
       currentDirectory: dirname(absoluteFile),
       warnings,
+      affectedReference: false,
     };
     const next = rewriteContent(content, context, moved);
     if (next !== content) {
       await replaceAtomically(absoluteFile, next, identity);
       rewritten.push(context.fileName);
     }
+    if (next !== content) {
+      affectedPaths.push(absoluteFile);
+    } else if (options.recoverPendingArchive && context.affectedReference) {
+      // Existing archived links are not ownership evidence. Recover a prior
+      // repaired reference only when HEAD's same grammar still names the old
+      // item and this pending move has not yet been committed.
+      try {
+        const { stdout: headContent } = await execFileAsync(
+          'git',
+          [
+            'show',
+            `HEAD:./${toPosix(relative(layout.scanRoot, absoluteFile))}`,
+          ],
+          { cwd: layout.scanRoot },
+        );
+        const historicalContext = {
+          ...context,
+          baseDirectory: dirname(absoluteFile),
+          warnings: [],
+          affectedReference: false,
+        };
+        if (
+          rewriteContent(headContent, historicalContext, false) !== headContent
+        ) {
+          affectedPaths.push(absoluteFile);
+        }
+      } catch {
+        // Without historical file bytes there is no proof of prior ownership.
+      }
+    }
   }
 
-  return { rewritten, warnings };
+  return { rewritten, affectedPaths, warnings };
 }

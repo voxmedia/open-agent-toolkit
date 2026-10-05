@@ -10,11 +10,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { createProgram } from '@app/create-program';
 import { initializeDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { createPjmCommand } from './index';
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
 
 // Repo-root `.oat/templates/` directory. The synthetic `seedTemplate` fixtures
@@ -96,6 +98,76 @@ describe('initializeRepoReference', () => {
     );
     tempDirs.length = 0;
   });
+
+  it.each([false, true])(
+    'preserves serialized unowned PJM settings through the real init command (adopted=%s)',
+    async (adopted) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-pjm-preserve-'));
+      tempDirs.push(root);
+      const assetsRoot = join(root, 'assets');
+      const repoRoot = join(root, '.oat', 'repo');
+      await mkdir(join(root, '.git'), { recursive: true });
+      await seedTemplates(join(assetsRoot, 'templates'));
+      await mkdir(join(root, '.oat'), { recursive: true });
+      if (adopted)
+        await initializeRepoReference({ assetsRoot, repoRoot, home: root });
+
+      const remote = {
+        schemaVersion: 1,
+        storage: { state: 'shared' },
+        policy: {
+          description: 'managed-section',
+          authority: {
+            default: 'user-approved',
+            operations: { 'update-fields': 'read-only' },
+          },
+          providers: {
+            github: {
+              description: 'none',
+              authority: { default: 'user-authorized' },
+            },
+          },
+        },
+      };
+      const unowned = {
+        remote,
+        futureSetting: { values: ['literal', 7, false] },
+      };
+      const configPath = join(root, '.oat', 'config.json');
+      // Raw on-disk input is the oracle: normalized config readers cannot assert
+      // preservation of fields they do not recognize.
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          pjm: { initialized: adopted, schemaVersion: 9, ...unowned },
+        }),
+        'utf8',
+      );
+      const before = JSON.stringify(unowned);
+      const program = createProgram();
+      program.addCommand(
+        createPjmCommand({ resolveAssetsRoot: async () => assetsRoot }),
+      );
+      const previousExitCode = process.exitCode;
+      try {
+        await program.parseAsync(['--cwd', root, '--json', 'pjm', 'init'], {
+          from: 'user',
+        });
+        expect(process.exitCode ?? 0).toBe(0);
+      } finally {
+        process.exitCode = previousExitCode;
+      }
+      const persisted = JSON.parse(await readFile(configPath, 'utf8'));
+      const { initialized, schemaVersion, ...after } = persisted.pjm;
+      expect(initialized).toBe(true);
+      expect(schemaVersion).toBe(1);
+      expect(JSON.stringify(after)).toBe(before);
+      const adoptedBytes = await readFile(configPath, 'utf8');
+      await initializeRepoReference({ assetsRoot, repoRoot, home: root });
+      expect(await readFile(configPath, 'utf8')).toBe(adoptedBytes);
+    },
+  );
 
   it('creates the canonical two-layer PJM scaffold for a fresh root', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
@@ -473,7 +545,11 @@ describe('pjm instruction template source content', () => {
     expect(content).toContain('never invent variants like `done`');
     // The handoffs section references the convention doc and its deletion rule.
     expect(content).toContain('handoffs/<BL-id>.md');
-    expect(content).toContain('git rm');
+    expect(content).toContain('deletion of the handoff file');
+    expect(content).toContain(
+      'filesystem removal, included as an owned tracked deletion',
+    );
+    expect(content).toContain('the same exact-path commit) in that same PR');
   });
 
   it('defers the close-out workflow to ../pjm/AGENTS.md in reference-agents.md', async () => {

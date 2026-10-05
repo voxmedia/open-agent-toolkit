@@ -185,9 +185,10 @@ root reviewer and a Codex `codex-6-sol-xhigh` gate on every phase:
 
 - **project-recap:** built at closeout (unattended, host-rung visual QA); the
   run ID, outcome, and QA verdict are recorded in the recap's own
-  `manifest.json` and `qa/result.json` (this section names no run, so the
+  `manifest.json` and `qa/result.json` retained in the archived project
+  (this section names no run, so the
   recap's inputs stay unchanged after it is built).
-- Recap export: [`.oat/repo/reference/project-recaps/20261001-backlog-wave-3/site/index.html`](../project-recaps/20261001-backlog-wave-3/site/index.html)
+- Recap export: [`.oat/repo/reference/project-recaps/20261001-backlog-wave-3.html`](../project-recaps/20261001-backlog-wave-3.html)
 
 ## Follow-up Items
 

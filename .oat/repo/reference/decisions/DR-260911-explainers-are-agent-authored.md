@@ -20,3 +20,15 @@ Use one agent-authored generation flow: bundle approved inputs into a fact base 
 ## Consequences
 
 The host agent owns prose and page composition while the core owns evidence preparation, safety, traceability, browser-ladder verification, and immutable recording. Lifecycle skills share one Generate vocabulary and may archive built-needs-review with its human-review signal intact. Existing superseded records remain unchanged as history. Removed provider, publication, and durability contracts are not compatibility surfaces.
+
+## Amendment: Completion export (2026-10-04)
+
+Completion verifies the selected run's immutable hashes and complete inventory
+before exporting one self-contained tracked HTML page. The archive JSON report
+identifies the run, original page and hash, exported hash, and verified artifact
+count. Summary and PR references point to that page. The full original run,
+manifest, source, and QA evidence remain byte-for-byte in the archived project;
+no tracked sidecar is required. Matching retries adopt the same page, while a
+conflicting destination fails without overwrite. Existing legacy packages and
+receipts remain readable. This amendment changes the completion export, while
+preserving the original agent-authored generation decision and its history.

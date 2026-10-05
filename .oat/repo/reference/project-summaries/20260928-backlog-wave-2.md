@@ -250,8 +250,8 @@ Revision 1 changed the shim design after the PR opened.
 ## Explainer Outcome
 
 - **project-recap:** built, rebuilt after Revision 1 at completion. Tracked
-  export: `.oat/repo/reference/project-recaps/20260928-backlog-wave-2/` (page `site/index.html`; run ID, outcome, and QA verdict in
-  its `manifest.json` and `qa/result.json`).
+  export: [View the recap](../project-recaps/20260928-backlog-wave-2.html). Full original
+  source, run metadata, and QA evidence are retained in the archived project.
 
 ## Follow-up Items
 

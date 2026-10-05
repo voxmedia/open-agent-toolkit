@@ -51,6 +51,11 @@ function formatProjectStatusLines(project: ProjectState): string[] {
     `Phase: ${project.phase} (${project.phaseStatus})`,
     `Progress: ${project.progress.completed}/${project.progress.total}`,
     `Current task: ${project.progress.currentTaskId ?? 'none'}`,
+    ...project.blockers.map((blocker) =>
+      typeof blocker === 'string'
+        ? `Blocker: ${blocker}`
+        : `Blocker: ${blocker.task_id}: ${blocker.reason} (since ${blocker.since})`,
+    ),
     `Recommendation: ${project.recommendation.skill}`,
     `Reason: ${project.recommendation.reason}`,
   ];

@@ -238,7 +238,9 @@ the bundle strips — requires bumping that skill's `metadata.version` in the
 same PR, one bump per changed skill in the final PR diff, even if the skill was
 edited multiple times on the branch. A change to a skill's `scripts/` or
 `references/` therefore needs the bump just as an edit to `SKILL.md` does: both
-ship to every `oat tools install` consumer. Changing a canonical agent role
+ship to every `oat tools install` consumer. Changes under `.agents/docs/`
+also require a bump for every skill that vendors the changed document through
+a file or directory symlink, because bundling follows those links. Changing a canonical agent role
 under `.agents/agents/*.md` requires bumping that file's top-level `version:`;
 agent roles deliberately keep the top-level field, so the gate accepts either
 declaration shape and never demands `metadata.version` of them. The gate reads

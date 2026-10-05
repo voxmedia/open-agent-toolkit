@@ -356,7 +356,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.10');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.11');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -1039,7 +1039,7 @@ printf 'artifact-read\\n'`,
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.5.3');
+    expect(readDeclaredVersion(content)).toBe('1.5.4');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);
@@ -1411,7 +1411,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.14');
+    expect(readDeclaredVersion(content)).toBe('1.7.15');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -2141,7 +2141,7 @@ printf 'artifact-read\\n'`,
     );
 
     expect(step10).toMatch(
-      /git commit --only "\$SYNCED_RECORD_PATH"[\s\S]*?&&\s+LIFECYCLE_COMMIT=\$\(git rev-parse HEAD\) &&\s+node "\$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT"[\s\S]*?\|\| exit 1/,
+      /oat internal commit-paths --identity [^\n]+-- "\$SYNCED_RECORD_PATH" \|\| exit 1\n\s+LIFECYCLE_COMMIT=\$\(git log -1 --format=%H -- "\$SYNCED_RECORD_PATH"\) \|\| exit 1\n\s+node "\$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT"[\s\S]*?\|\| exit 1/,
     );
     expect(step10).toMatch(
       /ancestor[\s\S]*?changes exactly `SYNCED_RECORD_PATH`[\s\S]*?byte-identical complete record/,
@@ -3558,7 +3558,9 @@ printf 'artifact-read\\n'`,
     expect(dirtySection).toContain(
       'FOLD_BACK_COMMIT_SHA=$(parse_synced_push_receipt "$MIXED_FOLD_BACK_PUSH")',
     );
-    expect(dirtySection.match(/git commit --only/g)).toHaveLength(3);
+    expect(
+      dirtySection.match(/oat internal commit-paths --identity/g),
+    ).toHaveLength(3);
     expect(dirtySection).toContain(
       'A synced dirty branch never runs parent\n  `git add` for the project artifact.',
     );
@@ -3649,7 +3651,10 @@ printf '%s\\n' "$EVENTS"`;
       'PARENT_COMMIT_MESSAGE="docs: promote summary decisions for {project-name}"',
     );
     expect(commitStep).toContain(
-      'git commit --only -m "$PARENT_COMMIT_MESSAGE" -- "${PARENT_OUTPUT_PATHS[@]}"',
+      'OWNED_COMMIT_PATHS=("${PARENT_OUTPUT_PATHS[@]}")',
+    );
+    expect(commitStep).toMatch(
+      /oat internal commit-paths --identity [^\n]+--message "\$PARENT_COMMIT_MESSAGE" -- "\$\{OWNED_COMMIT_PATHS\[@\]\}" \|\| exit 1/,
     );
     expect(commitStep).toContain(
       'PARENT_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$PARENT_DURABILITY_COMMIT")',
@@ -3684,7 +3689,10 @@ printf '%s\\n' "$EVENTS"`;
       'UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)',
     );
     expect(transaction).toContain(
-      'git commit --only -m "chore(oat): apply retro target $RP_ID" -- "${RETRO_TARGET_PATHS[@]}"',
+      'OWNED_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}")',
+    );
+    expect(transaction).toMatch(
+      /oat internal commit-paths --identity [^\n]+--message "chore\(oat\): apply retro target \$RP_ID" -- "\$\{OWNED_COMMIT_PATHS\[@\]\}" \|\| exit 1/,
     );
     expect(transaction).toContain(
       'RETRO_TARGET_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$RETRO_TARGET_COMMIT")',

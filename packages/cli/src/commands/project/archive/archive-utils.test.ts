@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import fsPromises from 'node:fs/promises';
 import {
   access,
   cp,
@@ -7,13 +8,16 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
 } from 'node:fs/promises';
+import { syncBuiltinESMExports } from 'node:module';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runInNewContext } from 'node:vm';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
 import { defaultGitRunner } from '@commands/project/sync/git';
@@ -128,6 +132,1050 @@ describe('archive utils', () => {
       immutableCount: Object.keys(manifest.immutableHashes).length,
     };
   }
+
+  // Captured declarations: 1c58b4f88d202a5138a6aa0fc32d54fff31de5a7,
+  // .oat/repo/reference/project-recaps/20260721-explainer-kit/{manifest,build-record}.json.
+  // Original source SHA-256 (fixture JSON is formatter-normalized without value changes): manifest e130e415435062ea59c359fd1eab52bbcbd75058adfbaa71437b942152668f3f;
+  // build record 01ae605954dc54e1c7dc0600c410c6c022220cfbf9b967f79636af183ba93cb7.
+  // Payloads below are small controlled derivatives, not captured original evidence.
+  async function createLegacyRecap(
+    projectPath: string,
+    page: string,
+  ): Promise<string> {
+    const run = 'explainers/legacy-run';
+    const root = join(projectPath, run);
+    const fixture = fileURLToPath(
+      new URL('./fixtures/legacy-package-contract/', import.meta.url),
+    );
+    const manifest = JSON.parse(
+      await readFile(join(fixture, 'manifest.json'), 'utf8'),
+    );
+    for (const path of Object.keys(manifest.immutableHashes)) {
+      const bytes =
+        path === manifest.artifacts[0].renderedPath
+          ? page
+          : [manifest.source.factBasePath, manifest.theme.path].includes(path)
+            ? `${JSON.stringify({ fixture: path }, null, 2)}\n`
+            : `controlled ${path}\n`;
+      await mkdir(dirname(join(root, path)), { recursive: true });
+      await writeFile(join(root, path), bytes);
+      manifest.immutableHashes[path] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    }
+    manifest.source.factBaseHash = `sha256:${createHash('sha256')
+      .update(JSON.stringify({ fixture: manifest.source.factBasePath }))
+      .digest('hex')}`;
+    manifest.theme.hash = `sha256:${createHash('sha256')
+      .update(JSON.stringify({ fixture: manifest.theme.path }))
+      .digest('hex')}`;
+    expect(manifest.source.factBaseHash).not.toBe(
+      manifest.immutableHashes[manifest.source.factBasePath],
+    );
+    expect(manifest.theme.hash).not.toBe(
+      manifest.immutableHashes[manifest.theme.path],
+    );
+    manifest.artifacts[0].hash =
+      manifest.immutableHashes[manifest.artifacts[0].renderedPath];
+    await copyFile(
+      join(fixture, 'build-record.json'),
+      join(root, 'build-record.json'),
+    );
+    await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
+    return run;
+  }
+
+  it('exports exactly one HTML with identity while preserving the full captured v2 archive', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const source = await readFile(join(recap.runRoot, 'site/index.html'));
+    const originalFiles = await readdir(recap.runRoot);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const report = result.projectRecapExport!;
+    expect(await readdir(dirname(report.exportRoot))).toEqual([
+      '20260401-demo.html',
+    ]);
+    expect(report).not.toHaveProperty('manifest');
+    expect(report.runId).toBe('run-p01-t06-fixture');
+    expect(report.page.originalSha256).toBe(
+      `sha256:${createHash('sha256').update(source).digest('hex')}`,
+    );
+    const archivedRun = join(result.archivePath, recap.relativeRunPath);
+    expect(await readdir(archivedRun)).toEqual(originalFiles);
+    expect(await readFile(join(archivedRun, 'site/index.html'))).toEqual(
+      source,
+    );
+    await cp(result.archivePath, projectPath, { recursive: true });
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(retried.projectRecapExport).toEqual({
+      ...report,
+    });
+    expect(await readdir(dirname(report.exportRoot))).toEqual([
+      '20260401-demo.html',
+    ]);
+  });
+
+  it.each(['qa/result.json', 'source/fact-base.json'])(
+    'rejects tampered %s despite page-only export',
+    async (file) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const recap = await createRecapPackage(projectPath);
+      await writeFile(join(recap.runRoot, file), 'tampered evidence');
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/hash verification/);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it.each(['double quoted', 'single quoted', 'unquoted'] as const)(
+    'uses the real legacy renderedPath and repairs %s destination links and fragments',
+    async (syntax) => {
+      const attribute = (value: string) =>
+        syntax === 'double quoted'
+          ? `"${value}"`
+          : syntax === 'single quoted'
+            ? `'${value}'`
+            : value;
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
+      const decision = join(
+        repoRoot,
+        '.oat/repo/reference/decisions/DR-test.md',
+      );
+      await mkdir(dirname(decision), { recursive: true });
+      await writeFile(decision, '# Decision\n');
+      const page = `<html><head><link rel="stylesheet" href="style.css"></head><body id="valid"><a href=${attribute('#valid')}>pivot</a><a href=${attribute('#missing')}>bad pivot</a><a href=${attribute('index.html#missing')}>bad self pivot</a><a href=${attribute('../../../../../summary.md#summary')}>Summary</a><a href=${attribute('../../../../../../../../repo/reference/decisions/DR-test.md#decision')}>Decision</a><a href=${attribute('../../../../../plan.md')}>Source</a><a href=${attribute('https://github.com/voxmedia/open-agent-toolkit/pull/1')}>PR</a><img src="asset.svg"><script src="local.js"></script></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifest = JSON.parse(
+        await readFile(join(root, 'manifest.json'), 'utf8'),
+      );
+      const parent = dirname(manifest.artifacts[0].renderedPath);
+      for (const [name, bytes] of Object.entries({
+        'style.css': '.hero{background:url(asset.svg)}',
+        'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'local.js': 'document.body.dataset.ready="yes";',
+      })) {
+        const file = `${parent}/${name}`;
+        await writeFile(join(root, file), bytes);
+        manifest.immutableHashes[file] =
+          `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      }
+      await writeFile(join(root, 'manifest.json'), JSON.stringify(manifest));
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          summaryExportPath: '.oat/repo/reference/project-summaries',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain(`href=${attribute('#valid')}`);
+      expect(exported).not.toContain('#missing');
+      expect(exported).toContain(
+        '../project-summaries/20260401-demo.md#summary',
+      );
+      expect(exported).toContain('../decisions/DR-test.md#decision');
+      expect(exported).not.toContain('plan.md');
+      expect(exported).toContain(
+        'https://github.com/voxmedia/open-agent-toolkit/pull/1',
+      );
+      expect(exported).toContain('data:image/svg+xml;base64,');
+      expect(exported).toContain('document.body.dataset.ready="yes";');
+      expect(exported).not.toMatch(
+        /(?:src|href)="(?:asset.svg|style.css|local.js)"/,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it.each(['id', 'name'] as const)(
+    'preserves decoded same-page and same-file fragments matching real %s attributes',
+    async (attribute) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      const page = `<html><body><a data-probe="page" href="#a&#38;b">page</a><a data-probe="file" href="index.html#a&amp;b">file</a><a ${attribute}="a&amp;b"></a><a href="#plain">plain</a><a href="index.html#plain">plain file</a><div id="plain"></div><a data-probe="absent" href="#absent">absent</a><a data-probe="absent-file" href="index.html#absent">absent file</a></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const manifest = JSON.parse(
+        await readFile(join(projectPath, run, 'manifest.json'), 'utf8'),
+      );
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      });
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain('<a data-probe="page" href="#a&#38;b">');
+      expect(exported).toContain('<a data-probe="file" href="#a&amp;b">');
+      expect(exported).toContain('<a href="#plain">');
+      expect(exported).not.toContain('index.html#plain');
+      expect(exported).toContain('<a data-probe="absent">');
+      expect(exported).toContain('<a data-probe="absent-file">');
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('ignores fragment targets described only in raw text, comments, or attribute values', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    const opaque = `<script>const markup='<i id="script-only">';</script><style>i{--markup:'<i name="style-only">';}</style><!-- <i id="comment-only"> --><div title='id="attribute-only"'></div>`;
+    const ghosts = [
+      'script-only',
+      'style-only',
+      'comment-only',
+      'attribute-only',
+    ];
+    const links = ghosts
+      .map(
+        (ghost) =>
+          `<a data-probe="${ghost}" href="#${ghost}">page</a><a data-probe="${ghost}-file" href="index.html#${ghost}">file</a>`,
+      )
+      .join('');
+    const page = `<html><body>${links}${opaque}</body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const result = await archiveProjectOnCompletion({
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: run,
+      s3SyncOnComplete: false,
+    });
+    const exported = await readFile(
+      result.projectRecapExport!.exportRoot,
+      'utf8',
+    );
+    for (const ghost of ghosts) {
+      expect(exported).toContain(`<a data-probe="${ghost}">`);
+      expect(exported).toContain(`<a data-probe="${ghost}-file">`);
+    }
+    expect(exported).toContain(opaque);
+  });
+
+  it.each([
+    ['script', `var i = s.indexOf('<!--'); const tag='<i id="ghost">';`],
+    ['style', `.marker{--text:'<!-- <i id="ghost">';}`],
+    ['textarea', 'literal <!-- <i id="ghost">'],
+  ])(
+    'resumes fragment scanning after %s raw text containing an overrunning comment opener',
+    async (element, body) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      const page = `<html><body><a data-probe="page" href="#later">go</a><a data-probe="file" href="index.html#later">self</a><a data-probe="ghost" href="#ghost">opaque</a><a data-probe="absent" href="#absent">absent</a><${element}>${body}</${element}><h2 id="later">Later</h2></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const manifest = JSON.parse(
+        await readFile(join(projectPath, run, 'manifest.json'), 'utf8'),
+      );
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      });
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain('<a data-probe="page" href="#later">');
+      expect(exported).toContain('<a data-probe="file" href="#later">');
+      expect(exported).toContain('<a data-probe="ghost">');
+      expect(exported).toContain('<a data-probe="absent">');
+      expect(exported).toContain(`<${element}>${body}</${element}>`);
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  // These pages/assets are controlled derivatives of the captured legacy declarations
+  // documented above, not original captured HTML. The real-package replay separately
+  // copies the authentic Wave4/July packages without changing the retained originals.
+  it.each([
+    ['unquoted image', '<img src=asset.svg>', 'data:image/svg+xml;base64,'],
+    [
+      'unquoted stylesheet',
+      '<link rel=stylesheet href=style.css>',
+      '<style>.hero',
+    ],
+    [
+      'unquoted script',
+      '<script src=local.js></script>',
+      'document.body.dataset.ready="yes";',
+    ],
+    ...[
+      ['query script', '<script src="local.js?v=1"></script>'],
+      ['fragment script', '<script src="local.js#v1"></script>'],
+      ['encoded script', '<script src="local%20script.js"></script>'],
+    ].map(([kind, tag]) => [kind, tag, 'document.body.dataset.ready="yes";']),
+    ...[
+      ['query stylesheet', '<link rel="stylesheet" href="style.css?v=1">'],
+      ['fragment stylesheet', '<link rel="stylesheet" href="style.css#v1">'],
+      [
+        'encoded stylesheet',
+        '<link rel="stylesheet" href="local%20style.css">',
+      ],
+    ].map(([kind, tag]) => [
+      kind,
+      tag,
+      '<style>.hero{background:url("data:image/svg+xml;base64,',
+    ]),
+  ])(
+    'embeds a required %s asset into the emitted flat page',
+    async (_kind, tag, expected) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const page = `<html><head>${tag}</head><body></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const parent = dirname(manifest.artifacts[0].renderedPath);
+      const assets = {
+        'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        'style.css': '.hero{background:url(asset.svg)}',
+        'local.js': 'document.body.dataset.ready="yes";',
+        'local script.js': 'document.body.dataset.ready="yes";',
+        'local style.css': '.hero{background:url(asset.svg)}',
+      };
+      for (const [name, bytes] of Object.entries(assets)) {
+        const file = `${parent}/${name}`;
+        await writeFile(join(root, file), bytes);
+        manifest.immutableHashes[file] =
+          `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      }
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain(expected);
+      expect(exported).not.toMatch(
+        /(?:src|href)=(?:asset.svg|style.css|local.js)/,
+      );
+      if (_kind!.includes('stylesheet'))
+        expect(exported).toContain('data:image/svg+xml;base64,');
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      for (const [name, bytes] of Object.entries(assets)) {
+        expect(
+          await readFile(join(result.archivePath, run, parent, name), 'utf8'),
+        ).toBe(bytes);
+      }
+    },
+  );
+
+  it.each(
+    ['inline', 'inlined'].flatMap((mode) =>
+      ['href', 'src', 'value'].map((name) => [mode, name]),
+    ),
+  )(
+    'preserves and executes %s script assignments named %s',
+    async (mode, name) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const script = `const ${name}=123; globalThis.recapValue=${name};`;
+      const page = `<html><body>${mode === 'inline' ? `<script>${script}</script>` : '<script src=local.js></script>'}</body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const scriptPath = `${dirname(manifest.artifacts[0].renderedPath)}/local.js`;
+      if (mode === 'inlined') {
+        await writeFile(join(root, scriptPath), script);
+        manifest.immutableHashes[scriptPath] =
+          `sha256:${createHash('sha256').update(script).digest('hex')}`;
+        await writeFile(manifestPath, JSON.stringify(manifest));
+      }
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const emitted = exported.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+      expect(emitted).toBe(script);
+      const context: { recapValue?: number } = {};
+      runInNewContext(emitted!, context);
+      expect(context.recapValue).toBe(123);
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      if (mode === 'inlined')
+        expect(
+          await readFile(join(result.archivePath, run, scriptPath), 'utf8'),
+        ).toBe(script);
+    },
+  );
+
+  it.each([
+    ['literal space', 'url("asset space.svg")', 'asset space.svg'],
+    ['single-quoted space', "url('asset space.svg')", 'asset space.svg'],
+    [
+      'hex-escaped space',
+      String.raw`url("asset\20 space.svg")`,
+      'asset space.svg',
+    ],
+    ['escaped quote', String.raw`url("asset\"quote.svg")`, 'asset"quote.svg'],
+  ])(
+    'embeds the verified bytes of a quoted CSS URL with %s',
+    async (_name, url, assetName) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      // Controlled derivative of the captured July legacy contract above.
+      const page = `<html><head><style>.hero{background:${url}}</style></head><body></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const file = `${dirname(manifest.artifacts[0].renderedPath)}/${assetName}`;
+      const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg"><title>quoted URL</title></svg>';
+      await writeFile(join(root, file), svg);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(svg).digest('hex')}`;
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      await verifySelectedProjectRecapForArchive(projectPath, run);
+
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+      expect(exported).toContain(
+        `<style>.hero{background:url("${dataUrl}")}</style>`,
+      );
+      expect(result.warnings).toEqual([]);
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('safely quotes external CSS URLs after decoding CSS escapes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page = String.raw`<html><head><style>.hero{background:url("https://example.com/asset\22 quote.svg")} .safe{background:url("https://example.com/\3c /style>\5c path\a end")}</style></head><body></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(
+      await readFile(result.projectRecapExport!.exportRoot, 'utf8'),
+    ).toContain(
+      String.raw`<style>.hero{background:url("https://example.com/asset\"quote.svg")} .safe{background:url("https://example.com/\3c /style>\\path\a end")}</style>`,
+    );
+  });
+
+  it.each([
+    ['named image', '<img src="asset&amp;.svg">', 'asset&.svg', 'svg'],
+    [
+      'numeric image with fragment',
+      '<img src="asset&#38;.svg#mark">',
+      'asset&.svg',
+      'svg',
+    ],
+    ['hex numeric image', '<img src="asset&#x26;.svg">', 'asset&.svg', 'svg'],
+    [
+      'full named image',
+      '<img src="asset&CounterClockwiseContourIntegral;.svg">',
+      'asset∳.svg',
+      'svg',
+    ],
+    [
+      'encoded style quotes',
+      '<div style="background:url(&quot;asset.svg&quot;)"></div>',
+      'asset.svg',
+      'style',
+    ],
+    [
+      'stylesheet reader',
+      '<link rel="stylesheet" href="style&amp;.css">',
+      'style&.css',
+      'css',
+    ],
+    [
+      'script reader',
+      '<script src="local&amp;.js"></script>',
+      'local&.js',
+      'script',
+    ],
+    [
+      'unterminated allowed reference',
+      '<img src="asset&amp.svg">',
+      'asset&.svg',
+      'svg',
+    ],
+    [
+      'suppressed before letter',
+      '<img src="asset&notit;.svg">',
+      'asset&notit;.svg',
+      'svg',
+    ],
+    [
+      'suppressed before equals',
+      '<img src="asset&amp=.svg">',
+      'asset&amp=.svg',
+      'svg',
+    ],
+  ])(
+    'decodes resource character references in the %s attribute context',
+    async (_name, markup, assetName, kind) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      // Small page/asset derivative of the captured July legacy contract above.
+      const external =
+        '<a href="https://example.com/?x=1&amp;y=2">external</a>';
+      const page = `<html><head></head><body>${markup}${external}</body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const file = `${dirname(manifest.artifacts[0].renderedPath)}/${assetName}`;
+      const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg"><title>attribute entity</title></svg>';
+      const bytes =
+        kind === 'css'
+          ? '.entity{color:red}'
+          : kind === 'script'
+            ? 'globalThis.entityReady=true;'
+            : svg;
+      await writeFile(join(root, file), bytes);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      await verifySelectedProjectRecapForArchive(projectPath, run);
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+      const expected =
+        kind === 'css'
+          ? '<style>.entity{color:red}</style>'
+          : kind === 'script'
+            ? '<script>globalThis.entityReady=true;</script>'
+            : kind === 'style'
+              ? `<div style="background:url(&quot;${dataUrl}&quot;)"></div>`
+              : `<img src="${dataUrl}">`;
+      expect(exported).toContain(expected);
+      expect(exported).toContain(external);
+      expect(result.warnings).toEqual([]);
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('re-escapes ampersands before the active quote in rewritten style attributes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page = `<html><head></head><body><div style='background:url(&quot;asset.svg&quot;);--literal:&quot;&amp;amp; &#39;&quot;;--external:url(&quot;https://example.com/a?x=1&amp;y=2&quot;)'></div></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const root = join(projectPath, run);
+    const manifestPath = join(root, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const file = `${dirname(manifest.artifacts[0].renderedPath)}/asset.svg`;
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    await writeFile(join(root, file), svg);
+    manifest.immutableHashes[file] =
+      `sha256:${createHash('sha256').update(svg).digest('hex')}`;
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    expect(
+      await readFile(result.projectRecapExport!.exportRoot, 'utf8'),
+    ).toContain(
+      `style='background:url("${dataUrl}");--literal:"&amp;amp; &#39;";--external:url("https://example.com/a?x=1&amp;y=2")'`,
+    );
+  });
+
+  it('preserves raw bodies and non-attribute text while embedding actual CSS resources', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const script = String.raw`const tag='<img src=missing.svg><link rel=stylesheet href=missing.css><script src=missing.js><\/script>'; const text='url(missing.svg)'; globalThis.recapValue=123; globalThis.entityText='&amp; &#38; &copy;';`;
+    const style = String.raw`.note::before{content:"&amp; &#38; &copy; href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg) url(\"missing space.svg\")"} /* <link rel=stylesheet href=missing.css> url(missing.svg) url("missing space.svg") */ .hero{background:url(asset.svg)} .literal{background:url(raw&amp;.svg)}`;
+    const text = '<p>href=missing.md src=missing.svg url(missing.svg)</p>';
+    const comment =
+      '<!-- <img src=missing.svg><script src=missing.js></script> url(missing.svg) -->';
+    const attribute = `<div title=' href=missing.md src=missing.svg url(missing.svg) <img src=missing.svg>' data-src=missing.svg></div>`;
+    const rawText =
+      '<textarea><img src=missing.svg> url(missing.svg)</textarea>';
+    const page = `<html><head><style>${style}</style><link rel=stylesheet href=style.css></head><body><script>${script}</script>${text}${comment}${attribute}${rawText}<div style='background:url(asset.svg)'></div></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const root = join(projectPath, run);
+    const manifestPath = join(root, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const parent = dirname(manifest.artifacts[0].renderedPath);
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    for (const [name, bytes] of Object.entries({
+      'asset.svg': svg,
+      'raw&amp;.svg': svg,
+      'style.css': style,
+    })) {
+      const file = `${parent}/${name}`;
+      await writeFile(join(root, file), bytes);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    }
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const exported = await readFile(
+      result.projectRecapExport!.exportRoot,
+      'utf8',
+    );
+    for (const preserved of [script, text, comment, attribute, rawText])
+      expect(exported).toContain(preserved);
+    const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    const embeddedStyle = style
+      .replace('background:url(asset.svg)', `background:url("${dataUrl}")`)
+      .replace('background:url(raw&amp;.svg)', `background:url("${dataUrl}")`);
+    expect(exported).toContain(`<style>${embeddedStyle}</style>`);
+    expect(exported.match(/<style>/g)).toHaveLength(2);
+    expect(exported).toContain(`style='background:url("${dataUrl}")'`);
+    const context: { recapValue?: number; entityText?: string } = {};
+    runInNewContext(
+      exported.match(/<script>([\s\S]*?)<\/script>/)![1]!,
+      context,
+    );
+    expect(context.recapValue).toBe(123);
+    expect(context.entityText).toBe('&amp; &#38; &copy;');
+    expect(
+      await readFile(
+        join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+        'utf8',
+      ),
+    ).toBe(page);
+    expect(
+      await readFile(
+        join(result.archivePath, run, parent, 'style.css'),
+        'utf8',
+      ),
+    ).toBe(style);
+  });
+
+  it.each([
+    ['quoted image', '<img src="../../../../../plan.md">'],
+    [
+      'CSS escaped traversal',
+      String.raw`<style>.hero{background:url("\2e \2e /../../../../plan.md")}</style>`,
+    ],
+    ['unquoted image', '<img src=../../../../../plan.md>'],
+    ['query script', '<script src="../../../../../plan.md?v=1"></script>'],
+    [
+      'encoded stylesheet',
+      '<link rel="stylesheet" href="..%2F..%2F..%2F..%2F..%2Fplan.md#v1">',
+    ],
+  ])(
+    'rejects an asset outside the verified package in a %s',
+    async (_kind, tag) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const page = `<html><body>${tag}</body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      await writeFile(join(projectPath, 'plan.md'), 'foreign project source');
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: run,
+            s3SyncOnComplete: false,
+          },
+          { timestamp: () => '2026-04-01T12:34:56Z' },
+        ),
+      ).rejects.toThrow(/asset escapes its verified package/);
+      expect(await readFile(join(projectPath, 'plan.md'), 'utf8')).toBe(
+        'foreign project source',
+      );
+      await expect(
+        access(
+          join(
+            repoRoot,
+            '.oat/repo/reference/project-recaps/20260401-demo.html',
+          ),
+        ),
+      ).rejects.toThrow();
+    },
+  );
+
+  it.each(['different bytes', 'same bytes'] as const)(
+    'preserves another writer replacement with %s during archive rollback',
+    async (replacement) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      const recap = await createRecapPackage(projectPath);
+      const page = join(
+        repoRoot,
+        '.oat/repo/reference/project-recaps/20260401-demo.html',
+      );
+      let replaced = '';
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: recap.relativeRunPath,
+            s3SyncOnComplete: false,
+          },
+          {
+            timestamp: () => '2026-04-01T12:34:56Z',
+            copyDirectory: async () => {
+              replaced =
+                replacement === 'same bytes'
+                  ? await readFile(page, 'utf8')
+                  : 'OTHER WRITER';
+              await rm(page);
+              await writeFile(page, replaced);
+              throw new Error('archive failure after replacement');
+            },
+          },
+        ),
+      ).rejects.toThrow('archive failure after replacement');
+      expect(await readFile(page, 'utf8')).toBe(replaced);
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it('preserves a public replacement while cleanup reads old claimed-file bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    const originalRead = fsPromises.readFile;
+    let fired = false;
+    // Real fs read and rename: keep old opened-file bytes while replacing the public path.
+    // This reproduces root-t01-rollback-race.ts on the original commit and protects
+    // the same interleaving when the old inode has first moved into a private claim.
+    fsPromises.readFile = (async (...args: Parameters<typeof originalRead>) => {
+      const bytes = await Reflect.apply(originalRead, fsPromises, args);
+      const readPath = String(args[0]);
+      if (
+        !fired &&
+        (readPath === page ||
+          (readPath.includes('.recap-cleanup-claim-') &&
+            basename(readPath) === basename(page)))
+      ) {
+        fired = true;
+        const replacement = `${page}.other-writer`;
+        await writeFile(replacement, 'FOREIGN REPLACEMENT LITERAL');
+        await rename(replacement, page);
+      }
+      return bytes;
+    }) as typeof originalRead;
+    syncBuiltinESMExports();
+    try {
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: recap.relativeRunPath,
+            s3SyncOnComplete: false,
+          },
+          {
+            timestamp: () => '2026-04-01T12:34:56Z',
+            copyDirectory: async () => {
+              throw new Error('injected archive-copy failure');
+            },
+          },
+        ),
+      ).rejects.toThrow('injected archive-copy failure');
+    } finally {
+      fsPromises.readFile = originalRead;
+      syncBuiltinESMExports();
+    }
+    expect(fired).toBe(true);
+    expect(await readFile(page, 'utf8')).toBe('FOREIGN REPLACEMENT LITERAL');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('retains foreign claimed bytes without overwriting a third public writer', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          timestamp: () => '2026-04-01T12:34:56Z',
+          copyDirectory: async () => {
+            const foreign = `${page}.foreign`;
+            await writeFile(foreign, 'FOREIGN CLAIMED BYTES');
+            await rename(foreign, page);
+            throw new Error('archive-copy failure');
+          },
+          renamePath: async (source, destination) => {
+            await rename(source, destination);
+            if (source === page) await writeFile(page, 'THIRD PUBLIC WRITER');
+          },
+        },
+      ),
+    ).rejects.toThrow(/preserved foreign content.*refusing to overwrite/);
+    expect(await readFile(page, 'utf8')).toBe('THIRD PUBLIC WRITER');
+    const claims = (await readdir(dirname(page))).filter((name) =>
+      name.startsWith('.recap-cleanup-claim-'),
+    );
+    expect(claims).toHaveLength(1);
+    expect(
+      await readFile(join(dirname(page), claims[0]!, basename(page)), 'utf8'),
+    ).toBe('FOREIGN CLAIMED BYTES');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('preserves a foreign temporary directory in its diagnostic claim and fails closed', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    let foreignRoot = '';
+    let replaced = false;
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          timestamp: () => '2026-04-01T12:34:56Z',
+          copySingleFile: async (source, destination) => {
+            if (!replaced) {
+              replaced = true;
+              foreignRoot = destination.slice(
+                0,
+                destination.indexOf('/', destination.indexOf('.tmp-')),
+              );
+              await rename(foreignRoot, `${foreignRoot}.owned-moved-away`);
+              await mkdir(foreignRoot);
+              await writeFile(
+                join(foreignRoot, 'foreign.txt'),
+                'FOREIGN TEMPORARY DIRECTORY',
+              );
+              throw new Error('staging failure after directory replacement');
+            }
+            await copyFile(source, destination);
+          },
+        },
+      ),
+    ).rejects.toThrow(
+      /preserved a foreign replacement.*no-clobber directory restoration/,
+    );
+    const parent = dirname(foreignRoot);
+    const claims = (await readdir(parent)).filter((name) =>
+      name.startsWith('.recap-cleanup-claim-'),
+    );
+    expect(claims).toHaveLength(1);
+    expect(
+      await readFile(
+        join(parent, claims[0]!, basename(foreignRoot), 'foreign.txt'),
+        'utf8',
+      ),
+    ).toBe('FOREIGN TEMPORARY DIRECTORY');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('refuses a different existing flat page without changing its bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const recap = await createRecapPackage(projectPath);
+    const page = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    await mkdir(dirname(page), { recursive: true });
+    await writeFile(page, 'existing different page');
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/does not match/);
+    expect(await readFile(page, 'utf8')).toBe('existing different page');
+  });
 
   it('builds a repo-scoped remote archive URI', () => {
     expect(
@@ -583,7 +1631,7 @@ describe('archive utils', () => {
           'repo',
           'reference',
           'project-recaps',
-          snapshotId,
+          `${snapshotId}.html`,
         ),
       );
       expect(result.s3Path).toBe(
@@ -1311,7 +2359,7 @@ describe('archive utils', () => {
                   'repo',
                   'reference',
                   'project-recaps',
-                  snapshotId,
+                  `${snapshotId}.html`,
                 )
               : null,
           );
@@ -1355,7 +2403,7 @@ describe('archive utils', () => {
                   'project-recaps',
                 ),
               ),
-            ).toEqual([snapshotId]);
+            ).toEqual([`${snapshotId}.html`]);
           }
           expect(
             s3Calls
@@ -1423,7 +2471,7 @@ describe('archive utils', () => {
           'repo',
           'reference',
           'project-recaps',
-          '20260401-demo',
+          '20260401-demo.html',
         ),
       ),
     ).rejects.toThrow();
@@ -1441,7 +2489,7 @@ describe('archive utils', () => {
         await copyFile(source, destination);
         if (!stagedRoot) {
           let candidate = dirname(destination);
-          while (!candidate.includes('20260401-demo.tmp-')) {
+          while (!candidate.includes('20260401-demo.html.tmp-')) {
             candidate = dirname(candidate);
           }
           stagedRoot = candidate;
@@ -1530,7 +2578,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+    expect(result.projectRecapExport?.verifiedArtifactCount).toBe(
       recap.immutableCount,
     );
     await expect(access(projectPath)).rejects.toThrow();
@@ -1644,7 +2692,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+    expect(result.projectRecapExport?.verifiedArtifactCount).toBe(
       recap.immutableCount,
     );
     await expect(access(projectPath)).rejects.toThrow();
@@ -1661,7 +2709,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
     await mkdir(exportRoot, { recursive: true });
     await writeFile(join(exportRoot, 'keep.txt'), 'original\n', 'utf8');
@@ -1746,7 +2794,7 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
     await expect(
-      access(join(retried.projectRecapExport!.exportRoot, 'manifest.json')),
+      access(retried.projectRecapExport!.exportRoot),
     ).resolves.toBeUndefined();
   });
 
@@ -1851,7 +2899,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
 
     await expect(
@@ -1924,15 +2972,9 @@ describe('archive utils', () => {
         }),
       ).rejects.toThrow('injected project cleanup failure');
 
-      await expect(
-        access(join(exportRoot, 'manifest.json')),
-      ).resolves.toBeUndefined();
+      await expect(access(exportRoot)).resolves.toBeUndefined();
       const tracked = await defaultGitRunner.run(
-        [
-          'ls-files',
-          '--error-unmatch',
-          `${exportPathspec}/20260401-demo/manifest.json`,
-        ],
+        ['ls-files', '--error-unmatch', `${exportPathspec}/20260401-demo.html`],
         { allowFailure: true, cwd: repoRoot },
       );
       expect(tracked.code === 0).toBe(trackingState === 'tracked');
@@ -2094,6 +3136,272 @@ describe('archive utils', () => {
     expect(result.s3Path).toBeNull();
   });
 
+  it.each(['shared', 'local'] as const)(
+    'omits unexported summary links on real directory obstruction in %s completion and reuses the link-free page',
+    async (scope) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, `.oat/projects/${scope}/demo`);
+      // Controlled derivative of the captured July legacy contract above.
+      const page =
+        '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+      const run = await createLegacyRecap(projectPath, page);
+      const summary = '# Summary\n\n## Verification\n\nVerified.\n';
+      await writeFile(join(projectPath, 'summary.md'), summary);
+      const summaryExportPath = '.oat/repo/reference/project-summaries';
+      const obstruction = join(repoRoot, summaryExportPath);
+      await mkdir(dirname(obstruction), { recursive: true });
+      await writeFile(obstruction, 'obstructing file');
+      const options = {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        summaryExportPath,
+        s3SyncOnComplete: false,
+      };
+      const timestamp = () => '2026-04-01T12:34:56Z';
+      const result = await archiveProjectOnCompletion(options, { timestamp });
+      const report = result.projectRecapExport!;
+      const exported = await readFile(report.exportRoot, 'utf8');
+      expect(exported).toContain('<a>Summary</a>');
+      expect(exported).not.toContain('project-summaries');
+      expect(result.summaryExportFile).toBeNull();
+      expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toContain('Summary export');
+      expect(report.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(report.page.originalSha256).toBe(
+        `sha256:${createHash('sha256').update(page).digest('hex')}`,
+      );
+      const archivedRun = join(result.archivePath, run);
+      const manifest = JSON.parse(
+        await readFile(join(archivedRun, 'manifest.json'), 'utf8'),
+      );
+      expect(
+        await readFile(
+          join(archivedRun, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      expect(
+        await readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+      ).toBe(summary);
+      expect(await readFile(obstruction, 'utf8')).toBe('obstructing file');
+
+      await cp(result.archivePath, projectPath, { recursive: true });
+      const blockedRetry = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(blockedRetry.projectRecapExport!.page).toEqual(report.page);
+      expect(blockedRetry.summaryExportFile).toBeNull();
+      expect(blockedRetry.warnings).toHaveLength(1);
+      expect(await readFile(report.exportRoot, 'utf8')).toBe(exported);
+
+      await rm(obstruction);
+      await cp(result.archivePath, projectPath, { recursive: true });
+      const repairedRetry = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(repairedRetry.projectRecapExport!.page).toEqual(report.page);
+      expect(repairedRetry.projectRecapExport!.exportRoot).toBe(
+        report.exportRoot,
+      );
+      expect(repairedRetry.projectRecapExport!.runId).toBe(report.runId);
+      expect(repairedRetry.warnings).toEqual([]);
+      expect(await readFile(report.exportRoot, 'utf8')).toBe(exported);
+      expect(
+        await readFile(repairedRetry.summaryExportFile!, 'utf8'),
+      ).toContain(report.page.exportedSha256);
+    },
+  );
+
+  it('preserves an adopted linked recap when summary failure would require different output', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page =
+      '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+    const run = await createLegacyRecap(projectPath, page);
+    await writeFile(
+      join(projectPath, 'summary.md'),
+      '# Summary\n\n## Verification\n',
+    );
+    const summaryExportPath = '.oat/repo/reference/project-summaries';
+    const options = {
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: run,
+      summaryExportPath,
+      s3SyncOnComplete: false,
+    };
+    const timestamp = () => '2026-04-01T12:34:56Z';
+    const first = await archiveProjectOnCompletion(options, { timestamp });
+    const exported = await readFile(first.projectRecapExport!.exportRoot);
+    expect(exported.toString()).toContain(
+      '../project-summaries/20260401-demo.md#verification',
+    );
+    await rm(join(repoRoot, summaryExportPath), { recursive: true });
+    await writeFile(join(repoRoot, summaryExportPath), 'obstructing file');
+    await cp(first.archivePath, projectPath, { recursive: true });
+    const retry = archiveProjectOnCompletion(options, { timestamp });
+    await expect(retry).rejects.toThrow(/recap export .*does not match/);
+    await expect(retry).rejects.toThrow(
+      `Summary export to \`${summaryExportPath}\` failed: ENOTDIR`,
+    );
+    await expect(retry).rejects.toThrow(
+      'Recap repair without the summary link failed:',
+    );
+    await expect(retry).rejects.toThrow(
+      `Repair the summary destination \`${summaryExportPath}\` and retry archive completion.`,
+    );
+    expect(await readFile(first.projectRecapExport!.exportRoot)).toEqual(
+      exported,
+    );
+    await expect(
+      access(join(first.archivePath, run, 'manifest.json')),
+    ).resolves.toBeUndefined();
+  });
+
+  it('preserves a foreign recap replacement when rebuilding after summary failure', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page =
+      '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+    const run = await createLegacyRecap(projectPath, page);
+    await writeFile(
+      join(projectPath, 'summary.md'),
+      '# Summary\n\n## Verification\n',
+    );
+    const summaryExportPath = '.oat/repo/reference/project-summaries';
+    await mkdir(dirname(join(repoRoot, summaryExportPath)), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, summaryExportPath), 'obstructing file');
+    const exportRoot = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    const foreign = '<html><body>Another writer owns this page.</body></html>';
+    const attempt = archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        summaryExportPath,
+        s3SyncOnComplete: false,
+      },
+      {
+        timestamp: () => '2026-04-01T12:34:56Z',
+        removePath: async (target, options) => {
+          await rm(target, options);
+          if (target === projectPath) {
+            await rm(exportRoot);
+            await writeFile(exportRoot, foreign);
+          }
+        },
+      },
+    );
+    await expect(attempt).rejects.toThrow(/recap export .*does not match/);
+    await expect(attempt).rejects.toThrow(
+      `Summary export to \`${summaryExportPath}\` failed: ENOTDIR`,
+    );
+    await expect(attempt).rejects.toThrow(
+      'Recap repair without the summary link failed:',
+    );
+    await expect(attempt).rejects.toThrow(
+      `Repair the summary destination \`${summaryExportPath}\` and retry archive completion.`,
+    );
+    expect(await readFile(exportRoot, 'utf8')).toBe(foreign);
+    const archivedRun = join(repoRoot, '.oat/projects/archived/demo', run);
+    const manifest = JSON.parse(
+      await readFile(join(archivedRun, 'manifest.json'), 'utf8'),
+    );
+    expect(
+      await readFile(
+        join(archivedRun, manifest.artifacts[0].renderedPath),
+        'utf8',
+      ),
+    ).toBe(page);
+  });
+
+  it('does not report a summary export without verifying its copied bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3SyncOnComplete: false,
+      },
+      {
+        copySingleFile: async (_source, destination) => {
+          await mkdir(dirname(destination), { recursive: true });
+          await writeFile(destination, 'wrong copied bytes');
+        },
+      },
+    );
+    expect(result.summaryExportFile).toBeNull();
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('Summary export');
+  });
+
+  it('exports the reported flat recap identity in the summary while preserving the original', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const original =
+      '# Summary\n\n## Explainer Outcome\n\nbuilt-needs-review: [Recap](explainers/old/site/index.html)\n\n## Other\n\nKeep this claim.\n';
+    await writeFile(join(projectPath, 'summary.md'), original);
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const summary = await readFile(result.summaryExportFile!, 'utf8');
+    expect(summary).toContain('[Recap](../project-recaps/20260401-demo.html)');
+    expect(summary).toContain(result.projectRecapExport!.runId);
+    expect(summary).toContain(result.projectRecapExport!.page.originalSha256);
+    expect(summary).toContain(result.projectRecapExport!.page.exportedSha256);
+    expect(summary).toContain('built-needs-review');
+    expect(summary).toContain('Keep this claim.');
+    expect(summary).not.toContain('explainers/old');
+    expect(await readFile(join(result.archivePath, 'summary.md'), 'utf8')).toBe(
+      original,
+    );
+    await cp(result.archivePath, projectPath, { recursive: true });
+    const retried = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    expect(await readFile(retried.summaryExportFile!, 'utf8')).toBe(summary);
+  });
+
   it('copies summary.md to the configured summary export path', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
@@ -2188,7 +3496,7 @@ describe('archive utils', () => {
       'repo',
       'reference',
       'project-recaps',
-      '20260401-demo',
+      '20260401-demo.html',
     );
 
     await expect(
@@ -2211,9 +3519,7 @@ describe('archive utils', () => {
       timestamp,
     });
     expect(retried.snapshotId).toBe('20260401-demo');
-    await expect(
-      access(join(recapExportRoot, 'manifest.json')),
-    ).resolves.toBeUndefined();
+    await expect(access(recapExportRoot)).resolves.toBeUndefined();
     await rm(retried.summaryExportFile!);
 
     await expect(
@@ -2226,9 +3532,7 @@ describe('archive utils', () => {
         timestamp,
       }),
     ).rejects.toThrow('injected summary copy failure');
-    await expect(
-      access(join(recapExportRoot, 'manifest.json')),
-    ).resolves.toBeUndefined();
+    await expect(access(recapExportRoot)).resolves.toBeUndefined();
   });
 
   it('directs an active record with an absent checkout to project pull', async () => {

@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Bash(oat project push:*), Bash(oat project scope:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.3
+  version: 1.0.4
 ---
 
 # File Project Retro Feedback
@@ -16,6 +16,10 @@ idempotent status writeback.
 
 This skill never applies `Disposition: apply` repo edits and never mutates
 `oat_retro_promotions`.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Progress Indicators (User-Facing)
 
@@ -395,8 +399,8 @@ if [ "$PROJECT_SCOPE" = "synced" ]; then
   RETRO_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): record project retro filing writeback" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   WRITEBACK_COMMIT=$(parse_synced_push_receipt "$RETRO_PUSH") || { printf '%s\n' "$RETRO_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
 else
-  git add "$RETRO_PATH"
-  git diff --cached --quiet || git commit -m "chore(oat): record project retro filing writeback"
+  OWNED_COMMIT_PATHS=("$RETRO_PATH")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-retro-file:1" --message "chore(oat): record project retro filing writeback" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   WRITEBACK_COMMIT=$(git rev-parse HEAD)
 fi
 

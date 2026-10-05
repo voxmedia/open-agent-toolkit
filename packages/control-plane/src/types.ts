@@ -115,6 +115,15 @@ export interface SkillRecommendation {
   context?: string;
 }
 
+/** A legacy reason string or the blocker record emitted by completion workflows. */
+export type ProjectBlocker =
+  | string
+  | {
+      task_id: string;
+      reason: string;
+      since: string;
+    };
+
 export interface ProjectState {
   name: string;
   path: string;
@@ -129,7 +138,7 @@ export interface ProjectState {
   artifacts: ArtifactStatus[];
   reviews: ReviewStatus[];
   activeReviewArtifacts: ReviewArtifactStatus[];
-  blockers: string[];
+  blockers: ProjectBlocker[];
   hillCheckpoints: string[];
   hillCompleted: string[];
   prStatus: string | null;

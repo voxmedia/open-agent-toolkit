@@ -118,8 +118,8 @@ continues immediately, this can be written back together with the final
        CORRECTION_PUSH=$(oat project push "$PROJECT_PATH" --message "chore(oat): apply retro correction $RP_ID" --json) || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
        CORRECTION_COMMIT=$(parse_synced_push_receipt "$CORRECTION_PUSH") || { printf '%s\n' "$CORRECTION_PUSH" >&2; echo "Recovery: run oat project pull \"$PROJECT_PATH\", resolve conflicts, then retry this push." >&2; exit 1; }
      else
-       git add "$PROJECT_PATH/project-log.md"
-       git commit -m "chore(oat): apply retro correction $RP_ID"
+       OWNED_COMMIT_PATHS=("$PROJECT_PATH/project-log.md")
+       oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-retro:apply-procedure:1" --message "chore(oat): apply retro correction $RP_ID" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
        CORRECTION_COMMIT=$(git rev-parse HEAD)
      fi
      ```
@@ -260,8 +260,8 @@ Compute `oat_retro_promotions` exactly:
   if [ "$PROJECT_SCOPE" = "synced" ]; then
     # RETRO_TARGET_PATHS contains exact ordinary-doc, agent-instruction, rule,
     # or decision-record paths; include the managed decision index only when changed.
-    git add -- "${RETRO_TARGET_PATHS[@]}"
-    git commit --only -m "chore(oat): apply retro target $RP_ID" -- "${RETRO_TARGET_PATHS[@]}"
+    OWNED_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-retro:apply-procedure:2" --message "chore(oat): apply retro target $RP_ID" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
     RETRO_TARGET_COMMIT=$(git rev-parse HEAD) || exit 1
     RETRO_TARGET_COMMIT_PATHS=$(git diff-tree --no-commit-id --name-only -r "$RETRO_TARGET_COMMIT") || exit 1
     # Require RETRO_TARGET_COMMIT_PATHS to equal the complete normalized
@@ -277,8 +277,8 @@ Compute `oat_retro_promotions` exactly:
     # shared/local route with only the exact target and retro paths.
     APPLIED_REF="${RETRO_TARGET_PATHS[*]}"
     RETRO_COMMIT_PATHS=("${RETRO_TARGET_PATHS[@]}" "$PROJECT_PATH/references/project-retro.md")
-    git add -- "${RETRO_COMMIT_PATHS[@]}"
-    git commit --only -m "chore(oat): apply retro item $RP_ID" -- "${RETRO_COMMIT_PATHS[@]}"
+    OWNED_COMMIT_PATHS=("${RETRO_COMMIT_PATHS[@]}")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-retro:apply-procedure:3" --message "chore(oat): apply retro item $RP_ID" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
     RETRO_TARGET_COMMIT=$(git rev-parse HEAD) || exit 1
   fi
 

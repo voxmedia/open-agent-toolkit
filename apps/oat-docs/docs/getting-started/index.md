@@ -55,10 +55,6 @@ view is the file or link that tool reads.
   available it falls back to the best available reviewer, which can be from the
   same family, and only records a warning. See
   [How independent the reviewer must be](../workflows/advanced/workflow-gates.md#how-independent-the-reviewer-must-be).
-- **Re-running `oat pjm init` removes remote settings.** It replaces the `pjm`
-  section of `.oat/config.json` and deletes any `pjm.remote` settings, so back
-  the file up first. See
-  [Remote Project Management](../workflows/backlog-and-planning/remote-project-management.md#prerequisite).
 - **Ad-hoc reviews run in the agent you invoke them in.** `oat-review-provide`
   cannot send a review to a different model; to get another model's review,
   run the skill in that model's coding tool. See

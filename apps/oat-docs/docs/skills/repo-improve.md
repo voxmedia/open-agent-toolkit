@@ -213,9 +213,11 @@ does not require a project name or an active-project pointer.
 the `oat-codebase-mapper` subagent. A preflight checks whether background
 agents can write files and switches to a read-only fallback if they cannot.
 Needs an active OAT project: no. If a knowledge directory already exists,
-choose whether to refresh it or skip the run. Refresh first deletes every
-`.md` file in `.oat/repo/knowledge/`, hand-written files included, and then
-regenerates the set. Move any notes you want to keep before you choose it.
+choose whether to refresh it or skip the run. Refresh removes only regular
+Markdown files marked `oat_generated: true` and regenerates the eight named
+outputs. Hand-written notes survive; an unmarked expected-output collision
+stops the run before deletion so you can decide how to preserve it. Symlinked
+knowledge directories and output collisions are refused.
 
 **Example scenario:** A new teammate needs to understand which packages own
 the CLI, how shared configuration reaches applications, and which test
@@ -234,8 +236,9 @@ answered.
 knowledge files already exist. Otherwise it creates `.oat/repo/knowledge/`,
 starts a test subagent and then four `oat-codebase-mapper` subagents in the
 background, and writes the knowledge files. It then runs
-`git add .oat/repo/knowledge/` and `git commit` on your current branch with
-no further prompt; that commit also includes anything you had already staged.
+`oat internal commit-paths` on your current branch with the exact generated
+output/deletion paths and enabled hooks. Unrelated staged and unstaged work
+remains intact.
 Afterwards it records the run in `.oat/tracking.json` and regenerates the
 `.oat/state.md` dashboard with `oat state refresh`; those two files are not
 part of the commit. It does not push.
@@ -244,8 +247,7 @@ part of the commit. It does not push.
 `project-index.md`, `stack.md`, `architecture.md`, `structure.md`,
 `conventions.md`, `testing.md`, `integrations.md`, and `concerns.md`. The
 workflow also updates its tracking/dashboard surface and commits the
-knowledge output on the current branch (unstage unrelated changes first; the
-commit includes anything already staged). Despite its name, `project-index.md` describes the
+knowledge output on the current branch with exact path ownership. Despite its name, `project-index.md` describes the
 repository; it does not require a pre-existing OAT lifecycle project.
 
 **Next step:** Read the index and the concern or testing documents relevant

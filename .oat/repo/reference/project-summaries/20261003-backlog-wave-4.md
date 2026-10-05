@@ -331,4 +331,4 @@ Three additional fix tasks (46 total) address stale gate recovery/release races 
 
 ## Explainer Outcome
 
-Final [project recap](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-02-backlog-wave-4/.oat/repo/reference/project-recaps/20261003-backlog-wave-4/site/index.html) recorded as `built-needs-review`: all seven content checks and full package validation pass; browser inspection at 320, 768, and 1440 pixels remains outstanding because T3 preview and the browser driver were unavailable.
+Final [project recap](../project-recaps/20261003-backlog-wave-4.html) recorded as `built-needs-review`: all seven content checks and full package validation pass; browser inspection at 320, 768, and 1440 pixels remains outstanding because T3 preview and the browser driver were unavailable.

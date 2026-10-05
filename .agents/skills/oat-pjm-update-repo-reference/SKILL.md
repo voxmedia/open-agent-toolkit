@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.1
+  version: 1.4.2
 ---
 
 # Update Repo Reference
@@ -120,8 +120,8 @@ To close out a completed backlog item, run the atomic close-out command rather
 than moving files by hand:
 
 ```bash
-oat backlog archive <id> --summary "one-line outcome"
-# abandoned work: oat backlog archive <id> --wont-do --summary "why"
+oat backlog archive <id> --summary "one-line outcome" --json
+# abandoned work: oat backlog archive <id> --wont-do --summary "why" --json
 ```
 
 This flips the item's `status` to a terminal value (`closed`/`wont_do` — never
@@ -133,6 +133,31 @@ backlog files by hand outside this command (curated overview text, an enriched
 
 ```bash
 oat backlog regenerate-index
+```
+
+Archive never stages files. Capture each successful `--json` result and retain
+its complete `affectedPaths` array, including the old tracked item deletion,
+the archived destination, completed ledger, index and rewritten references.
+On retry use the returned operation paths; do not reconstruct ownership from
+all files that mention the item. If this close-out owns a kickoff handoff,
+remove it with a filesystem operation and append its tracked deletion path.
+Convert returned absolute paths to literal repository-relative files using
+the same repository root (avoiding checkout/scratch-path aliases).
+Deduplicate the exact file list, format only existing supported text files
+with the repository's documented formatter, and commit that list through
+`oat internal commit-paths` with enabled hooks. Verify helper availability
+first; if unavailable, stop and update the CLI. Set a unique `COMMIT_IDENTITY`
+before the first attempt and retain the identity, message and literal paths
+through retries; a blocked/failed helper result stops close-out. Unrelated
+staged and unstaged work must remain intact. An empty settled-noop path list
+needs no commit; omit a missing source path only if Git proves it was never
+tracked, never omit a tracked old path or the new destination.
+
+```bash
+oat internal commit-paths --help || exit 1
+# ARCHIVE_OWNED_FILES is the literal affectedPaths union plus owned handoff deletion.
+# Format the existing text members with the repository's documented write command.
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:backlog-closeout" --message "chore(pjm): archive completed backlog work" -- "${ARCHIVE_OWNED_FILES[@]}" || exit 1
 ```
 
 ### Step 5: Sanity Checks

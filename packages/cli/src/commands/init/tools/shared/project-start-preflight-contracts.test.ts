@@ -126,7 +126,9 @@ describe('project-start preflight contracts', () => {
     (name) => {
       const step = readPreflightStep(name);
 
-      expect(step).toContain('git add -- .oat/sync/manifest.json');
+      expect(step).toMatch(
+        /oat internal commit-paths --identity [^`]+--message "chore: run sync" -- \.oat\/sync\/manifest\.json/,
+      );
       expect(step).not.toContain('git add -A');
       expect(step).not.toContain('git add .');
     },

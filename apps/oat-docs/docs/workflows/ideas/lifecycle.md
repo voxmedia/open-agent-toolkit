@@ -90,13 +90,8 @@ Good to know:
   (shared scope), pushed to a project ref (synced scope, the default on a
   fresh install), or kept on your machine (local scope).
 
-> [!WARNING]
-> Backlog items need project management (PJM, OAT's file-backed backlog,
-> roadmap, and decision records) adopted with `oat pjm init`. Run it once.
-> Running `oat pjm init` again, or running `oat pjm migrate --apply`,
-> currently deletes any `pjm.remote` settings from `.oat/config.json`. If
-> you rerun either command, check `git diff .oat/config.json` afterwards and
-> restore `pjm.remote` if it was removed.
+Backlog items need project management (PJM, OAT's file-backed backlog,
+roadmap, and decision records) adopted with `oat pjm init`. Run it once.
 
 1. Quick capture: `oat-idea-scratchpad` to review or capture idea seeds
 2. Start brainstorming: `oat-idea-new` (scaffolds directory, then invokes `oat-idea-ideate`)

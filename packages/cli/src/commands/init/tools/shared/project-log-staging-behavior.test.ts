@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import {
   mkdirSync,
   mkdtempSync,
@@ -7,7 +8,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -45,11 +46,22 @@ function readPhaseBookkeepingBlock(
 const PRE_REVIEW_MARKER = 'Pre-review bookkeeping is mandatory:';
 
 function instantiate(block: string): string {
+  const branchCli = resolve(
+    import.meta.dirname,
+    '../../../../../dist/index.js',
+  );
+  const shellQuote = (value: string): string =>
+    `'${value.replaceAll("'", "'\"'\"'")}'`;
   const sharedScopeStub = [
+    `COMMIT_IDENTITY=${shellQuote(`project-log-staging:${randomUUID()}`)}`,
     'oat() {',
     '  if [ "$1" = "project" ] && [ "$2" = "scope" ]; then',
     '    printf "shared\\n"',
     '    return 0',
+    '  fi',
+    '  if [ "$1" = "internal" ] && [ "$2" = "commit-paths" ]; then',
+    `    ${shellQuote(process.execPath)} ${shellQuote(branchCli)} "$@"`,
+    '    return $?',
     '  fi',
     '  printf "unexpected oat invocation: %s\\n" "$*" >&2',
     '  return 127',

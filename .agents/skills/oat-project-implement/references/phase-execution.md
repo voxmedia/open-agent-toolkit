@@ -127,6 +127,20 @@ Optional third-tier readiness is not a preflight blocker. Codex depth two may be
 provisioned as capability, but default phase execution requires only the root →
 phase-agent depth.
 
+#### Disclose Resolved Phase Capacity
+
+Before dispatch and on resume, report the effective project default and phase
+limit, source/override, prior durable `used_attempts`, remaining capacity
+`max(0, phase_recovery_limit - used_attempts)`, and reconciled `pending_attempt`.
+Use the owning policy resolution above; do not introduce another default.
+Refresh the autonomous kickoff disclosure with these values and every
+applicable recovery, dispatch, review and repository stop.
+
+Capacity is not permission: a failed-attempt remains terminal even when
+allowance remains. Separate route retries, recovery events, consumed attempts,
+review-fix rounds and gate attempts; the warning at three recovery events
+changes none of their limits or eligibility rules.
+
 #### Dedicated Phase Recovery Contract
 
 This contract covers only a post-commit defect discovered by declared task,
@@ -965,9 +979,9 @@ PROJECT_SCOPE=$(oat project scope "{PROJECT_PATH}" --format value) || { echo "oa
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "{PROJECT_PATH}" --message "chore(oat): record {pNN} task ledger before review" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
-  [ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
-  git commit -m "chore(oat): record {pNN} task ledger before review"
+  OWNED_COMMIT_PATHS=({PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md)
+  [ -f {PROJECT_PATH}/project-log.md ] && OWNED_COMMIT_PATHS+=({PROJECT_PATH}/project-log.md)
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-implement:phase-execution:1" --message "chore(oat): record {pNN} task ledger before review" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 
@@ -1023,9 +1037,9 @@ PROJECT_SCOPE=$(oat project scope "{PROJECT_PATH}" --format value) || { echo "oa
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "{PROJECT_PATH}" --message "chore(oat): bookkeeping after {pNN} {pass|fail}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
-  [ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
-  git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
+  OWNED_COMMIT_PATHS=({PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md)
+  [ -f {PROJECT_PATH}/project-log.md ] && OWNED_COMMIT_PATHS+=({PROJECT_PATH}/project-log.md)
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-implement:phase-execution:2" --message "chore(oat): bookkeeping after {pNN} {pass|fail}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

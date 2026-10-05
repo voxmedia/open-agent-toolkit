@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { access, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -85,6 +93,62 @@ async function run(command: Command, args: string[]): Promise<void> {
   project.addCommand(command);
   program.addCommand(project);
   await program.parseAsync(['project', 'prune', ...args], { from: 'user' });
+}
+
+function fixtureGit(root: string, ...args: string[]): string {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+}
+
+/** Independent Git and filesystem witnesses for an interrupted owned commit. */
+async function pruneGitState(root: string) {
+  return {
+    head: fixtureGit(root, 'rev-parse', 'HEAD'),
+    index: fixtureGit(root, 'ls-files', '--stage'),
+    unrelatedIndex: fixtureGit(
+      root,
+      'ls-files',
+      '--stage',
+      '--',
+      'unrelated.txt',
+    ),
+    unrelatedStaged: fixtureGit(root, 'show', ':unrelated.txt'),
+    unrelatedWorking: await readFile(join(root, 'unrelated.txt'), 'utf8'),
+  };
+}
+
+async function rejectPruneCommit(root: string): Promise<string> {
+  const hook = join(root, '.git', 'hooks', 'pre-commit');
+  await writeFile(
+    hook,
+    '#!/bin/sh\nprintf "real prune commit hook rejection\\n" >&2\nexit 1\n',
+    { mode: 0o755 },
+  );
+  return hook;
+}
+
+async function pendingPruneCommit(root: string) {
+  const pendingDir = join(root, '.git', 'oat-record-commit-pending');
+  const names = await readdir(pendingDir);
+  expect(names).toHaveLength(1);
+  const markerPath = join(pendingDir, names[0]!);
+  const markerBytes = await readFile(markerPath, 'utf8');
+  const marker = JSON.parse(markerBytes) as {
+    identity: string;
+    paths: string[];
+  };
+  const receiptsDir = join(root, '.git', 'oat-exact-path-commits');
+  const receipts = await Promise.all(
+    (await readdir(receiptsDir)).map(async (name) => {
+      const path = join(receiptsDir, name);
+      const bytes = await readFile(path, 'utf8');
+      return { path, bytes, value: JSON.parse(bytes) };
+    }),
+  );
+  const matching = receipts.filter(
+    (receipt) => receipt.value.identity === marker.identity,
+  );
+  expect(matching).toHaveLength(1);
+  return { markerPath, markerBytes, marker, receipt: matching[0]! };
 }
 
 describe('createProjectPruneCommand', () => {
@@ -564,31 +628,20 @@ describe('prune command integration', () => {
       execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneA });
       await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'working\n');
 
-      const failingGit = {
-        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
-          if (args[0][0] === 'commit') {
-            throw new Error('injected final prune commit failure');
-          }
-          return defaultGitRunner.run(...args);
-        }),
-      };
+      const beforeFailure = await pruneGitState(fixture.cloneA);
+      const hook = await rejectPruneCommit(fixture.cloneA);
       await expect(
-        pruneSynced(target, failingGit, { force: true, commit: true }),
-      ).rejects.toThrow('injected final prune commit failure');
-      expect(
-        execFileSync(
-          'git',
-          [
-            'diff',
-            '--cached',
-            '--diff-filter=D',
-            '--name-only',
-            '--',
-            recordPath,
-          ],
-          { cwd: fixture.cloneA, encoding: 'utf8' },
-        ).trim(),
-      ).toBe('.oat/projects/synced/retry-prune-commit.json');
+        pruneSynced(target, defaultGitRunner, { force: true, commit: true }),
+      ).rejects.toThrow('real prune commit hook rejection');
+      expect(await pruneGitState(fixture.cloneA)).toEqual(beforeFailure);
+      await expect(access(recordPath)).rejects.toThrow();
+      const pending = await pendingPruneCommit(fixture.cloneA);
+      expect(pending.marker.paths).toEqual([
+        '.oat/projects/synced/retry-prune-commit.json',
+      ]);
+      expect(pending.receipt.value.parent).toBe(beforeFailure.head);
+      expect(pending.receipt.value.commit).toBeUndefined();
+      await rm(hook);
 
       const capture = createLoggerCapture();
       const command = createProjectPruneCommand({
@@ -609,6 +662,29 @@ describe('prune command integration', () => {
 
       expect(capture.error).toEqual([]);
       expect(process.exitCode).toBe(0);
+      await expect(access(pending.markerPath)).rejects.toThrow();
+      const settledReceipt = JSON.parse(
+        await readFile(pending.receipt.path, 'utf8'),
+      );
+      expect(settledReceipt.identity).toBe(pending.marker.identity);
+      expect(settledReceipt.commit).toBe(
+        fixtureGit(fixture.cloneA, 'rev-parse', 'HEAD'),
+      );
+      expect(fixtureGit(fixture.cloneA, 'show', ':unrelated.txt')).toBe(
+        beforeFailure.unrelatedStaged,
+      );
+      expect(
+        fixtureGit(
+          fixture.cloneA,
+          'ls-files',
+          '--stage',
+          '--',
+          'unrelated.txt',
+        ),
+      ).toBe(beforeFailure.unrelatedIndex);
+      expect(
+        await readFile(join(fixture.cloneA, 'unrelated.txt'), 'utf8'),
+      ).toBe(beforeFailure.unrelatedWorking);
       expect(
         execFileSync(
           'git',
@@ -636,7 +712,7 @@ describe('prune command integration', () => {
     }
   });
 
-  it('preserves staged deletion and unrelated state when retry remote lookup fails', async () => {
+  it('preserves the pending owned deletion and unrelated state when retry remote lookup fails', async () => {
     const fixture = await createSyncedFixture();
     try {
       const target = buildSyncTarget(
@@ -663,21 +739,20 @@ describe('prune command integration', () => {
       execFileSync('git', ['add', 'unrelated.txt'], { cwd: fixture.cloneA });
       await writeFile(join(fixture.cloneA, 'unrelated.txt'), 'working\n');
 
-      const failingCommitGit = {
-        run: vi.fn(async (...args: Parameters<typeof defaultGitRunner.run>) => {
-          if (args[0][0] === 'commit') {
-            throw new Error('injected final prune commit failure');
-          }
-          return defaultGitRunner.run(...args);
-        }),
-      };
+      const beforeFailure = await pruneGitState(fixture.cloneA);
+      const hook = await rejectPruneCommit(fixture.cloneA);
       await expect(
-        pruneSynced(target, failingCommitGit, { force: true, commit: true }),
-      ).rejects.toThrow('injected final prune commit failure');
-      const headBeforeRetry = execFileSync('git', ['rev-parse', 'HEAD'], {
-        cwd: fixture.cloneA,
-        encoding: 'utf8',
-      }).trim();
+        pruneSynced(target, defaultGitRunner, { force: true, commit: true }),
+      ).rejects.toThrow('real prune commit hook rejection');
+      expect(await pruneGitState(fixture.cloneA)).toEqual(beforeFailure);
+      await expect(access(recordPath)).rejects.toThrow();
+      const pending = await pendingPruneCommit(fixture.cloneA);
+      expect(pending.marker.paths).toEqual([
+        '.oat/projects/synced/retry-prune-lookup.json',
+      ]);
+      expect(pending.receipt.value.parent).toBe(beforeFailure.head);
+      expect(pending.receipt.value.commit).toBeUndefined();
+      await rm(hook);
 
       let remoteLookups = 0;
       const retryGit = {
@@ -719,20 +794,14 @@ describe('prune command integration', () => {
         'injected retry remote lookup failure',
       );
       expect(process.exitCode).toBe(2);
-      expect(
-        execFileSync(
-          'git',
-          [
-            'diff',
-            '--cached',
-            '--diff-filter=D',
-            '--name-only',
-            '--',
-            recordPath,
-          ],
-          { cwd: fixture.cloneA, encoding: 'utf8' },
-        ).trim(),
-      ).toBe('.oat/projects/synced/retry-prune-lookup.json');
+      expect(await pruneGitState(fixture.cloneA)).toEqual(beforeFailure);
+      await expect(access(recordPath)).rejects.toThrow();
+      expect(await readFile(pending.markerPath, 'utf8')).toBe(
+        pending.markerBytes,
+      );
+      expect(await readFile(pending.receipt.path, 'utf8')).toBe(
+        pending.receipt.bytes,
+      );
       expect(
         execFileSync(
           'git',
@@ -748,7 +817,7 @@ describe('prune command integration', () => {
           cwd: fixture.cloneA,
           encoding: 'utf8',
         }).trim(),
-      ).toBe(headBeforeRetry);
+      ).toBe(beforeFailure.head);
     } finally {
       await fixture.cleanup();
     }

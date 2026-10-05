@@ -5,12 +5,16 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.0.4
+  version: 2.0.5
 ---
 
 # Specification Phase
 
 Transform discovery insights into a formal specification with detailed requirements and acceptance criteria.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Prerequisites
 
@@ -450,14 +454,14 @@ Requirements:
 Ready for design phase" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
   PROJECT_OUTPUT_PATHS=("$PROJECT_PATH/spec.md" "$PROJECT_PATH/state.md")
-  git add -- "${PROJECT_OUTPUT_PATHS[@]}"
-  git commit -m "docs: complete specification for {project-name}
+  OWNED_COMMIT_PATHS=("${PROJECT_OUTPUT_PATHS[@]}")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-spec:1" --message "docs: complete specification for {project-name}
 
 Requirements:
 - {N} functional requirements (P0: {n}, P1: {n}, P2: {n})
 - {N} non-functional requirements (P0: {n}, P1: {n}, P2: {n})
 
-Ready for design phase"
+Ready for design phase" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

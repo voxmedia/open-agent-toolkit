@@ -121,7 +121,7 @@ explicit and testable.
 ## Explainer Outcome
 
 - **project-recap:** built-not-durable —
-  [tracked recap](../project-recaps/20260721-explainer-kit/site/index.html)
+  [tracked recap](../project-recaps/20260721-explainer-kit.html)
   (awaiting completion-bookkeeping attestation)
 
 ## Revision History

@@ -2096,7 +2096,7 @@ describe('oat project log append', () => {
       expect(git(['status', '--porcelain', '--', logPath])).toBe('');
     });
 
-    it('accepts a hook that reproduces both the advice and a lock mention as contention', async () => {
+    it('refuses hook advice as contention when no foreign index lock exists', async () => {
       const { root, logPath } = await createRepo();
       await seedLog(logPath, '\n### seed\n\nseed entry\n');
       initGitRepo(root);
@@ -2123,17 +2123,16 @@ describe('oat project log append', () => {
         { sleep },
       );
 
-      // Accepted residual, pinned so it cannot drift silently: output carrying
-      // git's advice *and* an index-lock mention is read as contention and
-      // retried. The cost is one wasted retry window and a misleading
-      // `lockClass` — never a swallowed failure.
+      // The shared helper inspects the actual index lock. A hook's advice
+      // does not impersonate a foreign writer or trigger retries.
       expect(result).toMatchObject({
-        outcome: 'blocked-by-index-lock',
+        outcome: 'failed',
         committed: false,
-        attempts: 3,
+        attempts: 1,
+        lockClass: 'other',
       });
       expect(result.error).toContain('Another git process seems to be running');
-      expect(sleep).toHaveBeenCalledTimes(2);
+      expect(sleep).not.toHaveBeenCalled();
       // Nothing is swallowed and nothing is left staged.
       expect(git(['diff', '--cached', '--name-only'])).toBe('');
       expect(git(['status', '--porcelain', '--', logPath])).not.toBe('');

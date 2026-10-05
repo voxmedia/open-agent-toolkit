@@ -78,6 +78,73 @@ oat_template: false
     });
   });
 
+  it.each([
+    `oat_blockers:
+  - task_id: p01-t03
+    reason: ' Waiting on API contract '
+    since: '2026-10-03'
+  - waiting on review
+  - { task_id: p01-t04, reason: missing date }
+  - { task_id: p01-t05, reason: 42, since: '2026-10-03' }
+  - { task_id: '', reason: empty task, since: '2026-10-03' }
+  - null
+  - 42
+  - true
+  - ['nested']`,
+    `oat_blockers: '${JSON.stringify([
+      {
+        task_id: 'p01-t03',
+        reason: ' Waiting on API contract ',
+        since: '2026-10-03',
+      },
+      'waiting on review',
+      { task_id: 'p01-t04', reason: 'missing date' },
+      { task_id: 'p01-t05', reason: 42, since: '2026-10-03' },
+      { task_id: '', reason: 'empty task', since: '2026-10-03' },
+      null,
+      42,
+      true,
+      ['nested'],
+    ])}'`,
+  ])(
+    'preserves typed mixed blockers and diagnoses malformed entries (%s)',
+    (blockers) => {
+      expect(parseStateFrontmatter(`---\n${blockers}\n---\n`).blockers).toEqual(
+        [
+          {
+            task_id: 'p01-t03',
+            reason: ' Waiting on API contract ',
+            since: '2026-10-03',
+          },
+          'waiting on review',
+          'Malformed blocker entry: {"task_id":"p01-t04","reason":"missing date"}',
+          'Malformed blocker entry: {"task_id":"p01-t05","reason":42,"since":"2026-10-03"}',
+          'Malformed blocker entry: {"task_id":"","reason":"empty task","since":"2026-10-03"}',
+          'Malformed blocker entry: null',
+          'Malformed blocker entry: 42',
+          'Malformed blocker entry: true',
+          'Malformed blocker entry: ["nested"]',
+        ],
+      );
+    },
+  );
+
+  it('keeps cyclic YAML blocker aliases visible as bounded malformed diagnostics', () => {
+    // Legal YAML from PR #356 review comment M1; the alias refers to its own map.
+    const content = `---
+oat_phase: implement
+oat_blockers: [&b {task_id: p01-t03, reason: Waiting, extra: *b}]
+---
+`;
+
+    const state = parseStateFrontmatter(content);
+
+    expect(state.phase).toBe('implement');
+    expect(state.blockers).toHaveLength(1);
+    expect(state.blockers[0]).toMatch(/^Malformed blocker entry: .+/);
+    expect((state.blockers[0] as string).length).toBeLessThan(100);
+  });
+
   it('returns null/defaults for missing optional fields', () => {
     const content = `---
 oat_phase: discovery

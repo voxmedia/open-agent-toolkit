@@ -8,6 +8,16 @@
 
 ## Completed Items
 
+- 2026-10-05 — BL-261003-leave-backlog-archive-staging — Leave backlog archive staging to callers and report complete result paths — Keep backlog archive staging-neutral and report the complete operation path set to the owning helper caller.
+- 2026-10-05 — BL-261003-preserve-documented-structured — Preserve documented structured blockers in project status output — Preserve structured blocker fields for JSON consumers while keeping legacy strings and malformed entries visible.
+- 2026-10-05 — BL-261003-require-proportional — Require proportional adversarial probes at changed review boundaries — Require credible proportional changed-boundary probes and accepted controls with honest execution limits.
+- 2026-10-05 — BL-261003-show-autonomous-hard-stop — Show autonomous hard-stop conditions and effective recovery limits at kickoff — Disclose effective recovery capacity, overrides and owning autonomous hard stops without changing terminality.
+- 2026-10-05 — BL-261002-require-exactly-one-h1-per — Require exactly one H1 per docs page in docs:validate — Enforce one H1 per Markdown/MDX page through the existing parser and current docs corpus.
+- 2026-10-05 — BL-261002-teach-check-skill-bumps — Teach check:skill-bumps to follow vendored .agents/docs symlinks — Teach and validate PR-scoped owner bumps including file and directory shared-document vendors.
+- 2026-10-05 — BL-261002-preserve-pjm-remote-settings — Preserve pjm.remote settings when oat pjm init or migrate --apply reruns — Overlay PJM adoption markers while preserving unowned remote/storage/future settings on init and migrate.
+- 2026-10-05 — BL-261002-keep-hand-written-knowledge — Keep hand-written knowledge files and unrelated staged changes safe during knowledge-index refresh — Preserve manual knowledge, refuse unmarked collisions and report generated writes/deletions across shells.
+- 2026-10-05 — BL-260927-share-one-hook-safe-exact-path — Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits — Use shared exact-path hook-safe commits across CLI and skill callers with preserved Git state and receipt recovery.
+- 2026-10-05 — BL-260927-export-only-the-recap-page — Export only the recap page to project-recaps and fix its broken source links — Export one verified self-contained recap page; conserve complete original packages and retry identity.
 - 2026-10-03 — BL-261002-serialize-stale-gate-claim — Serialize stale gate-claim recovery — PR #351 serializes stale recovery and release under a per-claim mutation guard, refuses claim I/O failures, and proves exclusion with a three-contender regression.
 - 2026-10-02 — BL-260908-retire-the-top-level-skill — Retire the top-level skill version alias on the recorded schedule — Superseded by BL-260908-remove-the-top-level-skill, which owns removing the top-level skill.
 - 2026-10-02 — BL-261001-route-quick-mode-plan — Route quick-mode plan in-progress consistently across the router, dashboard, and skill tables — Backlog wave 4 p06-t03/t04: the state dashboard now sends a quick-mode plan in progress to the same place as the router and the next and progress tables, decided by quick plan readiness, with dashboard tests pinning the route.

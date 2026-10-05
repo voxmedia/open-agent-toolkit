@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(mkdir:*), Bash(pnpm:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.8
+  version: 1.0.9
 ---
 
 # Project Retrospective

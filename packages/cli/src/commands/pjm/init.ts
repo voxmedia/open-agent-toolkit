@@ -1,4 +1,4 @@
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
@@ -18,7 +18,9 @@ import {
 } from '@commands/shared/agents-md';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import { resolveTemplate } from '@commands/shared/template-source';
+import { parseJsonConfig } from '@config/json';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
+import { atomicWriteJson } from '@fs/io';
 
 export interface InitializeRepoReferenceOptions {
   repoRoot: string;
@@ -222,13 +224,46 @@ export async function initializeRepoReference(
     options.projectRoot ??
     (basename(repoParent) === '.oat' ? dirname(repoParent) : repoParent);
   const config = await readOatConfig(projectRoot);
-  await writeOatConfig(projectRoot, {
-    ...config,
-    pjm: {
-      initialized: true,
-      schemaVersion: PJM_ADOPTION_SCHEMA_VERSION,
-    },
-  });
+  const configPath = join(projectRoot, '.oat', 'config.json');
+  if (await pathExists(configPath)) {
+    // Adoption owns only these two markers. The normal config writer rebuilds
+    // known PJM fields, so it cannot preserve future settings or their literal
+    // remote policy. Validate above, then update the persisted object directly.
+    const persisted = parseJsonConfig(
+      await readFile(configPath, 'utf8'),
+      configPath,
+    );
+    const rawConfig =
+      typeof persisted === 'object' &&
+      persisted !== null &&
+      !Array.isArray(persisted)
+        ? (persisted as Record<string, unknown>)
+        : { ...config };
+    const rawPjm =
+      typeof rawConfig.pjm === 'object' &&
+      rawConfig.pjm !== null &&
+      !Array.isArray(rawConfig.pjm)
+        ? (rawConfig.pjm as Record<string, unknown>)
+        : {};
+    if (
+      rawPjm.initialized !== true ||
+      rawPjm.schemaVersion !== PJM_ADOPTION_SCHEMA_VERSION
+    ) {
+      await atomicWriteJson(configPath, {
+        ...rawConfig,
+        pjm: {
+          ...rawPjm,
+          initialized: true,
+          schemaVersion: PJM_ADOPTION_SCHEMA_VERSION,
+        },
+      });
+    }
+  } else {
+    await writeOatConfig(projectRoot, {
+      ...config,
+      pjm: { initialized: true, schemaVersion: PJM_ADOPTION_SCHEMA_VERSION },
+    });
+  }
 
   // Repository AGENTS guidance belongs to adoption, not to pack placement:
   // it is written here — after scaffold verification and alongside the

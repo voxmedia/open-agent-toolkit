@@ -10,6 +10,7 @@ import {
   type Lifecycle,
   type Phase,
   type PhaseStatus,
+  type ProjectBlocker,
   type WorkflowMode,
 } from '../types';
 
@@ -58,7 +59,7 @@ const ISO_TIMESTAMP_PATTERN =
 export interface ParsedStateFrontmatter {
   currentTask: string | null;
   lastCommit: string | null;
-  blockers: string[];
+  blockers: ProjectBlocker[];
   hillCheckpoints: string[];
   hillCompleted: string[];
   parallelExecution: boolean;
@@ -122,7 +123,7 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
     lastCommit: normalizeNullableString(parsed.oat_last_commit, {
       treatPlaceholdersAsNull: true,
     }),
-    blockers: parseStringArray(parsed.oat_blockers),
+    blockers: parseBlockers(parsed.oat_blockers),
     hillCheckpoints: parseStringArray(parsed.oat_hill_checkpoints),
     hillCompleted: parseStringArray(parsed.oat_hill_completed),
     parallelExecution: parseBoolean(parsed.oat_parallel_execution),
@@ -247,6 +248,62 @@ function isFailedAttemptEvidenceLocator(value: string | null): value is string {
     typeof fileName === 'string' &&
     ['manifest.json', 'failure.json'].includes(fileName)
   );
+}
+
+function parseBlockers(value: unknown): ProjectBlocker[] {
+  if (typeof value === 'string') {
+    const normalized = normalizeNullableString(value, {
+      treatPlaceholdersAsNull: true,
+    });
+    if (normalized === null) return [];
+    try {
+      value = JSON.parse(normalized);
+    } catch {
+      return [normalized];
+    }
+  }
+  if (!Array.isArray(value)) return [];
+
+  const blockers: ProjectBlocker[] = [];
+  for (const item of value) {
+    if (typeof item === 'string') {
+      const reason = normalizeNullableString(item, {
+        treatPlaceholdersAsNull: true,
+      });
+      if (reason !== null) blockers.push(reason);
+      continue;
+    } else if (
+      typeof item === 'object' &&
+      item !== null &&
+      !Array.isArray(item)
+    ) {
+      const record = item as Record<string, unknown>;
+      if (
+        typeof record.task_id === 'string' &&
+        record.task_id.trim() &&
+        typeof record.reason === 'string' &&
+        record.reason.trim() &&
+        typeof record.since === 'string' &&
+        record.since.trim()
+      ) {
+        // Preserve the producer's literal fields.
+        blockers.push({
+          task_id: record.task_id,
+          reason: record.reason,
+          since: record.since,
+        });
+        continue;
+      }
+    }
+    // Keep invalid entries visible to consumers that stop on a nonempty list.
+    try {
+      blockers.push(`Malformed blocker entry: ${JSON.stringify(item)}`);
+    } catch {
+      // Legal YAML aliases can form cycles that JSON cannot represent.
+      blockers.push('Malformed blocker entry: [unserializable value]');
+    }
+  }
+  return blockers;
 }
 
 function parseStringArray(value: unknown): string[] {

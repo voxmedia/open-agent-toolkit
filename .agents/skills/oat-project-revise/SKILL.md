@@ -5,12 +5,16 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.4
+  version: 1.0.5
 ---
 
 # Project Revise
 
 Accept post-PR human feedback and create revision tasks without starting a new project.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Purpose
 
@@ -174,6 +178,10 @@ Source: inline feedback ({today})
 
 - Modify: `{file}`
 
+Before the first edit, initialize `TASK_OWNED_FILES=()` and append each exact
+created, modified or removed file at its producer, including both rename sides.
+Retain the task list and its unique task identity for commit/retry.
+
 **Step 1:** {What to change}
 
 **Step 2: Verify**
@@ -183,8 +191,8 @@ Expected: {expected outcome}
 **Step 3: Commit**
 
 ```bash
-git add {files}
-git commit -m "fix(prev{N}-t01): {description}"
+OWNED_COMMIT_PATHS=("${TASK_OWNED_FILES[@]}")
+oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-revise:prev{N}-t01" --message "fix(prev{N}-t01): {description}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 ```
 
 Fix tasks that edit synced artifacts use `oat project push` under the scope
@@ -277,8 +285,8 @@ PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || { echo "oat
 if [ "$PROJECT_SCOPE" = "synced" ]; then
   oat project push "$PROJECT_PATH" --message "chore(oat): create revision tasks for {project-name}" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
 else
-  git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
-  git diff --cached --quiet || git commit -m "chore(oat): create revision tasks for {project-name}"
+  OWNED_COMMIT_PATHS=("$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md")
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-revise:2" --message "chore(oat): create revision tasks for {project-name}" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```
 

@@ -26,13 +26,6 @@ oat pjm doctor --json
 Continue only when `adoption.state` is `declared` or `inferred-legacy`. Run
 `oat pjm init` first when adoption is absent or only partially initialized.
 
-> [!WARNING]
-> Running `oat pjm init` again, or running `oat pjm migrate --apply`,
-> currently replaces the `pjm` section of `.oat/config.json` and deletes any
-> `pjm.remote` settings, which hold the remote policy described below. Before
-> you rerun either command, back up `.oat/config.json`. Afterwards, run
-> `git diff .oat/config.json` and restore `pjm.remote` if it was removed.
-
 ## Lifecycle operations
 
 The command family is `oat pjm remote`:

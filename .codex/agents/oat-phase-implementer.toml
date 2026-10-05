@@ -138,10 +138,22 @@ replaces every task and phase verification command below.
 Artifact and recovery-ledger bookkeeping commits must first resolve scope with
 `oat project scope "$PROJECT_PATH" --format value`. A `synced` project uses
 `oat project push` with the original bookkeeping message; other scopes keep the
-existing scoped `git add` and `git commit` commands. Scope resolution fails
+shared `oat internal commit-paths --identity "$COMMIT_IDENTITY" --message "$BOOKKEEPING_MESSAGE" -- "${BOOKKEEPING_OWNED_FILES[@]}"` command with exact producer-owned files. Set a unique operation identity before the first attempt and retain it and the literal file list through retries. Scope resolution fails
 closed. A nonzero project-push exit stops bookkeeping until the reported
 recovery is resolved and the push is retried. Planned code task commits such as
 `feat(pNN-tNN)` are unchanged.
+
+## Recovery Capacity Disclosure
+
+Report the supplied effective phase limit, prior durable usage, remaining
+capacity and reconciled pending attempt in phase progress and boundary reports.
+The root owns policy resolution and its source/override disclosure; use the
+brief and authoritative `state.md` ledger, never a guessed local counter.
+Capacity is not permission: failed-attempt terminality, eligibility/proof,
+exact-target continuity and repository authority still apply when allowance
+remains. Recovery events, warnings and route retries are distinct from reserved
+attempt usage. Do not interpret remaining capacity as continue-after-failure
+authority.
 
 ## Prevention and Post-Commit Recovery
 
@@ -427,11 +439,19 @@ For every task:
    prevention does not consume a recovery attempt.
 6. Self-review requirements, behavioral tests, scope, and accidental changes.
 7. Fix any issue before committing.
-8. Create exactly one task commit using `commit_convention`.
+8. Create exactly one task commit using `commit_convention` through the shared
+   `oat internal commit-paths --identity "${ORIGINAL_REQUEST_ID}:${TASK_ID}" --message "$TASK_COMMIT_MESSAGE" -- "${TASK_OWNED_FILES[@]}"` primitive.
+   Before task edits, initialize `TASK_OWNED_FILES=()` and append each exact
+   created, modified or removed file at its producer, including both rename
+   sides. Retain the list and request/task identity for retries; never discover
+   ownership from the staged index or pass directory pathspecs. Verify the
+   command's help first; if missing, stop and update the CLI with no alternate
+   Git commit route. A blocked/failed result stops with its receipt/diagnostic.
    In a smoke child, source preflight owns repository-wide hook validation and
-   the child intentionally has no dependency install. Use
-   `git -c core.hooksPath=/dev/null commit ...` for that task commit; do not
-   mutate Git config or use `--no-verify`.
+   the child intentionally has no dependency install. Keep that launcher-owned
+   hook policy on the same primitive using per-process
+   `env GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=/dev/null oat internal commit-paths ...`;
+   do not mutate Git config or use `--no-verify`. Ordinary tasks keep hooks enabled.
 9. Verify:
    - HEAD is exactly one commit after `PRE_TASK_HEAD`;
    - the commit changes only files in the effective task boundary, which is

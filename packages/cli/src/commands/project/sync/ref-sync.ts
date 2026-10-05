@@ -1,6 +1,10 @@
+import { createHash, randomUUID } from 'node:crypto';
 import {
   lstat,
+  link,
   mkdir,
+  mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
@@ -11,6 +15,10 @@ import {
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { ensureScopedRootGitignore } from '@commands/init/gitignore';
+import {
+  commitExactPaths,
+  type ExactPathCommitResult,
+} from '@commands/shared/exact-path-commit';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
 import {
   canonicalizePath,
@@ -34,6 +42,7 @@ import {
 import {
   buildSyncedRecord,
   readSyncedRecord,
+  SyncedProjectRecordSchema,
   writeSyncedRecord,
 } from './record';
 
@@ -1000,7 +1009,26 @@ export async function abortSynced(
 }
 
 function normalizedPathspecs(repoRoot: string, pathspecs: string[]): string[] {
-  return pathspecs.map((pathspec) => repoRelativePath(repoRoot, pathspec));
+  return [
+    ...new Set(
+      pathspecs.map((pathspec) => repoRelativePath(repoRoot, pathspec)),
+    ),
+  ].sort();
+}
+
+class PendingRecordCommitError extends CliError {
+  constructor(
+    message: string,
+    readonly result: ExactPathCommitResult,
+  ) {
+    super(message, result.outcome === 'blocked' ? 1 : 2);
+  }
+}
+
+interface RecordCommitSettlement {
+  commit: string;
+  marker: { identity: string; bytes: string; ino: number; dev: number };
+  finalize: () => Promise<void>;
 }
 
 export async function commitRecordChange(
@@ -1009,24 +1037,158 @@ export async function commitRecordChange(
   message: string,
   git: GitRunner,
   options: AllowlistedPathspecOptions,
+  settlement?: RecordCommitSettlement,
 ): Promise<{ sha: string } | null> {
   assertAllowlistedPathspecs(repoRoot, pathspecs, options);
   const normalized = normalizedPathspecs(repoRoot, pathspecs);
-  await git.run(['add', '--', ...normalized], { cwd: repoRoot });
-  const changed = await git.run(
-    ['diff', '--cached', '--quiet', '--', ...normalized],
-    { cwd: repoRoot, allowFailure: true },
-  );
-  assertExpectedGitResult('git diff --cached --quiet', changed, [0, 1]);
-  if (changed.code === 0) {
-    return null;
-  }
+  await git.run(['rev-parse', '--is-inside-work-tree'], { cwd: repoRoot });
+  const gitDir = (
+    await git.run(['rev-parse', '--absolute-git-dir'], { cwd: repoRoot })
+  ).stdout;
+  const pendingDir = join(gitDir, 'oat-record-commit-pending');
+  await mkdir(pendingDir, { recursive: true });
+  const operation = createHash('sha256')
+    .update(JSON.stringify([message, normalized]))
+    .digest('hex');
+  const pendingPath = join(pendingDir, `${operation}.json`);
+  for (
+    let reservationAttempt = 0;
+    reservationAttempt < 2;
+    reservationAttempt++
+  ) {
+    if ((await readOptionalFile(pendingPath)) === null) {
+      if (settlement)
+        throw new CliError(
+          'The verified pending migration marker disappeared; preserve state for inspection.',
+          2,
+        );
+      const identity = `project-record:${operation}:${randomUUID()}`;
+      const temporary = await mkdtemp(join(pendingDir, 'reservation-'));
+      const complete = join(temporary, 'pending.json');
+      try {
+        await writeFile(
+          complete,
+          JSON.stringify({ identity, paths: normalized, message }),
+        );
+        try {
+          await link(complete, pendingPath);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        }
+      } finally {
+        await rm(temporary, { recursive: true, force: true });
+      }
+    }
+    const file = await open(pendingPath, 'r');
+    const markerIdentity = await file.stat();
+    let markerBytes: string;
+    try {
+      markerBytes = await file.readFile('utf8');
+    } finally {
+      await file.close();
+    }
+    const reservation = JSON.parse(markerBytes) as {
+      identity: string;
+      paths: string[];
+      message: string;
+    };
+    if (
+      settlement &&
+      (reservation.identity !== settlement.marker.identity ||
+        markerBytes !== settlement.marker.bytes ||
+        markerIdentity.ino !== settlement.marker.ino ||
+        markerIdentity.dev !== settlement.marker.dev)
+    )
+      throw new CliError(
+        'The verified pending migration marker was replaced; replacement preserved for inspection.',
+        2,
+      );
+    const clearPending = async (): Promise<void> => {
+      const current = await lstat(pendingPath).catch(
+        (error: NodeJS.ErrnoException) => {
+          if (error.code === 'ENOENT') return undefined;
+          throw error;
+        },
+      );
+      if (!current) return;
+      if (
+        current.ino !== markerIdentity.ino ||
+        current.dev !== markerIdentity.dev ||
+        (await readOptionalFile(pendingPath)) !== markerBytes
+      )
+        throw new CliError(
+          `Verified commit exists, but the pending marker at ${pendingPath} was replaced; replacement preserved for inspection.`,
+          2,
+        );
+      await rm(pendingPath);
+    };
+    if (
+      reservation.message !== message ||
+      JSON.stringify(reservation.paths) !== JSON.stringify(normalized) ||
+      !reservation.identity.startsWith(`project-record:${operation}:`)
+    )
+      throw new CliError(
+        `Unreconciled lifecycle commit marker at ${pendingPath}; preserve it and inspect before retrying.`,
+        2,
+      );
 
-  await git.run(['commit', '-m', message, '--', ...normalized], {
-    cwd: repoRoot,
-  });
-  const sha = (await git.run(['rev-parse', 'HEAD'], { cwd: repoRoot })).stdout;
-  return { sha };
+    const result = await commitExactPaths({
+      repoRoot,
+      paths: normalized,
+      message,
+      identity: reservation.identity,
+    });
+    // A public helper repair can settle Git while leaving our reservation. Only
+    // its positive prior/current publication proof authorizes retiring that
+    // reservation before one fresh generation. Never republish a superseded
+    // tree; a migration's finalization remains mandatory.
+    if (
+      !settlement &&
+      reservationAttempt === 0 &&
+      result.outcome === 'failed' &&
+      result.settledCommit &&
+      result.settledCommit === result.commit
+    ) {
+      await clearPending();
+      continue;
+    }
+    if (
+      settlement &&
+      ['committed', 'already-matching', 'nothing'].includes(result.outcome) &&
+      result.commit !== settlement.commit
+    )
+      throw new CliError(
+        'Pending migration settlement did not return its verified commit; marker preserved for inspection.',
+        2,
+      );
+    if (result.outcome === 'nothing') {
+      await clearPending();
+      return null;
+    }
+    if (
+      (result.outcome === 'committed' ||
+        result.outcome === 'already-matching') &&
+      result.commit
+    ) {
+      try {
+        await settlement?.finalize();
+        await clearPending();
+      } catch (error) {
+        throw new PendingRecordCommitError(errorMessage(error), result);
+      }
+      return { sha: result.commit };
+    }
+    throw new PendingRecordCommitError(
+      result.resumable === false
+        ? `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Preserve the pending marker at ${pendingPath}${result.receipt ? ` and receipt at ${result.receipt}` : ''} for inspection and explicit provenance reconciliation before any further commit attempt.`
+        : `Exact-path lifecycle commit ${result.outcome}: ${result.error ?? 'unverified result'}. Retry after resolving the reported condition with: oat internal commit-paths --identity ${shellQuote(reservation.identity)} --message ${shellQuote(message)} -- ${normalized.map(shellQuote).join(' ')}${result.receipt ? `; receipt ${result.receipt}` : ''}.`,
+      result,
+    );
+  }
+  throw new CliError(
+    'Lifecycle commit reservation changed repeatedly; preserve pending state for inspection.',
+    2,
+  );
 }
 
 export async function preflightSyncedCheckout(
@@ -1523,19 +1685,14 @@ export async function pruneSynced(
       if (!options.commit) {
         return { status: 'pruned', lifecycleCommit: null };
       }
-      await git.run(
-        [
-          'commit',
-          '-m',
-          `chore(oat): prune synced project ${target.slug}`,
-          '--',
-          relativeRecordPath,
-        ],
-        { cwd: target.repoRoot },
+      const committed = await commitRecordChange(
+        target.repoRoot,
+        [relativeRecordPath],
+        `chore(oat): prune synced project ${target.slug}`,
+        git,
+        { projectRoots: target },
       );
-      const lifecycleCommit = (
-        await git.run(['rev-parse', 'HEAD'], { cwd: target.repoRoot })
-      ).stdout;
+      const lifecycleCommit = committed?.sha ?? null;
       return { status: 'pruned', lifecycleCommit };
     }
   }
@@ -1671,14 +1828,306 @@ async function readOptionalFile(path: string): Promise<string | null> {
   }
 }
 
+// Only the existing migration reservation can resume after its source was removed.
+// No ownership is inferred from the current staged index or a missing directory.
+async function verifyPendingMigration(
+  target: SyncTarget,
+  git: GitRunner,
+  options: MigrateSharedToSyncedOptions,
+  sourcePath: string,
+) {
+  const stop = (): never => {
+    throw new CliError(
+      'Pending migration does not positively match its retained operation, parent source tree and published synced checkout; preserve all state for inspection.',
+      2,
+    );
+  };
+  const sourceRelative = repoRelativePath(target.repoRoot, sourcePath);
+  if (
+    !options.commit ||
+    canonicalizePath(sourcePath) !==
+      resolve(canonicalizePath(target.sharedRoot), target.slug)
+  )
+    stop();
+  if (
+    await lstat(sourcePath).then(
+      () => true,
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+      },
+    )
+  )
+    stop();
+  const gitDir = (
+    await git.run(['rev-parse', '--absolute-git-dir'], { cwd: target.repoRoot })
+  ).stdout;
+  const pendingDir = join(gitDir, 'oat-record-commit-pending');
+  const message = `chore(oat): migrate ${target.slug} to synced scope`;
+  const candidates = [];
+  for (const name of await readdir(pendingDir).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    },
+  )) {
+    if (!name.endsWith('.json')) continue;
+    const path = join(pendingDir, name);
+    const file = await open(path, 'r');
+    let bytes: string;
+    let identity;
+    try {
+      identity = await file.stat();
+      bytes = await file.readFile('utf8');
+    } finally {
+      await file.close();
+    }
+    const marker = JSON.parse(bytes) as {
+      identity: string;
+      paths: string[];
+      message: string;
+    };
+    if (marker.message === message)
+      candidates.push({ name, path, bytes, marker, identity });
+  }
+  if (candidates.length !== 1) stop();
+  const { name, path, bytes, marker, identity } = candidates[0]!;
+  if (
+    !Array.isArray(marker.paths) ||
+    !marker.paths.every((value) => typeof value === 'string') ||
+    typeof marker.identity !== 'string'
+  )
+    stop();
+  const paths = normalizedPathspecs(target.repoRoot, marker.paths);
+  const operation = createHash('sha256')
+    .update(JSON.stringify([message, paths]))
+    .digest('hex');
+  const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
+  const recordRelative = repoRelativePath(target.repoRoot, recordPath);
+  if (
+    name !== `${operation}.json` ||
+    !marker.identity.startsWith(`project-record:${operation}:`) ||
+    JSON.stringify(paths) !== JSON.stringify(marker.paths) ||
+    !paths.includes(recordRelative) ||
+    paths.some(
+      (value) =>
+        value !== recordRelative &&
+        value !== '.gitignore' &&
+        !value.startsWith(`${sourceRelative}/`),
+    )
+  )
+    stop();
+  const receiptPath = join(
+    gitDir,
+    'oat-exact-path-commits',
+    `${createHash('sha256').update(marker.identity).digest('hex')}.json`,
+  );
+  const receiptBytes = await readFile(receiptPath, 'utf8');
+  const receipt = JSON.parse(receiptBytes) as {
+    identity: string;
+    paths: string[];
+    parent: string;
+    commit?: string;
+    tree?: string;
+  };
+  if (
+    !receipt.commit ||
+    !receipt.tree ||
+    receipt.identity !== marker.identity ||
+    JSON.stringify(receipt.paths) !== JSON.stringify(paths)
+  )
+    stop();
+  const commit = receipt.commit;
+  if (!commit) return stop();
+  const run = async (args: string[], cwd = target.repoRoot) =>
+    (await git.run(['--literal-pathspecs', ...args], { cwd })).stdout;
+  if (
+    (await run(['rev-parse', 'HEAD'])) !== commit ||
+    (await run(['show', '-s', '--format=%P', commit])) !== receipt.parent ||
+    (await run(['rev-parse', `${commit}^{tree}`])) !== receipt.tree ||
+    !(await run(['show', '-s', '--format=%B', commit])).includes(
+      `Oat-Operation: ${createHash('sha256').update(marker.identity).digest('hex')}`,
+    )
+  )
+    stop();
+  const removed = (
+    await run([
+      'ls-tree',
+      '-r',
+      '--name-only',
+      '-z',
+      receipt.parent,
+      '--',
+      sourceRelative,
+    ])
+  )
+    .split('\0')
+    .filter(Boolean)
+    .sort();
+  if (
+    !removed.length ||
+    JSON.stringify(removed) !==
+      JSON.stringify(
+        paths.filter((value) => value.startsWith(`${sourceRelative}/`)),
+      )
+  )
+    stop();
+  if (
+    (await run([
+      'ls-tree',
+      '-r',
+      '--name-only',
+      commit,
+      '--',
+      sourceRelative,
+    ])) !== ''
+  )
+    stop();
+  const emitted = (
+    await run([
+      'diff-tree',
+      '--root',
+      '--no-commit-id',
+      '-r',
+      '--no-renames',
+      '--name-only',
+      '-z',
+      commit,
+    ])
+  )
+    .split('\0')
+    .filter(Boolean);
+  if (emitted.some((value) => !paths.includes(value))) stop();
+  const committedRecord = SyncedProjectRecordSchema.parse(
+    JSON.parse(await run(['show', `${commit}:${recordRelative}`])),
+  );
+  const record = await readSyncedRecord(recordPath);
+  if (
+    !record ||
+    record.slug !== target.slug ||
+    record.ref !== target.ref ||
+    record.remote !== target.remote ||
+    record.status !== 'active' ||
+    JSON.stringify(record) !== JSON.stringify(committedRecord)
+  )
+    stop();
+  if (!(await assertCanonicalSyncTargetIdentity(target))) return stop();
+  await assertNestedWorktree(target, git);
+  const sha = await headSha(target, git);
+  const remote = await git.run(
+    ['ls-remote', '--exit-code', target.remote, target.ref],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (
+    remote.code !== 0 ||
+    remote.stdout.split(/\s+/)[0] !== sha ||
+    (await run(['status', '--porcelain'], target.projectPath)) !== '' ||
+    (await run(['rev-parse', `${receipt.parent}:${sourceRelative}`])) !==
+      (await run(['rev-parse', 'HEAD^{tree}'], target.projectPath))
+  )
+    return stop();
+  const currentMarker = await lstat(path);
+  if (
+    currentMarker.ino !== identity.ino ||
+    currentMarker.dev !== identity.dev ||
+    (await readFile(path, 'utf8')) !== bytes ||
+    (await readFile(receiptPath, 'utf8')) !== receiptBytes
+  )
+    stop();
+  return {
+    commit,
+    parent: receipt.parent,
+    paths,
+    message,
+    sha,
+    sourceRelative,
+    marker: {
+      identity: marker.identity,
+      bytes,
+      ino: identity.ino,
+      dev: identity.dev,
+    },
+  };
+}
+
+async function finalizePendingMigration(
+  target: SyncTarget,
+  git: GitRunner,
+  options: MigrateSharedToSyncedOptions,
+  sourcePath: string,
+): Promise<MigrateResult> {
+  const { commit, paths, message, sha, sourceRelative, marker } =
+    await verifyPendingMigration(target, git, options, sourcePath);
+  const committed = await commitRecordChange(
+    target.repoRoot,
+    paths,
+    message,
+    git,
+    { projectRoots: target },
+    {
+      commit,
+      marker,
+      finalize: async () => {
+        const local = await (options.readOatLocalConfig ?? readOatLocalConfig)(
+          target.repoRoot,
+        );
+        if (local.activeProject === sourceRelative)
+          await (options.writeOatLocalConfig ?? writeOatLocalConfig)(
+            target.repoRoot,
+            {
+              ...local,
+              activeProject: repoRelativePath(
+                target.repoRoot,
+                target.projectPath,
+              ),
+            },
+          );
+      },
+    },
+  );
+  if (committed?.sha !== commit)
+    throw new CliError(
+      'Pending migration settlement did not return its verified commit; preserve state for inspection.',
+      2,
+    );
+  return {
+    status: 'migrated',
+    lifecycleCommit: commit,
+    sha,
+  };
+}
+
 export async function migrateSharedToSynced(
   target: SyncTarget,
   git: GitRunner,
   options: MigrateSharedToSyncedOptions,
 ): Promise<MigrateResult> {
   const sourcePath = resolve(options.sourcePath);
+  const sourceExists = await lstat(sourcePath).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === 'ENOENT') return undefined;
+      throw error;
+    },
+  );
+  if (!sourceExists) {
+    if (
+      (await readSyncedRecord(
+        syncedRecordPath(target.syncedRoot, target.slug),
+      )) === null
+    )
+      await assertConfinedMigrationSource(target, sourcePath);
+    return finalizePendingMigration(target, git, options, sourcePath);
+  }
   await assertConfinedMigrationSource(target, sourcePath);
   const sourceRelative = repoRelativePath(target.repoRoot, sourcePath);
+  const sourceFiles = (
+    await git.run(
+      ['--literal-pathspecs', 'ls-files', '-z', '--', sourceRelative],
+      { cwd: target.repoRoot },
+    )
+  ).stdout
+    .split('\0')
+    .filter(Boolean);
   const recordPath = syncedRecordPath(target.syncedRoot, target.slug);
   const destinationRelative = repoRelativePath(
     target.repoRoot,
@@ -1740,6 +2189,7 @@ export async function migrateSharedToSynced(
   let prePublishRemoteSha: string | null = null;
   let activeProjectUpdated = false;
   let gitignoreSelfHealStarted = false;
+  let migrationCommitPaths: string[] | undefined;
   try {
     if (needsGitignoreHeal) {
       const repair = await (
@@ -1784,9 +2234,14 @@ export async function migrateSharedToSynced(
       (await readOptionalFile(gitignorePath)) !== originalGitignore;
     let lifecycleCommit: string | null = null;
     if (options.commit) {
+      migrationCommitPaths = [
+        ...sourceFiles,
+        recordPath,
+        ...(gitignoreChanged ? [gitignorePath] : []),
+      ];
       const committed = await commitRecordChange(
         target.repoRoot,
-        [sourcePath, recordPath, ...(gitignoreChanged ? [gitignorePath] : [])],
+        migrationCommitPaths,
         `chore(oat): migrate ${target.slug} to synced scope`,
         git,
         { projectRoots: target },
@@ -1816,6 +2271,47 @@ export async function migrateSharedToSynced(
     }
     return { status: 'migrated', lifecycleCommit, sha: pushed.sha };
   } catch (error) {
+    if (error instanceof PendingRecordCommitError && error.result.commit) {
+      // committed:true is not a provenance proof: the helper can report a
+      // stored receipt's commit before validating it. Reuse the owning verifier
+      // and bind its proof to this invocation before choosing retention.
+      let retained: Awaited<ReturnType<typeof verifyPendingMigration>>;
+      try {
+        retained = await verifyPendingMigration(
+          target,
+          git,
+          options,
+          sourcePath,
+        );
+        if (
+          retained.commit !== error.result.commit ||
+          retained.parent !== preMigrationHead ||
+          !migrationCommitPaths ||
+          JSON.stringify(retained.paths) !==
+            JSON.stringify(
+              normalizedPathspecs(target.repoRoot, migrationCommitPaths),
+            )
+        )
+          throw new Error(
+            'Retained operation does not match this migration invocation.',
+            { cause: error },
+          );
+      } catch (verificationError) {
+        throw new CliError(
+          `${error.message} Migration commit provenance could not be independently verified; no rollback or finalization was attempted. Preserve all current state and recovery metadata for inspection. ${errorMessage(verificationError)}`,
+          2,
+        );
+      }
+      // The verifier proved the removed source is absent. Restore only retained
+      // tree files; the owning finalizer will settle source deletions in the index.
+      const restorePaths = retained.paths.filter(
+        (value) => !value.startsWith(`${sourceRelative}/`),
+      );
+      throw new CliError(
+        `${error.message} The verified migration commit and published synced checkout were retained. Inspect the hook's changes; removing the hook does not repair its changed bytes. After inspection, restore owned worktree bytes with: git --literal-pathspecs -C ${shellQuote(target.repoRoot)} restore --source ${shellQuote(retained.commit)} --worktree -- ${restorePaths.map(shellQuote).join(' ')}; then finalize with: oat --cwd ${shellQuote(target.repoRoot)} project migrate ${shellQuote(sourceRelative)} --to synced`,
+        error.exitCode,
+      );
+    }
     const compensationFailures: MigrationCompensationFailure[] = [];
     const compensate = async (
       resource: string,

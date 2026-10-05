@@ -5,12 +5,16 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.14
+  version: 1.7.15
 ---
 
 # Complete Project
 
 Mark the active OAT project lifecycle as complete.
+
+## Hook-safe exact-path commits
+
+Before a parent-branch commit, verify `oat internal commit-paths --help` succeeds. If unavailable, stop and update the OAT CLI; never fall back to a staged-index or pathspec-only commit. Set `COMMIT_IDENTITY` to a unique operation/artifact identity before the first attempt and retain it for every retry; use a new identity for a new operation. Pass only the exact produced file list, including tracked removals and both names of a rename. A blocked/failed result stops the workflow; retain its receipt and follow its diagnostics. Hooks remain enabled. Synced project artifacts continue through `oat project push`.
 
 ## Progress Indicators (User-Facing)
 
@@ -1237,21 +1241,23 @@ another lifecycle commit. `removed` is the completed-only terminal shape;
 `retained` is the equally terminal same-SHA active alias shape. A differing-SHA
 state is never a successful report.
 
-When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
-`projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
-`projectRecapExport.manifest.relativePath === "manifest.json"`. Confirm the
-reported source is the selected run under the pre-archive project path and the
-export root is inside the tracked
-`.oat/repo/reference/project-recaps/` root. Record:
+When `SELECTED_PROJECT_RECAP_RUN` is non-empty, require the report's
+`projectRecapExport.sourceRunRoot`, `exportRoot`, `runId`,
+`page.sourceRelativePath`, `page.originalSha256`, `page.exportedSha256`, and
+positive `verifiedArtifactCount`. The export is one tracked
+`.oat/repo/reference/project-recaps/<snapshotId>.html` page. Confirm the source
+is the selected run under the pre-archive project path, or under `archivePath`
+on a terminal retry. Verify the run ID and manifest-declared original page/hash
+against the retained archived run, and the exported hash against the tracked
+page. Record `exportRoot` as the final page, never as a package directory.
 
-- `sourceRunRoot` as the relocation source;
-- `exportRoot` as the final recap run root; and
-- `exportRoot/manifest.relativePath` as the final manifest.
-
-Do not infer or reconstruct the recap export root. The archive report is
-authoritative. A missing, malformed, mismatched, outside-root, or gitignored
-export report is an archive failure; stop before lifecycle bookkeeping.
-Never use the gitignored archive as evidence or a link target.
+The archive report is authoritative. A missing, malformed, mismatched,
+outside-root, or gitignored export report is an archive failure; stop before
+lifecycle bookkeeping. Link only to the tracked page. The full original run,
+including source, manifest, and QA evidence, remains in the archived project;
+it is retained evidence rather than a remote link target. Persisted older
+receipts with `manifest.relativePath === "manifest.json"` remain readable as
+legacy package receipts; new exports never create a tracked manifest sidecar.
 
 SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for durable projects, local-scope projects never pass a recap archive argument.
 
@@ -1286,12 +1292,12 @@ final synced links,
 dashboard refresh, the required bookkeeping push, tracked-PR closeout when
 applicable, and final confirmation.
 
-Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport.exportRoot`; do not derive them from the local archive.
+Rewrite recap links in the tracked summary export and the PR description body from the reported HTML `projectRecapExport.exportRoot`; do not derive them from the local archive. Preserve the reported run ID and original/exported page hashes in the summary outcome. On resume use `EXPORTED_PAGE_PATH`; `EXPORTED_MANIFEST_PATH` is populated only for a persisted legacy package receipt.
 Use a repository-relative path under
 `.oat/repo/reference/project-recaps/` and a blob URL on the current head branch
 while the PR is open. If `summaryExportFile` is non-null, update its concise
 `Explainer Outcome` recap link. Update the archived PR-description artifact
-used by Step 11 or 11.5 so its recap reference points to the same tracked root.
+used by Step 11 or 11.5 so its recap reference points to the same tracked HTML page.
 Omit either link when its containing artifact does not exist.
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
@@ -1423,8 +1429,15 @@ Expected changes may include:
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions; synced archive record deletion is already sealed by
   the archive-owned lifecycle commit
-- The complete tracked recap export and tracked summary export reported by
+- The tracked recap page and tracked summary export reported by
   archive (if present)
+
+Initialize `COMPLETION_OUTPUT_PATHS=()` before closeout writes. Each producer
+appends its exact successful output paths from the expected changes above,
+including tracked removals and both names of a rename; omit ignored local
+config/dashboard outputs. Retain that list for retries. Do not infer ownership
+from the staged index or pass project/export directories. The synced record
+producer already supplies the single exact `SYNCED_RECORD_PATH`.
 
 Run:
 
@@ -1433,23 +1446,15 @@ if [[ "$PROJECT_SCOPE" == "synced" ]]; then
   if [[ "$SHOULD_ARCHIVE" == "true" ]]; then
     test -n "$LIFECYCLE_COMMIT"
   else
-    git add -- "$SYNCED_RECORD_PATH"
-    if git diff --cached --quiet -- "$SYNCED_RECORD_PATH"; then
-      LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH")
-      node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
-        "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
-    else
-      git commit --only "$SYNCED_RECORD_PATH" \
-        -m "chore(oat): complete synced project ${PROJECT_NAME}" &&
-        LIFECYCLE_COMMIT=$(git rev-parse HEAD) &&
-        node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
-          "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
-    fi
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-complete:1" --message "chore(oat): complete synced project ${PROJECT_NAME}" -- "$SYNCED_RECORD_PATH" || exit 1
+    LIFECYCLE_COMMIT=$(git log -1 --format=%H -- "$SYNCED_RECORD_PATH") || exit 1
+    node "$NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT" \
+      "$SYNCED_RECORD_PATH" "$LIFECYCLE_COMMIT" "$PROJECT_NAME" || exit 1
   fi
 else
   git status --short
-  git add -- <exact completion and lifecycle paths>
-  git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
+  : "${COMPLETION_OUTPUT_PATHS:?retain the exact lifecycle producer file list}"
+  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-complete:2" --message "chore(oat): complete project lifecycle for ${PROJECT_NAME}" -- "${COMPLETION_OUTPUT_PATHS[@]}" || exit 1
   LIFECYCLE_COMMIT=$(git rev-parse HEAD)
 fi
 ```
@@ -1623,7 +1628,7 @@ Show user:
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
 - Include the lifecycle bookkeeping commit hash and the single push result.
-- Report the final recap outcome and tracked reference root.
+- Report the final recap outcome and tracked recap page path.
 - Report every absorbed-project retirement finding from the Step 3.7 sweep with
   its disposition. This is the required destination whenever the sweep could not
   append them to the project log — an absent log, or a resume whose log is

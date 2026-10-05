@@ -5955,8 +5955,31 @@ describe('oat gate', () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
+    await writeFile(join(root, 'unrelated.md'), 'BASE unrelated literal\n');
     const git = initGitRepo(root);
-    await writeFile(join(root, 'unrelated.md'), 'edited\n', 'utf8');
+    await writeFile(join(root, 'unrelated.md'), 'STAGED unrelated literal\n');
+    git(['add', 'unrelated.md']);
+    await writeFile(join(root, 'unrelated.md'), 'UNSTAGED unrelated literal\n');
+    const formatter = join(root, '.git', 'format.cjs');
+    await writeFile(
+      formatter,
+      "const fs=require('node:fs');for(const p of process.argv.slice(2))fs.writeFileSync(p,fs.readFileSync(p,'utf8').trim()+'\\n<!-- hook-final -->\\n');",
+    );
+    const config = join(root, '.git', 'lint-staged.json');
+    await writeFile(
+      config,
+      JSON.stringify({ '*.md': `${process.execPath} ${formatter}` }),
+    );
+    const writer = join(root, '.git', 'writer.cjs');
+    await writeFile(
+      writer,
+      "const cp=require('node:child_process');const env={...process.env};delete env.GIT_INDEX_FILE;const result=cp.spawnSync('git',['add','unrelated.md'],{env});if(result.status===0)process.exit(1);require('node:fs').writeFileSync('.git/concurrent-rejected','blocked');",
+    );
+    await writeFile(
+      join(root, '.git', 'hooks', 'pre-commit'),
+      `#!/bin/sh\nset -eu\n"${process.execPath}" "${writer}"\n"${process.execPath}" "${join(import.meta.dirname, '../../../../..', 'node_modules/lint-staged/bin/lint-staged.js')}" --config "${config}" --quiet\n`,
+      { mode: 0o755 },
+    );
 
     const runner = createProcessRunner({
       onExecute: async () => {
@@ -5975,8 +5998,19 @@ describe('oat gate', () => {
     expect(git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
       `${projectPath}/project-log.md`,
     );
-    expect(git(['status', '--porcelain', '--', 'unrelated.md'])).toContain(
-      'unrelated.md',
+    expect(git(['show', ':unrelated.md'])).toBe('STAGED unrelated literal');
+    expect(git(['show', 'HEAD:unrelated.md'])).toBe('BASE unrelated literal');
+    expect(await readFile(join(root, 'unrelated.md'), 'utf8')).toBe(
+      'UNSTAGED unrelated literal\n',
+    );
+    expect(
+      git(['status', '--porcelain', '--', `${projectPath}/project-log.md`]),
+    ).toBe('');
+    expect(await readFile(join(root, '.git/concurrent-rejected'), 'utf8')).toBe(
+      'blocked',
+    );
+    expect(git(['show', `HEAD:${projectPath}/project-log.md`])).toContain(
+      '<!-- hook-final -->',
     );
   });
 
