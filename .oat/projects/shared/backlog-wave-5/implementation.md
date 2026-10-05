@@ -4732,7 +4732,7 @@ Fresh same-target continuation /root/wave5_phase6_exit_fix (McClintock) accepted
     "task_name": "wave5_phase6_exit_fix"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -4740,6 +4740,15 @@ Fresh same-target continuation /root/wave5_phase6_exit_fix (McClintock) accepted
       "model": "gpt-6.1-sol",
       "effort": "high",
       "policy_source": "project-state+invocation-ceiling"
+    },
+    {
+      "source": "native-terminal-result",
+      "commits": [
+        "16ed03f295d14afbc24864ab2242c737ab83af18",
+        "dfc3156804101b654c5b7eb3ae3347c74664f32a",
+        "37388b66275c327bea678d2d11e2601cd28334f6"
+      ],
+      "result": "DONE three exact normal-hook commits; direct suites28/36/74, real public producer controls, checks/types/build/formats explicit0; root independently repeated all probes and exact proof; recovery0/10pendingnull; RELEASE"
     }
   ],
   "runtime_confirmation": "not-reported",
