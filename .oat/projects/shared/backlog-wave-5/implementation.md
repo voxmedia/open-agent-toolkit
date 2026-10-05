@@ -5018,3 +5018,7 @@ Recorded immutable recap built-needs-review with seven passing static QA checks 
 ## Final PR prepared — 2026-10-05T03:23:39.531283Z
 
 Owning PR skill produced description from current summary and qualified native/phase/exit receipts. All 44 ledger paths resolve, including inline file fragments; historical invalid gate remains ineligible. No waivers. Title/base resolved to approved wave/main. Recap static checks pass; browser needs review. Exact ten tickets closed, two individually disposed debt items remain open.
+
+## Final PR opened and linked — 2026-10-05T03:25:20.006628Z
+
+Created and immediately registered https://github.com/voxmedia/open-agent-toolkit/pull/356 on the approved wave branch against main. Existing final native/phase/exit proofs remain qualified; no new product change. PR body preserves Quick assurance and individually deferred debt. Complete/archive remains authorized by standing user direction.

@@ -12,28 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current lifecycle phase
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
-# oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_phase_status: pr_open
 oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
@@ -83,11 +62,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: complete
-oat_pr_status: ready
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/356
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-05T03:23:39.527073Z'
+oat_project_state_updated: '2026-10-05T03:25:19.962227Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -198,7 +177,7 @@ oat_post_implement_sequence:
 
 ## Current Phase
 
-Implementation - all44tasks verified; fresh final-r5 checks passed; native final r3 passed; renewed phase gate passed; exit review and lifecycle closeout pending
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -214,14 +193,16 @@ Implementation - all44tasks verified; fresh final-r5 checks passed; native final
 - ✓ Execution artifacts scaffolded
 - ✓ Approved ten-ticket requirements captured
 - ✓ Required plan reviews received; complexity check complete
+- ✓ PR created
+- ⧗ Awaiting human PR review
 
 ## Blockers
 
-None. All44tasks and three exit correction controls are verified. Final-r5 passes all18invocations; native final r3 passed; renewed p06/exit reviews and approved lifecycle closeout remain pending.
+None. Implementation, reviews, exit gate, summary, documentation, ten-ticket closure and recap static verification passed.
 
 ## Next Milestone
 
-Run configured p06gate, qualified implementation exit gate and approved summary/document/PR/recap/HiLL closeout. Individual carried findings are disposed for final independent assessment. Actual ticket closure and own completion remain pending; no PR created.
+PR is open for review. Continue approved archive completion; incorporate later feedback with `oat-project-revise`. No merge or release authorized.
 
 ### Approved continuation — 2026-10-04
 
