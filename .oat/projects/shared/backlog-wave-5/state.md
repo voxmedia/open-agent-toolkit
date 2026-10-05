@@ -133,17 +133,26 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md before treating this gate review as consumed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation:
+    runId: 15ac619e-5287-4199-b06f-0661758068a5
+    handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md before treating this gate review as consumed.
+    sourceArtifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md
+    scope: final
+    type: code
+    sourceFilename: final-review-2026-10-05T083744Z.md
+  receive_source_artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md
+  receive_archived_artifact: .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T083744Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    sourceFilename: final-review-2026-10-05T083744Z.md
+  receive_pre_head: e3c493c8493d42f97bfbadb7db1382f5bf63aa40
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-05T08:39:19.680252Z'
+  updated_at: '2026-10-05T08:40:00.431385Z'
   decided_at: null
 oat_post_implement_sequence:
   status: complete
