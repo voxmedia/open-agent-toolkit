@@ -639,6 +639,18 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `chore(sync): refresh final wave guidance projections`
 
+### Task p06-t09: Reconcile retired-reference smoke guard with captured legacy recap compatibility
+
+**Files:** `tools/smoke/explainer-kit/no-retired-references.test.mjs` only.
+
+**Dependencies:** p06-t08 complete. New bounded final-gate correction under operator-delegated routine continuation.
+
+**Change:** Final r2 runs all8303CLI tests successfully but the smoke scan flags built-durable in the approved legacy archive reader and two captured v1 contract files. Preserve those original bytes and compatibility behavior. Extend the existing named path/pattern allowlist only for that exact legacy label in those three exact paths; do not exclude a directory or suppress other retired symbols/outcomes. Retain every existing retirement control. Extend the existing allowlist keeper with admitted exact compatibility references and categorical rejection of another retired label/symbol in those paths plus the same legacy label outside them. No production, captured fixture, public version or generated-output changes.
+
+**Verification:** Deliberate-testing: scanner boundary still rejects newly shipped retired references; existing real-repository keeper provides observed pre-fix rejection, admitted legacy controls and out-of-scope bad references prove bounded exception. Direct existing Node smoke file plus relevant real archive suite, scoped lint/format; capture explicit exits and exact bytes/scope before/after normal hooks. Existing archive coverage owns current-v2 outcome refusal and authentic legacy acceptance; inspect it without inventing another compatibility framework. Root reruns full final sequence afterwards. No new test campaign.
+
+**Commit:** `test(recap): scope legacy reference scan exceptions`
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -812,9 +824,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 8 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections and final owning-command regeneration. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 9 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 39 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 40 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: null
+oat_current_task_id: p06-t09
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-All39planned tasks are complete; p06 remains in progress for lifecycle final review and the configured phase gate. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
+39/40planned tasks are complete; p06-t09 is the bounded smoke compatibility correction before final review/gates. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ All39planned tasks are complete; p06 remains in progress for lifecycle final rev
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 8     | 8/8       |
+| Phase 6 | in_progress | 9     | 8/9       |
 
-**Total:** 39/39 tasks completed
+**Total:** 39/40 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,7 +307,7 @@ All39planned tasks are complete; p06 remains in progress for lifecycle final rev
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — all8tasks complete; final-review boundary and configured phase gate pending
+**Status:** in_progress — p06-t09 smoke compatibility correction pending before final-review/gate
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -367,6 +367,10 @@ All39planned tasks are complete; p06 remains in progress for lifecycle final rev
 
 **Outcome/Verification:** Exactly65 owning-sync generated reviewer paths, all planned pre/post checks0. Root inspected and independently reran parity: all65bodies/providerselection fields,118bundledfiles/39owners/6vendors, five0.3.17versions, setupmanifest/config and index unchanged; drysync0drift. Fresh main remains6ec5313b/no affected drift. No second bumps/manual projection/HTML/code changes. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t08/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
+### Task p06-t09: Reconcile retired-reference smoke guard with captured legacy recap compatibility
+
+**Status:** pending
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -403,7 +407,7 @@ Implements ten approved maintenance tickets and the Plain Markdown guided-init a
 
 One hook-safe exact-path commit primitive serves CLI and skill callers, preserving unrelated staged/worktree bytes and receipt-bound retries. Backlog archive reports complete caller-owned paths without staging. Knowledge refresh preserves manual notes/collisions and emits the exact ownership report across independent shell calls. Recap archive verifies the original package and exports one dated HTML page with matching retry, conflict refusal and owned rollback. Seven historical packages and the stray fact base were fully preserved before migration. Four expressly approved derived SVG pages remove only30erroneous quote pairs/60bytes; original evidence and receipts remain unchanged. Docs distinguish legacy v1 from completionv2 assurance and four recap links use durable relative destinations.
 
-Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All39tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
+Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. 39tasks complete; one additional bounded smoke correction remains. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
 
 Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. The complete ordered final suites, fresh isolated-home runs, final native review, configured p06gate and implementation exit gate are pending at this baseline. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
 
@@ -4295,3 +4299,7 @@ Root receipt script expected string exits but this author emitted numeric exits0
 ### Root t08 receipt and terminal task baseline
 
 All39planned tasks verified; pointers cleared, implementation remains in progress. Original same accepted phase6 author completed8task commits with recovery0/10pendingnull. Root independently reran the exact parity proof into its own sink and verified task hashes/parent/reported-path union/exits. Final generation is declared plan task8; no duplicate owner bump or new implementation route. Routine review execution/checkpoint choices are delegated by the latest operator instruction, not inferred from OAT_AUTONOMOUS. No autonomy flags set.
+
+### Final r2 verification — bounded smoke correction
+
+At9a1b07f8, check0/types0 with five cache-hit mentions each; full pnpmtest reached8303/8303CLI pass, then smoke162/163pass, sequenceexit1 after192.66sec. Only failure is no-retired-references scanner flagging built-durable in the approved legacy reader and captured manifest/build-record. Later gates/fresh runs did not execute; receipts analysis/final-r2 preserved. This is compatibility-test alignment, not authority to change archived evidence or new-v2 outcomes. p06-t09 owns one exact smoke file; all other retirement guards stay. Operator delegated routine scoped correction, so no additional permission prompt. No review/recovery counter used. Root earlier called the reader normalization; precise behavior is schema-v1-only acceptance of the captured label, not byte or outcome normalization.

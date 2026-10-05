@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t09
 oat_last_commit: 07133f737d1a1d32421e87e51509984d1e4a02b5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — all39tasks complete; final verification/review pending
+**Status:** In progress — 39/40tasks; bounded smoke compatibility correction
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implementation - All39tasks complete; awaiting final verification and review
+Implementation - p06-t09 smoke compatibility correction before final verification/review
 
 ## Artifacts
 
@@ -154,7 +154,7 @@ Implementation - All39tasks complete; awaiting final verification and review
 
 ## Blockers
 
-None. All39tasks verified; prior failed final run retained. Routine continuation/checkpoints delegated by operator; no final pass inferred.
+None requiring user input. Final r2 smoke compatibility failure is assigned bounded p06-t09; prior final receipts retained, no final pass inferred.
 
 ## Next Milestone
 

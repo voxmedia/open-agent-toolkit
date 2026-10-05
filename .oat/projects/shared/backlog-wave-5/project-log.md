@@ -252,6 +252,10 @@ wave5-root-t07-receipt-final: Numeric exit0 schema verified; exact task commit/c
 
 wave5-root-final-baseline-r2: All39tasks complete; verified65projection/118bundle/39owner parity and individual finding dispositions; full final gates/reviews/exitgate/closeout pending. Operator delegates routine scoped choices; no merge/release.
 
+### 2026-10-05 · structural · oat-project-implement · p06-t09
+
+wave5-final-r2-smoke-alignment: CLI8303tests pass; smoke1failure flags approved legacy-only references. Add exact one-file task9 under operator-delegated scoped authority; preserve original fixture bytes and live retirement guards. Root final r2 stops, later gates unrun; no counter reset.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
