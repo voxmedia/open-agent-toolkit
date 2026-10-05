@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t12
+oat_current_task_id: p06-t13
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 13    | 11/13     |
+| Phase 6 | in_progress | 13    | 12/13     |
 
-**Total:** 42/44 tasks completed
+**Total:** 43/44 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -4657,8 +4657,10 @@ Configured user gate resolved once, declaration hash sha256:023ab163cd770b412403
 
 ### Task p06-t12: (review) Scope promotion commit identity to its operation
 
-**Status:** pending
-**Commit:** null
+**Status:** completed
+**Commit:** dfc3156804101b654c5b7eb3ae3347c74664f32a
+
+**Outcome/Verification:** Immutable promotion identity is captured before writes and preserved by the returned recovery command. Root repeated the actual public producer twice for distinct Lite generations at one slug, then foreign-lock refusal, original-command recovery and idempotent replay; exit0 and unrelated state preserved. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t12/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 **Finding:** Exit gate r1 L1 Low. Exact scope and acceptance controls are recorded in plan.md.
 
