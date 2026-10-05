@@ -1,44 +1,52 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-10-03
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-10-05
+oat_generated: true
+oat_summary_last_task: p06-t13
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
-# Project Log: backlog-wave-5
+# Backlog Wave Five
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+Delivery scope: 44 tasks implement ten approved maintenance tickets plus the requested Plain Markdown option in guided init. The six implementation phases are complete. Five public packages are prepared at 0.3.17; publication and merge remain outside this project’s authority. The Quick workflow intentionally has no separate specification or design artifact.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- **Validator boundaries:** Markdown and MDX require exactly one H1, including nested headings; code and frontmatter are excluded. Shared-document file and directory vendors all require a PR-scoped skill version bump.
+- **Lifecycle guidance:** Autonomous kickoff discloses effective recovery limits, override sources, consumed capacity and owning hard stops. Reviewer guidance requires credible proportional probes, accepted controls and honest evidence limits under the existing severity model.
+- **State preservation:** PJM init and migrate overlay their owned adoption markers without dropping unowned remote/storage/future fields. Structured blockers preserve task_id, reason and since for JSON consumers while legacy strings and malformed entries stay visible. Guided init offers Plain Markdown for existing documentation.
+- **Commit ownership:** A shared hook-safe exact-path primitive serves CLI and skill callers. Git-expanded hook paths, per-promotion identities, truthful scaffold recovery diagnostics, enabled hooks, real index restoration, receipt identity, retry settlement and unrelated staged/unstaged bytes are preserved. Backlog archive performs its atomic lifecycle write without staging and reports complete affected paths. Knowledge refresh preserves manual files and refuses collisions with unmarked output paths.
+- **Recap exports:** Archive verifies the complete original package and emits one dated self-contained HTML page. Validated normalized asset paths own script and stylesheet embedding; matching retries, conflict refusal and attempt-owned rollback retain their safety checks. All seven historical recap packages and the stray fact base were conserved before migration. The separately approved derived SVG correction removes only erroneous quote pairs; original source and QA evidence remain unchanged.
+- **Integration:** Canonical owner versions, provider projections, docs catalog and release metadata agree. Public documentation covers the ten tickets and the separate guided-init amendment.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+Backlog closeout: 10 tickets are closed and archived through the staging-neutral CLI and one complete exact-path commit. The two separately scoped review follow-ups remain open.
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+## Key Decisions
 
-## Entry format
+- **Export only the recap page:** Readers receive one tracked HTML artifact; the complete original run remains archived as evidence. This reduces reference clutter while retaining provenance and retry identity.
+- **Share one hook-safe exact-path commit primitive:** Callers retain the exact producer-owned file list and operation identity; the shared CLI owns hook execution, Git-state protection and receipt recovery. This keeps lifecycle writers consistent without broad index commits.
+- **Preserve hand-written knowledge:** Only marked generated files are replaced; manual files are retained and unmarked output-name collisions fail closed. Refresh reports every owned generated write and deletion for an exact-path commit.
 
-Judgment entries:
+## Verification
 
-```text
-### 2026-10-03 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+Final verification: all 18 root final-r5 invocations passed, including the ordered CI/release/docs gates plus applicable lint, format and documentation validators. Ordinary Turbo gates include cache replay and are distinguished from fresh evidence. All 13 closeout-r6 invocations also passed after the final PJM documentation clarification, including the required CI/release/docs sequence.
 
-Structural entries:
+Fresh package tests: 8533 tests passed through forced Turbo with isolated child HOME and zero cached tasks. Fresh smoke tests: 163 passed. Fresh skill tests: 700 passed. Fresh worktree scripts: one passed; canonical skill validation also passed. The source and built CLI agree on authentic asset embedding and traversal-refusal controls. Independent native and configured Opus reviews assessed product changes and individual finding dispositions. Native final r3 passed with no new findings. Renewed full Phase 6 review passed; configured cross-family final exit r2 passed with no new findings, independently verifying the three exit corrections. Earlier failed exit r1 remains historical and fixes_completed; no gate waiver was used.
 
-```text
-### 2026-10-03 · structural · <producer> · <ref>
-```
+The original failed final-suite receipts remain preserved. Bounded corrective tasks repaired stale version pins, evidence classification and hook-failure injection before final-r5. Self-local guard checks that did not reach shipped guidance were withdrawn instead of counted as assurance. Browser evidence is limited to the recorded migrated-page checks; no complete visual, HTTP or live-S3 feature-acceptance claim is made.
 
-## Entries
+## Tradeoffs and Follow-ups
 
-Entries are chronological and append-only.
+- **Stored-receipt diagnostic Medium:** Deferred by delegated root judgment to [Distinguish stored receipt branch return from rewritten history](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/pjm/backlog/items/BL-261005-distinguish-stored-receipt.md). The operation fails closed and preserves receipt/marker/state. Returning to the original branch and rewritten history need different guidance and real controls; automatic rewritten-history reconciliation is excluded.
+- **Maintenance edge cases:** [Resolve deferred Wave 5 maintenance edge cases](https://github.com/voxmedia/open-agent-toolkit/blob/wave/2026-10-03-backlog-wave-5/.oat/repo/pjm/backlog/items/BL-261005-resolve-deferred-wave-5.md) tracks ACMR deletion-policy expansion, owning-caller signal continuation, large historical-reference retry bounds, never-tracked omission guidance, rewritten untracked-draft policy, additional resource attributes/unquoted fragments and knowledge commit-message shell lifetime and positional-argument guidance. Each remains separately scoped; no blanket waiver or counter reset applies.
+- Quick-mode requirements are carried by discovery, plan and implementation receipts. Routine closeout decisions are delegated by the user; this does not authorize merge, release or unverified gate success.
+
+## Workflow Observations
 
 ### 2026-10-03 · structural · oat gate review · plan
 
@@ -304,10 +312,12 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 Retirement sweep: no absorbed projects recorded. wave5-retirement-empty
 
-### 2026-10-05 · structural · oat-project-complete · seal
+## Explainer Outcome
 
-Completion sealed at 2026-10-05T03:27:03.999249Z; project-log roll-up status: ok. oat-seal:backlog-wave-5
+Generated — needs review. Run `backlog-wave-5-final-20261005` is recorded as `built-needs-review`; all seven browser-free QA checks passed. T3 preview previously returned unavailable/NoHost; no visual acceptance is claimed. Archive will export the verified page and retain this original package. The run binds the implementation checkpoint at `5cf0aa4d4346f1f210870df60425f55ee35a2b5a`; later closeout prose does not alter its original inputs.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+Recap: [View the recap](../project-recaps/20261005-backlog-wave-5.html)
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Run: `f1843cb0-b341-4c00-afb2-ba62be4366a1`  
+Original page SHA-256: `sha256:da7ef887a91f5beab89e13493f67d840870bd63f77c10c53d341d80e2f7a7011`  
+Exported page SHA-256: `sha256:da7ef887a91f5beab89e13493f67d840870bd63f77c10c53d341d80e2f7a7011`

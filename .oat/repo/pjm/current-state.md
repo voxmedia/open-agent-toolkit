@@ -35,14 +35,18 @@ copying their content here. -->
 
 ## What's Implemented
 
-- Backlog Wave 5 (`wave/2026-10-03-backlog-wave-5`) completes ten maintenance
-  tickets and the Plain Markdown guided-init option. Five public packages are
-  prepared at `0.3.17`; they are not published. All44tasks, required verification
-  and independent final/phase/configured exit reviews passed. Exact-path commits,
-  PJM settings, structured blockers, knowledge ownership and original recap
-  evidence are preserved. The ten items are archived in this branch; two
-  separately scoped review follow-ups remain open. Project recap/completion
-  and the single PR are being finalized; merge and release are not authorized.
+- Backlog Wave 5 ([PR #356](https://github.com/voxmedia/open-agent-toolkit/pull/356),
+  `wave/2026-10-03-backlog-wave-5`) completes ten maintenance tickets and the
+  Plain Markdown guided-init option. All 44 tasks, 41 acceptance criteria,
+  required checks and independent final/phase/configured exit reviews passed.
+  Five public packages are prepared at `0.3.17`; they are not published.
+  The ten items are closed; two individually scoped review follow-ups remain
+  open. Lifecycle is complete and archived locally, with a
+  [durable project record](../reference/project-summaries/20261005-backlog-wave-5.md)
+  and [verified recap page](../reference/project-recaps/20261005-backlog-wave-5.html).
+  The recap remains built-needs-review because browser verification is unavailable.
+  Original run evidence is conserved; configured S3 copying was skipped because
+  AWS access is not configured. PR is open; merge and release are not authorized.
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
