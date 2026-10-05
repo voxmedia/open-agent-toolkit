@@ -152,7 +152,7 @@ oat_implement_exit_gate:
   updated_at: '2026-10-05T03:25:45.558049Z'
   decided_at: '2026-10-05T03:01:53.591075Z'
 oat_post_implement_sequence:
-  status: awaiting_approval
+  status: post_approval
   source: configured
   final_phase: p06
   pre_approval:
@@ -163,8 +163,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  approval: pending
-  approval_source: null
+  approval: approved
+  approval_source: user
   post_approval: []
   post_approval_completed: []
   failure: null
