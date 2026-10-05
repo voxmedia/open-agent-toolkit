@@ -907,7 +907,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`, `packages/cli/package.json`, `pnpm-lock.yaml`.
 **Source:** M3, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553887.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
-**Status:** pending
+**Status:** completed — `bca432f92ceb3698fe06524365d19df5e3153460`
 
 1. Analyze the source comment and reproduce the failure at its real Git/YAML/export/assertion boundary; docs take a conservation diff.
 2. Implement the smallest correction within the listed ownership. Preserve original archived evidence and unrelated changes.
@@ -1033,7 +1033,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original 44 tasks remain recorded; 5/10 remote revision tasks verified (49/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
+**Current acceptance:** Original 44 tasks remain recorded; 6/10 remote revision tasks verified (50/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
 
 **Planned task totals:**
 
