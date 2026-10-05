@@ -1056,6 +1056,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p07    | code     | fixes_completed | 2026-10-05 | reviews/archived/p07-review-2026-10-05T064042Z.md           | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
 | p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T074041Z.md           | a17dcf2428d80702b8a659deddd36645ea157ba2 | auto       | -                    |
 | p07    | code     | fixes_completed | 2026-10-05 | reviews/archived/p07-review-2026-10-05T074551Z.md           | 10043c30e6c2d0399fcbe523c586a817ccb10c6c | gate       | claude-opus-5-5-high |
+| p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T081847Z.md           | c19659b655df6ac2fb7f3f129ef796704bf84875 | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -1074,9 +1075,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
 - Phase 6: 13 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction and the final-review normalized asset embedding correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-- Phase 7: 10 remote review correction tasks and two bounded independent-gate fixes.
+- Phase 7: 13 tasks — ten remote review corrections and three bounded independent-gate exporter fixes.
 
-**Total: 56 tasks across 7 phases.** This is a planning total, not a completion claim.
+**Total: 57 tasks across 7 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
