@@ -124,15 +124,15 @@ oat_implement_exit_gate:
   freshness_head: af5019594f10f3dd0bf0e348a20b43ae61160421
   freshness_fingerprint: sha256:effective-delta-v2:f1a5a617195738020cc6fec326e9a0b069abb09d0609a6441bd3b46d47b09e2d
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 796626c6-c833-4d15-9ebc-2e66763eafa3
   launch_started_at: '2026-10-05T08:36:07.153926Z'
   launch_result_receipt: .oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/15ac619e-5287-4199-b06f-0661758068a5.json
   gate_run_id: 15ac619e-5287-4199-b06f-0661758068a5
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md
+  handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T083744Z.md before treating this gate review as consumed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -140,10 +140,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-05T08:36:37.522948Z'
+  updated_at: '2026-10-05T08:39:19.680252Z'
   decided_at: null
 oat_post_implement_sequence:
   status: complete
