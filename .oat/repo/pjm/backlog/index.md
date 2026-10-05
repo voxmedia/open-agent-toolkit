@@ -440,6 +440,7 @@
 | BL-260818-distinguish-operator-directed  | Design the budget-exhausted decision point for reviews and gates review-cycle cap                        | open   | medium   | task       | L        |
 | BL-260927-detect-unfilled-placeholders   | Detect unfilled placeholders and frontmatter-body drift at PR-final and completion                       | open   | medium   | task       | M        |
 | BL-261003-diagnose-review-finding        | Diagnose review finding overcounts and revalidate format-only repairs without relaunch                   | open   | medium   | bug        | M        |
+| BL-261005-distinguish-stored-receipt     | Distinguish stored receipt branch return from rewritten history                                          | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                               | open   | medium   | feature    | M        |
 | BL-261003-enforce-reconnaissance         | Enforce reconnaissance evidence and reconcile original-run review receipts                               | open   | medium   | bug        | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset                  | open   | medium   | task       | M        |
@@ -523,6 +524,7 @@
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs                | open   | low      | task       | S        |
 | BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                          | open   | low      | feature    | M        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                              | open   | low      | task       | S        |
+| BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation              | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                           | open   | low      | task       | M        |
 | BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                          | open   | low      | task       | S        |

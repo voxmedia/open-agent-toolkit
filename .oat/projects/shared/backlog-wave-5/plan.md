@@ -804,7 +804,6 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p01    | code     | fixes_completed | 2026-10-03 | reviews/archived/p01-review-2026-10-03T231742Z.md           | d116bf47814081a4d8784f637ada4a5854e154b0 | auto       | -                    |
 | p01    | code     | passed          | 2026-10-03 | reviews/archived/p01-review-2026-10-03T232906Z.md           | 2a173c4ab68e02fdf02ed2777dfd36958f86ca80 | gate       | claude-opus-5-5-high |
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004034Z.md           | b1bfa9e22aa1da9c029c0b438f8685afc1e41061 | auto       | -                    |
-| p02    | code     | received        | 2026-10-04 | reviews/p02-review-2026-10-04T004538Z.md                    | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 | p02    | code     | passed          | 2026-10-04 | reviews/archived/p02-review-2026-10-04T004538Z.md           | 787c6acb9d8223191979c02cb12e75addf00f45c | gate       | claude-opus-5-5-high |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T022902Z.md           | 48cb84b46f04cf1a0ba82e322fd3c4131c802a47 | auto       | -                    |
 | p03    | code     | fixes_completed | 2026-10-04 | reviews/archived/p03-review-2026-10-04T032627Z.md           | 0ab95601abdd58e124c37b4d9770e07aaade5b09 | auto       | -                    |
@@ -825,6 +824,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p05    | code     | passed          | 2026-10-04 | reviews/archived/p05-review-2026-10-04T213716Z.md           | 8893b61dde96a24fb05822b7ac3bc33c627e782f | auto       | -                    |
 | p05    | code     | passed          | 2026-10-04 | reviews/archived/p05-review-2026-10-04T215406Z.md           | a016b5adb2c222adf5401c50151152fc6a141da2 | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T012945Z.md         | f98c1c9bee564e7c1f3ef21b051d2288d6568191 | auto       | -                    |
+| p06    | code     | passed          | 2026-10-05 | reviews/archived/p06-review-2026-10-05T013729Z.md           | 7cc7f549d531d8c3131e4e5ee6dd2430ce5318af | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 

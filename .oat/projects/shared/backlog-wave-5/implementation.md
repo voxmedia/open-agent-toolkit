@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-41of41planned tasks are complete; p06 remains in progress for final review and configured gate. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
+All 41 planned tasks and six phases are complete. Native final review and every independent phase gate passed; root final-r4 verification passed all 18 invocations, including fresh suites. Individual carried dispositions were independently assessed. The separate configured implementation exit gate and lifecycle closeout remain pending. No merge or release authorized.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 10    | 10/10     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 12    | 12/12     |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | complete | 5     | 5/5       |
+| Phase 6 | complete | 10    | 10/10     |
 
 **Total:** 41/41 tasks completed
 
@@ -307,7 +307,7 @@ oat_generated: false
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — tasks complete; configured phase gate pending
+**Status:** complete — tasks complete; configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -4619,3 +4619,13 @@ Completed generic dispatch evidence:
   "floor_satisfaction": "satisfied"
 }
 ```
+
+## Phase 6 independent gate receive — 2026-10-05
+
+Root consumed the unique terminal **Reconnaissance:** not-attempted before artifact access, read the entire report and awaited the branch parser. Complete eligible JSON envelope, accepted marker, run/project/target and artifact invocation match. Configured Claude Opus 5.5/high is distinct from native Sol 6.1/high; actual runtime model telemetry remains not reported. Threshold high passed with 0 Critical/High/Medium and two Lows. Byte-identical archive `.oat/projects/shared/backlog-wave-5/reviews/archived/p06-review-2026-10-05T013729Z.md` (SHA256 904a8e6876bb1e354fcc6df856574f3b134291adb20e9c4c24d9bc6cf5857f4f); source deletion only, reviewed basis 7cc7f549 unchanged.
+
+L1 (Minor, explicit_deferral): agree that unset MERGE_BASE_SHA can truncate a commit subject; ownership/staging/safety remain protected. Defer non-blocking message polish to `.oat/repo/pjm/backlog/items/BL-261005-resolve-deferred-wave-5.md`, with a separate-process guard/recomputation criterion. No blocking phase task or manufactured code fix.
+
+L2 (Minor, artifact_alignment_required): addressed now by two tracked follow-ups: `.oat/repo/pjm/backlog/items/BL-261005-distinguish-stored-receipt.md` for the separately assessed p03 stored-receipt Medium and `.oat/repo/pjm/backlog/items/BL-261005-resolve-deferred-wave-5.md` for the six policy/edge-case deferrals plus L1. Scope estimates M/L are root judgments under the user's standing delegation, not a claim of a new personal scope review. The Medium stays an explicit post-release deferral: safety refusal preserves state; original-branch return and rewritten history are distinct; no automatic reconciliation or waiver. PR must name it and its reason individually.
+
+Each carried finding retains its original individual disposition in the root final table. The gate independently assessed them; no receipt/counter reset or blanket waiver. All ten phase tasks and all 41 project tasks are complete, but implementation exit/summary/document/recap/approval/closeout/one PR remain root-owned. No recon log entry was appended because reconnaissance was not attempted.
