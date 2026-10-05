@@ -876,8 +876,13 @@ export async function scaffoldProject(
           2,
         );
       }
+      const recoveryGuidance = detail.includes(
+        'oat internal commit-paths --identity ',
+      )
+        ? 'Use the exact identity and paths in the reported recovery command'
+        : 'Preserve the existing checkout, remote ref, discovery record, and any commit receipt. Inspect the parent commit and repair the reported condition before retrying record persistence';
       throw new CliError(
-        `Synced project ${options.projectName} and its discovery record were written, but the parent commit failed: ${detail}. Use the exact identity and paths in the reported recovery command; do not rerun project creation.`,
+        `Synced project ${options.projectName} and its discovery record were written, but the parent commit failed: ${detail}. ${recoveryGuidance}; do not rerun project creation.`,
         2,
       );
     }

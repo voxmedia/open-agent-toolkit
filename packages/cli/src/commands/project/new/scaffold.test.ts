@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import {
   access,
+  copyFile,
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   stat,
   symlink,
@@ -17,7 +19,10 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { createProjectOpenCommand } from '@commands/project/open/index';
 import { defaultGitRunner } from '@commands/project/sync/git';
-import { createSyncedProject } from '@commands/project/sync/ref-sync';
+import {
+  commitRecordChange,
+  createSyncedProject,
+} from '@commands/project/sync/ref-sync';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -991,6 +996,126 @@ describe('scaffoldProject', () => {
       }),
     ).not.toContain('record-commit-failure');
   });
+
+  it.each(['resumable', 'inspect-and-repair'] as const)(
+    'reports truthful %s guidance after a published parent record commit fails',
+    async (kind) => {
+      const fixture = await createSyncedFixture();
+      tempDirs.push(fixture.rootDir);
+      const root = fixture.cloneA;
+      const projectName = `record-guidance-${kind}`;
+      const projectPath = join(root, '.oat/projects/synced', projectName);
+      const recordPath = `${projectPath}.json`;
+      const git = (args: string[]) =>
+        execFileSync('git', args, {
+          cwd: root,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trimEnd();
+      await writeFile(join(root, 'README.md'), 'STAGED unrelated\n');
+      git(['add', 'README.md']);
+      await writeFile(join(root, 'README.md'), 'UNSTAGED unrelated\n');
+      const parent = git(['rev-parse', 'HEAD']);
+      let recordBefore: string | undefined;
+      let remoteBefore: string | undefined;
+      let stateBefore: string | undefined;
+      let failure: unknown;
+      try {
+        await scaffoldProjectImpl(
+          {
+            repoRoot: root,
+            projectName,
+            scope: 'synced',
+            commit: true,
+            refreshDashboard: false,
+            setActive: false,
+            home: join(fixture.rootDir, 'home'),
+          },
+          {
+            commitRecordChange: async (...args) => {
+              recordBefore = await readFile(recordPath, 'utf8');
+              stateBefore = await readFile(
+                join(projectPath, 'state.md'),
+                'utf8',
+              );
+              remoteBefore = execFileSync(
+                'git',
+                ['rev-parse', `refs/oat/projects/${projectName}`],
+                {
+                  cwd: fixture.originDir,
+                  encoding: 'utf8',
+                },
+              ).trimEnd();
+              let body: string;
+              if (kind === 'resumable') {
+                const alternate = join(root, '.git/guidance-index');
+                await copyFile(join(root, '.git/index'), alternate);
+                await writeFile(
+                  join(root, 'concurrent.txt'),
+                  'CONCURRENT staged\n',
+                );
+                execFileSync('git', ['add', 'concurrent.txt'], {
+                  cwd: root,
+                  env: { ...process.env, GIT_INDEX_FILE: alternate },
+                });
+                body = `cp '${alternate}' '${join(root, '.git/index')}'`;
+              } else {
+                // A valid commit can precede a pending-marker settlement failure;
+                // this real producer error supplies no same-identity command.
+                body =
+                  'for marker in .git/oat-record-commit-pending/*.json; do printf "\\n" >> "$marker"; done';
+              }
+              await writeFile(
+                join(root, '.git/hooks/post-commit'),
+                `#!/bin/sh\nset -eu\n${body}\n`,
+                { mode: 0o755 },
+              );
+              return commitRecordChange(...args);
+            },
+          },
+        );
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(Error);
+      const message = (failure as Error).message;
+      expect(message).toContain('parent commit failed');
+      expect(message).toContain('do not rerun project creation');
+      if (kind === 'resumable') {
+        expect(message).toContain('oat internal commit-paths --identity');
+        expect(message).toContain('reported recovery command');
+        expect(git(['show', ':concurrent.txt'])).toBe('CONCURRENT staged');
+      } else {
+        expect(message).toContain('pending marker');
+        expect(message).toContain('replaced');
+        expect(message).not.toContain('oat internal commit-paths');
+        expect(message).not.toContain('reported recovery command');
+        expect(message).toMatch(/inspect|repair/i);
+        const pending = await readdir(
+          join(root, '.git/oat-record-commit-pending'),
+        );
+        expect(pending.filter((name) => name.endsWith('.json'))).toHaveLength(
+          1,
+        );
+      }
+      expect(git(['rev-parse', 'HEAD'])).not.toBe(parent);
+      expect(await readFile(recordPath, 'utf8')).toBe(recordBefore);
+      expect(await readFile(join(projectPath, 'state.md'), 'utf8')).toBe(
+        stateBefore,
+      );
+      expect(
+        execFileSync('git', ['rev-parse', `refs/oat/projects/${projectName}`], {
+          cwd: fixture.originDir,
+          encoding: 'utf8',
+        }).trimEnd(),
+      ).toBe(remoteBefore);
+      expect(git(['worktree', 'list', '--porcelain'])).toContain(projectName);
+      expect(git(['show', ':README.md'])).toBe('STAGED unrelated');
+      expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+        'UNSTAGED unrelated\n',
+      );
+    },
+  );
 
   it('preserves published state and recovers an active-pointer failure through project open', async () => {
     const fixture = await createSyncedFixture();
