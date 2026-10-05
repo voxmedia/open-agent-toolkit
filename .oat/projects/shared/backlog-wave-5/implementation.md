@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-high gate r1. Automatic rewritten-history recovery remains deferred. Thirteen Low findings and one stored-receipt diagnostic Medium require final-scope disposition. All32original tasks are complete; 1 remaining generated task and Phase6 final review/gate/one-PR closeout remain.
+All39planned tasks are complete; p06 remains in progress for lifecycle final review and the configured phase gate. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 8     | 7/8       |
+| Phase 6 | in_progress | 8     | 8/8       |
 
-**Total:** 38/39 tasks completed
+**Total:** 39/39 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,7 +307,7 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — final guidance/generated tasks remain; final-review boundary and configured phase gate pending
+**Status:** in_progress — all8tasks complete; final-review boundary and configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -362,7 +362,10 @@ Phases 1–5 are complete. Phase 5 passed full native r3 and configured Opus-hig
 
 ### Task p06-t08: Refresh final generated projections and bundled parity
 
-**Status:** pending
+**Status:** completed
+**Commit:** 07133f737d1a1d32421e87e51509984d1e4a02b5
+
+**Outcome/Verification:** Exactly65 owning-sync generated reviewer paths, all planned pre/post checks0. Root inspected and independently reran parity: all65bodies/providerselection fields,118bundledfiles/39owners/6vendors, five0.3.17versions, setupmanifest/config and index unchanged; drysync0drift. Fresh main remains6ec5313b/no affected drift. No second bumps/manual projection/HTML/code changes. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t08/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 ## Orchestration Runs
 
@@ -390,23 +393,21 @@ builds replayed cached results. The workspace build was fully cached and was
 followed by a fresh direct CLI build. Autonomy/review checks verify the shipped
 guidance contract; they make no live provider or model-efficacy claim.
 
-Final version bumps, provider projections and the complete CI/release/docs-build
-gate set remain Phase 6/root closeout work. Phase results do not claim those
-final gates have passed.
+Final versions and provider projections are complete, with scoped pre/post gates and direct parity verified. Full CI/release/docs-build verification is restarting at the committed final baseline; no final-suite pass is inferred from task checks.
 
 Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm check` exit0 (five cache-hit mentions), `pnpm type-check` exit0 (five cache-hit mentions), `pnpm test` exit1 after230.3seconds, CLI34failed/8269passed/8303. The sequence stopped at test; later gates and fresh isolated-home runs did not execute. A direct seven-file rerun reproduced34failed/405passed/439, exit1, without Turbo. Original receipts remain in `analysis/final/`; no claim that final verification passed.
 
 ## Final Summary (for PR/docs)
 
-Implements the approved ten maintenance tickets and the Plain Markdown guided-init amendment. Documentation validation requires exactly one Markdown/MDX H1; the skill-bump gate follows changed shared-doc vendors; autonomous/reviewer guidance names effective limits, hard stops and proportional evidence. PJM reruns preserve unowned settings; status preserves structured blockers and visibly reports malformed entries.
+Implements ten approved maintenance tickets and the Plain Markdown guided-init amendment. Markdown/MDX docs require exactly one H1; the version gate follows changed shared-doc vendors. Autonomous kickoff discloses effective limits and owning hard stops; reviewers require proportional credible evidence under the existing severity model. PJM reruns preserve unowned settings; structured blockers retain task_id/reason/since and malformed entries remain visible.
 
-One shared hook-safe exact-path commit primitive preserves unrelated index/worktree state and supports receipt-bound retries across actual CLI/skill callers. Backlog archive reports complete caller-owned result paths without staging; knowledge refresh protects manual notes, collisions and unrelated staged changes. Recap archival verifies the full original package but exports one dated self-contained HTML page, with matching retry/refusal/owned rollback and real report/resume readers. Seven historical packages plus the stray fact base were fully preserved before migration; four explicitly approved derived SVG pages remove only30erroneous quote pairs/60bytes. Original evidence and historical receipts stay intact.
+One hook-safe exact-path commit primitive serves CLI and skill callers, preserving unrelated staged/worktree bytes and receipt-bound retries. Backlog archive reports complete caller-owned paths without staging. Knowledge refresh preserves manual notes/collisions and emits the exact ownership report across independent shell calls. Recap archive verifies the original package and exports one dated HTML page with matching retry, conflict refusal and owned rollback. Seven historical packages and the stray fact base were fully preserved before migration. Four expressly approved derived SVG pages remove only30erroneous quote pairs/60bytes; original evidence and receipts remain unchanged. Docs distinguish legacy v1 from completionv2 assurance and four recap links use durable relative destinations.
 
-Main surfaces: CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer roles/shared docs, project provider projections and reference docs/recaps. Five public packages are0.3.17;37skills/two roles bumped, generated outputs current at the p06 task boundary.
+Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All39tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
 
-Verification so far: received native and independent Opus reviews for Phases1–5; source-derived negative/accepted controls and real Git/hooks/producer-reader probes recorded per task. Phase6's seven pre/post checks and forced scoped package build pass. The ordered final run stopped on34test failures; check/types passed with cache replay noted. A focused rerun reproduced the failures. Remaining final gates, fresh isolated-home test reruns, final native/configured reviews and implementation exit gate are blocked pending the bounded correction-task decision. Thirteen Low findings/one stored-receipt diagnostic Medium require explicit final disposition. Browser evidence covers the migrated pages and30restored SVG marker references, with screenshot/mobile/HTTP limitations recorded; no full visual, live-provider or liveS3 claim.
+Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. The complete ordered final suites, fresh isolated-home runs, final native review, configured p06gate and implementation exit gate are pending at this baseline. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
 
-Accepted deltas: approved review corrections, user-added Plain Markdown choice and exact four derived-page refresh; no framework/schema/authoring-policy expansion. Automatic rewritten-history recovery remains deferred. Final ticket closeout, own recap, stored preapproval steps and one mergeable PR remain authorized after required reviews/approval; no merge or release.
+Accepted deltas are the approved review corrections, Plain Markdown option, exact four-page refresh and operator-approved final-test/delegated guidance fixes. Seven carried Lows are resolved, one keeper gap is resolved with deletion-policy expansion separately deferred, five Lows remain individually retained/deferred, and the stored-receipt diagnostic Medium has its own scoped deferral. Reasons remain in the root disposition table and task receipts. Automatic rewritten-history recovery is deferred. No blanket waiver or counter reset. Actual ten-ticket closure, own recap, approved sequence and one mergeable PR follow qualified final review/gates. Latest operator direction delegates routine scoped decisions and checkpoints; consequential unresolved choices still require direction. No merge or release.
 
 ## Planning dispatch
 
@@ -4290,3 +4291,7 @@ p01gate L1-L4 are resolved at80109a77 by owning-term/no-policy-expansion wording
 ### Root t07 receipt correction
 
 Root receipt script expected string exits but this author emitted numeric exits0. Assertion rejected before task tracking mutation; the structural log alone was committed6086f1b5. Root then read actual numeric receipts, independently verified paths/hashes/conservation/code and completed tracking here. No failed gate accepted, no task commit/recovery/history changed.
+
+### Root t08 receipt and terminal task baseline
+
+All39planned tasks verified; pointers cleared, implementation remains in progress. Original same accepted phase6 author completed8task commits with recovery0/10pendingnull. Root independently reran the exact parity proof into its own sink and verified task hashes/parent/reported-path union/exits. Final generation is declared plan task8; no duplicate owner bump or new implementation route. Routine review execution/checkpoint choices are delegated by the latest operator instruction, not inferred from OAT_AUTONOMOUS. No autonomy flags set.
