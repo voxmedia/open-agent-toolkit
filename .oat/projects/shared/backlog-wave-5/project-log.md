@@ -284,6 +284,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 wave5-p06-gate-passed-receive: full phase gate passed and consumed; 41 tasks and all six phases complete; two Lows have durable dispositions and tracked follow-ups; configured exit review and lifecycle tail remain.
 
+### 2026-10-05 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:1,medium:0,low:2 exit=1 status=blocked artifact=.oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md run=618a7f2c-8019-454f-84c1-8f737d6450f6
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
