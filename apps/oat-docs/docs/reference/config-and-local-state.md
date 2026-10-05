@@ -216,6 +216,8 @@ with `oat pjm init` as the recovery instead of treating absent
 `.oat/repo/pjm/` files as drift. See
 [Install vs. initialize](../getting-started/tool-packs.md#install-vs-initialize).
 
+`oat pjm init` and `oat pjm migrate` update only their adoption markers; they preserve `pjm.remote` and other existing, unowned configuration fields.
+
 Workflow automation preferences are also visible through `oat config` and can be set at local, shared, or user scope. Notable review-loop keys:
 
 - `workflow.autoArtifactReview.plan` - default-on bounded artifact review for generated `plan.md` files before implementation handoff
