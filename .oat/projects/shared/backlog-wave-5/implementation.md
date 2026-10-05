@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t01
+oat_current_task_id: p07-t02
 oat_generated: false
 ---
 
@@ -13,18 +13,17 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 12    | 12/12     |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | complete | 5     | 5/5       |
-| Phase 6 | complete | 13    | 13/13     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 12    | 12/12     |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | complete    | 5     | 5/5       |
+| Phase 6 | complete    | 13    | 13/13     |
+| Phase 7 | in_progress | 10    | 1/10      |
 
-| Phase 7 | in_progress | 10 | 0/10 |
-
-**Total:** 44/54 tasks completed
+**Total:** 45/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5046,3 +5045,17 @@ Retirement sweep found no absorbed projects; owning roll-up reports ok and verif
 Date: 2026-10-05T03:56:51.715502+00:00. Counts: 2 Critical, 1 High, 6 Medium, 1 Low; all converted to p07-t01 through p07-t10. Event artifact: `reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md`. No deferrals/dismissals. Rehydrated only seven tracked canonical project artifacts from d60fe159e33970ec1de6969d89b8cb59cd21084b; preserved `.oat/projects/archived/backlog-wave-5` and its original S3 snapshot. Existing final/native cap, configured approvals, and receipts remain historical; exit qualification marked stale for revision. This remote receive is cycle 1.
 
 Recon dispatches accepted: `pr356_git_recon` and `pr356_export_recon`, native explorer, Codex gpt-6.1-sol/high, read-only bounded probes. Small-recon launch rejected before child start due host thread limit; root owns that bounded recon. No implementation launched before committed review bookkeeping.
+
+## Phase 7 accepted implementation dispatch
+
+Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high
+
+Request: `pr356-r1-phase7-t3-20261005`. Canonical role: `.agents/agents/oat-phase-implementer.md`. Native exact target was rejected before child start (`agent thread limit reached`); no child existed. One same-target T3 child was accepted, with canonical role instructions, explicit Codex gpt-6.1-sol/high and standard service tier, full-access/default mode. Launch receipt: `node:delegated-task:command%3Amcp%3Acf4873b7-ba07-41d9-8e18-7d812eedf0c7%3Adelegate-task%3Apr356-r1-phase7-t3-20261005`; backing child: `thread:delegated-task:command%3Amcp%3Acf4873b7-ba07-41d9-8e18-7d812eedf0c7%3Adelegate-task%3Apr356-r1-phase7-t3-20261005`. Classification: consequential (Git/ref safety, migration recovery, archive provenance). Policy/ceiling: high; selected requested candidate gpt-6.1-sol/high, candidateIndex2. Recovery default10, phase override absent, used0/pendingnull. One child owns all ten sequential tasks; root separately commits tracking between tasks and continues the same handle. Original final review cap and old configured gate history are preserved, not reset.
+
+## Task p07-t01 root receipt — 2026-10-05T04:09:23.151272+00:00
+
+**Commit:** `e5d56e75c4764a083b2cbbfcddae08b254ef4e3a`
+
+**Outcome:** Refuses repository-wide active Git operations before receipt/index mutation, resolves linked-worktree metadata through Git, and requires the exact expected parent list before index publication.
+
+**Verification:** Baseline accepted the conflicting merge; all10 corrected regression oracles failed against the baseline. Corrected public CLI refuses with preserved HEAD/index/worktree/operation state; valid linked-worktree controls commit. Author keeper suite38 passed, postcommit controls10 passed; root independently reran38/38 (exit0). Scoped format/lint/type-check/build and hook-enabled task commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t01/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t02`; phase incomplete.

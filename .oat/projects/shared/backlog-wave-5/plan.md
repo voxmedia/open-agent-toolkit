@@ -837,7 +837,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `packages/cli/src/commands/shared/exact-path-commit.ts`, `packages/cli/src/commands/shared/exact-path-commit.test.ts`.
 **Source:** C1, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553874.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
-**Status:** pending
+**Status:** completed — `e5d56e75c4764a083b2cbbfcddae08b254ef4e3a`
 
 1. Analyze the source comment and reproduce the failure at its real Git/YAML/export/assertion boundary; docs take a conservation diff.
 2. Implement the smallest correction within the listed ownership. Preserve original archived evidence and unrelated changes.
@@ -1031,7 +1031,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Remote review reopened this project: original 44/44 tasks remain recorded, and 10 revision tasks await verification. Earlier final/exit qualifications are stale for the new product delta. Original history: native final r3, renewed p06 and configured exit r2 passed. Configured summary/document/PR sequence and standing user approval are recorded complete. PR #356 is open. R9 awaits the actual own recap archive/export proof; the other 40 criteria including U1 are accepted. No merge or release.
+**Current acceptance:** Original 44 tasks remain recorded; 1/10 remote revision tasks verified (45/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
 
 **Planned task totals:**
 
