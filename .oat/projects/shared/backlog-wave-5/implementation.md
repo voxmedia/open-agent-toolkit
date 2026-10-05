@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t04
+oat_current_task_id: p07-t05
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 3/10      |
+| Phase 7 | in_progress | 10    | 4/10      |
 
-**Total:** 47/54 tasks completed
+**Total:** 48/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5079,3 +5079,11 @@ The ignored root progress script incorrectly nested the implementation-ledger wr
 **Outcome:** One owning verifier proves migration retention and finalization, including full parents, invocation binding, emitted owned tree and published checkout. Unverified metadata stops without compensation; hook drift is preserved with tested restore/finalize guidance.
 
 **Verification:** Baseline rollback poisoned retry reproduced. Full122/122 and postcommit4/4 passed; root independently4/4 exit0. Guard neutralization failed and guard restored. Format/lint/type/build/public/commit exit0. Root verified exact listed files, sole expected parent, clean worktree, baseline logs and manifest. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t03/evidence.json`. Recovery0/10 used, pendingnull.
+
+## Task p07-t04 root receipt — 2026-10-05T05:00:40.814156+00:00
+
+**Commit:** `baaabcdf8e0c26e058e93240618b8c6ea841e07b`
+
+**Outcome:** Catches nonserializable malformed blocker values and emits a bounded nonempty diagnostic, preserving ordinary JSON diagnostics and literal valid legacy/structured blockers.
+
+**Verification:** Named real-YAML alias keeper fails the baseline circular JSON TypeError and passes corrected implementation. Real parseStateFrontmatter/getProjectState/listProjects/CLI status JSON and human probes pass; controls preserved. Control-plane156/156, CLIstatus22/22, postcommit1/1, scoped check/type/build/format and hook-enabled commit exit0. Root independently verified the built parser alias diagnostic and accepted legacy control. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t04/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t05`; phase incomplete.

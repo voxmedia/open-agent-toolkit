@@ -879,7 +879,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `packages/control-plane/src/state/parser.ts`, `packages/control-plane/src/state/parser.test.ts`.
 **Source:** M1, https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553882.
 **Dependencies:** Execute sequentially after the preceding revision task; task 1 follows the complete original six phases.
-**Status:** pending
+**Status:** completed — `baaabcdf8e0c26e058e93240618b8c6ea841e07b`
 
 1. Analyze the source comment and reproduce the failure at its real Git/YAML/export/assertion boundary; docs take a conservation diff.
 2. Implement the smallest correction within the listed ownership. Preserve original archived evidence and unrelated changes.
@@ -1031,7 +1031,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original 44 tasks remain recorded; 3/10 remote revision tasks verified (47/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
+**Current acceptance:** Original 44 tasks remain recorded; 4/10 remote revision tasks verified (48/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
 
 **Planned task totals:**
 
