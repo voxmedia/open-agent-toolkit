@@ -13,6 +13,7 @@ import {
 import { basename, dirname, join } from 'node:path';
 
 import { completedSyncedRefName } from '@commands/shared/project-scope';
+import { readOatLocalConfig, writeOatLocalConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
 import {
   addLinkedWorktree,
@@ -368,6 +369,272 @@ describe('createSyncedProject', () => {
       await fixture.cleanup();
     }
   });
+});
+
+describe('migration committed-hook failure recovery', () => {
+  it.each(['accepted', 'extra-parent'] as const)(
+    'retains hook-owned drift for explicit restore and owning finalization (%s)',
+    async (condition) => {
+      const fixture = await createSyncedFixture();
+      try {
+        const root = fixture.cloneA;
+        const slug = 'hook-recovery';
+        const source = await addTrackedMigrationSource(root, slug);
+        const sourceRelative = `.oat/projects/shared/${slug}`;
+        const recordRelative = `.oat/projects/synced/${slug}.json`;
+        const recordPath = join(root, recordRelative);
+        const target = buildSyncTarget(root, '.oat/projects/shared', slug);
+        const parent = git(root, ['rev-parse', 'HEAD']);
+        await writeOatLocalConfig(root, {
+          version: 1,
+          activeProject: sourceRelative,
+        });
+        const config = await readOatLocalConfig(root);
+        await writeFile(join(root, 'README.md'), 'STAGED literal\n');
+        git(root, ['add', 'README.md']);
+        await writeFile(join(root, 'README.md'), 'UNSTAGED literal\n');
+        const hookPath = join(root, '.git/hooks/post-commit');
+        await writeFile(
+          hookPath,
+          `#!/bin/sh\nprintf '\\n' >> '${recordRelative}'\n`,
+          { mode: 0o755 },
+        );
+        const options = { sourcePath: source, commit: true };
+        const failure = await migrateSharedToSynced(
+          target,
+          defaultGitRunner,
+          options,
+        ).catch((error: unknown) => error);
+        expect(failure).toBeInstanceOf(Error);
+        expect((failure as Error).message).toContain(
+          'verified migration commit and published synced checkout were retained',
+        );
+        const commit = git(root, ['rev-parse', 'HEAD']);
+        expect(commit).not.toBe(parent);
+        expect(git(root, ['show', '-s', '--format=%P', commit])).toBe(parent);
+        expect(existsSync(source)).toBe(false);
+        expect(existsSync(target.projectPath)).toBe(true);
+        const checkoutHead = git(target.projectPath, ['rev-parse', 'HEAD']);
+        expect(
+          git(root, ['ls-remote', 'origin', target.ref]).split(/\s+/)[0],
+        ).toBe(checkoutHead);
+        const committedRecord = execFileSync(
+          'git',
+          ['show', `${commit}:${recordRelative}`],
+          { cwd: root },
+        );
+        expect(await readFile(recordPath)).toEqual(
+          Buffer.concat([committedRecord, Buffer.from('\n')]),
+        );
+        expect(await readOatLocalConfig(root)).toEqual(config);
+        const pendingDir = join(root, '.git/oat-record-commit-pending');
+        const markerPath = join(pendingDir, (await readdir(pendingDir))[0]!);
+        const receiptDir = join(root, '.git/oat-exact-path-commits');
+        const receiptPath = join(receiptDir, (await readdir(receiptDir))[0]!);
+        const markerBytes = await readFile(markerPath);
+        const receiptBytes = await readFile(receiptPath);
+        const index = await readFile(join(root, '.git/index'));
+        await rm(hookPath);
+        // Removing the hook does not repair the bytes it already changed.
+        await expect(
+          migrateSharedToSynced(target, defaultGitRunner, options),
+        ).rejects.toThrow('Committed owned bytes differ from the worktree');
+        expect(git(root, ['rev-parse', 'HEAD'])).toBe(commit);
+        expect(await readFile(recordPath)).toEqual(
+          Buffer.concat([committedRecord, Buffer.from('\n')]),
+        );
+        expect(await readFile(markerPath)).toEqual(markerBytes);
+        expect(await readFile(receiptPath)).toEqual(receiptBytes);
+        expect(await readFile(join(root, '.git/index'))).toEqual(index);
+        if (condition === 'extra-parent') {
+          const merge = git(root, [
+            'commit-tree',
+            git(root, ['rev-parse', `${commit}^{tree}`]),
+            '-p',
+            parent,
+            '-p',
+            commit,
+            '-m',
+            git(root, ['show', '-s', '--format=%B', commit]),
+          ]);
+          git(root, ['update-ref', 'HEAD', merge, commit]);
+          await writeFile(
+            receiptPath,
+            JSON.stringify({
+              ...JSON.parse(receiptBytes.toString()),
+              commit: merge,
+            }),
+          );
+          const foreign = await readFile(receiptPath);
+          await expect(
+            migrateSharedToSynced(target, defaultGitRunner, options),
+          ).rejects.toThrow('Pending migration does not positively match');
+          expect(git(root, ['rev-parse', 'HEAD'])).toBe(merge);
+          expect(await readFile(receiptPath)).toEqual(foreign);
+          expect(await readFile(markerPath)).toEqual(markerBytes);
+          expect(await readFile(join(root, '.git/index'))).toEqual(index);
+          return;
+        }
+        const message = (failure as Error).message;
+        const restore = message
+          .split('restore owned worktree bytes with: ')[1]!
+          .split('; then finalize with: ')[0]!;
+        const finalize = message.split('; then finalize with: ')[1]!;
+        expect(restore).toContain(`--source '${commit}'`);
+        execFileSync('/bin/sh', ['-c', restore], { cwd: root });
+        const cli = join(
+          import.meta.dirname,
+          '../../../../../../packages/cli/dist/index.js',
+        );
+        const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+        const finalCommand = finalize.replace(
+          /^oat /,
+          `${quote(process.execPath)} ${quote(cli)} --json `,
+        );
+        const result = spawnSync('/bin/sh', ['-c', finalCommand], {
+          cwd: root,
+          encoding: 'utf8',
+        });
+        expect(result.status, result.stderr + result.stdout).toBe(0);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+          status: 'migrated',
+          lifecycleCommit: commit,
+          sha: checkoutHead,
+        });
+        expect(git(root, ['rev-parse', 'HEAD'])).toBe(commit);
+        expect(await readdir(pendingDir)).toEqual([]);
+        expect(await readOatLocalConfig(root)).toMatchObject({
+          activeProject: `.oat/projects/synced/${slug}`,
+        });
+        expect(
+          git(root, [
+            'status',
+            '--porcelain',
+            '--',
+            sourceRelative,
+            recordRelative,
+          ]),
+        ).toBe('');
+        expect(git(root, ['show', ':README.md'])).toBe('STAGED literal');
+        expect(await readFile(join(root, 'README.md'), 'utf8')).toBe(
+          'UNSTAGED literal\n',
+        );
+      } finally {
+        await fixture.cleanup();
+      }
+    },
+    30000,
+  );
+
+  // Protects the fresh-failure retention decision; the resumed receipt case
+  // above cannot detect a false verified-retention claim made before finalization.
+  it('refuses a hook-landed merge before claiming verified migration retention', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const root = fixture.cloneA;
+      const slug = 'hook-landed-merge';
+      const source = await addTrackedMigrationSource(root, slug);
+      const target = buildSyncTarget(root, '.oat/projects/shared', slug);
+      const rewriter = join(root, '.git/merge-receipt.cjs');
+      await writeFile(
+        rewriter,
+        `const fs=require('node:fs'),cp=require('node:child_process');
+const git=args=>cp.execFileSync('git',args,{encoding:'utf8'}).trim();
+const dir='.git/oat-exact-path-commits';const path=dir+'/'+fs.readdirSync(dir).find(name=>name.endsWith('.json'));
+const receipt=JSON.parse(fs.readFileSync(path,'utf8'));const commit=git(['rev-parse','HEAD']);const tree=git(['rev-parse','HEAD^{tree}']);
+const merge=git(['commit-tree',tree,'-p',receipt.parent,'-p',commit,'-m',git(['show','-s','--format=%B',commit])]);
+git(['update-ref','HEAD',merge,commit]);fs.writeFileSync(path,JSON.stringify({...receipt,commit:merge,tree}));fs.copyFileSync('.git/index','.git/hook-index');\n`,
+      );
+      await writeFile(
+        join(root, '.git/hooks/post-commit'),
+        `#!/bin/sh\nexec "${process.execPath}" "${rewriter}"\n`,
+        { mode: 0o755 },
+      );
+      const failure = await migrateSharedToSynced(target, defaultGitRunner, {
+        sourcePath: source,
+        commit: true,
+      }).catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(Error);
+      expect((failure as Error).message).toContain(
+        'could not be independently verified',
+      );
+      expect((failure as Error).message).not.toContain(
+        'verified migration commit and published synced checkout were retained',
+      );
+      expect(
+        git(root, ['show', '-s', '--format=%P', 'HEAD']).split(' '),
+      ).toHaveLength(2);
+      expect(await readFile(join(root, '.git/index'))).toEqual(
+        await readFile(join(root, '.git/hook-index')),
+      );
+      expect(existsSync(source)).toBe(false);
+      expect(existsSync(target.projectPath)).toBe(true);
+      expect(
+        await readdir(join(root, '.git/oat-record-commit-pending')),
+      ).toHaveLength(1);
+      expect(
+        await readdir(join(root, '.git/oat-exact-path-commits')),
+      ).toHaveLength(1);
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 30000);
+
+  it('refuses an unverified stored receipt even when the shared helper reports committed true', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const root = fixture.cloneA;
+      const slug = 'unverified-hook-recovery';
+      const source = await addTrackedMigrationSource(root, slug);
+      const target = buildSyncTarget(root, '.oat/projects/shared', slug);
+      const options = { sourcePath: source, commit: true };
+      await installRejectingHook(root, 'pre-commit');
+      await expect(
+        migrateSharedToSynced(target, defaultGitRunner, options),
+      ).rejects.toThrow('Exact-path lifecycle commit failed');
+      expect(existsSync(source)).toBe(true);
+      await rm(join(root, '.git/hooks/pre-commit'));
+      const pendingDir = join(root, '.git/oat-record-commit-pending');
+      const markerPath = join(pendingDir, (await readdir(pendingDir))[0]!);
+      const markerBytes = await readFile(markerPath);
+      const receiptDir = join(root, '.git/oat-exact-path-commits');
+      const receiptPath = join(receiptDir, (await readdir(receiptDir))[0]!);
+      const parent = git(root, ['rev-parse', 'HEAD']);
+      await writeFile(
+        receiptPath,
+        JSON.stringify({
+          ...JSON.parse(await readFile(receiptPath, 'utf8')),
+          commit: parent,
+          tree: git(root, ['rev-parse', 'HEAD^{tree}']),
+          parent: '0000000000000000000000000000000000000000',
+        }),
+      );
+      const foreign = await readFile(receiptPath);
+      const calls: string[][] = [];
+      const runner: GitRunner = {
+        async run(args, runOptions) {
+          calls.push(args);
+          return defaultGitRunner.run(args, runOptions);
+        },
+      };
+      await expect(
+        migrateSharedToSynced(target, runner, options),
+      ).rejects.toThrow('could not be independently verified');
+      expect(
+        calls.some((args) => args[0] === 'reset' && args[1] === '--soft'),
+      ).toBe(false);
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(parent);
+      expect(await readFile(markerPath)).toEqual(markerBytes);
+      expect(await readFile(receiptPath)).toEqual(foreign);
+      expect(existsSync(source)).toBe(false);
+      expect(existsSync(target.projectPath)).toBe(true);
+      expect(
+        git(root, ['ls-remote', 'origin', target.ref]).split(/\s+/)[0],
+      ).toBe(git(target.projectPath, ['rev-parse', 'HEAD']));
+    } finally {
+      await fixture.cleanup();
+    }
+  }, 30000);
 });
 
 describe('migration rollback ownership', () => {

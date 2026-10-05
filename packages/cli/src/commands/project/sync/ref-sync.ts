@@ -42,6 +42,7 @@ import {
 import {
   buildSyncedRecord,
   readSyncedRecord,
+  SyncedProjectRecordSchema,
   writeSyncedRecord,
 } from './record';
 
@@ -1829,12 +1830,12 @@ async function readOptionalFile(path: string): Promise<string | null> {
 
 // Only the existing migration reservation can resume after its source was removed.
 // No ownership is inferred from the current staged index or a missing directory.
-async function finalizePendingMigration(
+async function verifyPendingMigration(
   target: SyncTarget,
   git: GitRunner,
   options: MigrateSharedToSyncedOptions,
   sourcePath: string,
-): Promise<MigrateResult> {
+) {
   const stop = (): never => {
     throw new CliError(
       'Pending migration does not positively match its retained operation, parent source tree and published synced checkout; preserve all state for inspection.',
@@ -1846,6 +1847,16 @@ async function finalizePendingMigration(
     !options.commit ||
     canonicalizePath(sourcePath) !==
       resolve(canonicalizePath(target.sharedRoot), target.slug)
+  )
+    stop();
+  if (
+    await lstat(sourcePath).then(
+      () => true,
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+      },
+    )
   )
     stop();
   const gitDir = (
@@ -1911,7 +1922,8 @@ async function finalizePendingMigration(
     'oat-exact-path-commits',
     `${createHash('sha256').update(marker.identity).digest('hex')}.json`,
   );
-  const receipt = JSON.parse(await readFile(receiptPath, 'utf8')) as {
+  const receiptBytes = await readFile(receiptPath, 'utf8');
+  const receipt = JSON.parse(receiptBytes) as {
     identity: string;
     paths: string[];
     parent: string;
@@ -1931,7 +1943,7 @@ async function finalizePendingMigration(
     (await git.run(['--literal-pathspecs', ...args], { cwd })).stdout;
   if (
     (await run(['rev-parse', 'HEAD'])) !== commit ||
-    (await run(['rev-parse', `${commit}^`])) !== receipt.parent ||
+    (await run(['show', '-s', '--format=%P', commit])) !== receipt.parent ||
     (await run(['rev-parse', `${commit}^{tree}`])) !== receipt.tree ||
     !(await run(['show', '-s', '--format=%B', commit])).includes(
       `Oat-Operation: ${createHash('sha256').update(marker.identity).digest('hex')}`,
@@ -1971,13 +1983,32 @@ async function finalizePendingMigration(
     ])) !== ''
   )
     stop();
+  const emitted = (
+    await run([
+      'diff-tree',
+      '--root',
+      '--no-commit-id',
+      '-r',
+      '--no-renames',
+      '--name-only',
+      '-z',
+      commit,
+    ])
+  )
+    .split('\0')
+    .filter(Boolean);
+  if (emitted.some((value) => !paths.includes(value))) stop();
+  const committedRecord = SyncedProjectRecordSchema.parse(
+    JSON.parse(await run(['show', `${commit}:${recordRelative}`])),
+  );
   const record = await readSyncedRecord(recordPath);
   if (
     !record ||
     record.slug !== target.slug ||
     record.ref !== target.ref ||
     record.remote !== target.remote ||
-    record.status !== 'active'
+    record.status !== 'active' ||
+    JSON.stringify(record) !== JSON.stringify(committedRecord)
   )
     stop();
   if (!(await assertCanonicalSyncTargetIdentity(target))) return stop();
@@ -1995,7 +2026,38 @@ async function finalizePendingMigration(
       (await run(['rev-parse', 'HEAD^{tree}'], target.projectPath))
   )
     return stop();
-  if ((await readFile(path, 'utf8')) !== bytes) stop();
+  const currentMarker = await lstat(path);
+  if (
+    currentMarker.ino !== identity.ino ||
+    currentMarker.dev !== identity.dev ||
+    (await readFile(path, 'utf8')) !== bytes ||
+    (await readFile(receiptPath, 'utf8')) !== receiptBytes
+  )
+    stop();
+  return {
+    commit,
+    parent: receipt.parent,
+    paths,
+    message,
+    sha,
+    sourceRelative,
+    marker: {
+      identity: marker.identity,
+      bytes,
+      ino: identity.ino,
+      dev: identity.dev,
+    },
+  };
+}
+
+async function finalizePendingMigration(
+  target: SyncTarget,
+  git: GitRunner,
+  options: MigrateSharedToSyncedOptions,
+  sourcePath: string,
+): Promise<MigrateResult> {
+  const { commit, paths, message, sha, sourceRelative, marker } =
+    await verifyPendingMigration(target, git, options, sourcePath);
   const committed = await commitRecordChange(
     target.repoRoot,
     paths,
@@ -2004,12 +2066,7 @@ async function finalizePendingMigration(
     { projectRoots: target },
     {
       commit,
-      marker: {
-        identity: marker.identity,
-        bytes,
-        ino: identity.ino,
-        dev: identity.dev,
-      },
+      marker,
       finalize: async () => {
         const local = await (options.readOatLocalConfig ?? readOatLocalConfig)(
           target.repoRoot,
@@ -2028,7 +2085,11 @@ async function finalizePendingMigration(
       },
     },
   );
-  if (committed?.sha !== commit) stop();
+  if (committed?.sha !== commit)
+    throw new CliError(
+      'Pending migration settlement did not return its verified commit; preserve state for inspection.',
+      2,
+    );
   return {
     status: 'migrated',
     lifecycleCommit: commit,
@@ -2128,6 +2189,7 @@ export async function migrateSharedToSynced(
   let prePublishRemoteSha: string | null = null;
   let activeProjectUpdated = false;
   let gitignoreSelfHealStarted = false;
+  let migrationCommitPaths: string[] | undefined;
   try {
     if (needsGitignoreHeal) {
       const repair = await (
@@ -2172,13 +2234,14 @@ export async function migrateSharedToSynced(
       (await readOptionalFile(gitignorePath)) !== originalGitignore;
     let lifecycleCommit: string | null = null;
     if (options.commit) {
+      migrationCommitPaths = [
+        ...sourceFiles,
+        recordPath,
+        ...(gitignoreChanged ? [gitignorePath] : []),
+      ];
       const committed = await commitRecordChange(
         target.repoRoot,
-        [
-          ...sourceFiles,
-          recordPath,
-          ...(gitignoreChanged ? [gitignorePath] : []),
-        ],
+        migrationCommitPaths,
         `chore(oat): migrate ${target.slug} to synced scope`,
         git,
         { projectRoots: target },
@@ -2208,16 +2271,44 @@ export async function migrateSharedToSynced(
     }
     return { status: 'migrated', lifecycleCommit, sha: pushed.sha };
   } catch (error) {
-    if (
-      error instanceof PendingRecordCommitError &&
-      error.result.committed &&
-      error.result.commit &&
-      ['blocked', 'committed', 'already-matching'].includes(
-        error.result.outcome,
-      )
-    ) {
+    if (error instanceof PendingRecordCommitError && error.result.commit) {
+      // committed:true is not a provenance proof: the helper can report a
+      // stored receipt's commit before validating it. Reuse the owning verifier
+      // and bind its proof to this invocation before choosing retention.
+      let retained: Awaited<ReturnType<typeof verifyPendingMigration>>;
+      try {
+        retained = await verifyPendingMigration(
+          target,
+          git,
+          options,
+          sourcePath,
+        );
+        if (
+          retained.commit !== error.result.commit ||
+          retained.parent !== preMigrationHead ||
+          !migrationCommitPaths ||
+          JSON.stringify(retained.paths) !==
+            JSON.stringify(
+              normalizedPathspecs(target.repoRoot, migrationCommitPaths),
+            )
+        )
+          throw new Error(
+            'Retained operation does not match this migration invocation.',
+            { cause: error },
+          );
+      } catch (verificationError) {
+        throw new CliError(
+          `${error.message} Migration commit provenance could not be independently verified; no rollback or finalization was attempted. Preserve all current state and recovery metadata for inspection. ${errorMessage(verificationError)}`,
+          2,
+        );
+      }
+      // The verifier proved the removed source is absent. Restore only retained
+      // tree files; the owning finalizer will settle source deletions in the index.
+      const restorePaths = retained.paths.filter(
+        (value) => !value.startsWith(`${sourceRelative}/`),
+      );
       throw new CliError(
-        `${error.message} The verified migration commit and published synced checkout were retained. After resolving the reported condition, finalize this operation with: oat --cwd ${shellQuote(target.repoRoot)} project migrate ${shellQuote(sourceRelative)} --to synced`,
+        `${error.message} The verified migration commit and published synced checkout were retained. Inspect the hook's changes; removing the hook does not repair its changed bytes. After inspection, restore owned worktree bytes with: git --literal-pathspecs -C ${shellQuote(target.repoRoot)} restore --source ${shellQuote(retained.commit)} --worktree -- ${restorePaths.map(shellQuote).join(' ')}; then finalize with: oat --cwd ${shellQuote(target.repoRoot)} project migrate ${shellQuote(sourceRelative)} --to synced`,
         error.exitCode,
       );
     }
