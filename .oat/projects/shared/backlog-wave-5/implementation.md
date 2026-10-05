@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ The ten remote PR corrections are implemented; two independently found exporter 
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 12    | 11/12     |
+| Phase 7 | in_progress | 12    | 12/12     |
 
-**Total:** 55/56 tasks completed
+**Total:** 56/56 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5278,3 +5278,12 @@ Phase remains in_progress with two declared fixes; this passing threshold does n
 **Outcome:** Same-page/same-file fragments match decoded real id/name attributes through existing markup/attribute readers, excluding raw-text bodies, comments and attribute descriptions; plain accepted and genuinely absent controls preserved.
 
 **Verification:** Three named keepers failed baseline and passed corrected; full archive148/148 exit0. Authentic July public5cases reproduce stripped entity links and false opaque targets at baseline and pass corrected with literal output/hash/original-byte conservation. Root independently reran all5public cases and3keepers, exits0. Scoped format/check/type/build and post-hook byte equality pass. No L2/L3 or protected archive changes. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t11/evidence.json`. Root verified exact two files, full sole parent, matching HEAD and clean tree; same original implementer handle, hooks enabled, recovery0/10 pendingnull. Next: `p07-t12`; composed acceptance remains pending.
+
+### Task p07-t12: (review) Retain the summary cause when recap repair refuses
+
+**Status:** completed
+**Commit:** d8cfc4bb6e963f6ba16c503296715f3a5249dbf7
+
+**Outcome:** On summary failure followed by recap cleanup/rebuild failure, retain both causes and repair-summary-destination/retry guidance; preserve original refusal/cleanup/hash/identity checks and warning-only successful fallback. No blanket output-preservation claim.
+
+**Verification:** Root independently reran eight focused fragment/diagnostic/fallback keepers, four authentic July diagnostic events, and eight healthy/link-free/retry controls, all exit0. Child baseline two keepers exit1, full archive148/148 and scoped format/check/type/build0. The supporting target fixture uses actual a id/name; prior t11 receipts remain unchanged. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t12/evidence.json`. Root verified exact two files, full sole parent, matching HEAD and clean tree; same original implementer handle, hooks enabled, recovery0/10 pendingnull. Next: `null`; composed acceptance remains pending.

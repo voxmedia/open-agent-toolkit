@@ -988,7 +988,7 @@ Compare same-page and same-file fragments against decoded real id/name attribute
 **Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
 **Source:** p07 independent gate p07-review-2026-10-05T064042Z.md, Low 2.
 **Dependencies:** Sequential after p07-t10; root bookkeeping before each continuation.
-**Status:** pending
+**Status:** completed — `d8cfc4bb6e963f6ba16c503296715f3a5249dbf7`
 
 When a summary failure is followed by a recap rebuild refusal, include both categorical errors and actionable repair-and-retry guidance while preserving the existing adopted/foreign page and original archive. Reproduce the actual public exporter failure, make the smallest owning correction, and protect it with proportional named existing-family regressions and valid accepted controls. Use deliberate-testing; preserve original archive/S3 and unrelated bytes. Run scoped owning verification and one hook-enabled exact-path task commit. Root owns full composed DoD and fresh required reviews.
 
@@ -1044,7 +1044,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T025900Z.md         | 29c8e57117141f7a97544d804610c7ab633cf1b9 | gate       | claude-opus-5-5-high |
 | final  | remote   | fixes_completed | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto       | -                    |
 | p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T062339Z.md           | 70aba3729da11d717e2f1aff05ff7ef0fc38d5e7 | auto       | -                    |
-| p07    | code     | fixes_added     | 2026-10-05 | reviews/archived/p07-review-2026-10-05T064042Z.md           | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
+| p07    | code     | fixes_completed | 2026-10-05 | reviews/archived/p07-review-2026-10-05T064042Z.md           | 782554d09274aabec4c5e07e854686684dad27b0 | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
@@ -1052,7 +1052,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original44 tasks plus 11/12 phase7 tasks verified (55/56 total). Composed verification and fresh qualification remain pending; original local/S3 archive and review history preserved.
+**Current acceptance:** Original44 tasks plus 12/12 phase7 tasks verified (56/56 total). Composed verification and fresh qualification remain pending; original local/S3 archive and review history preserved.
 
 **Planned task totals:**
 
