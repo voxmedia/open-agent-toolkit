@@ -108,9 +108,9 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-10-03T20:51:11.414Z'
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command: oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
@@ -118,42 +118,33 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 0f80dcc1e340c9ad90748dfa1ebf05a04af646c4
+  reviewed_head: af5019594f10f3dd0bf0e348a20b43ae61160421
   implementation_base_ref: origin/main
-  implementation_fingerprint: sha256:effective-delta-v2:aa12921771062b9e2510c16786eec6d0fc6191faf45b9eb2dbeaff45d3c9c59a
-  freshness_head: bfea7414916d057630c29df1f3323bec6c3671f6
-  freshness_fingerprint: sha256:effective-delta-v2:bf4811d6a985623a4e370a92e183013a66454852a1eb5c947a75435e836f0c18
+  implementation_fingerprint: sha256:effective-delta-v2:f1a5a617195738020cc6fec326e9a0b069abb09d0609a6441bd3b46d47b09e2d
+  freshness_head: af5019594f10f3dd0bf0e348a20b43ae61160421
+  freshness_fingerprint: sha256:effective-delta-v2:f1a5a617195738020cc6fec326e9a0b069abb09d0609a6441bd3b46d47b09e2d
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: 86f843ae-f978-4c5b-a47f-988cc05bdc3d
-  launch_started_at: '2026-10-05T02:56:19.927811Z'
-  launch_result_receipt: analysis/implementation-exit-gate-r2.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/b7782415-6c88-4764-876f-da5ee4ee8b19.json
-  gate_run_id: b7782415-6c88-4764-876f-da5ee4ee8b19
-  envelope_status: ok
-  artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md
-  handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.
-  receive_state: completed
-  receive_correlation:
-    runId: b7782415-6c88-4764-876f-da5ee4ee8b19
-    handoff: Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.
-    sourceArtifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md
-    scope: final
-    type: code
-    sourceFilename: final-review-2026-10-05T025900Z.md
-  receive_source_artifact: .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md
-  receive_archived_artifact: .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T025900Z.md
-  receive_event_identity:
-    scope: final
-    type: code
-    sourceFilename: final-review-2026-10-05T025900Z.md
-  receive_pre_head: a374a008d672c898aba5cbdbe7f2bd6787d6d159
-  receive_commit: b43f56dc58fb5b4494fb43c879bbdee68883e50d
-  receive_eligible: true
-  receive_completed: true
+  launch_state: intent_persisted
+  launch_attempt_id: 796626c6-c833-4d15-9ebc-2e66763eafa3
+  launch_started_at: '2026-10-05T08:36:07.153926Z'
+  launch_result_receipt: .oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-10-05T03:27:10.038329Z'
-  decided_at: '2026-10-05T03:01:53.591075Z'
+  updated_at: '2026-10-05T08:36:07.154070Z'
+  decided_at: null
 oat_post_implement_sequence:
   status: complete
   source: configured

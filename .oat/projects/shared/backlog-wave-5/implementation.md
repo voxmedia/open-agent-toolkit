@@ -5338,3 +5338,64 @@ Full report read after exactly one terminal reconnaissance signal; zero Critical
 Current configured final qualification passed0C0H0M1L with complete receive-eligible correlation and explicit narrowed prior phases1-6 coverage. Independent296CLI/38parser/6knowledge, check/type/skillbump/version gates pass; fullDoD attributed root. Root agrees with L1 percent-encoded fragment stripping, Task Scope Minor, but independently proves this limitation in pre-phase7 exporter780eca and current authentic July derivatives; plain valid links accepted and all originals/hashes conserved. It is URI decoding beyond t11 HTML character-reference contract, not an unimplemented approved t11 clause or new regression. Defer individually to explicit AC in BL-261005-resolve-deferred-wave-5, with space/non-ASCII/literal-percent/malformed-escape cases before owning implementation. Existing p03 stored-receipt Medium remains safe refusal with weak guidance and distinct provenance policy in BL-261005-distinguish-stored-receipt. Each carried Low family remains individually scoped: deletion policy, owning-caller signal continuation, historical-reference size/never-tracked/rewritten-draft policy, extra resource syntax, knowledge separate-shell/positional guidance and branch-pinned permalink durability. No aggregate waiver, new ordinary final round, counter reset or archive rewrite. All13 tasks accepted at their actual bounded contracts; no universal URI/HTML support claimed.
 
 Full report read after exactly one terminal reconnaissance signal; actual assessed counts {'critical': 0, 'high': 0, 'medium': 0, 'low': 1}; every Medium/Low has an explicit root disposition. Artifact `.oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T083054Z.md` archived byte-identically, SHA256 0d8c507199eb8c4f8c0e51a44db7d9b26a45e952fe2e3dbb39ac6d8ee6dbb75d. Immutable reviewed head 172ab30e6fe4d8e8d10a85feb3e21869501da19e, invocation gate, target claude-opus-5-5-high. Prior individual Medium/Low dispositions and native final cap3/operator continuation retained; no fourth ordinary final cycle, gate waiver, or attempt reset.
+
+## Preserved original completed exit carrier
+
+Original allowed generation was marked stale by remote corrections. Its complete immutable provenance follows; consumed remediation1/2 and no waivers remain unchanged.
+
+```json
+{
+  "status": "stale",
+  "resolution": "configured",
+  "disposition": "passed",
+  "config_fingerprint": "sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324",
+  "resolved_command": "oat --json gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final --exit-nonzero-on important \"Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.\"",
+  "resolved_description": "Semantic cross-family final implementation review before oat-project-implement exits.",
+  "project_override": null,
+  "on_failure": "block",
+  "max_attempts": 2,
+  "attempts_completed": 1,
+  "reviewed_head": "0f80dcc1e340c9ad90748dfa1ebf05a04af646c4",
+  "implementation_base_ref": "origin/main",
+  "implementation_fingerprint": "sha256:effective-delta-v2:aa12921771062b9e2510c16786eec6d0fc6191faf45b9eb2dbeaff45d3c9c59a",
+  "freshness_head": "bfea7414916d057630c29df1f3323bec6c3671f6",
+  "freshness_fingerprint": "sha256:effective-delta-v2:bf4811d6a985623a4e370a92e183013a66454852a1eb5c947a75435e836f0c18",
+  "waivers": [],
+  "launch_state": "result_persisted",
+  "launch_attempt_id": "86f843ae-f978-4c5b-a47f-988cc05bdc3d",
+  "launch_started_at": "2026-10-05T02:56:19.927811Z",
+  "launch_result_receipt": "analysis/implementation-exit-gate-r2.json",
+  "gate_run_marker": "/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/b7782415-6c88-4764-876f-da5ee4ee8b19.json",
+  "gate_run_id": "b7782415-6c88-4764-876f-da5ee4ee8b19",
+  "envelope_status": "ok",
+  "artifact": ".oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md",
+  "handoff": "Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.",
+  "receive_state": "completed",
+  "receive_correlation": {
+    "runId": "b7782415-6c88-4764-876f-da5ee4ee8b19",
+    "handoff": "Run oat-project-review-receive for .oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md before treating this gate review as consumed.",
+    "sourceArtifact": ".oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md",
+    "scope": "final",
+    "type": "code",
+    "sourceFilename": "final-review-2026-10-05T025900Z.md"
+  },
+  "receive_source_artifact": ".oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T025900Z.md",
+  "receive_archived_artifact": ".oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T025900Z.md",
+  "receive_event_identity": {
+    "scope": "final",
+    "type": "code",
+    "sourceFilename": "final-review-2026-10-05T025900Z.md"
+  },
+  "receive_pre_head": "a374a008d672c898aba5cbdbe7f2bd6787d6d159",
+  "receive_commit": "b43f56dc58fb5b4494fb43c879bbdee68883e50d",
+  "receive_eligible": true,
+  "receive_completed": true,
+  "failure": null,
+  "updated_at": "2026-10-05T03:27:10.038329Z",
+  "decided_at": "2026-10-05T03:01:53.591075Z"
+}
+```
+
+## Remote revision exit transition intent
+
+{"attemptId": "796626c6-c833-4d15-9ebc-2e66763eafa3", "launch": "intent_persisted", "receipt": ".oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json", "receive": "not_started", "receiveCommit": null, "runId": null, "status": "pending"}
