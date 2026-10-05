@@ -21,6 +21,8 @@ Track separately bounded follow-ups from the Wave 5 review disposition table: p0
 
 ## Acceptance Criteria
 
+- [ ] Show how retained affectedPaths populate positional arguments before the knowledge commit snippet; preserve empty-argument refusal and separate-shell proof.
+
 - [ ] Assess and scope each named edge case independently before implementation; do not expand the completed wave retroactively.
 - [ ] Make the knowledge commit snippet recompute or guard MERGE_BASE_SHA in its own shell, with a real separate-process control.
 - [ ] Record supported/unsupported resource attributes and historical-reference bounds; preserve original recap evidence.

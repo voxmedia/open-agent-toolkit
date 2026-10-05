@@ -9,18 +9,18 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-All 44 tasks are complete. Three bounded exit-review corrections are committed and independently verified: Git-expanded hook paths, per-promotion generation identities, and truthful scaffold recovery diagnostics. Prior reviews and final-r4 evidence remain historical; fresh final verification and reviews must qualify this changed basis before the approved closeout and single PR. No merge or release authorized.
+All 44 tasks and six phases are complete; see the authoritative phase/task ledger below. Fresh final-r5 verification, native final r3 and renewed Phase 6 gate passed. Configured exit review and lifecycle closeout remain pending. No merge or release authorized.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 12    | 12/12     |
-| Phase 4 | complete    | 4     | 4/4       |
-| Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 13    | 13/13     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 12    | 12/12     |
+| Phase 4 | complete | 4     | 4/4       |
+| Phase 5 | complete | 5     | 5/5       |
+| Phase 6 | complete | 13    | 13/13     |
 
 **Total:** 44/44 tasks completed
 
@@ -307,7 +307,7 @@ All 44 tasks are complete. Three bounded exit-review corrections are committed a
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — tasks complete; configured phase gate pending
+**Status:** complete — tasks complete; configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -4911,7 +4911,7 @@ Third final lifecycle review passed0C0H0M0L; standard cap forbids a fourth corre
     "task_name": "wave5_final_complexity"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -4928,6 +4928,12 @@ Third final lifecycle review passed0C0H0M0L; standard cap forbids a fourth corre
       "model": "gpt-6.1-sol",
       "effort": "high",
       "result": "accepted HOLD; read-only inline report at final cap; no writer ownership"
+    },
+    {
+      "source": "native-terminal-inline",
+      "result": "Deletion-rule compliant; trivial progress-prose simplification; no unsettled new operator item; RELEASE",
+      "report": ".oat/projects/shared/backlog-wave-5/reviews/archived/complexity-final-2026-10-05T025505Z.md",
+      "sha256": "46ff4c972e76571dbc5f9439253b652952cd784533f4389792ed7ffc2ea8d506"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -4940,3 +4946,21 @@ Third final lifecycle review passed0C0H0M0L; standard cap forbids a fourth corre
   "floor_satisfaction": "satisfied"
 }
 ```
+
+## Renewed Phase 6 root receive — 2026-10-05
+
+Unique terminal not-attempted consumed first, then complete envelope and full report read, branch parser awaited. Marker/run/project/invocation/target and explicit full-phase range correlate. 0 Critical/High/Medium, three Lows; byte-identical archive `.oat/projects/shared/backlog-wave-5/reviews/archived/p06-review-2026-10-05T025051Z.md` SHA256 169eff8dff10a073da9bb5c78329568e5fdedab50043d3d1167825ca8e37e62b. Independent gate directly passed 695 CLI cases, two node suites, three version/inventory gates and projection dry-run; broader final-r5 remains separately attributed.
+
+L1: retain guarded literal recovery-command detection. Agree coupling exists; actual producer regression guards both outcomes and future text drift fails that test. No present defect or new task; structured field adoption is conditional on a future producer API, as report explicitly says no change owed.
+
+L2: explicit Low deferral to BL-261005-resolve-deferred-wave-5, existing knowledge snippet usability and cross-shell guidance family. Empty positional arguments safely refuse; real supplied-argument producer/consumer passes. Add set-arguments clarity to the follow-up rather than reopening accepted ownership behavior. This is root judgment under existing finish delegation, not a new user personal review.
+
+L3: accept evidence qualification. CLI entry-shim hash proves that shim only, not full build identity. Baseline/fixed module behavior and source revisions, actual failed source controls and independent fixed probes qualify the changes. Preserve original receipts; do not relabel the shim hash or rerun passing suites. Future probes should hash changed modules/source commits. No shipped defect or blocking task.
+
+All carried findings retain individually assessed dispositions and two durable destinations; no blanket waiver, counter reset or new correctness cycle. All44 tasks and all six phases complete; configured exit and lifecycle tail still pending.
+
+## Final native review cap continuation — 2026-10-05
+
+Three native final cycles reached the standard cap; final r3 passed with no new findings. Full necessity report saved verbatim at `.oat/projects/shared/backlog-wave-5/reviews/archived/complexity-final-2026-10-05T025505Z.md` (SHA256 46ff4c972e76571dbc5f9439253b652952cd784533f4389792ed7ffc2ea8d506); no review frontmatter or ledger event. Verdict Deletion-rule compliant; central Git ownership and original-preserving recap exporter earn Keep, active progress prose earns trivial Simplify. No remaining finding dissolves through simplification; no newly unsettled operator choice identified.
+
+User's explicit direction “approve..at this point just stop asking me unless you think you need me. Take this project across the finish line” authorizes routine continuation and existing individually recorded deferrals. Record that standing choice as proceed with override of the native review-cycle cap only, without fourth ordinary correctness cycle, correctness waiver, gate waiver or fabricated autonomy environment. Existing approved deferrals retain their severity/reasons/destinations. Independently required configured gates remain binding; a new consequential unresolved finding would require user involvement. Current progress prose now points to the authoritative task ledger; historical evidence is unchanged.
