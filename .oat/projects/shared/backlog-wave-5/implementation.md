@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t09
+oat_current_task_id: p07-t10
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 8/10      |
+| Phase 7 | in_progress | 10    | 9/10      |
 
-**Total:** 52/54 tasks completed
+**Total:** 53/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5123,3 +5123,11 @@ Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yam
 **Outcome:** Public backlog lifecycle documentation now discloses automatic hook-enabled commits of exact archive closeout paths and owned handoff deletion; other reference edits remain uncommitted and there is no push step.
 
 **Verification:** Root conservation verifies surrounding bytes, headings and Markdown links unchanged; committed diff agrees with canonical skill. Child scoped formatter/markdownlint/docs validation/catalog and post-hook conservation/verification exit0. Composed independent phase review remains pending. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t08/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t09`; phase incomplete.
+
+## Task p07-t09 root receipt — 2026-10-05T05:57:08.224694+00:00
+
+**Commit:** `cfeef88ed02bdda2d62a5ad53f06354c6ada886c`
+
+**Outcome:** Broad-commit negative control checks structured AssertionError name/code/actual/expected instead of ANSI-dependent rendered text; independent preservation oracle remains unchanged.
+
+**Verification:** Original Node25.9.0 full file colored5/6 exit1 and uncolored6/6 exit0; corrected child and independent root full file colored6/6 and uncolored6/6 exit0. Real broad commit rejected and exact-owned CLI commit accepted by unchanged oracle. Scoped format/lint exit0; post-hook bytes match tested correction. Node24 not run. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t09/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t10`; phase incomplete.
