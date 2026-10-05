@@ -4865,3 +4865,78 @@ Exact canonical role1.2.11, accepted fresh native Sol6.1/high reviewer Wegener H
 Unique terminal not-attempted consumed before artifact access; full29541byte report read by root, branch parseReviewGateVerdict awaited. 0Critical/High/Medium/Low; auto/final/code and exactreturned Dispatch stamp. Sole artifact commit e0a61773e906df11a65e4b01a89813abdbb97e79 has exact START parent b6cd43700139da5fb3f2812047223f44f98c0fe3; committed/working hashes and clean tree verified. Byte-identical archive .oat/projects/shared/backlog-wave-5/reviews/archived/final-review-2026-10-05T023108Z.md, SHA256e4c8b3cdc85934eb632777dba279466afdd6365aed854d0a0c96e2f93c88f7da. Guarded f98c1c9bee564e7c1f3ef21b051d2288d6568191..b6cd43700139da5fb3f2812047223f44f98c0fe3 lifecycle lineage verified; earlier full41criterion coverage inherited explicitly. Independently executed138owning tests and three actualpublicprobes corroborate corrections; final-r5 is attributed fresh evidence, not reviewer replay. Broad65/64original preservation inherited, seven current export hashes freshly conserved; no visual/HTTP/liveS3claim.
 
 Root agrees with every separate carried assessment. Previously settled p03 storedreceipt Medium remains explicitly deferred postrelease under existing operator-delegated decision: safe refusal/evidence retained, originalbranchrecoverable, rewrittenhistoryautomaticpolicy excluded, followup BL-261005-distinguish-stored-receipt. Each remaining named Low stays individually scoped in BL-261005-resolve-deferred-wave-5; resolved findings retain exact task/receive linkage, no aggregate waiver. This is retention of approved dispositions, not a claim the user personally read this new artifact. No new findings/fix tasks/waivers/counter resets. Exit r1 H1/L1/L2 fixes_completed remains historical until configured re-review. Third lifecycle review is the standard-loop cap; no fourth ordinary review is authorized. The cap complexity check follows while configured phase/exit gates remain independent. Latest explicit user approval to finish governs routine checkpoint choices; any genuinely unsettled consequential choice still requires user. No recon log because not attempted.
+
+## Final cap complexity dispatch — wave5-final-complexity-r1
+
+Third final lifecycle review passed0C0H0M0L; standard cap forbids a fourth correctness cycle. Required read-only complexity report returns inline at same exact reviewer ceiling; installed method /Users/tstang/.agents/skills/complexity-review/SKILL.md. Root retains every decision. No unresolved new correctness findings; prior individual deferrals stay settled. Latest explicit user direction to finish is standing routine closeout authority, not a fabricated waiver or new personal review. Parallel configured p06 gate has separate producer/write scope; complexity child reads committed snapshot only.
+
+```json
+{
+  "request_id": "wave5-final-complexity-r1",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Read-only material complexity check at third final lifecycle review cap; assess approved ten-ticket contract and necessity, not a fourth correctness review or root receive.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema+t3-20261005-final-complexity",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-05T02:45:01.450282Z"
+  },
+  "authority": "read-only-inline-complexity-report",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_final_complexity"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "/root/wave5_final_complexity",
+      "nickname": "Bernoulli",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "accepted HOLD; read-only inline report at final cap; no writer ownership"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing review of exact-path Git ownership, archive original evidence, atomic rollback and lifecycle safety composition across completed wave.",
+  "floor_satisfaction": "satisfied"
+}
+```
