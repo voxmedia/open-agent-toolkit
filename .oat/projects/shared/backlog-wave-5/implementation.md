@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-All 44 tasks and six phases are complete; see the authoritative phase/task ledger below. Fresh final-r5 verification, native final r3 and renewed Phase 6 gate passed. Configured exit review and lifecycle closeout remain pending. No merge or release authorized.
+All 44 tasks and six phases are complete; see the authoritative ledger. Fresh verification and native/phase/configured exit reviews passed. Summary, documentation and ten-ticket closure are complete; final recap, PR and lifecycle archive remain in progress. No merge or release authorized.
 
 ## Progress Overview
 

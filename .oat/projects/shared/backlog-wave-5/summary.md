@@ -24,6 +24,8 @@ Delivery scope: 44 tasks implement ten approved maintenance tickets plus the req
 - **Recap exports:** Archive verifies the complete original package and emits one dated self-contained HTML page. Validated normalized asset paths own script and stylesheet embedding; matching retries, conflict refusal and attempt-owned rollback retain their safety checks. All seven historical recap packages and the stray fact base were conserved before migration. The separately approved derived SVG correction removes only erroneous quote pairs; original source and QA evidence remain unchanged.
 - **Integration:** Canonical owner versions, provider projections, docs catalog and release metadata agree. Public documentation covers the ten tickets and the separate guided-init amendment.
 
+Backlog closeout: 10 tickets are closed and archived through the staging-neutral CLI and one complete exact-path commit. The two separately scoped review follow-ups remain open.
+
 ## Key Decisions
 
 - **Export only the recap page:** Readers receive one tracked HTML artifact; the complete original run remains archived as evidence. This reduces reference clutter while retaining provenance and retry identity.
@@ -32,7 +34,7 @@ Delivery scope: 44 tasks implement ten approved maintenance tickets plus the req
 
 ## Verification
 
-Final verification: all 18 root final-r5 invocations passed, including the ordered CI/release/docs gates plus applicable lint, format and documentation validators. Ordinary Turbo gates include cache replay and are distinguished from fresh evidence.
+Final verification: all 18 root final-r5 invocations passed, including the ordered CI/release/docs gates plus applicable lint, format and documentation validators. Ordinary Turbo gates include cache replay and are distinguished from fresh evidence. All 13 closeout-r6 invocations also passed after the final PJM documentation clarification, including the required CI/release/docs sequence.
 
 Fresh package tests: 8533 tests passed through forced Turbo with isolated child HOME and zero cached tasks. Fresh smoke tests: 163 passed. Fresh skill tests: 700 passed. Fresh worktree scripts: one passed; canonical skill validation also passed. The source and built CLI agree on authentic asset embedding and traversal-refusal controls. Independent native and configured Opus reviews assessed product changes and individual finding dispositions. Native final r3 passed with no new findings. Renewed full Phase 6 review passed; configured cross-family final exit r2 passed with no new findings, independently verifying the three exit corrections. Earlier failed exit r1 remains historical and fixes_completed; no gate waiver was used.
 
