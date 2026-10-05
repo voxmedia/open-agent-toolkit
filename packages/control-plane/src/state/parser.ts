@@ -296,7 +296,12 @@ function parseBlockers(value: unknown): ProjectBlocker[] {
       }
     }
     // Keep invalid entries visible to consumers that stop on a nonempty list.
-    blockers.push(`Malformed blocker entry: ${JSON.stringify(item)}`);
+    try {
+      blockers.push(`Malformed blocker entry: ${JSON.stringify(item)}`);
+    } catch {
+      // Legal YAML aliases can form cycles that JSON cannot represent.
+      blockers.push('Malformed blocker entry: [unserializable value]');
+    }
   }
   return blockers;
 }

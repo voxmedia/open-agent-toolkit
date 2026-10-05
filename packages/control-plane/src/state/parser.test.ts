@@ -129,6 +129,22 @@ oat_template: false
     },
   );
 
+  it('keeps cyclic YAML blocker aliases visible as bounded malformed diagnostics', () => {
+    // Legal YAML from PR #356 review comment M1; the alias refers to its own map.
+    const content = `---
+oat_phase: implement
+oat_blockers: [&b {task_id: p01-t03, reason: Waiting, extra: *b}]
+---
+`;
+
+    const state = parseStateFrontmatter(content);
+
+    expect(state.phase).toBe('implement');
+    expect(state.blockers).toHaveLength(1);
+    expect(state.blockers[0]).toMatch(/^Malformed blocker entry: .+/);
+    expect((state.blockers[0] as string).length).toBeLessThan(100);
+  });
+
   it('returns null/defaults for missing optional fields', () => {
     const content = `---
 oat_phase: discovery
