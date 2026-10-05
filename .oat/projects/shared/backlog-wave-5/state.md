@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — 40of41tasks complete; final L1 correction pending
+**Status:** In progress — tasks complete; independent gates and lifecycle closeout pending
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implementation - 41of41tasks complete; fresh final verification and review pending
+Implementation - all41tasks verified; native final review passed; configured gates and lifecycle closeout pending
 
 ## Artifacts
 
@@ -154,11 +154,11 @@ Implementation - 41of41tasks complete; fresh final verification and review pendi
 
 ## Blockers
 
-None. Final r1 L1 implemented and root verified in p06-t10. Prior finalr3 gates are retained; finalr4 passes all18 invocations, qualified re-review pending.
+None. Finalr4 passes all18 invocations; native final r2 product controls pass and its stale-label Low is resolved in root receive. Configured p06/exit gates and lifecycle closeout remain pending.
 
 ## Next Milestone
 
-Receive native final review/configured p06gate, qualified implementation exit gate and approved summary/document/PR/recap/HiLL closeout. Individual carried findings are disposed for final independent assessment. Actual ticket closure and own completion remain pending; no PR created.
+Run configured p06gate, qualified implementation exit gate and approved summary/document/PR/recap/HiLL closeout. Individual carried findings are disposed for final independent assessment. Actual ticket closure and own completion remain pending; no PR created.
 
 ### Approved continuation — 2026-10-04
 

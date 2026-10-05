@@ -307,7 +307,7 @@ oat_generated: false
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — 9of10tasks complete; final L1 correction and re-review/configured gate pending
+**Status:** in_progress — tasks complete; configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -421,7 +421,7 @@ One hook-safe exact-path commit primitive serves CLI and skill callers, preservi
 
 Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All41tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
 
-Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. Finalr3 at5cada031f72b1dc16b94fe011c4a4dc8ba22b754 passes every ordered CI/release/docs gate and lint/format/docs validators. Fresh isolated-child-HOME forced Turbo executes12tasks with0cached; CLI8303/8303 and four other package suites pass. Fresh smoke/skill/script suites and canonical validation pass. Explicit exits/logs retained in analysis/final-r3/gate-results.json; ordinary gate cache replay is recorded separately. Final native r1 reviewed all40 prior tasks/41criteria and found one Low within R4. Task p06-t10 resolves it through validated asset paths shared by script/CSS reads; pre-fix source-derived failures and post-fix literal embedding controls, 176 archive cases, 13 focused cases and original/export conservation pass. Root independently repeated four authentic controls against the compiled producer, exit0. Finalr4 at4f691b153370a2d31d0abe12bbb1f960858bf261 passes all18 ordered/extra invocations with numeric0 exits. Forced isolated-child-HOME Turbo executes12tasks/0cached and8527tests (CLI8311, control-plane155, theme20, transforms31, config10); fresh smoke163/skills700/scripts1/canonical validation pass. Main6ec5313b/no owned integration drift, tree unchanged/clean. Qualified narrowed native re-review, configured p06gate and implementation exit gate remain pending. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
+Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. Finalr3 at5cada031f72b1dc16b94fe011c4a4dc8ba22b754 passes every ordered CI/release/docs gate and lint/format/docs validators. Fresh isolated-child-HOME forced Turbo executes12tasks with0cached; CLI8303/8303 and four other package suites pass. Fresh smoke/skill/script suites and canonical validation pass. Explicit exits/logs retained in analysis/final-r3/gate-results.json; ordinary gate cache replay is recorded separately. Final native r1 reviewed all40 prior tasks/41criteria and found one Low within R4. Task p06-t10 resolves it through validated asset paths shared by script/CSS reads; pre-fix source-derived failures and post-fix literal embedding controls, 176 archive cases, 13 focused cases and original/export conservation pass. Root independently repeated four authentic controls against the compiled producer, exit0. Finalr4 at4f691b153370a2d31d0abe12bbb1f960858bf261 passes all18 ordered/extra invocations with numeric0 exits. Forced isolated-child-HOME Turbo executes12tasks/0cached and8527tests (CLI8311, control-plane155, theme20, transforms31, config10); fresh smoke163/skills700/scripts1/canonical validation pass. Main6ec5313b/no owned integration drift, tree unchanged/clean. Qualified narrowed native r2 passes product controls and all carried dispositions; its sole stale progress label Low is corrected in root receive. Configured p06gate and implementation exit gate remain pending. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
 
 Accepted deltas are the approved review corrections, Plain Markdown option, exact four-page refresh and operator-approved final-test/delegated guidance fixes. Seven carried Lows are resolved, one keeper gap is resolved with deletion-policy expansion separately deferred, five Lows remain individually retained/deferred, and the stored-receipt diagnostic Medium has its own scoped deferral. Reasons remain in the root disposition table and task receipts. Automatic rewritten-history recovery is deferred. No blanket waiver or counter reset. Actual ten-ticket closure, own recap, approved sequence and one mergeable PR follow qualified final review/gates. Latest operator direction delegates routine scoped decisions and checkpoints; consequential unresolved choices still require direction. No merge or release.
 
@@ -4540,3 +4540,82 @@ Generic dispatch record (only launch record):
 Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
 
 Accepted /root/wave5_final_review_r2 (Volta), exactSol6.1/high fork none, READY/HOLD consumed. Runtime model identity not-reported. Resolver notices[]. Nominal final auto lifecycle review, guarded narrowing enabled; previous complete r1 archive and exact fixes_completed row agree85ee6dc345518ccd8b3f562a8b70e91895476f33. Root verifies ancestry at START. Prior40task/41criteria coverage inherited; new two-file R4 asset correction and following tracking verified afresh. One review artifact only, no nested recon or other tracked writes. Root owns receive/individual dispositions and remaining gates/tail.
+
+## Final native r2 received — 2026-10-05
+
+Exactly one not-attempted terminal consumed first at analysis/final-review-r2-terminal-signal.json; no Review Orchestration. Root read full report, parsed0C0H0M1L, verified sole artifact commit8ca0b73c and immutable reviewedf98c1c9b; guarded prior85ee/r1 inherited coverage correctly identified. Independent123archive and7accepted/2refused authentic controls pass. L1 agreed, Task Scope Negligible, artifact_alignment_required: two stale root progress labels corrected in current receive-owned state/implementation bookkeeping by pointing to the authoritative task ledger. No product/test/fix task added and no broad rerun owed for these two prose labels. Native final pass records this resolved Low under latest explicit operator routine-decision/checkpoint delegation; does not claim reviewer observed the later receive commit. Configured p06 independent gate evaluates corrected labels/full phase. Each original13Low and stored-receipt Medium disposition resurfaced and reassessed individually against the report/root ledger; resolved and explicitly deferred reasons retained, no blanket waiver or counter reset. Original finalr1 asset L1 freshly verified resolved. Full finalr4 remains valid for unchanged product delta. Source archived byte-identically at reviews/archived/final-review-2026-10-05T012945Z.md.
+
+Completed generic dispatch evidence:
+
+```json
+{
+  "request_id": "wave5-final-review-r2",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Guarded narrowed final re-review since lifecycle r1 reviewed head85ee6dc345518ccd8b3f562a8b70e91895476f33: verify p06-t10 R4 asset URL normalization and preserved containment/evidence; assess individual carried dispositions. Prior40task/41criteria coverage inherited, not freshly reviewed. Closeout pending.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261005-final-r2",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-05T01:13:54.334917Z"
+  },
+  "authority": "one-final-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_final_review_r2"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "completed",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "/root/wave5_final_review_r2",
+      "nickname": "Volta",
+      "result": "accepted READY/HOLD; exact role/fork none, no START yet"
+    },
+    {
+      "source": "native-terminal-result",
+      "commit": "8ca0b73c6553e23ad5e3406a29c0be6550e3a52c",
+      "result": "0C0H0M1L;123archive and7accepted/2refused authentic controls pass; sole Low stale progress labels, root-owned alignment; writer released"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing review of exact-path Git ownership, archive original evidence, atomic rollback and lifecycle safety composition across completed wave.",
+  "floor_satisfaction": "satisfied"
+}
+```
