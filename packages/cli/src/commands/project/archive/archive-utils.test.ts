@@ -412,6 +412,50 @@ describe('archive utils', () => {
     expect(exported).toContain(opaque);
   });
 
+  it.each([
+    ['script', `var i = s.indexOf('<!--'); const tag='<i id="ghost">';`],
+    ['style', `.marker{--text:'<!-- <i id="ghost">';}`],
+    ['textarea', 'literal <!-- <i id="ghost">'],
+  ])(
+    'resumes fragment scanning after %s raw text containing an overrunning comment opener',
+    async (element, body) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      const page = `<html><body><a data-probe="page" href="#later">go</a><a data-probe="file" href="index.html#later">self</a><a data-probe="ghost" href="#ghost">opaque</a><a data-probe="absent" href="#absent">absent</a><${element}>${body}</${element}><h2 id="later">Later</h2></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const manifest = JSON.parse(
+        await readFile(join(projectPath, run, 'manifest.json'), 'utf8'),
+      );
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      });
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain('<a data-probe="page" href="#later">');
+      expect(exported).toContain('<a data-probe="file" href="#later">');
+      expect(exported).toContain('<a data-probe="ghost">');
+      expect(exported).toContain('<a data-probe="absent">');
+      expect(exported).toContain(`<${element}>${body}</${element}>`);
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
   // These pages/assets are controlled derivatives of the captured legacy declarations
   // documented above, not original captured HTML. The real-package replay separately
   // copies the authentic Wave4/July packages without changing the retained originals.

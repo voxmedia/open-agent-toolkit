@@ -1614,23 +1614,24 @@ async function transformRecapPage(
   const rawText =
     /^(script|style|textarea|title|xmp|iframe|noembed|noframes|plaintext)$/;
   const fragmentTargets = new Set<string>();
-  let targetCursor = 0;
+  let targetMatch: RegExpExecArray | null;
   // Use the same markup/attribute readers for forward targets. Descriptions of
   // markup inside comments, attribute values, and raw-text bodies are not targets.
-  for (const match of html.matchAll(markup)) {
-    if (match.index < targetCursor) continue;
-    const name = /^<([a-z][a-z0-9:-]*)/i.exec(match[0])?.[1]?.toLowerCase();
+  while ((targetMatch = markup.exec(html))) {
+    const name = /^<([a-z][a-z0-9:-]*)/i
+      .exec(targetMatch[0])?.[1]
+      ?.toLowerCase();
     if (!name) continue;
-    const values = attributes(match[0]);
+    const values = attributes(targetMatch[0]);
     for (const attribute of ['id', 'name']) {
       const value = values.get(attribute);
       if (value !== undefined) fragmentTargets.add(value);
     }
     if (rawText.test(name)) {
       const closing = new RegExp(`</${name}\\s*>`, 'gi');
-      closing.lastIndex = match.index + match[0].length;
+      closing.lastIndex = markup.lastIndex;
       const end = name === 'plaintext' ? null : closing.exec(html);
-      targetCursor = end ? closing.lastIndex : html.length;
+      markup.lastIndex = end ? closing.lastIndex : html.length;
     }
   }
   const rewriteAttributes = async (tag: string, removeScriptSource = false) =>
@@ -1712,6 +1713,7 @@ async function transformRecapPage(
   let output = '';
   let cursor = 0;
   let match: RegExpExecArray | null;
+  markup.lastIndex = 0;
   while ((match = markup.exec(html))) {
     output += html.slice(cursor, match.index);
     const tag = match[0];
