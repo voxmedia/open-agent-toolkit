@@ -4777,3 +4777,80 @@ All three planned correction commits were received separately, and root independ
 ## Final integration verification r5 — 2026-10-05
 
 All18 sequential invocations exit0 from clean immutable 7f603383a7440faed62725080581e5a171d5284e: eight CI gates in CI order, fetch, root lint/format/docs validators and forced isolated-child-HOME Turbo/smoke/skills/scripts/canonical validation. Fresh package counts [('@open-agent-toolkit/docs-theme', '20', '20'), ('@open-agent-toolkit/docs-transforms', '31', '31'), ('@open-agent-toolkit/control-plane', '155', '155'), ('@open-agent-toolkit/docs-config', '10', '10'), ('@open-agent-toolkit/cli', '8317', '8317')], total8533; forced Turbo0cached. Ordinary gate cache mentions are recorded per invocation and never promoted to fresh execution. Parent HOME unchanged. Main 6ec5313b91e2595893eb89bb6372c028c0284ab4 has no planned integration path drift; HEAD/tree unchanged. Source/built authentic t11..t13 public controls independently repeated; oldr4/earlier failed sequences retained. Code/test qualification only: fresh final/phase/exit reviews and lifecycle tail still pending.
+
+## Fresh native final review — wave5-final-review-r3
+
+Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+Exact canonical role1.2.11, accepted fresh native Sol6.1/high reviewer Wegener HOLD. Consequential/high floor; runtime telemetry not reported. Final-r5 all18checks pass; future guarded lifecycle range inherits prior full coverage and independently reviews new substantive correction boundaries. Root retains receive/disposition; no fallback, replacement or product writes.
+
+```json
+{
+  "request_id": "wave5-final-review-r3",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Guarded lifecycle re-review of current exit remediation since f98c1c9bee564e7c1f3ef21b051d2288d6568191: p06-t11..t13 real hook paths, actual promotion generation/recovery and truthful published scaffold diagnostics; individual carried dispositions and preserved original recap evidence.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261005-final-r3",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-05T02:15:16.524920Z"
+  },
+  "authority": "one-final-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_final_review_r3"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "/root/wave5_final_review_r3",
+      "nickname": "Wegener",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "result": "READY/HOLD; fork none, accepted exact native role, no START yet"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing review of exact-path Git ownership, archive original evidence, atomic rollback and lifecycle safety composition across completed wave.",
+  "floor_satisfaction": "satisfied"
+}
+```
