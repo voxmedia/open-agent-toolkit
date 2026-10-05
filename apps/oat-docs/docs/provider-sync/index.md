@@ -35,6 +35,7 @@ Piloting with a team? Start with
 - [Instruction Sync](instruction-sync.md) - Project-scoped `AGENTS.md` / `CLAUDE.md` validation, repair, and Claude-only adoption.
 - [Manifest and Drift](manifest-and-drift.md) - How OAT tracks synced state, stray files, and adoption decisions.
 - [Providers](providers.md) - Provider-specific mappings, capabilities, and path conventions.
+- [Use OAT Skills in Hosted Amp](amp-hosted-skills.md) - Prepare selected bundled skills for hosted repositories and understand execution prerequisites.
 - [Provider Interop CLI Scope and Surface](scope-and-surface.md) - Canonical assets, provider views, scopes, and the sync surface area.
 
 ## What This Section Is
