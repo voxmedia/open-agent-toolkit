@@ -89,6 +89,171 @@ afterEach(async () => {
 });
 
 describe('commitExactPaths real Git boundary', () => {
+  it.each(['merge', 'unmerged index'] as const)(
+    'refuses an active %s before mutation and preserves the pending side tree',
+    async (kind) => {
+      const root = await repo();
+      git(root, ['commit', '-qam', 'clean fixture']);
+      const main = git(root, ['branch', '--show-current']);
+      git(root, ['checkout', '-qb', 'side']);
+      await writeFile(join(root, 'unrelated.md'), 'side conflict\n');
+      await writeFile(join(root, 'side-only.md'), 'side-only content\n');
+      git(root, ['add', 'unrelated.md', 'side-only.md']);
+      git(root, ['commit', '-qm', 'side']);
+      git(root, ['checkout', '-q', main]);
+      await writeFile(join(root, 'unrelated.md'), 'main conflict\n');
+      git(root, ['commit', '-qam', 'main']);
+      expect(() => git(root, ['merge', '--no-edit', 'side'])).toThrow();
+      await writeFile(join(root, 'owned.md'), 'owned candidate\n');
+      const marker = join(root, '.git/MERGE_HEAD');
+      if (kind === 'unmerged index') await rm(marker);
+      await hook(root, 'printf "hook ran" > .git/hook-ran');
+      const head = git(root, ['rev-parse', 'HEAD']);
+      const index = await readFile(join(root, '.git/index'));
+      const merge = kind === 'merge' ? await readFile(marker) : undefined;
+      const unmerged = git(root, ['ls-files', '--unmerged']);
+      const conflict = await readFile(join(root, 'unrelated.md'));
+      const sideEntry = git(root, [
+        'ls-files',
+        '--stage',
+        '--',
+        'side-only.md',
+      ]);
+      // Ordinary scoped Git independently refuses the active partial merge.
+      if (kind === 'merge')
+        expect(() =>
+          git(root, [
+            'commit',
+            '--only',
+            '-m',
+            'ordinary control',
+            '--',
+            'owned.md',
+          ]),
+        ).toThrow();
+      const result = await commitExactPaths({
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: refuse pending operation',
+        identity: `pending-${kind}`,
+      });
+      expect(result).toMatchObject({
+        outcome: 'failed',
+        committed: false,
+        attempts: 0,
+        error: expect.stringMatching(
+          /in-progress Git operation|unmerged index/,
+        ),
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(join(root, '.git/index'))).toEqual(index);
+      expect(git(root, ['ls-files', '--unmerged'])).toBe(unmerged);
+      expect(await readFile(join(root, 'unrelated.md'))).toEqual(conflict);
+      expect(git(root, ['ls-files', '--stage', '--', 'side-only.md'])).toBe(
+        sideEntry,
+      );
+      expect(await readFile(join(root, 'side-only.md'), 'utf8')).toBe(
+        'side-only content\n',
+      );
+      if (merge) expect(await readFile(marker)).toEqual(merge);
+      else expect(existsSync(marker)).toBe(false);
+      expect(existsSync(join(root, '.git/hook-ran'))).toBe(false);
+      expect(existsSync(join(root, '.git/oat-exact-path-commits'))).toBe(false);
+      expect(existsSync(join(root, '.git/index.lock'))).toBe(false);
+    },
+  );
+
+  it.each([
+    'MERGE_HEAD',
+    'CHERRY_PICK_HEAD',
+    'REVERT_HEAD',
+    'REBASE_HEAD',
+    'rebase-apply',
+    'rebase-merge',
+    'sequencer',
+  ])(
+    'refuses Git-resolved %s state in a linked worktree until resolved',
+    async (state) => {
+      const primary = await repo();
+      const root = await mkdtemp(join(tmpdir(), 'oat-pending-worktree-'));
+      roots.push(root);
+      git(primary, ['worktree', 'add', '-qb', `pending-${state}`, root]);
+      const metadata = resolve(
+        root,
+        git(root, ['rev-parse', '--git-path', 'index']),
+      );
+      const marker = resolve(
+        root,
+        git(root, ['rev-parse', '--git-path', state]),
+      );
+      const directory = ['rebase-apply', 'rebase-merge', 'sequencer'].includes(
+        state,
+      );
+      if (directory) await mkdir(marker);
+      const stateFile = directory ? join(marker, 'pending') : marker;
+      const head = git(root, ['rev-parse', 'HEAD']);
+      await writeFile(stateFile, `${head}\n`);
+      await writeFile(join(root, 'owned.md'), 'owned linked candidate\n');
+      const index = await readFile(metadata);
+      const metadataBefore = (await readdir(join(metadata, '..'))).sort();
+      const input = {
+        repoRoot: root,
+        paths: ['owned.md'],
+        message: 'feat: linked state control',
+        identity: `linked-${state}`,
+      };
+      expect(await commitExactPaths(input)).toMatchObject({
+        outcome: 'failed',
+        committed: false,
+        attempts: 0,
+        error: expect.stringContaining(`in-progress Git operation (${state})`),
+      });
+      expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+      expect(await readFile(metadata)).toEqual(index);
+      expect(await readFile(stateFile, 'utf8')).toBe(`${head}\n`);
+      expect((await readdir(join(metadata, '..'))).sort()).toEqual(
+        metadataBefore,
+      );
+      await rm(marker, { recursive: directory });
+      const valid = await commitExactPaths(input);
+      expect(valid.outcome).toBe('committed');
+      expect(git(root, ['show', '-s', '--format=%P', 'HEAD'])).toBe(head);
+      expect(git(root, ['show', 'HEAD:owned.md'])).toBe(
+        'owned linked candidate',
+      );
+    },
+  );
+
+  it('rejects a hook-produced commit with an unexpected second parent before index publication', async () => {
+    const root = await repo();
+    const parent = git(root, ['rev-parse', 'HEAD']);
+    const index = await readFile(join(root, '.git/index'));
+    const postCommit = join(root, '.git/hooks/post-commit');
+    await writeFile(
+      postCommit,
+      `#!/bin/sh\nset -eu\ncommit=$(git rev-parse HEAD)\ntree=$(git rev-parse 'HEAD^{tree}')\ngit show -s --format=%B HEAD > .git/candidate-message\nmerge=$(git commit-tree "$tree" -p ${parent} -p "$commit" < .git/candidate-message)\ngit update-ref HEAD "$merge" "$commit"\n`,
+    );
+    await chmod(postCommit, 0o700);
+    await writeFile(join(root, 'owned.md'), 'owned candidate\n');
+    const result = await commitExactPaths({
+      repoRoot: root,
+      paths: ['owned.md'],
+      message: 'feat: verify complete parents',
+      identity: 'unexpected-parents',
+    });
+    expect(result).toMatchObject({
+      outcome: 'failed',
+      error: 'Commit identity/parent could not be verified.',
+    });
+    expect(
+      git(root, ['show', '-s', '--format=%P', 'HEAD']).split(' '),
+    ).toHaveLength(2);
+    expect(await readFile(join(root, '.git/index'))).toEqual(index);
+    expect(
+      JSON.parse(await readFile(result.receipt!, 'utf8')).commit,
+    ).toBeUndefined();
+  });
+
   it.each(['tilde', 'absolute', 'repository-relative'] as const)(
     'honors refusing and accepting hooks at a Git-expanded %s path',
     async (kind) => {

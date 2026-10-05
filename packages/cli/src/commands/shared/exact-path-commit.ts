@@ -237,6 +237,39 @@ function detail(error: unknown): string {
   const failure = error as { stderr?: string; message?: string };
   return failure.stderr?.trim() || failure.message || String(error);
 }
+async function assertNoInProgressGitOperation(root: string): Promise<void> {
+  for (const state of [
+    'MERGE_HEAD',
+    'CHERRY_PICK_HEAD',
+    'REVERT_HEAD',
+    'REBASE_HEAD',
+    'rebase-apply',
+    'rebase-merge',
+    'sequencer',
+  ]) {
+    // Resolve through Git: linked worktrees keep these markers in their own
+    // metadata directory rather than the checkout's .git file or common dir.
+    const path = resolve(
+      root,
+      await git(root, ['rev-parse', '--git-path', state]),
+    );
+    const exists = await lstat(path).then(
+      () => true,
+      (error: NodeJS.ErrnoException) => {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+      },
+    );
+    if (exists)
+      throw new Error(
+        `Repository has an in-progress Git operation (${state}); resolve or abort it before retrying. No commit was launched.`,
+      );
+  }
+  if (await git(root, ['ls-files', '--unmerged']))
+    throw new Error(
+      'Repository has unmerged index entries; resolve them before retrying. No commit was launched.',
+    );
+}
 async function exactPaths(
   root: string,
   supplied: readonly string[],
@@ -328,6 +361,8 @@ export async function commitExactPaths(
     root = await realpath(
       (await git(input.repoRoot, ['rev-parse', '--show-toplevel'])).trim(),
     );
+    // Refuse before creating receipt directories, index locks or temporary state.
+    await assertNoInProgressGitOperation(root);
     indexPath = resolve(
       root,
       (await git(root, ['rev-parse', '--git-path', 'index'])).trim(),
@@ -427,6 +462,7 @@ export async function commitExactPaths(
           throw new Error(
             `${interrupted} received before commit; no commit was launched.`,
           );
+        await assertNoInProgressGitOperation(root);
         const snapshot = await bytes(indexPath);
         const head = await git(root, ['rev-parse', '--verify', 'HEAD']).catch(
           () => '',
@@ -576,6 +612,8 @@ export async function commitExactPaths(
             throw new Error(
               `${interrupted} received before commit; no commit was launched.`,
             );
+          // Recheck the real index and operation state immediately before launch.
+          await assertNoInProgressGitOperation(root);
           receipt = { identity: input.identity, paths, parent: head };
           await writeReceipt(receiptPath, receipt);
           if (interrupted)
@@ -596,8 +634,7 @@ export async function commitExactPaths(
           );
           commit = await git(root, ['rev-parse', 'HEAD']);
           if (
-            (await git(root, ['rev-parse', `${commit}^`]).catch(() => '')) !==
-              head ||
+            (await git(root, ['show', '-s', '--format=%P', commit])) !== head ||
             !(await git(root, ['show', '-s', '--format=%B', commit])).includes(
               `Oat-Operation: ${digest(input.identity)}`,
             )
