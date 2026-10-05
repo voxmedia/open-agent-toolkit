@@ -5243,3 +5243,11 @@ All ten assigned implementations completed on the accepted Codex gpt-6.1-sol/hig
 ## Composed revision Definition of Done
 
 All twelve recorded invocations passed on `adbb111d34ab8273498fd916799003ebe1d31ada`: the ordered eight CI/release/docs gates, origin/main refresh, lint, format and docs validation. TURBO_FORCE=true executes package jobs; the root test command also runs smoke/skills/scripts with an isolated child HOME. Exact numeric exits and logs: `.oat/repo/analysis/wave5-final-closeout/remote-r1/composed-dod-r1/results.json`. Current code unchanged; this repair makes the ten completion receipts consumable by the existing CLI task parser.
+
+## Phase 7 root review accepted — pr356-r1-p07-review-native-20261005
+
+Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+Exact native `oat-reviewer-gpt-6-1-sol-high` accepted as `/root/pr356_phase7_review_r1`; fork none, scoped review artifact only, deadline1200seconds, retry0. Frozen review range `780eca2894222590971d3ce6f1056b77dea194a9..70aba3729da11d717e2f1aff05ff7ef0fc38d5e7`; task ledger is current and CLI proves54/54. No replacement/fallback; terminal outcome pending. Generic record and canonical-role event validated-only; record: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-review-dispatch.json`. Configured invocation accepted; runtime identity not-reported. Task class consequential, floor satisfied by resolved Sol6.1/high plus independently configured Opus gates. This is phase7 review, not fourth ordinary native final cycle; original cap/operator decision/history retained. Step7b outcome and all configured phase/exit gates remain pending.
+
+Bounded read-only explorer `/root/pr356_review_path_recovery` accepted to identify historical report locations and archive filtering without reading or judging findings. It owns no write sink; root retains artifact interpretation and recovery. This acceptance entry changes only tracking after the frozen product baseline.
