@@ -126,7 +126,7 @@ oat_project_recap:
   source: autonomous_policy
   decided_at: '2026-10-03T20:51:11.414Z'
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
@@ -169,8 +169,8 @@ oat_implement_exit_gate:
   receive_commit: d228b3e0490282575d9529e645e837e26f29180e
   receive_eligible: true
   receive_completed: true
-  failure: 'blocking_findings: exit r1 H1; bounded p06-t11..t13 remediation reserved'
-  updated_at: '2026-10-05T01:56:03.092775Z'
+  failure: bounded p06-t11..t13 remediation complete; changed basis requires new final verification and lifecycle review
+  updated_at: '2026-10-05T02:19:58.264073Z'
   decided_at: '2026-10-05T01:56:03.092661Z'
 ---
 
