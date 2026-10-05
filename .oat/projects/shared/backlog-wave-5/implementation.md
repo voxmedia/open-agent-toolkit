@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: null
+oat_current_task_id: p06-t11
 oat_generated: false
 ---
 
@@ -13,14 +13,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 12    | 12/12     |
-| Phase 4 | complete | 4     | 4/4       |
-| Phase 5 | complete | 5     | 5/5       |
-| Phase 6 | complete | 10    | 10/10     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 12    | 12/12     |
+| Phase 4 | complete    | 4     | 4/4       |
+| Phase 5 | complete    | 5     | 5/5       |
+| Phase 6 | in_progress | 13    | 10/13     |
 
 **Total:** 41/44 tasks completed
 
@@ -4676,3 +4676,7 @@ The previously carried Medium and each Low stay individually assessed/tracked in
 ## Exit gate transition receive-completed — 2026-10-05
 
 {"artifact": ".oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md", "launch": "result_persisted", "launchAttempt": "6a8a2bc1-a0b4-4731-a048-d4e37c22e71c", "receipt": "analysis/implementation-exit-gate-r1.json", "receive": "completed", "receiveCommit": "d228b3e0490282575d9529e645e837e26f29180e", "runId": "618a7f2c-8019-454f-84c1-8f737d6450f6", "status": "pending"}
+
+## Exit gate remediation reservation — 2026-10-05
+
+Validated exit r1 blocked outcome is durably received at d228b3e0490282575d9529e645e837e26f29180e. Consumed remediation attempts 1/2, no infrastructure attempt. Three serial task commits p06-t11..t13; total44/p06 thirteen. Recovery ledger remains 0/10 for p06: this is a review correction, not post-commit automatic recovery. Old phase-author handle unavailable, one fresh same-target continuation permitted; no replacing accepted active work. Product/code review and phase/exit gate must be renewed for changed basis.

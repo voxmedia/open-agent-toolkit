@@ -890,9 +890,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 10 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction and the final-review normalized asset embedding correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 13 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction and the final-review normalized asset embedding correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 41 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 44 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 
