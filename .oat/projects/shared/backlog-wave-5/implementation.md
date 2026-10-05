@@ -4314,3 +4314,101 @@ Root independently verified sole path/parent/hash, exact retired inventory conse
 ## Final integration verification r3 — 2026-10-04
 
 All18 sequential invocations (17 gates plus fetch) exit0 from clean immutable5cada031f72b1dc16b94fe011c4a4dc8ba22b754. Latest origin/main remains6ec5313b91e2595893eb89bb6372c028c0284ab4; no owned-path drift. CI order preserved. Forced Turbo tests execute12/12 with0cache,8303CLI tests; separate smoke/skills/scripts/validation run directly. Ordinary gates contain recorded cache hits and are not claimed fresh. Parent HOME unchanged; only owned temporary test HOME used. Both earlier failed final sequences remain retained. This receipt qualifies code/test verification, not final review, ticket closure, own recap or PR acceptance.
+
+### Final native review — wave5-final-review-r1
+
+```json
+{
+  "request_id": "wave5-final-review-r1",
+  "caller": "oat-project-implement",
+  "scope": "final",
+  "objective": "Full Quick final integration review across ten-ticket wave, all40tasks/41acceptance criteria, prior findings and root dispositions; code/test qualification and preservation safety; actual closeout pending.",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema-20261005-final-r1",
+    "source": "native-schema+live-T3-catalog",
+    "observed_at": "2026-10-05T00:21:42.404140Z"
+  },
+  "authority": "one-final-review-artifact-write",
+  "role_selector": "oat-reviewer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-04",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_final_review_r1"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-reviewer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state"
+    },
+    {
+      "source": "native-spawn-acceptance",
+      "handle": "<redacted-path>",
+      "nickname": "Hilbert",
+      "result": "accepted HOLD; exact role/fork none, no START yet"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Final load-bearing review of exact-path Git ownership, archive original evidence, atomic rollback and lifecycle safety composition across completed wave.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "loaded",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<loaded>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.11",
+      "contentDigest": "sha256:f1f9a77746318338a3aca09b1b0d1b53fa00b8a4f130c3ff44c2f117421aff90",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
+```
+
+Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
+
+Accepted /root/wave5_final_review_r1 (Hilbert), exact materialized Sol6.1/high, fork none. READY/HOLD consumed. Resolver notices[]. Full Quick final code review, all40tasks/41criteria, base6ec5313b through committed START. One report authority; no nested reconnaissance, product/core/log writes or remote calls. Root owns receive and individual disposition. Original role1.2.11/current digest retained; runtime model identity not-reported.
