@@ -651,6 +651,20 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `test(recap): scope legacy reference scan exceptions`
 
+### Task p06-t10: (review) Reuse validated local asset paths during recap embedding
+
+**Files:** `packages/cli/src/commands/project/archive/archive-utils.ts` and `packages/cli/src/commands/project/archive/archive-utils.test.ts` only.
+
+**Dependencies:** p06-t09 complete; final native r1 L1 received. Scoped correction authorized by the operator's delegated routine continuation.
+
+**Change:** Within R4, read local stylesheet/script bodies from the same decoded, query/fragment-free, containment-verified package path used by the existing asset resolver. Do not resolve the raw URL again. Retain original bytes, fail-closed containment, raw-body preservation, exporter identity/retry/rollback and existing seven page hashes. No new parser/framework/schema/helper export, eligibility change, version bump or generated refresh.
+
+**Verification:** Extend the existing owning archive exporter family with a plain accepted control and actual source-derived query/fragment/percent-encoded local script/CSS controls. Use the captured July v1 derivative from final-review-2026-10-05T004142Z.md: pre-fix normalized variants refuse while plain embeds; post-fix embeds literal bodies and preserves original package. Existing traversal/symlink refusals and source/output identity controls remain. Inspect authentic derivatives and all seven current exports without changing preserved originals. Run direct archive suites with isolated child HOME, CLI check/types/fresh build, scoped lint/format; record explicit exits, pre/post hashes, exact task paths and repeatable probe. No new test campaign or root HOME override. Root reruns full ordered/fresh final verification and independent final review afterward.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts`, followed by exact-path `git diff --check`.
+
+**Commit:** `fix(recap): reuse validated paths for embedded assets`; one append-only normal-hook exact-path task commit, then RELEASE/HOLD for root receipt.
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -815,6 +829,8 @@ Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_vali
 
 Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass. Fresh run `4fc38012-9f90-4a0a-b665-853396e48d9f` returned a valid matched envelope, was received with its Low formatting correction resolved, and establishes the independent plan pass; complexity review found no further changes.
 
+| final | code | fixes_added | 2026-10-05 | reviews/archived/final-review-2026-10-05T004142Z.md | 85ee6dc345518ccd8b3f562a8b70e91895476f33 | manual | - |
+
 ## Implementation Complete
 
 **Planned task totals:**
@@ -824,9 +840,9 @@ Planning recovery: the original findings were reformatted without content/proven
 - Phase 3: 12 tasks — shared primitive and CLI/skill adoption, plus nine committed bounded review corrections, including recovered-unrecorded receipt recognition.
 - Phase 4: 4 tasks — caller-owned archive staging, safe knowledge refresh and user-added Plain Markdown init choice/config persistence.
 - Phase 5: 5 tasks — flat recap producer, consumers, full historical migration, valid unquoted link/asset repair and raw-body preservation with approved four derived SVG page refresh.
-- Phase 6: 9 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
+- Phase 6: 10 tasks — versions/generated outputs, three approved final-test corrections, three delegated final guidance/evidence corrections final owning-command regeneration and one final-smoke compatibility correction and the final-review normalized asset embedding correction. Root final verification, review and exact backlog closeout remain mandatory lifecycle-tail work.
 
-**Total: 40 tasks across 6 phases.** This is a planning total, not a completion claim.
+**Total: 41 tasks across 6 phases.** This is a planning total, not a completion claim.
 
 Completion requires evidence for all 40 original acceptance rows plus U1, exactly ten archived tickets and corresponding handoff deletion, preserved original recap evidence, all required gate exit codes, versions/generated/docs consistency, root and independent phase/final review dispositions, and the implementation-owned lifecycle tail through one mergeable PR. Root publishes the PR with accurate scope/test/evidence limitations using the existing PR workflow after final review; it records PR URL and final head. No merge or release. A successful gate or absent findings without accepted independent review evidence does not satisfy completion.
 

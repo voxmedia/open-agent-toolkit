@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t10
 oat_last_commit: 5318c68ede20412193bc519c2207fe92d1b25908
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — all40tasks complete; final review pending
+**Status:** In progress — 40of41tasks complete; final L1 correction pending
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implementation - All40tasks complete; final review pending
+Implementation - 40of41tasks complete; final L1 correction pending
 
 ## Artifacts
 
@@ -154,7 +154,7 @@ Implementation - All40tasks complete; final review pending
 
 ## Blockers
 
-None. All40tasks verified; finalr3 full ordered gates and uncached tests passed, finalr1/r2 failures retained. Final independent review/closeout pending.
+None. Final native r1 received; L1 converted to p06-t10 under delegated authority. Prior finalr3 gates pass; fresh corrected basis pending.
 
 ## Next Milestone
 

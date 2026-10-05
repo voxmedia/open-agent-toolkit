@@ -3,13 +3,13 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: null
+oat_current_task_id: p06-t10
 oat_generated: false
 ---
 
 # Implementation: backlog-wave-5
 
-All40planned tasks are complete; p06 remains in progress for final review and configured gate. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
+40of41planned tasks are complete; p06 remains in progress for final review and configured gate. Prior findings now have individual root dispositions: seven Lows resolved, one keeper gap resolved with a separate deletion-policy deferral, five Lows retained/deferred and one stored-receipt diagnostic Medium explicitly deferred. These judgments require final independent assessment. Full verification, final/exit gates, closeout and one PR remain pending. No merge or release authorized.
 
 ## Progress Overview
 
@@ -20,9 +20,9 @@ All40planned tasks are complete; p06 remains in progress for final review and co
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 9     | 9/9       |
+| Phase 6 | in_progress | 10    | 9/10      |
 
-**Total:** 40/40 tasks completed
+**Total:** 40/41 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,7 +307,7 @@ All40planned tasks are complete; p06 remains in progress for final review and co
 
 ## Phase 6: Versions and generated integration
 
-**Status:** in_progress — all9tasks complete; final-review boundary and configured phase gate pending
+**Status:** in_progress — 9of10tasks complete; final L1 correction and re-review/configured gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -403,6 +403,12 @@ guidance contract; they make no live provider or model-efficacy claim.
 Final versions and provider projections are complete, with scoped pre/post gates and direct parity verified. Full CI/release/docs-build verification is restarting at the committed final baseline; no final-suite pass is inferred from task checks.
 
 Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm check` exit0 (five cache-hit mentions), `pnpm type-check` exit0 (five cache-hit mentions), `pnpm test` exit1 after230.3seconds, CLI34failed/8269passed/8303. The sequence stopped at test; later gates and fresh isolated-home runs did not execute. A direct seven-file rerun reproduced34failed/405passed/439, exit1, without Turbo. Original receipts remain in `analysis/final/`; no claim that final verification passed.
+
+### Task p06-t10: (review) Reuse validated local asset paths during recap embedding
+
+**Status:** pending
+
+**Outcome target:** Final native r1 L1 is within R4; use validated normalized paths for local script/stylesheet reads, preserve original evidence and existing exports. Exact two product paths declared in plan; original accepted phase6 author resumes.
 
 ## Final Summary (for PR/docs)
 
@@ -4358,7 +4364,7 @@ All18 sequential invocations (17 gates plus fetch) exit0 from clean immutable5ca
     "task_name": "wave5_final_review_r1"
   },
   "launch_status": "accepted",
-  "child_outcome": "running",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     {
       "source": "resolver+native-schema",
@@ -4372,6 +4378,11 @@ All18 sequential invocations (17 gates plus fetch) exit0 from clean immutable5ca
       "handle": "<redacted-path>",
       "nickname": "Hilbert",
       "result": "accepted HOLD; exact role/fork none, no START yet"
+    },
+    {
+      "source": "native-terminal-result",
+      "commit": "69530145e865107d196eafd61832efbdfba0de1e",
+      "result": "Full40task/41criteria review0C0H0M1L, exact one not-attempted terminal consumed first; root L1 convertedp06-t10"
     }
   ],
   "runtime_confirmation": "not-reported",
@@ -4412,3 +4423,11 @@ All18 sequential invocations (17 gates plus fetch) exit0 from clean immutable5ca
 Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high
 
 Accepted /root/wave5_final_review_r1 (Hilbert), exact materialized Sol6.1/high, fork none. READY/HOLD consumed. Resolver notices[]. Full Quick final code review, all40tasks/41criteria, base6ec5313b through committed START. One report authority; no nested reconnaissance, product/core/log writes or remote calls. Root owns receive and individual disposition. Original role1.2.11/current digest retained; runtime model identity not-reported.
+
+## Final native r1 received — 2026-10-05
+
+Exactly one terminal `**Reconnaissance:** not-attempted` consumed and persisted before artifact access, validation, parser or bookkeeping. Report69530145 sole201line normal-hook artifact; immutable reviewed85ee6dc3, full40tasks/41criteria; parser0C/0H/0M/1L, no Review Orchestration. Root read full report and actual source, independently repeated captured July derivative: plain script/CSS embeds, script query/CSS query/encoded script refuse on raw filename, originals unchanged. L1 correctness/compatibility, Task Scope Minor, code_fix_required→p06-t10; not deferred. Existing prior Medium and each Low disposition reassessed and retained individually per root table, no blanket waiver. Failed reviewer four-file run readiness preconditions preceded signal delivery; serial five signal controls and full25helper controls pass, no signal/state-loss claim. Preserve both observed runs. Full finalr3 remains historical passing basis; fresh verification/re-review required after correction. Missing root-owned event reconciled from sole validated report identity by appending the exact final event, preserving pending placeholders and all prior provenance/unknown columns. Archive byte-identical at reviews/archived/final-review-2026-10-05T004142Z.md. Phase6 remains in_progress, recovery0/10pendingnull, no C/H recovery reservation. Latest operator delegation authorizes this routine R4 correction and continuation; no further approval requested.
+
+### Phase6 asset correction continuation planned — cont-backlog-wave-5-p06-final-asset
+
+Linked accepted wave5-p06-implement-r1 /root/wave5_phase6, mode implement, p06-t10 only. Same configured Sol6.1/high/current canonical role; original accepted1.1.6digest remains immutable provenance. Fresh fetch origin/main6ec5313b/no owned-path drift. Initial resolver notice requested explicit candidate provenance; corrected resolution pins candidate Sol6.1/high and notices[]. No new launch/replacement, nesting, recovery reservation, versions or generated work. START follows committed root receive/task ledger. Generic continuation validated-only in analysis/p06-t10-continuation-validation.json; exact authority two archive source/test files, original evidence/exported pages untouched.

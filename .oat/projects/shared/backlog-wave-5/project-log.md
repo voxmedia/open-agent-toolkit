@@ -264,6 +264,10 @@ wave5-root-final-baseline-r3: Root verified task9 exact smoke compatibility exce
 
 wave5-final-r3-verified: Full finalr3 verification passed all18 ordered invocations; forced12task tests0cache and fresh smoke/skills/scripts. Earlier failed sequences retained; final independent review and closeout pending.
 
+### 2026-10-05 · structural · oat-project-implement · final
+
+wave5-final-r1-l1-received: Full native final review0C0H0M1L received; root reproduces normalized script/CSS raw-file refusal, converts L1 to p06-t10 under delegated routine authority. Prior individual dispositions retained; fresh verification/review required, no phase completion or publication claim.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
