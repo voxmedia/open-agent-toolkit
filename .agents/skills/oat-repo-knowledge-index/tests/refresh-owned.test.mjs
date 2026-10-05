@@ -253,7 +253,12 @@ test('broad-commit baseline fails the independent staged-user preservation oracl
   git(root, 'add', '.oat/repo/knowledge/');
   git(root, 'commit', '-qm', 'broad staged-index commit');
   assert.equal(git(root, 'show', 'HEAD:user.txt'), 'STAGED user literal\n');
-  await assert.rejects(preservation(root, knowledge), /BASE user literal/);
+  await assert.rejects(preservation(root, knowledge), {
+    name: 'AssertionError',
+    code: 'ERR_ASSERTION',
+    actual: 'STAGED user literal\n',
+    expected: 'BASE user literal\n',
+  });
 });
 
 test('symlinked knowledge ancestors and expected output links never follow outside content', async (t) => {
