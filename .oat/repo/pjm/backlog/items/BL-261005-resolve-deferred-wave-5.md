@@ -29,3 +29,5 @@ Track separately bounded follow-ups from the Wave 5 review disposition table: p0
 - [ ] Keep Git ownership and receipt guarantees intact; policy changes require their own settled contract and proportional controls.
 
 - [ ] Assess durable branch/commit permalink policy for exporter-generated and historical recap guidance links; p07 gate r1 Low3 carries the existing wave-branch footer link. Preserve immutable original packages and apply any settled change through the owning exporter.
+
+- [ ] Assess percent-encoded same-page/same-file fragments (space and non-ASCII ids, literal percent targets and malformed escapes); preserve real targets through the owning exporter with authentic public controls. Final qualification L1 confirms this pre-existing URI-fragment limitation; p07-t11 HTML character-reference decoding remains implemented.
