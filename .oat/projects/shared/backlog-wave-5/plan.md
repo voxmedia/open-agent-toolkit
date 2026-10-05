@@ -1024,8 +1024,8 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T023108Z.md         | b6cd43700139da5fb3f2812047223f44f98c0fe3 | auto       | -                    |
 | p06    | code     | passed          | 2026-10-05 | reviews/archived/p06-review-2026-10-05T025051Z.md           | 141a3f91d66e8915a3571c7493d9749e3cd5c830 | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T025900Z.md         | 29c8e57117141f7a97544d804610c7ab633cf1b9 | gate       | claude-opus-5-5-high |
-
-| final | remote | fixes_completed | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto | - |
+| final  | remote   | fixes_completed | 2026-10-05 | reviews/archived/remote-pr-356-review-2026-10-05T035651Z.md | 1887bd6a46d6e61daab92f58ccb3513369ae045d | auto       | -                    |
+| p07    | code     | passed          | 2026-10-05 | reviews/archived/p07-review-2026-10-05T062339Z.md           | 70aba3729da11d717e2f1aff05ff7ef0fc38d5e7 | auto       | -                    |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
