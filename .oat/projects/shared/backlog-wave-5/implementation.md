@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-All57 tasks are implemented. The final raw-text traversal correction is verified; current composed verification and phase7 round3 review/configured gate3 passed; final/exit qualification precedes publication. Original completion/archive/S3 and review/recovery history remain unchanged.
+All 57 tasks across seven phases are complete. Current composed checks, independent phase acceptance, final qualification and the configured implementation exit gate passed. The current summary is refreshed; PR #356 publication is next. Original archive, recap, S3 evidence and review/recovery history remain preserved.
 
 ## Progress Overview
 
@@ -416,7 +416,7 @@ Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm 
 
 ## Final Summary (for PR/docs)
 
-Implements the ten approved maintenance tickets, Plain Markdown guided setup and all ten actionable PR #356 review corrections plus three exporter corrections found by independent phase review. All 57 tasks are implemented. Phase 7 has passed fresh native and configured composed review; current ordered revised final verification has passed; fresh configured exit qualification remains pending. The original completed generation and its local/S3 evidence remain preserved.
+Implements the ten approved maintenance tickets, Plain Markdown guided setup and all ten actionable PR #356 review corrections plus three exporter corrections found by independent phase review. All 57 tasks are implemented. Phase 7 has passed fresh native and configured composed review; current ordered revised final verification has passed; fresh configured exit qualification has passed. The original completed generation and its local/S3 evidence remain preserved.
 
 The shared exact-path commit helper refuses merge/sequencer/unmerged states and verifies full commit parents. Delegated Git hooks retain their argv, stdin, diagnostics and refusal behavior, including reference-transaction. Migration retention and retry independently verify owning receipts, current HEAD/parents, emitted tree and source removal; a committed flag alone cannot authorize compensation or cleanup. Cyclic YAML blockers return safe diagnostics through real control-plane and CLI consumers.
 
@@ -426,7 +426,7 @@ Main surfaces are CLI Git/sync/archive/validation/PJM/maintenance commands, cont
 
 Original qualification is historical: final-r5 and closeout-r6 checks, native final r3, configured phase/exit reviews, ten-ticket closure and original archive/S3 verification passed before remote corrections. Phase 7 evidence manifests preserve each pre-fix bad state, corrected behavior and valid accepted control; root independently verified load-bearing cases. Scoped archive suite145/145, ref-sync+migrate122/122, exact-path42/42, control-plane156/156, CLI status22/22 and knowledge color/uncolored6/6 passed on their recorded task commits. Those counts are scoped task evidence; the corrected final archive suite passed151/151. Current composed-r3 forced package tests passed8,580 (CLI8,363/control-plane156/theme20/transforms31/config10) across12Turbo jobs with0cached, plus docs85/smoke163/skills700/scripts1. All ordered eight CI/release/docs gates and extra lint/format/docs validation passed; see the composed revision record below. Node25.9.0 was used for the color reproduction; Node24 was not run. The original recap remains built-needs-review with NoHost and no visual acceptance.
 
-Previously settled Medium/Low follow-ups retain their individual reasons and backlog destinations. All ten new remote findings have implemented corrections, with no dismissals or new deferrals. The original native final three-cycle cap and complexity/operator continuation remain recorded; no fourth ordinary native correctness cycle or counter reset is authorized. Root-owned phase review and independent configured exit qualification remain binding for the revision before pushing corrections to the same PR.
+Previously settled Medium/Low follow-ups retain their individual reasons and backlog destinations. All ten new remote findings have implemented corrections, with no dismissals or new deferrals. The original native final three-cycle cap and complexity/operator continuation remain recorded; no fourth ordinary native correctness cycle or counter reset is authorized. Root-owned phase review and independent configured exit qualification passed for the revision; the same PR will receive the corrections.
 
 ## Planning dispatch
 
@@ -5425,3 +5425,7 @@ Full report read after exactly one terminal reconnaissance signal; zero Critical
 ## Remote revision exit transition allowed
 
 {"attemptId": "796626c6-c833-4d15-9ebc-2e66763eafa3", "launch": "result_persisted", "receipt": ".oat/repo/analysis/wave5-final-closeout/remote-r1/implementation-exit-gate-r3.json", "receive": "completed", "receiveCommit": "694791b550a27a841550da60651c86cc2bf5153d", "runId": "15ac619e-5287-4199-b06f-0661758068a5", "status": "allowed"}
+
+## Current revision implementation complete
+
+All57tasks/7phases accepted; current composed-r3 checks and native/configured phase review, final qualification and configured exit run15ac619e passed. The complete closeout snapshot is the retained original approved generation; original archive/S3 identity is not replayed or overwritten. Current summary116lines, owning log synthesis/rollup completed and original sealed log retained. Current documentation assessment: t08 corrected automatic closeout disclosure; existing configuration and recap docs describe the unchanged supported lifecycle, while remaining URI/permalink policies are individually tracked. PJM adoption declared (doctor warn is retained, not claimed healthy). No additional public docs or decision edits are required. No fourth ordinary final round, waived gate, attempt reset, merge or release. Exit receive694791b550a27a841550da60651c86cc2bf5153d includes actual source deletion, with correlated byte-identical archived report and completed durable receive before allowance.
