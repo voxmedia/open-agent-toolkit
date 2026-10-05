@@ -260,6 +260,10 @@ wave5-final-r2-smoke-alignment: CLI8303tests pass; smoke1failure flags approved 
 
 wave5-root-final-baseline-r3: Root verified task9 exact smoke compatibility exceptions and negative/valid protections, reader/captured bytes conserved; all40tasks complete. Restart ordered finalr3 before independent reviews/gates/closeout. Prior failures retained.
 
+### 2026-10-05 · structural · oat-project-implement · final
+
+wave5-final-r3-verified: Full finalr3 verification passed all18 ordered invocations; forced12task tests0cache and fresh smoke/skills/scripts. Earlier failed sequences retained; final independent review and closeout pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

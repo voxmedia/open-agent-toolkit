@@ -129,13 +129,13 @@ oat_project_recap:
 
 # Project State: backlog-wave-5
 
-**Status:** In progress — all40tasks complete; final verification/review pending
+**Status:** In progress — all40tasks complete; final review pending
 **Started:** 2026-10-03
 **Last Updated:** 2026-10-04
 
 ## Current Phase
 
-Implementation - All40tasks complete; final verification/review pending
+Implementation - All40tasks complete; final review pending
 
 ## Artifacts
 
@@ -154,11 +154,11 @@ Implementation - All40tasks complete; final verification/review pending
 
 ## Blockers
 
-None. All40tasks verified; finalr1/r2 failures retained. Operator-delegated routine continuation; no final-suite pass inferred.
+None. All40tasks verified; finalr3 full ordered gates and uncached tests passed, finalr1/r2 failures retained. Final independent review/closeout pending.
 
 ## Next Milestone
 
-Run complete ordered gates and fresh isolated-home verification at the final committed baseline, then native final review/configured p06gate, qualified implementation exit gate and approved summary/document/PR/recap/HiLL closeout. Individual carried findings are disposed for final independent assessment. Actual ticket closure and own completion remain pending; no PR created.
+Receive native final review/configured p06gate, qualified implementation exit gate and approved summary/document/PR/recap/HiLL closeout. Individual carried findings are disposed for final independent assessment. Actual ticket closure and own completion remain pending; no PR created.
 
 ### Approved continuation — 2026-10-04
 
