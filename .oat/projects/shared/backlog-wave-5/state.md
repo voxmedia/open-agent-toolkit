@@ -66,7 +66,7 @@ oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/356
 oat_project_created: '2026-10-03T20:50:03.967Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null
-oat_project_state_updated: '2026-10-05T07:21:24.481683Z'
+oat_project_state_updated: '2026-10-05T07:43:09.305650Z'
 oat_dispatch_policy:
   mode: managed
   policy: high
