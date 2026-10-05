@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261005-export-only-the-recap-page     | 2026-10-05 | accepted   | Export only the recap page                                                                             | -       |
+| DR-261005-preserve-hand-written          | 2026-10-05 | accepted   | Preserve hand-written knowledge                                                                        | -       |
+| DR-261005-share-one-hook-safe-exact-path | 2026-10-05 | accepted   | Share one hook-safe exact-path commit primitive                                                        | -       |
 | DR-261003-assets-override-destination    | 2026-10-03 | accepted   | Assets override destination rule                                                                       | -       |
 | DR-261003-autonomous-completion-uses     | 2026-10-03 | accepted   | Autonomous completion uses a standing opt-in and named requesting steps                                | -       |
 | DR-261003-complexity-review-at-budget    | 2026-10-03 | accepted   | Complexity review at budget exhaustion                                                                 | -       |
