@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t07
+oat_current_task_id: p07-t08
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ Remote PR review has reopened implementation for ten phase-7 corrections. The or
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 10    | 6/10      |
+| Phase 7 | in_progress | 10    | 7/10      |
 
-**Total:** 50/54 tasks completed
+**Total:** 51/54 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5107,3 +5107,11 @@ Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yam
 **Outcome:** Both HTML attribute readers decode full character references with attribute-context rules before URL/CSS resolution and escape ampersands before active quotes on emission. Raw CSS/script bodies and external query attributes are preserved. Adds existing locked entities6.0.1 as explicit CLI runtime dependency.
 
 **Verification:** Nine owning regressions fail the ENOENT baseline; authentic July public probe11cases passes with known embedded bytes, matching receipt hashes and original archive conservation. Owning140/140 and postcommit18/18 pass; root independently reran18/18 entity/CSS/raw-body controls exit0. Frozen offline install verifies the one-line manifest plus three-line CLI importer dependency delta. Scoped check/type/build/format and hook-enabled commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t06/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t07`; phase incomplete.
+
+## Task p07-t07 root receipt — 2026-10-05T05:45:02.677096+00:00
+
+**Commit:** `f1fd92b153394a1c6a53a8fe69d4a76e3998d16e`
+
+**Outcome:** Summary failure rebuilds only attempt-owned pages without unavailable links; verified link-free retries remain unchanged. Adopted or foreign differing pages are preserved and refused.
+
+**Verification:** Five named regressions fail baseline; child archive145/postcommit10 and authentic July3scenarios/8events pass. Root independently reran archive145/145 and the authentic healthy/shared/local obstruction plus retry probe, exit0; hashes and original archive bytes conserved. Child check/type/build and hook-enabled commit exit0. Exact commit file list matches the task boundary, parent/HEAD verified, and worktree clean before root bookkeeping. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t07/evidence.json`. Recovery0/10 used, pendingnull. Next: `p07-t08`; phase incomplete.
