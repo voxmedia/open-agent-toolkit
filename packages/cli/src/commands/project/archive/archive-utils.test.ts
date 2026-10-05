@@ -339,7 +339,7 @@ describe('archive utils', () => {
       const repoRoot = await createRepoRoot();
       const projectPath = join(repoRoot, '.oat/projects/shared/demo');
       await mkdir(projectPath, { recursive: true });
-      const page = `<html><body><a data-probe="page" href="#a&#38;b">page</a><a data-probe="file" href="index.html#a&amp;b">file</a><div ${attribute}="a&amp;b"></div><a href="#plain">plain</a><a href="index.html#plain">plain file</a><div id="plain"></div><a data-probe="absent" href="#absent">absent</a><a data-probe="absent-file" href="index.html#absent">absent file</a></body></html>`;
+      const page = `<html><body><a data-probe="page" href="#a&#38;b">page</a><a data-probe="file" href="index.html#a&amp;b">file</a><a ${attribute}="a&amp;b"></a><a href="#plain">plain</a><a href="index.html#plain">plain file</a><div id="plain"></div><a data-probe="absent" href="#absent">absent</a><a data-probe="absent-file" href="index.html#absent">absent file</a></body></html>`;
       const run = await createLegacyRecap(projectPath, page);
       const manifest = JSON.parse(
         await readFile(join(projectPath, run, 'manifest.json'), 'utf8'),
@@ -3202,9 +3202,17 @@ describe('archive utils', () => {
     await rm(join(repoRoot, summaryExportPath), { recursive: true });
     await writeFile(join(repoRoot, summaryExportPath), 'obstructing file');
     await cp(first.archivePath, projectPath, { recursive: true });
-    await expect(
-      archiveProjectOnCompletion(options, { timestamp }),
-    ).rejects.toThrow(/recap export .*does not match/);
+    const retry = archiveProjectOnCompletion(options, { timestamp });
+    await expect(retry).rejects.toThrow(/recap export .*does not match/);
+    await expect(retry).rejects.toThrow(
+      `Summary export to \`${summaryExportPath}\` failed: ENOTDIR`,
+    );
+    await expect(retry).rejects.toThrow(
+      'Recap repair without the summary link failed:',
+    );
+    await expect(retry).rejects.toThrow(
+      `Repair the summary destination \`${summaryExportPath}\` and retry archive completion.`,
+    );
     expect(await readFile(first.projectRecapExport!.exportRoot)).toEqual(
       exported,
     );
@@ -3233,29 +3241,37 @@ describe('archive utils', () => {
       '.oat/repo/reference/project-recaps/20260401-demo.html',
     );
     const foreign = '<html><body>Another writer owns this page.</body></html>';
-    await expect(
-      archiveProjectOnCompletion(
-        {
-          repoRoot,
-          projectPath,
-          projectName: 'demo',
-          projectsRoot: '.oat/projects/shared',
-          projectRecapRun: run,
-          summaryExportPath,
-          s3SyncOnComplete: false,
+    const attempt = archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        summaryExportPath,
+        s3SyncOnComplete: false,
+      },
+      {
+        timestamp: () => '2026-04-01T12:34:56Z',
+        removePath: async (target, options) => {
+          await rm(target, options);
+          if (target === projectPath) {
+            await rm(exportRoot);
+            await writeFile(exportRoot, foreign);
+          }
         },
-        {
-          timestamp: () => '2026-04-01T12:34:56Z',
-          removePath: async (target, options) => {
-            await rm(target, options);
-            if (target === projectPath) {
-              await rm(exportRoot);
-              await writeFile(exportRoot, foreign);
-            }
-          },
-        },
-      ),
-    ).rejects.toThrow(/recap export .*does not match/);
+      },
+    );
+    await expect(attempt).rejects.toThrow(/recap export .*does not match/);
+    await expect(attempt).rejects.toThrow(
+      `Summary export to \`${summaryExportPath}\` failed: ENOTDIR`,
+    );
+    await expect(attempt).rejects.toThrow(
+      'Recap repair without the summary link failed:',
+    );
+    await expect(attempt).rejects.toThrow(
+      `Repair the summary destination \`${summaryExportPath}\` and retry archive completion.`,
+    );
     expect(await readFile(exportRoot, 'utf8')).toBe(foreign);
     const archivedRun = join(repoRoot, '.oat/projects/archived/demo', run);
     const manifest = JSON.parse(

@@ -2218,35 +2218,42 @@ export async function archiveProjectOnCompletion(
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      const summaryFailure = `Summary export to \`${options.summaryExportPath}\` failed: ${message}`;
       if (syncTarget) {
         await removeAttemptRecapExport(
           attemptedProjectRecapExport,
           removePath,
           dependencies.renamePath ?? rename,
         );
-        throw new CliError(
-          `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
-          1,
-        );
+        throw new CliError(summaryFailure, 1);
       }
-      warnings.push(
-        `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
-      );
+      warnings.push(summaryFailure);
       if (attemptedProjectRecapExport) {
         // Rebuild only through the existing identity/hash-aware cleanup and
         // no-clobber publisher. Adopted or foreign linked output is preserved
         // and refused if it differs from the required link-free page.
-        await removeAttemptRecapExport(
-          attemptedProjectRecapExport,
-          removePath,
-          dependencies.renamePath ?? rename,
-        );
-        attemptedProjectRecapExport = await exportSelectedProjectRecap(
-          { ...options, projectPath: archivePath, summaryExportPath: null },
-          exportIdentity,
-          dependencies,
-        );
-        projectRecapExport = attemptedProjectRecapExport?.export ?? null;
+        try {
+          await removeAttemptRecapExport(
+            attemptedProjectRecapExport,
+            removePath,
+            dependencies.renamePath ?? rename,
+          );
+          attemptedProjectRecapExport = await exportSelectedProjectRecap(
+            { ...options, projectPath: archivePath, summaryExportPath: null },
+            exportIdentity,
+            dependencies,
+          );
+          projectRecapExport = attemptedProjectRecapExport?.export ?? null;
+        } catch (repairError) {
+          const repairMessage =
+            repairError instanceof Error
+              ? repairError.message
+              : String(repairError);
+          throw new CliError(
+            `${summaryFailure}\nRecap repair without the summary link failed: ${repairMessage}\nRepair the summary destination \`${options.summaryExportPath}\` and retry archive completion.`,
+            repairError instanceof CliError ? repairError.exitCode : 2,
+          );
+        }
       }
     }
   }
