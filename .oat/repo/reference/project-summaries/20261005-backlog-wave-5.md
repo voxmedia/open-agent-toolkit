@@ -320,4 +320,9 @@ Recap: [View the recap](../project-recaps/20261005-backlog-wave-5.html)
 
 Run: `f1843cb0-b341-4c00-afb2-ba62be4366a1`  
 Original page SHA-256: `sha256:da7ef887a91f5beab89e13493f67d840870bd63f77c10c53d341d80e2f7a7011`  
-Exported page SHA-256: `sha256:da7ef887a91f5beab89e13493f67d840870bd63f77c10c53d341d80e2f7a7011`
+Exported page SHA-256: `sha256:f7eb0f4dfcc19a32f4bd9f45dbfeef2404fbd7e7e83282ba4ed228ffc073a9bc`
+
+Derived-only footer repair (`p07-t10`, [L1 review comment](https://github.com/voxmedia/open-agent-toolkit/pull/356#discussion_r4180553903)):
+corrected the exported recap's project-artifact guidance URL directly; the exporter
+was not rerun. Original run `f1843cb0-b341-4c00-afb2-ba62be4366a1` at checkpoint
+`5cf0aa4d4346f1f210870df60425f55ee35a2b5a` and its original page hash remain unchanged.
