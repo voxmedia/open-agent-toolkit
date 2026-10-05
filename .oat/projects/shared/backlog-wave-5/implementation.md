@@ -4680,3 +4680,77 @@ The previously carried Medium and each Low stay individually assessed/tracked in
 ## Exit gate remediation reservation — 2026-10-05
 
 Validated exit r1 blocked outcome is durably received at d228b3e0490282575d9529e645e837e26f29180e. Consumed remediation attempts 1/2, no infrastructure attempt. Three serial task commits p06-t11..t13; total44/p06 thirteen. Recovery ledger remains 0/10 for p06: this is a review correction, not post-commit automatic recovery. Old phase-author handle unavailable, one fresh same-target continuation permitted; no replacing accepted active work. Product/code review and phase/exit gate must be renewed for changed basis.
+
+## Phase six exit correction dispatch — wave5-p06-exit-fix-r1
+
+Fresh same-target continuation /root/wave5_phase6_exit_fix (McClintock) accepted exact registered oat-phase-implementer-gpt-6-1-sol-high, fork none, ACK HOLD. Original wave5-p06-implement-r1 handle unavailable; no active replacement. Current canonical role1.1.7/digest92e7c485, project high policy/ceiling, exact model/effort candidate, resolver notices empty. Consequential/high floor; independent renewed reviews required. Native+current T3 catalog permit exact configured route, actual runtime identity/service tier not reported. Deadline7200/retry0/fallbacknone; only six declared product/test paths through three task commits. Root owns receive/lifecycle/all judgments.
+
+```json
+{
+  "request_id": "wave5-p06-exit-fix-r1",
+  "caller": "oat-project-implement",
+  "scope": "p06",
+  "objective": "Correct configured exit r1 H1/L1/L2 through p06-t11..t13, three scoped normal-hook commits and authentic public-boundary evidence.",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "native-schema+t3-20261005-exit-fix",
+    "source": "tool-schema+T3-live-catalog",
+    "observed_at": "2026-10-05T01:56:37.876389Z"
+  },
+  "authority": "p06-t11-t13-exact-six-product-test-paths",
+  "role_selector": "oat-phase-implementer-gpt-6-1-sol-high",
+  "model_selector": "gpt-6.1-sol",
+  "model_selector_granularity": "exact-model",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-10-01",
+  "guidance_verified_at": "2026-10-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["gpt-6.1-sol/high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-6-1-sol-high",
+    "fork_turns": "none",
+    "task_name": "wave5_phase6_exit_fix"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    {
+      "source": "resolver+native-schema",
+      "target": "oat-phase-implementer-gpt-6-1-sol-high",
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "policy_source": "project-state+invocation-ceiling"
+    }
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Accepted native handle /root/wave5_phase6_exit_fix (McClintock); ACK HOLD; root owns tracked writer until START."
+  ],
+  "continuation_events": [
+    {
+      "event": "fresh-phase-handle",
+      "original_request_id": "wave5-p06-implement-r1",
+      "reason": "original phase handle unavailable in live host; one same-target bounded fix continuation"
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Real hook bypass is an enabled-hook safety defect; caller identity and diagnostics require actual producer controls. Root retains disposition and independent verification.",
+  "floor_satisfaction": "satisfied"
+}
+```
