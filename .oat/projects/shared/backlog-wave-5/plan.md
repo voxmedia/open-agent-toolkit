@@ -1003,13 +1003,13 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                    |
-| plan   | artifact | passed          | 2026-10-03 | implementation.md#plan-artifact-self-review                 | -                                        | -          | -                    |
+| plan   | artifact | passed          | 2026-10-03 | implementation.md                                           | -                                        | -          | -                    |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | plan   | artifact | received        | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T211958Z.md | -                                        | -          | -                    |
-| plan   | artifact | passed          | 2026-10-03 | implementation.md#revised-plan-artifact-self-review         | -                                        | -          | -                    |
+| plan   | artifact | passed          | 2026-10-03 | implementation.md                                           | -                                        | -          | -                    |
 | plan   | artifact | fixes_completed | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T220910Z.md | -                                        | -          | -                    |
 | plan   | artifact | passed          | 2026-10-03 | reviews/archived/artifact-plan-review-2026-10-03T221441Z.md | -                                        | -          | -                    |
 | p01    | code     | fixes_completed | 2026-10-03 | reviews/archived/p01-review-2026-10-03T225737Z.md           | e586535587644cd6faf2a5c221650710fa6bd726 | auto       | -                    |
