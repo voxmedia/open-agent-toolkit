@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-Remote PR review has reopened implementation for ten phase-7 corrections. The original archive and S3 snapshot are preserved. Prior-generation history: all 44 tasks and six phases are complete; see the authoritative ledger. Fresh verification and native/phase/configured exit reviews passed. Summary, documentation and ten-ticket closure are complete; the recap is built-needs-review, PR #356 is open, and lifecycle archive is the remaining operation. No merge or release authorized.
+All 54 tasks are implemented, including the ten remote PR corrections. Phase 7 remains in progress until composed review and the configured phase gate pass. Full ordered revision checks have passed; fresh exit qualification and PR publication remain pending. The original completed generation, archive and S3 evidence are preserved. No merge or release.
 
 ## Progress Overview
 
@@ -416,7 +416,7 @@ Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm 
 
 ## Final Summary (for PR/docs)
 
-Implements the ten approved maintenance tickets, Plain Markdown guided setup and all ten actionable PR #356 review corrections. All 54 tasks are implemented. Phase 7 is awaiting independent composed review; revised final verification and configured exit qualification remain pending. The original completed generation and its local/S3 evidence remain preserved.
+Implements the ten approved maintenance tickets, Plain Markdown guided setup and all ten actionable PR #356 review corrections. All 54 tasks are implemented. Phase 7 is awaiting independent composed review; ordered revised final verification has passed; fresh configured exit qualification remains pending. The original completed generation and its local/S3 evidence remain preserved.
 
 The shared exact-path commit helper refuses merge/sequencer/unmerged states and verifies full commit parents. Delegated Git hooks retain their argv, stdin, diagnostics and refusal behavior, including reference-transaction. Migration retention and retry independently verify owning receipts, current HEAD/parents, emitted tree and source removal; a committed flag alone cannot authorize compensation or cleanup. Cyclic YAML blockers return safe diagnostics through real control-plane and CLI consumers.
 
@@ -424,7 +424,7 @@ Recap exports recognize quoted CSS URLs and escapes, decode HTML attribute entit
 
 Main surfaces are CLI Git/sync/archive/validation/PJM/maintenance commands, control-plane state parsing, canonical skills and reviewer contracts, docs and derived recaps. Five public package versions remain 0.3.17; existing PR-scoped skill/role bumps and generated provider parity are retained. Runtime dependency entities6.0.1 is explicit in the CLI manifest/lock importer. No merge, package release or deployment is claimed.
 
-Original qualification is historical: final-r5 and closeout-r6 checks, native final r3, configured phase/exit reviews, ten-ticket closure and original archive/S3 verification passed before remote corrections. Phase 7 evidence manifests preserve each pre-fix bad state, corrected behavior and valid accepted control; root independently verified load-bearing cases. Scoped archive suite145/145, ref-sync+migrate122/122, exact-path42/42, control-plane156/156, CLI status22/22 and knowledge color/uncolored6/6 passed on their recorded task commits. These counts are scoped evidence, not a current full-suite result. Node25.9.0 was used for the color reproduction; Node24 was not run. The original recap remains built-needs-review with NoHost and no visual acceptance.
+Original qualification is historical: final-r5 and closeout-r6 checks, native final r3, configured phase/exit reviews, ten-ticket closure and original archive/S3 verification passed before remote corrections. Phase 7 evidence manifests preserve each pre-fix bad state, corrected behavior and valid accepted control; root independently verified load-bearing cases. Scoped archive suite145/145, ref-sync+migrate122/122, exact-path42/42, control-plane156/156, CLI status22/22 and knowledge color/uncolored6/6 passed on their recorded task commits. Those counts are scoped task evidence. The composed forced full package run passed 8,574 tests (CLI8,357/control-plane156/theme20/transforms31/config10) across12Turbo jobs with0cached, plus smoke163/skills700/scripts1. All ordered eight CI/release/docs gates and extra lint/format/docs validation passed; see the composed revision record below. Node25.9.0 was used for the color reproduction; Node24 was not run. The original recap remains built-needs-review with NoHost and no visual acceptance.
 
 Previously settled Medium/Low follow-ups retain their individual reasons and backlog destinations. All ten new remote findings have implemented corrections, with no dismissals or new deferrals. The original native final three-cycle cap and complexity/operator continuation remain recorded; no fourth ordinary native correctness cycle or counter reset is authorized. Root-owned phase review and independent configured exit qualification remain binding for the revision before pushing corrections to the same PR.
 
@@ -5145,3 +5145,101 @@ Before implementation, root added `packages/cli/package.json` and `pnpm-lock.yam
 ## Phase 7 terminal task ledger — pre-review baseline
 
 All ten assigned implementations completed on the accepted Codex gpt-6.1-sol/high handle; task commits and exact file lists are retained in `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t10/phase7-implementation-handoff.json`. Root independently verified each load-bearing boundary and committed task tracking separately. Task pointers are null, phase row remains in_progress (review pending), and recovery usage remains0/10 pendingnull. Full ordered Definition of Done, independent phase review and fresh configured exit qualification precede publication. Original completion receipts and review-cap history remain historical; no gate waiver or reset.
+
+## Phase 7: Remote PR correction task ledger
+
+**Status:** in_progress — tasks complete; composed review pending
+
+### Task p07-t01: (review) Refuse repository-wide in-progress Git operations
+
+**Status:** completed
+**Commit:** e5d56e75c4764a083b2cbbfcddae08b254ef4e3a
+
+**Outcome:** Refuse repository-wide in-progress Git operations
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t01/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t02: (review) Preserve Git reference-transaction and other commit hooks
+
+**Status:** completed
+**Commit:** f218fe6e44d17814aaf7f908298c1e321d2e6dd4
+
+**Outcome:** Preserve Git reference-transaction and other commit hooks
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t02/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t03: (review) Recover migration retry after a committed hook failure
+
+**Status:** completed
+**Commit:** f2b8e49921b11fbf6d1a1b077b7ba61103dc0955
+
+**Outcome:** retain only independently verified current owning migration; preserve drift for explicit restore and owning finalization; stop without compensation on unverifiable commit metadata
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t03/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t04: (review) Render malformed cyclic YAML blockers safely
+
+**Status:** completed
+**Commit:** baaabcdf8e0c26e058e93240618b8c6ea841e07b
+
+**Outcome:** Legal YAML blocker alias cycles stay visible as a bounded malformed diagnostic; ordinary JSON diagnostics and valid blockers remain unchanged.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t04/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t05: (review) Embed quoted CSS asset URLs containing spaces and escapes
+
+**Status:** completed
+**Commit:** 9a195d070450f3756a22d6e14be88438dc16d98d
+
+**Outcome:** Recognize quoted CSS resource tokens, decode CSS escapes before verified path resolution, emit safely quoted CSS URLs, preserve comments/ordinary strings/raw bodies.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t05/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t06: (review) Decode HTML resource attribute character references
+
+**Status:** completed
+**Commit:** bca432f92ceb3698fe06524365d19df5e3153460
+
+**Outcome:** Both attribute readers use entities/decode decodeHTMLAttribute before URL/CSS interpretation; rewritten attributes escape ampersands before the active quote; raw CSS/script bodies remain literal.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t06/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t07: (review) Publish summary links only after successful export
+
+**Status:** completed
+**Commit:** f1fd92b153394a1c6a53a8fe69d4a76e3998d16e
+
+**Outcome:** On summary failure, rebuild attempt-owned recap output without unavailable summary links through existing verified-package/no-clobber publication; report final page hash. Adopt exact verified link-free retry bytes, preserve adopted/foreign output, and verify copied summary bytes.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t07/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t08: (review) Document automatic backlog closeout commits
+
+**Status:** completed
+**Commit:** 967ab48976935327b4fd3064092b0442d74e4fb1
+
+**Outcome:** Document automatic exact-path archive closeout commit and owned kickoff handoff deletion with hooks; other reference edits remain uncommitted; no push step.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t08/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t09: (review) Assert structured preservation errors under colored rendering
+
+**Status:** completed
+**Commit:** cfeef88ed02bdda2d62a5ad53f06354c6ada886c
+
+**Outcome:** Broad-commit negative control matches real AssertionError name/code/actual/expected instead of colored rendering; unchanged independent preservation oracle distinguishes broad staged-index commit from real exact-owned helper CLI commit.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t09/evidence.json`; root receipt above records independent verification.
+
+### Task p07-t10: (review) Repair the derived recap artifact-guidance footer
+
+**Status:** completed
+**Commit:** f19611efd1cea7690e1a3d35aea04b66fdeeae5f
+
+**Outcome:** Repair only derived footer URL path, refresh actual exported-page hash, append explicit direct derived-only repair provenance; preserve original evidence and historical status.
+
+**Verification:** Evidence and explicit exits: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t10/evidence.json`; root receipt above records independent verification.
+
+## Composed revision Definition of Done
+
+All twelve recorded invocations passed on `adbb111d34ab8273498fd916799003ebe1d31ada`: the ordered eight CI/release/docs gates, origin/main refresh, lint, format and docs validation. TURBO_FORCE=true executes package jobs; the root test command also runs smoke/skills/scripts with an isolated child HOME. Exact numeric exits and logs: `.oat/repo/analysis/wave5-final-closeout/remote-r1/composed-dod-r1/results.json`. Current code unchanged; this repair makes the ten completion receipts consumable by the existing CLI task parser.

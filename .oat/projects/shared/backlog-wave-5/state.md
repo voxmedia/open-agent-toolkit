@@ -182,7 +182,7 @@ oat_lifecycle: active
 
 ## Current Phase
 
-Implementation revision p07 — tasks complete; composed review, full verification and fresh exit qualification pending. Original completed generation preserved in local/S3 archive.
+Implementation revision p07 — tasks complete; full verification passed; composed review and fresh exit qualification pending. Original completed generation preserved in local/S3 archive.
 
 ## Artifacts
 
@@ -201,7 +201,7 @@ Implementation revision p07 — tasks complete; composed review, full verificati
 - ✓ PR created
 - ✓ Original project lifecycle complete (historical generation)
 - ✓ All 54 implementation tasks complete, including ten remote corrections
-- ⧗ Revised verification, phase review and fresh configured exit qualification pending
+- ⧗ Revised verification passed; phase review and fresh configured exit qualification pending
 
 ## Blockers
 
@@ -209,4 +209,4 @@ No implementation blocker. Previous reviews and exit gate are historical; curren
 
 ## Next Milestone
 
-Validate the composed revision, receive independent phase review, renew configured exit qualification, then update PR #356. No merge or release.
+Receive independent phase review, renew configured exit qualification, then update PR #356. No merge or release.
