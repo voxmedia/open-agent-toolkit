@@ -871,6 +871,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p05    | code     | fixes_completed | 2026-10-04 | reviews/archived/p05-review-2026-10-04T202926Z.md           | 386fd8f2845ba0e10da257f730d2357669a37b5a | auto       | -                    |
 | p05    | code     | passed          | 2026-10-04 | reviews/archived/p05-review-2026-10-04T213716Z.md           | 8893b61dde96a24fb05822b7ac3bc33c627e782f | auto       | -                    |
 | p05    | code     | passed          | 2026-10-04 | reviews/archived/p05-review-2026-10-04T215406Z.md           | a016b5adb2c222adf5401c50151152fc6a141da2 | gate       | claude-opus-5-5-high |
+| final  | code     | fixes_completed | 2026-10-05 | reviews/archived/final-review-2026-10-05T004142Z.md         | 85ee6dc345518ccd8b3f562a8b70e91895476f33 | manual     | -                    |
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T012945Z.md         | f98c1c9bee564e7c1f3ef21b051d2288d6568191 | auto       | -                    |
 | p06    | code     | passed          | 2026-10-05 | reviews/archived/p06-review-2026-10-05T013729Z.md           | 7cc7f549d531d8c3131e4e5ee6dd2430ce5318af | gate       | claude-opus-5-5-high |
 | final  | code     | fixes_completed | 2026-10-05 | reviews/archived/final-review-2026-10-05T015008Z.md         | a8b3e9f433e2453ed6e1470c7e5fd71a1d9f42d8 | gate       | claude-opus-5-5-high |
@@ -881,8 +882,6 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
 Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass. Fresh run `4fc38012-9f90-4a0a-b665-853396e48d9f` returned a valid matched envelope, was received with its Low formatting correction resolved, and establishes the independent plan pass; complexity review found no further changes.
-
-| final | code | fixes_completed | 2026-10-05 | reviews/archived/final-review-2026-10-05T004142Z.md | 85ee6dc345518ccd8b3f562a8b70e91895476f33 | manual | - |
 
 ## Implementation Complete
 

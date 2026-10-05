@@ -5010,3 +5010,7 @@ Current oat-project-document 1.8.8 --auto and oat-pjm-update-repo-reference 1.4.
 ## Closeout document completed — 2026-10-05T03:12:05.620292Z
 
 Owning skill completed with qualified output commit 9eb55764008523b2b7c1b4f67038f8369584878d; stored arrays/order unchanged, no scope waiver.
+
+## Recap terminal outcome and review ledger conservation — 2026-10-05T03:22:35.552645Z
+
+Recorded immutable recap built-needs-review with seven passing static QA checks and owning terminal guard acceptance. Preserved all review events and moved the misplaced historical final r1 event into the recognized ledger before later final passes; no event status, artifact or evidence changed. Historical rejected planning report remains received and ineligible. Browser unavailable; visual acceptance remains outstanding.
