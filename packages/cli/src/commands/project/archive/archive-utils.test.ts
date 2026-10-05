@@ -337,15 +337,36 @@ describe('archive utils', () => {
   // documented above, not original captured HTML. The real-package replay separately
   // copies the authentic Wave4/July packages without changing the retained originals.
   it.each([
-    ['image', '<img src=asset.svg>', 'data:image/svg+xml;base64,'],
-    ['stylesheet', '<link rel=stylesheet href=style.css>', '<style>.hero'],
+    ['unquoted image', '<img src=asset.svg>', 'data:image/svg+xml;base64,'],
     [
-      'script',
+      'unquoted stylesheet',
+      '<link rel=stylesheet href=style.css>',
+      '<style>.hero',
+    ],
+    [
+      'unquoted script',
       '<script src=local.js></script>',
       'document.body.dataset.ready="yes";',
     ],
+    ...[
+      ['query script', '<script src="local.js?v=1"></script>'],
+      ['fragment script', '<script src="local.js#v1"></script>'],
+      ['encoded script', '<script src="local%20script.js"></script>'],
+    ].map(([kind, tag]) => [kind, tag, 'document.body.dataset.ready="yes";']),
+    ...[
+      ['query stylesheet', '<link rel="stylesheet" href="style.css?v=1">'],
+      ['fragment stylesheet', '<link rel="stylesheet" href="style.css#v1">'],
+      [
+        'encoded stylesheet',
+        '<link rel="stylesheet" href="local%20style.css">',
+      ],
+    ].map(([kind, tag]) => [
+      kind,
+      tag,
+      '<style>.hero{background:url("data:image/svg+xml;base64,',
+    ]),
   ])(
-    'embeds a required unquoted %s asset into the emitted flat page',
+    'embeds a required %s asset into the emitted flat page',
     async (_kind, tag, expected) => {
       const repoRoot = await createRepoRoot();
       const projectPath = join(repoRoot, '.oat/projects/shared/demo');
@@ -359,6 +380,8 @@ describe('archive utils', () => {
         'asset.svg': '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
         'style.css': '.hero{background:url(asset.svg)}',
         'local.js': 'document.body.dataset.ready="yes";',
+        'local script.js': 'document.body.dataset.ready="yes";',
+        'local style.css': '.hero{background:url(asset.svg)}',
       };
       for (const [name, bytes] of Object.entries(assets)) {
         const file = `${parent}/${name}`;
@@ -386,7 +409,7 @@ describe('archive utils', () => {
       expect(exported).not.toMatch(
         /(?:src|href)=(?:asset.svg|style.css|local.js)/,
       );
-      if (_kind === 'stylesheet')
+      if (_kind!.includes('stylesheet'))
         expect(exported).toContain('data:image/svg+xml;base64,');
       expect(
         await readFile(
@@ -530,12 +553,20 @@ describe('archive utils', () => {
     ).toBe(style);
   });
 
-  it.each(['"../../../../../plan.md"', '../../../../../plan.md'])(
-    'rejects an asset outside the verified package with src=%s',
-    async (src) => {
+  it.each([
+    ['quoted image', '<img src="../../../../../plan.md">'],
+    ['unquoted image', '<img src=../../../../../plan.md>'],
+    ['query script', '<script src="../../../../../plan.md?v=1"></script>'],
+    [
+      'encoded stylesheet',
+      '<link rel="stylesheet" href="..%2F..%2F..%2F..%2F..%2Fplan.md#v1">',
+    ],
+  ])(
+    'rejects an asset outside the verified package in a %s',
+    async (_kind, tag) => {
       const repoRoot = await createRepoRoot();
       const projectPath = join(repoRoot, '.oat/projects/shared/demo');
-      const page = `<html><body><img src=${src}></body></html>`;
+      const page = `<html><body>${tag}</body></html>`;
       const run = await createLegacyRecap(projectPath, page);
       await writeFile(join(projectPath, 'plan.md'), 'foreign project source');
       await expect(

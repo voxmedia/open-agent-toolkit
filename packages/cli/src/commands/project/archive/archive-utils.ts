@@ -1499,8 +1499,10 @@ async function transformRecapPage(
   options: ArchiveProjectOnCompletionOptions,
 ): Promise<string> {
   const external = (url: string) => /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(url);
-  const asset = async (url: string, base: string): Promise<string> => {
-    if (external(url) || url.startsWith('#')) return url;
+  const resolveAssetPath = async (
+    url: string,
+    base: string,
+  ): Promise<string> => {
     const assetPath = resolve(
       dirname(base),
       decodeURIComponent(url.split(/[?#]/)[0]!),
@@ -1510,6 +1512,11 @@ async function transformRecapPage(
       !isInsidePath(await realpath(sourceRunRoot), await realpath(assetPath))
     )
       throw new CliError(`Recap asset escapes its verified package: ${url}`);
+    return assetPath;
+  };
+  const asset = async (url: string, base: string): Promise<string> => {
+    if (external(url) || url.startsWith('#')) return url;
+    const assetPath = await resolveAssetPath(url, base);
     const bytes = await readFile(
       join(stagedRoot, relative(sourceRunRoot, assetPath)),
     );
@@ -1670,8 +1677,7 @@ async function transformRecapPage(
     if (name === 'link' && values.get('rel')?.toLowerCase() === 'stylesheet') {
       const url = values.get('href');
       if (url !== undefined && !external(url)) {
-        await asset(url, sourcePage);
-        const file = resolve(dirname(sourcePage), url);
+        const file = await resolveAssetPath(url, sourcePage);
         output += `<style>${await css(await readFile(join(stagedRoot, relative(sourceRunRoot, file)), 'utf8'), file)}</style>`;
         continue;
       }
@@ -1694,13 +1700,10 @@ async function transformRecapPage(
         url !== undefined &&
         !external(url)
       ) {
-        await asset(url, sourcePage);
+        const file = await resolveAssetPath(url, sourcePage);
         body = (
           await readFile(
-            join(
-              stagedRoot,
-              relative(sourceRunRoot, resolve(dirname(sourcePage), url)),
-            ),
+            join(stagedRoot, relative(sourceRunRoot, file)),
             'utf8',
           )
         ).replace(/<\/script/gi, '<\\/script');
