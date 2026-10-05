@@ -979,7 +979,7 @@ Each alias below names one authoritative item. AC numbers follow the current tic
 **Files:** `packages/cli/src/commands/project/archive/archive-utils.ts`, `packages/cli/src/commands/project/archive/archive-utils.test.ts`.
 **Source:** p07 independent gate p07-review-2026-10-05T064042Z.md, Low 1.
 **Dependencies:** Sequential after p07-t10; root bookkeeping before each continuation.
-**Status:** pending
+**Status:** completed — `fe776e55a161eca07398ada57dc3368d5b20d1df`
 
 Compare same-page and same-file fragments against decoded real id/name attributes, preserving plain accepted anchors and stripping genuinely absent targets; keep raw CSS/script content out of target inventory. Reproduce the actual public exporter failure, make the smallest owning correction, and protect it with proportional named existing-family regressions and valid accepted controls. Use deliberate-testing; preserve original archive/S3 and unrelated bytes. Run scoped owning verification and one hook-enabled exact-path task commit. Root owns full composed DoD and fresh required reviews.
 
@@ -1052,7 +1052,7 @@ Planning recovery: the original findings were reformatted without content/proven
 
 ## Implementation Complete
 
-**Current acceptance:** Original 44 tasks remain recorded; 10/10 remote revision tasks verified (54/54 total). Revised product qualification remains pending phase/final review and fresh exit gate. Original local/S3 archive is preserved. PR #356 remains open; no merge or release.
+**Current acceptance:** Original44 tasks plus 11/12 phase7 tasks verified (55/56 total). Composed verification and fresh qualification remain pending; original local/S3 archive and review history preserved.
 
 **Planned task totals:**
 

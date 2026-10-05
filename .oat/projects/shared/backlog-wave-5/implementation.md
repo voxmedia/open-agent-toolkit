@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-05
-oat_current_task_id: p07-t11
+oat_current_task_id: p07-t12
 oat_generated: false
 ---
 
@@ -21,9 +21,9 @@ The ten remote PR corrections are implemented; two independently found exporter 
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
 | Phase 6 | complete    | 13    | 13/13     |
-| Phase 7 | in_progress | 12    | 10/12     |
+| Phase 7 | in_progress | 12    | 11/12     |
 
-**Total:** 54/56 tasks completed
+**Total:** 55/56 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -5269,3 +5269,12 @@ Root consumed the unique not-attempted signal before artifact validation, read t
 - L3: accept as a pre-existing Low follow-up, individually retained in `BL-261005-resolve-deferred-wave-5`. The approved derived correction fixed the broken path and conserved original evidence; durable branch-versus-commit link policy belongs with the exporter and historical-reference policy, not a second ad-hoc rewrite of original evidence. Assess supported permalink policy separately after this PR. No blanket waiver or new blocker is inferred.
 
 Phase remains in_progress with two declared fixes; this passing threshold does not mark the phase complete. Existing original final cap, operator continuation, individual Medium/Low dispositions and recovery counters stay unchanged. Gate r1 remains a received/fixes_added event until both tasks settle. Earlier composed checks passed on the prior product basis; repeat required DoD after these corrections before fresh qualification or publication.
+
+### Task p07-t11: (review) Preserve decoded same-page fragment targets
+
+**Status:** completed
+**Commit:** fe776e55a161eca07398ada57dc3368d5b20d1df
+
+**Outcome:** Same-page/same-file fragments match decoded real id/name attributes through existing markup/attribute readers, excluding raw-text bodies, comments and attribute descriptions; plain accepted and genuinely absent controls preserved.
+
+**Verification:** Three named keepers failed baseline and passed corrected; full archive148/148 exit0. Authentic July public5cases reproduce stripped entity links and false opaque targets at baseline and pass corrected with literal output/hash/original-byte conservation. Root independently reran all5public cases and3keepers, exits0. Scoped format/check/type/build and post-hook byte equality pass. No L2/L3 or protected archive changes. Evidence: `.oat/repo/analysis/wave5-final-closeout/remote-r1/p07-t11/evidence.json`. Root verified exact two files, full sole parent, matching HEAD and clean tree; same original implementer handle, hooks enabled, recovery0/10 pendingnull. Next: `p07-t12`; composed acceptance remains pending.
