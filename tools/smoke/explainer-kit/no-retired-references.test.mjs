@@ -92,7 +92,21 @@ const RETIRED_PATTERNS = [
   },
 ];
 
-const NEGATIVE_CONTROL_ALLOWLIST = new Map([
+const NAMED_REFERENCE_ALLOWLIST = new Map([
+  // The archive reader supports captured v1 outcomes; preserve those original
+  // contract bytes without permitting other retired references in these paths.
+  [
+    'packages/cli/src/commands/project/archive/archive-utils.ts',
+    new Set(['built-durable']),
+  ],
+  [
+    'packages/cli/src/commands/project/archive/fixtures/legacy-package-contract/manifest.json',
+    new Set(['built-durable']),
+  ],
+  [
+    'packages/cli/src/commands/project/archive/fixtures/legacy-package-contract/build-record.json',
+    new Set(['built-durable']),
+  ],
   [
     '.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs',
     new Set(['built-durable', 'built-not-durable']),
@@ -121,7 +135,7 @@ export async function scanRetiredReferences({ root = repoRoot, files } = {}) {
     const absolutePath = join(root, path);
     if ((await stat(absolutePath)).isDirectory()) continue;
     const content = await readFile(absolutePath, 'utf8');
-    const allowed = NEGATIVE_CONTROL_ALLOWLIST.get(path) ?? new Set();
+    const allowed = NAMED_REFERENCE_ALLOWLIST.get(path) ?? new Set();
     for (const pattern of RETIRED_PATTERNS) {
       if (!allowed.has(pattern.id) && content.includes(pattern.value)) {
         findings.push({ path, pattern: pattern.id });
@@ -187,17 +201,52 @@ test('rejects retired semantic residues outside historical records', async () =>
   }
 });
 
-test('honors only the named terminal-outcome negative-control allowlist', async () => {
+test('honors only the named path/pattern reference allowlist', async () => {
   const root = await mkdtemp(join(tmpdir(), 'retired-reference-allow-'));
   try {
-    const path =
-      '.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs';
-    await mkdir(dirname(join(root, path)), { recursive: true });
-    await writeFile(
-      join(root, path),
-      "const rejected = ['built-durable', 'built-not-durable'];\n",
+    const negativeControlPaths = [
+      '.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs',
+      '.agents/skills/oat-project-implement/tests/check-terminal-outcome.test.mjs',
+    ];
+    const legacyCompatibilityPaths = [
+      'packages/cli/src/commands/project/archive/archive-utils.ts',
+      'packages/cli/src/commands/project/archive/fixtures/legacy-package-contract/manifest.json',
+      'packages/cli/src/commands/project/archive/fixtures/legacy-package-contract/build-record.json',
+    ];
+    for (const path of negativeControlPaths) {
+      await mkdir(dirname(join(root, path)), { recursive: true });
+      await writeFile(
+        join(root, path),
+        "const rejected = ['built-durable', 'built-not-durable'];\n",
+      );
+    }
+    for (const path of legacyCompatibilityPaths) {
+      await mkdir(dirname(join(root, path)), { recursive: true });
+      await writeFile(join(root, path), 'built-durable\n');
+    }
+    assert.deepEqual(
+      await scanRetiredReferences({
+        root,
+        files: [...negativeControlPaths, ...legacyCompatibilityPaths],
+      }),
+      [],
     );
-    assert.deepEqual(await scanRetiredReferences({ root, files: [path] }), []);
+
+    for (const path of legacyCompatibilityPaths) {
+      // Exact path eligibility must not suppress another retired outcome/symbol.
+      await writeFile(join(root, path), 'built-not-durable\nrunExplainer\n');
+      assert.deepEqual(await scanRetiredReferences({ root, files: [path] }), [
+        { path, pattern: 'built-not-durable' },
+        { path, pattern: 'runExplainer' },
+      ]);
+      // A neighboring path is outside the exact compatibility exception.
+      const outsidePath = `${path}.unexpected`;
+      await writeFile(join(root, outsidePath), 'built-durable\n');
+      assert.deepEqual(
+        await scanRetiredReferences({ root, files: [outsidePath] }),
+        [{ path: outsidePath, pattern: 'built-durable' }],
+      );
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }
