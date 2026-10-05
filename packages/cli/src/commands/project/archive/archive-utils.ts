@@ -54,6 +54,7 @@ import {
   ensureDir,
   fileExists,
 } from '@fs/io';
+import { decodeHTMLAttribute } from 'entities/decode';
 
 import { loadExplainerPackageCoverage } from './explainer-package-coverage';
 
@@ -1588,34 +1589,38 @@ async function transformRecapPage(
   // for href/src would also find those strings inside title/data attributes.
   const attributePattern =
     /\s+([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'`=<>]+)))?/g;
+  const attributeValue = (match: RegExpExecArray) => {
+    const value = match[2] ?? match[3] ?? match[4];
+    return value === undefined ? undefined : decodeHTMLAttribute(value);
+  };
+  const emitAttribute = (name: string, value: string, quote = '"') =>
+    ` ${name}=${quote}${value
+      .replaceAll('&', '&amp;')
+      .replaceAll(quote, quote === '"' ? '&quot;' : '&#39;')}${quote}`;
   const attributes = (tag: string) =>
     new Map(
       [...tag.matchAll(attributePattern)].map((match) => [
         match[1]!.toLowerCase(),
-        match[2] ?? match[3] ?? match[4],
+        attributeValue(match),
       ]),
     );
   const rewriteAttributes = async (tag: string, removeScriptSource = false) =>
     replaceAsync(tag, attributePattern, async (match) => {
       const name = match[1]!.toLowerCase();
-      const url = match[2] ?? match[3] ?? match[4];
+      const url = attributeValue(match);
       if (url === undefined) return match[0];
       if (name === 'style') {
         const value = await css(url, sourcePage);
         if (value === url) return match[0];
         const quote = match[3] !== undefined ? "'" : '"';
-        const escaped = value.replaceAll(
-          quote,
-          quote === '"' ? '&quot;' : '&#39;',
-        );
-        return ` ${match[1]}=${quote}${escaped}${quote}`;
+        return emitAttribute(match[1]!, value, quote);
       }
       if (name !== 'href' && name !== 'src') return match[0];
       if (name === 'src' && removeScriptSource) return '';
       if (external(url)) return match[0];
       if (name === 'src') {
         const quote = match[3] !== undefined ? "'" : '"';
-        return ` src=${quote}${await asset(url, sourcePage)}${quote}`;
+        return emitAttribute('src', await asset(url, sourcePage), quote);
       }
       const [pathname, fragment] = url.split('#');
       if (!pathname) {
@@ -1640,7 +1645,7 @@ async function transformRecapPage(
           ).test(html)
         )
           return '';
-        return ` href="#${fragment}"`;
+        return emitAttribute('href', `#${fragment}`);
       }
       let target = original;
       if (
@@ -1677,7 +1682,10 @@ async function transformRecapPage(
         )
           return '';
       }
-      return ` href="${relative(dirname(exportPage), target).split(sep).join('/')}${fragment ? `#${fragment}` : ''}"`;
+      return emitAttribute(
+        'href',
+        `${relative(dirname(exportPage), target).split(sep).join('/')}${fragment ? `#${fragment}` : ''}`,
+      );
     });
 
   // Walk markup once. Comments and raw-text elements are opaque to attribute

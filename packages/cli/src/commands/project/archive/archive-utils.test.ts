@@ -561,11 +561,161 @@ describe('archive utils', () => {
     );
   });
 
+  it.each([
+    ['named image', '<img src="asset&amp;.svg">', 'asset&.svg', 'svg'],
+    [
+      'numeric image with fragment',
+      '<img src="asset&#38;.svg#mark">',
+      'asset&.svg',
+      'svg',
+    ],
+    ['hex numeric image', '<img src="asset&#x26;.svg">', 'asset&.svg', 'svg'],
+    [
+      'full named image',
+      '<img src="asset&CounterClockwiseContourIntegral;.svg">',
+      'asset∳.svg',
+      'svg',
+    ],
+    [
+      'encoded style quotes',
+      '<div style="background:url(&quot;asset.svg&quot;)"></div>',
+      'asset.svg',
+      'style',
+    ],
+    [
+      'stylesheet reader',
+      '<link rel="stylesheet" href="style&amp;.css">',
+      'style&.css',
+      'css',
+    ],
+    [
+      'script reader',
+      '<script src="local&amp;.js"></script>',
+      'local&.js',
+      'script',
+    ],
+    [
+      'unterminated allowed reference',
+      '<img src="asset&amp.svg">',
+      'asset&.svg',
+      'svg',
+    ],
+    [
+      'suppressed before letter',
+      '<img src="asset&notit;.svg">',
+      'asset&notit;.svg',
+      'svg',
+    ],
+    [
+      'suppressed before equals',
+      '<img src="asset&amp=.svg">',
+      'asset&amp=.svg',
+      'svg',
+    ],
+  ])(
+    'decodes resource character references in the %s attribute context',
+    async (_name, markup, assetName, kind) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      // Small page/asset derivative of the captured July legacy contract above.
+      const external =
+        '<a href="https://example.com/?x=1&amp;y=2">external</a>';
+      const page = `<html><head></head><body>${markup}${external}</body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const root = join(projectPath, run);
+      const manifestPath = join(root, 'manifest.json');
+      const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+      const file = `${dirname(manifest.artifacts[0].renderedPath)}/${assetName}`;
+      const svg =
+        '<svg xmlns="http://www.w3.org/2000/svg"><title>attribute entity</title></svg>';
+      const bytes =
+        kind === 'css'
+          ? '.entity{color:red}'
+          : kind === 'script'
+            ? 'globalThis.entityReady=true;'
+            : svg;
+      await writeFile(join(root, file), bytes);
+      manifest.immutableHashes[file] =
+        `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      await verifySelectedProjectRecapForArchive(projectPath, run);
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      );
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+      const expected =
+        kind === 'css'
+          ? '<style>.entity{color:red}</style>'
+          : kind === 'script'
+            ? '<script>globalThis.entityReady=true;</script>'
+            : kind === 'style'
+              ? `<div style="background:url(&quot;${dataUrl}&quot;)"></div>`
+              : `<img src="${dataUrl}">`;
+      expect(exported).toContain(expected);
+      expect(exported).toContain(external);
+      expect(result.warnings).toEqual([]);
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('re-escapes ampersands before the active quote in rewritten style attributes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page = `<html><head></head><body><div style='background:url(&quot;asset.svg&quot;);--literal:&quot;&amp;amp; &#39;&quot;;--external:url(&quot;https://example.com/a?x=1&amp;y=2&quot;)'></div></body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const root = join(projectPath, run);
+    const manifestPath = join(root, 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    const file = `${dirname(manifest.artifacts[0].renderedPath)}/asset.svg`;
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    await writeFile(join(root, file), svg);
+    manifest.immutableHashes[file] =
+      `sha256:${createHash('sha256').update(svg).digest('hex')}`;
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+    const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+    expect(
+      await readFile(result.projectRecapExport!.exportRoot, 'utf8'),
+    ).toContain(
+      `style='background:url("${dataUrl}");--literal:"&amp;amp; &#39;";--external:url("https://example.com/a?x=1&amp;y=2")'`,
+    );
+  });
+
   it('preserves raw bodies and non-attribute text while embedding actual CSS resources', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat/projects/shared/demo');
-    const script = String.raw`const tag='<img src=missing.svg><link rel=stylesheet href=missing.css><script src=missing.js><\/script>'; const text='url(missing.svg)'; globalThis.recapValue=123;`;
-    const style = String.raw`.note::before{content:" href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg) url(\"missing space.svg\")"} /* <link rel=stylesheet href=missing.css> url(missing.svg) url("missing space.svg") */ .hero{background:url(asset.svg)}`;
+    const script = String.raw`const tag='<img src=missing.svg><link rel=stylesheet href=missing.css><script src=missing.js><\/script>'; const text='url(missing.svg)'; globalThis.recapValue=123; globalThis.entityText='&amp; &#38; &copy;';`;
+    const style = String.raw`.note::before{content:"&amp; &#38; &copy; href=missing.md src=missing.svg <img src=missing.svg> url(missing.svg) url(\"missing space.svg\")"} /* <link rel=stylesheet href=missing.css> url(missing.svg) url("missing space.svg") */ .hero{background:url(asset.svg)} .literal{background:url(raw&amp;.svg)}`;
     const text = '<p>href=missing.md src=missing.svg url(missing.svg)</p>';
     const comment =
       '<!-- <img src=missing.svg><script src=missing.js></script> url(missing.svg) -->';
@@ -581,6 +731,7 @@ describe('archive utils', () => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
     for (const [name, bytes] of Object.entries({
       'asset.svg': svg,
+      'raw&amp;.svg': svg,
       'style.css': style,
     })) {
       const file = `${parent}/${name}`;
@@ -607,19 +758,19 @@ describe('archive utils', () => {
     for (const preserved of [script, text, comment, attribute, rawText])
       expect(exported).toContain(preserved);
     const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
-    const embeddedStyle = style.replace(
-      'background:url(asset.svg)',
-      `background:url("${dataUrl}")`,
-    );
+    const embeddedStyle = style
+      .replace('background:url(asset.svg)', `background:url("${dataUrl}")`)
+      .replace('background:url(raw&amp;.svg)', `background:url("${dataUrl}")`);
     expect(exported).toContain(`<style>${embeddedStyle}</style>`);
     expect(exported.match(/<style>/g)).toHaveLength(2);
     expect(exported).toContain(`style='background:url("${dataUrl}")'`);
-    const context: { recapValue?: number } = {};
+    const context: { recapValue?: number; entityText?: string } = {};
     runInNewContext(
       exported.match(/<script>([\s\S]*?)<\/script>/)![1]!,
       context,
     );
     expect(context.recapValue).toBe(123);
+    expect(context.entityText).toBe('&amp; &#38; &copy;');
     expect(
       await readFile(
         join(result.archivePath, run, manifest.artifacts[0].renderedPath),
