@@ -829,7 +829,7 @@ Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_vali
 
 Planning recovery: the original findings were reformatted without content/provenance changes and the parser now tallies 6 Medium / 4 Low. Root independently verified the source-backed authoring corrections before a fresh configured gate run. The original failed envelope remains ineligible and is never promoted into a pass. Fresh run `4fc38012-9f90-4a0a-b665-853396e48d9f` returned a valid matched envelope, was received with its Low formatting correction resolved, and establishes the independent plan pass; complexity review found no further changes.
 
-| final | code | fixes_added | 2026-10-05 | reviews/archived/final-review-2026-10-05T004142Z.md | 85ee6dc345518ccd8b3f562a8b70e91895476f33 | manual | - |
+| final | code | fixes_completed | 2026-10-05 | reviews/archived/final-review-2026-10-05T004142Z.md | 85ee6dc345518ccd8b3f562a8b70e91895476f33 | manual | - |
 
 ## Implementation Complete
 

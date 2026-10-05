@@ -268,6 +268,10 @@ wave5-final-r3-verified: Full finalr3 verification passed all18 ordered invocati
 
 wave5-final-r1-l1-received: Full native final review0C0H0M1L received; root reproduces normalized script/CSS raw-file refusal, converts L1 to p06-t10 under delegated routine authority. Prior individual dispositions retained; fresh verification/review required, no phase completion or publication claim.
 
+### 2026-10-05 · structural · oat-project-implement · p06-t10
+
+wave5-root-p06-t10-receive: all41 tasks implemented. Root verified exact two-file commit4fc29874, hashes and explicit exits; authentic July plain/query/encoded controls now embed literal script/CSS and preserve originals. Prior final r1 event fixes_completed; fresh full gates and qualified independent re-review required. Recovery0/10 pendingnull; operator delegation permits routine continuation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

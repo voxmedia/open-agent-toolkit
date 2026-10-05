@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-04
-oat_current_task_id: p06-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -20,9 +20,9 @@ oat_generated: false
 | Phase 3 | complete    | 12    | 12/12     |
 | Phase 4 | complete    | 4     | 4/4       |
 | Phase 5 | complete    | 5     | 5/5       |
-| Phase 6 | in_progress | 10    | 9/10      |
+| Phase 6 | in_progress | 10    | 10/10     |
 
-**Total:** 40/41 tasks completed
+**Total:** 41/41 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -406,7 +406,10 @@ Final ordered verification at `f4c516535aba19e143333fdb8ec0f9672a51a92f`: `pnpm 
 
 ### Task p06-t10: (review) Reuse validated local asset paths during recap embedding
 
-**Status:** pending
+**Status:** completed
+**Commit:** 4fc29874d5ceefbf37b02e1063b9d5ad40d755b5
+
+**Outcome/Verification:** Validated normalized local asset paths now own script and stylesheet embedding. Pre-fix source-derived controls fail on raw URL suffixes; post-fix authentic controls embed literal bodies, traversal remains refused, all seven exports and original bytes are conserved. Direct 176 archive and 13 focused cases pass. Root independently repeated four captured July controls against the built producer: all embed script/CSS and preserve the manifest, exit0. Root independently verified exact paths, parent, committed/working SHA256 and explicit exits. Evidence analysis/p06/t10/task-report.md and root-verification.json. Recovery0/10pendingnull.
 
 **Outcome target:** Final native r1 L1 is within R4; use validated normalized paths for local script/stylesheet reads, preserve original evidence and existing exports. Exact two product paths declared in plan; original accepted phase6 author resumes.
 
@@ -416,9 +419,9 @@ Implements ten approved maintenance tickets and the Plain Markdown guided-init a
 
 One hook-safe exact-path commit primitive serves CLI and skill callers, preserving unrelated staged/worktree bytes and receipt-bound retries. Backlog archive reports complete caller-owned paths without staging. Knowledge refresh preserves manual notes/collisions and emits the exact ownership report across independent shell calls. Recap archive verifies the original package and exports one dated HTML page with matching retry, conflict refusal and owned rollback. Seven historical packages and the stray fact base were fully preserved before migration. Four expressly approved derived SVG pages remove only30erroneous quote pairs/60bytes; original evidence and receipts remain unchanged. Docs distinguish legacy v1 from completionv2 assurance and four recap links use durable relative destinations.
 
-Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All40tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
+Main surfaces are CLI validators/project/PJM/archive/maintenance commands, control-plane blocker parsing, canonical skills/reviewer/shared contracts, generated provider views and reference docs/recaps. All41tasks complete. Five public packages are0.3.17;37skills/two roles have one PR-scoped bump. Final owning sync changed65reviewer projections; direct root parity verifies65canonical bodies and unchanged provider fields,118bundled files/39owners/6vendors, unchanged setupmanifest/config and docs index,0dry-sync drift.
 
-Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. Finalr3 at5cada031f72b1dc16b94fe011c4a4dc8ba22b754 passes every ordered CI/release/docs gate and lint/format/docs validators. Fresh isolated-child-HOME forced Turbo executes12tasks with0cached; CLI8303/8303 and four other package suites pass. Fresh smoke/skill/script suites and canonical validation pass. Explicit exits/logs retained in analysis/final-r3/gate-results.json; ordinary gate cache replay is recorded separately. Final native review, configured p06gate and implementation exit gate remain pending. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
+Verification: Phases1–5 received native and independent Opus reviews. Task evidence includes authentic source-derived negative/valid controls, real Git/hooks/index witnesses, producer-reader composition and original-byte conservation. The first final sequence stopped on34test failures (original logs retained); bounded t02–t04 corrected version pins, coverage composition and bypassed test failure injection. Current direct correction suites pass353/41/45cases. t05passes306tests with real chained/alias/tests-only vendor controls, and withdraws invalid self-local stop-clause guard evidence while retaining shipped positive keepers. t06passes6Nodekeepers/41inventorytests; actual old shipped guidance fails on empty stdout and corrected separate-shell guidance passes. t07docs conservation/oracle/checks and t08pre/postrelease/docs/lint/format/parity pass. Finalr3 at5cada031f72b1dc16b94fe011c4a4dc8ba22b754 passes every ordered CI/release/docs gate and lint/format/docs validators. Fresh isolated-child-HOME forced Turbo executes12tasks with0cached; CLI8303/8303 and four other package suites pass. Fresh smoke/skill/script suites and canonical validation pass. Explicit exits/logs retained in analysis/final-r3/gate-results.json; ordinary gate cache replay is recorded separately. Final native r1 reviewed all40 prior tasks/41criteria and found one Low within R4. Task p06-t10 resolves it through validated asset paths shared by script/CSS reads; pre-fix source-derived failures and post-fix literal embedding controls, 176 archive cases, 13 focused cases and original/export conservation pass. Root independently repeated four authentic controls against the compiled producer, exit0. Fresh finalr4, qualified narrowed native re-review, configured p06gate and implementation exit gate remain pending. Browser evidence covers migrated pages and30restored marker references with screenshot/mobile/HTTP limits; no complete visual or liveS3 acceptance claim.
 
 Accepted deltas are the approved review corrections, Plain Markdown option, exact four-page refresh and operator-approved final-test/delegated guidance fixes. Seven carried Lows are resolved, one keeper gap is resolved with deletion-policy expansion separately deferred, five Lows remain individually retained/deferred, and the stored-receipt diagnostic Medium has its own scoped deferral. Reasons remain in the root disposition table and task receipts. Automatic rewritten-history recovery is deferred. No blanket waiver or counter reset. Actual ten-ticket closure, own recap, approved sequence and one mergeable PR follow qualified final review/gates. Latest operator direction delegates routine scoped decisions and checkpoints; consequential unresolved choices still require direction. No merge or release.
 
@@ -4431,3 +4434,7 @@ Exactly one terminal `**Reconnaissance:** not-attempted` consumed and persisted 
 ### Phase6 asset correction continuation planned — cont-backlog-wave-5-p06-final-asset
 
 Linked accepted wave5-p06-implement-r1 /root/wave5_phase6, mode implement, p06-t10 only. Same configured Sol6.1/high/current canonical role; original accepted1.1.6digest remains immutable provenance. Fresh fetch origin/main6ec5313b/no owned-path drift. Initial resolver notice requested explicit candidate provenance; corrected resolution pins candidate Sol6.1/high and notices[]. No new launch/replacement, nesting, recovery reservation, versions or generated work. START follows committed root receive/task ledger. Generic continuation validated-only in analysis/p06-t10-continuation-validation.json; exact authority two archive source/test files, original evidence/exported pages untouched.
+
+### Phase6 asset correction completed — cont-backlog-wave-5-p06-final-asset
+
+Accepted author /root/wave5_phase6 returned TASK_DONE RELEASE/HOLD at4fc29874d5ceefbf37b02e1063b9d5ad40d755b5, sole parent39457a296a122cc80d628ba9a47afb98c3e90647, exact two owning files. Root verified declared paths, precommit/committed/working SHA256, numeric passing exits and clean tree, then independently repeated authentic July plain/query/encoded controls: all accepted with literal script/CSS bodies and original manifest preserved. Expected pre-fix negative control failures remain separately recorded. L1 correction implemented; original final r1 event advances fixes_completed, not passed. All41 tasks coded, p06 review/gates pending, recovery0/10 pendingnull. No phase/tail writer active. Fresh full gates and guarded narrowed re-review follow.
