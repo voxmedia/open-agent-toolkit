@@ -3013,6 +3013,209 @@ describe('archive utils', () => {
     expect(result.s3Path).toBeNull();
   });
 
+  it.each(['shared', 'local'] as const)(
+    'omits unexported summary links on real directory obstruction in %s completion and reuses the link-free page',
+    async (scope) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, `.oat/projects/${scope}/demo`);
+      // Controlled derivative of the captured July legacy contract above.
+      const page =
+        '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+      const run = await createLegacyRecap(projectPath, page);
+      const summary = '# Summary\n\n## Verification\n\nVerified.\n';
+      await writeFile(join(projectPath, 'summary.md'), summary);
+      const summaryExportPath = '.oat/repo/reference/project-summaries';
+      const obstruction = join(repoRoot, summaryExportPath);
+      await mkdir(dirname(obstruction), { recursive: true });
+      await writeFile(obstruction, 'obstructing file');
+      const options = {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        summaryExportPath,
+        s3SyncOnComplete: false,
+      };
+      const timestamp = () => '2026-04-01T12:34:56Z';
+      const result = await archiveProjectOnCompletion(options, { timestamp });
+      const report = result.projectRecapExport!;
+      const exported = await readFile(report.exportRoot, 'utf8');
+      expect(exported).toContain('<a>Summary</a>');
+      expect(exported).not.toContain('project-summaries');
+      expect(result.summaryExportFile).toBeNull();
+      expect(result.warnings).toHaveLength(1);
+      expect(result.warnings[0]).toContain('Summary export');
+      expect(report.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(report.page.originalSha256).toBe(
+        `sha256:${createHash('sha256').update(page).digest('hex')}`,
+      );
+      const archivedRun = join(result.archivePath, run);
+      const manifest = JSON.parse(
+        await readFile(join(archivedRun, 'manifest.json'), 'utf8'),
+      );
+      expect(
+        await readFile(
+          join(archivedRun, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+      expect(
+        await readFile(join(result.archivePath, 'summary.md'), 'utf8'),
+      ).toBe(summary);
+      expect(await readFile(obstruction, 'utf8')).toBe('obstructing file');
+
+      await cp(result.archivePath, projectPath, { recursive: true });
+      const blockedRetry = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(blockedRetry.projectRecapExport!.page).toEqual(report.page);
+      expect(blockedRetry.summaryExportFile).toBeNull();
+      expect(blockedRetry.warnings).toHaveLength(1);
+      expect(await readFile(report.exportRoot, 'utf8')).toBe(exported);
+
+      await rm(obstruction);
+      await cp(result.archivePath, projectPath, { recursive: true });
+      const repairedRetry = await archiveProjectOnCompletion(options, {
+        timestamp,
+      });
+      expect(repairedRetry.projectRecapExport!.page).toEqual(report.page);
+      expect(repairedRetry.projectRecapExport!.exportRoot).toBe(
+        report.exportRoot,
+      );
+      expect(repairedRetry.projectRecapExport!.runId).toBe(report.runId);
+      expect(repairedRetry.warnings).toEqual([]);
+      expect(await readFile(report.exportRoot, 'utf8')).toBe(exported);
+      expect(
+        await readFile(repairedRetry.summaryExportFile!, 'utf8'),
+      ).toContain(report.page.exportedSha256);
+    },
+  );
+
+  it('preserves an adopted linked recap when summary failure would require different output', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page =
+      '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+    const run = await createLegacyRecap(projectPath, page);
+    await writeFile(
+      join(projectPath, 'summary.md'),
+      '# Summary\n\n## Verification\n',
+    );
+    const summaryExportPath = '.oat/repo/reference/project-summaries';
+    const options = {
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: run,
+      summaryExportPath,
+      s3SyncOnComplete: false,
+    };
+    const timestamp = () => '2026-04-01T12:34:56Z';
+    const first = await archiveProjectOnCompletion(options, { timestamp });
+    const exported = await readFile(first.projectRecapExport!.exportRoot);
+    expect(exported.toString()).toContain(
+      '../project-summaries/20260401-demo.md#verification',
+    );
+    await rm(join(repoRoot, summaryExportPath), { recursive: true });
+    await writeFile(join(repoRoot, summaryExportPath), 'obstructing file');
+    await cp(first.archivePath, projectPath, { recursive: true });
+    await expect(
+      archiveProjectOnCompletion(options, { timestamp }),
+    ).rejects.toThrow(/recap export .*does not match/);
+    expect(await readFile(first.projectRecapExport!.exportRoot)).toEqual(
+      exported,
+    );
+    await expect(
+      access(join(first.archivePath, run, 'manifest.json')),
+    ).resolves.toBeUndefined();
+  });
+
+  it('preserves a foreign recap replacement when rebuilding after summary failure', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    const page =
+      '<html><head></head><body><a href="../../../../../summary.md#verification">Summary</a></body></html>';
+    const run = await createLegacyRecap(projectPath, page);
+    await writeFile(
+      join(projectPath, 'summary.md'),
+      '# Summary\n\n## Verification\n',
+    );
+    const summaryExportPath = '.oat/repo/reference/project-summaries';
+    await mkdir(dirname(join(repoRoot, summaryExportPath)), {
+      recursive: true,
+    });
+    await writeFile(join(repoRoot, summaryExportPath), 'obstructing file');
+    const exportRoot = join(
+      repoRoot,
+      '.oat/repo/reference/project-recaps/20260401-demo.html',
+    );
+    const foreign = '<html><body>Another writer owns this page.</body></html>';
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: run,
+          summaryExportPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          timestamp: () => '2026-04-01T12:34:56Z',
+          removePath: async (target, options) => {
+            await rm(target, options);
+            if (target === projectPath) {
+              await rm(exportRoot);
+              await writeFile(exportRoot, foreign);
+            }
+          },
+        },
+      ),
+    ).rejects.toThrow(/recap export .*does not match/);
+    expect(await readFile(exportRoot, 'utf8')).toBe(foreign);
+    const archivedRun = join(repoRoot, '.oat/projects/archived/demo', run);
+    const manifest = JSON.parse(
+      await readFile(join(archivedRun, 'manifest.json'), 'utf8'),
+    );
+    expect(
+      await readFile(
+        join(archivedRun, manifest.artifacts[0].renderedPath),
+        'utf8',
+      ),
+    ).toBe(page);
+  });
+
+  it('does not report a summary export without verifying its copied bytes', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    await writeFile(join(projectPath, 'summary.md'), '# Summary\n');
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: '.oat/repo/reference/project-summaries',
+        s3SyncOnComplete: false,
+      },
+      {
+        copySingleFile: async (_source, destination) => {
+          await mkdir(dirname(destination), { recursive: true });
+          await writeFile(destination, 'wrong copied bytes');
+        },
+      },
+    );
+    expect(result.summaryExportFile).toBeNull();
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('Summary export');
+  });
+
   it('exports the reported flat recap identity in the summary while preserving the original', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat/projects/shared/demo');

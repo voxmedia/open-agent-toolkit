@@ -929,6 +929,11 @@ async function exportProjectSummary(
   }
   await copySummary(summarySource, summaryTarget);
   if (recapExport) await writeFile(summaryTarget, expectedContents);
+  if (!expectedContents.equals(await readFile(summaryTarget))) {
+    throw new CliError(
+      `Summary export \`${summaryTarget}\` failed byte verification.`,
+    );
+  }
   return summaryTarget;
 }
 
@@ -1662,11 +1667,13 @@ async function transformRecapPage(
         isInsidePath(referenceRoot, target) &&
         !isInsidePath(resolve(referenceRoot, 'project-recaps'), target) &&
         (await fileExists(target));
-      const futureSummary =
+      // This provisional link is removed from attempt-owned output if completion
+      // cannot verify the summary export; an adopted page is never rewritten.
+      const pendingSummary =
         original === resolve(options.projectPath, 'summary.md') &&
         Boolean(options.summaryExportPath) &&
         (await fileExists(original));
-      if (!preserved && !futureSummary) return '';
+      if (!preserved && !pendingSummary) return '';
       if (fragment) {
         const contents = await readFile(preserved ? target : original, 'utf8');
         const anchors = [...contents.matchAll(/^#+\s+(.+)$/gm)].map((heading) =>
@@ -1898,14 +1905,32 @@ async function exportSelectedProjectRecap(
     };
     if (await pathExists(exportRoot)) {
       const stat = await lstat(exportRoot);
-      if (
-        !stat.isFile() ||
-        sha256(await readFile(exportRoot)) !== report.page.exportedSha256
-      )
-        throw new CliError(
-          `Existing project recap export ${exportRoot} already exists and does not match persisted snapshot ${snapshotName}.`,
-        );
-      return { export: report, createdByAttempt: false };
+      if (stat.isFile()) {
+        const existingHash = sha256(await readFile(exportRoot));
+        if (
+          existingHash !== report.page.exportedSha256 &&
+          options.summaryExportPath
+        ) {
+          // A warning-only completion may have published this verified package
+          // without its unavailable summary link. Preserve that page on retry,
+          // including when the summary destination has since been repaired.
+          const withoutSummary = await transformRecapPage(
+            original.toString('utf8'),
+            join(verified.sourceRunRoot, pagePath),
+            verified.sourceRunRoot,
+            temporaryRoot,
+            exportRoot,
+            { ...options, summaryExportPath: null },
+          );
+          if (sha256(withoutSummary) === existingHash)
+            report.page.exportedSha256 = existingHash;
+        }
+        if (existingHash === report.page.exportedSha256)
+          return { export: report, createdByAttempt: false };
+      }
+      throw new CliError(
+        `Existing project recap export ${exportRoot} already exists and does not match persisted snapshot ${snapshotName}.`,
+      );
     }
     const temporaryPage = join(temporaryRoot, 'export.html');
     await writeFile(temporaryPage, transformed, { flag: 'wx' });
@@ -2108,12 +2133,12 @@ export async function archiveProjectOnCompletion(
   const projectSourcePath = (await pathExists(options.projectPath))
     ? options.projectPath
     : archivePath;
-  const attemptedProjectRecapExport = await exportSelectedProjectRecap(
+  let attemptedProjectRecapExport = await exportSelectedProjectRecap(
     { ...options, projectPath: projectSourcePath },
     exportIdentity,
     dependencies,
   );
-  const projectRecapExport = attemptedProjectRecapExport?.export ?? null;
+  let projectRecapExport = attemptedProjectRecapExport?.export ?? null;
 
   if (!archiveExists) {
     try {
@@ -2201,6 +2226,22 @@ export async function archiveProjectOnCompletion(
       warnings.push(
         `Summary export to \`${options.summaryExportPath}\` failed: ${message}`,
       );
+      if (attemptedProjectRecapExport) {
+        // Rebuild only through the existing identity/hash-aware cleanup and
+        // no-clobber publisher. Adopted or foreign linked output is preserved
+        // and refused if it differs from the required link-free page.
+        await removeAttemptRecapExport(
+          attemptedProjectRecapExport,
+          removePath,
+          dependencies.renamePath ?? rename,
+        );
+        attemptedProjectRecapExport = await exportSelectedProjectRecap(
+          { ...options, projectPath: archivePath, summaryExportPath: null },
+          exportIdentity,
+          dependencies,
+        );
+        projectRecapExport = attemptedProjectRecapExport?.export ?? null;
+      }
     }
   }
 
