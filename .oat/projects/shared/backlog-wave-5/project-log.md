@@ -256,6 +256,10 @@ wave5-root-final-baseline-r2: All39tasks complete; verified65projection/118bundl
 
 wave5-final-r2-smoke-alignment: CLI8303tests pass; smoke1failure flags approved legacy-only references. Add exact one-file task9 under operator-delegated scoped authority; preserve original fixture bytes and live retirement guards. Root final r2 stops, later gates unrun; no counter reset.
 
+### 2026-10-05 · structural · oat-project-implement · p06
+
+wave5-root-final-baseline-r3: Root verified task9 exact smoke compatibility exceptions and negative/valid protections, reader/captured bytes conserved; all40tasks complete. Restart ordered finalr3 before independent reviews/gates/closeout. Prior failures retained.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
