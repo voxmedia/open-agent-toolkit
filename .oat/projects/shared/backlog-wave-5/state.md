@@ -172,6 +172,20 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-10-05T03:01:53.590951Z'
   decided_at: '2026-10-05T03:01:53.591075Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p06
+  pre_approval:
+    - summary
+    - document
+    - pr
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 ---
 
 # Project State: backlog-wave-5
