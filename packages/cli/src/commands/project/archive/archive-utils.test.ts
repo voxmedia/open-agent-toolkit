@@ -333,6 +333,85 @@ describe('archive utils', () => {
     },
   );
 
+  it.each(['id', 'name'] as const)(
+    'preserves decoded same-page and same-file fragments matching real %s attributes',
+    async (attribute) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+      await mkdir(projectPath, { recursive: true });
+      const page = `<html><body><a data-probe="page" href="#a&#38;b">page</a><a data-probe="file" href="index.html#a&amp;b">file</a><div ${attribute}="a&amp;b"></div><a href="#plain">plain</a><a href="index.html#plain">plain file</a><div id="plain"></div><a data-probe="absent" href="#absent">absent</a><a data-probe="absent-file" href="index.html#absent">absent file</a></body></html>`;
+      const run = await createLegacyRecap(projectPath, page);
+      const manifest = JSON.parse(
+        await readFile(join(projectPath, run, 'manifest.json'), 'utf8'),
+      );
+      const result = await archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: run,
+        s3SyncOnComplete: false,
+      });
+      const exported = await readFile(
+        result.projectRecapExport!.exportRoot,
+        'utf8',
+      );
+      expect(exported).toContain('<a data-probe="page" href="#a&#38;b">');
+      expect(exported).toContain('<a data-probe="file" href="#a&amp;b">');
+      expect(exported).toContain('<a href="#plain">');
+      expect(exported).not.toContain('index.html#plain');
+      expect(exported).toContain('<a data-probe="absent">');
+      expect(exported).toContain('<a data-probe="absent-file">');
+      expect(result.projectRecapExport!.page.exportedSha256).toBe(
+        `sha256:${createHash('sha256').update(exported).digest('hex')}`,
+      );
+      expect(
+        await readFile(
+          join(result.archivePath, run, manifest.artifacts[0].renderedPath),
+          'utf8',
+        ),
+      ).toBe(page);
+    },
+  );
+
+  it('ignores fragment targets described only in raw text, comments, or attribute values', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat/projects/shared/demo');
+    await mkdir(projectPath, { recursive: true });
+    const opaque = `<script>const markup='<i id="script-only">';</script><style>i{--markup:'<i name="style-only">';}</style><!-- <i id="comment-only"> --><div title='id="attribute-only"'></div>`;
+    const ghosts = [
+      'script-only',
+      'style-only',
+      'comment-only',
+      'attribute-only',
+    ];
+    const links = ghosts
+      .map(
+        (ghost) =>
+          `<a data-probe="${ghost}" href="#${ghost}">page</a><a data-probe="${ghost}-file" href="index.html#${ghost}">file</a>`,
+      )
+      .join('');
+    const page = `<html><body>${links}${opaque}</body></html>`;
+    const run = await createLegacyRecap(projectPath, page);
+    const result = await archiveProjectOnCompletion({
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      projectRecapRun: run,
+      s3SyncOnComplete: false,
+    });
+    const exported = await readFile(
+      result.projectRecapExport!.exportRoot,
+      'utf8',
+    );
+    for (const ghost of ghosts) {
+      expect(exported).toContain(`<a data-probe="${ghost}">`);
+      expect(exported).toContain(`<a data-probe="${ghost}-file">`);
+    }
+    expect(exported).toContain(opaque);
+  });
+
   // These pages/assets are controlled derivatives of the captured legacy declarations
   // documented above, not original captured HTML. The real-package replay separately
   // copies the authentic Wave4/July packages without changing the retained originals.

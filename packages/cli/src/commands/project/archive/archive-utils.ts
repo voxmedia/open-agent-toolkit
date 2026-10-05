@@ -1609,6 +1609,30 @@ async function transformRecapPage(
         attributeValue(match),
       ]),
     );
+  const markup =
+    /<!--[\s\S]*?(?:-->|$)|<![^>]*>|<\?[^>]*>|<[a-z][a-z0-9:-]*(?=[\s/>])(?:[^"'<>]|"[^"]*"|'[^']*')*>/gi;
+  const rawText =
+    /^(script|style|textarea|title|xmp|iframe|noembed|noframes|plaintext)$/;
+  const fragmentTargets = new Set<string>();
+  let targetCursor = 0;
+  // Use the same markup/attribute readers for forward targets. Descriptions of
+  // markup inside comments, attribute values, and raw-text bodies are not targets.
+  for (const match of html.matchAll(markup)) {
+    if (match.index < targetCursor) continue;
+    const name = /^<([a-z][a-z0-9:-]*)/i.exec(match[0])?.[1]?.toLowerCase();
+    if (!name) continue;
+    const values = attributes(match[0]);
+    for (const attribute of ['id', 'name']) {
+      const value = values.get(attribute);
+      if (value !== undefined) fragmentTargets.add(value);
+    }
+    if (rawText.test(name)) {
+      const closing = new RegExp(`</${name}\\s*>`, 'gi');
+      closing.lastIndex = match.index + match[0].length;
+      const end = name === 'plaintext' ? null : closing.exec(html);
+      targetCursor = end ? closing.lastIndex : html.length;
+    }
+  }
   const rewriteAttributes = async (tag: string, removeScriptSource = false) =>
     replaceAsync(tag, attributePattern, async (match) => {
       const name = match[1]!.toLowerCase();
@@ -1629,13 +1653,7 @@ async function transformRecapPage(
       }
       const [pathname, fragment] = url.split('#');
       if (!pathname) {
-        if (
-          fragment &&
-          !new RegExp(
-            `\\b(?:id|name)=["']${fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
-          ).test(html)
-        )
-          return '';
+        if (fragment && !fragmentTargets.has(fragment)) return '';
         return match[0];
       }
       const original = resolve(
@@ -1643,13 +1661,7 @@ async function transformRecapPage(
         decodeURIComponent(pathname.split('?')[0]!),
       );
       if (original === sourcePage) {
-        if (
-          !fragment ||
-          !new RegExp(
-            `\\b(?:id|name)=["']${fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
-          ).test(html)
-        )
-          return '';
+        if (!fragment || !fragmentTargets.has(fragment)) return '';
         return emitAttribute('href', `#${fragment}`);
       }
       let target = original;
@@ -1697,8 +1709,6 @@ async function transformRecapPage(
 
   // Walk markup once. Comments and raw-text elements are opaque to attribute
   // rewriting; generated script/style bodies are never fed back into the walk.
-  const markup =
-    /<!--[\s\S]*?(?:-->|$)|<![^>]*>|<\?[^>]*>|<[a-z][a-z0-9:-]*(?=[\s/>])(?:[^"'<>]|"[^"]*"|'[^']*')*>/gi;
   let output = '';
   let cursor = 0;
   let match: RegExpExecArray | null;
@@ -1720,11 +1730,7 @@ async function transformRecapPage(
         continue;
       }
     }
-    if (
-      /^(script|style|textarea|title|xmp|iframe|noembed|noframes|plaintext)$/.test(
-        name,
-      )
-    ) {
+    if (rawText.test(name)) {
       const closing = new RegExp(`</${name}\\s*>`, 'gi');
       closing.lastIndex = cursor;
       const end = name === 'plaintext' ? null : closing.exec(html);
