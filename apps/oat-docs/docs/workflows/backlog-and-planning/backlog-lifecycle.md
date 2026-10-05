@@ -336,9 +336,12 @@ the curated overview, and backlog item files under `.oat/repo/pjm/` as it
 judges applicable, with no separate approval step. It runs
 `oat backlog archive` for completed items, which moves each item file into
 `archived/` with a filesystem rename, and it creates decision
-records with `oat decision new`. Its workflow has no commit or push step,
-so review the working-tree diff afterwards. If the backlog index markers
-are missing, it stops and tells you to repair the repository with
+records with `oat decision new`. It automatically commits the exact archive
+close-out paths and any owned kickoff handoff deletion with hooks enabled.
+Other reference edits remain uncommitted, and the workflow has no push step,
+so review the close-out commit and remaining working-tree diff afterwards.
+If the backlog index markers are missing, it stops and tells you to repair
+the repository with
 `oat pjm init`.
 
 **Next step:** Review the changes against the implementation evidence and
