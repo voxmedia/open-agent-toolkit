@@ -9,7 +9,7 @@ oat_generated: false
 
 # Implementation: backlog-wave-5
 
-All 41 planned tasks and six phases are complete. Native final review and every independent phase gate passed; root final-r4 verification passed all 18 invocations, including fresh suites. Individual carried dispositions were independently assessed. The separate configured implementation exit gate and lifecycle closeout remain pending. No merge or release authorized.
+41 tasks are complete. The configured exit review found one High hook-path defect and two Low caller diagnostics/identity defects; three bounded correction tasks are queued in Phase 6. Prior native/phase passes and final-r4 evidence remain historical and do not qualify the changed basis. Exit receive/remediation and renewed final verification/reviews precede closeout. No merge or release authorized.
 
 ## Progress Overview
 
@@ -22,7 +22,7 @@ All 41 planned tasks and six phases are complete. Native final review and every 
 | Phase 5 | complete | 5     | 5/5       |
 | Phase 6 | complete | 10    | 10/10     |
 
-**Total:** 41/41 tasks completed
+**Total:** 41/44 tasks completed
 
 ## Phase 1: Validators and bounded lifecycle guidance
 
@@ -307,7 +307,7 @@ All 41 planned tasks and six phases are complete. Native final review and every 
 
 ## Phase 6: Versions and generated integration
 
-**Status:** complete — tasks complete; configured phase gate pending
+**Status:** in_progress — tasks complete; configured phase gate pending
 
 ### Task p06-t01: Finalize versions, generated projections and docs
 
@@ -4645,3 +4645,30 @@ Configured user gate resolved once, declaration hash sha256:023ab163cd770b412403
 ## Exit gate transition receive-intent — 2026-10-05
 
 {"artifact": ".oat/projects/shared/backlog-wave-5/reviews/final-review-2026-10-05T015008Z.md", "launch": "result_persisted", "launchAttempt": "6a8a2bc1-a0b4-4731-a048-d4e37c22e71c", "receipt": "analysis/implementation-exit-gate-r1.json", "receive": "intent_persisted", "receiveCommit": null, "runId": "618a7f2c-8019-454f-84c1-8f737d6450f6", "status": "pending"}
+
+### Task p06-t11: (review) Honor Git-expanded hooks paths
+
+**Status:** pending
+**Commit:** null
+
+**Finding:** Exit gate r1 H1 High. Exact scope and acceptance controls are recorded in plan.md.
+
+### Task p06-t12: (review) Scope promotion commit identity to its operation
+
+**Status:** pending
+**Commit:** null
+
+**Finding:** Exit gate r1 L1 Low. Exact scope and acceptance controls are recorded in plan.md.
+
+### Task p06-t13: (review) Report scaffold recovery guidance that exists
+
+**Status:** pending
+**Commit:** null
+
+**Finding:** Exit gate r1 L2 Low. Exact scope and acceptance controls are recorded in plan.md.
+
+## Configured exit r1 root receive — 2026-10-05
+
+Root read the full artifact and consumed not-attempted terminal signal first. Eligible blocked envelope, run/project/target and artifact correlate. Report archived byte-identically (SHA256 97a8d437e59b473d2839b5f61685d35d3c2fa3f670918f23cfe844c0fc061e2c); exact final event is fixes_added, reviewed a8b3e9f4 preserved. H1 High (Minor code_fix_required): agree; Git path-type tilde expansion is a concrete enabled-hook security/preservation obligation, current wrapper silently bypasses it. Convert to p06-t11 with real-Git pre-fix bad acceptance and post-fix refusal plus valid controls. L1 Low (Minor code_fix_required): agree on reused-slug identity mechanism; actual promotion producer coverage still required, not inferred from helper probe. Convert to p06-t12. L2 Low (Negligible code_fix_required): agree missing command referent is misleading; convert to p06-t13. No blanket deferral of changed caller defects.
+
+The previously carried Medium and each Low stay individually assessed/tracked in BL-261005-distinguish-stored-receipt and BL-261005-resolve-deferred-wave-5. No provenance reset/waiver. This is a validated blocking gate requiring one remediation attempt only after durable receive, not an infrastructure failure. Original phase-author handle is unavailable in the live host; one fresh same-target phase continuation is allowed and links wave5-p06-implement-r1. Root retains judgment and lifecycle. No recon log appended because not attempted.

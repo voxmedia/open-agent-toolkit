@@ -665,6 +665,54 @@ Create one same-stem `.html` file per package using p05-t01's export/link rules;
 
 **Commit:** `fix(recap): reuse validated paths for embedded assets`; one append-only normal-hook exact-path task commit, then RELEASE/HOLD for root receipt.
 
+### Task p06-t11: (review) Honor Git-expanded hooks paths
+
+**Files:** `packages/cli/src/commands/shared/exact-path-commit.ts` and `packages/cli/src/commands/shared/exact-path-commit.test.ts` only.
+
+**Dependencies:** p06-t10 complete and configured exit r1 received.
+
+**Finding:** Exit gate r1 H1 High; routine scoped correction under standing user authority.
+
+**Change:** Resolve the original hooks directory with Git-owned path semantics, including literal ~/hooks, before installing wrappers. Preserve all other hooks, args, exact ownership, receipt and preservation behavior.
+
+**Verification:** Real Git isolated child HOME: refusing hook under tilde, absolute and repository-relative paths; plain Git comparison; accepting hook succeeds with only owned files. The new tilde regression must fail against pre-fix code, then fixed implementation refuse that same state while a valid accepted control passes. Capture HEAD/index/unrelated bytes. No root HOME override, no mock of own helper, no new test-only export. Deliberate-testing author mode applies. Direct owning suite, CLI check/types/fresh build and exact-path formatting/diff checks; explicit exits and real captured probes in ignored analysis/p06/t11/. No extra public or owner version bump in this same PR.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/shared/exact-path-commit.ts packages/cli/src/commands/shared/exact-path-commit.test.ts`.
+
+**Commit:** `fix(git): honor expanded Git hook paths` through branch-built `internal commit-paths`, one exact normal-hook task commit, then TASK_DONE RELEASE/HOLD. Initialize TASK_OWNED_FILES before edits and retain exact producer paths/identity; no broad commit, history rewrite or root lifecycle write.
+
+### Task p06-t12: (review) Scope promotion commit identity to its operation
+
+**Files:** `packages/cli/src/commands/project/promote/promote.ts` and `packages/cli/src/commands/project/promote/promote.test.ts` only.
+
+**Dependencies:** p06-t11 complete.
+
+**Finding:** Exit gate r1 L1 Low; routine scoped correction under standing user authority.
+
+**Change:** Include an immutable per-promotion generation component in the exact-path identity. Capture it before writes; retain exact identity, message and files in failed-commit recovery. Reusing a project slug for a later Lite generation must not collide with a prior completed receipt. No automatic rewritten-history policy.
+
+**Verification:** Exercise the actual promote producer twice for distinct Lite generations at the same project path in one real Git clone, not just the low-level helper. Pre-fix second generation must fail by identity mismatch; fixed both succeed, unchanged retries remain idempotent or retain the exact original recovery command. Existing failure/conservation tests pass. Deliberate-testing author mode applies. Direct owning suite, CLI check/types/fresh build and exact-path formatting/diff checks; explicit exits and real captured probes in ignored analysis/p06/t12/. No extra public or owner version bump in this same PR.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts`.
+
+**Commit:** `fix(project): bind promotion receipts to each operation` through branch-built `internal commit-paths`, one exact normal-hook task commit, then TASK_DONE RELEASE/HOLD. Initialize TASK_OWNED_FILES before edits and retain exact producer paths/identity; no broad commit, history rewrite or root lifecycle write.
+
+### Task p06-t13: (review) Report scaffold recovery guidance that exists
+
+**Files:** `packages/cli/src/commands/project/new/scaffold.ts` and `packages/cli/src/commands/project/new/scaffold.test.ts` only.
+
+**Dependencies:** p06-t12 complete.
+
+**Finding:** Exit gate r1 L2 Low; routine scoped correction under standing user authority.
+
+**Change:** For discovery-record parent commit failure, reference the exact recovery command only when the detail actually supplies one. Otherwise give a truthful inspect-and-retry/repair instruction, preserving discovery/remote/checkout state and forbidding project recreation.
+
+**Verification:** Use the existing scaffold failure family to observe resumable versus non-resumable errors at its public output. Pin truthful actionable diagnostics, not unrelated exact prose. Preserve existing failure/published-record controls. Deliberate-testing author mode applies. Direct owning suite, CLI check/types/fresh build and exact-path formatting/diff checks; explicit exits and real captured probes in ignored analysis/p06/t13/. No extra public or owner version bump in this same PR.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/project/new/scaffold.ts packages/cli/src/commands/project/new/scaffold.test.ts`.
+
+**Commit:** `fix(project): clarify scaffold commit failure recovery` through branch-built `internal commit-paths`, one exact normal-hook task commit, then TASK_DONE RELEASE/HOLD. Initialize TASK_OWNED_FILES before edits and retain exact producer paths/identity; no broad commit, history rewrite or root lifecycle write.
+
 ## Root Lifecycle Tail
 
 These steps use `oat-project-implement`’s existing closeout flow; no additional coordinator, phase, task dispatch or program is introduced. Keep ticket closeout after verified acceptance and required reviews.
@@ -825,7 +873,7 @@ Preserve all existing rows, including spec/design placeholders. They do not impl
 | p05    | code     | passed          | 2026-10-04 | reviews/archived/p05-review-2026-10-04T215406Z.md           | a016b5adb2c222adf5401c50151152fc6a141da2 | gate       | claude-opus-5-5-high |
 | final  | code     | passed          | 2026-10-05 | reviews/archived/final-review-2026-10-05T012945Z.md         | f98c1c9bee564e7c1f3ef21b051d2288d6568191 | auto       | -                    |
 | p06    | code     | passed          | 2026-10-05 | reviews/archived/p06-review-2026-10-05T013729Z.md           | 7cc7f549d531d8c3131e4e5ee6dd2430ce5318af | gate       | claude-opus-5-5-high |
-| final  | code     | received        | 2026-10-05 | reviews/final-review-2026-10-05T015008Z.md                  | a8b3e9f433e2453ed6e1470c7e5fd71a1d9f42d8 | gate       | claude-opus-5-5-high |
+| final  | code     | fixes_added     | 2026-10-05 | reviews/archived/final-review-2026-10-05T015008Z.md         | a8b3e9f433e2453ed6e1470c7e5fd71a1d9f42d8 | gate       | claude-opus-5-5-high |
 
 Independent gate run `7abeb986-214b-460e-8ec3-ccbb4cae81a1` ended `artifact_validation_failed` / `receiveEligible: false`. Its original artifact declared 0 Critical, 0 High, 6 Medium and 4 Low findings as bold paragraphs; the validator counted list items and rejected the mismatch. No receive event or accepted independent pass is recorded. The artifact contains the requested invocation fields, but gate corroboration did not reach them because verdict parsing failed. Preserve this run and original artifact; that run never granted implementation readiness.
 
