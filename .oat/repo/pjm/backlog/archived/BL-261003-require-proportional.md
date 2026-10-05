@@ -1,14 +1,14 @@
 ---
 id: BL-261003-require-proportional
 title: Require proportional adversarial probes at changed review boundaries
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
 labels: []
 assignee: null
 created: 2026-10-03T19:13:38.027Z
-updated: 2026-10-03T19:13:38.027Z
+updated: '2026-10-05T03:05:33Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/346

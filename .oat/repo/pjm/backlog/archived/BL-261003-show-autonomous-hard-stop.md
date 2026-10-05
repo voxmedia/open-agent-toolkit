@@ -1,14 +1,14 @@
 ---
 id: BL-261003-show-autonomous-hard-stop
 title: Show autonomous hard-stop conditions and effective recovery limits at kickoff
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
 labels: []
 assignee: null
 created: 2026-10-03T19:13:37.589Z
-updated: 2026-10-03T19:13:37.589Z
+updated: '2026-10-05T03:05:33Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/343

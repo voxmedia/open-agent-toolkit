@@ -35,6 +35,15 @@ copying their content here. -->
 
 ## What's Implemented
 
+- Backlog Wave 5 (`wave/2026-10-03-backlog-wave-5`) completes ten maintenance
+  tickets and the Plain Markdown guided-init option. Five public packages are
+  prepared at `0.3.17`; they are not published. All44tasks, required verification
+  and independent final/phase/configured exit reviews passed. Exact-path commits,
+  PJM settings, structured blockers, knowledge ownership and original recap
+  evidence are preserved. The ten items are archived in this branch; two
+  separately scoped review follow-ups remain open. Project recap/completion
+  and the single PR are being finalized; merge and release are not authorized.
+
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.3.16` (`backlog-wave-4`, branch `wave/2026-10-02-backlog-wave-4`)

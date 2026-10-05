@@ -1,14 +1,14 @@
 ---
 id: BL-261003-preserve-documented-structured
 title: Preserve documented structured blockers in project status output
-status: open
+status: closed
 priority: medium
 scope: bug
 scope_estimate: S
 labels: []
 assignee: null
 created: 2026-10-03T19:13:38.261Z
-updated: 2026-10-03T19:13:38.261Z
+updated: '2026-10-05T03:05:33Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/347

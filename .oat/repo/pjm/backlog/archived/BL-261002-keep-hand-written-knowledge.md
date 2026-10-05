@@ -2,7 +2,7 @@
 id: BL-261002-keep-hand-written-knowledge
 title: Keep hand-written knowledge files and unrelated staged changes safe
   during knowledge-index refresh
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:52.135Z
-updated: 2026-10-02T18:40:52.135Z
+updated: '2026-10-05T03:05:31Z'
 associated_issues: []
 external_plans: []
 ---

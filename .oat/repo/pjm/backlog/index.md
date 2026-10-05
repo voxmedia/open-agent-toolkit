@@ -413,9 +413,7 @@
 | BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                            | open   | high     | task       | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                             | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                             | open   | high     | feature    | L        |
-| BL-261002-keep-hand-written-knowledge    | Keep hand-written knowledge files and unrelated staged changes safe during knowledge-index refresh       | open   | high     | task       | S        |
 | BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention             | open   | high     | feature    | M        |
-| BL-261002-preserve-pjm-remote-settings   | Preserve pjm.remote settings when oat pjm init or migrate --apply reruns                                 | open   | high     | task       | S        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                              | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                            | open   | high     | feature    | L        |
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                             | open   | high     | feature    | M        |
@@ -444,7 +442,6 @@
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                               | open   | medium   | feature    | M        |
 | BL-261003-enforce-reconnaissance         | Enforce reconnaissance evidence and reconcile original-run review receipts                               | open   | medium   | bug        | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset                  | open   | medium   | task       | M        |
-| BL-260927-export-only-the-recap-page     | Export only the recap page to project-recaps and fix its broken source links                             | open   | medium   | feature    | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                               | open   | medium   | feature    | M        |
 | BL-261002-fix-oat-config-describe-gaps   | Fix oat config describe gaps and make config unset reach the layer that holds the key                    | open   | medium   | task       | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan           | open   | medium   | task       | M        |
@@ -453,7 +450,6 @@
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                   | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                       | open   | medium   | feature    | M        |
-| BL-261003-leave-backlog-archive-staging  | Leave backlog archive staging to callers and report complete result paths                                | open   | medium   | bug        | S        |
 | BL-261002-let-plans-declare-an-evidence  | Let plans declare an evidence tier per phase and reconcile tracking on driver takeover                   | open   | medium   | feature    | L        |
 | BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |
@@ -466,7 +462,6 @@
 | BL-261002-offer-a-strict-gate-reviewer   | Offer a strict gate-reviewer independence mode and align gate skill wording and decision records         | open   | medium   | feature    | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                              | open   | medium   | bug        | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                        | open   | medium   | task       | M        |
-| BL-261003-preserve-documented-structured | Preserve documented structured blockers in project status output                                         | open   | medium   | bug        | S        |
 | BL-261002-provide-a-complete-oat         | Provide a complete OAT uninstall path and make pack removal clean up after itself                        | open   | medium   | feature    | L        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                   | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                        | open   | medium   | feature    | L        |
@@ -476,19 +471,14 @@
 | BL-261003-reconcile-oat-tracking-commit  | Reconcile OAT tracking commit cadence with resumable phase/group batching                                | open   | medium   | bug        | M        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags    | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                             | open   | medium   | task       | S        |
-| BL-261002-require-exactly-one-h1-per     | Require exactly one H1 per docs page in docs:validate                                                    | open   | medium   | task       | S        |
-| BL-261003-require-proportional           | Require proportional adversarial probes at changed review boundaries                                     | open   | medium   | task       | M        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge               | open   | medium   | task       | M        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                            | open   | medium   | feature    | M        |
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail           | open   | medium   | task       | M        |
 | BL-261002-settle-dispatch-policy         | Settle dispatch policy precedence and stop legacy presets overwriting ladder columns                     | open   | medium   | task       | M        |
-| BL-260927-share-one-hook-safe-exact-path | Share one hook-safe exact-path commit primitive across CLI and skill lifecycle commits                   | open   | medium   | feature    | L        |
-| BL-261003-show-autonomous-hard-stop      | Show autonomous hard-stop conditions and effective recovery limits at kickoff                            | open   | medium   | task       | S        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests      | open   | medium   | task       | S        |
 | BL-261002-stop-oat-sync-from-changing    | Stop oat sync from changing user values in .codex/config.toml                                            | open   | medium   | task       | S        |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                    | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                             | open   | medium   | task       | M        |
-| BL-261002-teach-check-skill-bumps        | Teach check:skill-bumps to follow vendored .agents/docs symlinks                                         | open   | medium   | task       | S        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                               | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                            | open   | medium   | task       | S        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                               | open   | medium   | task       | S        |

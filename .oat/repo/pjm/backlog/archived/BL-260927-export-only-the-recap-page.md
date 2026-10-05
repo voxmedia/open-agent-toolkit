@@ -1,7 +1,7 @@
 ---
 id: BL-260927-export-only-the-recap-page
 title: Export only the recap page to project-recaps and fix its broken source links
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - oat-project-complete
 assignee: null
 created: 2026-09-27T12:50:13.379Z
-updated: 2026-10-03T19:47:01.720Z
+updated: '2026-10-05T03:05:31Z'
 associated_issues: []
 external_plans: []
 ---

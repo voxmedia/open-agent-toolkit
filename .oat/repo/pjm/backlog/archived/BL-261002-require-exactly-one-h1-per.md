@@ -1,7 +1,7 @@
 ---
 id: BL-261002-require-exactly-one-h1-per
 title: Require exactly one H1 per docs page in docs:validate
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T19:38:42.235Z
-updated: 2026-10-02T19:38:42.235Z
+updated: '2026-10-05T03:05:32Z'
 associated_issues: []
 external_plans: []
 ---

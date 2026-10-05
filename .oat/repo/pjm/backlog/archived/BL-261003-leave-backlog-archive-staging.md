@@ -1,14 +1,14 @@
 ---
 id: BL-261003-leave-backlog-archive-staging
 title: Leave backlog archive staging to callers and report complete result paths
-status: open
+status: closed
 priority: medium
 scope: bug
 scope_estimate: S
 labels: []
 assignee: null
 created: 2026-10-03T19:13:38.485Z
-updated: 2026-10-03T19:13:38.485Z
+updated: '2026-10-05T03:05:34Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/348
@@ -34,4 +34,4 @@ Baseline: `be168345ef4f586731c13fe849da03eb87b526ec`.
 
 packages/cli/src/commands/backlog/archive.ts:180,328,343; archive.test.ts stages tracked item; .oat/repo/pjm/AGENTS.md Backlog Lifecycle. Merged PR #127 established archive behavior.
 
-Related owner: [BL-260927-share-one-hook-safe-exact-path — Share one hook-safe exact-path commit primitive across CLI and skill](../items/BL-260927-share-one-hook-safe-exact-path.md). Preserve its existing scope and acceptance criteria.
+Related owner: [BL-260927-share-one-hook-safe-exact-path — Share one hook-safe exact-path commit primitive across CLI and skill](../archived/BL-260927-share-one-hook-safe-exact-path.md). Preserve its existing scope and acceptance criteria.

@@ -1,7 +1,7 @@
 ---
 id: BL-261002-teach-check-skill-bumps
 title: Teach check:skill-bumps to follow vendored .agents/docs symlinks
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - release
 assignee: null
 created: 2026-10-02T22:53:38.194Z
-updated: 2026-10-02T22:53:38.194Z
+updated: '2026-10-05T03:05:32Z'
 associated_issues: []
 external_plans: []
 ---

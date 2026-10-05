@@ -2,7 +2,7 @@
 id: BL-260927-share-one-hook-safe-exact-path
 title: Share one hook-safe exact-path commit primitive across CLI and skill
   lifecycle commits
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: L
@@ -13,7 +13,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-27T03:35:37.315Z
-updated: 2026-09-27T03:35:37.315Z
+updated: '2026-10-05T03:05:31Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/306

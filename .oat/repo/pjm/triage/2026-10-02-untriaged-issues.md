@@ -130,7 +130,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Improves unattended-run expectations without broadening recovery authority. S: kickoff disclosure and contract tests; continuation policy is explicitly excluded.
 - Implementation readiness: Bounded implementation for kickoff disclosure. Changed failed-recovery continuation policy is excluded and requires separate discussion.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-261003-show-autonomous-hard-stop — Show autonomous hard-stop conditions and effective recovery limits at kickoff](../backlog/items/BL-261003-show-autonomous-hard-stop.md).
+- Applied backlog reference: [BL-261003-show-autonomous-hard-stop — Show autonomous hard-stop conditions and effective recovery limits at kickoff](../backlog/archived/BL-261003-show-autonomous-hard-stop.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:
@@ -196,7 +196,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Missed boundary defects can be consequential, but reported relative effectiveness is not experimentally established. Medium adoption improvement; M to align reviewer role/prompts, scope limits, evidence records and meaningful guard tests.
 - Implementation readiness: Policy settled; bounded review-guidance alignment and failure-oriented validation.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-261003-require-proportional — Require proportional adversarial probes at changed review boundaries](../backlog/items/BL-261003-require-proportional.md).
+- Applied backlog reference: [BL-261003-require-proportional — Require proportional adversarial probes at changed review boundaries](../backlog/archived/BL-261003-require-proportional.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:
@@ -218,7 +218,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Operator status loses actionable blocker reason, while state source remains a workaround. S because shared state types/parser/status and existing string consumers require compatible serialization and fixture coverage.
 - Implementation readiness: Bounded implementation with compatible shared parser/output handling.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-261003-preserve-documented-structured — Preserve documented structured blockers in project status output](../backlog/items/BL-261003-preserve-documented-structured.md).
+- Applied backlog reference: [BL-261003-preserve-documented-structured — Preserve documented structured blockers in project status output](../backlog/archived/BL-261003-preserve-documented-structured.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:
@@ -240,7 +240,7 @@ Proposed post-merge comment:
 - Priority and size rationale: Medium: unreported index side effects can lead to incomplete commits. S for removing command-owned staging, explicit complete-result paths and tracked/untracked item compatibility. The broader hook-safe commit primitive remains its existing L-sized owner.
 - Implementation readiness: Archive slice is plan-ready; lifecycle commit integration retains the existing exact-path owner and must preserve unrelated staged work.
 - Approval: approved by the user on 2026-10-03; repository changes and the exact deferred post-merge GitHub actions are authorized.
-- Applied backlog reference: [BL-261003-leave-backlog-archive-staging — Leave backlog archive staging to callers and report complete result paths](../backlog/items/BL-261003-leave-backlog-archive-staging.md).
+- Applied backlog reference: [BL-261003-leave-backlog-archive-staging — Leave backlog archive staging to callers and report complete result paths](../backlog/archived/BL-261003-leave-backlog-archive-staging.md).
 - Post-merge result: not started; issue mutations remain deferred until merge.
 
 Proposed post-merge comment:

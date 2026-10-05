@@ -1,7 +1,7 @@
 ---
 id: BL-261002-preserve-pjm-remote-settings
 title: Preserve pjm.remote settings when oat pjm init or migrate --apply reruns
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:36:26.332Z
-updated: 2026-10-02T18:36:26.332Z
+updated: '2026-10-05T03:05:32Z'
 associated_issues: []
 external_plans: []
 ---
