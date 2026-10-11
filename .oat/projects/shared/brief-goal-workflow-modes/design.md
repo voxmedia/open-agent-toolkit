@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-10
@@ -16,8 +16,11 @@ alignment contracts (F1–F9, G2–G3, F12–F13, C1–C6) are summarized in
 `discovery.md` and detailed in
 `.oat/repo/analysis/freestyle-brainstorm/consensus-proposal.md`.
 
-Revision 3 (2026-10-10) answers Astra's round-2 review. Sections carry the
-round-2 item they answer as "(R2-n)".
+Revision 3 (2026-10-10) answers Astra's round-2 review; sections carry the
+round-2 item they answer as "(R2-n)". Revision 3.1 applies Astra's round-3
+changes (R3-n). Round-3 verdict: v1 (brief) ALIGNED WITH CHANGES, all
+applied below; v1.5 (goal) NOT ALIGNED, with four objections carried into
+the mandatory v1.5 plan-revision review (see "Carried to the v1.5 review").
 
 ## Overview
 
@@ -198,9 +201,7 @@ export function parseTaskProgress(
   implementationContent: string,
   options?: TaskProgressOptions,
 ): TaskProgress;
-export function parsePhaseMarkers(
-  implementationContent: string,
-): Map<
+export function parsePhaseMarkers(implementationContent: string): Map<
   string,
   {
     status: PhaseStatus;
@@ -284,7 +285,10 @@ provisional is incomplete; extracted units are already excluded by
 `lifecycle === 'complete'` exception is preserved and the task-mode
 revision-only reopen at `router.ts:325-330` is untouched.
 
-**Planning routes**: `BRIEF_ROUTES = { 'plan:in_progress:*': 'oat-project-brief', 'plan:complete:1': 'oat-project-implement', 'implement:in_progress:any': 'oat-project-implement' }`
+**Planning routes**: `BRIEF_ROUTES = { 'plan:in_progress:3': 'oat-project-brief', 'plan:in_progress:2': 'oat-project-brief', 'plan:complete:1': 'oat-project-implement', 'implement:in_progress:any': 'oat-project-implement' }`
+(explicit tier keys, since the router performs exact lookup; unlike lite,
+tier 2 stays with the entry skill because a brief is implementation-ready
+only through its recorded review disposition and approval)
 (goal: `oat-project-goal` for the plan rows). `CURRENT_PHASE_SKILLS` used by
 `getHillOverride` (`router.ts:224`) becomes mode-aware: for brief modes the
 `plan` phase maps to the entry skill, not `oat-project-plan`. Brief modes
@@ -529,9 +533,18 @@ Resolution order in `oat-project-review-provide` for brief modes:
 6. Otherwise the existing explicit-range / confirmed-merge-base fallback.
 
 Candidate head is captured at phase end (`**Head:**`) before review
-dispatch; the `## Reviews` row's `Reviewed Head` is written by the review;
-fix commits advance `**Head:**` and the re-review's `Reviewed Head` (base
-unchanged, F5.3).
+dispatch; the `## Reviews` row's `Reviewed Head` is written by the review.
+
+**Late-fix rule (R3-1).** Fix commits may advance a phase's `**Head:**`
+(base unchanged, F5.3) **only while no later phase has started** (no later
+phase in document order has a `**Base:**`). Once a later phase has
+started, corrections to an earlier phase are recorded as an appended
+revision phase `## Phase p-revN:` with its own `**Base:**`/`**Head:**`
+and a `**Corrects:** pNN` marker; the corrected phase keeps its original
+anchors, and its `## Reviews` row is re-evaluated by the revision's review.
+Revision phases take part in anchor resolution as ordinary later phases, so
+aggregate containment and sequential continuity hold for the whole history.
+`final` scope includes revision phases.
 
 **Review artifact record**: in addition to today's provenance,
 `oat_review_requested_scope`, `oat_review_phase_ids` (ordered),
@@ -553,10 +566,14 @@ incomplete unit.
 **`oat-project-review-receive`, brief-mode branch:** fix work is recorded as
 execution-record tasks under the reviewed phase in `implementation.md`
 (`(review)` prefix, `**Source review:**` filename and finding IDs,
-`**Status:** pending`). Receiving queued fixes rewrites the phase's
-`**Status:**` from `completed` to `in_progress`, updates the Reviews event
-to `fixes_added` with preserved provenance, sets `oat_current_task_id` to
-the phase ID, and in goal mode writes `oat_milestone_status: implementing`
+`**Status:** pending`). Receiving queued fixes applies the late-fix rule: if no later phase has
+started, the fixes go under the reviewed phase, whose `**Status:**` is
+rewritten from `completed` to `in_progress`; otherwise review-receive
+appends `## Phase p-revN:` (Intent: the findings; Exit evidence: the
+re-review; `**Corrects:** pNN`) in both `plan.md` and the journal and
+records the fixes under it. In both cases it updates the Reviews event to
+`fixes_added` with preserved provenance, sets `oat_current_task_id` to the
+phase (or revision phase) ID, and in goal mode writes `oat_milestone_status: implementing`
 (from `reviewing` or `delivering`). For `final` or range scopes the fixes go
 under the last phase in scope.
 
@@ -567,7 +584,7 @@ Migration by phase state and task-record disposition:
 | Brief phase state      | Migration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Accepted               | Kept as `## Phase pNN:`. Each **completed** execution record is copied into `plan.md` as `### Task pNN-tNN:` with the same ID (journal markers already satisfy quick progress). Records with `failed`, `cancelled` or `no-change` are **not** copied; they stay in the journal and the plan phase gets a `**Historical records:** pNN-tNN (cancelled), …` line. If the phase has no completed record, synthesize one `### Task pNN-tNN:` named `Accepted via phase evidence` at the next free ID, and write its completed marker and `**Commit:** <phase head>` in the journal. |
-| Active (`in_progress`) | As above for existing records; remaining work needs authored tasks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Active (`in_progress`) | Completed records are copied as above; unfinished records (`pending`, `in_progress`) keep their IDs and become the first authored tasks of the phase during the promoted-brief resume; **no acceptance task is ever synthesized for an unaccepted phase** (synthesis belongs to the Accepted row only).                                                                                                                                                                                                                                                                         |
 | Pending or provisional | Kept as a taskless phase; needs authored tasks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Extracted (goal)       | Promotion refused.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
@@ -673,9 +690,12 @@ base` for any member → `integrated_review.disposition: stale` and the
   `complete-state` go through `checkProjectCloseout`, and the goal
   invariants are enforced before either the snapshot-success or the
   `not_required` return.
-- **Snapshot `pr` step:** when the predicate holds, implement's closeout
-  records the step complete with `satisfied_by: delivery-coverage` and runs
-  every other configured step unchanged.
+- **Snapshot `pr` step:** when execution of the configured sequence
+  reaches the `pr` step's position and the predicate holds, implement's
+  closeout records that step complete with `satisfied_by: delivery-coverage`
+  (never earlier, so the completed-prefix invariant at
+  `closeout-invariant.ts:189-212` holds) and runs every other configured
+  step unchanged.
 
 **Extraction (G3, manual in v1.5):** transferred phases get
 `**Extracted to:** <slug>` in the brief and the journal marker pair
@@ -762,6 +782,35 @@ project`. Both roles bump `version:`.
 | agent roles and projections                                                                               | v1; goal v1.5                                          |
 | docs pages, lane diagrams, root `AGENTS.md`                                                               | v1; goal v1.5                                          |
 | decision records, project summary, backlog                                                                | each delivery                                          |
+
+## Carried to the v1.5 review
+
+Astra's round-3 objections to the goal contracts, to be resolved in the
+design and plan revision after the v1 progress PR and before any goal phase
+executes. The v1 seam does not depend on their resolution.
+
+1. **Review recovery owners.** `reviewing → delivering` must be written by
+   review-receive on a clean receive (review-provide writes `received`,
+   review-receive writes `passed`); missing or stale exit carriers route to
+   implement's scoped milestone closeout before review-provide is
+   recommended; recovery applies to older deliveries without moving the
+   active milestone pointer.
+2. **Bookkeeping-successor freshness.** Exact-head freshness rejects the
+   workflow's own artifact and registration commits. Define a bounded
+   successor contract for review and gate evidence: keep the actual
+   reviewed SHA, verify ancestry to the published head, allow an explicit
+   allowlist of bookkeeping-only paths between them, reject anything
+   substantive; never relabel an unreviewed head as reviewed.
+3. **Terminal boundary requires declaration.** The closeout boundary must
+   require `declared_met`, a valid outcome audit, and a disposition for
+   every remaining phase and outcome (accepted, validly extracted, or
+   deferred/retired through the audit) before either success return, so a
+   direct `complete-state` call cannot pass on coverage alone.
+4. **Supersession chains.** Resolve acyclic replacement chains to the
+   terminal delivery, compute the effective inherited scope there, count
+   coverage once, and require review evidence bound to revisions containing
+   the entire effective scope; reject cycles, missing links and mismatched
+   review scope.
 
 ## Error Handling
 
