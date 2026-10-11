@@ -503,6 +503,7 @@
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                             | open   | medium   | task       | M        |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                               | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                            | open   | medium   | task       | S        |
+| BL-261011-validate-skill-bumps-against   | Validate skill bumps against a stacked PR's base branch, not only origin/main                            | open   | medium   | task       | S        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                               | open   | medium   | task       | S        |
 | BL-261002-verify-local-scope-lifecycle   | Verify local-scope lifecycle commits and empty HiLL phase defaults                                       | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                               | open   | medium   | feature    | M        |
@@ -517,6 +518,7 @@
 | BL-261011-automate-goal-phase-extraction | Automate goal phase extraction into a child project                                                      | open   | low      | feature    | M        |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                              | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                              | open   | low      | task       | M        |
+| BL-261011-clean-up-the-isolated-home     | Clean up the isolated HOME directories that evidence-grade test runs leave under TMPDIR                  | open   | low      | task       | S        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                        | open   | low      | task       | S        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                    | open   | low      | task       | M        |
 | BL-261002-correct-misleading-init-status | Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync | open   | low      | task       | S        |
