@@ -141,7 +141,7 @@ If scope is `pNN`, gather commits via commit convention grep:
 
 ```bash
 PHASE="p02" # example
-git log --oneline --grep="\\(${PHASE}-" HEAD~500..HEAD
+git log --oneline --fixed-strings --grep="(${PHASE}-" --max-count=500
 ```
 
 If the grep returns no commits:

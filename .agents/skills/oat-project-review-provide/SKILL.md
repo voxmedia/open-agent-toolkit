@@ -705,10 +705,10 @@ narrowed range):**
 
      ```bash
      # Task commits: grep for (pNN-tNN)
-     git log --oneline --grep="\(p${PHASE}-t" HEAD~50..HEAD
+     git log --oneline --fixed-strings --grep="(p${PHASE}-t" --max-count=50
 
      # Phase commits: grep for (pNN-
-     git log --oneline --grep="\(p${PHASE}-" HEAD~50..HEAD
+     git log --oneline --fixed-strings --grep="(p${PHASE}-" --max-count=50
      ```
 
    - For contiguous phase-range scopes (`pNN-pMM`), aggregate commit matches for each phase in the inclusive range:
@@ -716,7 +716,7 @@ narrowed range):**
      ```bash
      for PHASE_NUM in $(seq "$START_PHASE_NUM" "$END_PHASE_NUM"); do
        PHASE_ID=$(printf "p%02d" "$PHASE_NUM")
-       git log --oneline --grep="\\(${PHASE_ID}-" HEAD~50..HEAD
+       git log --oneline --fixed-strings --grep="(${PHASE_ID}-" --max-count=50
      done
      ```
 
