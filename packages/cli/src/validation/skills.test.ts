@@ -6362,6 +6362,10 @@ describe('validateOatSkills', () => {
     );
     expect(progressStatus).toContain('`oat_implement_exit_gate`');
     expect(progressStatus).toContain('`oat_quick_start_gate`');
+    expect(progressStatus).toContain('`oat_brief_gate`');
+    expect(progressStatus).toContain(
+      'Brief Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None" (brief mode only)',
+    );
     expect(progressStatus).toContain(recordDoc);
     expect(progressStatus).toContain(
       'Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"',

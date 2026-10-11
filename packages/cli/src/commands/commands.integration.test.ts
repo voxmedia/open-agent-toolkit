@@ -1259,6 +1259,266 @@ describe('CLI command integration', () => {
     }
   });
 
+  it('project new creates brief-mode scaffold artifacts and routes to oat-project-brief', async () => {
+    const root = await createWorkspace();
+    const isolatedHome = await mkdtemp(join(tmpdir(), 'oat-cli-brief-home-'));
+    tempDirs.push(root, isolatedHome);
+    const previousHome = process.env.HOME;
+    process.env.HOME = isolatedHome;
+
+    try {
+      const scaffold = await runCli(root, [
+        'project',
+        'new',
+        'brief-route',
+        '--mode',
+        'brief',
+        '--scope',
+        'shared',
+        '--no-dashboard',
+        '--no-commit',
+      ]);
+      expect(scaffold.exitCode).toBe(0);
+
+      const projectPath = join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'brief-route',
+      );
+      const state = await readFile(join(projectPath, 'state.md'), 'utf8');
+      expect(state).toContain('oat_workflow_mode: brief');
+      const scaffoldedPlan = await readFile(
+        join(projectPath, 'plan.md'),
+        'utf8',
+      );
+      expect(scaffoldedPlan).toContain('oat_plan_source: brief');
+      expect(scaffoldedPlan).toContain('oat_template: true');
+
+      const refresh = await runCli(root, ['state', 'refresh']);
+      expect(refresh.exitCode).toBe(0);
+      const dashboard = await readFile(join(root, '.oat', 'state.md'), 'utf8');
+      expect(dashboard).toContain('| Mode | brief |');
+      expect(dashboard).toContain(
+        '**oat-project-brief** - Continue the project brief',
+      );
+      expect((await getProjectState(projectPath)).recommendation.skill).toBe(
+        'oat-project-brief',
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
+  it('project promote --to quick converts a brief project and keeps quick readiness pending', async () => {
+    const root = await createWorkspace();
+    const isolatedHome = await mkdtemp(join(tmpdir(), 'oat-cli-brief-home-'));
+    tempDirs.push(root, isolatedHome);
+    await initializeGitRepository(root);
+    const previousHome = process.env.HOME;
+    process.env.HOME = isolatedHome;
+
+    try {
+      const scaffold = await runCli(root, [
+        'project',
+        'new',
+        'brief-promote',
+        '--mode',
+        'brief',
+        '--scope',
+        'shared',
+        '--no-dashboard',
+        '--no-commit',
+      ]);
+      expect(scaffold.exitCode).toBe(0);
+
+      const projectPath = join(
+        root,
+        '.oat',
+        'projects',
+        'shared',
+        'brief-promote',
+      );
+      const authoredBrief = [
+        '---',
+        'oat_status: complete',
+        'oat_ready_for: oat-project-implement',
+        'oat_blockers: []',
+        'oat_last_updated: 2026-10-11',
+        'oat_phase: plan',
+        'oat_phase_status: complete',
+        'oat_plan_hill_phases: []',
+        'oat_plan_parallel_groups: []',
+        'oat_plan_source: brief',
+        'oat_generated: false',
+        'oat_template: false',
+        'oat_template_name: plan-brief',
+        '---',
+        '',
+        '# Project Brief: brief-promote',
+        '',
+        '## Goal',
+        '',
+        'Ship the widget renderer safely.',
+        '',
+        '## Outcomes',
+        '',
+        '1. Widgets render — evidence: `pnpm test` covers rendering.',
+        '',
+        '## Approach',
+        '',
+        'Two sequential phases.',
+        '',
+        '## Constraints and Out of Scope',
+        '',
+        '- No new runtime dependencies.',
+        '',
+        '## Decisions',
+        '',
+        '- Reuse the existing renderer.',
+        '',
+        '## Known Unknowns',
+        '',
+        '- None.',
+        '',
+        '## Delivery endpoint and authority',
+        '',
+        'A PR against main; the user merges.',
+        '',
+        '## Milestones',
+        '',
+        '## Phase p01: Renderer core',
+        '',
+        '**Intent:** Render widgets through the existing pipeline.',
+        '**Exit evidence:** `pnpm test` passes for the renderer.',
+        '**Provisional:** no',
+        '',
+        '## Phase p02: Renderer cache',
+        '',
+        '**Intent:** Cache rendered widgets.',
+        '**Exit evidence:** `pnpm test` passes for the cache.',
+        '**Provisional:** no',
+        '',
+        '## Parallelism',
+        '',
+        'Sequential.',
+        '',
+        '## Reviews',
+        '',
+        '| Scope | Type     | Status | Date       | Artifact        |',
+        '| ----- | -------- | ------ | ---------- | --------------- |',
+        '| plan  | artifact | passed | 2026-10-11 | reviews/plan.md |',
+        '',
+        '## Implementation Complete',
+        '',
+        'Pending.',
+        '',
+        '## References',
+        '',
+        '- Research: `references/research/`',
+        '',
+      ].join('\n');
+      const journal = [
+        '---',
+        'oat_current_task_id: p02',
+        '---',
+        '',
+        '# Implementation: brief-promote',
+        '',
+        '## Phase p01: Renderer core',
+        '',
+        '**Status:** completed',
+        `**Base:** ${'a'.repeat(40)}`,
+        `**Head:** ${'b'.repeat(40)}`,
+        '**Executor:** root',
+        '',
+        'Renderer core accepted.',
+        '',
+        '## Phase p02: Renderer cache',
+        '',
+        '**Status:** pending',
+        '',
+        'Not started.',
+        '',
+      ].join('\n');
+      await writeFile(join(projectPath, 'plan.md'), authoredBrief, 'utf8');
+      await writeFile(join(projectPath, 'implementation.md'), journal, 'utf8');
+
+      const promoted = await runCli(
+        root,
+        [
+          'project',
+          'promote',
+          '.oat/projects/shared/brief-promote',
+          '--to',
+          'quick',
+        ],
+        ['--json'],
+      );
+      expect(JSON.parse(promoted.stdout)).toMatchObject({
+        status: 'promoted',
+        reason: 'promoted',
+      });
+      expect(promoted.exitCode).toBe(0);
+
+      const promotedState = await readFile(
+        join(projectPath, 'state.md'),
+        'utf8',
+      );
+      expect(promotedState).toContain('oat_workflow_mode: quick');
+      await expect(
+        readFile(join(projectPath, 'references', 'brief-archive.md'), 'utf8'),
+      ).resolves.toContain('Ship the widget renderer safely.');
+      const discovery = await readFile(
+        join(projectPath, 'discovery.md'),
+        'utf8',
+      );
+      expect(discovery).toContain('Ship the widget renderer safely.');
+      const promotedPlan = await readFile(join(projectPath, 'plan.md'), 'utf8');
+      expect(promotedPlan).toMatch(
+        /^oat_promotion_pending_phases:\n {2}- ['"]?p02['"]?$/m,
+      );
+
+      // Simulate quick-start finishing every other readiness clause: the
+      // promoted plan stays not ready only because p02 still needs tasks.
+      await writeFile(
+        join(projectPath, 'plan.md'),
+        promotedPlan
+          .replace(/^oat_status: .*$/m, 'oat_status: complete')
+          .replace(
+            /^oat_ready_for: .*$/m,
+            'oat_ready_for: oat-project-implement',
+          )
+          .replace(/^oat_template: .*$/m, 'oat_template: false')
+          .replace(
+            /^## Reviews\n/m,
+            '## Reviews\n\n- Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)\n',
+          ),
+        'utf8',
+      );
+      const recommendation = (await getProjectState(projectPath))
+        .recommendation;
+      expect(recommendation.skill).toBe('oat-project-quick-start');
+      expect(recommendation.reason).toContain(
+        'promoted brief phases still need executable tasks',
+      );
+
+      const refresh = await runCli(root, ['state', 'refresh']);
+      expect(refresh.exitCode).toBe(0);
+      const dashboard = await readFile(join(root, '.oat', 'state.md'), 'utf8');
+      expect(dashboard).toContain('| Mode | quick |');
+      expect(dashboard).toContain('**oat-project-quick-start**');
+      expect(dashboard).toContain(
+        'promoted brief phases still need executable tasks',
+      );
+    } finally {
+      if (previousHome === undefined) delete process.env.HOME;
+      else process.env.HOME = previousHome;
+    }
+  });
+
   it('cleanup subcommands parse successfully', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);

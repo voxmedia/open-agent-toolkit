@@ -139,9 +139,12 @@ worktree's journal and lists them in its report, but writes no anchors. At
 fan-in the root reconciles those phase-local records into `implementation.md`:
 it keeps each phase's own section from its worktree when resolving a journal
 merge, writes every member's `**Base:**` as the group's fork commit and its
-`**Head:**` as that phase's integration merge commit on the project branch, and
-lists integration and conflict-resolution commits to the reviewer as
-integration commits.
+`**Head:**` as that phase's integration head on the project branch (its merge
+commit, or its last cherry-picked commit when step 7 integrates by
+cherry-pick), and lists integration and conflict-resolution commits to the
+reviewer as integration commits. The review-provide resolver checks only the
+shared fork base and that member heads advance in document order; it does not
+require a head to be a merge commit.
 
 #### Required Manual or Visual Proof Boundary
 

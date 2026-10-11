@@ -82,6 +82,12 @@ oat_workflow_origin: native # native | imported
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
+# oat_brief_gate: # optional; persisted brief artifact gate outcome, absent when no gate is configured; provenance only, read back by nothing (core record: gate-approval-record.md)
+#   status: allowed # allowed | blocked
+#   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
+#   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists

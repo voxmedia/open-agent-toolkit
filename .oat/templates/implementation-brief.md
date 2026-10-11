@@ -53,7 +53,7 @@ oat_template_name: implementation-brief
 
 **Status:** pending
 **Base:** [full base SHA, recorded when the phase starts]
-**Head:** [full head SHA, recorded when the phase is accepted]
+**Head:** [full head SHA, recorded when the phase's work ends, before its review]
 **Executor:** [root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled]
 
 [Summary prose: verification, review disposition, authority changes, deviations, next action.]
@@ -150,6 +150,10 @@ Document any intentional deviations from the brief. Include accepted review find
 **Verification performed:**
 
 - [tests/lint/typecheck/build/manual steps]
+
+**Outcomes audit:**
+
+- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
 
 **Brief deltas (if any):**
 

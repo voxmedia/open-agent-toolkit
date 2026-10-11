@@ -76,6 +76,11 @@ the brief is one **phase-unit**. Progress counts units, not tasks.
   `extracted` without it reads as `pending`
 - `**Corrects:** pNN` on a revision phase
 
+**Marker ownership.** The root writes `**Base:**` in the phase-start commit
+before dispatch; the committing owner writes `**Head:**` when the phase's work
+ends, before its review; only the root writes `**Status:** completed`, at
+acceptance.
+
 Phase ownership ends at the next line starting with `#`, including a
 `### Task` heading, so a task record's status is never read as its phase's
 status.
@@ -221,9 +226,15 @@ accepted non-extracted phase including revision phases):
   phase head is contained in it;
 - sequential phases continue: the next base equals or descends from the
   previous head (bookkeeping commits between phases sit inside the range);
-- a parallel group shares its fork base, and each phase head is its
-  integration merge on the project branch;
+- a parallel group shares its fork base, and member heads advance in document
+  order on the project branch; each head is the member's integration head,
+  normally a merge commit, but the merge-commit property is not enforced
+  because a member may be integrated by cherry-pick;
 - the range is the first base through the aggregate head.
+
+A group member's per-phase review runs before fan-in on
+`EXPECTED_HEAD..<worktree head>` with `oat_review_scope_source: anchors`; the
+fan-in anchors govern `pNN-pMM` and `final`.
 
 Missing anchors widen the range to the confirmed merge-base range, using
 `(pNN-` commit-message matches only to label commits, never to narrow. Invalid

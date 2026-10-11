@@ -182,6 +182,7 @@ Read `{project}/state.md` frontmatter:
   deliberately disabled, keyed by gate-aware skill name
 - `oat_implement_exit_gate` - The implementation exit gate record
 - `oat_quick_start_gate` - The quick-start plan gate record
+- `oat_brief_gate` - The brief artifact gate record (brief mode)
 
 Blockers may be legacy reason strings or structured `{task_id, reason, since}`
 records. Display strings as their reason; display records as
@@ -207,6 +208,7 @@ state or routing merely to render blockers.
    HiLL Pending: {yes/no for current phase}
    Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
    Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"
+   Brief Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None" (brief mode only)
    Exit Gate: {status}/{disposition} as recorded, or "None"
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
@@ -220,15 +222,15 @@ even when no gate is currently configured for that skill, and never infer a
 configured gate from an override alone. This is read-only reporting: never add,
 remove, or repair the map here.
 
-Both gate records share the core defined in
-`references/docs/gate-approval-record.md`. Report a quick-start record as that
-doc describes: its stored fields as recorded, with `config_fingerprint` shown as
+All three gate records share the core defined in
+`references/docs/gate-approval-record.md`. Report a quick-start or brief record
+as that doc describes: its stored fields as recorded, with `config_fingerprint` shown as
 provenance and never recomputed, or `malformed` when its fields do not form a
 valid record. Report the exit-gate
 record's `status` and `disposition` as recorded; its freshness belongs to the
-implementation workflow and is not re-derived here. Either record adds no route
+implementation workflow and is not re-derived here. Each record adds no route
 and no warning: quick plan readiness stays the single routing rule for quick
-plans. Show "None" for an absent record, and never write or repair one here.
+plans, and the brief record is provenance only, read back by no route. Show "None" for an absent record, and never write or repair one here.
 
 ### Step 5: Determine Next Skill
 

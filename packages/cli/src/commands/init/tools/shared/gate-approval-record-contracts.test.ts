@@ -109,6 +109,23 @@ describe('lifecycle gate approval record', () => {
     ]);
   });
 
+  it('scaffolds the brief record with exactly the core', () => {
+    const template = readRepoFile('.oat/templates/state.md');
+    const start = template.indexOf('# oat_brief_gate:');
+    expect(start, 'template carries the brief block').toBeGreaterThan(-1);
+    expect(start, 'brief block follows the quick-start block').toBeGreaterThan(
+      template.indexOf('# oat_quick_start_gate:'),
+    );
+
+    const lines = template.slice(start).split('\n').slice(1);
+    const block = lines.filter((line, index) =>
+      lines.slice(0, index + 1).every((entry) => entry.startsWith('#   ')),
+    );
+    expect(block.map((line) => /^# {3}([a-z_]+):/.exec(line)?.[1])).toEqual([
+      ...CORE_FIELDS,
+    ]);
+  });
+
   it('persists every configured quick-start gate outcome', () => {
     const skill = readRepoFile(QUICK_START);
     const gate = normalize(

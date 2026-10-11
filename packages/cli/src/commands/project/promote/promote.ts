@@ -1315,8 +1315,10 @@ export function createProjectPromoteCommand(
 ): Command {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
   return new Command('promote')
-    .description('Promote an authored lite project to the quick workflow')
-    .argument('<project-path>', 'Lite project path to promote')
+    .description(
+      'Promote an authored lite or brief project to the quick workflow',
+    )
+    .argument('<project-path>', 'Lite or brief project path to promote')
     .requiredOption('--to <mode>', 'Target workflow mode')
     .action(
       async (
