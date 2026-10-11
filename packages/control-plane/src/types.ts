@@ -446,8 +446,8 @@ export interface ProjectState {
    * Goal mode only (absent for every other mode): the active milestone
    * (`oat_milestone`), its status, the goal status, the raw terminal audit and
    * its validation result, the pending recovery record, the delivery registry,
-   * the milestone gate carriers and the `## Milestones` membership with its
-   * errors.
+   * the milestone gate carriers, the `## Milestones` membership with its
+   * errors and the brief's parallel groups.
    */
   milestone?: string | null;
   milestoneStatus?: MilestoneStatus | null;
@@ -458,6 +458,12 @@ export interface ProjectState {
   deliveries?: GoalDelivery[];
   milestoneGates?: Record<string, MilestoneGates>;
   milestoneMembership?: MilestoneMembership;
+  /**
+   * Goal mode only: the brief's `oat_plan_parallel_groups` with normalized
+   * phase ids, so activation can require every member of the next dispatched
+   * group to be concrete.
+   */
+  planParallelGroups?: string[][];
 }
 
 export interface ProjectSummary {

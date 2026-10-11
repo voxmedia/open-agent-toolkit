@@ -2,6 +2,7 @@ import { access, readFile, readdir } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { recommendSkill } from './recommender/router';
+import { parseFrontmatterRecord } from './shared/utils/frontmatter';
 import { scanArtifacts } from './state/artifacts';
 import {
   parseBriefOutcomes,
@@ -17,7 +18,7 @@ import {
   parseReviewTable,
   scanUnprocessedReviews,
 } from './state/reviews';
-import { parseTaskProgress } from './state/tasks';
+import { normalizePhaseId, parseTaskProgress } from './state/tasks';
 import {
   isBriefMode,
   type ProjectState,
@@ -223,6 +224,7 @@ type GoalStateFields = Pick<
   | 'deliveries'
   | 'milestoneGates'
   | 'milestoneMembership'
+  | 'planParallelGroups'
 >;
 
 /**
@@ -263,7 +265,28 @@ function readGoalState(
       planContent,
       implementationContent,
     ),
+    planParallelGroups: readPlanParallelGroups(planContent),
   };
+}
+
+/**
+ * `oat_plan_parallel_groups` from the brief frontmatter with normalized phase
+ * ids. A malformed value reads as no groups; plan validation reports it.
+ */
+function readPlanParallelGroups(planContent: string): string[][] {
+  const groups = parseFrontmatterRecord(planContent).oat_plan_parallel_groups;
+  if (!Array.isArray(groups)) {
+    return [];
+  }
+  return groups
+    .filter(Array.isArray)
+    .map((group: unknown[]) =>
+      group
+        .map((member) =>
+          typeof member === 'string' ? normalizePhaseId(member.trim()) : null,
+        )
+        .filter((member): member is string => member !== null),
+    );
 }
 
 async function resolveProjectDisplayPath(projectPath: string): Promise<string> {

@@ -67,7 +67,10 @@ and revision phases) and every numbered outcome (`parseBriefOutcomes(plan)`)
 and returns a `GoalOutcomeAuditValidation`. For goal projects `ProjectState`
 also carries `milestone`, `milestoneStatus`, `goalStatus`, `goalOutcomeAudit`
 with `goalOutcomeAuditValidation`, `goalRecovery`, `deliveries`,
-`milestoneGates` and `milestoneMembership`; every other mode omits them.
+`milestoneGates`, `milestoneMembership` and `planParallelGroups`; every other
+mode omits them. `recommendSkill` routes goal projects through a goal priority
+block (terminal declaration, review feedback and recovery records, membership,
+then the milestone status table) that reads only this persisted state.
 
 ### `getProjectState(projectPath)`
 

@@ -1,9 +1,11 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
+import { getProjectState, listProjects } from '../project';
 import { scanArtifacts } from '../state/artifacts';
 import {
   type ArtifactStatus,
@@ -1388,5 +1390,1112 @@ describe('recommendSkill brief-unit guard', () => {
     });
 
     expect(recommendSkill(state).skill).toBe('oat-project-summary');
+  });
+});
+
+// Goal routing is exercised through the real project readers: each fixture
+// writes `state.md`, a goal brief with a canonical `## Milestones` table, the
+// journal and optional review files, then reads them with `getProjectState`,
+// whose recommendation is `recommendSkill` over the parsed state.
+describe('recommendSkill goal milestones (real readers)', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const SHA = (character: string) => character.repeat(40);
+  const DECIDED = '2026-10-11T00:00:00Z';
+
+  const planCarrier = (scope: string[], overrides = {}) => ({
+    status: 'allowed',
+    resolution: 'configured',
+    disposition: 'passed',
+    config_fingerprint: 'cfg',
+    reviewed_head: SHA('a'),
+    subject: { kind: 'plan', scope, ref: 'plan.md' },
+    decided_at: DECIDED,
+    freshness: 'fresh',
+    freshness_reason: null,
+    ...overrides,
+  });
+  const exitCarrier = (scope: string[], overrides = {}) => ({
+    status: 'allowed',
+    resolution: 'no_gate',
+    disposition: 'no_gate',
+    config_fingerprint: null,
+    reviewed_head: null,
+    subject: { kind: 'code', scope },
+    decided_at: DECIDED,
+    freshness: 'fresh',
+    freshness_reason: null,
+    ...overrides,
+  });
+  const delivery = (overrides: Record<string, unknown> = {}) => ({
+    delivery_id: 'd01',
+    milestone: 'm01',
+    scope: ['p01', 'p02'],
+    endpoint: 'merged',
+    kind: 'pr',
+    status: 'at_endpoint',
+    superseded_by: null,
+    corrects_delivery_id: null,
+    covers_scope_of: null,
+    members: [
+      {
+        url: 'https://example.com/pull/1',
+        base: SHA('b'),
+        reviewed_head: SHA('c'),
+        observed_head: SHA('c'),
+        observed_base: SHA('b'),
+        status: 'merged',
+      },
+    ],
+    integrated_review: {
+      artifact: 'reviews/archived/review-m01.md',
+      scope: ['p01', 'p02'],
+      bound_revisions: [],
+      disposition: 'passed',
+    },
+    ...overrides,
+  });
+
+  interface GoalFixture {
+    phase?: string;
+    phaseStatus?: string;
+    state?: Record<string, unknown>;
+    milestones?: string;
+    phases?: { id: string; provisional?: boolean }[];
+    journal?: Record<string, string>;
+    currentTaskId?: string;
+    reviewRows?: string[];
+    reviewFiles?: Record<string, string>;
+    planStatus?: 'complete' | 'in_progress';
+    parallelGroups?: string[][];
+    summary?: boolean;
+  }
+
+  const DEFAULT_PHASES = ['p01', 'p02', 'p03', 'p04'].map((id) => ({ id }));
+
+  /** m01 delivered and at its endpoint; m02 is the active milestone. */
+  function m02Implementing(overrides: GoalFixture = {}): GoalFixture {
+    return {
+      ...overrides,
+      state: {
+        oat_milestone: 'm02',
+        oat_milestone_status: 'implementing',
+        oat_goal_status: 'active',
+        oat_deliveries: [delivery()],
+        oat_milestone_gates: {
+          m01: {
+            plan: planCarrier(['p01', 'p02']),
+            exit: exitCarrier(['p01', 'p02']),
+          },
+          m02: { plan: planCarrier(['p03', 'p04']) },
+        },
+        ...overrides.state,
+      },
+      journal: {
+        p01: 'completed',
+        p02: 'completed',
+        p03: 'in_progress',
+        ...overrides.journal,
+      },
+    };
+  }
+
+  async function writeGoalProject(
+    projectDir: string,
+    fixture: GoalFixture,
+  ): Promise<void> {
+    await mkdir(join(projectDir, 'reviews'), { recursive: true });
+    const phases = fixture.phases ?? DEFAULT_PHASES;
+    const stateYaml = YAML.stringify({
+      oat_current_task: null,
+      oat_blockers: [],
+      oat_hill_checkpoints: [],
+      oat_hill_completed: [],
+      oat_phase: fixture.phase ?? 'implement',
+      oat_phase_status: fixture.phaseStatus ?? 'in_progress',
+      oat_execution_mode: 'single-thread',
+      oat_lifecycle: 'active',
+      oat_workflow_mode: 'goal',
+      ...fixture.state,
+    });
+    const planStatus = fixture.planStatus ?? 'complete';
+    const plan = [
+      '---',
+      `oat_status: ${planStatus}`,
+      `oat_ready_for: ${planStatus === 'complete' ? 'oat-project-implement' : 'null'}`,
+      'oat_template: false',
+      'oat_plan_source: goal',
+      `oat_plan_parallel_groups: ${JSON.stringify(fixture.parallelGroups ?? [])}`,
+      '---',
+      '',
+      '# Project Brief: goal',
+      '',
+      '## Outcomes',
+      '',
+      '1. **Goal works** — Evidence: tests',
+      '',
+      '## Milestones',
+      '',
+      '| Milestone | Phases |',
+      '| --------- | ------ |',
+      fixture.milestones ?? '| m01 | p01, p02 |\n| m02 | p03, p04 |',
+      '',
+      ...phases.flatMap((phase) => [
+        `## Phase ${phase.id}: Phase ${phase.id}`,
+        '',
+        '**Intent:** Do it.',
+        '**Exit evidence:** Done.',
+        `**Provisional:** ${phase.provisional ? 'yes' : 'no'}`,
+        '',
+      ]),
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '| ----- | ---- | ------ | ---- | -------- |',
+      ...(fixture.reviewRows ?? []),
+      '',
+    ].join('\n');
+    const journal = [
+      '---',
+      `oat_current_task_id: ${fixture.currentTaskId ?? 'null'}`,
+      '---',
+      '',
+      ...phases.flatMap((phase) => {
+        const marker = fixture.journal?.[phase.id] ?? 'pending';
+        const [status, target] = marker.split(':');
+        return [
+          `## Phase ${phase.id}: Phase ${phase.id}`,
+          '',
+          `**Status:** ${status}`,
+          ...(target ? [`**Extracted to:** ${target}`] : []),
+          '',
+        ];
+      }),
+    ].join('\n');
+    await Promise.all([
+      writeFile(join(projectDir, 'state.md'), `---\n${stateYaml}---\n`),
+      writeFile(join(projectDir, 'plan.md'), plan),
+      writeFile(join(projectDir, 'implementation.md'), journal),
+      ...(fixture.summary
+        ? [
+            writeFile(
+              join(projectDir, 'summary.md'),
+              '---\noat_status: complete\noat_ready_for: null\n---\n\n# Summary\n',
+            ),
+          ]
+        : []),
+      ...Object.entries(fixture.reviewFiles ?? {}).map(([path, content]) =>
+        writeFile(join(projectDir, path), content),
+      ),
+    ]);
+  }
+
+  async function newProjectDir(): Promise<string> {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-goal-router-'));
+    tempDirs.push(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'goal');
+    await mkdir(projectDir, { recursive: true });
+    return projectDir;
+  }
+
+  async function readGoal(fixture: GoalFixture) {
+    const projectDir = await newProjectDir();
+    await writeGoalProject(projectDir, fixture);
+    const state = await getProjectState(projectDir);
+    // The reader's recommendation is the router over the parsed state.
+    expect(state.recommendation).toEqual(recommendSkill(state));
+    return state;
+  }
+
+  async function route(fixture: GoalFixture) {
+    return (await readGoal(fixture)).recommendation;
+  }
+
+  describe('planning and status table', () => {
+    it('routes goal planning to the goal entry skill before milestone state exists', async () => {
+      const recommendation = await route({
+        phase: 'plan',
+        planStatus: 'in_progress',
+        state: {},
+        journal: {},
+      });
+      expect(recommendation.skill).toBe('oat-project-goal');
+      expect(
+        recommendSkill(
+          makeState({
+            phase: 'plan',
+            phaseStatus: 'in_progress',
+            workflowMode: 'goal',
+            artifacts: makeArtifacts({ type: 'plan', boundaryTier: 3 }),
+          }),
+        ).skill,
+      ).toBe('oat-project-goal');
+    });
+
+    it('scopes implementation to the active milestone ordered phase set', async () => {
+      expect(await route(m02Implementing())).toEqual({
+        skill: 'oat-project-implement',
+        reason: 'Incomplete phase-units remain in the active milestone',
+        context: 'scope m02: p03, p04',
+      });
+    });
+
+    it('runs milestone closeout once every active-milestone unit is accepted', async () => {
+      expect(
+        await route(
+          m02Implementing({ journal: { p03: 'completed', p04: 'completed' } }),
+        ),
+      ).toEqual({
+        skill: 'oat-project-implement',
+        reason:
+          'Every phase-unit in the active milestone is accepted; implement milestone closeout runs the exit gate',
+        context: 'closeout m02: p03, p04',
+      });
+    });
+
+    it('routes reviewing by the missing evidence (A1)', async () => {
+      const reviewing = (state: Record<string, unknown>, rows: string[] = []) =>
+        m02Implementing({
+          journal: { p03: 'completed', p04: 'completed' },
+          reviewRows: rows,
+          state: { oat_milestone_status: 'reviewing', ...state },
+        });
+      const gates = (exit: unknown) => ({
+        oat_milestone_gates: {
+          m01: { plan: planCarrier(['p01', 'p02']) },
+          m02: { plan: planCarrier(['p03', 'p04']), exit },
+        },
+      });
+
+      expect(await route(reviewing({}))).toMatchObject({
+        skill: 'oat-project-implement',
+        context: 'closeout m02: p03, p04',
+      });
+      const fresh = gates(exitCarrier(['p03', 'p04']));
+      expect(await route(reviewing(fresh))).toMatchObject({
+        skill: 'oat-project-review-provide',
+        context: 'code m02: p03, p04',
+      });
+      expect(
+        await route(
+          reviewing(fresh, [
+            '| m02 | code | received | 2026-10-11 | reviews/archived/review-m02.md |',
+          ]),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-review-receive',
+        context: 'receive reviews/archived/review-m02.md',
+      });
+      expect(
+        await route(
+          reviewing(fresh, [
+            '| m02 | code | passed | 2026-10-11 | reviews/archived/review-m02.md |',
+          ]),
+        ),
+      ).toMatchObject({ skill: 'oat-project-review-receive' });
+    });
+
+    it('delivers only with a passed review and a fresh allowed exit carrier', async () => {
+      const delivering = (status: string) =>
+        m02Implementing({
+          journal: { p03: 'completed', p04: 'completed' },
+          reviewRows: [
+            `| m02 | code | ${status} | 2026-10-11 | reviews/archived/review-m02.md |`,
+          ],
+          state: {
+            oat_milestone_status: 'delivering',
+            oat_milestone_gates: {
+              m02: {
+                plan: planCarrier(['p03', 'p04']),
+                exit: exitCarrier(['p03', 'p04']),
+              },
+            },
+          },
+        });
+      expect(await route(delivering('passed'))).toEqual({
+        skill: 'oat-project-pr-progress',
+        reason:
+          'Integrated review passed and the exit carrier is allowed and fresh',
+        context: 'deliver m02',
+      });
+      // fixes_completed is not a passed review.
+      expect(await route(delivering('fixes_completed'))).toMatchObject({
+        skill: 'oat-project-review-provide',
+        context: 'code m02: p03, p04',
+      });
+    });
+
+    it('surfaces invalid active membership to the goal skill (B1)', async () => {
+      for (const milestones of [
+        '| m01 p01, p02 |\n| m02 | p03, p04 |',
+        '| m01 | p01, p02 |\n| m02 | p03, p04, p09 |',
+        '| m01 | p01, p02, p03 |\n| m02 | p03, p04 |',
+        '| m01 | p01, p02, p03, p04 |',
+      ]) {
+        const recommendation = await route(m02Implementing({ milestones }));
+        expect(recommendation.skill, milestones).toBe('oat-project-goal');
+        expect(recommendation.reason).toMatch(
+          /^Active milestone membership invalid: /,
+        );
+      }
+    });
+
+    it('routes the same goal state identically through listProjects', async () => {
+      const projectDir = await newProjectDir();
+      await writeGoalProject(projectDir, m02Implementing());
+      const [summary] = await listProjects(join(projectDir, '..'));
+      expect(summary?.recommendation).toMatchObject({
+        skill: 'oat-project-implement',
+        reason: 'Incomplete phase-units remain in the active milestone',
+      });
+    });
+  });
+
+  describe('goal-activation-prerequisites', () => {
+    /** m01 at its endpoint; m02 aligning with an approved, bound plan carrier. */
+    function aligningM02(overrides: GoalFixture = {}): GoalFixture {
+      const base = m02Implementing({ journal: { p03: 'pending' } });
+      return {
+        ...base,
+        ...overrides,
+        state: {
+          ...base.state,
+          oat_milestone_status: 'aligning',
+          ...overrides.state,
+        },
+      };
+    }
+    const gatesWith = (plan: unknown) => ({
+      oat_milestone_gates: {
+        m01: {
+          plan: planCarrier(['p01', 'p02']),
+          exit: exitCarrier(['p01', 'p02']),
+        },
+        m02: { plan },
+      },
+    });
+
+    it('accepts an approved concrete next dispatch with later provisional phases', async () => {
+      expect(
+        await route(
+          aligningM02({
+            phases: [
+              { id: 'p01' },
+              { id: 'p02' },
+              { id: 'p03' },
+              { id: 'p04', provisional: true },
+            ],
+          }),
+        ),
+      ).toEqual({
+        skill: 'oat-project-goal',
+        reason: 'Milestone m02 is ready to activate',
+        context: 'align m02',
+      });
+    });
+
+    it.each([
+      [
+        'missing approval',
+        { planStatus: 'in_progress' as const },
+        'the brief is not approved',
+      ],
+      [
+        'a disallowed plan carrier',
+        {
+          state: gatesWith(planCarrier(['p03', 'p04'], { status: 'blocked' })),
+        },
+        'the m02 plan carrier is blocked',
+      ],
+      [
+        'a stale plan carrier',
+        {
+          state: gatesWith(
+            planCarrier(['p03', 'p04'], {
+              freshness: 'stale',
+              freshness_reason: 'gate configuration changed',
+            }),
+          ),
+        },
+        'the m02 plan carrier is stale (gate configuration changed)',
+      ],
+      [
+        'a plan binding to different membership',
+        { state: gatesWith(planCarrier(['p03'])) },
+        'the m02 plan carrier binds [p03]',
+      ],
+      [
+        'a provisional next phase',
+        {
+          phases: [
+            { id: 'p01' },
+            { id: 'p02' },
+            { id: 'p03', provisional: true },
+            { id: 'p04' },
+          ],
+        },
+        'the next phase p03 is provisional',
+      ],
+      [
+        'a provisional next-group member',
+        {
+          parallelGroups: [['p03', 'p04']],
+          phases: [
+            { id: 'p01' },
+            { id: 'p02' },
+            { id: 'p03' },
+            { id: 'p04', provisional: true },
+          ],
+        },
+        'next dispatched group member p04 is provisional',
+      ],
+    ])('refuses activation with %s', async (_label, overrides, reason) => {
+      const recommendation = await route(aligningM02(overrides));
+      expect(recommendation.skill).toBe('oat-project-goal');
+      expect(recommendation.context).toBe('align m02');
+      expect(recommendation.reason).toContain(
+        `Milestone m02 cannot activate yet: ${reason}`,
+      );
+    });
+
+    it('refuses implementation of a milestone whose plan carrier is not allowed', async () => {
+      expect(
+        await route(
+          m02Implementing({
+            state: gatesWith(
+              planCarrier(['p03', 'p04'], { status: 'pending' }),
+            ),
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-goal',
+        reason:
+          'Milestone m02 is implementing without its activation prerequisites: the m02 plan carrier is pending',
+      });
+    });
+
+    it('refuses activation after the goal is declared met', async () => {
+      const recommendation = await route(
+        aligningM02({
+          journal: { p03: 'completed', p04: 'completed' },
+          state: { oat_goal_status: 'declared_met' },
+        }),
+      );
+      expect(recommendation.reason).not.toContain('ready to activate');
+      expect(recommendation.context).not.toBe('align m02');
+    });
+  });
+
+  describe('delivered versus at_endpoint (B4)', () => {
+    const delivered = (endpoint: string, memberStatus: string) =>
+      m02Implementing({
+        journal: { p03: 'pending' },
+        state: {
+          oat_milestone: 'm01',
+          oat_milestone_status: 'delivered',
+          oat_deliveries: [
+            delivery({
+              endpoint,
+              status: 'open',
+              members: [
+                {
+                  url: 'https://example.com/pull/1',
+                  base: SHA('b'),
+                  reviewed_head: SHA('c'),
+                  observed_head: SHA('c'),
+                  observed_base: SHA('b'),
+                  status: memberStatus,
+                },
+              ],
+            }),
+          ],
+        },
+      });
+
+    it('lets an open merged-endpoint delivery plan the next milestone but not activate it', async () => {
+      const recommendation = await route(delivered('merged', 'open'));
+      expect(recommendation).toMatchObject({
+        skill: 'oat-project-goal',
+        context: 'realign m01',
+      });
+      expect(recommendation.reason).toContain(
+        'activation waits for d01 to reach its agreed endpoint (merged)',
+      );
+
+      // Drafting m02 during `delivered` is permitted; activating it is not.
+      const drafted = delivered('merged', 'open');
+      const aligning = await route({
+        ...drafted,
+        state: {
+          ...drafted.state,
+          oat_milestone: 'm02',
+          oat_milestone_status: 'aligning',
+        },
+      });
+      expect(aligning.reason).toBe(
+        'Milestone m02 cannot activate yet: delivery d01 has not reached its agreed endpoint (merged)',
+      );
+    });
+
+    it('lets an open endpoint satisfied by the same observation permit activation', async () => {
+      const recommendation = await route(delivered('open', 'open'));
+      expect(recommendation.reason).toBe(
+        'Delivery d01 reached its agreed endpoint; re-align and activate the next milestone',
+      );
+
+      const drafted = delivered('open', 'open');
+      expect(
+        (
+          await route({
+            ...drafted,
+            state: {
+              ...drafted.state,
+              oat_milestone: 'm02',
+              oat_milestone_status: 'aligning',
+            },
+          })
+        ).reason,
+      ).toBe('Milestone m02 is ready to activate');
+    });
+  });
+
+  describe('terminal declaration (A3)', () => {
+    const SNAPSHOT_COMPLETE = {
+      status: 'complete',
+      source: 'configured',
+      final_phase: 'p04',
+      pre_approval: ['review', 'summary', 'pr'],
+      pre_approval_completed: ['review', 'summary', 'pr'],
+      approval: 'not_required',
+      approval_source: null,
+      post_approval: [],
+      post_approval_completed: [],
+      failure: null,
+    };
+    const phaseEntry = (disposition: string, extra = {}) => ({
+      disposition,
+      reason: null,
+      scope_decision_ref: null,
+      ...extra,
+    });
+    const audit = (phases: Record<string, unknown>, outcomes?: unknown) => ({
+      disposition: 'met_with_deferrals',
+      decided_at: DECIDED,
+      declaration_ref: 'project-log.md#declared',
+      brief_identity: `plan.md@${SHA('f')}`,
+      phases,
+      outcomes: outcomes ?? {
+        1: {
+          disposition: 'met',
+          evidence_or_ref: 'tests',
+          text: '**Goal works** — Evidence: tests',
+        },
+      },
+    });
+    const ALL_PHASES = {
+      p01: phaseEntry('accepted'),
+      p02: phaseEntry('accepted'),
+      p03: phaseEntry('accepted'),
+      p04: phaseEntry('deferred', {
+        reason: 'Out of budget',
+        scope_decision_ref: 'decisions/DR-1',
+      }),
+    };
+    const declared = (auditValue: unknown) =>
+      m02Implementing({
+        phaseStatus: 'pr_open',
+        summary: true,
+        journal: { p03: 'completed', p04: 'in_progress' },
+        reviewRows: [
+          '| final | code | passed | 2026-10-11 | reviews/archived/final.md |',
+        ],
+        state: {
+          oat_milestone_status: 'delivered',
+          oat_goal_status: 'declared_met',
+          oat_goal_outcome_audit: auditValue,
+          oat_post_implement_sequence: SNAPSHOT_COMPLETE,
+        },
+      });
+
+    it('routes a declared-met goal with a completed snapshot but an omitted phase to audit repair', async () => {
+      const { p03: _omitted, ...withoutP03 } = ALL_PHASES;
+      const recommendation = await route(declared(audit(withoutP03)));
+      expect(recommendation).toEqual({
+        skill: 'oat-project-goal',
+        reason:
+          'Goal is declared met but its outcome audit is invalid (audit-phase-omitted); oat-project-goal repairs the declaration and audit',
+        context: 'audit',
+      });
+    });
+
+    it('routes an omitted outcome and a missing audit to audit repair', async () => {
+      expect((await route(declared(audit(ALL_PHASES, {})))).reason).toContain(
+        '(audit-outcome-omitted)',
+      );
+      expect((await route(declared(null))).reason).toContain('(audit-missing)');
+    });
+
+    it('lets an audited deferral leave terminal scope without changing phase-unit counts', async () => {
+      const state = await readGoal(declared(audit(ALL_PHASES)));
+      // Placement control: the incomplete deferred p04 does not reopen
+      // implementation; terminal closeout continues to completion.
+      expect(state.recommendation).toEqual({
+        skill: 'oat-project-complete',
+        reason: 'PR is open and the project is ready for completion',
+      });
+      expect(state.progress).toMatchObject({ total: 4, completed: 3 });
+    });
+  });
+
+  describe('goal-recovery-evidence and older-delivery isolation (A1)', () => {
+    const RECOVERY_SCOPE = ['p01', 'p02', 'p-rev1'];
+    const PHASES_WITH_REVISION = [...DEFAULT_PHASES, { id: 'p-rev1' }];
+    const MEMBERSHIP = '| m01 | p01, p02, p-rev1 |\n| m02 | p03, p04 |';
+    /** The fresh recovery review; d01's registry still records the original. */
+    const ARTIFACT = 'reviews/archived/review-m01-d01.md';
+    const ORIGINAL = 'reviews/archived/review-m01.md';
+
+    /** m02 active and implementing; d01 (m01) under recovery. */
+    function recovering(
+      stage: string,
+      options: {
+        exit?: unknown;
+        rows?: string[];
+        artifact?: string | null;
+        deliveryReview?: string;
+        journal?: Record<string, string>;
+      } = {},
+    ): GoalFixture {
+      const base = m02Implementing();
+      return {
+        ...base,
+        phases: PHASES_WITH_REVISION,
+        milestones: MEMBERSHIP,
+        currentTaskId: 'p03',
+        reviewRows: options.rows ?? [],
+        journal: { ...base.journal, 'p-rev1': 'completed', ...options.journal },
+        state: {
+          ...base.state,
+          oat_deliveries: [
+            delivery({
+              status: 'open',
+              integrated_review: {
+                artifact: ORIGINAL,
+                scope: ['p01', 'p02'],
+                bound_revisions: [],
+                disposition: options.deliveryReview ?? 'passed',
+              },
+            }),
+          ],
+          oat_goal_recovery: {
+            milestone: 'm01',
+            delivery_id: 'd01',
+            phase_ids: RECOVERY_SCOPE,
+            stage,
+            review_artifact:
+              options.artifact === undefined ? ARTIFACT : options.artifact,
+          },
+          oat_milestone_gates: {
+            m01: {
+              plan: planCarrier(['p01', 'p02']),
+              ...(options.exit === undefined ? {} : { exit: options.exit }),
+            },
+            m02: { plan: planCarrier(['p03', 'p04']) },
+          },
+        },
+      };
+    }
+    const row = (status: string, artifact = ARTIFACT) =>
+      `| m01 | code | ${status} | 2026-10-11 | ${artifact} |`;
+    const FRESH_EXIT = exitCarrier(RECOVERY_SCOPE);
+
+    async function expectActiveMilestoneUntouched(fixture: GoalFixture) {
+      const state = await readGoal(fixture);
+      expect(state).toMatchObject({
+        milestone: 'm02',
+        milestoneStatus: 'implementing',
+        progress: { currentTaskId: 'p03' },
+      });
+      expect(state.recommendation.context ?? '').not.toContain('m02');
+      return state.recommendation;
+    }
+
+    it('A1: a received review with a missing exit carrier is neither delivery-ready nor sent to review-provide', async () => {
+      const recommendation = await expectActiveMilestoneUntouched(
+        recovering('delivering', { rows: [row('received')] }),
+      );
+      expect(recommendation).toEqual({
+        skill: 'oat-project-implement',
+        reason:
+          "Milestone exit carrier for m01 is missing; implement's scoped closeout reruns the exit gate",
+        context: 'closeout m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it('A1: a clean receive of the exact fresh review advances only d01', async () => {
+      const recommendation = await expectActiveMilestoneUntouched(
+        recovering('delivering', { exit: FRESH_EXIT, rows: [row('passed')] }),
+      );
+      expect(recommendation).toEqual({
+        skill: 'oat-project-pr-progress',
+        reason:
+          'Integrated review passed and the exit carrier is allowed and fresh',
+        context: 'deliver m01/d01',
+      });
+    });
+
+    it('refuses fixes_completed as a passed review', async () => {
+      expect(
+        await route(
+          recovering('delivering', {
+            exit: FRESH_EXIT,
+            rows: [row('fixes_completed')],
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-review-provide',
+        context: 'code m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it('refuses a passed review of a different artifact (wrong-artifact receive)', async () => {
+      for (const other of ['reviews/archived/review-m02.md', ORIGINAL]) {
+        expect(
+          await route(
+            recovering('delivering', {
+              exit: FRESH_EXIT,
+              rows: [row('passed', other)],
+            }),
+          ),
+          other,
+        ).toMatchObject({
+          skill: 'oat-project-review-provide',
+          context: 'code m01/d01: p01, p02, p-rev1',
+        });
+      }
+    });
+
+    it('refuses the registry review that predates the appended correction phase', async () => {
+      expect(
+        await route(
+          recovering('reviewing', {
+            exit: FRESH_EXIT,
+            artifact: null,
+            rows: [row('passed', ORIGINAL)],
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-review-provide',
+        context: 'code m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it.each([
+      ['blocked', exitCarrier(RECOVERY_SCOPE, { status: 'blocked' })],
+      [
+        'stale',
+        exitCarrier(RECOVERY_SCOPE, {
+          freshness: 'stale',
+          freshness_reason: 'member base changed',
+        }),
+      ],
+    ])('refuses %s exit evidence', async (_label, exit) => {
+      expect(
+        await route(recovering('delivering', { exit, rows: [row('passed')] })),
+      ).toMatchObject({
+        skill: 'oat-project-implement',
+        context: 'closeout m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it('refuses evidence reused after queued fixes', async () => {
+      // Queued fixes on the reviewed artifact route back to implementation.
+      expect(
+        await route(
+          recovering('delivering', {
+            exit: FRESH_EXIT,
+            rows: [row('fixes_added')],
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-implement',
+        context: 'scope m01/d01: p01, p02, p-rev1',
+      });
+      // A carrier bound before the correction phase was added no longer
+      // covers the recovery scope.
+      expect(
+        await route(
+          recovering('delivering', {
+            exit: exitCarrier(['p01', 'p02']),
+            rows: [row('passed')],
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-implement',
+        reason:
+          "Milestone exit carrier for m01 is not bound to p-rev1; implement's scoped closeout reruns the exit gate",
+      });
+    });
+
+    it('preserves the active pointer while an interrupted recovery resumes', async () => {
+      expect(
+        await expectActiveMilestoneUntouched(
+          recovering('implementing', { journal: { 'p-rev1': 'in_progress' } }),
+        ),
+      ).toEqual({
+        skill: 'oat-project-implement',
+        reason: 'Goal recovery for m01/d01 is implementing queued fixes',
+        context: 'scope m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it('routes stale d01 evidence found at pr-progress entry to its owner without touching m02', async () => {
+      expect(
+        await expectActiveMilestoneUntouched(
+          recovering('reviewing', {
+            exit: FRESH_EXIT,
+            artifact: null,
+            deliveryReview: 'stale',
+          }),
+        ),
+      ).toMatchObject({
+        skill: 'oat-project-review-provide',
+        reason: 'The integrated delivery review is stale',
+        context: 'code m01/d01: p01, p02, p-rev1',
+      });
+    });
+
+    it('routes inline m01 feedback landed as p-rev1 through its recovery, with active-milestone and brief controls', async () => {
+      const revised = await readGoal(
+        recovering('implementing', {
+          artifact: null,
+          journal: { 'p-rev1': 'pending' },
+        }),
+      );
+      expect(revised.milestoneMembership).toMatchObject({
+        errors: [],
+        milestones: [
+          { milestoneId: 'm01', phaseIds: ['p01', 'p02', 'p-rev1'] },
+          { milestoneId: 'm02', phaseIds: ['p03', 'p04'] },
+        ],
+      });
+      expect(revised.recommendation.context).toBe(
+        'scope m01/d01: p01, p02, p-rev1',
+      );
+
+      // Control: the same correction on the active milestone uses the
+      // ordinary pointer and scope, with no recovery record.
+      const active = m02Implementing({
+        phases: PHASES_WITH_REVISION,
+        milestones: '| m01 | p01, p02 |\n| m02 | p03, p04, p-rev1 |',
+        journal: { 'p-rev1': 'pending' },
+      });
+      expect(await route(active)).toMatchObject({
+        skill: 'oat-project-implement',
+        context: 'scope m02: p03, p04, p-rev1',
+      });
+
+      // Control: an ordinary brief keeps the landed brief-unit guard.
+      const brief = await newProjectDir();
+      await writeGoalProject(brief, {
+        ...active,
+        state: { oat_workflow_mode: 'brief' },
+      });
+      expect((await getProjectState(brief)).recommendation).toEqual({
+        skill: 'oat-project-implement',
+        reason: 'Incomplete phase-units remain in the active scope',
+      });
+    });
+
+    it('lets received feedback precede the recovery record', async () => {
+      const artifact = 'reviews/review-m01-d01.md';
+      expect(
+        await route({
+          ...recovering('delivering', {
+            exit: FRESH_EXIT,
+            artifact,
+            rows: [row('received', artifact)],
+          }),
+          reviewFiles: {
+            [artifact]:
+              '---\noat_review_scope: m01\noat_review_type: code\n---\n',
+          },
+        }),
+      ).toEqual({
+        skill: 'oat-project-review-receive',
+        reason: 'Unprocessed review feedback exists',
+      });
+    });
+  });
+
+  describe('placement', () => {
+    it('does not route a delivered m01 with drafted m02 phases to implement', async () => {
+      const drafted = m02Implementing({
+        phases: [
+          { id: 'p01' },
+          { id: 'p02' },
+          { id: 'p03', provisional: true },
+          { id: 'p04', provisional: true },
+        ],
+        journal: { p03: 'pending' },
+        state: { oat_milestone: 'm01', oat_milestone_status: 'delivered' },
+      });
+      const state = await readGoal(drafted);
+      expect(state.recommendation).toMatchObject({
+        skill: 'oat-project-goal',
+        context: 'realign m01',
+      });
+      // The phases are genuinely incomplete: only placement keeps the
+      // whole-plan brief-unit guard from claiming them.
+      expect(state.progress).toMatchObject({ total: 4, completed: 2 });
+    });
+  });
+
+  describe('recovery stage walk', () => {
+    const SCOPE = ['p01', 'p02', 'p-rev1'];
+    const ARTIFACT = 'reviews/archived/review-m01-d01-r2.md';
+
+    /** Each owner's clean stage write, applied to the fixture. */
+    type StageWrite = (fixture: GoalFixture) => GoalFixture;
+    const withState =
+      (patch: (state: Record<string, unknown>) => Record<string, unknown>) =>
+      (fixture: GoalFixture): GoalFixture => ({
+        ...fixture,
+        state: patch(fixture.state ?? {}),
+      });
+    const recoveryPatch = (patch: Record<string, unknown>) =>
+      withState((state) => ({
+        ...state,
+        oat_goal_recovery: {
+          ...(state.oat_goal_recovery as Record<string, unknown>),
+          ...patch,
+        },
+      }));
+
+    const OWNER_WRITES: Record<string, StageWrite> = {
+      // implement: fixes accepted → exit_gate.
+      implementing: (fixture) =>
+        recoveryPatch({ stage: 'exit_gate' })({
+          ...fixture,
+          journal: { ...fixture.journal, 'p-rev1': 'completed' },
+          reviewRows: [
+            `| m01 | code | fixes_completed | 2026-10-11 | reviews/archived/review-m01.md |`,
+          ],
+        }),
+      // implement scoped closeout: carrier allowed and fresh → reviewing.
+      exit_gate: (fixture) =>
+        withState((state) => ({
+          ...state,
+          oat_milestone_gates: {
+            ...(state.oat_milestone_gates as Record<string, unknown>),
+            m01: {
+              plan: planCarrier(['p01', 'p02']),
+              exit: exitCarrier(SCOPE),
+            },
+          },
+        }))(recoveryPatch({ stage: 'reviewing' })(fixture)),
+      // review-provide: artifact recorded `received` → receiving.
+      reviewing: (fixture) =>
+        recoveryPatch({ stage: 'receiving', review_artifact: ARTIFACT })({
+          ...fixture,
+          reviewRows: [
+            ...(fixture.reviewRows ?? []),
+            `| m01 | code | received | 2026-10-11 | ${ARTIFACT} |`,
+          ],
+        }),
+      // review-receive: clean receive → delivering.
+      receiving: (fixture) =>
+        recoveryPatch({ stage: 'delivering' })({
+          ...fixture,
+          reviewRows: [
+            ...(fixture.reviewRows ?? []).slice(0, -1),
+            `| m01 | code | passed | 2026-10-11 | ${ARTIFACT} |`,
+          ],
+        }),
+      // pr-progress: refresh of the targeted delivery complete → cleared.
+      delivering: withState((state) => ({
+        ...state,
+        oat_goal_recovery: null,
+      })),
+    };
+
+    async function walk(writes: Record<string, StageWrite>) {
+      const projectDir = await newProjectDir();
+      let fixture: GoalFixture = m02Implementing({
+        phases: [...DEFAULT_PHASES, { id: 'p-rev1' }],
+        milestones: '| m01 | p01, p02, p-rev1 |\n| m02 | p03, p04 |',
+        journal: { 'p-rev1': 'in_progress' },
+        reviewRows: [
+          '| m01 | code | fixes_added | 2026-10-11 | reviews/archived/review-m01.md |',
+        ],
+        state: {
+          oat_goal_recovery: {
+            milestone: 'm01',
+            delivery_id: 'd01',
+            phase_ids: SCOPE,
+            stage: 'implementing',
+            review_artifact: null,
+          },
+        },
+      });
+      const routes: string[] = [];
+      const seen = new Set<string>();
+      for (let step = 0; step < 8; step += 1) {
+        await writeGoalProject(projectDir, fixture);
+        const state = await getProjectState(projectDir);
+        const stage = state.goalRecovery?.stage ?? 'cleared';
+        const routeKey = `${state.recommendation.skill} ${state.recommendation.context ?? ''}`;
+        const visit = `${stage} → ${routeKey}`;
+        if (seen.has(visit)) {
+          return { routes, repeated: visit };
+        }
+        seen.add(visit);
+        routes.push(visit);
+        if (stage === 'cleared') {
+          return { routes, repeated: null };
+        }
+        fixture = writes[stage]!(fixture);
+      }
+      return { routes, repeated: 'no terminal state' };
+    }
+
+    it('routes each stage to its owner in turn and reaches no owner twice without a stage change', async () => {
+      expect(await walk(OWNER_WRITES)).toEqual({
+        routes: [
+          'implementing → oat-project-implement scope m01/d01: p01, p02, p-rev1',
+          'exit_gate → oat-project-implement closeout m01/d01: p01, p02, p-rev1',
+          'reviewing → oat-project-review-provide code m01/d01: p01, p02, p-rev1',
+          `receiving → oat-project-review-receive receive ${ARTIFACT}`,
+          'delivering → oat-project-pr-progress deliver m01/d01',
+          'cleared → oat-project-implement scope m02: p03, p04',
+        ],
+        repeated: null,
+      });
+    });
+
+    it('repeats the route when one stage write is neutralized', async () => {
+      const { routes, repeated } = await walk({
+        ...OWNER_WRITES,
+        // implement accepts the fixes but never advances the stage.
+        implementing: (fixture) => ({
+          ...OWNER_WRITES.implementing!(fixture),
+          state: fixture.state,
+        }),
+      });
+      expect(routes).toEqual([
+        'implementing → oat-project-implement scope m01/d01: p01, p02, p-rev1',
+      ]);
+      expect(repeated).toBe(
+        'implementing → oat-project-implement scope m01/d01: p01, p02, p-rev1',
+      );
+    });
   });
 });
