@@ -52,6 +52,23 @@ describe('PACK_MANIFEST', () => {
     );
   });
 
+  it('registers the brief plan and journal templates in the workflows pack', () => {
+    const workflows = PACK_MANIFEST.find(({ name }) => name === 'workflows');
+
+    expect(workflows?.assets).toEqual(
+      expect.arrayContaining(
+        ['plan-brief.md', 'implementation-brief.md'].map((name) =>
+          expect.objectContaining({
+            id: `template:${name}`,
+            kind: 'template',
+            source: `templates/${name}`,
+            destination: `.oat/templates/${name}`,
+          }),
+        ),
+      ),
+    );
+  });
+
   it('registers oat-pjm-remote in the project-management pack', () => {
     const projectManagement = PACK_MANIFEST.find(
       ({ name }) => name === 'project-management',
