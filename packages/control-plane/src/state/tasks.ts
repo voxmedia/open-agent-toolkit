@@ -261,6 +261,23 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
 }
 
 /**
+ * The phases inside an active scope, in plan document order. A `null` scope
+ * selects every phase; scope ids that name no phase are ignored, and the
+ * order of `scope` never reorders the result.
+ */
+export function selectPhaseUnits(
+  progress: TaskProgress,
+  scope: readonly string[] | null,
+): PhaseProgress[] {
+  if (scope == null) {
+    return [...progress.phases];
+  }
+
+  const scoped = new Set(scope);
+  return progress.phases.filter((phase) => scoped.has(phase.phaseId));
+}
+
+/**
  * Journal phase status values. Task execution records additionally use
  * `cancelled` and `no-change`, which are not phase statuses.
  */

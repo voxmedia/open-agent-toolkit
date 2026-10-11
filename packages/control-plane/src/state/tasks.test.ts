@@ -4,6 +4,7 @@ import {
   parsePhaseMarkers,
   parseProvisionalPhaseIds,
   parseTaskProgress,
+  selectPhaseUnits,
 } from './tasks';
 
 describe('parseTaskProgress', () => {
@@ -840,5 +841,42 @@ describe('parseProvisionalPhaseIds', () => {
 **Provisional:** yes
 `),
     ).toEqual(new Set(['p02']));
+  });
+});
+
+describe('selectPhaseUnits', () => {
+  const progress = parseTaskProgress(
+    `## Phase p01: Research
+
+**Intent:** Learn.
+
+## Phase p02: Build
+
+**Intent:** Build.
+
+## Phase p03: Ship
+
+**Intent:** Ship.
+`,
+    '',
+    { phaseUnits: true },
+  );
+
+  it('returns scoped units in document order regardless of scope order', () => {
+    expect(
+      selectPhaseUnits(progress, ['p03', 'p01']).map((phase) => phase.phaseId),
+    ).toEqual(['p01', 'p03']);
+  });
+
+  it('returns every unit for a null scope', () => {
+    expect(
+      selectPhaseUnits(progress, null).map((phase) => phase.phaseId),
+    ).toEqual(['p01', 'p02', 'p03']);
+  });
+
+  it('ignores scope ids that name no phase', () => {
+    expect(
+      selectPhaseUnits(progress, ['p09', 'p02']).map((phase) => phase.phaseId),
+    ).toEqual(['p02']);
   });
 });

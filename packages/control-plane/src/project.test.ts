@@ -459,7 +459,159 @@ oat_template: false
       reason: 'Revision work remains incomplete',
     });
   });
+
+  it('counts a taskless accepted brief phase as one completed unit through both readers', async () => {
+    const repoRoot = await createDir('oat-control-plane-brief-units-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'brief-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+
+    await createBriefProject(projectDir, {
+      workflowMode: 'brief',
+      journal: `## Phase p01: Research the parser contract
+
+**Status:** completed
+`,
+    });
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState.workflowMode).toBe('brief');
+    expect(projectState.progress).toMatchObject({ total: 1, completed: 1 });
+    expect(projectState.progress.phases).toEqual([
+      {
+        phaseId: 'p01',
+        name: 'Research the parser contract',
+        total: 1,
+        completed: 1,
+        isRevision: false,
+        unit: 'phase',
+        provisional: false,
+        taskRecords: { total: 0, completed: 0 },
+      },
+    ]);
+
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary).toMatchObject({
+      name: 'brief-demo',
+      workflowMode: 'brief',
+      progress: { total: 1, completed: 1 },
+    });
+  });
+
+  it('keeps the task contract for the same files under quick mode', async () => {
+    const repoRoot = await createDir('oat-control-plane-brief-as-quick-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'quick-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+
+    await createBriefProject(projectDir, {
+      workflowMode: 'quick',
+      journal: `## Phase p01: Research the parser contract
+
+**Status:** completed
+`,
+    });
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState.progress).toEqual({
+      total: 0,
+      completed: 0,
+      currentTaskId: null,
+      phases: [],
+    });
+
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary?.progress).toEqual({ total: 0, completed: 0 });
+  });
+
+  it('leaves a brief phase pending when only a journal task record is completed', async () => {
+    const repoRoot = await createDir('oat-control-plane-brief-records-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'brief-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+
+    await createBriefProject(projectDir, {
+      workflowMode: 'brief',
+      journal: `## Phase p01: Research the parser contract
+
+**Status:** in_progress
+
+### Task p01-t01: Pin taskless-phase behavior
+
+**Status:** completed
+`,
+    });
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState.progress).toMatchObject({ total: 1, completed: 0 });
+    expect(projectState.progress.phases[0]).toMatchObject({
+      completed: 0,
+      taskRecords: { total: 1, completed: 1 },
+    });
+
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary?.progress).toEqual({ total: 1, completed: 0 });
+  });
 });
+
+/**
+ * A minimal brief-mode project: one taskless phase in the plan and the
+ * supplied journal body. `workflowMode` is written to `state.md` so the same
+ * files can be read under the brief and task contracts.
+ */
+async function createBriefProject(
+  projectDir: string,
+  options: { workflowMode: 'brief' | 'quick'; journal: string },
+): Promise<void> {
+  await mkdir(projectDir, { recursive: true });
+  await Promise.all([
+    writeFile(
+      join(projectDir, 'state.md'),
+      `---
+oat_current_task: null
+oat_blockers: []
+oat_hill_checkpoints: []
+oat_hill_completed: []
+oat_phase: implement
+oat_phase_status: in_progress
+oat_execution_mode: single-thread
+oat_lifecycle: active
+oat_workflow_mode: ${options.workflowMode}
+oat_project_created: '2026-10-10T00:00:00Z'
+oat_project_state_updated: '2026-10-10T00:00:00Z'
+---
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'plan.md'),
+      `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_template: false
+---
+
+# Project Brief
+
+## Phase p01: Research the parser contract
+
+**Intent:** Learn the parser contract.
+**Exit evidence:** Notes recorded.
+**Provisional:** no
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'implementation.md'),
+      `---
+oat_current_task_id: null
+---
+
+${options.journal}`,
+      'utf8',
+    ),
+  ]);
+}
 
 /**
  * A plan that mixes ordinary and revision phases across the heading dialects
