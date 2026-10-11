@@ -124,6 +124,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 Configured plan gate on revision 5: attempt 1 0/2/2/0 (applied at 1de4aac68), attempt 2 0/0/0/0 passed; oat_quick_start_gate refreshed to 1de4aac68. v1.5 plan approved for execution; p09 launches next. Key plan-rev5-gate-passed.
 
+### 2026-10-11 · structural · oat-project-implement · 611596345
+
+Phase p09 review round 1 (0/1/2/3) converted the High, a Medium's code side and a Low into p09-t03; round 2 (0/0/0/0) passed. Contract sentences (Scope cell, approval evidence, exit-carrier freshness) recorded in design.md; Milestones grammar and code mapping carried to p11-t01/p10-t01. Phase p09 closed at 611596345. Key p09-review-pass-611596345.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -634,8 +634,9 @@ oat_generated: false
 
 ## Phase 9: Goal registration and control-plane transitions (v1.5)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
+**Completed:** 2026-10-11
 
 **Base:** 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5
 **Head:** 611596345 (fix round 1; candidate head 17a996a2e35235a2fd4f2e4bf61eba763723a6a8 at review round 1)
@@ -681,6 +682,10 @@ oat_generated: false
 - L3 persisted phase-id lists read verbatim → converted: p09-t03 (normalize in `parser.ts`); p10-t01 reports non-canonical ids.
 
 **New tasks added:** p09-t03 (same handle, fix mode; re-review round 2 on the fix range because a High was converted).
+
+**Round 2:** `reviews/archived/p09-review-2026-10-11T091238Z.md` at 8113ced43 — 0/0/0/0; H1, M1 (code side) and L3 resolved with evidence; the second ordering fix (queued fixes before the stale-registry check) confirmed against A1.
+
+**Disposition:** passed at 611596345; artifacts archived (rounds 1 and 2).
 
 ---
 
@@ -888,7 +893,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5, the plan-gate closeout; the dispatch-plan commit sits between base and the first task commit; p09-t01..t02 in the root checkout against design rev 4.0 / plan rev 5)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head 17a996a2e; commits ab17cbd35, 17a996a2e; concerns: two widened edits (router.ts one line in t01; `planParallelGroups` in t02), four design-gap decisions (table grammar, extracted goal-only, approval = plan complete, freshness null fails) flagged for review; parser drops a delivery without `delivery_id` and reads an unparseable recovery as null (p10 validation)
-- Review round 1 (rev-p09-6d0ca3c4, Fable 5.1 high at the frontier cap): 0/1/2/3; fix continuation `cont-brief-goal-workflow-modes-p09-fix-1` → 611596345; round 2 dispatched on the fix range
+- Review round 1 (rev-p09-6d0ca3c4, Fable 5.1 high at the frontier cap): 0/1/2/3; fix continuation `cont-brief-goal-workflow-modes-p09-fix-1` → 611596345; round 2 (0/0/0/0) passed; phase p09 closed at 611596345
 
 <!-- orchestration-runs-end -->
 
