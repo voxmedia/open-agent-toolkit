@@ -226,3 +226,12 @@ Track test execution during implementation.
 **Findings:** Critical 0, High 0, Medium 0, Low 0. Gate run `3d1ca87b-c858-497a-b529-d73f88974327`, target `codex-6-sol-xhigh` (gpt-6.1-sol, xhigh), envelope `status: ok`, `receiveEligible: true`, reviewed baseline `3f164e0c0`. No artifact edits; plan artifact event recorded `passed`. Quick-start gate persisted in state.md as `allowed/passed`.
 
 **Plan artifact review ladder:** structured in-memory reviews by oat-reviewer (Claude Opus 5.5 high): initial (H1–H4, M1–M7, L1–L3), retry 1 (H1–H4, M1–M2, L1–L3), retry 2 (M1, L1–L3); retry bound exhausted; all findings applied (plan revisions 2–4). Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, applied in revision 2. Plan approved by Claude under Thomas's 2026-10-10 delegation (self-approve after review and gate).
+
+## Implement run preflight (2026-10-11)
+
+- Tier 1 (subagents): oat-phase-implementer and oat-reviewer available without auth. Gate IMPLEMENT-08: delegation authorized for this run (Thomas, 2026-10-10) for both roles across every phase.
+- Gate IMPLEMENT-09: dispatch policy resolved from project state: managed, frontier (source project-state).
+- Gate IMPLEMENT-03: `oat_plan_hill_phases: ['p12']` present and valid; preserved as confirmed (Thomas: no checkpoints beyond the final-phase default). Gate IMPLEMENT-04: `oat_auto_review_at_hill_checkpoints: true` written.
+- Phase review gate: absent (disabled). Lifecycle gate posture: configured implement exit gate in force.
+- Schedule: [p01] → [p02, p03, p04] (worktrees) → [p05, p06, p07] (worktrees) → [p08] → [p09] → [p10] → [p11] → [p12]. Resuming from p01-t01.
+- Implementer target for this run: Claude Opus 5.5 at high effort under the frontier ceiling (operator choice), resolved per phase through the exact-candidate branch.
