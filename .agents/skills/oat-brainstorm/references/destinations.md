@@ -132,7 +132,7 @@ Skill proposes `lite`, `brief`, `quick`, or `spec-driven` mode based on `chosenD
 
 **Pack required:** `workflows` AND an active project pointer is set (`oat config get activeProject`) AND its `state.md` is readable.
 **Trigger phrases:** "fold this into the active project", "this is feedback for the active project", "integrate this into design", "add this to discovery", explicit "for the active project" mention. Also offered as the first option when the active-project 3-way router fires after convergence (related → fold-back).
-**Required template fields:** which artifact (`plan.md` for lite and brief; for import `design.md` or `discovery.md` when present, else `plan.md`; otherwise `design.md` if exists, else `discovery.md`; user signal can override), the synthesized payload's `chosenDirection`, key decisions, `transcriptSessionNote` (transcript appendix). Template: appended in-place using `## Brainstorming Update: YYYY-MM-DD — <topic>` heading.
+**Required template fields:** which artifact (`plan.md` for lite, brief, and goal; for import `design.md` or `discovery.md` when present, else `plan.md`; otherwise `design.md` if exists, else `discovery.md`; user signal can override), the synthesized payload's `chosenDirection`, key decisions, `transcriptSessionNote` (transcript appendix). Template: appended in-place using `## Brainstorming Update: YYYY-MM-DD — <topic>` heading.
 **Optional template fields:** `openQuestions`, `nextSteps` — appended if surfaced during convergence.
 **Confirmation pattern:** `minimal` (which artifact + dirty-tree handling)
 
@@ -167,9 +167,12 @@ Skill name resolved per workflow mode + PR status (read from `state.md` frontmat
 | lite        | none / closed                | `oat-project-lite`        |
 | import      | none / closed                | `oat-project-import-plan` |
 | brief       | none / closed                | `oat-project-brief`       |
+| goal        | none / closed                | `oat-project-goal`        |
 | any mode    | open (`oat_pr_status: open`) | `oat-project-revise`      |
 
 For brief, `oat-project-brief` is the target while the brief is still in planning (`oat_phase: plan`) and `oat-project-implement` once implementation has started; the handoff prompt asks for new or amended phases instead of tasks.
+
+For goal, `oat-project-goal` is the target (an amendment during authoring or at re-alignment), or `oat-project-implement` for an update inside the active milestone's approved Outcomes and Approach. With an open PR, the goal handoff to `oat-project-revise` names the target milestone and delivery (`<mNN>/<dNN>`, from the `oat_deliveries` entry whose member URL is `oat_pr_url`), because revise requires an explicit target in goal mode.
 
 After printing the prompt, the skill stops. The user runs the plan-authoring skill at their own pace. The brainstorming skill never auto-chains into plan authoring — the deliberate transition is the point.
 

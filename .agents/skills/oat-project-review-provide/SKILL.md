@@ -188,6 +188,12 @@ accepted unit to the first incomplete unit in document order. A brief code
 scope is always a phase-unit (`pNN`, `p-revN`, `pNN-pMM`, or `final`), never an
 execution record.
 
+When `WORKFLOW_MODE` is `goal`, the same pointer rule applies within the active
+milestone's ordered phase set, and an integrated milestone or delivery review
+takes its scope from the router's `code` context (`code mNN: pAA, pBB` or
+`code mNN/dNN: …`) or from a pending `oat_goal_recovery` record, never from the
+phase table (Step 3.0g).
+
 If inference produces a result, propose it and proceed unless the user overrides:
 
 ```
@@ -321,6 +327,7 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
 - `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
 - `lite`: `plan.md`, `implementation.md` (`discovery.md`/`spec.md`/`design.md` are absent by design)
 - `brief`: `plan.md` (the Project Brief) and `implementation.md` (the per-phase journal, which carries the `**Base:**`/`**Head:**` anchors); `discovery.md`, `spec.md`, and `design.md` are absent by design, and research under `references/` is optional
+- `goal`: the same as `brief`, plus the `## Milestones` table in `plan.md` and the goal state in `state.md` (milestone, recovery record, milestone gate carriers, delivery registry)
 
 **Required for artifact review:**
 
@@ -334,6 +341,7 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
   - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead; lite uses the separate rule below
   - reviewing `plan` in `lite` mode requires only `plan.md`; its Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections are the complete upstream contract
   - reviewing `plan` in `brief` mode requires only `plan.md`; the brief and `oat-project-brief/references/brief-contract.md` are the complete upstream contract. `discovery`, `spec`, and `design` are not reviewable artifacts in brief mode
+  - reviewing `plan` in `goal` mode follows the `brief` rule; for an amendment the request names the milestone under review and its ordered phase set
 
 **If missing:** Report missing required artifacts for the current mode and stop if requirements are not met.
 
@@ -609,6 +617,51 @@ and, when they apply, `oat_review_fallback_reason`,
 them to the reviewer and Step 8 writes them; `oat-project-review-receive`
 preserves them.
 
+**Step 3.0g: Goal Explicit Review Scope (`goal` only)**
+
+When `WORKFLOW_MODE` is `goal`, a phase-unit code review (`pNN`, `p-revN`)
+runs Step 3.0 unchanged. An integrated milestone or delivery review follows
+`oat-project-brief/references/brief-contract.md` section 12.6 (explicit goal
+review scopes) and section 12.5 (the goal exception to the shared ladder):
+
+1. **Explicit identity only.** Accept only a milestone or delivery identity
+   with its ordered phase set: the router's `code mNN: pAA, pBB` or
+   `code mNN/dNN: …` context, a pending `oat_goal_recovery` record
+   (`milestone`, `delivery_id`, `phase_ids`), or the same form typed by the
+   user. Refuse a `pNN-pMM` or `final` token for an integrated goal review, and
+   never expand membership first to last or derive it from commit labels.
+2. **Validate the set.** It must equal the milestone's ordered phase set from
+   the shared Milestones reader (`oat project status --json`), the recovery
+   record's `phase_ids`, or a registered delivery's frozen scope with any
+   recorded correction phases. A mismatch stops with the two sets; membership
+   errors route to `oat-project-goal`.
+3. **Exit gate first.** Before dispatch, run
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
+   and read only its `exit` result (`source: milestone-carrier`); the command
+   exits 1 here because no passed integrated review exists yet. A missing,
+   blocked or stale exit carrier stops and routes to `oat-project-implement`
+   scoped closeout: the milestone exit gate precedes the integrated review.
+4. **Range.** Resolve each set member's anchors with the Step 3.0 per-phase
+   checks (existence, ancestry). The aggregate head is the last set member's
+   head in document order and must contain every member head; the range is the
+   first member's base through the aggregate head. Delivery evidence uses
+   integration heads: a parallel group member's pre-fan-in review is member
+   evidence only. Missing anchors widen to the merge-base range exactly as in
+   Step 3.0; invalid anchors route to `oat-project-reconcile`.
+5. **Disclose, never relabel.** The range may be wider than the set. Name every
+   phase whose anchored commits fall inside the range but outside the set
+   (for example `p03` of m02 between `p02` and `p-rev1`) under an
+   `Intervening changes:` line in the Review Scope, so the reviewer judges only
+   the set and treats the rest as context.
+6. **Record.** Write the brief artifact record with
+   `oat_review_requested_scope: mNN` (or `mNN/dNN`) and `oat_review_phase_ids`
+   equal to the exact ordered set; the semantic set survives in provenance even
+   when the Git range is wider.
+7. **No narrowing below the set.** Step 3a may narrow a re-review's Git range,
+   but a narrowed or revision-only goal review is never recorded as the full
+   integrated review without the prior review it builds on; its
+   `oat_review_phase_ids` stays the full set.
+
 **Step 3a: Detect Re-Review Context**
 
 After parsing the requested scope, distinguish an explicit range override from a
@@ -791,8 +844,8 @@ case "$SCOPE_TOKEN" in
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
     elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
-    elif [[ "$WORKFLOW_MODE" == "lite" || "$WORKFLOW_MODE" == "brief" ]]; then
-      # brief: the reviewer also receives oat-project-brief/references/brief-contract.md
+    elif [[ "$WORKFLOW_MODE" == "lite" || "$WORKFLOW_MODE" == "brief" || "$WORKFLOW_MODE" == "goal" ]]; then
+      # brief and goal: the reviewer also receives oat-project-brief/references/brief-contract.md
       # as the contract reference (Step 5), not as a file in scope.
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md")
     else
@@ -951,7 +1004,7 @@ artifact-plan and code Review Scope explicitly as:
 - Import reference: not required
 - Plan: `{PROJECT_PATH}/plan.md` (the Project Brief: Goal, Outcomes, Approach, Constraints and Out of Scope, Decisions, and the in-scope phases' `**Intent:**` and `**Exit evidence:**` are the requirements contract)
 - Implementation: `{PROJECT_PATH}/implementation.md` (the per-phase journal: anchors, execution records, verification evidence)
-- Brief contract: `oat-project-brief/references/brief-contract.md`
+- Brief contract: `oat-project-brief/references/brief-contract.md` (goal: sections 1–11 and section 12)
 
 and append the brief anchor record to every brief code Review Scope:
 
@@ -1470,6 +1523,7 @@ Record this artifact as one append-ordered review event:
 
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
   - Phase-range examples such as `p02-p03` are valid code-review scopes and should be preserved exactly.
+  - Goal integrated reviews: exactly the milestone ID (`m01`) or, for a registered delivery, the delivery ID (`d01`); the ordered phase set lives in `oat_review_phase_ids`, never in the Scope cell (brief contract section 12.6).
 - `Type`: `code` or `artifact`
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/High/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
@@ -1497,6 +1551,14 @@ eight columns.
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
 
+**Goal mode.** Review-provide records the event as `received` and never writes
+`passed`, `delivering`, or any milestone status: `oat-project-review-receive`
+owns the transition to `delivering`. When a pending `oat_goal_recovery` record
+names this scope at stage `reviewing`, advance it to `stage: receiving` and set
+`review_artifact: reviews/{filename}.md` in `state.md`; leave `oat_milestone`,
+`oat_milestone_status`, and the execution pointer unchanged. Step 9.5 then
+commits `state.md` with the review bookkeeping.
+
 ### Step 9.5: Commit Review Bookkeeping Atomically (Required)
 
 **If `INLINE_ONLY=true`:** skip this step — no artifact was written to disk.
@@ -1509,6 +1571,7 @@ After writing the review artifact and applying the Step 9 Reviews-table update, 
 
 - Always include the active review artifact file: `reviews/{filename}.md`
 - Include `plan.md` when Step 9 updated the Reviews table
+- Include `state.md` when Step 9 advanced a goal recovery record (`GOAL_RECOVERY_ADVANCED=true`)
 - Do not write or commit new review artifacts directly into `reviews/archived/`
 - Do not include unrelated implementation/code files in this commit
 
@@ -1533,6 +1596,8 @@ if [ "$PROJECT_SCOPE" = "synced" ]; then
 else
   OWNED_COMMIT_PATHS=("$ACTIVE_REVIEW_PATH")
   [ -f "$PROJECT_PATH/plan.md" ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/plan.md")
+  # goal: Step 9 advanced a pending oat_goal_recovery record
+  [ "${GOAL_RECOVERY_ADVANCED:-false}" = true ] && OWNED_COMMIT_PATHS+=("$PROJECT_PATH/state.md")
   oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-review-provide:1" --message "chore(oat): record {scope} review artifact" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
 fi
 ```

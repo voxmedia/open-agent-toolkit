@@ -41,9 +41,73 @@ record `**Status:** in_progress` with the `**Blocker:**` line, or close it
 `failed` when the attempt is abandoned. Option 3 edits the brief's phases under
 the `plan-and-resume.md` Step 2.2 rules.
 
+### Goal Milestone Closeout
+
+This section applies only when `oat_workflow_mode` is `goal` and the run's
+scope is a milestone or recovery scope (`plan-and-resume.md`, Goal Projects).
+`oat-project-brief/references/brief-contract.md` sections 12.4, 12.5 and 12.8
+own the carrier, ladder and freshness rules; this section states the order.
+Steps 11–16 below are the **terminal** closeout and run for goal only after a
+valid declaration, once every phase in the terminal execution scope is
+accepted.
+
+When every phase-unit in the milestone or recovery scope is accepted (the
+router's `closeout mNN: …` context), and whenever the router routes a
+missing, blocked or stale exit carrier back here, this scoped closeout is the
+recovery owner for that carrier:
+
+1. **Exit gate before the integrated review.** Resolve and run the configured
+   implement exit gate exactly as Step 14 does (`oat gate resolve
+oat-project-implement --project "$PROJECT_PATH" --json`, canonical
+   `oat --json gate review`, receive eligibility, `onFailure`, `maxAttempts`),
+   scoped to the milestone's ordered phase set. The goal ladder exception
+   applies: this gate precedes the integrated delivery review, and queued
+   fixes require it to run again.
+2. **Write the milestone carrier.** Record `oat_milestone_gates[mNN].exit`
+   with the gate approval record core, `resolution` (`configured`, `no_gate`,
+   or `project_disabled`), `subject: { kind: code, scope: [ordered phase
+set] }`, and `freshness: fresh` with `freshness_reason: null` for every
+   carrier it records, `no_gate` and `project_disabled` included. A configured
+   gate keeps the head it actually reviewed as `reviewed_head`; `no_gate` and
+   `project_disabled` record `reviewed_head: null`. A blocked outcome records
+   `status: blocked`, `disposition: null`, and no transition. This carrier is
+   never `oat_implement_exit_gate`.
+3. **Read freshness before any transition.** Run
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`
+   and persist its `exit` result (`source: milestone-carrier`) as the
+   carrier's `freshness` and `freshness_reason`; the command exits 1 while the
+   integrated review is not yet passed, so read only `exit` here. The bounded
+   bookkeeping-successor rule (section 12.8) decides freshness: bookkeeping
+   commits after the reviewed head never force a rerun, and a substantive
+   commit does.
+4. **Transition.** For the active milestone, when the carrier is `allowed` and
+   fresh, write `oat_milestone_status: reviewing` (`implementing → reviewing`);
+   never `delivering`, which belongs to `oat-project-review-receive`. For a
+   recovery scope, advance `oat_goal_recovery.stage` instead: accepted fixes →
+   `exit_gate`, then an allowed, fresh carrier → `reviewing`; the active
+   milestone's fields stay unchanged.
+5. **Hand off.** Commit the carrier and transition as bookkeeping, then
+   report the router's next skill: `oat-project-review-provide` with the
+   explicit `code mNN: <ordered phase ids>` (or `code mNN/dNN: …`) scope.
+
+**Terminal `pr` step.** When the terminal post-implement sequence (Step 15)
+reaches the `pr` step's position, run `oat project closeout-check
+"$PROJECT_PATH" --json`. When delivery coverage holds, record the step complete
+with `satisfied_by: { pr: delivery-coverage }` in the snapshot and run every
+other configured step unchanged; never record it before that position. When an
+accepted phase is uncovered (`phase-uncovered`), the step's target
+`oat-project-pr-final` registers the terminal delivery; other refusals route to
+their `nextOwner.skill`.
+
 ### Step 11: Prepare Final Closeout Baseline
 
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
+
+In goal mode this step is terminal closeout: it starts only after a valid
+declaration (`oat_goal_status: declared_met`) when every phase in the terminal
+execution scope is accepted; a milestone closes through Goal Milestone Closeout
+above instead. The Outcomes audit below is the declaration's
+`oat_goal_outcome_audit`, which implement reads and never writes.
 
 In brief modes this step starts only when every phase-unit in the active scope
 is accepted (`**Status:** completed` under its journal heading), no phase is
@@ -946,6 +1010,9 @@ last phase-unit in document order. The generic sequence normalization, the
 autonomous lifecycle-tail default, the project recap, and the non-lite algorithm
 below then apply unchanged; with no final checkpoint, item 5 of that algorithm
 governs. In v1 the `pr` step keeps its target, `oat-project-pr-final`.
+Goal follows this path at terminal closeout, with the `pr` step satisfied by
+delivery coverage at its position (Goal Milestone Closeout, Terminal `pr`
+step).
 
 Run final verification (Step 12). Final review must be `passed` and the
 configured implementation exit gate in Step 14 must be allowed before any

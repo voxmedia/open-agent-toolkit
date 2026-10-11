@@ -29,7 +29,7 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, or `brief`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`;
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;
@@ -132,10 +132,13 @@ Read each required artifact once at phase start:
   `implementation.md`; and sections 3, 6, 7, and 10 of
   `oat-project-brief/references/brief-contract.md`. Discovery, spec, and design
   are absent by design.
+- `goal`: everything `brief` reads, plus the `## Milestones` table and
+  section 12 of the brief contract. The Phase Scope names the milestone,
+  recovery, or terminal scope the phase belongs to.
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing. In
-`brief` mode there are no planned tasks to extract: extract the phase's Intent,
+`brief` and `goal` modes there are no planned tasks to extract: extract the phase's Intent,
 its Exit evidence as the phase-wide verification, and the Phase Scope's commit
 convention, and follow `## Brief Mode` below.
 
@@ -424,6 +427,25 @@ belongs to a revision phase the root appends.
 the Task column with its terminal status and commit, and add
 `**Phase anchors:** {anchor_base}..{head}` below the header fields.
 
+## Goal Mode
+
+This section applies only when `workflow_mode` is `goal`. Every `## Brief Mode`
+rule applies unchanged, and section 12 of the brief contract wins where this
+section restates it.
+
+- **Scope.** Execute only the dispatched phase. Its milestone, recovery, or
+  terminal scope is context, never permission to touch another milestone's
+  phases.
+- **Root-owned goal records.** Never write `oat_milestone`,
+  `oat_milestone_status`, `oat_goal_status`, `oat_goal_outcome_audit`,
+  `oat_goal_recovery`, `oat_milestone_gates`, `oat_deliveries`, or the
+  `## Milestones` table. Milestone closeout, the exit-gate carrier, recovery
+  stages, delivery registration, and the declaration are root and skill
+  transitions, not phase work.
+- **Recovery phases.** A recovery scope's phase (often a `p-revN` that
+  corrects an older milestone's phase) follows the brief late-fix and revision
+  rules; report its head like any sequential phase.
+
 ## Mode: Implement
 
 ### 1. Verify Phase Base
@@ -562,6 +584,7 @@ After all task commits:
   - `import`: `plan.md` and the imported plan, plus design/spec when present;
   - `brief`: the phase's Intent and Exit evidence plus the brief's Outcomes,
     Constraints and Out of Scope, and Decisions;
+  - `goal`: as `brief`, within the dispatched milestone's scope;
 - confirm no task boundary or dependency was missed; and
 - report Medium/Low concerns without launching a reviewer.
 

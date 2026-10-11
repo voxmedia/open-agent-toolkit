@@ -175,6 +175,16 @@ commit grep above (`oat-project-brief/references/brief-contract.md` section
   or a contradictory ordering stops the PR: route to `oat-project-reconcile`
   and never narrow the range silently.
 
+**Goal mode (`oat_workflow_mode: goal`).** A goal progress PR is a milestone
+delivery, and this skill is its registration owner. The scope is the router's
+`deliver mNN` or `deliver mNN/dNN` context, or a pending `oat_goal_recovery`
+record at stage `delivering`: the milestone's ordered phase set from the shared
+Milestones reader, or a registered delivery's frozen scope. Never derive it from
+a `pNN-pMM` range or commit labels. The Git range for the PR description is the
+set's first anchored base through its last anchored head; disclose phases of
+other milestones that fall inside it. Step 5.5 runs before Step 6 and replaces
+its optional PR creation.
+
 ### Step 2: Load Artifacts (Mode-Aware)
 
 Resolve workflow mode from `state.md` (default `spec-driven`):
@@ -344,6 +354,72 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 - Reviews: `[reviews/]({REPO_WEB}/tree/{BRANCH}/{PROJECT_REL}/reviews)` (fallback: `{PROJECT_PATH}/reviews/`) — include when active `reviews/` is tracked; omit archived review paths and any target that still matches a `localPaths` pattern
 ```
 
+### Step 5.5: Goal Delivery Registration (`goal` only)
+
+`oat-project-brief/references/brief-contract.md` sections 12.5–12.8 govern;
+this step states only the order. It never writes review dispositions, exit
+gate outcomes, or `oat_milestone` itself, and it never registers a delivery
+without passing evidence.
+
+1. **Refresh.** When `oat_deliveries` has entries, run
+   `oat project delivery refresh --project "$PROJECT_PATH" --json` and commit
+   the persisted observations as bookkeeping.
+2. **Check.** Run
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`.
+   Register only on `status: ok` (exit 0): a passed, fresh integrated review
+   and an allowed, fresh exit carrier (`exit.source: milestone-carrier`).
+3. **Stale evidence stops before registration.** When refresh or check
+   reports the integrated review or the `exit` carrier not fresh, choose the
+   recovery stage by the section 12.5 missing-evidence order (a missing,
+   blocked or stale exit carrier → `exit_gate`; otherwise a missing or stale
+   integrated review → `reviewing`) and:
+   - **active milestone's delivery:** write `oat_milestone_status: reviewing`
+     and `oat_goal_recovery: { milestone, delivery_id, phase_ids, stage,
+review_artifact: null }`;
+   - **older milestone's delivery:** write only that targeted
+     `oat_goal_recovery` record; the active milestone's `oat_milestone`,
+     `oat_milestone_status`, `oat_current_task_id`, and `oat_current_task`
+     stay unchanged.
+
+   Commit and stop, reporting the stage owner. Never register stale evidence.
+
+4. **Idempotent registration.** For a new delivery, allocate the next unused
+   `dNN` and write its entry with `status: registering`: `milestone`, the
+   frozen `scope` (the ordered set), the agreed `endpoint` from the brief's
+   Delivery endpoint and authority, `kind: pr`, the persisted `lookup` keys
+   (`repository` from `gh repo view --json nameWithOwner`, `head_branch`,
+   `head_sha_at_registration` from `git rev-parse HEAD`), the
+   `integrated_review` (`artifact`, `scope`, `bound_revisions`,
+   `disposition: passed`) and the accepted `exit_gate` copied from the
+   milestone's current exit carrier, so the gate result is captured with the
+   delivery evidence. A replacement writes `covers_scope_of: <predecessor>`
+   and the predecessor's `superseded_by: <dNN>` in the same write; an additive
+   correction writes `corrects_delivery_id` instead. Commit this registration
+   record before creating anything.
+5. **Create or attach.** Generate the PR description (Steps 2–5), push the
+   branch, and create the pull request with the Step 6 commands. On resume
+   with a `registering` entry, first run
+   `gh pr list --repo <repository> --head <head_branch> --state all --json url,headRefOid`:
+   exactly one match is attached without creating a duplicate; zero matches
+   create once; more than one stops and routes to `oat-project-reconcile`.
+6. **Record.** Write the member (`url`, `base`, `reviewed_head`),
+   `status: open`, `oat_milestone_status: delivered` for the active milestone,
+   `oat_pr_status: open`, `oat_pr_url`, and `oat_phase_status: pr_open`;
+   commit this registration bookkeeping.
+7. **Log.** After that registration commit, append exactly one structural
+   entry and commit it in this same step:
+   `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-progress --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered <dNN> for <mNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.
+   Never pre-check log configuration: the helper no-ops when logging is
+   disabled.
+8. **Recovery targets.** For a pending `oat_goal_recovery` at stage
+   `delivering`, push the targeted delivery's fixes to its existing member,
+   run steps 1–2 for that `dNN`, and on `status: ok` clear the record
+   (`oat_goal_recovery: null`); the active milestone stays untouched.
+
+`delivered` means registered, open and review-ready. Activation of the next
+milestone belongs to `oat-project-goal` once the delivery reaches its agreed
+endpoint.
+
 ### Step 6: Optional - Open PR
 
 For a synced project whose user chooses to open the PR, use this ordered flow:
@@ -414,4 +490,5 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 - Residual active review artifacts are archived before PR generation continues
 - Scope determined (phase or explicit range)
 - PR description artifact written to `{PROJECT_PATH}/pr/`
+- Goal mode: the delivery was registered only on a deliverable `delivery check`, idempotently, with its exit-gate result captured and one structural log entry per registration
 - User has clear next step to open PR (manual or gh)

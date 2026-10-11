@@ -238,7 +238,7 @@ ACTIVE_PROJECT_PR_STATUS=""
 if [ -n "$ACTIVE_PROJECT" ] && [ -f "$ACTIVE_PROJECT/state.md" ]; then
   ACTIVE_PROJECT_VALID="true"
   # Read state.md frontmatter — extract:
-  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick", "import", "lite", "brief")
+  #   oat_workflow_mode → ACTIVE_PROJECT_MODE        (e.g., "spec-driven", "quick", "import", "lite", "brief", "goal")
   #   oat_phase         → ACTIVE_PROJECT_PHASE       (e.g., "discovery", "design", "plan", "implement")
   #   oat_pr_status     → ACTIVE_PROJECT_PR_STATUS   (e.g., "none", "open", "closed")
 fi
@@ -402,7 +402,7 @@ The payload is staged in memory only — it is not persisted between conversatio
   - Extend existing idea → confirm which idea (slug or path).
   - Doc-to-path → confirm path.
   - Promote to new project → confirm slug + workflow mode (`lite`, `brief`, `quick`, or `spec-driven`, with skill proposing a default based on the chosen direction and scope signals).
-  - Active-project fold-back → for lite and brief confirm `plan.md`; for import confirm `design.md` or `discovery.md` when present, else `plan.md`; otherwise confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
+  - Active-project fold-back → for lite, brief, and goal confirm `plan.md`; for import confirm `design.md` or `discovery.md` when present, else `plan.md`; otherwise confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
   - Active-project reference file → confirm filename (default `YYYY-MM-DD-<topic>.md`).
 
 - **`none`** (currently `Inline only` and `Summarize idea directly`): no per-field confirmation at this layer. For `Inline only`, write the closing summary directly. For `Summarize idea directly`, hand off — the downstream `oat-idea-summarize` surfaces its own summary for accept/refine review.
@@ -608,12 +608,13 @@ The 3-way router fires once per session. After convergence resumes (e.g., the us
 
 #### 9i — Active project: fold-back to upstream artifact
 
-Uniform across spec-driven, quick, import, lite, and brief modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
+Uniform across spec-driven, quick, import, lite, brief, and goal modes. Differs only in which plan-authoring skill the handoff prompt addresses (resolved by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATUS`).
 
 **Step 1 — Pick upstream artifact.** Prefer the most-specific existing one:
 
 - For lite, always select `<ACTIVE_PROJECT>/plan.md`. Append `## Brainstorming Update` immediately above `## Phase 1`; lite has no discovery or design artifact.
 - For brief, always select `<ACTIVE_PROJECT>/plan.md` (the Project Brief). Append `## Brainstorming Update` immediately above the first `## Phase` heading; brief has no discovery or design artifact, and the receiving skill folds the update into the brief's sections.
+- For goal, select `<ACTIVE_PROJECT>/plan.md` exactly as for brief; the update never edits the `## Milestones` table, which the receiving skill amends.
 - For import, use `design.md` or `discovery.md` when present (the rules below); otherwise `<ACTIVE_PROJECT>/plan.md`, because the import scaffold has neither.
 - `<ACTIVE_PROJECT>/design.md` if it exists (any mode — quick lightweight design counts).
 - Otherwise `<ACTIVE_PROJECT>/discovery.md`.
@@ -686,7 +687,7 @@ beside another dirty project file must take Step 4.
 
    For non-synced projects, use the explicit `--` filename form. **Never `git add -A`. Never directory globs.** Other working-tree paths are not touched by this commit. For synced projects, `FOLD_BACK_COMMIT_SHA` comes from the push JSON rather than the parent branch.
 
-3. `<artifact-basename>` is `plan.md` for lite and brief (and for import when it has no `design.md` or `discovery.md`), otherwise `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
+3. `<artifact-basename>` is `plan.md` for lite, brief, and goal (and for import when it has no `design.md` or `discovery.md`), otherwise `design.md` or `discovery.md` depending on which was chosen. `<project-name>` is the active project's slug.
 
 4. If the guarded persistence succeeded → proceed to step 5 (handoff prompt).
 
@@ -763,6 +764,7 @@ Resolve the handoff target by `ACTIVE_PROJECT_MODE` and `ACTIVE_PROJECT_PR_STATU
 | lite        | none / closed                | `oat-project-lite`        |
 | import      | none / closed                | `oat-project-import-plan` |
 | brief       | none / closed                | `oat-project-brief`       |
+| goal        | none / closed                | `oat-project-goal`        |
 | any mode    | open (`oat_pr_status: open`) | `oat-project-revise`      |
 
 For brief, `oat-project-brief` is the target while the brief is still in
@@ -774,6 +776,20 @@ Decision, the authority, the endpoint, or the agreed Approach. For brief, the
 prompt's last two sentences read "Integrate the new content into the brief as
 new or amended phases. Don't refresh the brief — preserve the review table and
 the journal." instead.
+
+For goal, `oat-project-goal` is the target: it folds the update into the
+brief as an amendment through its review ladder, during authoring or at the
+next re-alignment (`delivered`). While a milestone is active, an update that
+stays inside that milestone's approved Outcomes and Approach goes to
+`oat-project-implement` instead, which adds the new phases to the active
+milestone's `## Milestones` row; anything else waits for re-alignment. The
+prompt's last two sentences read as for brief.
+
+With an open PR in goal mode the open PR is a registered delivery, and
+`oat-project-revise` requires an explicit target. Name it in the prompt: add
+"Target: <mNN>/<dNN> (the open delivery)." after its first sentence, with the
+milestone and delivery IDs read from the `oat_deliveries` entry whose member
+URL is `oat_pr_url`.
 
 Print the handoff prompt template, substituting `<skill-name>`, `<artifact>`, `<hash>`, and `<subject>` from the actual branch commit or synced push receipt:
 
@@ -849,6 +865,6 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` for quick/spec-driven, `plan.md` for lite, and a `references/research/` note for brief — never `design.md` — and does not auto-chain into the next phase.
 - ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
 - ✅ Fold-back persistence safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + exact-path branch commit for shared/local or validated `oat project push --json` for synced; dirty → three-option picker (persist-prior-first / mix / abort-to-reference-file); handoff prompt prints only after the scope-appropriate receipt succeeds.
-- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-import-plan` (import, no/closed PR) / `oat-project-brief` or `oat-project-implement` (brief, no/closed PR, by phase) / `oat-project-revise` (any mode, open PR).
+- ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-import-plan` (import, no/closed PR) / `oat-project-brief` or `oat-project-implement` (brief, no/closed PR, by phase) / `oat-project-goal` or `oat-project-implement` (goal, no/closed PR, by milestone state) / `oat-project-revise` (any mode, open PR; goal names the target delivery).
 - ✅ Active-project 3-way router (related / independent / supplementary) fires before the standard pack-filtered picker when both `WORKFLOWS_INSTALLED == "true"` and `ACTIVE_PROJECT_VALID == "true"`.
 - ✅ Skill validates cleanly under `pnpm oat:validate-skills` (frontmatter contract, allowed-tools, mode-assertion structure).

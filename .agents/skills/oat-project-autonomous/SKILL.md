@@ -227,6 +227,7 @@ Select the earliest incomplete lifecycle owner:
 | No project yet                                            | Continue to Step 2, then invoke the selected creation skill |
 | Lite plan incomplete                                      | `oat-project-lite`                                          |
 | Brief not yet reviewed and approved                       | `oat-project-brief`                                         |
+| Existing goal project (`oat_workflow_mode: goal`)         | Stop at a product-judgment boundary: goal is not autonomous |
 | Quick-mode discovery, optional design, or plan incomplete | `oat-project-quick-start`                                   |
 | Spec-driven discovery incomplete                          | `oat-project-discover`                                      |
 | Spec-driven design/spec incomplete                        | `oat-project-design`                                        |
@@ -303,8 +304,13 @@ For a new goal, choose mode as a rigor selector:
   sequential implementation phase.
 - **Brief:** use when the goal is one delivery whose outcome and design can be
   settled from evidence and recorded in one reviewed Project Brief, with
-  phases of intent and exit evidence instead of a pre-approved task plan. Goal
-  mode is excluded until it is registered.
+  phases of intent and exit evidence instead of a pre-approved task plan.
+- **Goal is excluded.** Never select `goal` for a new project, even when the
+  outcome needs several deliveries: each milestone's approval, re-alignment
+  and the terminal declaration need the user (`GOAL-11` through `GOAL-13` in
+  the autonomy contract), so an autonomous run cannot carry a goal end to end.
+  Choose brief for the first delivery, or stop at a product-judgment boundary
+  when one delivery cannot honestly represent the outcome.
 
 Base the choice on uncertainty, integration risk, architecture decisions,
 reversibility, and review needs—not task count. Record the chosen mode and

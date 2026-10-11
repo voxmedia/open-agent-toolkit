@@ -50,10 +50,10 @@ You will be given a "Review Scope" block including:
 - **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
 - **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **analysis_artifact**: For `type: analysis`, path to the severity-rated analysis artifact to fact-check.
-- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` | `brief` (default to `spec-driven` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` | `brief` | `goal` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope). In `brief` mode these are the execution-record IDs under the phases in scope; they label commits and never narrow the range.
-- **Brief anchor record**: For `brief` code reviews, the caller supplies `oat_review_requested_scope`, `oat_review_phase_ids` (ordered), `oat_review_base_sha`, `oat_review_scope_source` (`anchors` | `merge-base-range` | `explicit` | `merge-base` | `narrowed`), and, when they apply, `oat_review_fallback_reason`, `oat_review_integration_commits`, and `oat_review_narrowed_from`. Copy them verbatim into artifact frontmatter (Step 8).
+- **Brief anchor record**: For `brief` code reviews, the caller supplies `oat_review_requested_scope`, `oat_review_phase_ids` (ordered), `oat_review_base_sha`, `oat_review_scope_source` (`anchors` | `merge-base-range` | `explicit` | `merge-base` | `narrowed`), and, when they apply, `oat_review_fallback_reason`, `oat_review_integration_commits`, and `oat_review_narrowed_from`. Copy them verbatim into artifact frontmatter (Step 8). In `goal` mode the same record applies; for an integrated milestone or delivery review `oat_review_requested_scope` is the milestone or delivery ID (`mNN` or `mNN/dNN`) and `oat_review_phase_ids` is the explicit ordered phase set.
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
 - **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
 - **Code-review provenance**: For artifact-mode code reviews, resolve the authoritative range head with `git rev-parse <authoritative-range-head>^{commit}` and record the resulting full 40-character commit SHA as `oat_review_head_sha`. If the review is narrowed, also record the resolved range, prior artifact path, and prior reviewed head supplied by the caller.
@@ -131,6 +131,7 @@ Use workflow mode to determine required evidence:
 - **import**: `plan.md` is expected (`references/imported-plan.md` preferred; `spec.md`/`design.md` optional).
 - **lite**: `plan.md` and `implementation.md` are expected; discovery, spec, and design are absent by design.
 - **brief**: `plan.md` (a Project Brief) and `implementation.md` (the per-phase journal) are expected; discovery, spec, and design are absent by design. `oat-project-brief/references/brief-contract.md` defines the brief sections, phase grammar, journal markers, and anchor rules, and the caller supplies it with the Review Scope.
+- **goal**: as **brief**, plus the canonical `## Milestones` table in `plan.md` and the goal state in `state.md`; section 12 of the brief contract defines milestones, explicit review scopes, the delivery registry, and the terminal audit.
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.
@@ -166,6 +167,8 @@ Only review files/changes within the provided scope.
 
 In `brief` mode the authoritative code-review range comes from the recorded phase anchors: `Base..Head` for one phase, or the first selected base through the last selected phase's head for a range or `final`. Commit-message `(pNN-` matches only label which commits belong to which phase and never narrow the range. When `oat_review_scope_source` is `merge-base-range`, review the entire supplied range. If an anchor is missing, does not exist, or contradicts the ordering rules in brief contract section 10, record a workflow contract gap rather than narrowing silently. Treat the listed integration commits as inside the range.
 
+In `goal` mode an integrated milestone or delivery review judges exactly the explicit ordered phase set in `oat_review_phase_ids`, never a first–last expansion. The Git range may be wider: commits of phases outside the set that the Review Scope lists under `Intervening changes:` are context, not scope, so do not record findings against them and do not treat them as covered. A parallel group member's pre-fan-in review is member evidence only; integrated delivery evidence comes from the integration heads.
+
 Do NOT:
 
 - Review unrelated work outside the scope
@@ -183,6 +186,7 @@ For each requirement in scope, use the best available requirement source by mode
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
 - `lite`: the requirements contract in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also use Product Behavior and/or Technical Design when selected by the recorded `minimal`, `product`, `technical`, or `both` content shape.
 - `brief`: each phase in scope's `**Intent:**` and `**Exit evidence:**` lines plus the brief's Outcomes, Constraints and Out of Scope, and Decisions. A `final` review also audits every numbered Outcome against its observed evidence in the journal; an Outcome with neither evidence nor a recorded deferral is a finding. Execution records are evidence of committed work, not requirements.
+- `goal`: as `brief`, scoped to the milestone or delivery set under review. A plan (artifact) review of a goal brief or amendment also checks the `## Milestones` table against brief contract section 12.1: every executable phase in exactly one milestone, phase IDs never reused, and no frozen delivery phase moved or removed.
 
 Then verify:
 
@@ -290,6 +294,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and has executable verification intent. Require a proportionate implementation and proof strategy only when the applicable workflow plan contract declares it; otherwise review the task's existing verification commands and evidence.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
+   - **Goal plan review** follows the brief plan review below, except that `## Milestones` holds the canonical table (brief contract section 12.1) instead of being empty, and an amendment review judges the named milestone's appended phases and any changed Outcomes, Decisions, or authority.
    - **Brief plan review** replaces the task-oriented items above with the brief section list: Goal; numbered Outcomes, each naming its intended evidence; Approach (optional `### Design`); Constraints and Out of Scope; Decisions with rationale and rejected alternatives; Known Unknowns, each with the phase that settles it; Delivery endpoint and authority; an empty `## Milestones` section; `## Phase pNN:` blocks with non-empty Intent and Exit evidence, a `**Provisional:**` value of `yes` or `no`, and a concrete first phase; Parallelism; Reviews (preserved rows); Implementation Complete; References. Stable, never-reused phase IDs in document order replace stable task IDs. There is no task requirement; `### Task` headings in a brief are a finding, because execution records belong in the journal. Check that every Outcome is reachable through some phase's Exit evidence and that any declared parallel group passes the independence test in brief contract section 6.
 
 6. **Necessary**

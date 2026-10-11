@@ -228,6 +228,13 @@ configured, autonomous, or lite closeout cannot complete until its
 `oat_post_implement_sequence` snapshot exists and every stored step and the
 final sign-off are recorded. A project whose implementation finished before
 closeout snapshots existed recovers the same way; there is no override.
+
+For a goal project (`oat_workflow_mode: goal`) the boundary also requires a
+valid declaration, an exhaustive outcome audit and delivery coverage
+(`oat-project-brief/references/brief-contract.md` section 12.9); a refusal
+routes to its `nextOwner.skill` (`oat-project-goal`, `oat-project-implement`,
+a review owner, `oat-project-pr-progress`, or `oat-project-pr-final`) rather
+than to implement alone.
 `oat project complete-state` refuses the same state in Step 5.
 
 The shared and synced archive resume branches above continue at Step 12 or
@@ -291,6 +298,7 @@ PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>
 - **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
 - The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
+- **Goal mode (`oat_workflow_mode: goal`):** the completion decision consumes the validated goal coverage from Step 1.5. When the declaration and its exhaustive audit are valid, every terminal delivery is merged (observed at its agreed endpoint), and the snapshot's `pr` step is satisfied by coverage (`satisfied_by: { pr: delivery-coverage }`), set `SHOULD_OPEN_PR="false"`, skip the Open PR question, call no `gh pr create` in Step 11, and print `PR on complete: satisfied by goal delivery coverage` — even when `PR_ON_COMPLETE` is `true`. Genuinely uncovered delivery work never reaches this step: Step 1.5 refuses it and routes to the goal registration owner (`oat-project-pr-final` for terminal registration, `oat-project-pr-progress` for a milestone delivery). A separately intended bookkeeping PR for the completion commits is not a goal delivery: open one only when the user explicitly asks for it in this run, never because of `PR_ON_COMPLETE`, and never register it in `oat_deliveries` or count it toward coverage. Every other mode is unchanged.
 
 Select archive prompt participation before assembling the batched prompt:
 

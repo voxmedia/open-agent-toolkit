@@ -216,6 +216,30 @@ Add a pending `p-rev{N}` `code` row to the brief's `## Reviews` table. The
 executor opens `prev{N}-tNN` execution records in `implementation.md` when the
 work starts and commits them as `fix(prev{N}-tNN): …`; revise writes none.
 
+**Goal mode (`oat_workflow_mode: goal`):** the brief-mode rules apply, with
+`oat-project-brief/references/brief-contract.md` section 12.6 winning. Inline
+feedback requires an explicit target before any write: a milestone or
+delivery identity (`mNN` or `mNN/dNN`), named by the user or by the open
+delivery the feedback is about. Ask for it when it is not stated; never infer
+it from the open PR's commit labels or a first–last phase range.
+
+- **Phase-only `p-rev{N}`.** The revision phase is a phase-unit with no
+  execution records, as in brief mode, and it joins the **target** milestone:
+  append `p-rev{N}` to that milestone's `## Milestones` row, so its membership
+  is exact. A registered delivery's frozen scope is never edited.
+- **Invalidate the target's evidence.** Write
+  `oat_milestone_gates[mNN].exit.freshness: stale` with
+  `freshness_reason: "revision p-rev{N} (inline feedback)"`, and for a
+  registered target delivery its `integrated_review.disposition: stale`.
+- **Active target** (the milestone is `oat_milestone`): write the ordinary
+  pointer (4e, 4f) and `oat_milestone_status: implementing`.
+- **Older target** (an earlier milestone or its delivery): create or advance
+  `oat_goal_recovery: { milestone, delivery_id, phase_ids: [the target's
+ordered set plus p-rev{N}], stage: implementing, review_artifact: null }`
+  instead, and skip the 4e/4f pointer and status writes: `oat_milestone`,
+  `oat_milestone_status`, `oat_current_task_id`, and `oat_current_task` stay
+  unchanged.
+
 **Task naming:** Prefix with `(revision)` — following the `(review)` convention in review-receive.
 
 **Task IDs:** `prev{N}-t{NN}` format (e.g., `prev1-t01`, `prev1-t02`).
