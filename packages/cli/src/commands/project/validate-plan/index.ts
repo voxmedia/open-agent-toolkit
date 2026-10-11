@@ -7,14 +7,26 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import {
+  WORKFLOW_MODES,
+  type WorkflowMode,
+} from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 
 import {
-  extractPhaseIdsFromPlan,
+  extractPhaseIds,
   parseFrontmatterFromContent,
-  validateLitePlan,
+  resolvePlanProfile,
   validateParallelGroups,
+  validatePlanForProfile,
 } from './validate-plan';
+
+function toWorkflowMode(value: unknown): WorkflowMode | null {
+  return typeof value === 'string' &&
+    (WORKFLOW_MODES as readonly string[]).includes(value)
+    ? (value as WorkflowMode)
+    : null;
+}
 
 interface ValidatePlanCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -77,30 +89,54 @@ export function createProjectValidatePlanCommand(
       }
 
       const groups = frontmatterResult.data['oat_plan_parallel_groups'];
-      const phaseIds = extractPhaseIdsFromPlan(content);
-      let workflowMode: string | null = null;
+      let stateFrontmatter: Record<string, unknown> | null = null;
       try {
         const stateContent = readFileSync(
           join(options.projectPath, 'state.md'),
           'utf-8',
         );
-        const stateFrontmatter = parseFrontmatterFromContent(stateContent);
-        const mode =
-          stateFrontmatter.kind === 'invalid'
-            ? null
-            : stateFrontmatter.data['oat_workflow_mode'];
-        workflowMode = typeof mode === 'string' ? mode : null;
+        const parsedState = parseFrontmatterFromContent(stateContent);
+        stateFrontmatter =
+          parsedState.kind === 'invalid' ? null : parsedState.data;
       } catch {
-        workflowMode = null;
+        stateFrontmatter = null;
+      }
+      const workflowMode = toWorkflowMode(
+        stateFrontmatter?.['oat_workflow_mode'],
+      );
+      const profile = resolvePlanProfile(workflowMode);
+      const phaseIds = extractPhaseIds(content, profile);
+
+      const issues = validatePlanForProfile(content, {
+        profile,
+        workflowMode,
+        stateFrontmatter,
+      });
+      const profileErrors = issues
+        .filter((issue) => issue.severity === 'error')
+        .map((issue) => issue.message);
+      const warnings = issues
+        .filter((issue) => issue.severity === 'warning')
+        .map((issue) => issue.message);
+      const warningPayload = warnings.length > 0 ? { warnings } : {};
+      if (!context.json) {
+        for (const warning of warnings) {
+          context.logger.warn(warning);
+        }
       }
 
-      const liteResult = validateLitePlan(content, workflowMode);
-      if (!liteResult.ok) {
+      if (profileErrors.length > 0) {
         if (context.json) {
-          context.logger.json({ valid: false, errors: [liteResult.message] });
+          context.logger.json({
+            valid: false,
+            errors: profileErrors,
+            ...warningPayload,
+          });
         } else {
           context.logger.error('Plan validation failed:');
-          context.logger.error(`  - ${liteResult.message}`);
+          for (const err of profileErrors) {
+            context.logger.error(`  - ${err}`);
+          }
         }
         process.exitCode = 1;
         return;
@@ -110,7 +146,7 @@ export function createProjectValidatePlanCommand(
 
       if (result.valid) {
         if (context.json) {
-          context.logger.json({ valid: true });
+          context.logger.json({ valid: true, ...warningPayload });
         } else {
           context.logger.success('Plan validation passed.');
         }
@@ -119,7 +155,11 @@ export function createProjectValidatePlanCommand(
       }
 
       if (context.json) {
-        context.logger.json({ valid: false, errors: result.errors });
+        context.logger.json({
+          valid: false,
+          errors: result.errors,
+          ...warningPayload,
+        });
       } else {
         context.logger.error('Plan validation failed:');
         for (const err of result.errors) {

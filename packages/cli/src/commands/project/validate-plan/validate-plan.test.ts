@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createProjectValidatePlanCommand } from './index';
 import {
+  extractPhaseIds,
   extractPhaseIdsFromPlan,
   parseFrontmatterFromContent,
   validateLitePlan,
@@ -220,5 +221,19 @@ describe('extractPhaseIdsFromPlan', () => {
 
   it('returns empty array for a plan with no tasks', () => {
     expect(extractPhaseIdsFromPlan('just some text')).toEqual([]);
+  });
+
+  it('delegates to the task profile, ignoring taskless phase headings', () => {
+    const plan = [
+      '## Phase p03: Taskless',
+      '## Phase p02: Second',
+      '### Task p02-t01: B',
+      '## Phase p01: First',
+      '### Task p01-t01: A',
+    ].join('\n');
+    expect(extractPhaseIdsFromPlan(plan)).toEqual(['p01', 'p02']);
+    expect(extractPhaseIdsFromPlan(plan)).toEqual(
+      extractPhaseIds(plan, 'task'),
+    );
   });
 });

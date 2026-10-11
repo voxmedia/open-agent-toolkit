@@ -257,17 +257,17 @@ function hasAbsentOrFalseTemplate(frontmatter: string[]): boolean {
 }
 
 /**
- * Drop fence lines, fenced content, and indented code, leaving the lines that
- * are the plan's record. CommonMark fences close only on a bare run of their
+ * For each line, whether it is a record line: fence lines, fenced content and
+ * indented code are not. CommonMark fences close only on a bare run of their
  * own marker, at least as long as the one that opened them, so an example
  * nested inside another fence stays an example.
  *
- * Also used by the phase-unit progress parser (`tasks.ts`), so brief-mode
- * phase headings and markers share this exact fence and indented-code
- * exclusion.
+ * This is the single fence and indented-code exclusion. It preserves line
+ * indices for callers that edit by position (the CLI's brief plan profile and
+ * brief → quick promotion); `readRecordLines` is the filtered view of it.
  */
-export function readRecordLines(lines: string[]): string[] {
-  const record: string[] = [];
+export function recordLineMask(lines: readonly string[]): boolean[] {
+  const mask: boolean[] = [];
   let fenceMarker: string | null = null;
   let fenceLength = 0;
 
@@ -296,21 +296,27 @@ export function readRecordLines(lines: string[]): string[] {
           fenceLength = 0;
         }
       }
+      mask.push(false);
       continue;
     }
 
-    if (fenceMarker != null) {
-      continue;
-    }
-
-    if (columns >= INDENTED_CODE_COLUMNS) {
-      continue;
-    }
-
-    record.push(line);
+    mask.push(fenceMarker == null && columns < INDENTED_CODE_COLUMNS);
   }
 
-  return record;
+  return mask;
+}
+
+/**
+ * Drop fence lines, fenced content, and indented code, leaving the lines that
+ * are the plan's record (the filtered view of `recordLineMask`).
+ *
+ * Also used by the phase-unit progress parser (`tasks.ts`), so brief-mode
+ * phase headings and markers share this exact fence and indented-code
+ * exclusion.
+ */
+export function readRecordLines(lines: string[]): string[] {
+  const mask = recordLineMask(lines);
+  return lines.filter((_, index) => mask[index]);
 }
 
 function isBlank(value: string): boolean {
