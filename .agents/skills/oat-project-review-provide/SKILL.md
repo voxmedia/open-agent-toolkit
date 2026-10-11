@@ -361,7 +361,8 @@ Resolution order for brief code reviews:
    `<sha1>..<sha2>` range skips this step; record
    `oat_review_scope_source: explicit`, the range base as
    `oat_review_base_sha`, and as `oat_review_phase_ids` the phases whose
-   `(pNN-` or `(p-revN-` commit labels appear in the range (labels only).
+   `(pNN-` or `(prevN-` commit labels appear in the range (labels only),
+   listing a `prevN` label as its phase ID `p-revN`.
 2. **Guarded re-review narrowing** (Step 3a) — unchanged in its guards, with
    the brief inputs described after the script below.
 3. **Anchor resolution** for a nominal `pNN`, `p-revN`, `pNN-pMM`, or `final`
@@ -528,7 +529,8 @@ Act on the verdict:
 - `fallback`: the range is the entire merge-base range `MERGE_BASE..HEAD`.
   On a `manual` invocation, show it and ask the user to confirm it; `auto` and
   `gate` invocations print it and continue. Commit
-  matches by `(pNN-` label which commits belong to which phase and never
+  matches by `(pNN-` or `(prevN-` (phase `p-revN`) label which commits belong
+  to which phase and never
   narrow the range. Record `oat_review_scope_source: merge-base-range` and
   `oat_review_fallback_reason: missing-anchors`.
 - `reconcile`: stop. Print
@@ -564,6 +566,17 @@ member's worktree, with `oat_review_requested_scope: pNN`,
 failure routes to `oat-project-reconcile`), use the supplied range without
 running the resolver, and never record it as `explicit`. The fan-in
 `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and `final` scopes.
+The resolver verifies only the shared fork base and that member heads advance
+in document order; it does not enforce that a member head is a merge commit,
+because Parallel Group Execution step 7 may integrate a member by cherry-pick.
+
+A single group member reviewed after fan-in (`pNN` naming one member) resolves
+to `fork..<that member's integration head>`. For every member after the first
+in document order, that range also carries the earlier siblings' integration
+commits and their phase commits. Prefer the group's `pNN-pMM` run, or the
+pre-fan-in member range above, for that case. When a single member is
+requested, list its sibling phases in the Review Scope as context so the
+reviewer can attribute the sibling commits inside the range.
 
 **Late-fix rule.** A review-fix commit may advance a phase's `**Head:**`, base
 unchanged, only while no later phase in document order has a `**Base:**`. Once
