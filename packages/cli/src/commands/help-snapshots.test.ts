@@ -1176,6 +1176,7 @@ describe('help output snapshots', () => {
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        delivery                                     Observe goal delivery registry members and check delivery evidence freshness
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
@@ -1302,6 +1303,91 @@ describe('help output snapshots', () => {
         --json         Output a single JSON document
         --verbose      Enable verbose debug output
         --cwd <path>   Override working directory
+      "
+    `);
+  });
+
+  it('project delivery --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery [options] [command]
+
+      Observe goal delivery registry members and check delivery evidence freshness
+
+      Options:
+        -h, --help         display help for command
+
+      Global Options:
+        -V, --version      output the version number
+        --json             Output a single JSON document
+        --verbose          Enable verbose debug output
+        --cwd <path>       Override working directory
+
+      Commands:
+        refresh [options]  Observe registered goal delivery members with gh and
+                           persist observations, endpoint attainment and derived
+                           staleness in state.md
+        check [options]    Report integrated-review and exit-carrier freshness for a
+                           goal milestone or delivery under the bookkeeping-successor
+                           contract (read-only)
+        help [command]     display help for command
+      "
+    `);
+  });
+
+  it('project delivery refresh --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+      'refresh',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery refresh [options]
+
+      Observe registered goal delivery members with gh and persist observations,
+      endpoint attainment and derived staleness in state.md
+
+      Options:
+        --project <path>  Goal project path
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
+      "
+    `);
+  });
+
+  it('project delivery check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+      'check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery check [options]
+
+      Report integrated-review and exit-carrier freshness for a goal milestone or
+      delivery under the bookkeeping-successor contract (read-only)
+
+      Options:
+        --project <path>  Goal project path
+        --subject <id>    Milestone (mNN) or registered delivery (dNN) to evaluate
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
       "
     `);
   });
