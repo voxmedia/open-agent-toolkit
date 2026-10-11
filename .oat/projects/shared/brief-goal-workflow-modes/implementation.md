@@ -691,8 +691,12 @@ oat_generated: false
 
 ## Phase 10: Goal CLI: validation, delivery registry, refresh and closeout (v1.5)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** 0cc095c5ae394a782efcec066880375f6725ddd1
+**Head:** -
+**Executor:** phase-implementer:impl-p10-7ff59906 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p10-t01: Goal validation profile
 
@@ -894,6 +898,12 @@ _- Outstanding Items_
 - Launch status: planned (base 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5, the plan-gate closeout; the dispatch-plan commit sits between base and the first task commit; p09-t01..t02 in the root checkout against design rev 4.0 / plan rev 5)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head 17a996a2e; commits ab17cbd35, 17a996a2e; concerns: two widened edits (router.ts one line in t01; `planParallelGroups` in t02), four design-gap decisions (table grammar, extracted goal-only, approval = plan complete, freshness null fails) flagged for review; parser drops a delivery without `delivery_id` and reads an unparseable recovery as null (p10 validation)
 - Review round 1 (rev-p09-6d0ca3c4, Fable 5.1 high at the frontier cap): 0/1/2/3; fix continuation `cont-brief-goal-workflow-modes-p09-fix-1` → 611596345; round 2 (0/0/0/0) passed; phase p09 closed at 611596345
+
+#### Phase p10 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p10-7ff59906` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base 0cc095c5ae394a782efcec066880375f6725ddd1, p09 closeout; the dispatch-plan commit sits between base and the first task commit; p10-t01..t04 in the root checkout; disk under 1 GB free with a 700 MB stop rule in the brief)
 
 <!-- orchestration-runs-end -->
 
