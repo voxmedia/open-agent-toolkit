@@ -1184,7 +1184,7 @@ describe('generateStateDashboard brief routes', () => {
     expect(complete.dashboard.recommendedStep).toBe('oat-project-implement');
   });
 
-  it('shows the brief mode row, help line and router-authority note', async () => {
+  it('shows the brief mode row and help line without the router-authority note while planning', async () => {
     const { markdown } = await briefFixture(
       { oat_phase: 'plan', oat_phase_status: 'in_progress' },
       TIER_2_PLAN,
@@ -1194,9 +1194,9 @@ describe('generateStateDashboard brief routes', () => {
     expect(markdown).toContain(
       '- `oat-project-brief` - Create a brief workflow project',
     );
-    expect(markdown).toContain(
-      'Brief projects count progress in phase-units, which this dashboard does not read',
-    );
+    // The note explains an implement-phase guard a planning brief cannot
+    // reach yet, so it is printed only in the implement phase.
+    expect(markdown).not.toContain('phase-units');
   });
 
   it('defers the brief-unit guard to the router at implement:complete', async () => {
@@ -1227,6 +1227,9 @@ describe('generateStateDashboard brief routes', () => {
       reason: 'Incomplete phase-units remain in the active scope',
     });
     expect(dashboard.recommendedStep).not.toBe(recommendation.skill);
+    expect(markdown).toContain(
+      'Brief projects count progress in phase-units, which this dashboard does not read',
+    );
     expect(markdown).toContain('`oat project status`');
     expect(markdown).toContain('brief-unit guard');
   });

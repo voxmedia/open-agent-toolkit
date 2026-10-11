@@ -388,9 +388,10 @@ function isBriefWorkflow(workflowMode: string): boolean {
 }
 
 /**
- * Printed for brief projects. The dashboard reads `state.md` frontmatter only
- * and never phase-unit progress, so it cannot apply the router's brief-unit
- * guard at `implement:complete`/`pr_open`.
+ * Printed for brief projects in the implement phase, where the router's
+ * brief-unit guard applies. The dashboard reads `state.md` frontmatter only
+ * and never phase-unit progress, so it cannot apply that guard at
+ * `implement:complete`/`pr_open`.
  */
 const BRIEF_ROUTER_AUTHORITY_NOTE =
   '> Brief projects count progress in phase-units, which this dashboard does not read. ' +
@@ -820,6 +821,7 @@ function buildDashboardMarkdown(
   if (
     project.status === 'active' &&
     state &&
+    state.phase === 'implement' &&
     isBriefWorkflow(state.workflowMode)
   ) {
     lines.push(BRIEF_ROUTER_AUTHORITY_NOTE);
