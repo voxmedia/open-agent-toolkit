@@ -669,8 +669,11 @@ export function validatePlanForProfile(
   `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`,
   `goal-shipped-milestone-changed` (against `oat_deliveries[].scope`),
   `goal-group-crosses-milestone`, `goal-phase-without-milestone`,
-  `goal-delivered-scope-changed`, `goal-plan-source`, plus the existing
-  checkpoint rule.
+  `goal-delivered-scope-changed`, `goal-plan-source`; p10-t01 also landed
+  `goal-milestones-malformed`, `goal-milestone-empty` (one-to-one with the
+  Milestones reader's codes) and `goal-noncanonical-phase-id`. There is no
+  checkpoint rule in `validate-plan`; `oat_hill_checkpoints` is validated
+  elsewhere (p10 review L5).
 - `index.ts` passes the state frontmatter it already reads
   (`index.ts:82-95`) and replaces the direct lite call.
 

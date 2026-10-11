@@ -1265,6 +1265,16 @@ git commit -m "fix(p09-t03): newest passed review wins, tolerant scope labels, n
 
 ---
 
+### Task p10-t05: (review) `--cwd` for the goal journal read, set-once delivery `exit_gate`, and the `delivery check` report contract
+
+**Source:** p10 review round 1 (reviews/archived/p10-review-2026-10-11T135002Z.md) M1, M2, L1, L2, L3, L6.
+
+**Files:** `validate-plan/index.ts` (+test): the goal-only `implementation.md` read uses the cwd-resolved `projectPath`; a `--cwd` test runs the goal profile with a journal-extracted phase from a foreign cwd and expects `{ valid: true }` (M1). `delivery/evidence.ts` (+test): `judgeDeliveries` treats `oat_deliveries[].exit_gate` as set-once except in a commit that also records new integrated-review evidence for that delivery; the `decided_at` rerun escape stays in `judgeMilestoneGates` only; tests: a successor rewriting `d01.exit_gate` with a new `decided_at` is `substantive-change`, the registration commit that first sets it stays `bookkeeping-successor` (M2). `delivery/check.ts` (+test, help snapshot if the description changes): `exit.source: 'milestone-carrier' | 'delivery-binding'` on the report (L1); `status: 'undeliverable'` when `deliverable` is false (L2). `delivery/refresh.ts` (+test): `mayReplaceStoredValue` is path-aware (member `observed_head|observed_base|status`, delivery `status` only while stored `open`, `integrated_review.disposition`, carrier `freshness|freshness_reason`) (L3). `promote/promote.ts` (+test): refuse `goal-delivery-unsettled` when `oat_milestone_status: delivered` and `oat_deliveries` is empty (L6).
+
+**Verify:** scoped vitest for the five modules plus help snapshots; the M1 fix reproduced with the built CLI from `/` with `--cwd`; prove-it-can-fail for M2 (restore the rerun escape in `judgeDeliveries`, the new test fails). **Commit:** `fix(p10-t05): cwd-resolved goal journal read, set-once delivery exit gate, delivery check report contract`
+
+---
+
 ## Phase 11: Goal skills and roles (v1.5)
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
@@ -1369,7 +1379,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T081731Z.md                                                                                                                                                         | 1de4aac6840ff1fa99b59f37ec673c11f8581396 | gate       | configured plan gate attempt 2 on revision 5: 0/0/0/0; `oat_quick_start_gate` refreshed                             |
 | p09    | code     | passed          | 2026-10-11 | reviews/archived/p09-review-2026-10-11T090259Z.md                                                                                                                                                                   | 29a4b914f311343c4f51e6431874d72e56814cb5 | auto       | fixes at 611596345                                                                                                  |
 | p09    | code     | passed          | 2026-10-11 | reviews/archived/p09-review-2026-10-11T091238Z.md                                                                                                                                                                   | 8113ced43022a83572d635b22db9ecd7ee287862 | auto       | round 2 (0/0/0/0)                                                                                                   |
-| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
+| p10    | code     | fixes_added     | 2026-10-11 | reviews/archived/p10-review-2026-10-11T135002Z.md                                                                                                                                                                   | bb69bb0650dc1cc076b5d432b8a53702bd6190c1 | auto       | 0/0/2/6; M1, M2, L1, L2, L3, L6 → p10-t05; L4 carried to p11-t01 contract text; L5 design edit in root bookkeeping  |
 | p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
@@ -1397,11 +1407,11 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
 - Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
 - Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
-- Phase 10: 4 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5)
+- Phase 10: 5 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); one review fix
 - Phase 11: 3 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
 - Phase 12: 5 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5)
 
-**Total: 55 tasks**
+**Total: 56 tasks**
 
 Ready for code review and merge.
 

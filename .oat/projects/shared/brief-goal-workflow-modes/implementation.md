@@ -734,6 +734,32 @@ oat_generated: false
 
 ---
 
+### Task p10-t05: (review) `--cwd` for the goal journal read, set-once delivery `exit_gate`, and the `delivery check` report contract
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p10
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p10-review-2026-10-11T135002Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p10-1867dcf3`, invocation auto, reviewed head bb69bb0650dc1cc076b5d432b8a53702bd6190c1, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 2, Low 6 → fix tasks queued; auto-disposition mode. Items 1–6 of the review brief all verdict accept: the three extra p10-t01 codes and the journal read are named by the plan or forced by the p09 reader with v1 branches untouched; `Total` is within the design's allowed set; refresh's `status` replacement cannot regress `at_endpoint`; both implementer formats (`satisfied_by: { pr: delivery-coverage }`, extracted-child deferral under `met_with_deferrals`) accepted and carried into p11-t01/p11-t02 contract text; promotion retains history verbatim; recovered patch confirmed (check/index byte-identical, evidence differs only by `Total`, refresh rewritten, no tests in the patch). Reviewer re-proved the overlap guard and the never-overwrite rule, ran both builds, 59 files / 1586 tests (isolated HOME), type-check, lint, validate-skills, format:root (all 0), and scratch goal-project probes (`review-missing`/`no carrier` exit 1, `goal_not_declared` routed to `oat-project-goal`). The three v1-branch commits in range (f197a7936, e5a9b2cd5, 80c040f39) are clean apart from M1.
+
+- M1 `validate-plan/index.ts:114` goal journal read uses the unresolved `--project-path` (integration gap between p10-t01 and the merged `--cwd` fix) → converted: p10-t05.
+- M2 `evidence.ts:573-592` `decided_at` rerun escape also applied to `oat_deliveries[].exit_gate`, letting a bookkeeping successor swap a delivery's persisted binding → converted: p10-t05.
+- L1 `delivery check` report does not say which carrier was judged → converted: p10-t05 (`exit.source`); contract sentence carried to p11-t01/p11-t02.
+- L2 `delivery check` prints `status: ok` with exit 1 → converted: p10-t05 (`status: undeliverable`).
+- L3 `mayReplaceStoredValue` keys on leaf name alone → converted: p10-t05 (path-aware).
+- L4 evaluator leniencies (modified review artifact accepted without frontmatter identity check; `**Head:**` rewritable as a progress field) → carried to p11-t01 contract text as accepted leniencies.
+- L5 design "existing checkpoint rule" clause for the goal profile has no validate-plan counterpart → design.md edited in this bookkeeping (clause dropped).
+- L6 `delivered` goal with an empty registry promotes vacuously → converted: p10-t05 (`goal-delivery-unsettled`).
+
+**New tasks added:** p10-t05 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p10-fix-1`); round-2 re-review on the fix range follows because Mediums were converted.
+
+---
+
 ## Phase 11: Goal skills and roles (v1.5)
 
 **Status:** pending
@@ -926,6 +952,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f3fcae68c, the goal branch after merging the v1 fix commits from `feat/brief-workflow-mode-v1`; the dispatch-plan commit sits between base and the first task commit; p10-t02..t04 in the root checkout; p10-t02 starts from `references/p10-t02-recovered.patch`; disk 8.1 GB free with a 1 GB stop rule in the brief)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are the two implementer-chosen formats carried to p11 and the two carrier consumers noted in p10-t03) at 7d4fbe12b; p10 review follows
+- Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` then round 2 on the fix range
 
 <!-- orchestration-runs-end -->
 
