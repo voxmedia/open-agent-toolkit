@@ -152,6 +152,10 @@ p12 reached the three-round review cap with a one-clause prose residual (goal te
 
 Phase p12 passed review at da60988b8 after three rounds (0/1/2/4, 0/0/1/1, 0/0/1/2); fixes p12-t06..t08; all twelve phases complete at lockstep 0.3.20. Key p12-review-passed-da60988b8.
 
+### 2026-10-11 · general · friction · review-cap final
+
+The final integrated review reached three rounds; each fix to the delivery-evidence evaluator surfaced an adjacent bypass (same-artifact rebind, set-once member revisions, own-artifact set from the judged state). Disposition: a known evaluator bypass cannot ship, so one more narrow fix (p12-t11, reviewer-verified counterfactual) and a round 4 limited to that guard; lesson for artifact-cleanup and future evaluators: derive trust sets from immutable records (Reviews rows), never from the state being judged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

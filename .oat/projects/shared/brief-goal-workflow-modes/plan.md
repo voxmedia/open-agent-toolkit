@@ -1425,6 +1425,16 @@ The v1 progress PR is #361 from `feat/brief-workflow-mode-v1` (cut at the p08 cl
 
 ---
 
+### Task p12-t11: (final review round 3) Own-artifact set from the delivery's own Reviews rows only
+
+**Source:** final integrated review round 3 (reviews/archived/final-review-2026-10-11T190043Z.md) H1. Review cap reached; disposition: one narrow fix with a reviewer-verified counterfactual, re-proved by a round 4 limited to this guard.
+
+**Files:** `packages/cli/src/commands/project/delivery/evidence.ts` (+`evidence.test.ts`): `ownEvidenceArtifacts` (:1301-1312, :1256-1260) is built from the delivery's own `## Reviews` rows only — never from the `integrated_review.artifact` of the state being judged, which the repoint commit controls; drop the "any artifact no other registry entry records" fallback (an empty own set means no identity or `reviewed_head` replacement is unlocked). Tests through the production `deliveryEvidenceScope` (not a hand-built map): the sibling-artifact swap with revisions moved → `substantive-change`; a fabricated artifact named only by `integrated_review` (no Reviews row) → `substantive-change`; the recovery path (own Reviews row recorded for the new artifact in the same receive commit) → `bookkeeping-successor`, `fresh: true`; existing `:966` rewritten to use the production scope. Contract 12.8 and the DR: "the delivery's own review artifacts are those its Reviews rows record".
+
+**Verify:** delivery/closeout-check/complete-state suites; prove-it-can-fail by restoring the `integrated_review.artifact` source; probe B, 7c and the sibling swap through the built CLI (`ok`, refused, refused). No bumps. **Commit:** `fix(p12-t11): own-artifact set from the delivery's own Reviews rows only`
+
+---
+
 After p12 is accepted, the final integrated review, summary, document and `pr-final` run per the configured sequence; the final PR is linked and left for Thomas to merge.
 
 ---
@@ -1462,6 +1472,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p12    | code     | passed          | 2026-10-11 | reviews/archived/p12-review-2026-10-11T175805Z.md                                                                                                                                                                   | 9b696a1994cbe825adf418db41e38683d446e50a | auto       | round 3 (0/0/1/2); fixes 2195e6fbd; M1/L1/L2 → p12-t08, root-verified at the review cap; final integrated review covers the range                                                       |
 | final  | code     | fixes_added     | 2026-10-11 | reviews/archived/final-review-2026-10-11T181730Z.md                                                                                                                                                                 | f839c16772fcfdf258d2771a6e53b1a0bbe26f25 | auto       | 0/1/0/2; all nine Success Criteria met, DoD gates 0; H1 (same-artifact bound_revisions rewrite bypass) + L1 → p12-t09; L2 design sentence in root bookkeeping; round 2 on the fix range |
 | final  | code     | fixes_added     | 2026-10-11 | reviews/archived/final-review-2026-10-11T183835Z.md                                                                                                                                                                 | e6745866a2e1fcf898a96841f2037b468797f8e6 | auto       | round 2 (0/1/0/1): round-1 H1/L1/L2 resolved; new H1 (recovery of an open delivery permanently mismatched after p12-t09) + L1 → p12-t10; round 3 on the fix range                       |
+| final  | code     | fixes_added     | 2026-10-11 | reviews/archived/final-review-2026-10-11T190043Z.md                                                                                                                                                                 | 546e1081e26fc37e638e5e19fcf71c13c66f16f7 | auto       | round 3 (0/1/0/0): round-2 H1/L1 resolved; new H1 (own-artifact set built from the judged state's integrated_review) → p12-t11; cap reached, narrow round 4 on this guard               |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                                                                                       |
 | plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -                                        | auto       | -                                                                                                                                                                                       |
 | plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -                                        | gate       | codex-6-sol-xhigh                                                                                                                                                                       |
@@ -1488,9 +1499,9 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
 - Phase 10: 6 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); two review fixes
 - Phase 11: 4 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
-- Phase 12: 9 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5); three review fixes and two final-review fixes
+- Phase 12: 9 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5); three review fixes and three final-review fixes
 
-**Total: 63 tasks**
+**Total: 64 tasks**
 
 Ready for code review and merge.
 
