@@ -1,3 +1,6 @@
+import { resolve } from 'node:path';
+
+import { appendProjectLog } from '@commands/project/log/append';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import type {
   GoalDelivery,
@@ -27,6 +30,41 @@ import {
 } from './evidence';
 
 const git = defaultGitRunner;
+
+/** The bundled templates the real `oat project log append` instantiates. */
+const CANONICAL_ASSETS_ROOT = resolve(
+  import.meta.dirname,
+  '../../../../../../.oat',
+);
+
+/**
+ * Append one structural entry through the real project-log writer, exactly as
+ * the goal skills do (`oat project log append --structural`): the first append
+ * instantiates the bundled template, whose end-of-run synthesis section stays
+ * last, so every later entry is inserted before it rather than at the end.
+ */
+async function appendLogEntry(
+  target: GoalRepo,
+  ref: string,
+  body: string,
+): Promise<void> {
+  const result = await appendProjectLog(
+    {
+      repoRoot: target.root,
+      home: target.root,
+      project: target.projectPath,
+      structural: true,
+      producer: 'oat-project-pr-progress',
+      ref,
+      body,
+    },
+    {
+      resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
+      now: () => new Date('2026-10-11T12:00:00.000Z'),
+    },
+  );
+  expect(result.status).toBe('appended');
+}
 
 function scopeFor(repo: GoalRepo): EvidenceScope {
   return {
@@ -169,6 +207,55 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
         chain.registered,
       );
       expect(result.fresh).toBe(true);
+    });
+
+    it('accepts project-log entries the real writer inserts before the synthesis section', async () => {
+      // Found by the p12-t02 real-artifact probe: pr-progress Step 5.5 item 7
+      // appends the registration entry after the registration commit, and
+      // the old byte-prefix rule judged that insertion a rewrite, staling the
+      // delivery it had just registered.
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await appendLogEntry(repo, 'm01', 'Activated m01 (p01, p02).');
+      repo.commitAll('chore(oat): log m01 activation');
+      await appendLogEntry(repo, 'd01', 'Registered d01 for m01 (p01, p02).');
+      const logged = repo.commitAll('chore(oat): log d01 registration');
+
+      const log = await repo.read('project-log.md');
+      expect(log.indexOf('Registered d01')).toBeLessThan(
+        log.indexOf('\n## End-of-run synthesis'),
+      );
+      await expect(
+        evaluateSuccessor(git, scopeFor(repo), chain.reviewed, logged),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+
+    it('rejects a project-log change that edits an entry or the synthesis section', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await appendLogEntry(repo, 'm01', 'Activated m01 (p01, p02).');
+      const opened = repo.commitAll('chore(oat): log m01 activation');
+      const original = await repo.read('project-log.md');
+
+      for (const edited of [
+        original.replace('Activated m01 (p01, p02).', 'Activated m01 (p01).'),
+        // A valid insertion paired with a rewritten synthesis section.
+        `${original.replace(
+          '\n## End-of-run synthesis',
+          '\n### 2026-10-11 · structural · x · d01\n\nLate.\n\n## End-of-run synthesis',
+        )}Synthesis rewritten.\n`,
+      ]) {
+        expect(edited).not.toBe(original);
+        await repo.write('project-log.md', edited);
+        const published = repo.commitAll('chore(oat): edit the log');
+        await expect(
+          evaluateSuccessor(git, scopeFor(repo), chain.reviewed, published),
+        ).resolves.toMatchObject({
+          fresh: false,
+          code: 'substantive-change',
+        });
+        repo.git(['reset', '-q', '--hard', opened]);
+      }
     });
 
     it('treats the identical head as fresh without inspecting anything', async () => {

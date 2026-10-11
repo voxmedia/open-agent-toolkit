@@ -72,7 +72,12 @@ import {
 } from './grammar';
 
 export const PROJECT_LOG_FILENAME = 'project-log.md';
-const SYNTHESIS_HEADING_PREFIX = '\n## End-of-run synthesis';
+/**
+ * Where `appendEntry` inserts: entries go before the end-of-run synthesis
+ * section, so an append is not a byte-suffix of the previous log. The
+ * delivery-evidence evaluator reads the same marker to recognize an append.
+ */
+export const SYNTHESIS_HEADING_PREFIX = '\n## End-of-run synthesis';
 
 /**
  * Directory, relative to a project, that holds gate partial-finalization

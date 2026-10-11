@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 
+import { SYNTHESIS_HEADING_PREFIX } from '@commands/project/log/append';
 import type { GitRunner } from '@commands/project/sync/git';
 import {
   recordLineMask,
@@ -364,7 +365,7 @@ function judgeBookkeepingChange(
   if (kind === 'project-log') {
     if (status === 'A') return OK;
     if (status !== 'M') return refuse('the project log may only grow');
-    return after!.startsWith(before!.trimEnd())
+    return isProjectLogAppend(before!, after!)
       ? OK
       : refuse('the project log was rewritten, not appended');
   }
@@ -384,6 +385,34 @@ function judgeBookkeepingChange(
     case 'implementation':
       return judgeJournalChange(before!, after!);
   }
+}
+
+/**
+ * Whether `after` only adds entries to the project log `before`. `oat project
+ * log append` writes at the end of the log, or, once the log carries its
+ * end-of-run synthesis section, immediately before that section; every byte
+ * of the previous log is kept either way. Insertion anywhere else, a change to
+ * an existing entry, or a change to the synthesis section is a rewrite.
+ */
+export function isProjectLogAppend(before: string, after: string): boolean {
+  if (after.startsWith(before.trimEnd())) {
+    return true;
+  }
+  const synthesisIndex = before.indexOf(SYNTHESIS_HEADING_PREFIX);
+  if (synthesisIndex < 0) {
+    return false;
+  }
+  const entries = before.slice(0, synthesisIndex);
+  const synthesis = before.slice(synthesisIndex);
+  if (
+    after.length < before.length ||
+    !after.startsWith(entries) ||
+    !after.endsWith(synthesis)
+  ) {
+    return false;
+  }
+  const inserted = after.slice(entries.length, after.length - synthesis.length);
+  return !inserted.includes(SYNTHESIS_HEADING_PREFIX);
 }
 
 // --- shared helpers --------------------------------------------------------
