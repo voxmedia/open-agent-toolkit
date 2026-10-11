@@ -1385,6 +1385,16 @@ The v1 progress PR is #361 from `feat/brief-workflow-mode-v1` (cut at the p08 cl
 
 ---
 
+### Task p12-t07: (review) Defer repo-level summary writes until the terminal delivery is registered
+
+**Source:** p12 review round 2 (reviews/archived/p12-review-2026-10-11T173401Z.md) M1, L1.
+
+**Files:** `.agents/skills/oat-project-summary/SKILL.md` (Step 6 ledger graduation at :600-612 and Step 7 decision-record promotion plus index regeneration at :686-705): in goal mode, when the summary runs before `pr` for a terminal delivery (the configured pre-approval sequence), write only files under the project directory and defer the repo-ledger graduation, the decision-record promotion and the index regeneration until `pr` has registered the terminal delivery; perform those deferred writes in the step that follows `pr` (the `postApproval` position, or the summary refresh `oat-project-complete` runs), stated once in the summary skill and referenced from `oat-project-pr-final` Step 1.5; `brief-contract.md` 12.5 (terminal closeout sentence: the ordinary sequence runs with the goal deferral); `DR-261011-bookkeeping-successors-keep` (one sentence); `apps/oat-docs/docs/reference/project-artifacts.md:117-121` blank line before the following paragraph (L1). Registered deliveries are unaffected.
+
+**Verify:** `oat:validate-skills`, `format:root`, `pnpm --filter oat-docs check`; `rg -n 'defer' .agents/skills/oat-project-summary/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-brief/references/brief-contract.md` shows the clause at each site; a scratch goal project at the row-7 head with a repo-level ledger commit before `pr` is `undeliverable` (the refusal the deferral avoids) and with only project-dir summary writes is `ok` (the p12-t06 check test already covers the second half). No version bump needed if `oat-project-summary` and `oat-project-pr-final` are already bumped in this PR; otherwise bump once. **Commit:** `fix(p12-t07): defer repo-level summary writes until the terminal delivery is registered`
+
+---
+
 After p12 is accepted, the final integrated review, summary, document and `pr-final` run per the configured sequence; the final PR is linked and left for Thomas to merge.
 
 ---
@@ -1418,6 +1428,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p11    | code     | fixes_added     | 2026-10-11 | reviews/archived/p11-review-2026-10-11T151221Z.md                                                                                                                                                                   | ee16af1b8788b1b680f7442005027e4abd3d208f | auto       | 0/1/2/5; H1, M1, M2 (decision a), L1–L5 → p11-t04; M1/M2 design rows in root bookkeeping                            |
 | p11    | code     | passed          | 2026-10-11 | reviews/archived/p11-review-2026-10-11T153131Z.md                                                                                                                                                                   | a7aefa911bb606f7079dd9a2f9f1adaab155632f | auto       | round 2 (0/0/0/1); fixes 80282f21b; L1 (12.3 `delivered → reviewing` row) carried to p12-t04                        |
 | p12    | code     | fixes_added     | 2026-10-11 | reviews/archived/p12-review-2026-10-11T170802Z.md                                                                                                                                                                   | 9a645c1d88511971f3f94b38cf6218905dc5511c | auto       | 0/1/2/4; H1, M1 (decision a: summary.md is bookkeeping), M2, L1–L3 → p12-t06; L4 ledger line in root bookkeeping    |
+| p12    | code     | passed          | 2026-10-11 | reviews/archived/p12-review-2026-10-11T173401Z.md                                                                                                                                                                   | daa35216193b77090c4ec5f7e34fff38f78fd26f | auto       | round 2 (0/0/1/1); fixes 4c4a7c09a; M1 (repo-level summary writes) → p12-t07, round 3 on the fix range              |
 | final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -                                        | auto       | -                                                                                                                   |
@@ -1445,9 +1456,9 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
 - Phase 10: 6 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); two review fixes
 - Phase 11: 4 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
-- Phase 12: 6 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5); one review fix
+- Phase 12: 7 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5); two review fixes
 
-**Total: 59 tasks**
+**Total: 60 tasks**
 
 Ready for code review and merge.
 
