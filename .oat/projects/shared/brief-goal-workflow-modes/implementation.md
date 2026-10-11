@@ -488,23 +488,32 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 57a8858ca740372cb0824569d47606806f45842c
-**Head:** -
+**Head:** d1e2a93c1f080f7399aa7768af9c3417e526550c
 **Executor:** phase-implementer:impl-p07-d224f8e5 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p07-t01: Review scope from anchors in review-provide
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4d26e567f
+
+- **Files changed:** .agents/skills/oat-project-review-provide/SKILL.md (Step 3.0 "Brief-Mode Anchor Resolution" at :350 with the bash resolver `brief_resolve_anchors` at :436; brief required artifacts, artifact file set, rendering and the seven artifact record fields; additions beyond the design: anchored aggregate head must be on the reviewed branch, brief Step 3a narrowing measures from the aggregate head, a `pNN-tNN` token is not an anchored brief scope, explicit-range reviews record phase IDs from commit labels; "parallel member head must be a merge commit" dropped because step 7 may integrate by cherry-pick); .agents/docs/autonomy-contract.md (new prompt site `e3c08ecdab17 -> REVIEWPROVIDE-06` mapped in the same commit; resolver header comments moved to prose because the inventory scanner is not fence-aware)
+- **Verification:** validate-skills, format:root; scripted check (resolver extracted verbatim, byte-identical to the committed block, one `mktemp -d` repo per case under bash 3.2): (1) linear A→B→C control → accepted, `anchors`, A..C; (2) decreasing heads p01 A..C, p02 A..B → reconcile (sequential continuity); neutralizing sequential-only or aggregate-only guards still rejects, both → wrongly accepted with range A..B omitting C; (3) bookkeeping commit K between phases → accepted, K inside `rev-list A..C`; (4) parallel group [p02,p03] with integration merges → `final` A..M3 listing M3, M2; `p02-p03` F..M3; control with p03 base ≠ fork → reconcile; fork-base guard neutralized → wrongly accepted; (5) missing p02 Head → `merge-base-range` / `missing-anchors`; detection removed → the existence check still fails closed to reconcile; (6) nonexistent p02 Head SHA → reconcile (existence); existence+ancestry+aggregate guards each still reject, all four → wrongly accepted with an invalid range; (7) 60 p01 commits + 5 later → anchor range covers 60, documented grep found 0 (git regex error, see Deferred Findings), corrected grep over `HEAD~50..HEAD` found 45; extras: `p02-p01` → invalid-scope; late fix moving p01 Head after p02 took its Base → reconcile; `p-rev1` after p02 → accepted in `final` and alone
 
 ### Task p07-t02: Review-receive and reconcile brief branches
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f808aa33e
+
+- **Files changed:** oat-project-review-receive/SKILL.md (:388 brief branch, reviewed phase from `oat_review_phase_ids`; :398 late-fix rule reopens `completed` → `in_progress`; :405-418 `## Phase p-revN:` with `**Corrects:** pNN` in plan and journal; :456 record IDs from the journal; :510-519 `(review)` records with `**Status:** pending` and `**Source review:**`; :552-563 event provenance and anchor record fields preserved, corrected phase's event moves to `passed` when the `p-revN` review passes; :644 pointer); oat-project-reconcile/SKILL.md (:135 brief branch; :148 anchor check, correction only after user confirmation and correcting an accepted phase's anchor reopens it; :161 records from the journal; :165-169 commits → records by `(pNN-tNN)` then phases by anchors, unmatched → `**Executor:** reconciled`; :175 live handles checked before closing; :179-187 never writes `completed` or a missing Head; pointer to first incomplete unit)
+- **Verification:** validate-skills; read-through against design "Reconcile and review-receive" (lines above)
 
 ### Task p07-t03: Summary, PR, revise, complete, document and brainstorm
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d1e2a93c1
+
+- **Files changed:** summary (:25, :123 one accepted phase-unit prerequisite; :140 brief source table; :255-318 fingerprint fragment, invariant under whitespace and Intent edits, changes on acceptance, review rows, Outcomes; :495 frontmatter, `oat_summary_last_task` omitted), pr-progress (:158 scope from anchors; artifact set), pr-final (:32 summary required as in quick; :183 reduced-assurance note names the brief; :287 sources), revise (:202 `p-revN` with Intent and Exit evidence, no tasks; :236 pointer and journal section), complete (:393 staleness by fingerprint; archive References brief set), document (:220 brief artifact set), oat-brainstorm/SKILL.md (:404, :513 promote offers brief; :555 brief promote branch; :616-617 fold-back to `plan.md`, import fallback; :764-775 handoff rows), references/destinations.md (:125-126, :135, :166-172 lite/import/brief rows)
+- **Verification:** validate-skills, format:root; read-through recorded above; scoped vitest 1289 passed / 4 failed, all expected reds; root re-ran validate-skills, format:root and the three pin suites (355/358, exactly the expected reds), tree clean
 
 ---
 
@@ -712,6 +721,7 @@ _- Outstanding Items_
 - Request ID: `impl-p07-d224f8e5` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 57a8858ca740372cb0824569d47606806f45842c, p06 closeout; the dispatch-plan commit sits between base and the first task commit; p07-t01..t03 in the root checkout after p06 closed at 1e2ff01dd)
+- Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1e2a93c1; commits 4d26e567f, f808aa33e, d1e2a93c1; concerns: autonomy re-key mapped in-commit, pre-existing non-brief commit-grep regex bug left for triage, `final` scope checks accepted phases only (per design)
 
 <!-- orchestration-runs-end -->
 
@@ -735,6 +745,7 @@ Chronological log of implementation progress.
 ## Deferred Findings
 
 - p04 round 2, Low: route a standalone `## Out of Scope` brief section into discovery on promotion. Rationale: additive rendering; the archived brief (`references/brief-archive.md`) preserves the text; design lists the rendered sections explicitly. Follow-up: backlog item at p08-t05.
+- (p07) Pre-existing bug outside brief scope: review-provide's quick/spec-driven commit grep `git log --oneline --grep="\(p${PHASE}-" HEAD~50..HEAD` (~:696-707) errors with `parentheses not balanced` under git's default basic regex, so that path finds 0 commits; pr-progress's `--grep="\\(${PHASE}-"` likely shares it. Carried to p08 as a backlog item (fix changes non-brief behavior).
 
 ## Deviations from Plan / Design
 
