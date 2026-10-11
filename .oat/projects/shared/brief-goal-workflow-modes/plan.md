@@ -629,6 +629,35 @@ git commit -m "fix(p04-t05): strict provisional marker, refuse headless promotio
 
 ---
 
+### Task p04-t06: (review) Make the Approach heading demotion fence-aware
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.brief.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p04 review round 2, Low): the Approach heading demotion at `promote.ts:1106` is not fence-aware, so a `### ` line inside a fenced example in Approach is demoted too.
+
+**Step 2: Implement fix**
+
+Gate the demotion on `recordLineMask` per line (only record lines are demoted); add one test with a fenced `### ` line inside Approach that must survive unchanged while a real `### Design` subheading is demoted.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane build && HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote`
+Expected: pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.brief.test.ts
+git commit -m "fix(p04-t06): fence-aware Approach heading demotion on promotion"
+```
+
+---
+
 ## Phase 5: Brief entry skill and planning surfaces
 
 ### Task p05-t01: `oat-project-brief` skill, shared contract, gate registration and autonomy entries
@@ -1057,7 +1086,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 1: 6 tasks - Control-plane registry, phase-unit parsing, scope seam and readers, readiness clause, two review fixes
 - Phase 2: 5 tasks - Router routes, brief-unit guard, dashboard parity, two review fixes
 - Phase 3: 3 tasks - Templates with bundle registration, scaffold behavior, one review fix
-- Phase 4: 5 tasks - Plan profiles, brief → quick promotion, three review fixes
+- Phase 4: 6 tasks - Plan profiles, brief → quick promotion, four review fixes
 - Phase 5: 2 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills
 - Phase 6: 3 tasks - Implement references, agent roles and projections, quick-start resume contract
 - Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
@@ -1067,7 +1096,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 41 tasks**
+**Total: 42 tasks**
 
 Ready for code review and merge.
 

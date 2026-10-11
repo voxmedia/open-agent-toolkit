@@ -221,7 +221,11 @@ oat_generated: false
 - L2 accepted phase without `**Head:**` synthesizes `**Commit:** -` → converted: p04-t05 (refuse with `missing-phase-head`).
 - L3 `## Approach` dropped from working artifacts → converted: p04-t05 (render into discovery Solution Space).
 
-**New tasks added:** p04-t03, p04-t04, p04-t05. **Fix continuation:** cont-brief-goal-workflow-modes-p04-fix-1 on the original handle → e028bb016 (p04-t03), 1f0eb78a7 (p04-t04, lane widened to control-plane `quick-plan-readiness.ts`, its test and the barrel), 7e3966dcc (p04-t05); root re-verified control-plane 186/186 and validate-plan + promote 108/108, no local `recordLineMask`. Deferred to p08: docs for `missing-phase-head` and the optional `phases` refusal field; standalone `## Out of Scope` routing into discovery (round-1 note, outside the fix scope). **Round 2:** dispatched (reviewed head 7e3966dcc47c53dbdd6a693789fb82c96c6bc936); lane verdict recorded on return.
+**New tasks added:** p04-t03, p04-t04, p04-t05. **Fix continuation:** cont-brief-goal-workflow-modes-p04-fix-1 on the original handle → e028bb016 (p04-t03), 1f0eb78a7 (p04-t04, lane widened to control-plane `quick-plan-readiness.ts`, its test and the barrel), 7e3966dcc (p04-t05); root re-verified control-plane 186/186 and validate-plan + promote 108/108, no local `recordLineMask`. Deferred to p08: docs for `missing-phase-head` and the optional `phases` refusal field; standalone `## Out of Scope` routing into discovery (round-1 note, outside the fix scope). **Round 2:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p04-r2-e5d8f2bd`, reviewed head 7e3966dcc47c53dbdd6a693789fb82c96c6bc936, artifact reviews/archived/p04-review-2026-10-11T035054Z.md, reconnaissance not-attempted): 0 critical, 0 high, 0 medium, 2 low → pass; all round-1 findings verified closed (M2 equivalence probe 0 mismatches over 1.46M lines).
+
+- R2-L1 Approach heading demotion not fence-aware → converted: p04-t06 (Negligible); executed on the same handle and verified by root, no third review round (passing review stands; Step 7b queued-task rule).
+- R2-L2 standalone `## Out of Scope` routing into discovery → **deferred with rationale**: additive discovery rendering, the archived brief preserves the text, and the design lists the rendered sections explicitly; follow-up filed as a backlog item at p08-t05.
+  **Lane verdict:** pass at the p04-t06 head (recorded at fan-in); fix-loop count 1.
 
 ---
 
@@ -472,6 +476,10 @@ _- Outstanding Items_
 - p01 round-2 review passed (0/0/0/1, bookkeeping low fixed here); phase p01 complete; both review events `passed`.
 
 Chronological log of implementation progress.
+
+## Deferred Findings
+
+- p04 round 2, Low: route a standalone `## Out of Scope` brief section into discovery on promotion. Rationale: additive rendering; the archived brief (`references/brief-archive.md`) preserves the text; design lists the rendered sections explicitly. Follow-up: backlog item at p08-t05.
 
 ## Deviations from Plan / Design
 
