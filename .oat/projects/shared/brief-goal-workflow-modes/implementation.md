@@ -697,7 +697,7 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 0cc095c5ae394a782efcec066880375f6725ddd1
-**Head:** 97f2f1a32 (p10-t01 only; phase paused)
+**Head:** 7d4fbe12bafe05338ce79c53133475bc02f4e56b (candidate head at review; p10-t01 97f2f1a32 from the first dispatch, p10-t02..t04 from the resume)
 **Executor:** phase-implementer:impl-p10-7ff59906 → impl-p10-abc8a9b0 after the disk pause (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p10-t01: Goal validation profile
@@ -710,18 +710,27 @@ oat_generated: false
 
 ### Task p10-t02: Delivery registry types and `oat project delivery refresh`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** aff0b65fe
+
+- **Files changed:** `packages/cli/src/commands/project/delivery/{index,evidence,check,refresh}.ts` (+`{evidence,check,refresh}.test.ts`, `__tests__/goal-repo.ts` scratch-repo helper), `project/index.ts` registration, help snapshots (`project --help` lists `delivery`). Recovered patch folded in: `evidence.ts`, `check.ts`, `index.ts`, the registration and the snapshots kept; `refresh.ts` rewritten around one `mayReplaceStoredValue` predicate (only `observed_head`, `observed_base`, `status`, `disposition`, `freshness`, `freshness_reason` may replace a stored value; every other field is written only while empty; writes outside `oat_deliveries`/`oat_milestone_gates` throw); `evidence.ts` gained `Total` among the journal progress fields (a `**Total:** n/m` update was wrongly substantive). `delivery check` exits 1 for an undeliverable subject and still prints the full JSON report.
+- **Verification:** 106 tests (delivery + help snapshots); CLI lint, type-check, format clean. A2 controls: paths-only evaluator accepts an Outcome/authority change inside `plan.md` (5 of 6 cases fail neutralized), substantive-then-reverted, non-ancestor head, changed base each rejected; valid chain head-recording → receive/archive → registration passes with the reviewed SHA unchanged; exact-head comparison rejects that chain. Refresh guard: never-overwrite neutralized → attainment and reviewed head rewritten (2 fail), restored → preserved, plain refresh still updates `observed_*`; write-limit guard (no milestone status, no recovery) 1 fail/pass.
 
 ### Task p10-t03: Closeout boundary inputs, coverage predicate and gate carriers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bba656308
+
+- **Files changed:** `closeout-check/{closeout-invariant,index}.ts` (`EvaluateCloseoutOptions` gains plan/implementation content, declaration/audit, extracted-child facts and delivery observations; coverage predicate per A4 with transitive chains, effective scope union, inherited obligations counted once, disjoint terminal scopes, evidence bound through the p10-t02 evaluator; terminal boundary requires `declared_met` and an audit validated by p09's `validateGoalOutcomeAudit`), new `goal-closeout.test.ts` (pure) and `goal-boundary.test.ts` (end to end), `complete-state/index.ts` (writes nothing on refusal; refusal `route` widened to a string with a new `nextOwner` kind `goal` and reason codes; non-goal output unchanged, dist probe on this repo's quick project still returns `snapshot_missing`). Implementer-chosen formats flagged for review: snapshot `satisfied_by: { pr: delivery-coverage }` (goal only, `pr` step only, once `pr` is in the completed prefix); deferring an extracted child keeps disposition `extracted` plus non-empty `reason` and `scope_decision_ref` and requires `met_with_deferrals` (`child-deferral-under-met` otherwise). Child projects resolve by slug across every scope of the projects root, exactly one match.
+- **Verification:** 249 tests (closeout-check, complete-state, delivery, push, help snapshots); non-goal suites unchanged 53/53. A3: omitted declaration (complete-snapshot and `not_required` paths), one pending/provisional phase and one outcome omitted from the audit each refused by the corrected boundary and accepted by the old one, `complete-state` writes nothing; wrong child backlink fails, matching completed child passes. A4: one-hop predicate accepts a terminal replacement listing only its new phase, corrected coverage rejects; cycle, missing link, mismatched reciprocal, overlapping terminal scopes refuse; `d01 → d02 → d03` with full effective-scope evidence passes counting every inherited phase once. Carrier guard: subject-binding neutralized accepts a `no_gate` carrier with a fabricated `reviewed_head` or changed subject (evaluator and boundary), restored refuses, unchanged `no_gate`/`project_disabled` carriers stay fresh; historical binding: closeout judges the delivery's own exit gate, not the milestone carrier. Audit guard: 11 fail neutralized / 14 pass restored; `met_with_deferrals` passes with the deferred phase incomplete. Terminal-observation guard: failed member observation, unreadable inputs, `pr` satisfied before its position each refused.
 
 ### Task p10-t04: Goal → quick promotion at a settled delivery boundary (B3)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7d4fbe12b
+
+- **Files changed:** `promote/promote.ts`, new `promote.goal.test.ts`, `help-snapshots.test.ts`, `.agents/skills/oat-project-quick-start/SKILL.md` (promotion resume generalized to `oat_promoted_from: brief | goal`), `.agents/skills/oat-project-brief/references/brief-contract.md` (goal promotion rule). No version bump (p12-t05); `check:skill-bumps` expected red until then.
+- **Verification:** 52 promote tests (`promote.brief.test.ts` unchanged); `oat:validate-skills`, `format:root`; 12 skill-contract files 771 tests. Guard `goal-promotion-unsettled`: settled-boundary check neutralized → an `open` delivery promotes (2 fail), restored → refused; active milestone, pending recovery, `registering` delivery and extracted phase each refuse without writes; settled promotion and quick-start resume pass. Phase-wide at 7d4fbe12b with isolated HOME: 85 files / 2668 tests across `src/commands/project`, help snapshots, integration, `src/validation`, `init/tools/shared`; no expected-red test turned red in scoped runs. Root re-ran the delivery, closeout-check, complete-state, promote, validate-plan and help-snapshot suites (16 files / 346 tests), CLI type-check, lint, `oat:validate-skills`, `format:root`: all exit 0.
 
 ---
 
@@ -916,6 +925,7 @@ _- Outstanding Items_
 - Request ID: `impl-p10-abc8a9b0` (continuation of `impl-p10-7ff59906` after the disk pause) · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f3fcae68c, the goal branch after merging the v1 fix commits from `feat/brief-workflow-mode-v1`; the dispatch-plan commit sits between base and the first task commit; p10-t02..t04 in the root checkout; p10-t02 starts from `references/p10-t02-recovered.patch`; disk 8.1 GB free with a 1 GB stop rule in the brief)
+- Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are the two implementer-chosen formats carried to p11 and the two carrier consumers noted in p10-t03) at 7d4fbe12b; p10 review follows
 
 <!-- orchestration-runs-end -->
 
