@@ -2,9 +2,10 @@ import { resolve } from 'node:path';
 
 import { appendProjectLog } from '@commands/project/log/append';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
-import type {
-  GoalDelivery,
-  MilestoneGateCarrier,
+import {
+  getProjectState,
+  type GoalDelivery,
+  type MilestoneGateCarrier,
 } from '@open-agent-toolkit/control-plane';
 import { afterEach, describe, expect, it } from 'vitest';
 import YAML from 'yaml';
@@ -25,6 +26,7 @@ import {
 } from './__tests__/goal-repo';
 import {
   classifyPath,
+  deliveryEvidenceScope,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
@@ -32,6 +34,27 @@ import {
 } from './evidence';
 
 const git = defaultGitRunner;
+
+/**
+ * The evidence scope production builds for one delivery (`delivery check`,
+ * `delivery refresh` and the closeout boundary all call
+ * `deliveryEvidenceScope`), from the project state at the working tree,
+ * which is the state of the commit just made.
+ */
+async function productionScope(
+  target: GoalRepo,
+  deliveryId: string,
+): Promise<EvidenceScope> {
+  const state = await getProjectState(target.projectPath);
+  const deliveries = state.deliveries ?? [];
+  const entry = deliveries.find((item) => item.delivery_id === deliveryId);
+  expect(entry, deliveryId).toBeDefined();
+  return deliveryEvidenceScope(
+    { repoRoot: target.root, projectDir: PROJECT_REL, state },
+    deliveries,
+    entry!,
+  );
+}
 
 /** The bundled templates the real `oat project log append` instantiates. */
 const CANONICAL_ASSETS_ROOT = resolve(
@@ -767,6 +790,15 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       const second = 'reviews/archived/m01-code-review-2.md';
       await repo.write(second, '# m01 re-review\n\nNo findings.\n');
       await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', second, chain.headRecording, 'd01'),
+          ].join('\n'),
+        }),
+      );
+      await repo.write(
         'state.md',
         boundHead(
           chain,
@@ -786,10 +818,7 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       await expect(
         evaluateSuccessor(
           git,
-          {
-            ...scopeFor(repo),
-            evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, second],
-          },
+          await productionScope(repo, 'd01'),
           chain.reviewed,
           published,
         ),
@@ -891,21 +920,18 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       return target.commitAll('chore(oat): receive the d01 re-review');
     }
 
-    const ownScope = (target: GoalRepo): EvidenceScope => ({
-      ...scopeFor(target),
-      evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, RE_REVIEW],
-      ownEvidenceArtifacts: new Map([
-        ['d01', [ARCHIVED_REVIEW_ARTIFACT, RE_REVIEW]],
-      ]),
-    });
-
     it('accepts the recovery of an open delivery: fix F, then one receive moving artifact, bound head and reviewed_head together', async () => {
       repo = await createGoalRepo();
       const chain = await registeredThenFixed(repo);
       const received = await receive(repo, chain);
 
       await expect(
-        evaluateSuccessor(git, ownScope(repo), chain.fixed, received),
+        evaluateSuccessor(
+          git,
+          await productionScope(repo, 'd01'),
+          chain.fixed,
+          received,
+        ),
       ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
 
       const recovered = delivery({
@@ -916,7 +942,12 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       });
       recovered.integrated_review!.artifact = RE_REVIEW;
       await expect(
-        evaluateDeliveryReview(git, ownScope(repo), recovered, ['p01', 'p02']),
+        evaluateDeliveryReview(
+          git,
+          await productionScope(repo, 'd01'),
+          recovered,
+          ['p01', 'p02'],
+        ),
       ).resolves.toMatchObject({ fresh: true, reason: null });
     });
 
@@ -930,7 +961,7 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
 
       const result = await evaluateSuccessor(
         git,
-        ownScope(repo),
+        await productionScope(repo, 'd01'),
         chain.fixed,
         received,
       );
@@ -952,7 +983,7 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
 
       const result = await evaluateSuccessor(
         git,
-        ownScope(repo),
+        await productionScope(repo, 'd01'),
         chain.fixed,
         received,
       );
@@ -991,28 +1022,48 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       await repo.write('state.md', d01 + state.slice(d02At));
       const swapped = repo.commitAll('chore(oat): point d01 at the d02 review');
 
-      const siblings = [
-        'reviews/archived/d01-review.md',
-        'reviews/archived/d02-review.md',
-      ];
-      for (const scope of [
-        {
-          ...scopeFor(repo),
-          evidenceArtifacts: siblings,
-          ownEvidenceArtifacts: new Map([
-            ['d01', [siblings[0]!]],
-            ['d02', [siblings[1]!]],
-          ]),
-        },
-        // Without an own map, another entry's artifact is never this one's.
-        { ...scopeFor(repo), evidenceArtifacts: siblings },
-      ]) {
-        const result = await evaluateSuccessor(git, scope, fixed, swapped);
-        expect(result).toMatchObject({
-          fresh: false,
-          code: 'substantive-change',
-        });
-      }
+      // Composed through the production builder: d01's own set comes from its
+      // own Reviews rows, so d02's artifact never unlocks d01's revisions.
+      const result = await evaluateSuccessor(
+        git,
+        await productionScope(repo, 'd01'),
+        fixed,
+        swapped,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+      });
+      expect(result.reason).toContain('delivery d01');
+    });
+
+    it('rejects a fabricated artifact named only by integrated_review, with no Reviews row', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredThenFixed(repo);
+      const fabricated = 'reviews/archived/fabricated-review.md';
+      await repo.write(fabricated, '# not a review\n');
+      const state = (await repo.read('state.md'))
+        .replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+          `artifact: ${fabricated}`,
+        )
+        .replace(`head: '${chain.reviewed}' }]`, `head: '${chain.fixed}' }]`)
+        .replace(
+          `reviewed_head: '${chain.reviewed}'`,
+          `reviewed_head: '${chain.fixed}'`,
+        );
+      await repo.write('state.md', state);
+      const forged = repo.commitAll(
+        'chore(oat): point d01 at a fabricated review',
+      );
+
+      const scope = await productionScope(repo, 'd01');
+      // The pointer still reaches the shared allowlist; it is not "own".
+      expect(scope.evidenceArtifacts).toContain(fabricated);
+      expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(fabricated);
+      await expect(
+        evaluateSuccessor(git, scope, chain.fixed, forged),
+      ).resolves.toMatchObject({ fresh: false, code: 'substantive-change' });
     });
   });
 
@@ -1127,6 +1178,15 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       const second = 'reviews/archived/m01-code-review-2.md';
       await repo.write(second, '# m01 re-review\n\nNo findings.\n');
       await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', second, chain.reviewed, 'd01'),
+          ].join('\n'),
+        }),
+      );
+      await repo.write(
         'state.md',
         (await repo.read('state.md'))
           .replace(
@@ -1142,10 +1202,7 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       await expect(
         evaluateSuccessor(
           git,
-          {
-            ...scopeFor(repo),
-            evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, second],
-          },
+          await productionScope(repo, 'd01'),
           chain.reviewed,
           published,
         ),

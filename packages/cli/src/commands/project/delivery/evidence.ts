@@ -38,13 +38,15 @@ export interface EvidenceScope {
    */
   evidenceArtifacts: readonly string[];
   /**
-   * Each delivery's OWN review artifacts (its own Reviews rows and recorded
-   * integrated review), keyed by delivery ID, kept apart from the shared
-   * allowlist above. Only a new artifact from this set may replace a
+   * Each delivery's OWN review artifacts: the artifacts its own Reviews rows
+   * record (Scope cell = the delivery ID or its milestone), keyed by delivery
+   * ID and kept apart from the shared allowlist above. Never derived from the
+   * registry's `integrated_review.artifact`, which is the very pointer a
+   * judged commit may rewrite. Only a new artifact from this set may replace a
    * delivery's review identity or member revisions, so a sharing sibling's
-   * artifact, which the allowlist admits as bookkeeping, never unlocks them.
-   * When a delivery has no entry, an artifact that another registry entry
-   * records is never treated as its own.
+   * artifact (admitted by the allowlist as bookkeeping) or an artifact no
+   * Reviews row records never unlocks them. A delivery with no entry unlocks
+   * nothing.
    */
   ownEvidenceArtifacts?: ReadonlyMap<string, readonly string[]>;
 }
@@ -562,28 +564,12 @@ function judgeDeliveries(
   );
 
   const before = deliveryMap(beforeValue);
-  const artifactOf = (entry: Record<string, unknown> | undefined) => {
-    const review = entry?.['integrated_review'];
-    return isRecord(review) && typeof review['artifact'] === 'string'
-      ? artifactVariants(projectRelative(scope.projectDir, review['artifact']))
-      : [];
-  };
-  const otherArtifacts = (id: string): Set<string> =>
+  const ownArtifactsFor = (id: string): Set<string> =>
     new Set(
-      [...before, ...after]
-        .filter(([other]) => other !== id)
-        .flatMap(([, entry]) => artifactOf(entry)),
+      (scope.ownEvidenceArtifacts?.get(id) ?? []).flatMap((artifact) =>
+        artifactVariants(projectRelative(scope.projectDir, artifact)),
+      ),
     );
-  const ownArtifactsFor = (id: string): Set<string> | null => {
-    const own = scope.ownEvidenceArtifacts?.get(id);
-    return own === undefined
-      ? null
-      : new Set(
-          own.flatMap((artifact) =>
-            artifactVariants(projectRelative(scope.projectDir, artifact)),
-          ),
-        );
-  };
 
   for (const [id, previous] of before) {
     const next = after.get(id);
@@ -616,12 +602,8 @@ function judgeDeliveries(
       ).includes(nextArtifact);
     // ...and only when that artifact is this delivery's own, never a sharing
     // sibling's (which the allowlist admits as bookkeeping).
-    const ownArtifacts = ownArtifactsFor(id);
     const ownArtifact =
-      nextArtifact !== null &&
-      (ownArtifacts === null
-        ? !otherArtifacts(id).has(nextArtifact)
-        : ownArtifacts.has(nextArtifact));
+      nextArtifact !== null && ownArtifactsFor(id).has(nextArtifact);
     const recordsNewReview = recordsEvidence && !sameArtifact && ownArtifact;
 
     const previousMembers = Array.isArray(previous['members'])
@@ -1298,16 +1280,17 @@ export function deliveryEvidenceScope(
     ...(delivery.milestone === null ? [] : [delivery.milestone]),
     ...sharing.map((entry) => entry.delivery_id),
   ];
+  // Own artifacts come from the delivery's own Reviews rows only, never from
+  // `integrated_review.artifact` (the pointer a judged commit may rewrite).
   const ownEvidenceArtifacts = new Map<string, readonly string[]>(
     [delivery, ...sharing].map((entry) => [
       entry.delivery_id,
-      deliveryEvidenceArtifacts(
-        entry,
-        reviewRowsFor(project.state.reviews, [
-          entry.delivery_id,
-          ...(entry.milestone === null ? [] : [entry.milestone]),
-        ]).map((row) => row.artifact),
-      ),
+      reviewRowsFor(project.state.reviews, [
+        entry.delivery_id,
+        ...(entry.milestone === null ? [] : [entry.milestone]),
+      ])
+        .map((row) => row.artifact)
+        .filter((artifact) => !placeholder(artifact)),
     ]),
   );
   return {

@@ -625,7 +625,8 @@ its `integrated_review` identity (`artifact`, `scope`, `bound_revisions`) and
 its `members[].reviewed_head` are set once and are replaced only by a commit
 that records a review naming a different artifact of that delivery (an
 artifact and its `reviews/archived/` counterpart are the same artifact; a
-sharing sibling's artifact never counts), with each `reviewed_head` equal to
+sharing sibling's artifact never counts; the delivery's own review artifacts
+are those its Reviews rows record), with each `reviewed_head` equal to
 the head the new `bound_revisions` binds for that member. A bound revision
 that disagrees with its member's `reviewed_head` is not fresh
 (`bound-revision-mismatch`).
