@@ -391,11 +391,12 @@ oat_generated: false
 
 ## Phase 6: Execution skills and agent roles
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
+**Completed:** 2026-10-11
 
 **Base:** a4d7768d5ecf76482168e7bcdabf542c595d59d2
-**Head:** 578e88b0c (fix round 1; candidate head d1969527b2e806ec5f5ee75d4bf3f69786ba2138 at review round 1)
+**Head:** 1e2ff01dd (fix round 2; candidate head d1969527b2e806ec5f5ee75d4bf3f69786ba2138 at review round 1, 578e88b0c at round 2)
 **Executor:** phase-implementer:impl-p06-ba2fb5ee (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p06-t01: Implement references for brief execution
@@ -440,6 +441,14 @@ oat_generated: false
 - **Files changed:** plan-and-resume.md:169-172 (task modes read `[]` as every phase; brief modes as none), oat-phase-implementer.md (one `import` bullet), 65 regenerated projections
 - **Verification:** `grep -c` import bullet = 1; the only "empty list means every phase" match is the reworded sentence; validate-skills, format:root, agents pin, inventory 5/5; no `version:` changes
 
+### Task p06-t06: (review) Scope the anchor pre-check to sequential phases
+
+**Status:** completed
+**Commit:** 1e2ff01dd
+
+- **Files changed:** phase-execution.md "Fresh reviewer on anchors" (sequential pre-check; group member uses step 3's descent check; the range stated once for both cases; fan-in anchors govern `pNN-pMM` and `final`)
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p06-fix-2`; validate-skills, format:root exit 0 (root re-ran); tree clean; no re-review (Low-only on a passing round)
+
 ### Review Received: p06
 
 **Date:** 2026-10-11
@@ -468,6 +477,8 @@ oat_generated: false
 - L2 brief-contract.md:214-230 and design.md "Parallel continuity" have no rung for the pre-fan-in member review → design.md sentence added in this bookkeeping; brief-contract.md:224 sentence carried to p08-t02 (outside p06's write set).
 
 **New tasks added:** p06-t06.
+
+**Disposition:** passed at 1e2ff01dd; artifacts archived under reviews/archived/ (rounds 1 and 2).
 
 ---
 
@@ -690,7 +701,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base a4d7768d5ecf76482168e7bcdabf542c595d59d2, p05 closeout; the dispatch-plan commit sits between base and the first task commit; p06-t01..t03 in the root checkout after p05 closed at c86f8558c)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1969527b; commits 296a62f4e, b260b9063, d1969527b; concerns: manifest deferred to p08-t02, implement SKILL.md note relocated to plan-and-resume.md (entry-size pin), extra named-skill-load sentences for p08-t01, implementer-chosen record-ownership contract flagged for review
-- Review round 1 (rev-p06-dc4c4725, Fable 5.1 high at the frontier cap): 0/0/1/4; fix continuation `cont-brief-goal-workflow-modes-p06-fix-1` → e2fd29c93, 578e88b0c; round 2 dispatched on the fix range
+- Review round 1 (rev-p06-dc4c4725, Fable 5.1 high at the frontier cap): 0/0/1/4; fix continuation `cont-brief-goal-workflow-modes-p06-fix-1` → e2fd29c93, 578e88b0c; round 2 (0/0/0/2 Low) passed; `cont-brief-goal-workflow-modes-p06-fix-2` → 1e2ff01dd; phase p06 closed at 1e2ff01dd
 
 <!-- orchestration-runs-end -->
 
