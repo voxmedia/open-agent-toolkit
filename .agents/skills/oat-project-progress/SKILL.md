@@ -162,6 +162,7 @@ Start a new project:
   oat-project-new - Create a spec-driven project scaffold
   oat-project-quick-start - Start a quick workflow project
   oat-project-lite - Start a lite workflow (interview -> plan -> implement)
+  oat-project-brief - Start a brief workflow (interview -> brief -> implement)
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
 
@@ -173,7 +174,7 @@ Read `{project}/state.md` frontmatter:
 
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - spec-driven | quick | import | lite
+- `oat_workflow_mode` - spec-driven | quick | import | lite | brief
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -239,6 +240,7 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `quick`
 - `import`
 - `lite`
+- `brief`
 
 **HiLL override (apply before phase routing):**
 
@@ -278,6 +280,9 @@ fi
 - Commits exist that match `feat(pNN-tNN):` pattern but lack corresponding completed entries in `implementation.md`
 
 If drift is detected, recommend `oat-project-reconcile` alongside the normal implementation skill.
+
+In brief mode `plan.md` carries no tasks, so skip the `PLAN_TASKS` comparison;
+compare `(pNN-tNN)` commits against the journal's execution records instead.
 
 Routing matrix by mode:
 
@@ -338,6 +343,20 @@ branch, which finishes the plan in place without re-scaffolding the project.
 | implement | complete         | Ready for final review / PR                                                                                                         |
 | implement | pr_open          | `oat-project-complete`                                                                                                              |
 
+**Brief mode (`oat_workflow_mode: brief`):**
+
+| oat_phase | oat_phase_status | Next Skill                                                                                                                          |
+| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| plan      | in_progress      | Continue `oat-project-brief` (it owns review, gate, and approval of the brief)                                                      |
+| plan      | complete         | `oat-project-implement`                                                                                                             |
+| implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | `oat-project-implement` while any phase-unit is unaccepted; otherwise ready for final review / PR                                   |
+| implement | pr_open          | `oat-project-implement` while any phase-unit is unaccepted; otherwise `oat-project-complete`                                        |
+
+Brief progress counts phase-units: report `{accepted}/{total} phases accepted`
+from `oat project status`, never task counts. A provisional phase is never
+accepted, and execution records never change the totals.
+
 **If blockers exist:**
 
 ```
@@ -361,9 +380,10 @@ Knowledge:
 
 Workflow:
   oat-project-lite              - Start a lite workflow (interview -> plan -> implement)
+  oat-project-brief             - Start a brief workflow (interview -> brief -> implement)
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
-  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite promotes via quick)
+  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite and brief promote via quick)
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-design            - Confirm requirements + create technical design (folds spec authoring inline)
   oat-project-spec              - Optional standalone specification (most projects skip this — design handles it)

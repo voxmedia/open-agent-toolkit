@@ -20,7 +20,7 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 ## Prerequisites
 
 This skill is the plan authoring path for **spec-driven** projects only. Quick,
-import, and lite modes have dedicated entry skills that produce `plan.md`
+import, lite, and brief modes have dedicated entry skills that produce `plan.md`
 directly.
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
@@ -29,6 +29,7 @@ Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`)
 - **`quick`**: **Stop.** Spec-driven planning does not apply here: the quick workflow authors `plan.md` itself and owns it through its own review disposition. Step 1 routes the project by the named **quick plan readiness** predicate instead of assuming the plan is finished.
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 - **`lite`**: **Stop.** Tell the user: "Lite planning is owned by `oat-project-lite`; run it to author or resume the combined plan contract."
+- **`brief`**: **Stop.** Tell the user: "Brief planning is owned by `oat-project-brief`; run it to author or resume the Project Brief."
 
 ## Plan Format Contract
 
@@ -158,6 +159,15 @@ Exit skill.
 ```
 ⚠️  This project uses lite mode. Run `oat-project-lite` to author or resume
     its combined requirements and single-phase plan.
+```
+
+Exit skill.
+
+**Mode: `brief`** — **STOP.** Print:
+
+```
+⚠️  This project uses brief mode. Run `oat-project-brief` to author or resume
+    its Project Brief; brief phases carry intent and exit evidence, not tasks.
 ```
 
 Exit skill.

@@ -146,7 +146,7 @@ Based on the docs, here's how OAT project workflows work: [answer]
 You can read more in `workflows/projects/lifecycle.md`.
 
 Would you like me to:
-- Start a new project? (I'd invoke oat-project-lite for single-sitting work, or oat-project-quick-start for a larger quick workflow)
+- Start a new project? (I'd invoke oat-project-lite for single-sitting work, oat-project-brief for one delivery planned as a Project Brief, or oat-project-quick-start for a larger quick workflow)
 - Check your current project status? (I'd read your active project's state.md)
 ```
 
@@ -170,9 +170,14 @@ To create a new OAT project, you have three main approaches:
 3. **Spec-driven mode** (for complex features):
    oat-project-new <project-name>
 
+Brief mode is a fourth option for one delivery whose design you can agree in
+conversation:
+   oat-project-brief <project-name> "project description"
+
 Lite combines the interview and requirements contract in one plan for a
-single sitting. Quick mode goes straight from discovery to plan. Spec-driven
-mode adds formal spec and design phases. If you invoke quick mode with only a
+single sitting. Brief writes one reviewed Project Brief whose phases carry
+intent and exit evidence instead of tasks. Quick mode goes straight from
+discovery to plan. Spec-driven mode adds formal spec and design phases. If you invoke quick mode with only a
 project name, it should ask you for the missing project description
 before discovery starts.
 

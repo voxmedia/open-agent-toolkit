@@ -108,6 +108,7 @@ projects, and synced records whose detached checkout is absent.
   - `oat-project-new` — Create a spec-driven project
   - `oat-project-quick-start` — Start a quick workflow project
   - `oat-project-lite` — Start a lite workflow project
+  - `oat-project-brief` — Start a brief workflow project
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
@@ -130,7 +131,7 @@ Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 | ------------------------- | -------------------------------------------------------------------------------------------- |
 | `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                        |
 | `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                      |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven`           |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite, brief). Default: `spec-driven`    |
 | `oat_hill_checkpoints`    | Which phases require HiLL approval                                                           |
 | `oat_hill_completed`      | Which HiLL gates have been passed                                                            |
 | `oat_blockers`            | Informational warnings (not routing gates)                                                   |
@@ -220,6 +221,9 @@ Phase-to-skill mapping for HiLL override:
 | design    | `oat-project-design`   |
 | plan      | `oat-project-plan`     |
 
+In brief mode the `plan` row maps to `oat-project-brief`, which owns brief
+planning; spec-driven planning is never a brief project's current-phase skill.
+
 Note: a `spec` HiLL phase only appears in legacy projects scaffolded before requirements confirmation was folded into `oat-project-design`. New projects scaffold with `['discovery', 'design']` HiLL checkpoints, so `spec` falls through to `oat-project-design` here as a graceful migration. The standalone `oat-project-spec` skill remains available as an opt-in for users who want to formalize requirements separately.
 
 Note: `implement` is intentionally omitted. Implementation-phase checkpoints are handled by `oat_plan_hill_phases` in plan.md (plan-phase-level gates), not by the workflow-level `oat_hill_checkpoints` in state.md.
@@ -300,6 +304,19 @@ for a quick project.
 | plan          | complete     | tier 1        | `oat-project-implement` \* |
 | implement     | in_progress  | —             | `oat-project-implement` \* |
 
+**Brief Mode:**
+
+| Current Phase | Phase Status | Boundary Tier | Target Skill               |
+| ------------- | ------------ | ------------- | -------------------------- |
+| plan          | in_progress  | tier 3        | `oat-project-brief`        |
+| plan          | in_progress  | tier 2        | `oat-project-brief`        |
+| plan          | complete     | tier 1        | `oat-project-implement` \* |
+| implement     | in_progress  | —             | `oat-project-implement` \* |
+
+Unlike lite, tier 2 stays with `oat-project-brief`: a brief becomes
+implementation-ready only through its recorded review disposition and single
+approval, which that skill owns. Brief progress counts phase-units, not tasks.
+
 \* `oat-project-implement` handles both sequential and parallel execution.
 
 ### Step 4: Check for Unprocessed Reviews (Review Safety Check)
@@ -328,6 +345,14 @@ Before dispatching the target skill, check for unprocessed review artifacts:
 Entry condition: `oat_phase == "implement"` AND (`oat_phase_status == "complete"` OR `oat_phase_status == "pr_open"`)
 
 Apply the following checks in priority order. Stop at the first match:
+
+**Brief phase-unit guard (brief mode, applied first).** When
+`oat_workflow_mode: brief` and `oat_lifecycle` is not `complete`, read
+`project.progress.phases` from `oat project status --json`. If any phase has
+`provisional: true` or `completed` below `total`, route to
+`oat-project-implement` before every check below and announce: "Incomplete
+phase-units remain in the active scope". A `complete` or `pr_open` phase status
+alone never finalizes a brief project.
 
 **5.0: Unresolved implementation exit gate**
 
@@ -479,7 +504,8 @@ and fall through to 5.3, and do not route to `oat-project-implement` even when
 signal here — neither a null current task nor a `complete` or `pr_open`
 `oat_phase_status` is terminal, because an active project reaches both while it
 still owns pending revision work. The guard is workflow-mode independent: it
-applies identically to `spec-driven`, `quick`, `import`, and `lite` projects.
+applies identically to `spec-driven`, `quick`, `import`, `lite`, and `brief`
+projects.
 
 For every other `oat_lifecycle` value the check below is unchanged.
 
@@ -529,7 +555,8 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
 routes directly to `oat-project-pr-final` before the summary check below.
 Announce: "Final review passed — creating final PR". Optional lite summary or
 documentation work is owned by the immutable implementation closeout snapshot,
-not this fallback router.
+not this fallback router. The lite shortcut does not apply to brief projects:
+brief closeout takes 5.5 through 5.7 and never skips the summary.
 
 **5.5: Summary not done**
 

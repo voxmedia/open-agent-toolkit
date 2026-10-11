@@ -67,6 +67,9 @@ the row. Never persist either autonomy environment signal.
 
 - If the work cannot fit one sitting, promote the authored plan to quick mode.
 - If a design decision is not safely resolvable, promote rather than invent it.
+- Lite never converts to brief. Work that needs several phases with a design
+  agreed in conversation belongs in `oat-project-brief`; lite promotion still
+  targets quick.
 - If implementation code is about to change, stop and hand off to
   `oat-project-implement`.
 

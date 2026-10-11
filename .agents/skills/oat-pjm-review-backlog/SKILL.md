@@ -256,7 +256,7 @@ This step mirrors the **Project Kickoff Handoffs** section of the pjm instructio
 **For each item in the agreed kickoff stack**, write or refresh `.oat/repo/pjm/handoffs/<BL-id>.md` with:
 
 - the backlog item reference — its ID **and** human-readable title **and** path (never a bare ID);
-- the recommended project mode (`oat-project-lite` for single-sitting work, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work), including which artifacts (spec/design/plan) to pre-populate from existing research when it exists;
+- the recommended project mode (`oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work), including which artifacts (spec/design/plan) to pre-populate from existing research when it exists;
 - authoritative input pointers (research directories, decision records, code paths);
 - repo conventions and verification gates the item file does not restate;
 - a close-out section requiring (a) the **Backlog Lifecycle** — `oat backlog archive <id> --summary "outcome" --json` — in the same PR that ships the item, and (b) filesystem deletion of its owned handoff. Consume the complete returned `affectedPaths`, append the tracked handoff deletion, format existing text with the repository command, and commit the exact list via `oat internal commit-paths` with a unique retained identity and enabled hooks; stop if unavailable or blocked/failed. Include both old/new item names, ledger, index and rewritten references; preserve unrelated staged/unstaged work.

@@ -32,7 +32,7 @@ Before acting:
 2. Confirm `{PROJECT_PATH}/state.md` exists.
 3. Confirm `oat_workflow_mode` is `spec-driven` or absent only in a legacy spec-driven project.
 
-If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, `oat-project-lite` for single-sitting work, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
+If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
 
 ## Mode Assertion
 
@@ -107,6 +107,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - If `oat_workflow_mode` is present and not `spec-driven`, stop and route:
   - quick project: continue with `oat-project-quick-start` / `oat-project-progress`
   - lite project: continue with `oat-project-lite` / `oat-project-progress`
+  - brief project: continue with `oat-project-brief` / `oat-project-progress`
   - import project: continue with `oat-project-import-plan` / `oat-project-progress`
 - Ask user:
   - **Continue** with active project, or

@@ -74,7 +74,7 @@ waits.
 
 - Setting the two autonomy environment variables for the current process tree.
 - Resolving project home and persisted entry state.
-- Selecting lite, quick, or spec-driven mode from the review-density rule.
+- Selecting lite, brief, quick, or spec-driven mode from the review-density rule.
 - Invoking existing OAT lifecycle and dispatch skills in their required order.
 - Auto-resolving only the gates authorized by the autonomy contract.
 - Selecting the first existing compatible dispatch-ladder config scope through
@@ -170,8 +170,9 @@ fi
 ```
 
 For a new goal, derive a safe project slug but do not hand-create the project.
-Mode selection in Step 2 chooses `oat-project-lite`, `oat-project-new`, or
-`oat-project-quick-start`, which owns scaffolding and pointer persistence. If
+Mode selection in Step 2 chooses `oat-project-brief`,
+`oat-project-lite`, `oat-project-new`, or `oat-project-quick-start`, which owns
+scaffolding and pointer persistence. If
 the input is empty, ambiguous, collides with another project, or resolves
 outside the target repository, stop at the applicable product-judgment or
 repository-policy boundary.
@@ -225,6 +226,7 @@ Select the earliest incomplete lifecycle owner:
 | --------------------------------------------------------- | ----------------------------------------------------------- |
 | No project yet                                            | Continue to Step 2, then invoke the selected creation skill |
 | Lite plan incomplete                                      | `oat-project-lite`                                          |
+| Brief not yet reviewed and approved                       | `oat-project-brief`                                         |
 | Quick-mode discovery, optional design, or plan incomplete | `oat-project-quick-start`                                   |
 | Spec-driven discovery incomplete                          | `oat-project-discover`                                      |
 | Spec-driven design/spec incomplete                        | `oat-project-design`                                        |
@@ -299,6 +301,10 @@ For a new goal, choose mode as a rigor selector:
 - **Lite:** use when the goal is a clear, single-sitting change whose interview,
   decisions, assumptions, and validation criteria fit one combined plan and one
   sequential implementation phase.
+- **Brief:** use when the goal is one delivery whose outcome and design can be
+  settled from evidence and recorded in one reviewed Project Brief, with
+  phases of intent and exit evidence instead of a pre-approved task plan. Goal
+  mode is excluded until it is registered.
 
 Base the choice on uncertainty, integration risk, architecture decisions,
 reversibility, and review needs—not task count. Record the chosen mode and
@@ -306,8 +312,8 @@ evidence-based review-density rationale in the first owned project artifact.
 If evidence cannot support the choice without changing product intent, stop at
 a product-judgment boundary.
 
-Invoke `oat-project-new` for spec-driven mode, `oat-project-quick-start` for quick, or `oat-project-lite` for lite;
-these three entry routes own new-project setup. Load the selected creation
+Invoke `oat-project-new` for spec-driven mode, `oat-project-quick-start` for quick, `oat-project-lite` for lite, or `oat-project-brief` for brief;
+these four entry routes own new-project setup. Load the selected creation
 skill's current `SKILL.md` and follow it, or dispatch a child that carries it,
 never a remembered outcome. Existing projects retain their persisted workflow
 mode.
@@ -507,7 +513,7 @@ On success, report:
 ```text
 Autonomous run: complete
 Project: {path}
-Workflow mode: {lite | quick | spec-driven}
+Workflow mode: {lite | brief | quick | spec-driven}
 Entry state: {phase}
 Phases executed: {list}
 Reviews: {scope → route, target, independence, record}
@@ -585,7 +591,7 @@ reconciliation path. Do not guess or overwrite the tracker.
 - ✅ Both autonomy signals were active only for the current process tree.
 - ✅ The entry phase came from persisted OAT state and completed work was not
   replayed.
-- ✅ Lite/quick/spec-driven selection, when needed, recorded a review-density
+- ✅ Lite/brief/quick/spec-driven selection, when needed, recorded a review-density
   rationale.
 - ✅ External-integration research and evidence gaps were recorded.
 - ✅ Every required review has dispatch provenance and no accepted launch fell

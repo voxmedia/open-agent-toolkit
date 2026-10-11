@@ -274,6 +274,10 @@ commands or manual checks. Preserve the external source at
 all `oat_import_*` fields; accepting lite changes execution mode, not import
 provenance.
 
+Import never converts a plan to brief mode: an imported plan already carries
+tasks, while a brief carries phases without tasks. To author a brief, start
+`oat-project-brief` instead.
+
 ### Step 4: Update Plan Metadata
 
 Set frontmatter in `"$PROJECT_PATH/plan.md"`:
