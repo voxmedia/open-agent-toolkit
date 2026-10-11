@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 2.2.10
+  version: 2.2.11
 ---
 
 # Discovery Phase
