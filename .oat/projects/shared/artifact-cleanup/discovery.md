@@ -241,8 +241,13 @@ References` is the last section; no template placeholder survives
   timestamp-suffixed twin; reopened work is refused with the follow-up
   guidance.
 - `project-log.md` for a new project starts with at most a two-line header.
+- Every changed contract is documented: the docs pages that describe the
+  artifact set, the project log, closeout and the CLI reference; root
+  `AGENTS.md`; the edited skills' own prose; decision records for D1–D12; a
+  final-phase documentation audit confirms no page still describes the old
+  roll-up, the learnings file or the dropped template sections.
 - Every gate in the Definition of Done passes with real runs; skill and
-  lockstep versions bumped; decision records capture D1–D12.
+  lockstep versions bumped.
 
 ## Out of Scope
 
