@@ -38,7 +38,11 @@ async function runCommand(
   args: string[],
   globalArgs: string[] = [],
 ): Promise<void> {
-  const program = new Command().name('oat').option('--json').exitOverride();
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--cwd <path>')
+    .exitOverride();
   const project = new Command('project');
   project.addCommand(command);
   program.addCommand(project);
@@ -319,6 +323,22 @@ describe('oat project validate-plan', () => {
         errors: expect.arrayContaining([expect.any(String)]),
       });
       expect(process.exitCode).toBe(2);
+    });
+  });
+
+  describe('--cwd resolution', () => {
+    it('resolves a relative --project-path against the command cwd, not the process cwd', async () => {
+      const dir = await writeValidPlan();
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(
+        command,
+        ['--project-path', '.'],
+        ['--json', '--cwd', dir],
+      );
+
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode ?? 0).toBe(0);
     });
   });
 

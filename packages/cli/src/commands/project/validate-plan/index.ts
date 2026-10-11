@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -57,7 +57,8 @@ export function createProjectValidatePlanCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
-      const planPath = join(options.projectPath, 'plan.md');
+      const projectPath = resolve(context.cwd, options.projectPath);
+      const planPath = join(projectPath, 'plan.md');
 
       let content: string;
       try {
@@ -92,7 +93,7 @@ export function createProjectValidatePlanCommand(
       let stateFrontmatter: Record<string, unknown> | null = null;
       try {
         const stateContent = readFileSync(
-          join(options.projectPath, 'state.md'),
+          join(projectPath, 'state.md'),
           'utf-8',
         );
         const parsedState = parseFrontmatterFromContent(stateContent);
