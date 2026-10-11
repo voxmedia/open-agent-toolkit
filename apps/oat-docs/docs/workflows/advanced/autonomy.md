@@ -336,10 +336,18 @@ must resolve before the run makes any change.
 and a dispatch policy is already configured. You authorize the bounded
 resumable-export goal through a final PR without ordinary mid-run approval
 pauses. Autonomous entry chooses
-lite, quick, or spec-driven review density from the actual uncertainty and
+lite, brief, quick, or spec-driven review density from the actual uncertainty and
 invokes its owning creation skill. If an export-filter project is already
 active, the second example explicitly resumes its earliest incomplete step
 instead of replaying finished phases.
+
+When autonomous entry selects brief, `oat-project-brief` derives the project
+name and description only from the explicit goal and stops if it is not
+substantive. The brief's single approval resolves autonomously under
+`BRIEF-11`: the reviewed brief is approved and the approval line records the
+autonomous run, while contradictory or materially incomplete outcomes stop at
+a product-judgment boundary. A brief records no HiLL checkpoints unless it
+lists phases explicitly.
 
 **Expected output:** Session-only autonomy signals, persisted lifecycle
 progress, reviewed task commits, and project-local execution learnings. Existing

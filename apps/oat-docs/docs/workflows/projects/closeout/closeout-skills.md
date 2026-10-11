@@ -150,7 +150,7 @@ inputs select its destination and title.
 **Prerequisites:** Needs an active OAT project: yes. If no project is active,
 the skill asks for the project name and sets that project as active. The
 project needs `plan.md`. Spec-driven mode also requires `spec.md` and `design.md`. Quick,
-import, and lite accept their mode-appropriate reduced artifacts. The latest
+import, lite, and brief accept their mode-appropriate reduced artifacts. The latest
 `final` code-review event in the plan's Reviews ledger should be `passed`.
 Autonomous execution stops if it is not passed. Interactive execution warns
 and asks before proceeding anyway.
@@ -378,7 +378,9 @@ path. The target needs `state.md` and at least `plan.md` or
 `implementation.md`. Completed
 implementation provides shipped evidence. If only a plan exists, the skill can
 proceed but must identify recommendations as based on planned work rather than
-verified implementation. Lite projects do not require discovery, spec, or design.
+verified implementation. Lite and brief projects do not require discovery,
+spec, or design; a brief's documentation sources are the Project Brief and the
+per-phase journal.
 
 **Example scenario:** Export filters shipped, but the user guide still describes
 only unfiltered exports. Document verifies the actual endpoint and CLI behavior,
@@ -430,7 +432,10 @@ Summarize the delivered export filters, the date-format decision, and the audit-
 completed task. Missing implementation tracking blocks summary generation.
 With no completed tasks, the process warns that the summary will be minimal.
 Lite uses its plan contract and implementation results without requiring
-discovery, spec, or design artifacts.
+discovery, spec, or design artifacts. Brief needs at least one accepted
+phase-unit and draws on the brief's Goal, Outcomes, Approach, and Decisions
+plus the journal; its staleness fingerprint changes when a phase is accepted,
+not when execution records change.
 
 **Example scenario:** The first export phase is delivered, and another engineer
 will own the reporting phase next week. Summary records the shipped filter

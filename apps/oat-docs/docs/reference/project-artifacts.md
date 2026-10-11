@@ -50,7 +50,7 @@ archive metadata own terminal reachability and retry identity.
 
 Mode-sensitive notes:
 
-- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`) for routing.
+- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`, `brief`) for routing.
 - `plan.md` remains the canonical execution artifact across all modes.
 
 | Mode          | Core authored artifacts                                                                                                                | Optional artifacts                         |
@@ -59,6 +59,7 @@ Mode-sensitive notes:
 | `quick`       | `discovery.md`, `plan.md`                                                                                                              | Lightweight `design.md`, `spec.md`         |
 | `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                     |
 | `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout |
+| `brief`       | `plan.md` as a Project Brief (phases with Intent and Exit evidence) and `implementation.md` as the per-phase journal                   | `references/research/`, `project-log.md`   |
 
 Every Lite plan keeps Summary, Decisions, Assumptions, Out of Scope, and
 Validation Criteria. User-visible changes add numbered, testable Product
@@ -74,6 +75,21 @@ proof. Strategies may be test-first, characterization-first,
 implementation-then-regression, static/build, or manual/visual. Static or build
 checks alone fit only changes that cannot affect runtime behavior; every
 behavioral change needs evidence that fails without the change.
+
+In brief mode, `plan.md` is the Project Brief: Goal, numbered Outcomes (each
+naming its intended evidence), Approach with an optional `### Design`,
+Constraints and Out of Scope, Decisions, Known Unknowns, Delivery endpoint and
+authority, an empty `## Milestones` section reserved for goal mode, and
+`## Phase pNN:` blocks with `**Intent:**`, `**Exit evidence:**`, and
+`**Provisional:**` lines instead of tasks. `implementation.md` is the
+per-phase journal: each phase section carries exact `**Status:**`,
+`**Base:**`, `**Head:**`, and `**Executor:**` marker lines, followed by
+`### Task pNN-tNN` execution records opened as work happens. Progress counts
+phase-units, and `**Status:** completed` under a phase heading is what accepts
+it. The journal's Final Summary adds an `**Outcomes audit:**` block with one
+line per numbered Outcome. When a brief artifact gate is configured,
+`state.md` records its outcome as `oat_brief_gate`, with the same core fields
+as `oat_quick_start_gate`.
 
 ## Blockers in state.md
 

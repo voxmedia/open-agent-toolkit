@@ -176,7 +176,7 @@ This feature is opt-in and disabled by default (missing or `enabled: false`). Fo
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
 
-For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
+For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
 
 For analysis artifacts, `oat-docs-analyze` and `oat-agent-instructions-analyze` run a bounded accuracy review after writing their severity-rated artifacts. The reviewer checks cited evidence, severity, and recommendations before the matching apply workflow consumes the artifact. The analysis loop updates tracking metadata to mark the artifact verified.
 
@@ -219,6 +219,18 @@ See [Workflow preferences in the Configuration guide](../../../reference/configu
 ## Phase and final review
 
 Use phase-scoped review artifacts during implementation (`p01`, `p02`, etc), then run final review before project closeout.
+
+In a brief project, review scope comes from the journal's anchors instead of
+commit-message inference. A phase scope is its `**Base:**..**Head:**` range, a
+`pNN-pMM` run spans the first selected base through the last selected head,
+and `final` covers every accepted phase, including `p-revN` revision phases.
+The review artifact records the requested scope, the ordered phase IDs, the
+base SHA, and `oat_review_scope_source` (`anchors`, or `merge-base-range` when
+anchors are missing and the range widens to the confirmed merge-base range).
+Commit-message matches only label commits and never narrow the range. Invalid
+or contradictory anchors stop the review and route to `oat-project-reconcile`.
+A brief `final` review also audits every numbered Outcome against the
+journal's evidence.
 
 Final review `passed` gate requires:
 
@@ -455,7 +467,8 @@ An artifact review loop runs in the same agent session that wrote the artifact,
 so it is not an independent review. It retries up to the project's retry limit,
 which defaults to two; a limit of zero still allows the first review. Autonomous
 runs turn on review at HiLL checkpoints for every project except lite projects,
-which have no checkpoints.
+which have no checkpoints, and brief projects without explicitly listed
+checkpoint phases.
 
 - If you are a solo developer, or runs are unattended, and your agent tool
   supports subagents, set the final review execution to `subagent`.

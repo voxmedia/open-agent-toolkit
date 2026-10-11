@@ -1,6 +1,6 @@
 ---
 title: Choose a Workflow
-description: Choose how to run tracked, resumable work in OAT, from no project to lite, quick, spec-driven, or imported projects, and what each mode does at the end.
+description: Choose how to run tracked, resumable work in OAT, from no project to lite, brief, quick, spec-driven, or imported projects, and what each mode does at the end.
 ---
 
 # Choose a Workflow
@@ -48,6 +48,7 @@ Stay with direct CLI usage when:
 
 - CLI only: direct commands, no tracked project artifacts
 - Lite mode: a batched interview and one approval produce a single-phase `plan.md` for a single-sitting change
+- Brief mode: a design-aligned interview produces one reviewed Project Brief whose phases carry intent and exit evidence instead of tasks
 - Quick mode: tracked work with a lighter upfront planning path
 - Spec-driven mode: explicit discovery, requirements, design, and plan artifacts
 - Import mode: an externally-authored plan imported into OAT for tracked execution
@@ -78,13 +79,14 @@ it by running that mode's entry skill, and the skill creates the project for
 you. An OAT project is a folder of tracked files (plan, state, reviews) that lets
 an agent pick the work up again in a later session.
 
-| Mode        | Start it with                                   | Choose it when                                                                 | What you give up                                                                                                | At the end                                                                                                                  |
-| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| No project  | No skill; ask your agent or run CLI commands    | The work is small, or is just provider sync or a single CLI command            | Resuming later, a tracked plan, and lifecycle reviews. Ad-hoc reviews still work                                | OAT pushes nothing and opens no pull request                                                                                |
-| Lite        | `/oat-project-lite`                             | The change fits in one sitting and the outcome is clear                        | Discovery and design documents, multiple phases, and approval pauses between phases. You approve one plan, once | Always pushes your current branch and opens a pull request by itself; no setting removes this step                          |
-| Quick       | `/oat-project-quick-start`                      | The work is bounded and the requirements are clear                             | A formal requirements document (`spec.md`). Design is optional                                                  | Pushes your branch and opens a pull request only when `workflow.postImplementSequence` asks for it, or in an autonomous run |
-| Spec-driven | `/oat-project-new`                              | The requirements are unclear, or the change cuts across many parts of the code | Speed: you approve discovery and design before any planning or code                                             | Same as quick                                                                                                               |
-| Import      | `/oat-project-import-plan` with the plan's path | A plan already exists in another tool or document                              | OAT's own discovery and design steps                                                                            | Same as quick                                                                                                               |
+| Mode        | Start it with                                   | Choose it when                                                                  | What you give up                                                                                                                     | At the end                                                                                                                  |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| No project  | No skill; ask your agent or run CLI commands    | The work is small, or is just provider sync or a single CLI command             | Resuming later, a tracked plan, and lifecycle reviews. Ad-hoc reviews still work                                                     | OAT pushes nothing and opens no pull request                                                                                |
+| Lite        | `/oat-project-lite`                             | The change fits in one sitting and the outcome is clear                         | Discovery and design documents, multiple phases, and approval pauses between phases. You approve one plan, once                      | Always pushes your current branch and opens a pull request by itself; no setting removes this step                          |
+| Brief       | `/oat-project-brief`                            | The work is one delivery whose outcome and design you can agree in conversation | Discovery and design documents and an up-front task list. Phases state intent and exit evidence; tasks are recorded as the work runs | Same as quick                                                                                                               |
+| Quick       | `/oat-project-quick-start`                      | The work is bounded and the requirements are clear                              | A formal requirements document (`spec.md`). Design is optional                                                                       | Pushes your branch and opens a pull request only when `workflow.postImplementSequence` asks for it, or in an autonomous run |
+| Spec-driven | `/oat-project-new`                              | The requirements are unclear, or the change cuts across many parts of the code  | Speed: you approve discovery and design before any planning or code                                                                  | Same as quick                                                                                                               |
+| Import      | `/oat-project-import-plan` with the plan's path | A plan already exists in another tool or document                               | OAT's own discovery and design steps                                                                                                 | Same as quick                                                                                                               |
 
 Type the skill names in your coding agent's chat, not a terminal; Codex uses
 `$` instead of `/`. No mode ever merges a pull request. Separately,
@@ -105,6 +107,12 @@ is what holds the planning conversation, so start with the skill.
   asking, so start it on a feature branch; if you do not want that, choose
   quick instead, which opens a pull request only when
   `workflow.postImplementSequence` asks for one or the run is autonomous.
+- If you can agree the outcome and the design with your agent in one
+  conversation and want to approve that once, choose brief. You approve one
+  reviewed Project Brief; the agent then works phase by phase and records each
+  task as it happens rather than planning them all first. Promote it to quick
+  with `oat project promote <path> --to quick` if you later want a maintained
+  task plan.
 - If your team is building a feature with agreed, bounded requirements, choose
   quick. A long task list alone does not call for a formal spec.
 - If the change is high-risk or regulated, or its requirements are still being

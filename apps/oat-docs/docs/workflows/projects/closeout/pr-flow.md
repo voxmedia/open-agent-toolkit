@@ -18,11 +18,13 @@ Expected artifacts:
 - Required (spec-driven mode): `spec.md`, `design.md`
 - Optional (quick/import): `spec.md`, `design.md`
 - Not expected (lite): `discovery.md`, `spec.md`, or `design.md`
+- Not expected (brief): `discovery.md`, `spec.md`, or `design.md`; the Project Brief in `plan.md` and the per-phase journal in `implementation.md` are the sources
 - Recommended (quick mode): `discovery.md`
 - Recommended (import mode): `references/imported-plan.md`
 - Recommended: `implementation.md` final summary
 - Recommended: `summary.md` — pr-final treats it as the primary source for the PR Summary section and automatically refreshes it first when missing or stale
 - Lite source row: `oat-project-pr-final` uses the plan's Summary, Decisions, and Validation Criteria plus the `implementation.md` Final Summary; it does not create `summary.md` unless lite closeout explicitly opts in
+- Brief source row: `summary.md` is required as in quick; its sources are the brief's Goal, Outcomes, Approach, and Decisions, the journal's accepted phases and Outcomes audit, and the review rows. Progress PRs scope a phase or `pNN-pMM` run from the journal's `**Base:**`/`**Head:**` anchors rather than a commit-message search
 - Required gate for final PR: review table final row should be `passed`
 
 ## Output

@@ -30,7 +30,7 @@ instead of `/`):
    summary that `/oat-repo-knowledge-index` writes under
    `.oat/repo/knowledge/`. If that folder has no Markdown file, progress tells
    you to run `/oat-repo-knowledge-index` and stops without a project report,
-   whatever the project's mode; quick, lite and imported projects never
+   whatever the project's mode; quick, lite, brief and imported projects never
    needed the index before, so this can be the first time you see it. Run
    `/oat-repo-knowledge-index` once and then run progress again, or skip to
    step 3: `/oat-project-next` itself does not check for the index (spec-driven
@@ -80,6 +80,15 @@ the unmet clause in the reason, until the plan carries ready frontmatter, a
 durable `## Reviews` disposition, and a substantive task; only then do they
 recommend `oat-project-implement`. Recommendations for lite, spec-driven, and
 import projects are unchanged, because the predicate is quick-workflow policy.
+
+For a brief project, the router counts phase-units from the journal. While the
+brief is not yet approved, it recommends `oat-project-brief`. After
+implementation, while any phase is provisional or not yet accepted with
+`**Status:** completed`, it recommends `oat-project-implement` ("Incomplete
+phase-units remain in the active scope") before every later check. The
+`.oat/state.md` dashboard does not read phase-units, so at the end of
+implementation it prints a note that `oat project status` and
+`oat-project-next` are the authority for brief projects.
 
 ## What travels
 

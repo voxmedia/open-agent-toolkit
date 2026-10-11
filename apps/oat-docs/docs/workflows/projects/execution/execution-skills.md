@@ -92,14 +92,26 @@ choosing `Leave Unresolved` stops the run. A non-interactive run stops with
 needs your authorization, the skill asks once before any work; if you decline,
 it runs the phases inline in the current session instead.
 
-**Questions on the first run:** Except in a lite project, the first run lists
+**Questions on the first run:** Except in a lite or brief project, the first run lists
 the plan's phases and asks which checkpoint behavior you want: stop after
 every phase (the default), after specific phases, or only after the final
 phase. Setting `workflow.hillCheckpointDefault` to `every` or `final` answers
 this in advance. It then asks whether to run an extra lifecycle review
 automatically at each checkpoint, unless `workflow.autoReviewAtHillCheckpoints`
 is set. Both answers are written to `plan.md` and are not asked again when you
-resume. A lite project has no checkpoints and skips both questions.
+resume. A lite project has no checkpoints and skips both questions. A brief
+project skips them too unless its `oat_plan_hill_phases` lists phases
+explicitly; for a brief, `[]` means no checkpoints.
+
+**Brief projects:** Each `## Phase pNN:` block in the brief is one
+phase-unit with Intent and Exit evidence instead of planned tasks. The root
+records the phase's `**Base:**` in a phase-start commit before dispatch, the
+committing owner opens `### Task pNN-tNN` execution records in
+`implementation.md` as work happens and writes `**Head:**` when the phase's
+work ends, a fresh reviewer reviews the anchored `Base..Head` range, and only
+the root writes `**Status:** completed` once review dispositions and selected
+gates settle. Progress and the next-phase decision count phase-units, never
+records.
 
 **What it does without asking:** After those questions, the run continues
 until a checkpoint, a blocker or the end of the plan without asking again,

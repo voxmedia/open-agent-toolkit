@@ -544,8 +544,9 @@ scaffold:
 - one `## Phase pNN: <name>` section per authored phase containing only
   `**Status:** pending`. Remove the template's placeholder `**Base:**`,
   `**Head:**`, and `**Executor:**` lines and the example execution record:
-  implementation records anchors when a phase starts and is accepted, and opens
-  execution records only when work starts.
+  implementation records `**Base:**` when a phase starts and `**Head:**` when
+  its work ends, before its review, and opens execution records only when work
+  starts.
 
 ### Step 6: Refresh Repo Dashboard
 
