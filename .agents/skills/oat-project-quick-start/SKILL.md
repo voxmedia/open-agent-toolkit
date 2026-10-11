@@ -152,11 +152,13 @@ Step 3.7 — against `"$PROJECT_PATH/plan.md"`:
   `oat-project-implement/SKILL.md` and follow it to begin execution.
 
 **Promoted-brief resume.** When the resumed `plan.md` frontmatter records
-`oat_promoted_from: brief`, the project came from
-`oat project promote --to quick` (brief contract section 11), and quick plan
-readiness stays false while `oat_promotion_pending_phases` lists any phase
-(condition 6). `discovery.md` was rendered from the brief and counts as
-existing output, so re-enter at Step 2.9 and then:
+`oat_promoted_from: brief` or `oat_promoted_from: goal`, the project came from
+`oat project promote --to quick` (brief contract section 11; a goal promotes
+only at a settled delivery boundary), and quick plan readiness stays false
+while `oat_promotion_pending_phases` lists any phase (condition 6). The same
+resume serves both origins; there is no second readiness predicate.
+`discovery.md` was rendered from the brief and counts as existing output, so
+re-enter at Step 2.9 and then:
 
 1. Author executable `### Task pNN-tNN:` tasks, under Step 3's plan
    requirements, for every phase in `oat_promotion_pending_phases`, in document
@@ -166,7 +168,8 @@ existing output, so re-enter at Step 2.9 and then:
    ID is reused.
 2. In the same plan write that adds a phase's tasks, remove that phase from
    `oat_promotion_pending_phases`; when the last one is authored, write
-   `oat_promotion_pending_phases: []`. Keep `oat_promoted_from: brief`.
+   `oat_promotion_pending_phases: []`. Keep `oat_promoted_from` unchanged
+   (`brief` or `goal`).
 3. Present historical tasks (those copied from completed execution records and
    any synthesized `Accepted via phase evidence` task) as already accepted:
    their journal markers already satisfy quick progress, and they and the
@@ -176,7 +179,9 @@ existing output, so re-enter at Step 2.9 and then:
    configured gate see every task, with the historical ones labeled as accepted
    context, and the disposition Step 3.7 records is the sign-off for the newly
    authored tasks only. Existing `## Reviews` rows and the promotion provenance
-   line stay untouched.
+   line stay untouched. A promoted goal also keeps its `oat_deliveries`,
+   `oat_milestone_gates` and `oat_goal_outcome_audit` in `state.md` as
+   history; quick never edits them.
 
 If no valid active project exists:
 
@@ -658,7 +663,7 @@ Required frontmatter updates:
 
 **Promoted-brief provenance.** Promotion already wrote `oat_plan_source: quick`,
 and this step leaves it unchanged; the origin lives in `oat_promoted_from:
-brief`. Re-asserting the values above never removes `oat_promoted_from` or
+brief` or `oat_promoted_from: goal`. Re-asserting the values above never removes `oat_promoted_from` or
 `oat_promotion_pending_phases`; only the Step 0.5 promoted-brief resume shrinks
 that list as it authors each phase.
 

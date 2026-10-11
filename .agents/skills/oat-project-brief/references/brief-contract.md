@@ -286,6 +286,25 @@ Promotion refuses, writing nothing, with:
 - `missing-phase-head`: an accepted phase has no completed record and no
   `**Head:**` anchor to synthesize from (the refused phases are listed).
 
+**Goal promotion.** A goal project promotes the same way, only at a settled
+delivery boundary: `oat_milestone_status: delivered`, every `oat_deliveries`
+entry `at_endpoint` or `superseded` (none `registering` or `open`), no pending
+`oat_goal_recovery`, and no extracted phase. Promotion writes
+`oat_promoted_from: goal`; the provenance line under `## Reviews` names
+workflow mode goal; `oat_deliveries`, `oat_milestone_gates` and
+`oat_goal_outcome_audit` stay in the promoted `state.md` and are copied into
+`references/brief-archive.md` under the archived brief. The promoted-brief
+resume and its `oat_promotion_pending_phases` readiness clause are shared;
+there is no second readiness predicate. A goal that is not settled refuses,
+writing nothing, with:
+
+- `goal-milestone-active`: the active milestone is not `delivered`;
+- `goal-delivery-unsettled`: a delivery is `registering` or `open` (the
+  unsettled delivery IDs are listed);
+- `goal-recovery-pending`: `oat_goal_recovery` is not null;
+- `extracted-phases`: as above, matching the migration's refusal of every
+  extracted phase.
+
 ## 12. Goal mode (reserved)
 
 Goal mode adds a `## Milestones` index, milestone state, a delivery registry,

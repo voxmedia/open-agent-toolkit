@@ -1186,7 +1186,7 @@ describe('help output snapshots', () => {
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
-        promote [options] <project-path>             Promote an authored lite or brief project to the quick workflow
+        promote [options] <project-path>             Promote an authored lite, brief or settled goal project to the quick workflow
         prune [options] [project-path|slug]          Permanently remove a synced project and its ref
         push [options] [project-path|slug]           Commit and publish a synced OAT project
         pull [options] [project-path|slug]           Materialize or update a synced OAT project
