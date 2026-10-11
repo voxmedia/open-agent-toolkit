@@ -34,6 +34,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-pjm-update-repo-reference',
     'oat-cursor-cloud-projects',
     'oat-project-autonomous',
+    'oat-project-brief',
     'oat-project-capture',
     'oat-project-clear-active',
     'oat-project-complete',

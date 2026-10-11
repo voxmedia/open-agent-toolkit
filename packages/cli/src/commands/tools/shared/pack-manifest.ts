@@ -126,6 +126,7 @@ const WORKFLOW_SKILL_NAMES = [
   'oat-cursor-cloud-projects',
   'oat-explainer-kit',
   'oat-project-autonomous',
+  'oat-project-brief',
   'oat-project-capture',
   'oat-project-clear-active',
   'oat-project-complete',

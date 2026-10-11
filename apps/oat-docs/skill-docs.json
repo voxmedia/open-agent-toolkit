@@ -218,6 +218,14 @@
       "applicabilityNotes": "Entry point: a substantive goal creates a project; an explicit project path, slug or valid active pointer resumes an existing one."
     },
     {
+      "name": "oat-project-brief",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-brief",
+      "applicability": "none",
+      "applicabilityNotes": "Interviews for and scaffolds a brief project; resumes an active brief project in place."
+    },
+    {
       "name": "oat-project-capture",
       "family": "Project entry",
       "page": "workflows/projects/planning/starting-projects.md",

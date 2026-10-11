@@ -299,6 +299,31 @@ keeping or disabling configured gates for this project.
 **Next step:** Run `oat-project-implement` after the approved lite plan is ready.
 If the scope grows, continue through `oat-project-quick-start` after promotion.
 
+## oat-project-brief
+
+Use brief for one delivery whose outcome and design you can agree in
+conversation. Brief replaces discovery, design, and a task plan with one
+reviewed Project Brief in `plan.md`. Its phases state intent and exit evidence
+instead of tasks.
+
+**Invocation:** Provide the slug and the intended outcome.
+
+```text
+/oat-project-brief export-audit "Let administrators export the audit log as CSV from the settings page."
+```
+
+**Prerequisites:** No active project is needed. If the active project is a
+brief project, brief resumes it in place.
+
+**Example scenario:** Administrators need the audit log as CSV. Brief
+interviews you in short rounds, settling facts from the code itself and
+putting the design choices to you, such as streaming against buffering the
+export. It writes the agreed outcomes, approach, decisions, and phases into the
+brief, runs artifact review and any configured gate, and asks you to approve
+the reviewed brief once.
+
+**Next step:** Run `oat-project-implement` after the brief is approved.
+
 ## oat-project-import-plan
 
 Use import when the plan already exists, including one produced in a provider's
