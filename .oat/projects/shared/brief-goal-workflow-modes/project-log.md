@@ -44,6 +44,18 @@ Entries are chronological and append-only.
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/brief-goal-workflow-modes/reviews/artifact-plan-review-2026-10-11T014430Z.md run=3d1ca87b-c858-497a-b529-d73f88974327
 
+### 2026-10-11 · structural · oat-project-implement · p01
+
+Phase p01 outcome: pass. Root review round 1 (auto, oat-reviewer-claude-claude-fable-5-1-high) 0C/0H/1M/2L → fix tasks p01-t05, p01-t06 on the original implementer handle; round 2 0C/0H/0M/1L (bookkeeping). Fix-loop count 1. Review artifacts: reviews/archived/p01-review-2026-10-11T024911Z.md, reviews/archived/p01-review-2026-10-11T030140Z.md. Key p01-outcome-run1-f73b4e904.
+
+### 2026-10-11 · general · friction · reviewer child terminated by gateway 503 before artifact
+
+The round-2 p01 reviewer (accepted native launch) was terminated by a transient inference-gateway HTTP 503 before writing anything. Continued through the same accepted handle rather than launching a replacement; the continuation completed normally. Key p01-review2-503-continuation.
+
+### 2026-10-11 · general · friction · reviewer resolver refuses candidate overrides under a capped policy
+
+Operator asked for Opus 5.5 high subagents under a frontier ceiling; dispatch-ceiling resolve rejects --candidate-model for the reviewer role, so root-owned phase reviewers run the cap (claude-fable-5-1/high) while implementers run Opus 5.5 high via the exact-candidate branch. Recorded as a run deviation rather than lowering the ceiling. Key p01-reviewer-cap-deviation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

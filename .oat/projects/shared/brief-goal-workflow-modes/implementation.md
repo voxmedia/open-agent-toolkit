@@ -24,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status      | Tasks | Completed |
-| -------- | ----------- | ----- | --------- |
-| Phase 1  | in_progress | 6     | 4/6       |
-| Phase 2  | pending     | 3     | 0/3       |
-| Phase 3  | pending     | 2     | 0/2       |
-| Phase 4  | pending     | 2     | 0/2       |
-| Phase 5  | pending     | 2     | 0/2       |
-| Phase 6  | pending     | 3     | 0/3       |
-| Phase 7  | pending     | 3     | 0/3       |
-| Phase 8  | pending     | 6     | 0/6       |
-| Phase 9  | pending     | 2     | 0/2       |
-| Phase 10 | pending     | 3     | 0/3       |
-| Phase 11 | pending     | 2     | 0/2       |
-| Phase 12 | pending     | 1     | 0/1       |
+| Phase    | Status   | Tasks | Completed |
+| -------- | -------- | ----- | --------- |
+| Phase 1  | complete | 6     | 6/6       |
+| Phase 2  | pending  | 3     | 0/3       |
+| Phase 3  | pending  | 2     | 0/2       |
+| Phase 4  | pending  | 2     | 0/2       |
+| Phase 5  | pending  | 2     | 0/2       |
+| Phase 6  | pending  | 3     | 0/3       |
+| Phase 7  | pending  | 3     | 0/3       |
+| Phase 8  | pending  | 6     | 0/6       |
+| Phase 9  | pending  | 2     | 0/2       |
+| Phase 10 | pending  | 3     | 0/3       |
+| Phase 11 | pending  | 2     | 0/2       |
+| Phase 12 | pending  | 1     | 0/1       |
 
 **Total:** 6/35 tasks completed
 
@@ -45,16 +45,16 @@ oat_generated: false
 
 ## Phase 1: Control-plane registry, phase-unit contract and readiness clause
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-10-11
 
 **Base:** 8f8465b957d6beaf414a2cfb90c61195a9129951
-**Head:** 522659033 (fix head; original phase head 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b)
+**Head:** 522659033bbb2cf95565b83acf1e37915687494e
 **Executor:** phase-implementer:impl-p01-6392fd49 (oat-phase-implementer-claude-claude-opus-5-5-high)
 
 ### Phase Summary (fill when phase is complete)
 
-- **Outcome:** tasks complete; root review pending. `brief` registered in `WORKFLOW_MODES` with `isBriefMode`; phase-unit parsing (`parsePhaseMarkers`, `parseProvisionalPhaseIds`, `phaseUnits` option) with strict journal markers; `selectPhaseUnits` seam and brief-aware readers; readiness clause 6 (`promotion-pending-phases`) with its router reason-map entry.
+- **Outcome:** accepted. Root review round 1 (Fable 5.1 high, auto) passed with 1 medium / 2 low → fix tasks p01-t05, p01-t06 (same implementer handle, fix mode); round 2 passed with 0 critical / 0 high / 0 medium / 1 low (bookkeeping, resolved here). Fix-loop count: 1. `brief` registered in `WORKFLOW_MODES` with `isBriefMode`; phase-unit parsing (`parsePhaseMarkers`, `parseProvisionalPhaseIds`, `phaseUnits` option) with strict journal markers; `selectPhaseUnits` seam and brief-aware readers; readiness clause 6 (`promotion-pending-phases`) with its router reason-map entry.
 - **Verification:** phase-wide: control-plane suite 180/180; CLI suite 8363/8363 after a control-plane build (isolated HOME); `pnpm check` pass. Root re-ran the control-plane suite (180/180) and `pnpm type-check` (pass) before bookkeeping.
 - **Notes:** report status DONE_WITH_CONCERNS (informational concerns only; no recovery attempts, 0/10).
 
@@ -122,7 +122,7 @@ oat_generated: false
 - L2 ledger hygiene (Progress Overview stale, Deviations rows under-padded, template log stanzas) → resolved by root in this bookkeeping commit; no task.
 
 **New tasks added:** p01-t05, p01-t06
-**Next:** resume the p01 implementer (request impl-p01-6392fd49) in fix mode for p01-t05 and p01-t06; then a fresh root reviewer round on the updated range; then `passed`.
+**Next:** done. Fix continuation landed af7d01fbd and 522659033; round-2 review (reviews/archived/p01-review-2026-10-11T030140Z.md, head f73b4e904b96de4be741daf526d0afcacfdbe05c) passed: 0/0/0/1 (L: Progress Overview row, abbreviated SHAs — corrected in this bookkeeping). Both p01 review events are `passed`.
 
 ---
 
@@ -381,6 +381,16 @@ _- Outstanding Items_
 - Managed Claude record: validated-only · Dispatch stamp: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high`
 - Launch status: accepted → child outcome: completed; artifact reviews/archived/p01-review-2026-10-11T024911Z.md; 0 critical, 0 high, 1 medium, 2 low; reconnaissance not-attempted (no `## Review Orchestration`, no project-log entry)
 
+#### Phase p01 fix continuation
+
+- Continuation event `cont-brief-goal-workflow-modes-p01-fix-1` on the original handle (request `impl-p01-6392fd49`, mode fix, target unchanged): commits af7d01fbd (p01-t05), 522659033 (p01-t06); report DONE; root re-verified (control-plane 183/183, forced type-check).
+
+#### Phase p01 review dispatch (round 2)
+
+- Request ID: `rev-p01-r2-294cf72e` · Dispatch target: `oat-reviewer-claude-claude-fable-5-1-high` · Model axis: `selected:claude-fable-5-1` · Effort axis: `selected:high` · Selection mode: review-target · Selection reason: gate-target · Managed Claude record: validated-only · Dispatch stamp: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high`
+- Launch status: accepted → first turn terminated by a transient gateway HTTP 503 (auth_unavailable) before any artifact; continued through the same accepted handle (no replacement launch) → child outcome: completed; artifact reviews/archived/p01-review-2026-10-11T030140Z.md; 0 critical, 0 high, 0 medium, 1 low; reconnaissance not-attempted
+- Phase outcome: pass; fix iterations: 1; optional nested dispatches: none; worktrees: root; outstanding items: none
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -392,6 +402,7 @@ _- Outstanding Items_
 - p01 implemented by `oat-phase-implementer-claude-claude-opus-5-5-high` (request impl-p01-6392fd49): 4 tasks, 4 commits, verification green; root re-verified; ledger recorded before review (Step 7a).
 - p01 reviewed (auto, Fable 5.1 high): pass with 1 medium, 2 low; M1 and L1 converted to p01-t05/p01-t06; L2 fixed in bookkeeping.
 - p01 fix continuation (cont-brief-goal-workflow-modes-p01-fix-1, same handle): p01-t05 af7d01fbd, p01-t06 522659033; root re-verified control-plane 183/183 and forced type-check; event → fixes_completed; re-review round 2 dispatched.
+- p01 round-2 review passed (0/0/0/1, bookkeeping low fixed here); phase p01 complete; both review events `passed`.
 
 Chronological log of implementation progress.
 
