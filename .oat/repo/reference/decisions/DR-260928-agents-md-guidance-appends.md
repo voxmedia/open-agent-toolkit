@@ -19,3 +19,20 @@ Append only absent managed blocks, opening the existing AGENTS.md with O_WRONLY 
 ## Consequences
 
 Guidance writers exit 0 after appending instead of exiting 1 with a patch. Two concurrent runs can append the same block twice, leaving duplicate markers that block later runs; serializing appends needs a cross-process lock and is tracked in BL-260928-serialize-concurrent-agents-md. Shipped in backlog-wave-2.
+
+## Resolution — 2026-10-10
+
+The cross-process follow-up is implemented in `feat/october-backlog-fixes`
+(commit `5a12600e0`, lint correction `222bade6e`), tracked by the archived
+[Serialize concurrent AGENTS.md guidance appends](../../pjm/backlog/archived/BL-260928-serialize-concurrent-agents-md.md).
+A bounded two-process first-read barrier reproduces two appends on the baseline
+and proves one `appended`, one `no-change`, and a clean rerun after serialization.
+The original inode, hard-link refusal, no-follow flags, and append-only writes remain.
+
+The advisory lock lives beside the canonical target as
+`<target>.oat-guidance.lock`, so direct and contained symlink aliases share it.
+Preview and manual-only paths do not acquire it. Locks record host, PID, and an
+ownership token. No stale lock is stolen automatically: after abrupt termination,
+check the recorded host/PID and remove the lock manually only after verifying
+its owner is gone. Catchable interrupts release the owned lock when the critical
+section settles; SIGKILL cannot run cleanup. PR review and publication remain separate.
