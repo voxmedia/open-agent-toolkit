@@ -99,9 +99,9 @@
       - [Reviews](workflows/projects/reviews/index.md) — Review request/receive loop, status progression, severity policy, and quality gates.
       - [Review Flavors](workflows/projects/reviews/review-flavors.md) — The four OAT project review flavors, when each fires in the lifecycle, and who resolves its reviewer target.
       - [Reviewing OAT PRs](workflows/projects/reviews/reviewing-oat-prs.md) — Understand synced-project records, SHA-pinned artifact links, and the reviewer-facing PR experience.
-    - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, lite, and import paths.
+    - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, and import paths.
   - Waves
     - [Waves](workflows/waves/index.md) — Wave-program planning and execution over a corpus of external plans.
     - [Wave Workflows](workflows/waves/wave-workflows.md) — How OAT coordinates a corpus of external plans into waves while preserving project-lifecycle ownership and human judgment.
   - [Approvals and Automation](workflows/approvals-and-automation.md) — Where a person approves in each OAT workflow mode, what runs without asking, how many agent runs a project starts, and which controls are advisory rather than enforced.
-  - [Choose a Workflow](workflows/choose-workflow.md) — Choose how to run tracked, resumable work in OAT, from no project to lite, quick, spec-driven, or imported projects, and what each mode does at the end.
+  - [Choose a Workflow](workflows/choose-workflow.md) — Choose how to run tracked, resumable work in OAT, from no project to lite, brief, quick, spec-driven, or imported projects, and what each mode does at the end.

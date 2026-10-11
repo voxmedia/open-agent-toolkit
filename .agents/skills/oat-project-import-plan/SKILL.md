@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.20
+  version: 1.4.21
 ---
 
 # Import External Plan
@@ -273,6 +273,10 @@ commands or manual checks. Preserve the external source at
 `references/imported-plan.md`, keep `oat_plan_source: imported`, and preserve
 all `oat_import_*` fields; accepting lite changes execution mode, not import
 provenance.
+
+Import never converts a plan to brief mode: an imported plan already carries
+tasks, while a brief carries phases without tasks. To author a brief, start
+`oat-project-brief` instead.
 
 ### Step 4: Update Plan Metadata
 

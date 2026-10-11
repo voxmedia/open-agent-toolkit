@@ -58,6 +58,10 @@ replaces the record.
   record is current.
 - **`oat_quick_start_gate`** (`oat-project-quick-start`, Gate Execution) carries
   exactly the core.
+- **`oat_brief_gate`** (`oat-project-brief`, Gate Execution) carries exactly the
+  core, written and read under the same rules as `oat_quick_start_gate`. It is
+  absent when no gate is configured, and nothing routes on it: it is provenance
+  only.
 
 ## Reading a quick-start record
 

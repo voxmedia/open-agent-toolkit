@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.9
+  version: 1.6.10
 ---
 
 # Project PR (Final)
@@ -29,6 +29,9 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 - In `spec-driven` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
 - In `quick`/`import`/`lite` mode: `spec.md`/`design.md` are optional; lite
   proceeds with a reduced assurance note because plan.md is its full contract
+- In `brief` mode: `plan.md` (the Project Brief) and `implementation.md` are
+  required, `discovery.md`/`spec.md`/`design.md` are absent by design, and
+  `summary.md` is required exactly as in quick mode
 
 **Required (recommended to proceed):**
 
@@ -177,7 +180,7 @@ If `WORKFLOW_MODE=spec-driven`, also require:
 ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" 2>/dev/null
 ```
 
-If `WORKFLOW_MODE` is `quick`, `import`, or `lite`, proceed without spec/design and include a reduced assurance note in the PR body. For lite, explicitly note that plan.md is the reduced artifact contract and the absence of discovery/spec/design is intentional.
+If `WORKFLOW_MODE` is `quick`, `import`, `lite`, or `brief`, proceed without spec/design and include a reduced assurance note in the PR body. For lite, explicitly note that plan.md is the reduced artifact contract and the absence of discovery/spec/design is intentional. For brief, the note names the Project Brief (`plan.md`) as the requirements contract, audited against its numbered Outcomes, with the phase journal as the evidence record; the absence of discovery/spec/design is intentional.
 
 ### Step 2: Check Final Review Status
 
@@ -254,6 +257,10 @@ only for the remaining available artifacts; do not invoke
 `oat-project-summary` for lite. This branch ends Step 3.0 and jumps directly to
 Step 3.1.
 
+Brief projects take the non-lite branch below: `summary.md` is generated or
+refreshed exactly as in quick mode, with freshness decided by
+`oat_summary_phase_fingerprint` (`oat-project-summary` Step 3).
+
 **Non-lite branch only:** If the route contract sets
 `GENERIC_SUMMARY_REACHABLE=true`, check if `{PROJECT_PATH}/summary.md` exists:
 
@@ -276,6 +283,11 @@ Read:
 - `{PROJECT_PATH}/implementation.md` (if exists; preferred for “what actually happened”)
 - `{PROJECT_PATH}/discovery.md` (recommended for quick mode)
 - `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
+
+In brief mode `plan.md` is the Project Brief (Goal, Outcomes, Approach,
+Constraints and Out of Scope, Decisions, phases, and Reviews) and
+`implementation.md` is the per-phase journal; spec, design, and discovery are
+absent by design and are not read.
 
 If `implementation.md` exists, check for a filled `## Final Summary (for PR/docs)` section:
 
@@ -388,7 +400,7 @@ oat_project: { PROJECT_PATH }
 
 ## Goals / Non-Goals
 
-{brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import; plan contract in lite}
+{brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import; plan contract in lite; the brief's Goal, Outcomes, and Constraints and Out of Scope in brief}
 
 ## Changes
 

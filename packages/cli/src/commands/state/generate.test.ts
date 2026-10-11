@@ -1049,3 +1049,210 @@ describe('phaseInHillList', () => {
     expect(phaseInHillList('plan', ['design'])).toBe(false);
   });
 });
+
+// Bounded parity for brief mode. The dashboard builds state from `state.md`
+// frontmatter only and never reads phase-unit progress, so parity with
+// `recommendSkill` is asserted for the plan-phase states and
+// `implement:in_progress` only. At `implement:complete`/`pr_open` the router
+// (reached through `oat project status` and `oat-project-next`) is the
+// authority for the brief-unit guard, and the dashboard says so.
+describe('generateStateDashboard brief routes', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const BRIEF_PHASES = [
+    '## Phase p01: Research the parser contract',
+    '',
+    '**Intent:** Learn the parser contract.',
+    '**Exit evidence:** Notes recorded.',
+    '',
+    '## Phase p02: Build the reader',
+    '',
+    '**Intent:** Wire the reader.',
+    '**Exit evidence:** Tests pass.',
+    '',
+  ].join('\n');
+
+  const briefPlan = (frontmatter: string) =>
+    ['---', frontmatter, '---', '', '# Plan: demo', '', BRIEF_PHASES].join(
+      '\n',
+    );
+
+  const TIER_3_PLAN = briefPlan(
+    'oat_status: in_progress\noat_ready_for: null\noat_template: true',
+  );
+  const TIER_2_PLAN = briefPlan(
+    'oat_status: in_progress\noat_ready_for: null\noat_template: false',
+  );
+  const COMPLETE_PLAN = briefPlan(
+    'oat_status: complete\noat_ready_for: oat-project-implement\noat_template: false',
+  );
+
+  async function briefFixture(
+    state: Record<string, string>,
+    plan: string,
+    implementation?: string,
+  ) {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/brief-proj';
+    await writeLocalConfig(root, { activeProject: projectPath });
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'brief',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+      ...state,
+    });
+    await writeFile(join(root, projectPath, 'plan.md'), plan, 'utf8');
+    if (implementation !== undefined) {
+      await writeFile(
+        join(root, projectPath, 'implementation.md'),
+        implementation,
+        'utf8',
+      );
+    }
+
+    const dashboard = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-10-10',
+      git: mockGit,
+    });
+    const { recommendation } = await getProjectState(join(root, projectPath));
+    return {
+      dashboard,
+      recommendation,
+      markdown: await readFile(dashboard.dashboardPath, 'utf8'),
+    };
+  }
+
+  it.each([
+    ['plan:in_progress tier 3', 'plan', 'in_progress', TIER_3_PLAN, '[]'],
+    ['plan:in_progress tier 2', 'plan', 'in_progress', TIER_2_PLAN, '[]'],
+    ['plan:complete', 'plan', 'complete', COMPLETE_PLAN, '[]'],
+    [
+      'plan:complete with a pending plan HiLL checkpoint',
+      'plan',
+      'complete',
+      COMPLETE_PLAN,
+      '["plan"]',
+    ],
+    ['implement:in_progress', 'implement', 'in_progress', COMPLETE_PLAN, '[]'],
+  ])(
+    'matches the router skill for a brief at %s',
+    async (_label, phase, phaseStatus, plan, checkpoints) => {
+      const { dashboard, recommendation } = await briefFixture(
+        {
+          oat_phase: phase,
+          oat_phase_status: phaseStatus,
+          oat_hill_checkpoints: checkpoints,
+        },
+        plan,
+      );
+
+      expect(dashboard.recommendedStep).toBe(recommendation.skill);
+    },
+  );
+
+  it('keeps brief planning and its plan HiLL checkpoint with the brief entry skill', async () => {
+    const inProgress = await briefFixture(
+      { oat_phase: 'plan', oat_phase_status: 'in_progress' },
+      TIER_2_PLAN,
+    );
+    expect(inProgress.dashboard.recommendedStep).toBe('oat-project-brief');
+
+    const hill = await briefFixture(
+      {
+        oat_phase: 'plan',
+        oat_phase_status: 'complete',
+        oat_hill_checkpoints: '["plan"]',
+      },
+      COMPLETE_PLAN,
+    );
+    expect(hill.dashboard.recommendedStep).toBe('oat-project-brief');
+    expect(hill.dashboard.recommendedReason).toContain('HiLL approval');
+
+    const complete = await briefFixture(
+      { oat_phase: 'plan', oat_phase_status: 'complete' },
+      COMPLETE_PLAN,
+    );
+    expect(complete.dashboard.recommendedStep).toBe('oat-project-implement');
+  });
+
+  it('shows the brief mode row and help line without the router-authority note while planning', async () => {
+    const { markdown } = await briefFixture(
+      { oat_phase: 'plan', oat_phase_status: 'in_progress' },
+      TIER_2_PLAN,
+    );
+
+    expect(markdown).toContain('| Mode | brief |');
+    expect(markdown).toContain(
+      '- `oat-project-brief` - Create a brief workflow project',
+    );
+    // The note explains an implement-phase guard a planning brief cannot
+    // reach yet, so it is printed only in the implement phase.
+    expect(markdown).not.toContain('phase-units');
+  });
+
+  it('defers the brief-unit guard to the router at implement:complete', async () => {
+    const implementation = [
+      '## Phase p01: Research the parser contract',
+      '',
+      '**Status:** completed',
+      '',
+      '## Phase p02: Build the reader',
+      '',
+      '**Status:** in_progress',
+      '',
+    ].join('\n');
+    const { dashboard, recommendation, markdown } = await briefFixture(
+      {
+        oat_phase: 'implement',
+        oat_phase_status: 'complete',
+      },
+      COMPLETE_PLAN,
+      implementation,
+    );
+
+    // The router reads phase-unit progress and resumes implementation; the
+    // dashboard cannot, so it follows the shared post-implementation map and
+    // points at the router as the authority instead of claiming parity.
+    expect(recommendation).toEqual({
+      skill: 'oat-project-implement',
+      reason: 'Incomplete phase-units remain in the active scope',
+    });
+    expect(dashboard.recommendedStep).not.toBe(recommendation.skill);
+    expect(markdown).toContain(
+      'Brief projects count progress in phase-units, which this dashboard does not read',
+    );
+    expect(markdown).toContain('`oat project status`');
+    expect(markdown).toContain('brief-unit guard');
+  });
+
+  it('omits the router-authority note for non-brief projects', async () => {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/quick-proj';
+    await writeLocalConfig(root, { activeProject: projectPath });
+    await writeStateFile(root, projectPath, {
+      oat_phase: 'implement',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'quick',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+
+    const dashboard = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-10-10',
+      git: mockGit,
+    });
+    const markdown = await readFile(dashboard.dashboardPath, 'utf8');
+    expect(markdown).not.toContain('phase-units');
+  });
+});

@@ -978,6 +978,257 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-summary'],
     reason: 'Negative directive: lite explicitly does not run the named skill.',
   },
+  // --------------------------------------------------------------------- brief
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Artifact Persistence (Required)',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-brief:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-brief:2"',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 0.5: Resolve Active Project or Scaffold Brief',
+    match: 'nothing is left to author; load',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: ['load `oat-project-implement/SKILL.md` and follow it'],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.5: Resolve Dispatch Ladder and Ceiling',
+    match: 'Managed Dispatch Readiness and Review Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.5: Resolve Dispatch Ladder and Ceiling',
+    match: 'follow that contract as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the complete **Managed Dispatch Readiness and Review Contract** from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.55: Configure Optional Phase Gate Review',
+    match: 'Shared Phase Gate Review Setup Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.57: Configure Lifecycle Gate Posture',
+    match: 'Shared Lifecycle Gate Posture Setup Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.6: Run Brief Artifact Review Loop',
+    match:
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Step 3.6: Run Brief Artifact Review Loop',
+    match: 'follow that loop as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/SKILL.md',
+    anchor: 'Success Criteria',
+    match: 'Completion state was committed and routes to',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Success-criteria checklist describing the terminal handoff; Step 7 owns the execution boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '5. Review ladder',
+    match:
+      'The configured gate for `oat-project-brief` runs on the committed bundle',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Names the gate key the configured gate is registered under; the gate runner, not this sentence, executes it.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '10. Anchors and review scope',
+    match: 'Invalid or contradictory anchors stop and route to',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/phase-execution.md',
+    anchor: 'Brief-Mode Phase Execution',
+    match: 'is authoritative where the two differ',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Precedence statement naming a reference file to read; it does not invoke the brief entry skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/phase-execution.md',
+    anchor: 'Brief-Mode Phase Execution',
+    match: 'a failed check routes to `oat-project-reconcile`',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+    anchor: 'Step 3: Check Implementation State',
+    match: 'already initialized the journal',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Records which earlier skill wrote the journal; nothing is invoked.',
+  },
+  {
+    file: '.agents/skills/oat-project-new/SKILL.md',
+    anchor: 'Step 2: Scaffold Project (Deterministic)',
+    match: 'start from their entry skills',
+    classification: 'non-executing',
+    skills: [
+      'oat-project-brief',
+      'oat-project-lite',
+      'oat-project-quick-start',
+    ],
+    reason:
+      'Scope statement naming the entry skills that own other modes; this skill does not invoke them.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match: 'Incomplete phase-units remain in the active scope',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Brief routing rule inside the router table; Step 6 owns the invocation boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Prerequisites',
+    match: 'Brief planning is owned by `oat-project-brief`',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Terminal handoff: this skill stops and tells the user which entry point owns brief planning.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 1: Determine Scope (Phase or Range)',
+    match:
+      'resolves from the journal anchors, never from the commit grep above',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Cites the brief contract section that defines anchor scope; a reference, not an invocation.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 1: Determine Scope (Phase or Range)',
+    match: 'under the same containment and continuity',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason:
+      'Borrows the checks another skill defines by reference; it does not invoke that skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 1: Determine Scope (Phase or Range)',
+    match: 'or a contradictory ordering stops the PR',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-promote-spec-driven/SKILL.md',
+    anchor: 'Promote Project To Spec-Driven Lifecycle',
+    match: 'Lite and brief projects promote through quick first',
+    classification: 'non-executing',
+    skills: ['oat-project-quick-start'],
+    reason:
+      "Eligibility note: lite and brief projects are outside this skill, and the parenthetical describes the promoted project's own resume path rather than directing this skill to run it.",
+  },
+  {
+    file: '.agents/skills/oat-project-reconcile/SKILL.md',
+    anchor: 'Step 0.5: Prerequisite Check',
+    match: 'routes here when its',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason:
+      'Explains which upstream skill hands this state over; nothing is invoked.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 2: Validate Artifacts Exist (Mode-Aware)',
+    match: 'reviewing `plan` in `brief` mode requires only `plan.md`',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Artifact requirement list naming the brief contract as an upstream input; a reference, not an invocation.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match: '**Invalid or contradictory anchors** stop and route to',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match: 'Brief anchors are invalid or contradictory ({ANCHOR_REASON})',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason: 'Quoted message telling the user which skill to run next.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match: 'use the supplied range without running the resolver',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
   // ---------------------------------------------------------------- autonomous
   {
     file: '.agents/skills/oat-project-autonomous/SKILL.md',
@@ -996,6 +1247,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: 'Continue to Step 2, then invoke the selected creation skill',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-design',
       'oat-project-discover',
       'oat-project-implement',
@@ -1012,7 +1264,12 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     anchor: 'Step 2: Select Workflow Mode by Review Density',
     match: 'Invoke `oat-project-new` for spec-driven mode',
     classification: 'load-required',
-    skills: ['oat-project-lite', 'oat-project-new', 'oat-project-quick-start'],
+    skills: [
+      'oat-project-brief',
+      'oat-project-lite',
+      'oat-project-new',
+      'oat-project-quick-start',
+    ],
     requires: [
       "load the selected creation skill's current `SKILL.md` and follow it",
     ],
@@ -1053,6 +1310,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: '| ID | Skill | Gate | Interactive behavior |',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-design',
       'oat-project-discover',
       'oat-project-implement',
@@ -1088,6 +1346,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: 'Stable prompt-site mappings',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-complete',
       'oat-project-design',
       'oat-project-discover',
@@ -1138,6 +1397,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: 'use `oat-project-reconcile` instead',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-lite',
       'oat-project-new',
       'oat-project-quick-start',
@@ -1374,6 +1634,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: 'stop and route: quick project',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-import-plan',
       'oat-project-lite',
       'oat-project-progress',
@@ -1769,6 +2030,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: '— Create a spec-driven project',
     classification: 'non-executing',
     skills: [
+      'oat-project-brief',
       'oat-project-import-plan',
       'oat-project-lite',
       'oat-project-new',

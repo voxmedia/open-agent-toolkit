@@ -15,6 +15,137 @@ optional bounded child for beneficial recon, isolated fanout, or specialist
 work under the shared dispatch contract. The phase implementer remains
 responsible for file boundaries, verification, and task commits.
 
+#### Brief-Mode Phase Execution
+
+When `oat_workflow_mode` is `brief`, each phase is one phase-unit with Intent
+and Exit evidence instead of planned tasks. Every rule in this route still
+applies except where this subsection replaces it, and
+`oat-project-brief/references/brief-contract.md` (sections 3, 6, 7, and 10) is
+authoritative where the two differ. The subsection is inert for every other
+workflow mode.
+
+**Requirement source.** The phase's `**Intent:**` and `**Exit evidence:**`
+lines plus the brief's Outcomes, Constraints and Out of Scope, and Decisions
+sections. There is no planned task list, file list, or commit message to
+extract. A provisional phase is never dispatched; `plan-and-resume.md` Step 2.2
+makes it concrete first.
+
+**Execution precedence.** Select exactly one execution shape per phase, in this
+order, and record it in the phase-start record:
+
+1. **Declared parallel group.** A ready group of concrete phases in
+   `oat_plan_parallel_groups` runs through Parallel Group Execution below: one
+   worktree and one phase implementer per phase, merged back in document order.
+2. **Root fan-out.** For a phase outside any group, the root fans out bounded
+   slices when at least two slices pass the independence test. The root is
+   then the committing owner for that phase, and each worker is a nested
+   worker.
+3. **One phase implementer.** Otherwise resolve and dispatch one phase
+   implementer through the flow below.
+4. **Inline exception.** The root works inline only through an exception
+   written into the journal before editing that holds for the whole phase: no
+   new surface, no unresolved design, no consequential change, and one existing
+   proof command. File count alone is not a predicate. Reclassify, and leave the
+   inline shape, as soon as the scope grows past any of those conditions.
+
+**Independence test**, for phases and slices alike: no shared files, state,
+generated files, lockfiles, formatter or build output, fixtures, or services,
+and no sequential dependency. A parallel phase is also a coherent deliverable on
+its own. Slices that fail the test stay with one executor.
+
+There is exactly one committing owner per worktree: the root for a root fan-out
+or inline exception, the phase implementer for its phase or phase worktree.
+Nested workers return edits on owned paths and never commit.
+
+**Phase-start record.** Before phase work starts, capture
+`PHASE_ANCHOR_BASE=$(git rev-parse HEAD)` on a clean tree. The root writes these
+exact lines directly under the phase's `## Phase pNN:` heading in
+`implementation.md`, replacing `**Status:** pending`:
+
+```markdown
+**Status:** in_progress
+**Base:** {PHASE_ANCHOR_BASE as a full 40-character SHA}
+**Executor:** {root | phase-implementer:<request_id> | inline:<exception-ref>}
+```
+
+followed by prose naming the worktree, the committing owner, and the
+parallelism assessment: the precedence rung selected and why each higher rung
+did not apply. Commit it through Step 7a's scope-resolving bookkeeping branch
+with the message `chore(oat): start {pNN}`, then record `PHASE_BASE_HEAD` (the
+dispatch base the implementer verifies) after that commit. The phase-start
+commit sits inside `PHASE_ANCHOR_BASE..Head`, which is allowed. For a parallel
+group the root writes every member's start record, without `**Base:**`, in one
+`chore(oat): start {group}` commit, then captures `EXPECTED_HEAD` as the group's
+fork commit; each member's `**Base:**` is that fork commit, written at fan-in
+(see Parallel Group Execution). The Late-fix rule below forbids a later phase
+from taking a `**Base:**` while an earlier phase still expects a head-advancing
+fix.
+
+**Execution records.** Tasks are execution records, never a plan. Whoever
+executes creates the record: the committing owner opens
+`### Task pNN-tNN: <name>` under the phase's journal section when the work
+starts, with `**Status:** in_progress`, `**Executor:**`, intent, files, proof
+command, and the live handle while in flight. Record IDs take the next free
+ordinal in the phase (`prevN-tNN` in a revision phase) and are never reused. The
+record's one implementation commit carries `(pNN-tNN)` in its message and
+excludes the journal. After it lands, the owner closes the record with
+`**Status:** completed` and `**Commit:** <full SHA>`, or with a terminal
+`failed`, `cancelled`, or `no-change` status and no fabricated commit, and
+commits the journal separately as `chore(oat): record {pNN-tNN}`. Lookahead is
+allowed: the owner may open several independent records before dispatching
+them together. A request for a maintained up-front task plan is an offer to
+promote the brief to quick, never lookahead. Records are coherent units tied to
+one commit, not one per command or edit, and they never change phase totals.
+
+**Phase head.** When the executor's work is done and phase-wide verification
+passes, the committing owner writes `**Head:** <full SHA>`, the candidate head,
+which is the last implementation or record commit of the phase, plus a short
+verification summary, and commits the journal as `chore(oat): record {pNN}
+head`. A phase without a `**Head:**` line never reaches review or the
+completion line.
+
+**Fresh reviewer on anchors.** Per-Phase Review dispatches a fresh reviewer for
+every phase: never the phase implementer, never a reviewer handle from an
+earlier phase. For a sequential phase, before dispatch verify that both anchors
+exist and that `**Base:**` is an ancestor of `**Head:**`; a failed check routes
+to `oat-project-reconcile` and is never narrowed. For a parallel-group member,
+step 3's check that the worktree head descends from `EXPECTED_HEAD` stands in
+for that pre-check, because the member has no journal anchors until fan-in. The
+per-phase Review Scope range is `Base..Head` for a sequential phase and
+`EXPECTED_HEAD..<worktree head from the phase report>` for a parallel-group
+member, whose `oat_review_base_sha` is `EXPECTED_HEAD`; the fan-in
+`**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and `final` scopes.
+In both cases the in-scope IDs are the phase's execution-record IDs, and the
+scope carries the artifact record fields `oat_review_requested_scope: pNN`,
+`oat_review_phase_ids: [pNN]`, `oat_review_base_sha`, and
+`oat_review_scope_source: anchors` for the reviewer to copy into its artifact.
+
+**Late-fix rule.** A review-fix commit may advance the phase's `**Head:**`, base
+unchanged, only while no later phase in document order has a `**Base:**`. Once
+a later phase has started, a correction becomes an appended revision phase
+`## Phase p-revN:` with its own anchors and `**Corrects:** pNN`, recorded in both
+`plan.md` and the journal; the corrected phase keeps its anchors. Under this
+route the next phase's start record is written only after the current phase's
+review and fix loop settles, so ordinary fix-mode commits advance the head.
+
+**Acceptance.** The root alone writes `**Status:** completed` under the phase
+heading, in the Step 7b (or later) bookkeeping commit that observes every
+review disposition settled and every selected phase gate passed. That line is
+what makes the phase-unit accepted. Step 7a keeps `**Status:** in_progress`.
+
+**Journal ownership in parallel worktrees.** A phase implementer in a parallel
+group writes its execution records into its own phase section of the
+worktree's journal and lists them in its report, but writes no anchors. At
+fan-in the root reconciles those phase-local records into `implementation.md`:
+it keeps each phase's own section from its worktree when resolving a journal
+merge, writes every member's `**Base:**` as the group's fork commit and its
+`**Head:**` as that phase's integration head on the project branch (its merge
+commit, or its last cherry-picked commit when step 7 integrates by
+cherry-pick), and lists integration and conflict-resolution commits to the
+reviewer as integration commits. The review-provide resolver checks only the
+shared fork base and that member heads advance in document order; it does not
+require a head to be a merge commit.
+
 #### Required Manual or Visual Proof Boundary
 
 Before committing a task that declares required manual or visual proof, the
@@ -69,7 +200,7 @@ Before each phase:
      spec: {PROJECT_PATH}/spec.md
      implementation: {PROJECT_PATH}/implementation.md
      discovery: {PROJECT_PATH}/discovery.md
-   workflow_mode: {spec-driven|quick|import|lite} # lite is always a single phase
+   workflow_mode: {spec-driven|quick|import|lite|brief} # lite is always a single phase; brief phases carry Intent and Exit evidence, not tasks
    active_provider: {codex|claude|cursor|other}
    phase_base_head: {PHASE_BASE_HEAD}
    worktree: {assigned checkout}
@@ -117,6 +248,12 @@ The phase recovery limit is not a route retry limit. Implementation recovery
 must not use route escalation, route-level advancement, model/provider
 replacement, or `oat_orchestration_retry_limit`. It remains pinned to the exact
 accepted implementation target.
+
+In brief modes the Phase Scope keeps every field above. `design`, `spec`, and
+`discovery` are absent by design (set them to `null`), `commit_convention`
+names the `(pNN-tNN)` record convention, and the scope adds the phase-start
+record's `parallelism_assessment` and `committing_owner`, plus
+`anchor_base: {PHASE_ANCHOR_BASE}` for a sequential phase.
 
 Tier 2 inline execution is allowed only under the existing verified-equivalent
 controls or documented inherit/default exception. Inline mode executes the
@@ -720,6 +857,10 @@ commit range, task IDs and boundaries, artifacts, verification evidence,
 configured axes, selection reason, and candidates. Require a timestamped review
 artifact under the project's `reviews/` directory.
 
+In brief modes the phase commit range, the in-scope execution-record IDs, and
+the artifact record fields come from the phase anchors as Brief-Mode Phase
+Execution describes; validate the anchors before launch.
+
 The Review Scope names review-outcome bookkeeping as out of scope: this
 review's `## Reviews` row and its disposition, the Orchestration Run entry for
 this review's outcome, the deferred phase-outcome and review-orchestration
@@ -907,6 +1048,15 @@ Head`, `Invocation`, and `Gate Target`) to the header and separator, then pad
 
 For a multi-phase schedule entry:
 
+In brief modes, step 6 merges passing phases in document order, and step 10's
+bookkeeping writes every member's anchors and phase-local records as the
+Brief-Mode Phase Execution subsection describes. Step 5's per-phase review
+still runs before the merge: For a parallel-group member the per-phase Review Scope range is
+`EXPECTED_HEAD..<worktree head from the phase report>` with
+`oat_review_base_sha: EXPECTED_HEAD` and `oat_review_scope_source: anchors`;
+the fan-in `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and
+`final` scopes.
+
 1. Capture `EXPECTED_HEAD=$(git rev-parse HEAD)`.
 2. Bootstrap one worktree per phase through `oat-worktree-bootstrap-auto` with
    explicit base `EXPECTED_HEAD`. Never substitute host-native worktree
@@ -956,6 +1106,12 @@ reviewer. Write the phase's task ledger:
   to `implementation.md`;
 - remove legacy `oat_execution_mode: subagent-driven`; and
 - preserve any configured retry override.
+
+In brief modes the task ledger is the phase's journal section: validate that
+the execution records and `**Head:**` the executor committed are present,
+update the phase's Progress Overview row, keep `**Status:** in_progress`, and
+point both resume pointers at the phase ID. A missing `**Head:**` stops before
+review.
 
 The task rows, resume pointer, and recovery settlement do not depend on the
 review outcome, which is why they can move ahead of the review; the recovery
@@ -1028,6 +1184,13 @@ commit observes that last condition: this Step 7b commit when nothing is
 queued and no gate is selected, otherwise the commit that records the final
 review-fix task or the passing gate.
 
+In brief modes the row is the phase's journal section and `complete` is the
+exact line `**Status:** completed` under its heading, written only by the root
+under that same rule; the brief's `pNN` code row in `## Reviews` records the
+review event, and the phase summary prose records the reviewer's disposition
+and gate results. A review-fix commit that advances the phase head updates
+`**Head:**` under the Late-fix rule.
+
 Bookkeeping is mandatory:
 
 ```bash
@@ -1052,6 +1215,8 @@ when it exists; logging can be disabled.
 At every phase boundary, verify `implementation.md`, task pointers, phase
 summary, and design/plan deviations. `oat_plan_hill_phases` lists phases after
 which execution pauses; an empty list means every phase.
+In brief modes an empty list means none (`plan-and-resume.md` Step 2.5), and a
+phase boundary is reached only when the phase-unit is accepted.
 
 Before a configured non-final HiLL pause, run auto-review when enabled. Scope
 starts after the last passed whole-phase review and ends at the current phase.

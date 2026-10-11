@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.4
+  version: 1.0.5
 ---
 
 # Reconcile Manual Implementation
@@ -125,6 +125,68 @@ Verify the project is ready for reconciliation:
 3. **Check for untracked commits:**
    - Read `implementation.md` if it exists — find the last recorded commit SHA
    - If all recent commits are already tracked, inform user: "No untracked commits found. Nothing to reconcile."
+
+4. **Resolve the workflow mode:**
+
+   ```bash
+   WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null || echo null)
+   ```
+
+**Brief-mode branch (`WORKFLOW_MODE=brief`).** A brief has no planned tasks:
+the task source is the journal, and
+`oat-project-brief/references/brief-contract.md` (sections 3, 7, 8, and 10)
+wins where this skill differs. Steps 1 through 6 still run, with these
+replacements:
+
+- **Phases and ranges (Steps 1–2).** Read each phase's markers from its
+  `## Phase` section of `implementation.md` (exact `**Status:**`, `**Base:**`,
+  and `**Head:**` lines directly under the heading; ownership ends at the next
+  line starting with `#`). A phase's range is `Base..Head`, or `Base..HEAD`
+  for the active phase that has a `**Base:**` and no `**Head:**`. The
+  checkpoint is still Step 1's last tracked commit; the anchors decide which
+  phase owns each later commit.
+- **Anchor check.** Before mapping, verify every recorded anchor exists
+  (`git cat-file -e "$SHA^{commit}"`), each base is an ancestor of its head,
+  and consecutive sequential phases continue (the next base equals or
+  descends from the previous head; a declared parallel group shares its fork
+  base). This is the state `oat-project-review-provide` routes here when its
+  anchor resolution rejects a scope. Report each contradiction with the
+  candidate value read from the phase's `chore(oat): start {pNN}` or
+  `chore(oat): record {pNN} head` commit, and correct a `**Base:**` or
+  `**Head:**` line only when the user confirms it in Step 4. Record the old
+  and new values in the Step 5f log entry. A corrected anchor on an accepted
+  phase rewrites its `**Status:**` to `in_progress`, because the earlier
+  review covered a different range. Reconcile never invents an anchor for a
+  phase that has none.
+- **Task source (Step 2).** Extract the execution records
+  (`### Task pNN-tNN:` and `### Task prevN-tNN:`) under each journal phase
+  section, not `plan.md`, which never carries task headings. Pending and
+  in-progress records are the mapping targets.
+- **Mapping (Step 3).** Map a commit to a record by the `(pNN-tNN)` ID in its
+  message (Signal A), then to its phase by the anchors: the phase whose range
+  contains the commit. A commit inside a phase's range that matches no record
+  gets a synthesized record under that phase, with the next free ordinal for
+  the phase, `**Executor:** reconciled`, `**Status:** completed`, and
+  `**Commit:** <full SHA>`. A commit outside every phase range is reported in
+  Step 4 for the user to assign to a started phase or to leave unrecorded;
+  reconcile never starts a phase to hold it. Signals B and C (file overlap and
+  keywords) apply only to the brief's open records, which list their files and
+  intent in the journal.
+- **Live handles (Step 4).** Before closing any open record, check the live
+  handle it names (subagent, worktree, or process). A live or unverifiable
+  handle keeps the record open and is listed in the Step 6 report; a record is
+  closed only when its handle has ended.
+- **Writes (Step 5).** Close records with `**Status:** completed` and the full
+  commit SHA, or leave them open. A phase whose range gained commits and whose
+  status is `pending` may become `in_progress`. Reconcile never writes
+  `**Status:** completed` for a phase: only `oat-project-implement` accepts a
+  phase-unit. It does not write a missing `**Head:**`; the phase's executor
+  records it when the phase ends. Use the phase-unit Progress Overview
+  (`| Phase | Status | Units | Accepted |`, one unit per phase, accepted only by
+  `**Status:** completed`) instead of task counts. Set `oat_current_task_id`
+  and `oat_current_task` to the first incomplete unit in document order (a
+  phase ID, never an extracted or accepted unit), or `null` when every unit is
+  accepted.
 
 ### Step 1: Find Checkpoint
 
@@ -600,7 +662,7 @@ For each commit the user chose to log as unplanned work, append after the last t
 - Not part of original plan. Logged during reconciliation on {today's date}.
 ```
 
-**5d. Update progress table:**
+**5d. Update progress table** (brief modes: the phase-unit table from the brief-mode branch above):
 
 Recalculate the `## Progress Overview` table dynamically from the project's actual data:
 
@@ -632,7 +694,7 @@ oat_current_task_id: { next_pending_task_id } # or null if all complete
 oat_last_updated: { today }
 ```
 
-Find the next pending task by scanning plan order: first task with status not `completed`.
+Find the next pending task by scanning plan order: first task with status not `completed`. In brief modes the pointer is the first incomplete phase-unit, per the brief-mode branch above.
 
 In `state.md`:
 

@@ -16,6 +16,10 @@ and updates project state.
   in dependency order.
 - **Task boundary:** each task still produces exactly one bounded, verified
   commit.
+- **Brief phase-units:** in a brief project each phase carries Intent and Exit
+  evidence instead of tasks; execution records are opened in the journal as
+  work happens, and the phase's `**Base:**`/`**Head:**` anchors scope its
+  review.
 - **Prevention boundary:** formatting, declared task verification, and
   applicable cheap checks run before the task commit.
 - **Recovery boundary:** an eligible post-commit defect may produce a separate
@@ -513,6 +517,17 @@ Lite plans never take this path. A lite `plan.md` must contain exactly one phase
 and declare no parallel groups, so lite implementation is always sequential;
 `oat project validate-plan` enforces both rules. Work that needs more than one
 phase should promote to quick rather than declare a parallel group.
+
+Brief plans may declare parallel groups of taskless phases once those phases
+are concrete and pass the independence test (no shared files, state,
+generated output, fixtures, or services, and no sequential dependency). A
+group member's per-phase review runs before fan-in on
+`EXPECTED_HEAD..<worktree head>`. At fan-in the root writes every member's
+`**Base:**` as the group's fork commit and its `**Head:**` as the member's
+integration head, which is normally a merge commit but may be the last
+cherry-picked commit; review scope checks only the shared fork base and that
+member heads advance in document order. The fan-in anchors govern the
+`pNN-pMM` and `final` review scopes.
 
 ## Synced projects in worktrees
 

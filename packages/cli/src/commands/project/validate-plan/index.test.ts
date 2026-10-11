@@ -38,7 +38,11 @@ async function runCommand(
   args: string[],
   globalArgs: string[] = [],
 ): Promise<void> {
-  const program = new Command().name('oat').option('--json').exitOverride();
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--cwd <path>')
+    .exitOverride();
   const project = new Command('project');
   project.addCommand(command);
   program.addCommand(project);
@@ -160,6 +164,117 @@ describe('oat project validate-plan', () => {
     return dir;
   }
 
+  async function writeBriefProject(options: {
+    phases: string[][];
+    groups?: string;
+  }): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-vplan-'));
+    tempDirs.push(dir);
+    await writeFile(
+      join(dir, 'state.md'),
+      ['---', 'oat_workflow_mode: brief', '---', '', '# State'].join('\n'),
+      'utf8',
+    );
+    await writeFile(
+      join(dir, 'plan.md'),
+      [
+        '---',
+        'oat_plan_source: brief',
+        `oat_plan_parallel_groups: ${options.groups ?? '[]'}`,
+        '---',
+        '',
+        '# Project Brief',
+        '',
+        ...options.phases.flat(),
+      ].join('\n'),
+      'utf8',
+    );
+    return dir;
+  }
+
+  function briefPhase(id: string, extra: string[] = []): string[] {
+    return [
+      `## Phase ${id}: Phase ${id}`,
+      '',
+      '**Intent:** Do the work.',
+      '**Exit evidence:** Tests pass.',
+      '',
+      ...extra,
+    ];
+  }
+
+  describe('brief profile', () => {
+    it('validates a parallel group of two taskless phases', async () => {
+      const dir = await writeBriefProject({
+        phases: [briefPhase('p01'), briefPhase('p02'), briefPhase('p03')],
+        groups: '[[p02, p03]]',
+      });
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(command, ['--project-path', dir], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('rejects a group naming a phase the brief does not declare', async () => {
+      const dir = await writeBriefProject({
+        phases: [briefPhase('p01'), briefPhase('p02')],
+        groups: '[[p02, p09]]',
+      });
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(command, ['--project-path', dir], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        valid: false,
+        errors: [expect.stringContaining('p09')],
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reports brief error codes', async () => {
+      const dir = await writeBriefProject({
+        phases: [['## Phase p01: Missing markers', '']],
+      });
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(command, ['--project-path', dir], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        valid: false,
+        errors: [
+          expect.stringContaining('brief-phase-missing-intent'),
+          expect.stringContaining('brief-phase-missing-exit-evidence'),
+        ],
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('passes with the task-headings warning in JSON and human output', async () => {
+      const dir = await writeBriefProject({
+        phases: [briefPhase('p01', ['### Task p01-t01: Authored', ''])],
+      });
+      const json = createHarness({ json: true });
+
+      await runCommand(json.command, ['--project-path', dir], ['--json']);
+
+      expect(json.capture.jsonPayloads[0]).toEqual({
+        valid: true,
+        warnings: [expect.stringContaining('brief-task-headings-ignored')],
+      });
+      expect(process.exitCode).toBe(0);
+
+      const human = createHarness();
+      await runCommand(human.command, ['--project-path', dir]);
+
+      expect(human.capture.warn.join('\n')).toContain(
+        'brief-task-headings-ignored',
+      );
+      expect(human.capture.success).toContain('Plan validation passed.');
+    });
+  });
+
   describe('--json mode', () => {
     it('emits { valid: true } when the plan is valid', async () => {
       const dir = await writeValidPlan();
@@ -208,6 +323,22 @@ describe('oat project validate-plan', () => {
         errors: expect.arrayContaining([expect.any(String)]),
       });
       expect(process.exitCode).toBe(2);
+    });
+  });
+
+  describe('--cwd resolution', () => {
+    it('resolves a relative --project-path against the command cwd, not the process cwd', async () => {
+      const dir = await writeValidPlan();
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(
+        command,
+        ['--project-path', '.'],
+        ['--json', '--cwd', dir],
+      );
+
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode ?? 0).toBe(0);
     });
   });
 

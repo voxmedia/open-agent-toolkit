@@ -7,17 +7,18 @@ description: 'Choose a project entry skill, import an existing plan, capture com
 
 Choose an entry path based on what you already know and what already exists.
 These skills do not require an existing active project. They create or import
-tracked work, although quick-start and lite resume an active project of their
-own mode, and import writes into whichever project is active.
+tracked work, although quick-start, lite, and brief resume an active project of
+their own mode, and import writes into whichever project is active.
 
-| Your situation                                                     | Entry skill               | Result                                                                         |
-| ------------------------------------------------------------------ | ------------------------- | ------------------------------------------------------------------------------ |
-| Requirements need discovery and a full technical design.           | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                              |
-| The outcome is bounded, with optional design decisions to resolve. | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.         |
-| The change fits one implementation sitting.                        | `oat-project-lite`        | One approved plan with requirements and validation criteria.                   |
-| You already have a Markdown plan.                                  | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                    |
-| Implementation happened without project tracking.                  | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits. |
-| A confirmed scope contains several coordinated projects.           | `oat-project-split`       | A coordination parent and children that resume at discovery.                   |
+| Your situation                                                       | Entry skill               | Result                                                                            |
+| -------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| Requirements need discovery and a full technical design.             | `oat-project-new`         | A spec-driven scaffold, ready to begin discovery.                                 |
+| The outcome is bounded, with optional design decisions to resolve.   | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.            |
+| The change fits one implementation sitting.                          | `oat-project-lite`        | One approved plan with requirements and validation criteria.                      |
+| One delivery whose outcome and design you can agree in conversation. | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence. |
+| You already have a Markdown plan.                                    | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                       |
+| Implementation happened without project tracking.                    | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.    |
+| A confirmed scope contains several coordinated projects.             | `oat-project-split`       | A coordination parent and children that resume at discovery.                      |
 
 For the broader mode decision, see [Choose a workflow](../../choose-workflow.md).
 For an existing project's discovery, design, or plan, see
@@ -68,15 +69,15 @@ in a fresh repository.
    overrides the setting for one shell.
 
 3. **Only `oat-project-new` takes a scope.** It accepts `--scope shared|local|synced`.
-   Quick-start, lite, import, capture, and split have no scope argument.
-   Quick-start, lite, import, and capture always create projects in the
+   Quick-start, lite, brief, import, capture, and split have no scope argument.
+   Quick-start, lite, brief, import, and capture always create projects in the
    default scope. Split uses the active project's scope, or `shared` when no
    project is active. Set the default first if you do not want `synced`.
 
 4. **Build the knowledge index before spec-driven discovery.** `oat-project-discover`
    refuses to start until `.oat/repo/knowledge/project-index.md` exists. Run
    `/oat-repo-knowledge-index` once before your first spec-driven project.
-   Quick-start, lite, import, and capture do not check for it.
+   Quick-start, lite, brief, import, and capture do not check for it.
 
 5. **Know what happens when a project is already active.** Check with
    `oat config get activeProject` before you start:
@@ -88,6 +89,9 @@ in a fresh repository.
    - `oat-project-lite` resumes an active lite project and ignores the name and
      description you pass. With any other project active, it creates a new lite
      project.
+   - `oat-project-brief` resumes an active brief project at the earliest step
+     whose output is missing. With any other project active, it creates a new
+     brief project.
    - `oat-project-import-plan` writes into any active project, whatever its
      mode. It rewrites that project's `plan.md` and switches it to import mode.
    - `oat-project-split` makes its first child the active project.
@@ -106,14 +110,14 @@ Project creation normally activates the new project in `.oat/config.local.json`.
 Check the reported project path before continuing, especially when another
 project is already active.
 
-The new, quick-start, lite, and import skills check inherited Git changes before
+The new, quick-start, lite, brief, and import skills check inherited Git changes before
 scaffolding. Unrelated changes require an explicit disposition in interactive
 runs. One exception: if the only change is `.oat/sync/manifest.json`, it is
 committed automatically as `chore: run sync`. Capture does not run this check.
 Do not assume starting a project also authorizes implementation or a PR.
 
-**Dispatch policy.** Before a plan is marked ready, quick-start, lite, and
-import ask you to choose a _dispatch policy_: the highest tier of models and
+**Dispatch policy.** Before a plan is marked ready, quick-start, lite, brief,
+and import ask you to choose a _dispatch policy_: the highest tier of models and
 effort OAT may use when it dispatches implementation and review agents. The
 choices come from `oat project dispatch-ceiling choices`. If your configuration
 has no complete dispatch ladder (the list of models for each tier), the skill
@@ -125,9 +129,10 @@ deliberately. The plan stays not ready until this resolves. See
 **Approval checkpoints.** A _HiLL (human-in-the-loop lifecycle) checkpoint_ is
 a point where a skill stops and waits for your explicit approval before it marks
 a phase complete. Projects created by `oat-project-new` have checkpoints on
-discovery and design by default. Quick, lite, import, and captured projects have
-no workflow-phase checkpoints before implementation. Lite still asks you to
-approve its plan once. See [HiLL checkpoints](hill-checkpoints.md).
+discovery and design by default. Quick, lite, brief, import, and captured
+projects have no workflow-phase checkpoints before implementation. Lite still
+asks you to approve its plan once, and brief asks you to approve its reviewed
+brief once. See [HiLL checkpoints](hill-checkpoints.md).
 
 Several skills also run a configured _exit gate_, an optional review or command
 your repository configures to run before a skill marks its work complete. When
@@ -298,6 +303,73 @@ keeping or disabling configured gates for this project.
 
 **Next step:** Run `oat-project-implement` after the approved lite plan is ready.
 If the scope grows, continue through `oat-project-quick-start` after promotion.
+
+## oat-project-brief
+
+Use brief for one delivery whose outcome and design you can agree in
+conversation. Brief replaces discovery, design, and a task plan with one
+reviewed Project Brief in `plan.md`. Its phases state intent and exit evidence
+instead of tasks.
+
+**Invocation:** Provide the slug and the intended outcome.
+
+```text
+/oat-project-brief export-audit "Let administrators export the audit log as CSV from the settings page."
+```
+
+**Prerequisites:** No active project is needed. If the active project is a
+brief project, brief resumes it in place.
+
+**Example scenario:** Administrators need the audit log as CSV. Brief
+interviews you in short rounds, settling facts from the code itself and
+putting the design choices to you, such as streaming against buffering the
+export. It writes the agreed outcomes, approach, decisions, and phases into the
+brief, runs artifact review and any configured gate, and asks you to approve
+the reviewed brief once.
+
+**Expected output:** One Project Brief in `plan.md` with a Goal, numbered
+Outcomes that each name their evidence, the Approach (with an optional
+`### Design` subsection), Constraints and Out of Scope, Decisions with the
+alternatives you rejected, Known Unknowns with the phase that settles each,
+the Delivery endpoint and authority, and `## Phase pNN:` blocks. Each phase
+states its `**Intent:**`, `**Exit evidence:**`, and whether it is
+`**Provisional:**`; only the first phase has to be concrete now. The skill also
+initializes `implementation.md` as a per-phase journal with one section per
+phase and no execution records yet. There is no `discovery.md`, `spec.md`, or
+`design.md`, and no task list: tasks are recorded in the journal as the work
+runs.
+
+The interview runs in readiness rounds. The agent settles facts from the code,
+docs, or research itself and brings you only decisions, each with a
+recommendation and its tradeoff. It writes the brief once you have explicitly
+agreed the design, so the approval confirms a design you already accepted.
+Within the approved outcomes, constraints, and authority, the agent may later
+add, split, or reorder phases and make provisional phases concrete, and logs
+each change; a change to an Outcome, a Constraint, the authority, the endpoint,
+a Decision, or the Approach comes back to you first.
+
+**What it does without asking:** It creates the project through
+`oat project new --mode brief` in the default scope and makes it active,
+commits the authored brief before any review, runs the independent artifact
+review (the reviewer receives the brief and the bundled brief contract, not the
+conversation), runs any configured `oat-project-brief` gate and records its
+outcome as `oat_brief_gate` in `state.md`, and commits the approved brief and
+journal. In synced scope each commit is an `oat project push` to `origin`. It
+asks before: proceeding with a dirty working tree, the interview decisions,
+adopting a dispatch ladder into config, choosing the dispatch policy, keeping
+or disabling configured gates for this project, and the single approval
+(approve, revise, or promote to quick).
+
+**Promotion to quick.** Choose promote at the approval, or later run
+`oat project promote <project-path> --to quick`, when you want a maintained,
+approved up-front task plan. Promotion keeps completed execution records as
+quick tasks, lists phases that still need tasks in
+`oat_promotion_pending_phases`, and hands off to `oat-project-quick-start`.
+Before the brief is written and committed there is nothing to promote: abandon
+the scaffold and start `oat-project-quick-start` instead. See
+[Lifecycle](../lifecycle.md#promoting-a-brief-project-to-quick).
+
+**Next step:** Run `oat-project-implement` after the brief is approved.
 
 ## oat-project-import-plan
 

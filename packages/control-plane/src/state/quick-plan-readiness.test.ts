@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { evaluateQuickPlanReadiness } from './quick-plan-readiness';
+import {
+  evaluateQuickPlanReadiness,
+  readRecordLines,
+  recordLineMask,
+} from './quick-plan-readiness';
 
 const READY_FRONTMATTER = `---
 oat_status: complete
@@ -473,5 +477,144 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
 
       expect(evaluateQuickPlanReadiness(content).ready).toBe(true);
     });
+  });
+
+  describe('promotion-pending phases clause', () => {
+    function withPending(line: string): string {
+      return plan(
+        READY_FRONTMATTER.replace(
+          'oat_template: false\n',
+          `oat_template: false\n${line}\n`,
+        ),
+        PHASE_WITH_TASK,
+        PASSED_REVIEW_ROW,
+      );
+    }
+
+    it('rejects an otherwise-ready plan with a flow list of pending phases', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending("oat_promotion_pending_phases: ['p03']"),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
+    it('rejects a block list of pending phases', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases:\n  - p03\n  - p04'),
+        ).failure,
+      ).toBe('promotion-pending-phases');
+    });
+
+    it('rejects a block list separated from its bare key by a blank line', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases:\n\n  - p03'),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
+    it('rejects a block list separated from its bare key by a comment line', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending(
+            'oat_promotion_pending_phases:\n# phases still needing tasks\n  - p03',
+          ),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
+    it('rejects a duplicated declaration', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending(
+            'oat_promotion_pending_phases: []\noat_promotion_pending_phases: []',
+          ),
+        ).failure,
+      ).toBe('promotion-pending-phases');
+    });
+
+    it('accepts an empty list, a null value, or an absent key', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: []'),
+        ),
+      ).toEqual({ ready: true, failure: null });
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: [ ] # all authored'),
+        ).ready,
+      ).toBe(true);
+      expect(
+        evaluateQuickPlanReadiness(withPending('oat_promotion_pending_phases:'))
+          .ready,
+      ).toBe(true);
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: ~'),
+        ).ready,
+      ).toBe(true);
+      expect(evaluateQuickPlanReadiness(READY_PLAN).ready).toBe(true);
+    });
+  });
+});
+
+describe('recordLineMask', () => {
+  it('excludes fence lines, fenced content and nested fences by index', () => {
+    const lines = [
+      '## Phase p01: Real', // 0 record
+      '````markdown', // 1 fence open (four backticks)
+      '## Phase p09: Example', // 2 fenced
+      '~~~', // 3 nested other marker stays fenced
+      '```', // 4 shorter run does not close
+      '```` ', // 5 longer run with blank info closes
+      '**Intent:** real', // 6 record
+      '~~~~text', // 7 opens
+      '~~~~~ trailing', // 8 info string does not close
+      '~~~~~', // 9 closes
+      'after', // 10 record
+    ];
+    expect(recordLineMask(lines)).toEqual([
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it('excludes four-column indentation measured with tab stops', () => {
+    const lines = [
+      '   ## Phase p01: three spaces', // record
+      '    ## Phase p02: four spaces', // indented code
+      '\t## Phase p03: tab', // indented code (tab = 4 columns)
+      '  \t## Phase p04: two spaces then tab', // indented code
+      '    ```', // indented fence is not a fence
+      '## Phase p05: after indented fence', // record
+    ];
+    expect(recordLineMask(lines)).toEqual([
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it('is the index-preserving form of readRecordLines', () => {
+    const lines = ['a', '```', 'b', '```', '    c', 'd'];
+    const mask = recordLineMask(lines);
+    expect(readRecordLines(lines)).toEqual(
+      lines.filter((_, index) => mask[index]),
+    );
+    expect(readRecordLines(lines)).toEqual(['a', 'd']);
   });
 });

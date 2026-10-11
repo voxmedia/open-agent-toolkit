@@ -784,4 +784,101 @@ ${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`;
       reason: 'Route lite plan work based on boundary tier',
     });
   });
+
+  // `oat project status` reaches the control-plane router, which is the
+  // authority for brief routes and the brief-unit guard (the state dashboard
+  // reads frontmatter only and defers to it).
+  describe('brief routes', () => {
+    const BRIEF_STATE = QUICK_STATE.replace(
+      'oat_workflow_mode: quick',
+      'oat_workflow_mode: brief',
+    );
+
+    const BRIEF_PHASES = `
+## Phase p01: Research the parser contract
+
+**Intent:** Learn the parser contract.
+**Exit evidence:** Notes recorded.
+
+## Phase p02: Build the reader
+
+**Intent:** Wire the reader.
+**Exit evidence:** Tests pass.
+`;
+
+    const IN_PROGRESS_BRIEF = `---
+oat_status: in_progress
+oat_ready_for: null
+oat_template: false
+---
+
+# Plan: demo
+${BRIEF_PHASES}`;
+
+    const COMPLETE_BRIEF = `${READY_FRONTMATTER}
+# Plan: demo
+${BRIEF_PHASES}`;
+
+    it('keeps an in-progress brief plan with the brief entry skill', async () => {
+      const projectPath = await createProject(
+        IN_PROGRESS_BRIEF,
+        BRIEF_STATE.replace(
+          'oat_phase_status: complete',
+          'oat_phase_status: in_progress',
+        ),
+      );
+
+      expect(await recommendationFor(projectPath)).toEqual({
+        skill: 'oat-project-brief',
+        reason: 'Route brief plan work based on boundary tier',
+      });
+    });
+
+    it('resumes implement for a brief at implement:complete with an incomplete phase-unit', async () => {
+      const projectPath = await createProject(
+        COMPLETE_BRIEF,
+        BRIEF_STATE.replace('oat_phase: plan', 'oat_phase: implement'),
+      );
+      await writeFile(
+        join(projectPath, 'implementation.md'),
+        `## Phase p01: Research the parser contract
+
+**Status:** completed
+
+## Phase p02: Build the reader
+
+**Status:** in_progress
+`,
+        'utf8',
+      );
+
+      expect(await recommendationFor(projectPath)).toEqual({
+        skill: 'oat-project-implement',
+        reason: 'Incomplete phase-units remain in the active scope',
+      });
+    });
+
+    it('moves a brief past implementation once every phase-unit is accepted', async () => {
+      const projectPath = await createProject(
+        COMPLETE_BRIEF,
+        BRIEF_STATE.replace('oat_phase: plan', 'oat_phase: implement'),
+      );
+      await writeFile(
+        join(projectPath, 'implementation.md'),
+        `## Phase p01: Research the parser contract
+
+**Status:** completed
+
+## Phase p02: Build the reader
+
+**Status:** completed
+`,
+        'utf8',
+      );
+
+      expect(await recommendationFor(projectPath)).toMatchObject({
+        skill: 'oat-project-review-provide',
+      });
+    });
+  });
 });

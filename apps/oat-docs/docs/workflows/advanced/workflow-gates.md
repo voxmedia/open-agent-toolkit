@@ -98,7 +98,7 @@ string, and the lifecycle executes it unchanged; OAT does not inject, reorder,
 or rewrite its shell arguments.
 
 `oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`,
-`oat-project-lite`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
+`oat-project-lite`, `oat-project-brief`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
 in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
@@ -249,7 +249,7 @@ for it.
 
 ### Gate approval records
 
-Two lifecycle gates persist their outcome in project `state.md` with a shared
+Three lifecycle gates persist their outcome in project `state.md` with a shared
 five-field core:
 
 | Field                | Meaning                                                                                        |
@@ -277,8 +277,13 @@ carries exactly the core:
 - a gate that is not configured writes no record (implement writes
   `allowed/no_gate` instead).
 
-`oat-project-next` and `oat-project-progress` report the quick-start record as
-recorded: status, disposition, `decided_at`, and `config_fingerprint` as
+`oat_brief_gate`, written by `oat-project-brief` for its configured gate on the
+committed brief, carries exactly the same core with the same outcome rules. It
+is provenance only: no route reads it back, and the brief's single approval
+still follows the gate.
+
+`oat-project-next` and `oat-project-progress` report the quick-start record
+(and `oat-project-progress` the brief record) as recorded: status, disposition, `decided_at`, and `config_fingerprint` as
 provenance, or `malformed` when the fields do not form a valid record. They do
 not recompute the fingerprint, because no CLI emits a canonical one for the
 quick-start gate, and they never route on the record: quick plan readiness
@@ -840,7 +845,7 @@ oat gate set oat-project-implement \
 ```
 
 Apply the same command shape to `oat-project-plan`,
-`oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` when those lifecycle
+`oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, and `oat-project-import-plan` when those lifecycle
 skills have configured review gates. Do not add `--target`; explicit targets
 remain manual/debug or deliberate local/user-specific overrides.
 
@@ -1234,7 +1239,7 @@ as a failed gate, never as a pass.
 
 How the skills handle that case differs:
 
-- `oat-project-implement` and `oat-project-lite` keep it blocked whatever
+- `oat-project-implement`, `oat-project-lite`, and `oat-project-brief` keep it blocked whatever
   `onFailure` says, so even a `warn` gate does not let them continue.
 - `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`
   apply your `onFailure` setting to any failed gate run, including one where no

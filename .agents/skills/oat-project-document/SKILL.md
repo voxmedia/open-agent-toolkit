@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.8
+  version: 1.8.9
 ---
 
 # Project Documentation Sync
@@ -214,6 +214,16 @@ the numbered artifact list below. Read the five `plan.md` sections `Summary`,
 `Decisions`, `Assumptions`, `Out of Scope`, and `Validation Criteria`, then read
 `implementation.md` task outcomes and `Final Summary (for PR/docs)` as the
 shipped results. A lite project accepts `discovery.md`, `spec.md`, and
+`design.md` as absent; do not read or require them. Build the documentation
+delta from what actually shipped and continue with code verification.
+
+For `oat_workflow_mode: brief`, use the brief artifact set instead of the
+numbered list below. Read `plan.md` (the Project Brief: Goal, Outcomes,
+Approach and any `### Design` subsection, Constraints and Out of Scope,
+Decisions, and the phases' Intent and Exit evidence), then `implementation.md`
+phase sections, execution records, `Brief deltas`, and `Final Summary (for
+PR/docs)` as the shipped results, plus `summary.md` and `references/research/`
+when present. A brief project accepts `discovery.md`, `spec.md`, and
 `design.md` as absent; do not read or require them. Build the documentation
 delta from what actually shipped and continue with code verification.
 

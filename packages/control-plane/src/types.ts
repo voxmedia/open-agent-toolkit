@@ -13,8 +13,24 @@ export const WORKFLOW_MODES = [
   'quick',
   'import',
   'lite',
+  'brief',
 ] as const;
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
+
+/**
+ * Workflow modes whose plans are Project Briefs: phases carry intent and exit
+ * evidence instead of executable tasks, and progress is counted in
+ * phase-units.
+ */
+export const BRIEF_MODES = ['brief'] as const;
+export type BriefMode = (typeof BRIEF_MODES)[number];
+
+/** True when `mode` belongs to the brief mode family. */
+export function isBriefMode(
+  mode: WorkflowMode | null | undefined,
+): mode is BriefMode {
+  return mode != null && (BRIEF_MODES as readonly string[]).includes(mode);
+}
 
 export type ExecutionMode = 'single-thread' | 'subagent-driven';
 
@@ -50,7 +66,8 @@ export type QuickPlanReadinessFailure =
   | 'plan-missing'
   | 'frontmatter-not-ready'
   | 'review-disposition-missing'
-  | 'substantive-task-missing';
+  | 'substantive-task-missing'
+  | 'promotion-pending-phases';
 
 export interface QuickPlanReadiness {
   ready: boolean;
@@ -80,6 +97,22 @@ export interface PhaseProgress {
   total: number;
   completed: number;
   isRevision: boolean;
+  /**
+   * Present only when the phase-unit contract (brief modes) produced this
+   * record: the phase itself is the unit of progress.
+   */
+  unit?: 'phase';
+  /**
+   * Brief modes only: the plan marks this phase `**Provisional:** yes`, so it
+   * stays incomplete regardless of any journal marker.
+   */
+  provisional?: boolean;
+  /**
+   * Brief modes only: execution records (`### Task` headings) under this
+   * phase in `implementation.md`. Display metadata; never feeds
+   * `total`/`completed`.
+   */
+  taskRecords?: { total: number; completed: number };
 }
 
 export interface TaskProgress {

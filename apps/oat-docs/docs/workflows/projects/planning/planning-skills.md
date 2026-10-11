@@ -13,7 +13,7 @@ For a spec-driven project (one using the full workflow: discovery, design, plan,
 then implementation), the usual path is discovery, then design, then plan.
 Design confirms requirements and produces `spec.md` as well as `design.md`.
 Standalone spec is optional when you want to review requirements before
-designing. Quick, lite, and import workflows author their own plans through
+designing. Quick, lite, brief, and import workflows author their own plans through
 their entry skills. Do not send those projects through spec-driven planning
 just because they contain a file named `plan.md`.
 
@@ -55,8 +55,8 @@ A _HiLL (human-in-the-loop lifecycle) checkpoint_ is a point where a skill stops
 and waits for your explicit approval before marking a phase complete. Projects
 created with `oat-project-new` have HiLL approvals on discovery and design **by
 default**: each skill stops after writing its artifact and waits for your
-explicit approval before marking it complete. Quick, lite, and import projects
-have no workflow-phase HiLL checkpoints. Configured exit gates (optional reviews
+explicit approval before marking it complete. Quick, lite, brief, and import
+projects have no workflow-phase HiLL checkpoints. Configured exit gates (optional reviews
 or commands your repository runs before a skill marks its work complete) can
 also keep an artifact in progress. See [HiLL checkpoints](hill-checkpoints.md).
 The [skill catalog](../../../skills/index.md) lists the broader lifecycle tools.
@@ -83,7 +83,7 @@ spec-driven project. The repository knowledge index must exist at
 `oat-repo-knowledge-index` first. The skill checks knowledge staleness and asks
 whether to refresh or continue when the index is stale.
 
-Quick, import, and lite projects use their own next step instead. Mentioning a
+Quick, import, lite, and brief projects use their own next step instead. Mentioning a
 new idea does not authorize automatic discovery invocation.
 
 **Example scenario:** The webhook-delivery project is active, but the team has
@@ -270,11 +270,12 @@ skill asks for a project name and sets it as the active project. The project
 must use spec-driven mode, with `design.md` recording `oat_status: complete` and
 `oat_ready_for: oat-project-plan`.
 
-Quick, import, and lite projects never use this skill to author a plan. On a
+Quick, import, lite, and brief projects never use this skill to author a plan. On a
 quick project, it resumes quick-start if the plan is not ready, and **starts
 `oat-project-implement` immediately** if the plan is ready. On an import project
 with a plan, it points you to `oat-project-implement`. On a lite project, it
-points you to `oat-project-lite`. Do not invoke it on those projects unless you
+points you to `oat-project-lite`. On a brief project, it stops and points you
+to `oat-project-brief`, which owns the Project Brief. Do not invoke it on those projects unless you
 intend that handoff.
 
 **Example scenario:** The webhook design now defines persistence, retries, and
@@ -338,14 +339,14 @@ Promote the active cache-refresh project, keeping its imported plan and complete
 skill asks for a project name and sets it as the active project. The active
 project's `state.md` must record quick or import workflow mode. A spec-driven
 project is already promoted, so the skill reports a no-op unless you request
-artifact refresh. Lite must promote to quick first through the actual terminal
-command:
+artifact refresh. Lite and brief projects must promote to quick first through
+the actual terminal command:
 
 ```bash
-oat project promote <lite-project-path> --to quick
+oat project promote <lite-or-brief-project-path> --to quick
 ```
 
-Use the reported lite project path, for example
+Use the reported project path, for example
 `.oat/projects/synced/retry-message` in the default synced scope. Then use this
 skill against the active quick project.
 

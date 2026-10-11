@@ -5,6 +5,25 @@ This reference preserves the route-specific implementation contract. Load it onl
 Step 0 of the entry skill has already pulled and materialized any discoverable
 synced project before this route validates or reads its artifacts.
 
+### Brief-Family Projects
+
+When `state.md` records `oat_workflow_mode: brief`, `plan.md` is a Project
+Brief. Its `## Phase pNN:` blocks carry `**Intent:**`, `**Exit evidence:**`,
+and `**Provisional:**` lines instead of tasks, and each phase is one
+**phase-unit**, accepted only by the exact `**Status:** completed` line under
+its heading in `implementation.md`. Read
+`oat-project-brief/references/brief-contract.md` from the same installed skills
+root as this skill once, before Step 1. It owns the phase grammar, journal
+markers, execution records, pointer interpretation, and anchor rules, and it
+wins where this route restates them. The brief branches in this route, in
+`phase-execution.md`, and in `completion-and-closeout.md` are inert for every
+other workflow mode.
+
+The entry skill's rule against changing plan structure does not cover the
+logged brief edits Step 2.2 allows (adding, splitting, reordering, or making
+phases concrete within the approved outcomes); those are part of brief
+execution, not scope expansion.
+
 ### Step 1: Check Plan Complete
 
 ```bash
@@ -59,6 +78,15 @@ If `{PROJECT_PATH}/implementation.md` already contains orchestration run entries
 
 6. Once resume target is identified, continue from that phase with the normal per-phase flow.
 
+**Brief modes:** before any redispatch, reconcile every open execution record
+(a `### Task pNN-tNN:` record in the journal without a terminal status) against
+`git log` commits carrying `(pNN-tNN)` and against live handles, as brief
+contract section 7 requires. A record whose implementation commit landed closes
+with that SHA; a record whose handle is still live is continued through that
+handle and never redispatched; a record with neither stays open for its phase's
+next executor. Records never change phase totals, so this reconciliation never
+writes a phase's `**Status:** completed`.
+
 **On first-ever invocation** (no prior run entries), skip resumption detection and proceed to Step 2.
 
 ### Step 2: Read Plan Document
@@ -69,6 +97,15 @@ Read `"$PROJECT_PATH/plan.md"` completely to understand:
 - File changes per task
 - Verification commands
 - Commit messages
+
+**Brief modes:** read the whole brief: Goal, Outcomes, Approach, Constraints and
+Out of Scope, Decisions, Known Unknowns, Delivery endpoint and authority, the
+phase blocks, Parallelism, and Reviews. There are no planned tasks, file lists,
+or commit messages to extract. Each phase's Intent and Exit evidence are its
+requirement and proof source, and execution records are opened only when work
+starts (`phase-execution.md`, Brief-Mode Phase Execution). `oat project
+validate-plan` in Step 2.1 applies the brief profile from the recorded workflow
+mode.
 
 ### Step 2.1: Validate Parallelism Metadata
 
@@ -108,14 +145,31 @@ Example:
 - `oat_plan_parallel_groups: [["p02", "p03"], ["p04", "p05"]]`
 - Schedule: `[p01]` → `[p02, p03]` (group) → `[p04, p05]` (group)
 
+**Brief modes** build the schedule from the brief's phase-units in document
+order, which governs execution even when numeric order differs. Extracted units
+are excluded. A provisional phase stays in the schedule but is never
+dispatched: before its schedule entry starts, the root makes it concrete in
+`plan.md` (writes its Intent and Exit evidence and sets `**Provisional:** no`)
+within the approved outcomes, constraints, authority, and evidence, logs the
+change (in `project-log.md` when the project log is enabled, otherwise in the
+journal), re-runs Step 2.1, and commits the brief before dispatch. A change that
+alters an Outcome, a Constraint, the authority, the endpoint, a Decision, or the
+agreed Approach stops for the focused realignment in brief contract section 4.
+Within those bounds the root may also add, split, or reorder phases and declare
+parallel groups whenever their phases become concrete, with the same logging and
+re-validation, and adds one `code` row per new phase to the brief's
+`## Reviews` table.
+
 ### Step 2.5: Confirm Plan HiLL Checkpoints
 
 #### Lite checkpoint bypass
 
 Resolve `oat_workflow_mode` from project state before any generic checkpoint
 field read. When `oat_workflow_mode` is `lite`, resolve checkpoint state as
-`none` without reading or interpreting `oat_plan_hill_phases`; for other modes,
-an empty list means every phase and therefore cannot represent lite's policy.
+`none` without reading or interpreting `oat_plan_hill_phases`; for the task modes
+(spec-driven, quick, import) an empty list means every phase and therefore
+cannot represent lite's policy; brief modes read it as none (Brief checkpoint
+resolution below).
 Write this plan frontmatter value:
 
 ```yaml
@@ -127,7 +181,8 @@ auto-review preference prompt in both interactive and autonomous runs. Continue
 directly to Step 2.6. The standard root-owned per-phase review and final review
 remain required; only HiLL approval pauses are absent.
 
-For every other workflow mode, read `oat_plan_hill_phases` from
+For every workflow mode other than lite and the brief modes (see Brief
+checkpoint resolution below), read `oat_plan_hill_phases` from
 `"$PROJECT_PATH/plan.md"` frontmatter when present and validate it.
 
 - **Valid format:** JSON-like array of phase IDs (e.g., `["p01","p03"]`)
@@ -138,6 +193,22 @@ Determine whether this is a first implementation run:
 
 - If `"$PROJECT_PATH/implementation.md"` does not exist, treat as first run.
 - If it exists but still has template placeholders and no completed task evidence, treat as first run.
+
+#### Brief checkpoint resolution
+
+Brief modes read `oat_plan_hill_phases` with the brief meaning, not the generic
+one: `[]` and an absent field both mean **none**, and an explicit phase array
+means exactly those phases, an opt-in the user recorded. Never reinterpret a
+brief's `[]` as every phase. With none, write
+`oat_auto_review_at_hill_checkpoints: false # brief: no checkpoints` when that
+key is absent, skip the workflow preference check, the first-run checkpoint
+question, Touchpoint A, and the autonomous checkpoint resolution below in both
+interactive and autonomous runs, and continue directly to Step 2.6. With an
+explicit array, validate it with the normal format rules and keep it as the
+recorded value without re-asking; resolve Touchpoint A below (under
+`OAT_AUTONOMOUS=1`, the autonomous checkpoint resolution, which preserves the
+array) and continue to Step 2.6. The per-phase reviews and the final review run
+either way.
 
 #### Autonomous checkpoint resolution
 
@@ -313,6 +384,18 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
   - If `oat_current_task_id` points at a task already marked `completed` in the body, advance to the **next incomplete** task (first `pending` / `in_progress` / `blocked` entry).
   - If all tasks are completed, skip ahead to finalization (Step 11+).
 - **Always resume** from the resolved task. Print `Resuming from {task_id}.` Do not prompt.
+- **Brief modes:** `oat_current_task_id` may hold a phase ID or an execution
+  record ID (brief contract section 8). Resolve a record ID to its phase and a
+  phase ID to itself; `null`, an unknown ID, or an accepted or extracted unit
+  resolves to the first incomplete phase-unit in document order within the
+  active scope, which is every phase in brief. Phase-units come from the brief's
+  `## Phase` headings, never from task headings, and a provisional phase is
+  incomplete. Print `Resuming from {phase_id}.` and apply the Step 2.2
+  provisional rule before dispatching it. When every phase-unit in the active
+  scope is accepted, skip ahead to finalization (Step 11+). Finalization starts
+  only then, never because every execution record is closed. The stale-state
+  reconciliation below resolves the next phase-unit the same way instead of a
+  next task.
 - **Fresh start is an explicit override only.** If the user invoked the skill with `fresh=true` (argument), warn `Starting fresh — this will overwrite implementation.md. Any draft logs will be lost.` and proceed with fresh initialization. Do not offer fresh start interactively; it is a rare edge case reserved for corrupt state or deliberate plan rewrites.
 
 **Stale-state reconciliation (approval required):**
@@ -331,6 +414,9 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
 **If doesn't exist:**
 
 - Initialize from template (Step 4)
+
+In brief modes `oat-project-brief` already initialized the journal; Step 4 runs
+only when it is missing.
 
 **Important:** Never overwrite an existing `implementation.md` without explicit user confirmation (and warn that draft logs will be lost).
 
@@ -357,3 +443,11 @@ Initialize project state so other skills (e.g., `oat-project-progress`) reflect 
   - `oat_phase_status: in_progress`
   - `oat_current_task: p01-t01`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+
+**Brief modes:** resolve the journal with
+`oat template resolve implementation-brief --output "$PROJECT_PATH/implementation.md"`
+instead, write one Progress Overview row and one `## Phase pNN: <name>` section
+holding only `**Status:** pending` per brief phase, and set both resume pointers
+(`oat_current_task_id` here and `oat_current_task` in `state.md`) to the first
+incomplete phase ID, such as `p01`, rather than a task ID. Anchors and execution
+records are written only when work starts.

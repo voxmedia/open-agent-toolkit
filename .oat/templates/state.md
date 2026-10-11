@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS } # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: { OAT_PHASE } # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -34,7 +34,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
-oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import | lite
+oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -77,6 +77,12 @@ oat_workflow_origin: native # native | imported
 #   updated_at: '2026-07-18T00:00:00Z'
 #   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
 # oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
+#   status: allowed # allowed | blocked
+#   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
+#   decided_at: null # ISO 8601 UTC
+# oat_brief_gate: # optional; persisted brief artifact gate outcome, absent when no gate is configured; provenance only, read back by no route (core record: gate-approval-record.md)
 #   status: allowed # allowed | blocked
 #   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
 #   config_fingerprint: '<stable hash of resolved gate declaration>'

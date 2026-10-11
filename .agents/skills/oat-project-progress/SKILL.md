@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
 metadata:
-  version: 1.4.5
+  version: 1.4.6
 ---
 
 # Progress Router
@@ -162,6 +162,7 @@ Start a new project:
   oat-project-new - Create a spec-driven project scaffold
   oat-project-quick-start - Start a quick workflow project
   oat-project-lite - Start a lite workflow (interview -> plan -> implement)
+  oat-project-brief - Start a brief workflow (interview -> brief -> implement)
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
 
@@ -173,7 +174,7 @@ Read `{project}/state.md` frontmatter:
 
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - spec-driven | quick | import | lite
+- `oat_workflow_mode` - spec-driven | quick | import | lite | brief
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -181,6 +182,7 @@ Read `{project}/state.md` frontmatter:
   deliberately disabled, keyed by gate-aware skill name
 - `oat_implement_exit_gate` - The implementation exit gate record
 - `oat_quick_start_gate` - The quick-start plan gate record
+- `oat_brief_gate` - The brief artifact gate record (brief mode)
 
 Blockers may be legacy reason strings or structured `{task_id, reason, since}`
 records. Display strings as their reason; display records as
@@ -206,6 +208,7 @@ state or routing merely to render blockers.
    HiLL Pending: {yes/no for current phase}
    Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
    Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"
+   Brief Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None" (brief mode only)
    Exit Gate: {status}/{disposition} as recorded, or "None"
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
@@ -219,15 +222,15 @@ even when no gate is currently configured for that skill, and never infer a
 configured gate from an override alone. This is read-only reporting: never add,
 remove, or repair the map here.
 
-Both gate records share the core defined in
-`references/docs/gate-approval-record.md`. Report a quick-start record as that
-doc describes: its stored fields as recorded, with `config_fingerprint` shown as
+All three gate records share the core defined in
+`references/docs/gate-approval-record.md`. Report a quick-start or brief record
+as that doc describes: its stored fields as recorded, with `config_fingerprint` shown as
 provenance and never recomputed, or `malformed` when its fields do not form a
 valid record. Report the exit-gate
 record's `status` and `disposition` as recorded; its freshness belongs to the
-implementation workflow and is not re-derived here. Either record adds no route
+implementation workflow and is not re-derived here. Each record adds no route
 and no warning: quick plan readiness stays the single routing rule for quick
-plans. Show "None" for an absent record, and never write or repair one here.
+plans, and the brief record is provenance only, read back by no route. Show "None" for an absent record, and never write or repair one here.
 
 ### Step 5: Determine Next Skill
 
@@ -239,6 +242,7 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `quick`
 - `import`
 - `lite`
+- `brief`
 
 **HiLL override (apply before phase routing):**
 
@@ -278,6 +282,9 @@ fi
 - Commits exist that match `feat(pNN-tNN):` pattern but lack corresponding completed entries in `implementation.md`
 
 If drift is detected, recommend `oat-project-reconcile` alongside the normal implementation skill.
+
+In brief mode `plan.md` carries no tasks, so skip the `PLAN_TASKS` comparison;
+compare `(pNN-tNN)` commits against the journal's execution records instead.
 
 Routing matrix by mode:
 
@@ -338,6 +345,20 @@ branch, which finishes the plan in place without re-scaffolding the project.
 | implement | complete         | Ready for final review / PR                                                                                                         |
 | implement | pr_open          | `oat-project-complete`                                                                                                              |
 
+**Brief mode (`oat_workflow_mode: brief`):**
+
+| oat_phase | oat_phase_status | Next Skill                                                                                                                          |
+| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| plan      | in_progress      | Continue `oat-project-brief` (it owns review, gate, and approval of the brief)                                                      |
+| plan      | complete         | `oat-project-implement`                                                                                                             |
+| implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | `oat-project-implement` while any phase-unit is unaccepted; otherwise ready for final review / PR                                   |
+| implement | pr_open          | `oat-project-implement` while any phase-unit is unaccepted; otherwise `oat-project-complete`                                        |
+
+Brief progress counts phase-units: report `{accepted}/{total} phases accepted`
+from `oat project status`, never task counts. A provisional phase is never
+accepted, and execution records never change the totals.
+
 **If blockers exist:**
 
 ```
@@ -361,9 +382,10 @@ Knowledge:
 
 Workflow:
   oat-project-lite              - Start a lite workflow (interview -> plan -> implement)
+  oat-project-brief             - Start a brief workflow (interview -> brief -> implement)
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
-  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite promotes via quick)
+  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite and brief promote via quick)
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-design            - Confirm requirements + create technical design (folds spec authoring inline)
   oat-project-spec              - Optional standalone specification (most projects skip this — design handles it)

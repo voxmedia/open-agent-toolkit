@@ -122,8 +122,8 @@ Confirm to write this to a new backlog item file, or tell me what to change.
 **Required template fields:** `title`, `summary` (Initial Request), `approachesConsidered` (Solution Space), `chosenDirection` (Chosen Direction), key decisions, `openQuestions`. Template: `.oat/templates/discovery.md` (consumed via `oat project new`).
 **Optional template fields:** `motivation`, `vision`, `nextSteps`.
 **Confirmation pattern:** `minimal` (slug + workflow mode)
-Skill proposes `quick` vs `spec-driven` mode based on `chosenDirection` and scope signals from the conversation. User picks; skill confirms slug.
-**Handoff target:** Run `oat project new <slug> --mode <mode>` to scaffold. Write field-filled `discovery.md` only (Initial Request, Solution Space with approaches, Chosen Direction, Key Decisions, Open Questions). Mark `oat_status: complete`, `oat_ready_for: oat-project-quick-start` (for quick mode) or `oat-project-design` (for spec-driven). Update project `state.md` (phase=discovery, status=complete). Print pointer to next skill. **Stop — do NOT inline-execute the next phase.** Project promotion writes `discovery.md` only, never `design.md`.
+Skill proposes `lite`, `brief`, `quick`, or `spec-driven` mode based on `chosenDirection` and scope signals from the conversation. User picks; skill confirms slug.
+**Handoff target:** Run `oat project new <slug> --mode <mode>` to scaffold. Write field-filled `discovery.md` only (Initial Request, Solution Space with approaches, Chosen Direction, Key Decisions, Open Questions). Mark `oat_status: complete`, `oat_ready_for: oat-project-quick-start` (for quick mode) or `oat-project-design` (for spec-driven). Update project `state.md` (phase=discovery, status=complete). Print pointer to next skill. **Stop — do NOT inline-execute the next phase.** Project promotion writes `discovery.md` only, never `design.md`. For `brief` mode there is no `discovery.md`: write the synthesized payload to `references/research/brainstorm-YYYY-MM-DD.md`, leave the scaffolded `plan.md` (the Project Brief) for `oat-project-brief` to author through its interview, keep state at plan/in-progress, and point to `oat-project-brief`. For `lite` mode, fill `plan.md` as `oat-brainstorm` step 9g describes and point to `oat-project-lite`.
 **If user wants to keep brainstorming after this is offered:** return to flow with destination = promote-to-new-project. Skill probes for missing chosen direction, key decisions, and explicit open questions — these become artifact fields that read poorly when shallow.
 
 ---
@@ -132,7 +132,7 @@ Skill proposes `quick` vs `spec-driven` mode based on `chosenDirection` and scop
 
 **Pack required:** `workflows` AND an active project pointer is set (`oat config get activeProject`) AND its `state.md` is readable.
 **Trigger phrases:** "fold this into the active project", "this is feedback for the active project", "integrate this into design", "add this to discovery", explicit "for the active project" mention. Also offered as the first option when the active-project 3-way router fires after convergence (related → fold-back).
-**Required template fields:** which artifact (`design.md` if exists, else `discovery.md`; user signal can override), the synthesized payload's `chosenDirection`, key decisions, `transcriptSessionNote` (transcript appendix). Template: appended in-place using `## Brainstorming Update: YYYY-MM-DD — <topic>` heading.
+**Required template fields:** which artifact (`plan.md` for lite and brief; for import `design.md` or `discovery.md` when present, else `plan.md`; otherwise `design.md` if exists, else `discovery.md`; user signal can override), the synthesized payload's `chosenDirection`, key decisions, `transcriptSessionNote` (transcript appendix). Template: appended in-place using `## Brainstorming Update: YYYY-MM-DD — <topic>` heading.
 **Optional template fields:** `openQuestions`, `nextSteps` — appended if surfaced during convergence.
 **Confirmation pattern:** `minimal` (which artifact + dirty-tree handling)
 
@@ -164,7 +164,12 @@ Skill name resolved per workflow mode + PR status (read from `state.md` frontmat
 | ----------- | ---------------------------- | ------------------------- |
 | spec-driven | none / closed                | `oat-project-plan`        |
 | quick       | none / closed                | `oat-project-quick-start` |
-| either      | open (`oat_pr_status: open`) | `oat-project-revise`      |
+| lite        | none / closed                | `oat-project-lite`        |
+| import      | none / closed                | `oat-project-import-plan` |
+| brief       | none / closed                | `oat-project-brief`       |
+| any mode    | open (`oat_pr_status: open`) | `oat-project-revise`      |
+
+For brief, `oat-project-brief` is the target while the brief is still in planning (`oat_phase: plan`) and `oat-project-implement` once implementation has started; the handoff prompt asks for new or amended phases instead of tasks.
 
 After printing the prompt, the skill stops. The user runs the plan-authoring skill at their own pace. The brainstorming skill never auto-chains into plan authoring — the deliberate transition is the point.
 

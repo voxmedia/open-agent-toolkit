@@ -27,6 +27,7 @@ const VENDORING_SKILLS = [
   'oat-project-implement',
   'oat-project-next',
   'oat-project-progress',
+  'oat-project-brief',
 ] as const;
 
 const QUICK_START = '.agents/skills/oat-project-quick-start/SKILL.md';
@@ -98,6 +99,23 @@ describe('lifecycle gate approval record', () => {
     const template = readRepoFile('.oat/templates/state.md');
     const start = template.indexOf('# oat_quick_start_gate:');
     expect(start, 'template carries the quick-start block').toBeGreaterThan(-1);
+
+    const lines = template.slice(start).split('\n').slice(1);
+    const block = lines.filter((line, index) =>
+      lines.slice(0, index + 1).every((entry) => entry.startsWith('#   ')),
+    );
+    expect(block.map((line) => /^# {3}([a-z_]+):/.exec(line)?.[1])).toEqual([
+      ...CORE_FIELDS,
+    ]);
+  });
+
+  it('scaffolds the brief record with exactly the core', () => {
+    const template = readRepoFile('.oat/templates/state.md');
+    const start = template.indexOf('# oat_brief_gate:');
+    expect(start, 'template carries the brief block').toBeGreaterThan(-1);
+    expect(start, 'brief block follows the quick-start block').toBeGreaterThan(
+      template.indexOf('# oat_quick_start_gate:'),
+    );
 
     const lines = template.slice(start).split('\n').slice(1);
     const block = lines.filter((line, index) =>

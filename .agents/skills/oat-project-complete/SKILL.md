@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.15
+  version: 1.7.16
 ---
 
 # Complete Project
@@ -390,6 +390,11 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
 - `summary.md` is `missing` when `{PROJECT_PATH}/summary.md` does not exist
 - `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
 - `summary.md` is `current` when those tracking fields still match the `oat-project-summary` Step 3 comparison inputs
+- In brief modes staleness is decided by fingerprint instead: recompute the
+  phase fingerprint with the `oat-project-summary` Step 3 brief fragment;
+  `summary.md` is `stale` when its `oat_summary_phase_fingerprint` is absent or
+  differs from the recomputed value and `current` when they match.
+  `oat_summary_last_task` is not consulted for a brief project.
 
 Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.
 The safety-net offer is governed by how this completion run executes, not by how
@@ -1088,7 +1093,7 @@ If a PR description artifact already exists at `{PROJECT_PATH}/pr/project-pr-*.m
 
 **Archive-aware References (required when `SHOULD_ARCHIVE` is `true`):**
 
-When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,discovery,spec,design,summary}.md` will move to a gitignored archive location in Step 8. After commit + push (Step 10), those paths no longer exist on the branch and any blob link to them returns 404 on GitHub. The PR description must anticipate this:
+When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,discovery,spec,design,summary}.md` will move to a gitignored archive location in Step 8. After commit + push (Step 10), those paths no longer exist on the branch and any blob link to them returns 404 on GitHub. The PR description must anticipate this. A brief project's artifact set is `plan.md` (the Project Brief), `implementation.md` (the phase journal), `summary.md`, and `references/`; it has no discovery, spec, or design artifact:
 
 - **Drop References bullets** that point to artifacts about to become local-only:
   - `plan.md`, `implementation.md`, `discovery.md`, `spec.md`, `design.md`, `summary.md`, `references/imported-plan.md`

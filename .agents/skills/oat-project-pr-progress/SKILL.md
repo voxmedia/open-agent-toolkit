@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.2
+  version: 1.3.3
 ---
 
 # Progress PR
@@ -16,7 +16,7 @@ Create a progress PR description (typically at a plan phase boundary) and write 
 
 Generate a PR-ready summary that is:
 
-- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference; lite uses the five plan.md contract sections)
+- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference; lite uses the five plan.md contract sections; brief uses the Project Brief's Outcomes and each phase's Intent and Exit evidence)
 - scoped to a specific phase (pNN) or an explicit git range
 - easy to paste into GitHub (or used with `gh pr create` if desired)
 
@@ -141,7 +141,7 @@ If scope is `pNN`, gather commits via commit convention grep:
 
 ```bash
 PHASE="p02" # example
-git log --oneline --grep="\\(${PHASE}-" HEAD~500..HEAD
+git log --oneline --fixed-strings --grep="(${PHASE}-" --max-count=500
 ```
 
 If the grep returns no commits:
@@ -154,6 +154,26 @@ If the grep returns no commits:
 If scope is `range`/`base_sha`, set:
 
 - `SCOPE_RANGE` to the range string (e.g., `abc..HEAD`)
+
+**Brief modes (`oat_workflow_mode: brief`).** A `pNN` or `p-revN` scope (or a
+contiguous `pNN-pMM` run) resolves from the journal anchors, never from the
+commit grep above (`oat-project-brief/references/brief-contract.md` section
+10):
+
+- Read the exact `**Base:**` and `**Head:**` lines directly under the phase's
+  `## Phase` heading in `implementation.md`.
+- When both exist, verify each names a commit (`git cat-file -e "$SHA^{commit}"`)
+  and that the base is an ancestor of the head
+  (`git merge-base --is-ancestor "$PHASE_BASE" "$PHASE_HEAD"`), then set
+  `SCOPE_RANGE="$PHASE_BASE..$PHASE_HEAD"`. For a run, the range is the first
+  base through the last head, under the same containment and continuity
+  checks as `oat-project-review-provide` Step 3.0.
+- A missing anchor widens the range to `merge-base..HEAD`; `(pNN-` commit
+  matches only label which commits belong to the phase, and the PR body says
+  the range was widened because the anchors are missing.
+- An anchor that is not a commit, a base that is not an ancestor of its head,
+  or a contradictory ordering stops the PR: route to `oat-project-reconcile`
+  and never narrow the range silently.
 
 ### Step 2: Load Artifacts (Mode-Aware)
 
@@ -171,6 +191,13 @@ Read (as available):
 - `{PROJECT_PATH}/implementation.md` (if exists)
 - `{PROJECT_PATH}/discovery.md` (recommended for quick mode)
 - `{PROJECT_PATH}/references/imported-plan.md` (recommended for import mode)
+
+For `WORKFLOW_MODE=brief`, read `plan.md` (the Project Brief: Goal, Outcomes,
+Decisions, and the in-scope phases' Intent and Exit evidence are the
+requirements source) and `implementation.md` (the phase journal: anchors,
+execution records, verification evidence). `discovery.md`, `spec.md`, and
+`design.md` are absent by design; say in the PR summary that the requirements
+come from the brief rather than noting missing spec-driven artifacts.
 
 If `WORKFLOW_MODE != spec-driven` and spec/design are missing:
 
@@ -286,7 +313,7 @@ oat_project: { PROJECT_PATH }
 
 ## Goals / Non-Goals
 
-{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode; discovery/import reference in quick/import mode; Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite}
+{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode; discovery/import reference in quick/import mode; Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite; the phase's Intent and Exit evidence plus the brief's Outcomes for brief}
 
 ## Changes
 

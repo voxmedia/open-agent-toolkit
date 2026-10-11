@@ -17,8 +17,8 @@ This page is the compact contract for how project lifecycle state and review sta
 
 === "Diagram"
 
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite enters at planning](/diagrams/project-state-machine-light.svg)
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite enters at planning](/diagrams/project-state-machine-dark.svg)
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite and brief enter at planning](/diagrams/project-state-machine-light.svg)
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite and brief enter at planning](/diagrams/project-state-machine-dark.svg)
 
 === "Mermaid source"
 
@@ -41,10 +41,11 @@ This page is the compact contract for how project lifecycle state and review sta
       PASSED --> I
 
       LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
+      BRIEF["Brief: alignment interview\n(one Project Brief)"] -. entry point .-> P
     ```
 
-The solid chain is the spec-driven progression. Lite enters at **Plan in
-progress** and never sets `oat_phase` to `discovery`, `spec`, or `design`;
+The solid chain is the spec-driven progression. Lite and brief enter at **Plan
+in progress** and never set `oat_phase` to `discovery`, `spec`, or `design`;
 quick and import projects also skip part of the leading chain.
 
 ## Phase status values
@@ -91,6 +92,20 @@ A lite project that outgrows one sitting can move to the quick chain with `oat
 project promote <project-path> --to quick`, which flips `oat_workflow_mode` to
 `quick` and sets `oat_phase: discovery` with `oat_phase_status: complete`. See
 [Lifecycle](../workflows/projects/lifecycle.md#promoting-a-lite-project-to-quick).
+
+Brief progression:
+
+1. Plan in progress (`oat_workflow_mode: brief`, `oat_phase: plan`) — `oat-project-brief` owns the interview, the artifact review, any configured gate, and the single approval
+2. Ready for implement (`plan.md` complete and pointing to `oat-project-implement`)
+3. Implement in progress — progress counts phase-units; a phase is accepted only by `**Status:** completed` under its heading in `implementation.md`
+4. Implement complete (final review passed). While any phase-unit is provisional or unaccepted, the router's brief-unit guard sends the project back to `oat-project-implement` ("Incomplete phase-units remain in the active scope") before every later check
+5. PR open (`pr_open`) through the same post-implementation sequence as quick
+6. Complete
+
+A brief project can move to the quick chain with `oat project promote
+<project-path> --to quick`; quick plan readiness stays false while
+`oat_promotion_pending_phases` lists phases that still need tasks. See
+[Lifecycle](../workflows/projects/lifecycle.md#promoting-a-brief-project-to-quick).
 
 ## Review progression
 

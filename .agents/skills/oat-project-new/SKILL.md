@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.3
+  version: 1.4.4
 ---
 
 # New OAT Project
@@ -72,6 +72,10 @@ Use the CLI scaffolder:
 ```bash
 oat project new "{project-name}" --mode spec-driven [--scope shared|local|synced]
 ```
+
+This skill scaffolds spec-driven projects only. Quick, lite, and brief projects
+start from their entry skills (`oat-project-quick-start`, `oat-project-lite`,
+`oat-project-brief`), which run `oat project new --mode <mode>` themselves.
 
 Optional flags:
 

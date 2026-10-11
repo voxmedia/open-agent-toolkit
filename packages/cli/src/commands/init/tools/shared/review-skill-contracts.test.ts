@@ -356,7 +356,7 @@ describe('review skill contracts', () => {
 
     // The `oat-reviewer` AGENT role is out of scope for the skill version
     // migration and keeps its top-level declaration, so this read stays direct.
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.11');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.12');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -1411,7 +1411,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(readDeclaredVersion(content)).toBe('1.7.15');
+    expect(readDeclaredVersion(content)).toBe('1.7.16');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -4717,7 +4717,7 @@ printf '%s\\n' "$EVENTS"`;
     );
     // The guard carries no workflow-mode branch.
     expect(normalizeProse(stepFiveTwo)).toContain(
-      'applies identically to `spec-driven`, `quick`, `import`, and `lite` projects',
+      'applies identically to `spec-driven`, `quick`, `import`, `lite`, and `brief` projects',
     );
 
     // Active branch: the pre-existing route text survives byte for byte.

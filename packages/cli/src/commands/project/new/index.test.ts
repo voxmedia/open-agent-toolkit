@@ -19,7 +19,7 @@ type CommitScaffoldStatus =
 
 interface HarnessOptions {
   result?: {
-    mode: 'spec-driven' | 'quick' | 'import' | 'lite';
+    mode: 'spec-driven' | 'quick' | 'import' | 'lite' | 'brief';
     scope?: 'shared' | 'local' | 'synced';
     ref?: string;
     sha?: string;

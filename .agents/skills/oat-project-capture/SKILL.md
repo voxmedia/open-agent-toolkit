@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.4
+  version: 1.0.5
 ---
 
 # Capture Untracked Work
@@ -29,7 +29,7 @@ Use when:
 Don't use when:
 
 - A project already exists for the current branch — use `oat-project-reconcile` instead
-- You haven't started any work yet — use `oat-project-lite` for single-sitting work, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work
+- You haven't started any work yet — use `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work
 - You only need to map new commits to an existing plan — use `oat-project-reconcile`
 
 ## Prerequisites

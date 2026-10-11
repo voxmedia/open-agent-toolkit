@@ -6,14 +6,14 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.5
+  version: 1.2.6
 ---
 
 # Promote Project To Spec-Driven Lifecycle
 
 Convert a quick/import workflow project into a Spec-Driven OAT lifecycle project without creating a new project directory.
 
-Lite projects promote through quick first: run `oat project promote <path> --to quick`, then use this skill. This skill's direct eligibility remains quick/import only.
+Lite and brief projects promote through quick first: run `oat project promote <path> --to quick`, then use this skill (a promoted brief first finishes its pending phase tasks through `oat-project-quick-start`). This skill's direct eligibility remains quick/import only.
 
 ## Hook-safe exact-path commits
 

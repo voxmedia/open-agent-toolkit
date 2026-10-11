@@ -10,11 +10,12 @@ import {
   scanUnprocessedReviews,
 } from './state/reviews';
 import { parseTaskProgress } from './state/tasks';
-import type {
-  ProjectState,
-  ProjectSummary,
-  ReviewArtifactStatus,
-  ReviewStatus,
+import {
+  isBriefMode,
+  type ProjectState,
+  type ProjectSummary,
+  type ReviewArtifactStatus,
+  type ReviewStatus,
 } from './types';
 
 export async function getProjectState(
@@ -43,7 +44,9 @@ export async function getProjectState(
     tableReviews,
   );
   const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
-  const progress = parseTaskProgress(planContent, implementationContent);
+  const progress = parseTaskProgress(planContent, implementationContent, {
+    phaseUnits: isBriefMode(parsedState.workflowMode),
+  });
 
   const projectStateWithoutRecommendation: Omit<
     ProjectState,
@@ -119,7 +122,9 @@ export async function listProjects(
         tableReviews,
       );
       const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
-      const progress = parseTaskProgress(planContent, implementationContent);
+      const progress = parseTaskProgress(planContent, implementationContent, {
+        phaseUnits: isBriefMode(parsedState.workflowMode),
+      });
 
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
         name: basename(projectDir),

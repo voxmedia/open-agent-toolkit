@@ -384,14 +384,14 @@ describe('autonomy gate-inventory drift enforcement', () => {
     expect(proofGate?.[4]).toContain('deferred-but-verified');
   });
 
-  it('keeps all sixteen autonomous skill roots mapped at repository HEAD', async () => {
+  it('keeps all seventeen autonomous skill roots mapped at repository HEAD', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const contract = await readFile(
       join(repoRoot, '.agents', 'docs', 'autonomy-contract.md'),
       'utf8',
     );
 
-    expect(parseInventory(contract).skillRoots).toHaveLength(16);
+    expect(parseInventory(contract).skillRoots).toHaveLength(17);
     await expect(assertInventoryCurrent(repoRoot)).resolves.toBeUndefined();
   });
 });

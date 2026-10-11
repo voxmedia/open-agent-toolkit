@@ -7,7 +7,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.19
+  version: 2.3.20
 ---
 
 # Quick Start Project
@@ -150,6 +150,33 @@ Step 3.7 — against `"$PROJECT_PATH/plan.md"`:
   earlier run already wrote.
 - Ready → there is nothing left to author here; load
   `oat-project-implement/SKILL.md` and follow it to begin execution.
+
+**Promoted-brief resume.** When the resumed `plan.md` frontmatter records
+`oat_promoted_from: brief`, the project came from
+`oat project promote --to quick` (brief contract section 11), and quick plan
+readiness stays false while `oat_promotion_pending_phases` lists any phase
+(condition 6). `discovery.md` was rendered from the brief and counts as
+existing output, so re-enter at Step 2.9 and then:
+
+1. Author executable `### Task pNN-tNN:` tasks, under Step 3's plan
+   requirements, for every phase in `oat_promotion_pending_phases`, in document
+   order. A phase that carries an `**Unfinished records:**` line keeps those
+   record IDs as its first authored tasks; every new task takes the next free
+   ordinal after all existing plan tasks and journal records in its phase, so no
+   ID is reused.
+2. In the same plan write that adds a phase's tasks, remove that phase from
+   `oat_promotion_pending_phases`; when the last one is authored, write
+   `oat_promotion_pending_phases: []`. Keep `oat_promoted_from: brief`.
+3. Present historical tasks (those copied from completed execution records and
+   any synthesized `Accepted via phase evidence` task) as already accepted:
+   their journal markers already satisfy quick progress, and they and the
+   `**Historical records:**` lines are never re-authored, renumbered, or
+   reordered.
+4. Run Steps 3.5 through 3.7 on the whole plan. The plan artifact review and the
+   configured gate see every task, with the historical ones labeled as accepted
+   context, and the disposition Step 3.7 records is the sign-off for the newly
+   authored tasks only. Existing `## Reviews` rows and the promotion provenance
+   line stay untouched.
 
 If no valid active project exists:
 
@@ -629,6 +656,12 @@ Required frontmatter updates:
 - `oat_import_provider: null`
 - `oat_template: true`
 
+**Promoted-brief provenance.** Promotion already wrote `oat_plan_source: quick`,
+and this step leaves it unchanged; the origin lives in `oat_promoted_from:
+brief`. Re-asserting the values above never removes `oat_promoted_from` or
+`oat_promotion_pending_phases`; only the Step 0.5 promoted-brief resume shrinks
+that list as it authors each phase.
+
 These values are the interruption-safe pre-review state. Here,
 `oat_template: true` marks the generated plan as still owned by the current
 planning workflow even after its substantive content has been written. If the
@@ -996,6 +1029,12 @@ A quick `plan.md` is implementation-ready only when all of the following hold:
 5. At least one phase carries a substantive task — a `### Task pNN-tNN:`
    heading under a `## Phase` heading, outside any fenced example, whose title
    still reads as text once every `{placeholder}` is removed.
+6. Frontmatter `oat_promotion_pending_phases` is absent or empty, so a brief
+   promoted to quick stays not ready while any of its phases still lacks
+   executable tasks. Empty means declared exactly once as `[]`, `null`, `~`, or
+   a bare key whose next frontmatter line, after any blank or `#` comment lines,
+   is not a block-list item; a duplicated key is contradictory. The control
+   plane's `quick-plan-readiness.ts` mirrors this condition.
 
 Substantive tasks alone never make a plan ready. The plan that Step 3 writes
 already has concrete tasks, yet it carries the Step 3 pre-review frontmatter, so
@@ -1139,6 +1178,26 @@ quick_plan_ready() {
       print
     }
   ' "$PLAN_FILE" | sed -E 's/\{[^}]*\}//g' | grep -qE '[[:alnum:]]' || return 1
+
+  # Condition 6: a brief promoted to quick lists the phases that still need
+  # executable tasks in `oat_promotion_pending_phases`. Absent is ready; a
+  # duplicated key is contradictory; `[]` is empty; `null`, `~`, or a bare key
+  # is empty only when no block-list item follows it, skipping blank and `#`
+  # comment lines, which do not end a block list. Anything else is not ready.
+  PENDING_KEY=$(quick_plan_key oat_promotion_pending_phases)
+  PENDING_COUNT=$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$PENDING_KEY")
+  [ "$PENDING_COUNT" -le 1 ] || return 1
+  if [ "$PENDING_COUNT" = "1" ] &&
+    ! printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$PENDING_KEY[[:space:]]*\[[[:space:]]*\][[:space:]]*(#.*)?$"; then
+    printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$PENDING_KEY[[:space:]]*(null|~)?[[:space:]]*(#.*)?$" || return 1
+    printf '%s\n' "$FRONTMATTER" | awk -v key="^$PENDING_KEY" '
+      found && /^[[:space:]]*(#.*)?$/ { next }
+      found { exit ($0 ~ /^[[:space:]]*-([[:space:]]|$)/) ? 1 : 0 }
+      $0 ~ key { found = 1 }
+    ' || return 1
+  fi
 
   return 0
 }

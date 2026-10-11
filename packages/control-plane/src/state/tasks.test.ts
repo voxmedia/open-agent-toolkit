@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTaskProgress } from './tasks';
+import {
+  parsePhaseMarkers,
+  parseProvisionalPhaseIds,
+  parseTaskProgress,
+  selectPhaseUnits,
+} from './tasks';
 
 describe('parseTaskProgress', () => {
   it('parses task counts and current task across multiple phases', () => {
@@ -465,5 +470,413 @@ oat_current_task_id: null
       currentTaskId: null,
       phases: [],
     });
+  });
+});
+
+describe('parseTaskProgress in task mode (default)', () => {
+  it('drops a taskless phase heading and adds no phase-unit fields', () => {
+    const planContent = `## Phase 1: Research
+
+**Intent:** Learn the parser contract.
+
+## Phase 2: Build
+
+### Task p02-t01: Wire the reader
+`;
+    const implementationContent = `## Phase 1: Research
+
+**Status:** completed
+
+### Task p02-t01: Wire the reader
+
+**Status:** completed
+`;
+
+    const progress = parseTaskProgress(planContent, implementationContent);
+    expect(progress).toEqual({
+      total: 1,
+      completed: 1,
+      currentTaskId: null,
+      phases: [
+        {
+          phaseId: 'p02',
+          name: 'Build',
+          total: 1,
+          completed: 1,
+          isRevision: false,
+        },
+      ],
+    });
+    expect(
+      parseTaskProgress(planContent, implementationContent, {
+        phaseUnits: false,
+      }),
+    ).toEqual(progress);
+    for (const phase of progress.phases) {
+      expect(phase).not.toHaveProperty('unit');
+      expect(phase).not.toHaveProperty('provisional');
+      expect(phase).not.toHaveProperty('taskRecords');
+    }
+  });
+});
+
+describe('parseTaskProgress in phase-unit mode', () => {
+  const phaseUnits = { phaseUnits: true } as const;
+
+  it('counts each taskless phase as one unit and accepts a completed phase marker', () => {
+    const planContent = `## Phase p01: Research the parser contract
+
+**Intent:** Learn the parser contract.
+**Exit evidence:** Notes recorded.
+
+## Phase p02: Build the reader
+
+**Intent:** Wire the reader.
+**Exit evidence:** Tests pass.
+`;
+    const implementationContent = `---
+oat_current_task_id: p02
+---
+
+## Phase p01: Research the parser contract
+
+**Status:** completed
+**Base:** 531e86a0f4b2c7d9e1f3a5b7c9d1e3f5a7b9c1d3
+**Head:** 9c0f3a1d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b
+
+## Phase p02: Build the reader
+
+**Status:** in_progress
+`;
+
+    expect(
+      parseTaskProgress(planContent, implementationContent, phaseUnits),
+    ).toEqual({
+      total: 2,
+      completed: 1,
+      currentTaskId: 'p02',
+      phases: [
+        {
+          phaseId: 'p01',
+          name: 'Research the parser contract',
+          total: 1,
+          completed: 1,
+          isRevision: false,
+          unit: 'phase',
+          provisional: false,
+          taskRecords: { total: 0, completed: 0 },
+        },
+        {
+          phaseId: 'p02',
+          name: 'Build the reader',
+          total: 1,
+          completed: 0,
+          isRevision: false,
+          unit: 'phase',
+          provisional: false,
+          taskRecords: { total: 0, completed: 0 },
+        },
+      ],
+    });
+  });
+
+  it('ends phase marker ownership at any heading, including a task heading', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+`;
+    const implementationContent = `## Phase p01: Research
+
+Summary prose without a phase status marker.
+
+### Task p01-t01: Pin taskless-phase behavior
+
+**Status:** completed
+`;
+
+    const progress = parseTaskProgress(
+      planContent,
+      implementationContent,
+      phaseUnits,
+    );
+    expect(progress.completed).toBe(0);
+    expect(progress.phases[0]).toMatchObject({
+      phaseId: 'p01',
+      total: 1,
+      completed: 0,
+      taskRecords: { total: 1, completed: 1 },
+    });
+  });
+
+  it('lets a provisional plan phase override a journal completion', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+**Provisional:** yes
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** completed
+`;
+
+    expect(
+      parseTaskProgress(planContent, implementationContent, phaseUnits),
+    ).toMatchObject({
+      total: 1,
+      completed: 0,
+      phases: [
+        {
+          phaseId: 'p01',
+          total: 1,
+          completed: 0,
+          provisional: true,
+          unit: 'phase',
+        },
+      ],
+    });
+  });
+
+  it('ignores plan task headings for totals and counts task records from the journal only', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+
+### Task p01-t01: A plan task heading
+### Task p01-t02: Another plan task heading
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** in_progress
+
+### Task p01-t01: First record
+
+**Status:** completed
+
+### Task p01-t03: Second record
+
+**Status:** in_progress
+
+### Task p02-t01: Record from another phase
+
+**Status:** completed
+`;
+
+    const progress = parseTaskProgress(
+      planContent,
+      implementationContent,
+      phaseUnits,
+    );
+    expect(progress.total).toBe(1);
+    expect(progress.completed).toBe(0);
+    expect(progress.phases).toHaveLength(1);
+    expect(progress.phases[0]?.taskRecords).toEqual({
+      total: 2,
+      completed: 1,
+    });
+  });
+
+  it('counts revision phases as units', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+
+## Phase p-rev1: Address review
+
+**Intent:** Fix findings.
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** completed
+
+## Phase p-rev01: Address review
+
+**Status:** completed
+`;
+
+    expect(
+      parseTaskProgress(planContent, implementationContent, phaseUnits),
+    ).toMatchObject({
+      total: 2,
+      completed: 2,
+      phases: [
+        { phaseId: 'p01', isRevision: false, completed: 1 },
+        { phaseId: 'p-rev1', isRevision: true, completed: 1 },
+      ],
+    });
+  });
+
+  it('rejects a status marker with trailing text', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** completed # note
+`;
+
+    expect(
+      parseTaskProgress(planContent, implementationContent, phaseUnits),
+    ).toMatchObject({ total: 1, completed: 0 });
+  });
+
+  it('treats an extracted phase as pending in v1', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** extracted
+**Extracted to:** follow-up-project
+`;
+
+    const progress = parseTaskProgress(
+      planContent,
+      implementationContent,
+      phaseUnits,
+    );
+    expect(progress).toMatchObject({ total: 1, completed: 0 });
+    expect(progress.phases[0]).not.toHaveProperty('extracted');
+  });
+
+  it('ignores phase headings and markers inside fenced examples', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+
+\`\`\`markdown
+## Phase p09: Example only
+
+**Provisional:** yes
+\`\`\`
+`;
+    const implementationContent = `## Phase p01: Research
+
+\`\`\`markdown
+**Status:** completed
+\`\`\`
+
+**Status:** in_progress
+`;
+
+    const progress = parseTaskProgress(
+      planContent,
+      implementationContent,
+      phaseUnits,
+    );
+    expect(progress.total).toBe(1);
+    expect(progress.completed).toBe(0);
+    expect(progress.phases.map((phase) => phase.phaseId)).toEqual(['p01']);
+  });
+});
+
+describe('parsePhaseMarkers', () => {
+  it('reads exact phase marker lines under each journal phase heading', () => {
+    const markers = parsePhaseMarkers(`## Phase p01: Research
+
+**Status:** completed
+**Base:** 531e86a0f4b2c7d9e1f3a5b7c9d1e3f5a7b9c1d3
+**Head:** 9c0f3a1d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b
+**Executor:** root
+
+## Phase 2: Build
+
+**Status:** extracted
+**Extracted to:** follow-up-project
+
+## Phase p03: Ship
+
+**Head:** abc1234
+
+## Phase p04: Unknown status
+
+**Status:** done
+`);
+
+    expect([...markers.entries()]).toEqual([
+      [
+        'p01',
+        {
+          status: 'completed',
+          base: '531e86a0f4b2c7d9e1f3a5b7c9d1e3f5a7b9c1d3',
+          head: '9c0f3a1d2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b',
+          extractedTo: null,
+        },
+      ],
+      [
+        'p02',
+        {
+          status: 'extracted',
+          base: null,
+          head: null,
+          extractedTo: 'follow-up-project',
+        },
+      ],
+      ['p03', { status: 'pending', base: null, head: null, extractedTo: null }],
+      ['p04', { status: 'pending', base: null, head: null, extractedTo: null }],
+    ]);
+  });
+});
+
+describe('parseProvisionalPhaseIds', () => {
+  it('collects phases marked provisional with the exact yes value', () => {
+    expect(
+      parseProvisionalPhaseIds(`## Phase p01: Research
+
+**Provisional:** no
+
+## Phase p02: Build
+
+**Provisional:** yes
+
+## Phase p03: Ship
+
+**Provisional:** yes, probably
+
+## Phase p04: Later
+
+### Notes
+
+**Provisional:** yes
+`),
+    ).toEqual(new Set(['p02']));
+  });
+});
+
+describe('selectPhaseUnits', () => {
+  const progress = parseTaskProgress(
+    `## Phase p01: Research
+
+**Intent:** Learn.
+
+## Phase p02: Build
+
+**Intent:** Build.
+
+## Phase p03: Ship
+
+**Intent:** Ship.
+`,
+    '',
+    { phaseUnits: true },
+  );
+
+  it('returns scoped units in document order regardless of scope order', () => {
+    expect(
+      selectPhaseUnits(progress, ['p03', 'p01']).map((phase) => phase.phaseId),
+    ).toEqual(['p01', 'p03']);
+  });
+
+  it('returns every unit for a null scope', () => {
+    expect(
+      selectPhaseUnits(progress, null).map((phase) => phase.phaseId),
+    ).toEqual(['p01', 'p02', 'p03']);
+  });
+
+  it('ignores scope ids that name no phase', () => {
+    expect(
+      selectPhaseUnits(progress, ['p09', 'p02']).map((phase) => phase.phaseId),
+    ).toEqual(['p02']);
   });
 });

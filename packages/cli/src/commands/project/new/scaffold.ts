@@ -35,7 +35,10 @@ import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
 import { dirExists, fileExists } from '@fs/io';
-import type { WorkflowMode } from '@open-agent-toolkit/control-plane';
+import {
+  isBriefMode,
+  type WorkflowMode,
+} from '@open-agent-toolkit/control-plane';
 import { assertValidProjectStateContent } from '@validation/project-state';
 
 export interface ScaffoldProjectOptions {
@@ -131,6 +134,11 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     'state.md',
     { source: 'plan-lite.md', target: 'plan.md' },
     'implementation.md',
+  ],
+  brief: [
+    'state.md',
+    { source: 'plan-brief.md', target: 'plan.md' },
+    { source: 'implementation-brief.md', target: 'implementation.md' },
   ],
 };
 
@@ -231,6 +239,23 @@ const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
       '- ⧗ Awaiting critical interview and plan authoring',
     ],
     nextMilestone: 'Run `oat-project-lite` to author and approve the plan',
+  },
+  brief: {
+    hillCheckpoints: '[]',
+    phase: 'plan',
+    status: 'Plan',
+    currentPhase: 'Plan - Authoring the Project Brief',
+    artifacts: [
+      '- **Plan:** `plan.md` (scaffolded Project Brief template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)',
+      '- **Research:** `references/research/` (empty)',
+    ],
+    progress: [
+      '- ✓ Brief project scaffolded',
+      '- ✓ Brief and implementation artifacts scaffolded',
+      '- ⧗ Awaiting brief interview and authoring',
+    ],
+    nextMilestone: 'Run `oat-project-brief` to author and approve the brief',
   },
 };
 
@@ -414,7 +439,7 @@ async function scaffoldModeTemplates(
       nowUtc,
       mode,
     );
-    if (mode === 'lite' && target === 'plan.md') {
+    if ((mode === 'lite' || isBriefMode(mode)) && target === 'plan.md') {
       rendered = rendered.replace(/^---\n/, '---\noat_template: true\n');
     }
     assertNoUnresolvedOatPlaceholders(rendered, source);
@@ -480,12 +505,18 @@ async function ensureStructure(
   await mkdir(join(absoluteProjectPath, 'pr'), { recursive: true });
 
   if (mode === 'import') {
-    const referencesDir = join(absoluteProjectPath, 'references');
-    await mkdir(referencesDir, { recursive: true });
-    const gitkeepPath = join(referencesDir, '.gitkeep');
-    if (!(await fileExists(gitkeepPath))) {
-      await writeFile(gitkeepPath, '', 'utf8');
-    }
+    await ensureGitkeepDir(join(absoluteProjectPath, 'references'));
+  }
+  if (isBriefMode(mode)) {
+    await ensureGitkeepDir(join(absoluteProjectPath, 'references', 'research'));
+  }
+}
+
+async function ensureGitkeepDir(dir: string): Promise<void> {
+  await mkdir(dir, { recursive: true });
+  const gitkeepPath = join(dir, '.gitkeep');
+  if (!(await fileExists(gitkeepPath))) {
+    await writeFile(gitkeepPath, '', 'utf8');
   }
 }
 

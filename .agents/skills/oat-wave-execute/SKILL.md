@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.7
+  version: 1.9.8
 ---
 
 # Execute a Wave of External Plans
@@ -200,7 +200,8 @@ writes and stay on the orchestrator's own model class, the same rule
    `oat project new wave-N-execution --mode quick --no-commit`. If the flag is
    absent because of version skew, run the command without it, expect the scaffold
    to auto-commit, record that generated commit, and land the wrapper artifacts in
-   a follow-up commit (Orc W1 scaffold evidence).
+   a follow-up commit (Orc W1 scaffold evidence). The wrapper stays in quick
+   mode: its lanes need task-level plans, so lite and brief do not apply.
 2. **Verify scaffold substitution AND advance the lifecycle** in `state.md`.
    On oat ≥0.1.65, verify that the basic scaffold placeholders
    (`{ OAT_HILL_CHECKPOINTS }`, `{ OAT_PHASE }`, `{ OAT_WORKFLOW_MODE }`) were
