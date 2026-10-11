@@ -1185,6 +1185,7 @@ interface AppendCommandOptions {
   project?: string;
   idempotencyKey?: string;
   commit?: boolean;
+  dryRun?: boolean;
 }
 
 export interface ProjectLogAppendCommandDependencies extends AppendProjectLogDependencies {
@@ -1520,11 +1521,109 @@ export async function appendProjectLog(
   );
 }
 
+type PreparedProjectLogAppend =
+  | Extract<ProjectLogAppendResult, { status: 'skipped' | 'already-appended' }>
+  | {
+      status: 'ready';
+      logPath: string;
+      heading: string;
+      body: string;
+      versionNote: string | undefined;
+      normalized: boolean;
+      instantiated: string | undefined;
+    };
+
+type ProjectLogAppendPreview =
+  | {
+      status: 'dry-run';
+      outcome: 'append' | 'already-appended';
+      logPath: string;
+      heading: string;
+      wouldAppend: boolean;
+      wouldCreate: boolean;
+      normalizedLineEndings?: true;
+    }
+  | {
+      status: 'dry-run';
+      outcome: 'skipped';
+      reason: 'projectLog=false';
+      wouldAppend: false;
+      wouldCreate: false;
+    };
+
+async function previewProjectLogAppend(
+  input: AppendProjectLogInput,
+  dependencies: AppendProjectLogDependencies,
+): Promise<ProjectLogAppendPreview> {
+  const projectPath = await resolveTargetProject(input, dependencies);
+  const prepared = await prepareProjectLogAppend(
+    input,
+    dependencies,
+    join(projectPath, PROJECT_LOG_FILENAME),
+  );
+  if (prepared.status === 'skipped') {
+    return {
+      status: 'dry-run',
+      outcome: 'skipped',
+      reason: prepared.reason,
+      wouldAppend: false,
+      wouldCreate: false,
+    };
+  }
+  if (prepared.status === 'already-appended') {
+    return {
+      status: 'dry-run',
+      outcome: 'already-appended',
+      logPath: prepared.logPath,
+      heading: prepared.heading,
+      wouldAppend: false,
+      wouldCreate: false,
+    };
+  }
+  return {
+    status: 'dry-run',
+    outcome: 'append',
+    logPath: prepared.logPath,
+    heading: prepared.heading,
+    wouldAppend: true,
+    wouldCreate: prepared.instantiated !== undefined,
+    ...(prepared.normalized ? { normalizedLineEndings: true as const } : {}),
+  };
+}
+
 async function appendLockedProjectLog(
   input: AppendProjectLogInput,
   dependencies: AppendProjectLogDependencies,
   logPath: string,
 ): Promise<ProjectLogAppendResult> {
+  // Normal append prepares fresh state only after taking its required lock.
+  const prepared = await prepareProjectLogAppend(input, dependencies, logPath);
+  if (prepared.status !== 'ready') return prepared;
+  if (prepared.instantiated !== undefined) {
+    await dependencies.writeLog(logPath, prepared.instantiated);
+  }
+  await appendEntry(
+    logPath,
+    prepared.heading,
+    prepared.body,
+    prepared.versionNote,
+    dependencies,
+  );
+  return {
+    status: 'appended',
+    logPath,
+    heading: prepared.heading,
+    created: prepared.instantiated !== undefined,
+    ...(prepared.normalized ? { normalizedLineEndings: true as const } : {}),
+  };
+}
+
+/** Read-only validation shared by advisory previews and locked mutations. */
+async function prepareProjectLogAppend(
+  input: AppendProjectLogInput,
+  dependencies: AppendProjectLogDependencies,
+  logPath: string,
+): Promise<PreparedProjectLogAppend> {
   const logExists = await fileExists(logPath);
 
   if (!logExists) {
@@ -1540,7 +1639,7 @@ async function appendLockedProjectLog(
   const date = dependencies.now().toISOString().slice(0, 10);
   const { heading, body, versionNote, normalized } = validateEntry(input, date);
   const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, body);
-  let created = false;
+  let instantiated: string | undefined;
 
   if (logExists) {
     const content = await dependencies.readLog(logPath);
@@ -1644,7 +1743,7 @@ async function appendLockedProjectLog(
       join(assetsRoot, 'templates', PROJECT_LOG_FILENAME),
       'utf8',
     );
-    const instantiated = instantiateProjectLogTemplate(
+    instantiated = instantiateProjectLogTemplate(
       template,
       basename(dirname(logPath)),
       date,
@@ -1658,17 +1757,16 @@ async function appendLockedProjectLog(
         `Project name ${basename(dirname(logPath))} would put a '## ' heading after a carriage return, U+2028, or U+2029 in the new log's title, leaving a file with two readings. Rename the project directory using line feeds only.`,
       );
     }
-    await dependencies.writeLog(logPath, instantiated);
-    created = true;
   }
 
-  await appendEntry(logPath, heading, body, versionNote, dependencies);
   return {
-    status: 'appended',
+    status: 'ready',
     logPath,
     heading,
-    created,
-    ...(normalized ? { normalizedLineEndings: true as const } : {}),
+    body,
+    versionNote,
+    normalized,
+    instantiated,
   };
 }
 
@@ -1869,9 +1967,11 @@ async function runAppendCommand(
       }
     }
 
-    let result: ProjectLogAppendResult;
+    let result: ProjectLogAppendResult | ProjectLogAppendPreview;
     try {
-      result = await appendProjectLog(
+      result = await (
+        options.dryRun ? previewProjectLogAppend : appendProjectLog
+      )(
         {
           repoRoot,
           home: context.home,
@@ -1902,7 +2002,11 @@ async function runAppendCommand(
 
     let commit: ProjectLogCommitResult | undefined;
     let receiptRemoved = false;
-    if (options.commit && result.status !== 'skipped') {
+    if (
+      options.commit &&
+      result.status !== 'skipped' &&
+      result.status !== 'dry-run'
+    ) {
       commit = await commitProjectLog({
         repoRoot,
         logPath: result.logPath,
@@ -1929,6 +2033,14 @@ async function runAppendCommand(
           ? { receipt: { path: receiptPath, removed: receiptRemoved } }
           : {}),
       });
+    } else if (result.status === 'dry-run') {
+      const prediction =
+        result.outcome === 'append'
+          ? `Would append project log entry: ${result.logPath}${result.wouldCreate ? ' (would create log)' : ''}.`
+          : result.outcome === 'already-appended'
+            ? `Project log entry already present: ${result.heading}.`
+            : 'Would skip project log append (projectLog=false).';
+      context.logger.success(`${prediction} No changes were made.`);
     } else if (result.status === 'appended') {
       context.logger.success(`Appended project log entry: ${result.logPath}`);
     } else if (result.status === 'already-appended') {
@@ -1967,6 +2079,10 @@ export function createProjectLogAppendCommand(
 
   return new Command('append')
     .description('Append a validated entry to the active project log')
+    .option(
+      '--dry-run',
+      'Validate and preview without writing files, acquiring locks, or committing',
+    )
     .option('--structural', 'Write a structural lifecycle entry')
     .option(
       '--type <type>',
