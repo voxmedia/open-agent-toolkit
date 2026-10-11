@@ -780,12 +780,16 @@ oat_generated: false
 
 ## Phase 11: Goal skills and roles (v1.5)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
 
 **Base:** c2865c3dc88d32c100173eeb507214d82e5cee87
-**Head:** 38d84c1b5361559e2ffdbd55fe5f5650c476e5a1 (candidate head at review)
+**Head:** 80282f21b (fix round 1; candidate head 38d84c1b5 at review round 1, ledger a7aefa911 at round 2)
 **Executor:** phase-implementer:impl-p11-2535b029 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
+**Status:** completed
+
+- **Outcome:** accepted. Round-1 root review (Fable 5.1 high, auto; head ee16af1b8; C/H/M/L 0/1/2/5) queued p11-t04 on the same handle; round 2 (head a7aefa911; 0/0/0/1) passed, its Low (12.3 `delivered → reviewing` row) carried to p12-t04. Fix-loop count 1. The implementer's four concerns were adjudicated by review: pre-registration staleness hop accepted; amendment commits on an open delivery → p12-t02 probe; terminal delivery per milestone → decision (a) shared member; brainstorm goal promotion → fixed in p11-t04.
+- **Verification:** reviewer round 2 re-ran validate-skills (68 skills), format:root, CLI build, autonomy-gate-inventory 5/5 (isolated HOME) and the scratch goal router probe (S7, S13, post-3a, old item 8, older-milestone recovery; `delivery check` ok at S7/S13/post-3a, `undeliverable` for the failing controls). Root re-ran validate-skills and format:root after the fix: exit 0; tree clean.
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
 
@@ -839,7 +843,9 @@ oat_generated: false
 - L4 `oat_phase_status: pr_open` / `oat_pr_status: open` never reset at the next activation → converted: p11-t04.
 - L5 next's row 4d omits the missing-evidence branch at `delivering` → converted: p11-t04.
 
-**New tasks added:** p11-t04 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p11-fix-1`); round-2 re-review on the fix range follows because a High was converted. Dispatch of the fix waits for free disk above 1.5 GB (863 MB at receive time).
+**New tasks added:** p11-t04 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p11-fix-1`); round-2 re-review on the fix range follows because a High was converted. Dispatch of the fix waited for free disk (863 MB at receive time; Thomas freed 32 GB).
+
+**Round 2 (2026-10-11):** artifact reviews/archived/p11-review-2026-10-11T153131Z.md; reviewer `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p11-e605870b`, auto, reviewed head a7aefa911bb606f7079dd9a2f9f1adaab155632f, range bc108730b..a7aefa911, reconnaissance not-attempted). Findings 0/0/0/1 → phase review passes. H1, M1, M2, L1–L5 verified resolved with post-image file:line evidence; the fix touched exactly the eight boundary files; no pinned brief sentence altered. Residual L1: 12.3 (`brief-contract.md:404`) and the design row list only `delivering → reviewing` while item 3a reaches item 3 from a stale `delivered` hand-back → carried to p12-t04 (contract and design rows). Non-finding observations: 3a leaves `oat_phase_status` to the next activation; the pre-existing p10 `no_gate` carrier freshness recomputation.
 
 ---
 
@@ -1021,7 +1027,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are design gaps recorded under p11-t03) at 38d84c1b5; p11 review follows
-- Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` → 80282f21b (after Thomas freed disk to 32 GB); round 2 on the fix range follows
+- Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` → 80282f21b (after Thomas freed disk to 32 GB); round 2 (rev-p11-e605870b, head a7aefa911): 0/0/0/1 → passed; phase p11 closed at 80282f21b
 
 <!-- orchestration-runs-end -->
 

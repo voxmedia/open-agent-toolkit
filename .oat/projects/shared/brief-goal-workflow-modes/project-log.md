@@ -140,6 +140,10 @@ Progress PR #361 opened for v1 (p01–p08) from feat/brief-workflow-mode-v1 cut 
 
 Phase p10 passed review at 675d5bd27 after two rounds (0/0/2/6 then 0/0/0/1); fixes p10-t05 and p10-t06; plan amendment 5.1 applied. Key p10-review-passed-675d5bd27.
 
+### 2026-10-11 · structural · oat-project-implement · p11
+
+Phase p11 passed review at 80282f21b after two rounds (0/1/2/5 then 0/0/0/1); fix p11-t04; one Low carried to p12-t04. Key p11-review-passed-80282f21b.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
