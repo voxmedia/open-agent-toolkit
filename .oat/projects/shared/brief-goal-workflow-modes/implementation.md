@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-11
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status   | Tasks | Completed |
-| -------- | -------- | ----- | --------- |
-| Phase 1  | complete | 6     | 6/6       |
-| Phase 2  | complete | 5     | 5/5       |
-| Phase 3  | complete | 3     | 3/3       |
-| Phase 4  | complete | 6     | 6/6       |
-| Phase 5  | pending  | 2     | 0/2       |
-| Phase 6  | pending  | 3     | 0/3       |
-| Phase 7  | pending  | 3     | 0/3       |
-| Phase 8  | pending  | 6     | 0/6       |
-| Phase 9  | pending  | 2     | 0/2       |
-| Phase 10 | pending  | 3     | 0/3       |
-| Phase 11 | pending  | 2     | 0/2       |
-| Phase 12 | pending  | 1     | 0/1       |
+| Phase    | Status      | Tasks | Completed |
+| -------- | ----------- | ----- | --------- |
+| Phase 1  | complete    | 6     | 6/6       |
+| Phase 2  | complete    | 5     | 5/5       |
+| Phase 3  | complete    | 3     | 3/3       |
+| Phase 4  | complete    | 6     | 6/6       |
+| Phase 5  | in_progress | 2     | 2/2       |
+| Phase 6  | pending     | 3     | 0/3       |
+| Phase 7  | pending     | 3     | 0/3       |
+| Phase 8  | pending     | 6     | 0/6       |
+| Phase 9  | pending     | 2     | 0/2       |
+| Phase 10 | pending     | 3     | 0/3       |
+| Phase 11 | pending     | 2     | 0/2       |
+| Phase 12 | pending     | 1     | 0/1       |
 
-**Total:** 20/42 tasks completed
+**Total:** 22/42 tasks completed
 
 ---
 
@@ -338,18 +338,28 @@ oat_generated: false
 
 ## Phase 5: Brief entry skill and planning surfaces
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** 305ede50c3453cc43ef941b2033f4482d988be15
+**Head:** 31c4e56a3411d645145a0ab6d0dad1ca4f605d4c
+**Executor:** phase-implementer:impl-p05-50ae8921 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential); host session restarted after p05-t01, continued through the same handle
 
 ### Task p05-t01: `oat-project-brief` skill, shared contract, gate registration and autonomy entries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d4a1d4fc6
+
+- **Files changed:** .agents/skills/oat-project-brief/{SKILL.md, references/brief-contract.md, references/docs/{autonomy-contract,gate-approval-record}.md symlinks}; .agents/docs/{autonomy-contract,gate-approval-record}.md; packages/cli/src/commands/shared/frontmatter.ts; pack-manifest.ts (+test); bundle-inputs.mjs; autonomy-gate-inventory.test.ts (17 roots); apps/oat-docs/skill-docs.json; starting-projects.md; docs/skills/index.md
+- **Verification:** validate-skills, format:root, docs:skills:check, scoped vitest 269/269 (pack-manifest, autonomy inventory, bundled-docs, gate-record, preflight, frontmatter), gate-aware pin; gate resolve oat-project-brief → not_configured
 
 ### Task p05-t02: Planning-surface skills recognize brief
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 31c4e56a3
+
+- **Files changed:** fourteen planning-surface SKILL.md files
+- **Verification:** order-independent rg sweep prints nothing; validate-skills; format:root; no autonomy re-keys (inventory test green)
 
 ---
 
@@ -585,7 +595,7 @@ _- Outstanding Items_
 
 - Request ID: `impl-p05-50ae8921` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
-- Launch status: planned
+- Launch status: accepted → child outcome: completed (DONE); head 31c4e56a3; commits d4a1d4fc6, 31c4e56a3; the launching host session restarted after p05-t01 and the same handle was continued (no replacement)
 
 <!-- orchestration-runs-end -->
 
