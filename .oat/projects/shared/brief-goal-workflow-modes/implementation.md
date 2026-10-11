@@ -691,6 +691,11 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Task p11-t03: Planning surfaces and summary recognize goal
+
+**Status:** pending
+**Commit:** -
+
 ---
 
 ## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
@@ -698,7 +703,27 @@ oat_generated: false
 **Status:** pending
 **Started:** -
 
-### Task p12-t01: Contract tests, probe, docs, records and bumps for goal
+### Task p12-t01: Skill contract tests and autonomy coverage for goal
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t02: Real-artifact goal probe
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t03: Docs, lane diagram and root AGENTS.md for goal
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t04: Decision records and backlog for goal
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t05: Version bumps and the full gate run for goal
 
 **Status:** pending
 **Commit:** -
@@ -866,6 +891,8 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | group 2       | plan declares `['p05','p06','p07']` as a parallel worktree group                                                    | -                    | Degraded to sequential root execution after a strict bootstrap preflight failure (`insufficient-disk`); targets, reviews and gates unchanged                           | -      | implementation  | restore parallel groups once the volume has headroom (operator asked)                           |
 
 **Plan revision 5 / design revision 4.0 (2026-10-11):** after p08 closed, Astra v1.5 round 1 (`references/astra-v15-round-1.md`) resolved the four carried objections (A1–A4) and surfaced four contradictions with the landed v1 (B1–B4); design.md "Goal transition contract", "Review scope from anchors", "Promote brief → quick", "Delivery registry and closeout boundary", "Error Handling" and "Carried to the v1.5 review" were revised and p09–p12 re-planned with named negative controls plus the new task p10-t04. The first delegate (approval-required runtime mode) blocked on its first command and was cancelled; the retry ran in auto mode. The revision goes through one artifact review and an Astra confirmation round before p09 launches.
+
+**Plan revision 5 artifact review (2026-10-11):** Opus 5.5 high structured plan review of p09–p12 at 58a721556 (`reviews/archived/plan-review-2026-10-11T074747Z.md`): 0 critical, 3 high, 7 medium, 6 low. All sixteen applied in root bookkeeping: router placement before the brief-unit guard (H1), new p11-t03 for the orphaned planning surfaces (H2), recovery producers named (H3), the v1.5 expected-red list (M1), `oat project delivery check` as the evaluator surface (M2), `selectPhaseUnits` contract kept (M3), barrel and README exports (M4), one audit predicate (M5), membership and profile guard triples (M6), p12 split into five tasks with the bump base and the PR relation (M7), and the six Lows (paths, references and codes, promotion vocabulary, Milestones placeholder, p11-t02 verify and sync scope; L3 was already fixed by Astra round 2). Astra round 2 had reached the two-round plan cap, so its five edits were applied verbatim rather than opening a third round. Re-review round 2 of the fixes precedes p09.
 
 ## Test Results
 

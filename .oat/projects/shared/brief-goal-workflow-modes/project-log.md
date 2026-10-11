@@ -108,6 +108,10 @@ Astra v1.5 round 1 (gpt-6-astra high, read-only delegate) resolved carried objec
 
 Astra v1.5 round 2 returned NOT ALIGNED with five paste-ready edits (read-only closeout observation, recovery isolation in reconcile/review-receive, audit phase-entry shape, observed endpoint for activation, goal guard verification supplement); the two-round plan cap was reached, so the edits were applied verbatim as Astra's own text. Report at references/astra-v15-round-2.md. Key astra-v15-round-2-applied.
 
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Plan revision 5 artifact review (Opus 5.5 high): 0/3/7/6; all findings applied (router placement, p11-t03, recovery producers, expected-red list, delivery check, p12 split into five tasks, Low wording). Artifact archived; round-2 re-review of the fixes next. Key plan-rev5-artifact-review-applied.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

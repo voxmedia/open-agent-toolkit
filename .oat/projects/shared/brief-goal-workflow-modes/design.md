@@ -416,6 +416,33 @@ the active milestone pointer or activate the successor until that endpoint
 is satisfied; for an agreed endpoint of `open`, the same observation
 permits activation.
 
+**Router placement and evidence access.** For `workflowMode === 'goal'`
+the goal priority block runs immediately after the HiLL override and before
+the landed brief-unit guard (`router.ts:135`); under goal the brief-unit
+guard applies only inside status-table step 4 at `implementing`, with scope
+= the active milestone's ordered phase set from the shared Milestones
+reader; under `declared_met` the terminal execution scope excludes audited
+`deferred`/`retired` phases; pending recovery uses
+`oat_goal_recovery.phase_ids`; `brief` keeps the current guard unchanged.
+The router reads only persisted derived freshness
+(`integrated_review.disposition`, carrier freshness written by refresh or
+by the owning skill) and never evaluates Git. Skills reach the shared
+evaluator before registration through the read-only
+`oat project delivery check --project <path> --subject <milestone|delivery>
+--json`, which runs `evidence.ts` for a milestone scope and reports carrier
+and review freshness with reasons.
+
+**Recovery producers.** `pr-progress` writes `delivering → reviewing`
+(`oat_milestone_status: reviewing` plus `oat_goal_recovery: { milestone,
+delivery_id, phase_ids, stage }`, stage chosen by the A1 missing-evidence
+rule) when refresh reports the integrated review or `exit` carrier stale,
+and stops before registration. `review-receive` creates `oat_goal_recovery`
+(stage `implementing`) when fixes target an older delivery, advances the
+stage on each clean step, and clears it when the targeted delivery's
+evidence is fresh. `reconcile` repairs an interrupted record and never
+creates one for the active milestone. `delivery refresh` never writes
+`oat_milestone_status` or `oat_goal_recovery`.
+
 **Router priority for goal** (inside `recommendSkill`, after the existing
 decomposition/HiLL checks):
 
@@ -599,7 +626,9 @@ export function validatePlanForProfile(
 - `goal` adds: `goal-milestones-missing`, `goal-duplicate-milestone`,
   `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`,
   `goal-shipped-milestone-changed` (against `oat_deliveries[].scope`),
-  `goal-group-crosses-milestone`, plus the existing checkpoint rule.
+  `goal-group-crosses-milestone`, `goal-phase-without-milestone`,
+  `goal-delivered-scope-changed`, `goal-plan-source`, plus the existing
+  checkpoint rule.
 - `index.ts` passes the state frontmatter it already reads
   (`index.ts:82-95`) and replaces the direct lite call.
 
