@@ -27,7 +27,7 @@ oat_template: true
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): register brief workflow mode`
 
-**Plan revision 2 (2026-10-10):** applies the structured plan artifact review (Opus 5.5, findings H1–H4, M1–M7, L1–L3) and Astra's plan round 1 (ALIGNED WITH CHANGES, findings 1–6). Group 1 is now write-disjoint; cross-phase end-to-end tests, sync output, the autonomy coverage table and the docs mapping have single owners; every CLI-scoped test that depends on control-plane changes rebuilds the control plane first.
+**Plan revision 3 (2026-10-10):** applies the second structured review (H1–H4, M1–M2, L1–L3: pinned versions and text, catalog regeneration, named-skill-load scan, gate-record vendoring). **Plan revision 2 (2026-10-10):** applies the structured plan artifact review (Opus 5.5, findings H1–H4, M1–M7, L1–L3) and Astra's plan round 1 (ALIGNED WITH CHANGES, findings 1–6). Group 1 is now write-disjoint; cross-phase end-to-end tests, sync output, the autonomy coverage table and the docs mapping have single owners; every CLI-scoped test that depends on control-plane changes rebuilds the control plane first.
 
 **Staged delivery:** phases p01–p08 are v1 (brief) and end with `oat-project-pr-progress`; phases p09–p12 are v1.5 (goal). Before p09 starts, the design section "Carried to the v1.5 review" is resolved with Astra (gpt-6-astra, high) in a plan-revision round and p09–p12 are revised accordingly; they are planned here at the resolution available today.
 
@@ -60,7 +60,7 @@ No group member edits `commands.integration.test.ts`, `help-snapshots.test.ts`, 
 - p06: `.agents/skills/oat-project-implement/**`, `.agents/skills/oat-project-quick-start/SKILL.md`, `.agents/skills/oat-project-dispatch-subagents/SKILL.md`, `.agents/agents/*.md`, regenerated projections under `.codex/agents` and `.cursor/agents`, and `.oat/sync/manifest.json` (sole group-2 owner of `oat sync` output).
 - p07: review-provide, review-receive, reconcile, summary, pr-progress, pr-final, revise, complete, document and brainstorm (including `references/destinations.md`).
 
-**Expected-red until p08-t01** (phase self-checks and reviewers treat these, and only these, as deferred): `packages/cli/src/validation/skills.test.ts:8719` (pins `workflow_mode: {spec-driven|quick|import|lite}` in `phase-execution.md:72`, broken by p06-t01); `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:4720` (pins oat-project-next's four-mode sentence, broken by p05-t02); `packages/cli/src/validation/autonomy-gate-inventory.test.ts` prompt-site mappings re-keyed by p06 and p07 edits (the 17-root pin and BRIEF entries are added by p05-t01; re-keyed sites are mapped in p08-t01). Skill `metadata.version` bumps are deferred to p08-t06 (one bump per skill per PR).
+**Expected-red until p08-t01** (phase self-checks and reviewers treat these, and only these, as deferred): `packages/cli/src/validation/skills.test.ts:8719` (pins `workflow_mode: {spec-driven|quick|import|lite}` in `phase-execution.md:72`, broken by p06-t01); `skills.test.ts:8691` (pins the implementer's four-mode line at `oat-phase-implementer.md:32`, broken by p06-t02); `skills.test.ts:8660` (reviewer and implementer mode-aware contracts, broken by p06-t02); `skills.test.ts:9044` (pins `Workflow mode: {lite | quick | spec-driven}` in `oat-project-autonomous/SKILL.md:510`, broken by p05-t02); `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:4720` (pins oat-project-next's four-mode sentence, broken by p05-t02); `packages/cli/src/validation/named-skill-load-contract.test.ts:2941-2981` (HEAD scan requires every execution-verb sentence naming an `oat-project-*` skill to be classified and bound to exactly one live call site; new `oat-project-brief` sentences and moved pointers from p05–p07 go unclassified until p08-t01); `packages/cli/src/validation/autonomy-gate-inventory.test.ts` prompt-site mappings re-keyed by p06 and p07 edits (p05 owns `.agents/docs/autonomy-contract.md` in group 2 and maps its own re-keys inside p05; p06 and p07 re-keys are mapped in p08-t01). Catch-all: any contract test under `packages/cli/src/validation` or `packages/cli/src/commands/init/tools/shared` that pins exact text or a `metadata.version` in a file p05–p07 edit is deferred to p08-t01 (text) or p08-t06 (versions). Skill `metadata.version` bumps and both agent-role `version:` bumps are deferred to p08-t06 (one bump per file per PR).
 
 p01 and p08 are sequential fan-in points. p09–p12 are sequential.
 
@@ -397,18 +397,20 @@ git commit -m "feat(p04-t02): promote brief projects to quick with disposition-a
 - Modify: `packages/cli/src/commands/shared/frontmatter.ts` (`GATE_AWARE_SKILLS` adds `oat-project-brief`)
 - Modify: `packages/cli/src/commands/tools/shared/pack-manifest.ts` (+test) and `packages/cli/scripts/bundle-inputs.mjs` (skill directory)
 - Modify: `.agents/docs/autonomy-contract.md` (BRIEF-01..NN rows for dirty tree, startup input, interview, review findings, dispatch-ladder scope, dispatch policy, configured gate, lifecycle gate posture, approval; `oat-project-brief` added as the 17th inventoried root)
-- Modify: `apps/oat-docs/skill-docs.json` (`oat-project-brief` → `workflows/projects/planning/starting-projects.md#oat-project-brief`, family "Project entry") and `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md` (minimal `## oat-project-brief` section with an `**Example scenario:**`; p08-t04 expands it)
+- Modify: `apps/oat-docs/skill-docs.json` (`oat-project-brief` → `workflows/projects/planning/starting-projects.md#oat-project-brief`, family "Project entry") and `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md` (minimal `## oat-project-brief` section with an `**Example scenario:**`; p08-t04 expands it); regenerate and commit `apps/oat-docs/docs/skills/index.md` via `pnpm docs:skills:generate` (the committed catalog staleness check in `apps/oat-docs/scripts/skill-catalog.ts:154-164` fails otherwise)
+- Modify: `.agents/docs/gate-approval-record.md` (Carriers list gains `oat_brief_gate` beside `oat_quick_start_gate`; no other group-2 lane writes this file)
+- Create: `.agents/skills/oat-project-brief/references/docs/gate-approval-record.md` and `references/docs/autonomy-contract.md` as symlinks to the shared docs (the same vendoring lite carries, so `skills-bundled-docs-contract.test.ts` stays green), and point the skill at the vendored paths; add the `oat-project-brief/references/docs/autonomy-contract.md | * -> NG` coverage row in the autonomy contract
 - Modify: `.oat/templates/state.md` is **not** touched here (p03 owns it); the `oat_brief_gate` comment block is added to the template in p08-t02
 - Modify: `NOTICES.md` if any prose is adapted from external projects (grill-me, superpowers)
 
 **Steps:** write the skill and reference; register; add the autonomy rows and the docs mapping; run `pnpm oat:validate-skills`.
 
-**Verify:** `pnpm oat:validate-skills` passes; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/validation/autonomy-gate-inventory.test.ts` passes (the 17-root pin updated here); `pnpm --filter oat-docs docs:skills:check` passes; `pnpm --filter @open-agent-toolkit/cli build && node packages/cli/dist/index.js gate resolve oat-project-brief --project .oat/projects/shared/brief-goal-workflow-modes --json` returns a resolution.
+**Verify:** `pnpm oat:validate-skills` passes; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/validation/autonomy-gate-inventory.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/gate-approval-record-contracts.test.ts` passes (the 17-root pin updated here) and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "gate-aware skill set"` passes; `pnpm --filter oat-docs docs:skills:check` passes after the catalog regeneration; `pnpm --filter @open-agent-toolkit/cli build && node packages/cli/dist/index.js gate resolve oat-project-brief --project .oat/projects/shared/brief-goal-workflow-modes --json` returns a resolution.
 
 **Commit:**
 
 ```bash
-git add .agents/skills/oat-project-brief .agents/docs/autonomy-contract.md packages/cli/src/commands/shared/frontmatter.ts packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/autonomy-gate-inventory.test.ts apps/oat-docs/skill-docs.json apps/oat-docs/docs/workflows/projects/planning/starting-projects.md NOTICES.md
+git add .agents/skills/oat-project-brief .agents/docs/autonomy-contract.md .agents/docs/gate-approval-record.md packages/cli/src/commands/shared/frontmatter.ts packages/cli/src/commands/tools/shared/pack-manifest.ts packages/cli/src/commands/tools/shared/pack-manifest.test.ts packages/cli/scripts/bundle-inputs.mjs packages/cli/src/validation/autonomy-gate-inventory.test.ts apps/oat-docs/skill-docs.json apps/oat-docs/docs/workflows/projects/planning/starting-projects.md apps/oat-docs/docs/skills/index.md NOTICES.md
 git commit -m "feat(p05-t01): oat-project-brief entry skill, shared brief contract and autonomy entries"
 ```
 
@@ -426,14 +428,14 @@ git commit -m "feat(p05-t01): oat-project-brief entry skill, shared brief contra
 - Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (mode selection table and route table include brief; goal excluded until v1.5)
 - Modify: `.agents/skills/oat-project-new/SKILL.md`, `oat-project-lite/SKILL.md`, `oat-project-import-plan/SKILL.md`, `oat-project-promote-spec-driven/SKILL.md` (brief mentions and promotion hints), `oat-project-capture/SKILL.md`, `oat-docs/SKILL.md` (`:149-181`), `oat-pjm-review-backlog/SKILL.md` (`:259`), `oat-wave-execute/SKILL.md` (mode mention)
 
-**Steps:** apply each edit at the cited lines; keep every line that pairs quick with spec-driven and lite also naming brief (the p08 contract test will pin this). Do not rewrite prompt-site lines beyond what the mode mention requires; any re-keyed autonomy site is listed in the commit message for p08-t01.
+**Steps:** apply each edit at the cited lines; keep every line that pairs quick with spec-driven and lite also naming brief (the p08 contract test will pin this). Do not rewrite prompt-site lines beyond what the mode mention requires; because p05 owns `.agents/docs/autonomy-contract.md` in group 2, map any site this task re-keys (sites are keyed by heading plus line) in the same commit so `autonomy-gate-inventory.test.ts` stays green at the end of p05.
 
-**Verify:** `pnpm oat:validate-skills` passes; `grep -rn "quick.*spec-driven.*lite" .agents/skills/<each>/SKILL.md` shows brief alongside; `pnpm format:root` clean.
+**Verify:** `pnpm oat:validate-skills` passes; `rg -n 'quick.*spec-driven.*lite' .agents/skills/{oat-project-plan-writing,oat-project-plan,oat-project-next,oat-project-progress,oat-project-discover,oat-project-autonomous,oat-project-new,oat-project-lite,oat-project-import-plan,oat-project-promote-spec-driven,oat-project-capture,oat-docs,oat-pjm-review-backlog,oat-wave-execute}/SKILL.md | rg -v brief` prints nothing; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts` passes; `pnpm format:root` clean.
 
 **Commit:**
 
 ```bash
-git add .agents/skills/oat-project-plan-writing .agents/skills/oat-project-plan .agents/skills/oat-project-next .agents/skills/oat-project-progress .agents/skills/oat-project-discover .agents/skills/oat-project-autonomous .agents/skills/oat-project-new .agents/skills/oat-project-lite .agents/skills/oat-project-import-plan .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-capture .agents/skills/oat-docs .agents/skills/oat-pjm-review-backlog .agents/skills/oat-wave-execute
+git add .agents/docs/autonomy-contract.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-plan .agents/skills/oat-project-next .agents/skills/oat-project-progress .agents/skills/oat-project-discover .agents/skills/oat-project-autonomous .agents/skills/oat-project-new .agents/skills/oat-project-lite .agents/skills/oat-project-import-plan .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-capture .agents/skills/oat-docs .agents/skills/oat-pjm-review-backlog .agents/skills/oat-wave-execute
 git commit -m "feat(p05-t02): planning-surface skills recognize brief mode"
 ```
 
@@ -465,11 +467,11 @@ git commit -m "feat(p06-t01): brief-mode execution, resume and closeout in imple
 
 **Files:**
 
-- Modify: `.agents/agents/oat-phase-implementer.md` (`:32` `workflow_mode` adds brief; `:116-130` brief requirement source and no task extraction; execution-record creation per F13; `**Base:**`/`**Head:**` writes; never commit from a nested worker; Task Outcomes table lists records; bump top-level `version:`)
-- Modify: `.agents/agents/oat-reviewer.md` (`:53` mode; `:126-131`, `:149-154`, `:174-179` brief artifacts and requirement source; `:264-283` plan review of a brief uses the brief section list with no task requirement; `:310` design not applicable; code review scope from anchors with the artifact record fields; bump `version:`)
+- Modify: `.agents/agents/oat-phase-implementer.md` (`:32` `workflow_mode` adds brief; `:116-130` brief requirement source and no task extraction; execution-record creation per F13; `**Base:**`/`**Head:**` writes; never commit from a nested worker; Task Outcomes table lists records; the top-level `version:` bump is deferred to p08-t06 because `skills.test.ts:3373-3374,6813-6814` and `review-skill-contracts.test.ts:359` pin the exact values)
+- Modify: `.agents/agents/oat-reviewer.md` (`:53` mode; `:126-131`, `:149-154`, `:174-179` brief artifacts and requirement source; `:264-283` plan review of a brief uses the brief section list with no task requirement; `:310` design not applicable; code review scope from anchors with the artifact record fields; `version:` bump deferred to p08-t06)
 - Regenerate: `.codex/agents/*`, `.cursor/agents/*-<model>-<effort>.md` and `.oat/sync/manifest.json` via `pnpm --filter @open-agent-toolkit/cli build && node packages/cli/dist/index.js sync --scope project` (the `oat-project-brief` Claude link is created in p08-t02 after group 2 merges, since this worktree does not contain the new skill)
 
-**Verify:** `pnpm oat:validate-skills`; `git diff --stat .codex/agents .cursor/agents .oat/sync/manifest.json` shows only regenerated files; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "agent"` passes.
+**Verify:** `pnpm oat:validate-skills`; `git diff --stat .codex/agents .cursor/agents .oat/sync/manifest.json` shows only regenerated files; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "pins portable user-default agents"` still passes (versions unchanged); `skills.test.ts:8660` and `:8691` are expected-red until p08-t01.
 
 **Commit:**
 
@@ -565,7 +567,8 @@ git commit -m "feat(p07-t03): brief-mode summary, PR, revise, complete, document
 **Files:**
 
 - Modify: `packages/cli/src/validation/skills.test.ts` (extend the lite-mode contract blocks `:8315-9100` to brief: entry surfaces list it; any line pairing quick with spec-driven and lite also names brief; `GATE_AWARE_SKILLS` matches `oat_gateable`; gateable brief; update the `:8719` phase-execution pin to the five-mode form)
-- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (`:4720` five-mode sentence), `post-implement-sequence-contracts.test.ts`, `project-start-preflight-contracts.test.ts`, `packages/cli/src/validation/named-skill-load-contract.test.ts`, `packages/cli/src/engine/engine.integration.test.ts` as each references lite
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (`:4720` five-mode sentence), `post-implement-sequence-contracts.test.ts`, `project-start-preflight-contracts.test.ts`, `packages/cli/src/engine/engine.integration.test.ts` as each references lite; `skills.test.ts:8660`, `:8691`, `:9044` updated to the five-mode forms
+- Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts` (HEAD scan `:2941-2981`: classify every new `oat-project-brief` candidate sentence in `CALL_SITE_MATRIX`, rebind rows whose sentences moved in p05–p07, and keep `report.unclassified` empty with exactly one live call site per row; add `oat-project-brief` to `VENDORING_SKILLS` in `skills-bundled-docs-contract.test.ts` if the vendoring check requires it)
 - Modify: `.agents/docs/autonomy-contract.md` (map every prompt site re-keyed by p05–p07 edits per the contract's maintenance rule; `autonomy-gate-inventory.test.ts` green)
 
 **Step 1: Write test (RED)**: the brief blocks fail against a deliberately omitted mention (temporarily revert one p05 edit) and pass after restore; record as the prove-it-can-fail evidence.
@@ -607,7 +610,7 @@ git commit -m "chore(p08-t02): sync brief skill links, end-to-end integration te
 
 - Modify: `implementation.md` evidence section only (scratch under a `mktemp -d` repo; no tracked fixtures)
 
-**Steps:** `pnpm build`; `CLI="$PWD/packages/cli/dist/index.js"`; in `SCRATCH=$(mktemp -d)`: `git init`, `node "$CLI" init …` as the repo's documented bootstrap requires, `node "$CLI" --json project new brief-probe --mode brief`, author a two-phase brief (one parallel group of two taskless phases) in `$SCRATCH/.oat/projects/shared/brief-probe/plan.md`, write journal sections with anchors for both phases; then run and record: `node "$CLI" --json project status --project-path <path>` (expect `progress.total 2, completed 2`), `node "$CLI" --json project validate-plan --project-path <path>` (expect valid with the taskless group), `node "$CLI" state refresh`, and a node script that imports `getProjectState` from `@open-agent-toolkit/control-plane` (built) against the scratch project and prints the phase units. The review artifact fields are exercised by p07-t01's scripted check, not here.
+**Steps:** `pnpm build`; `CLI="$PWD/packages/cli/dist/index.js"`; `CP="$PWD/packages/control-plane/dist/index.js"`; `export HOME=$(mktemp -d)` for the whole probe (the maintainer's `~/.oat/templates/` would otherwise join template resolution); in `SCRATCH=$(mktemp -d)`: `git init`, `node "$CLI" --cwd "$SCRATCH" init …` as the repo's documented bootstrap requires, `node "$CLI" --cwd "$SCRATCH" --json project new brief-probe --mode brief`, author a two-phase brief (one parallel group of two taskless phases) in `$SCRATCH/.oat/projects/shared/brief-probe/plan.md`, write journal sections with anchors for both phases; then run and record: `node "$CLI" --cwd "$SCRATCH" --json project status --project-path <path>` (expect `progress.total 2, completed 2`), `node "$CLI" --cwd "$SCRATCH" --json project validate-plan --project-path <path>` (expect valid with the taskless group), `node "$CLI" --cwd "$SCRATCH" state refresh`, and a node script that imports `getProjectState` from `"$CP"` by absolute path against the scratch project and prints the phase units. The review artifact fields are exercised by p07-t01's scripted check, not here.
 
 **Verify:** every probed command succeeds with the expected categorical result; failures are fixed in the owning phase's files and re-probed.
 
@@ -664,7 +667,8 @@ git commit -m "docs(p08-t05): decision records and backlog for brief workflow mo
 
 **Files:**
 
-- Modify: `metadata.version` in every skill changed in p05–p07 (one bump each) and `version:` in both agent roles (bumped in p06-t02; verify)
+- Modify: `metadata.version` in every skill changed in p05–p07 (one bump each) and top-level `version:` in both agent roles (deferred from p06-t02)
+- Modify: every exact version pin that names a bumped skill or role: sweep `rg -n "toBe\\(expectedVersion\\)|\\['oat-project-[a-z-]+', '[0-9]+\\.[0-9]+\\.[0-9]+'\\]|toBe\\('[0-9]+\\.[0-9]+\\.[0-9]+'\\)" packages/cli/src` and update `packages/cli/src/validation/skills.test.ts` (`:3373-3381`, `:5182-5198`, `:6591-6604`, `:6665-6675`, `:6811-6821`) and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (`:359`, `:1414`)
 - Modify: lockstep versions in `packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms` (`package.json`) and `packages/cli/assets/public-package-versions.json`; versions strictly greater than fetched `origin/main`
 
 **Steps:** `git fetch origin main`; bump; run every gate as an explicit line with its captured exit code (no shell loop; zsh does not word-split `$g`):
@@ -688,7 +692,7 @@ pnpm lint > /tmp/gate-lint.log 2>&1; echo "lint exit=$?"; pnpm format > /tmp/gat
 **Commit:**
 
 ```bash
-git add .agents/skills .agents/agents packages/*/package.json packages/cli/assets/public-package-versions.json
+git add .agents/skills .agents/agents packages/*/package.json packages/cli/assets/public-package-versions.json packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "chore(p08-t06): version bumps for brief workflow mode"
 ```
 
