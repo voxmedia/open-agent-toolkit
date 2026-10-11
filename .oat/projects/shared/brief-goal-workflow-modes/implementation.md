@@ -397,7 +397,7 @@ _- Outstanding Items_
 - Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
 - Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
-- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+- Bootstrap: success (strict; worktree HEAD = base 212e1bdc0; repository init pass; git clean; sync commit skipped) · Launch status: accepted (native Agent, background, concurrent with the group)
 
 #### Phase p03 implementation dispatch (parallel group 1)
 
@@ -405,7 +405,7 @@ _- Outstanding Items_
 - Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
 - Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
-- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+- Bootstrap: success (strict; worktree HEAD = base 212e1bdc0; repository init pass; git clean; sync commit skipped) · Launch status: accepted (native Agent, background, concurrent with the group)
 
 #### Phase p04 implementation dispatch (parallel group 1)
 
@@ -413,7 +413,7 @@ _- Outstanding Items_
 - Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
 - Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
-- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+- Bootstrap: success (strict; worktree HEAD = base 212e1bdc0; repository init pass; git clean; sync commit skipped) · Launch status: accepted (native Agent, background, concurrent with the group)
 
 <!-- orchestration-runs-end -->
 
