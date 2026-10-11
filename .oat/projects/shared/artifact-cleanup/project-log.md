@@ -40,6 +40,10 @@ Structural entries:
 
 Entries are chronological and append-only.
 
+### 2026-10-11 · structural · oat-project-review-provide · plan
+
+Review reconnaissance: writer inventory and archive trace completed; root reconciled both. Artifact: reviews/artifact-plan-review-2026-10-11T162428Z.md. Run: 4266e002-d5cc-4a36-8d8a-3491ee266dfb:review-orchestration
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

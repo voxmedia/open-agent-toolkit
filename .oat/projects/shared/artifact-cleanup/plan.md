@@ -236,18 +236,19 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                          | Reviewed Head                            | Invocation | Gate Target                                                               |
-| ------ | -------- | ----------- | ---------- | ------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                 | -                                        | -          | -                                                                         |
-| p02    | code     | pending     | -          | -                                                 | -                                        | -          | -                                                                         |
-| p03    | code     | pending     | -          | -                                                 | -                                        | -          | -                                                                         |
-| p04    | code     | pending     | -          | -                                                 | -                                        | -          | -                                                                         |
-| final  | code     | pending     | -          | -                                                 | -                                        | -          | -                                                                         |
-| design | artifact | received    | 2026-10-11 | references/astra-design-round-1.md                | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13               |
-| design | artifact | received    | 2026-10-11 | references/astra-design-round-2.md                | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded             |
-| design | artifact | passed      | 2026-10-11 | references/astra-design-round-3.md                | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced             |
-| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2           |
-| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3 |
+| Scope  | Type     | Status      | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target                                                               |
+| ------ | -------- | ----------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                  | -                                        | -          | -                                                                         |
+| p02    | code     | pending     | -          | -                                                  | -                                        | -          | -                                                                         |
+| p03    | code     | pending     | -          | -                                                  | -                                        | -          | -                                                                         |
+| p04    | code     | pending     | -          | -                                                  | -                                        | -          | -                                                                         |
+| final  | code     | pending     | -          | -                                                  | -                                        | -          | -                                                                         |
+| design | artifact | received    | 2026-10-11 | references/astra-design-round-1.md                 | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13               |
+| design | artifact | received    | 2026-10-11 | references/astra-design-round-2.md                 | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded             |
+| design | artifact | passed      | 2026-10-11 | references/astra-design-round-3.md                 | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced             |
+| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md  | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2           |
+| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md  | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3 |
+| plan   | artifact | received    | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T162428Z.md | -                                        | -          | -                                                                         |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
