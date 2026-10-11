@@ -959,8 +959,11 @@ oat_generated: false
 
 ### Task p12-t07: (review) Defer repo-level summary writes until the terminal delivery is registered
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2195e6fbd
+
+- **Files changed:** `oat-project-summary/SKILL.md:536-550` new "Goal terminal deferral" paragraph in Step 6 (in goal mode, when the summary runs before `pr` and `pr` has not completed, only files under the project path are written; `oat project log rollup` and all of Step 7 are skipped and reported as deferred; the skipped writes run in the summary run after `pr` — a `summary` step configured after `pr`, or the refresh at completion, which the goal fingerprint fragment forces once the terminal delivery reaches its endpoint; both writes idempotent) with a one-line Step 7 reference at :614; `oat-project-pr-final/SKILL.md:219-223` Step 1.5 item 4 references it; `brief-contract.md:479-483` 12.5 names the one goal deferral; `DR-261011-bookkeeping-successors-keep` one sentence; `project-artifacts.md:121` blank line (L1). Wording deviation: "a `summary` step configured after `pr`" and "the summary refresh at completion" instead of naming the `postApproval` position and `oat-project-complete`, and "the summary skill's Step 6" in the contract, so the autonomy gate inventory and the named-skill-load scan stay green without editing test files.
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p12-fix-2`; scratch probe at a row-7-shaped head: no commit → `ok`; a repo ledger commit → `undeliverable` (`disallowed-path`); a decision-record commit → `undeliverable`; project-path `summary.md` only → `ok`; validate-skills, format:root, docs check, both builds, validation + init/tools/shared 25 files / 1064 tests all exit 0; `rg -n 'defer'` at all three skill files; project-scope sync dry-run clean; no bumps. Root re-ran validate-skills, format:root and the two contract suites: exit 0; tree clean.
 
 ---
 
@@ -1119,7 +1122,7 @@ _- Outstanding Items_
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
 - Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base f214626dc (artifact-cleanup planning commits in between are out of scope)
 - Resume outcome: DONE_WITH_CONCERNS at 644f23e1e (p12-t01 verified with a fresh prove-it-can-fail; p12-t02 22-row probe with three fixes 96e6d24df/3ba63e2e5/b0f7cfacd; t03–t05 landed; full gate table green at lockstep 0.3.20; concerns: the goal declaration now recorded in the journal Final Summary instead of the brief's endpoint/authority (fix 3, p11 implementer's choice reversed), the bump base, the design row (added by the root), doc prose to be checked against source); p12 review follows
-- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` → 4c4a7c09a; round 2 (rev-p12-fae693e0, head daa352161): 0/0/1/1 → passed; M1 → p12-t07 via `cont-brief-goal-workflow-modes-p12-fix-2`, round 3 on the fix range
+- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` → 4c4a7c09a; round 2 (rev-p12-fae693e0, head daa352161): 0/0/1/1 → passed; M1 → p12-t07 via `cont-brief-goal-workflow-modes-p12-fix-2` → 2195e6fbd; round 3 on the fix range follows
 
 <!-- orchestration-runs-end -->
 
