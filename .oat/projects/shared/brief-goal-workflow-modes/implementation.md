@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -24,12 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase    | Status      | Tasks | Completed |
+| -------- | ----------- | ----- | --------- |
+| Phase 1  | in_progress | 6     | 4/6       |
+| Phase 2  | pending     | 3     | 0/3       |
+| Phase 3  | pending     | 2     | 0/2       |
+| Phase 4  | pending     | 2     | 0/2       |
+| Phase 5  | pending     | 2     | 0/2       |
+| Phase 6  | pending     | 3     | 0/3       |
+| Phase 7  | pending     | 3     | 0/3       |
+| Phase 8  | pending     | 6     | 0/6       |
+| Phase 9  | pending     | 2     | 0/2       |
+| Phase 10 | pending     | 3     | 0/3       |
+| Phase 11 | pending     | 2     | 0/2       |
+| Phase 12 | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 4/35 tasks completed
 
 ---
 
@@ -80,6 +90,31 @@ oat_generated: false
 
 - **Files changed:** packages/control-plane/src/types.ts, packages/control-plane/src/recommender/router.ts, packages/control-plane/src/state/quick-plan-readiness.ts, packages/control-plane/src/state/quick-plan-readiness.test.ts, packages/control-plane/src/recommender/router.test.ts
 - **Verification:** RED confirmed (4 failing); quick-plan-readiness.test.ts + router.test.ts 76/76; type-check.
+
+### Task p01-t05: (review) Export the phase-unit parser surface from the package barrel
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: (review) Read block lists across blank and comment lines in readiness clause 6
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p01
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p01-review-2026-10-11T024911Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p01-b6195573`, invocation auto, reviewed head 2ac285d80a0035837150bd77943331a86f51db29, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 1, Low 2 → phase review passes (no blocking findings); auto-disposition mode (review invocation `auto`).
+
+- M1 `index.ts` barrel does not export the phase-unit parser surface → converted: p01-t05 (Task Scope: Minor). Agree: p04 needs the strict grammar through the barrel.
+- L1 clause 6 fail-open across blank/comment lines → converted: p01-t06 (Task Scope: Minor). Agree: p06-t03 mirrors this clause into bash.
+- L2 ledger hygiene (Progress Overview stale, Deviations rows under-padded, template log stanzas) → resolved by root in this bookkeeping commit; no task.
+
+**New tasks added:** p01-t05, p01-t06
+**Next:** resume the p01 implementer (request impl-p01-6392fd49) in fix mode for p01-t05 and p01-t06; then a fresh root reviewer round on the updated range; then `passed`.
 
 ---
 
@@ -332,6 +367,12 @@ _- Outstanding Items_
 - Launch status: accepted (native Agent launch, background) → child outcome: completed, report status DONE_WITH_CONCERNS; phase head 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b; commits b1b134917, ff024a0bd, 38512dbf1, 81cfbd853; recovery attempts 0/10; optional nested dispatches: none
 - Runtime confirmation: not-observable (no independent runtime identity captured)
 
+#### Phase p01 review dispatch
+
+- Request ID: `rev-p01-b6195573` · Dispatch target: `oat-reviewer-claude-claude-fable-5-1-high` (native Agent, effort-pinned) · Model axis: `selected:claude-fable-5-1` · Effort axis: `selected:high` · Selection mode: review-target · Selection reason: gate-target · Candidates: `oat-reviewer-claude-claude-fable-5-1-high`
+- Managed Claude record: validated-only · Dispatch stamp: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high`
+- Launch status: accepted → child outcome: completed; artifact reviews/archived/p01-review-2026-10-11T024911Z.md; 0 critical, 0 high, 1 medium, 2 low; reconnaissance not-attempted (no `## Review Orchestration`, no project-log entry)
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -341,56 +382,22 @@ _- Outstanding Items_
 ### 2026-10-11 (p01)
 
 - p01 implemented by `oat-phase-implementer-claude-claude-opus-5-5-high` (request impl-p01-6392fd49): 4 tasks, 4 commits, verification green; root re-verified; ledger recorded before review (Step 7a).
+- p01 reviewed (auto, Fable 5.1 high): pass with 1 medium, 2 low; M1 and L1 converted to p01-t05/p01-t06; L2 fixed in bookkeeping.
 
 Chronological log of implementation progress.
-
-### 2026-10-11
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-10-11
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                                                                                                     | Planned / Documented                                                                                                                                                  | Actual / Accepted                                                                               | Reason | Source of Truth | Follow-up |
-| ------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------ | --------------- | --------- |
-| p01-t02       | design.md names the journal status type `PhaseStatus`; that name is already the dashboard type                      | Named the journal enum `JournalPhaseStatus` and the record `PhaseMarkers` (exported from tasks.ts)                                                                    | implementation is source of truth; design naming note to be reconciled at p08 docs/records      |
-| p01-t02       | `readRecordLines` in quick-plan-readiness.ts was private                                                            | Exported it (export keyword only) so brief-mode scans reuse the exact fence/indent exclusion the design cites                                                         | in-phase mechanical addition, reported by the implementer                                       |
-| p01           | plan step 3 says prove-it-can-fail cycles are recorded in implementation.md by the implementer                      | Implementer returned them in its report; root copied them into the p01-t02 task row                                                                                   | bookkeeping is root-owned under the implement contract                                          |
-| p01           | global `oat` 0.3.16 lacks `internal commit-paths`                                                                   | Task commits made with the branch build `node packages/cli/dist/index.js internal commit-paths` (hooks on; same primitive)                                            | none                                                                                            |
-| run           | operator asked for Opus 5.5 high subagents; the reviewer resolver refuses candidate overrides under a capped policy | Implementers run Opus 5.5 high via the exact-candidate branch; root-owned phase reviewers run the configured frontier cap `oat-reviewer-claude-claude-fable-5-1-high` | the frontier ceiling the operator set is preserved; review rung is policy-bound for determinism |
-| -             | -                                                                                                                   | -                                                                                                                                                                     | -                                                                                               | -      | -               | -         |
+| Task / Review | Source Artifact                                                                                                     | Planned / Documented | Actual / Accepted                                                                                                                                                     | Reason | Source of Truth | Follow-up                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------- | ----------------------------------------------------------------------------------------------- |
+| p01-t02       | design.md names the journal status type `PhaseStatus`; that name is already the dashboard type                      | -                    | Named the journal enum `JournalPhaseStatus` and the record `PhaseMarkers` (exported from tasks.ts)                                                                    | -      | implementation  | implementation is source of truth; design naming note to be reconciled at p08 docs/records      |
+| p01-t02       | `readRecordLines` in quick-plan-readiness.ts was private                                                            | -                    | Exported it (export keyword only) so brief-mode scans reuse the exact fence/indent exclusion the design cites                                                         | -      | implementation  | in-phase mechanical addition, reported by the implementer                                       |
+| p01           | plan step 3 says prove-it-can-fail cycles are recorded in implementation.md by the implementer                      | -                    | Implementer returned them in its report; root copied them into the p01-t02 task row                                                                                   | -      | implementation  | bookkeeping is root-owned under the implement contract                                          |
+| p01           | global `oat` 0.3.16 lacks `internal commit-paths`                                                                   | -                    | Task commits made with the branch build `node packages/cli/dist/index.js internal commit-paths` (hooks on; same primitive)                                            | -      | implementation  | none                                                                                            |
+| run           | operator asked for Opus 5.5 high subagents; the reviewer resolver refuses candidate overrides under a capped policy | -                    | Implementers run Opus 5.5 high via the exact-candidate branch; root-owned phase reviewers run the configured frontier cap `oat-reviewer-claude-claude-fable-5-1-high` | -      | implementation  | the frontier ceiling the operator set is preserved; review rung is policy-bound for determinism |
+| -             | -                                                                                                                   | -                    | -                                                                                                                                                                     | -      | -               | -                                                                                               |
 
 ## Test Results
 

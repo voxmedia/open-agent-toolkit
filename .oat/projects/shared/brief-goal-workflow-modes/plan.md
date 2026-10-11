@@ -228,6 +228,67 @@ git commit -m "feat(p01-t04): readiness clause for promotion-pending phases"
 
 ---
 
+### Task p01-t05: (review) Export the phase-unit parser surface from the package barrel
+
+**Files:**
+
+- Modify: `packages/control-plane/src/index.ts`
+- Modify: `packages/control-plane/src/state/parser.test.ts` (barrel pin)
+- Modify: `packages/control-plane/README.md` (Public API snippet)
+
+**Step 1: Understand the issue**
+
+Review finding (p01 review, Medium): `index.ts` exports only `types`, the two readers, the router entry points and `evaluateQuickPlanReadiness`; `parsePhaseMarkers`, `parseProvisionalPhaseIds`, `parseTaskProgress`, `selectPhaseUnits` and the types `JournalPhaseStatus`, `PhaseMarkers`, `TaskProgressOptions` stay package-internal, so p04 (validate-plan profiles, promotion) could not reach the strict marker grammar without duplicating it or editing `index.ts` outside its write set.
+Location: `packages/control-plane/src/index.ts:1-4`
+
+**Step 2: Implement fix**
+
+Add `export { parsePhaseMarkers, parseProvisionalPhaseIds, parseTaskProgress, selectPhaseUnits } from './state/tasks';` and `export type { JournalPhaseStatus, PhaseMarkers, TaskProgressOptions } from './state/tasks';`. Add a barrel pin importing these names from `'../index'` beside the existing `WORKFLOW_MODES` pin in `parser.test.ts`. List the names in the README Public API snippet.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/parser.test.ts && pnpm --filter @open-agent-toolkit/control-plane build && node -e "const m=require('./packages/control-plane/dist/index.js');console.log(['parsePhaseMarkers','parseProvisionalPhaseIds','parseTaskProgress','selectPhaseUnits'].map(n=>n in m))"`
+Expected: tests pass; the probe prints `[ true, true, true, true ]`.
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/index.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/README.md
+git commit -m "fix(p01-t05): export the phase-unit parser surface from the barrel"
+```
+
+---
+
+### Task p01-t06: (review) Read block lists across blank and comment lines in readiness clause 6
+
+**Files:**
+
+- Modify: `packages/control-plane/src/state/quick-plan-readiness.ts`
+- Modify: `packages/control-plane/src/state/quick-plan-readiness.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p01 review, Low): `hasNoPromotionPendingPhases` inspects only `frontmatter[index + 1]` for a block-list item, so a bare `oat_promotion_pending_phases:` key followed by a blank or comment line and then `  - p03` reads as empty and the plan is reported ready (fail-open). Flow lists and the absent key behave correctly.
+Location: `packages/control-plane/src/state/quick-plan-readiness.ts:171`
+
+**Step 2: Implement fix**
+
+After the `nullValue` match, skip blank lines and lines starting with `#` within the frontmatter block before applying `BLOCK_LIST_ITEM`; update the header comment (`:26-31`, `:132-138`) to state the accepted empty forms. Add the blank-line and comment-line cases to the `promotion-pending phases clause` describe block (one not-ready case each, plus the existing ready controls).
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/quick-plan-readiness.test.ts && pnpm type-check`
+Expected: pass, including the two new not-ready cases.
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/state/quick-plan-readiness.ts packages/control-plane/src/state/quick-plan-readiness.test.ts
+git commit -m "fix(p01-t06): read readiness clause 6 block lists across blank and comment lines"
+```
+
+---
+
 ## Phase 2: Router and dashboard routes
 
 ### Task p02-t01: Brief routes and mode-aware planning ownership
@@ -783,25 +844,25 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head | Invocation | Gate Target       |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ----------------- |
-| p01    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p02    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p03    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
-| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -             | auto       | -                 |
-| plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -             | gate       | codex-6-sol-xhigh |
-| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -             | -          | -                 |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head                            | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01    | code     | fixes_added     | 2026-10-11 | reviews/archived/p01-review-2026-10-11T024911Z.md                                                                                                                                                                   | 2ac285d80a0035837150bd77943331a86f51db29 | auto       | -                 |
+| p02    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p03    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -                                        | auto       | -                 |
+| plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -                                        | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -                                        | -          | -                 |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -811,7 +872,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 
 **Summary:**
 
-- Phase 1: 4 tasks - Control-plane registry, phase-unit parsing, scope seam and readers, readiness clause
+- Phase 1: 6 tasks - Control-plane registry, phase-unit parsing, scope seam and readers, readiness clause, two review fixes
 - Phase 2: 3 tasks - Router routes, brief-unit guard, dashboard parity
 - Phase 3: 2 tasks - Templates with bundle registration, scaffold behavior
 - Phase 4: 2 tasks - Plan profiles, brief → quick promotion
@@ -824,7 +885,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 33 tasks**
+**Total: 35 tasks**
 
 Ready for code review and merge.
 
