@@ -146,6 +146,19 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Review Received: p02 (parallel group 1, pre-fan-in)
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p02-review-2026-10-11T031650Z.md (produced in the p02 worktree; copied into the root archive at fan-in)
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p02-c0d68110`, invocation auto, reviewed head 2826da694b6dce2df126f36599d97b7daecac265, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 1, Low 1 → phase review passes; auto-disposition mode.
+
+- M1 provisional-unit guard clause not proven by its test (fixture always `completed: 0`) → converted: p02-t04 (Minor). Agree: a test that cannot fail is not evidence.
+- L1 router-authority note printed in every brief phase → converted: p02-t05 (Negligible).
+
+**New tasks added:** p02-t04, p02-t05. **Next:** resume the p02 implementer (request impl-p02-a7c1a9c0) in fix mode in its worktree; re-review round 2 on the updated range; ledger rows at fan-in.
+
 ---
 
 ## Phase 3: Templates and scaffold

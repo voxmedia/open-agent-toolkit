@@ -353,6 +353,65 @@ git commit -m "feat(p02-t03): dashboard routes and help text for brief mode"
 
 ---
 
+### Task p02-t04: (review) Make the provisional-unit clause of the brief-unit guard discriminating
+
+**Files:**
+
+- Modify: `packages/control-plane/src/recommender/router.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p02 review, Medium): `hasIncompletePhaseUnit` tests `unit.provisional === true || unit.completed < unit.total`, but the fixture builds every provisional unit with `completed: 0`, so the "treats a provisional phase-unit as incomplete" case passes through the second clause alone; removing the `provisional` clause leaves the suite green.
+Location: `packages/control-plane/src/recommender/router.test.ts:1287`, `router.ts:314-318`
+
+**Step 2: Implement fix**
+
+Extend `makeBriefUnitProgress` with an explicit `completed` override (or build the phase inline) and give the `:1287` case a unit `{ phaseId: 'p02', total: 1, completed: 1, provisional: true }`; assert the guard still routes to `oat-project-implement`. Prove it can fail: neutralize the `provisional` clause, confirm this case fails, restore.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
+Expected: pass; the neutralization cycle shows exactly this case failing.
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/recommender/router.test.ts
+git commit -m "test(p02-t04): make the provisional-unit guard clause discriminating"
+```
+
+---
+
+### Task p02-t05: (review) Print the router-authority note only in the implement phase
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/state/generate.ts`
+- Modify: `packages/cli/src/commands/state/generate.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p02 review, Low): `BRIEF_ROUTER_AUTHORITY_NOTE` is emitted for every active brief project, including the plan phase, although it explains an implement-stage guard.
+Location: `packages/cli/src/commands/state/generate.ts:820-827` (constant at `:395-399`)
+
+**Step 2: Implement fix**
+
+Gate the note on `state.phase === 'implement'`; move the "shows … router-authority note" assertion from the `plan:in_progress` fixture (`generate.test.ts:1183-1197`) to the `implement:complete` fixture (`:1202`) and add a negative assertion for the plan-phase fixture.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane build && HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/state/generate.test.ts`
+Expected: pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/state/generate.ts packages/cli/src/commands/state/generate.test.ts
+git commit -m "fix(p02-t05): show the router-authority note only in the implement phase"
+```
+
+---
+
 ## Phase 3: Templates and scaffold
 
 ### Task p03-t01: Brief plan and journal templates with bundle registration
@@ -848,7 +907,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T024911Z.md                                                                                                                                                                   | 2ac285d80a0035837150bd77943331a86f51db29 | auto       | -                 |
 | p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T030140Z.md                                                                                                                                                                   | f73b4e904b96de4be741daf526d0afcacfdbe05c | auto       | -                 |
-| p02    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p02    | code     | fixes_added     | 2026-10-11 | reviews/archived/p02-review-2026-10-11T031650Z.md                                                                                                                                                                   | 2826da694b6dce2df126f36599d97b7daecac265 | auto       | -                 |
 | p03    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
@@ -874,7 +933,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 **Summary:**
 
 - Phase 1: 6 tasks - Control-plane registry, phase-unit parsing, scope seam and readers, readiness clause, two review fixes
-- Phase 2: 3 tasks - Router routes, brief-unit guard, dashboard parity
+- Phase 2: 5 tasks - Router routes, brief-unit guard, dashboard parity, two review fixes
 - Phase 3: 2 tasks - Templates with bundle registration, scaffold behavior
 - Phase 4: 2 tasks - Plan profiles, brief → quick promotion
 - Phase 5: 2 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills
@@ -886,7 +945,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 35 tasks**
+**Total: 37 tasks**
 
 Ready for code review and merge.
 
