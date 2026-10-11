@@ -568,7 +568,6 @@ async function promoteProject(
 // ---------------------------------------------------------------------------
 
 const BRIEF_ARCHIVE_FILE = 'references/brief-archive.md';
-const PRE_PROMOTION_ANNOTATION = '(pre-promotion, brief)';
 const SYNTHESIZED_TASK_TITLE = 'Accepted via phase evidence';
 
 /** Brief sections rendered into `discovery.md` and dropped from the quick plan. */
@@ -774,23 +773,19 @@ function trimBlank(lines: string[]): string[] {
   return lines.slice(start, end);
 }
 
-function annotateReviewRows(section: BriefSection): string[] {
-  const mask = recordLineMask(section.lines);
-  let headerSeen = false;
-  return section.lines.map((line, index) => {
-    if (!mask[index] || !line.trimStart().startsWith('|')) return line;
-    if (!headerSeen) {
-      headerSeen = true;
-      return line;
-    }
-    if (/^\s*\|[\s:|-]+\|?\s*$/.test(line)) return line;
-    if (line.includes(PRE_PROMOTION_ANNOTATION)) return line;
-    return line.replace(
-      /^(\s*\|\s*)([^|]*?)(\s*\|)/,
-      (_, open: string, scope: string, close: string) =>
-        `${open}${scope} ${PRE_PROMOTION_ANNOTATION}${close}`,
-    );
-  });
+/**
+ * The brief's `## Reviews` section with every row left byte-identical (Scope,
+ * Type and Artifact are review-event identity) and one provenance line under
+ * the heading marking the rows recorded before promotion.
+ */
+function reviewsWithProvenance(section: BriefSection, today: string): string[] {
+  return [
+    section.lines[0]!,
+    '',
+    `Rows dated on or before ${today} were recorded pre-promotion under workflow mode brief.`,
+    '',
+    ...trimBlank(section.lines.slice(1)),
+  ];
 }
 
 function renderPlanTask(record: BriefTaskRecord): string[] {
@@ -949,7 +944,7 @@ export function migrateBriefToQuick(input: {
     if (/^delivery\b/i.test(title)) continue;
 
     if (title.toLowerCase() === 'reviews') {
-      output.push(...trimBlank(annotateReviewRows(section)), '');
+      output.push(...reviewsWithProvenance(section, today), '');
       continue;
     }
 

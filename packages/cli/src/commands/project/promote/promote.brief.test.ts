@@ -36,6 +36,15 @@ const SHA = {
   t3: '3'.repeat(40),
 };
 
+const REVIEW_ROWS = [
+  '| Scope | Type     | Status      | Date       | Artifact              |',
+  '| ----- | -------- | ----------- | ---------- | --------------------- |',
+  '| plan  | artifact | passed      | 2026-09-30 | reviews/plan.md       |',
+  '| p01   | code     | passed      | 2026-10-01 | reviews/p01-review.md |',
+  '| p03   | code     | fixes_added | 2026-10-02 | reviews/p03-review.md |',
+  '| final | code     | pending     | -          | -                     |',
+];
+
 function phaseBlock(id: string, name: string, extra: string[] = []): string[] {
   return [
     `## Phase ${id}: ${name}`,
@@ -107,9 +116,7 @@ function briefPlan(phases: string[][]): string {
     '',
     '## Reviews',
     '',
-    '| Scope | Type | Status | Date       | Artifact              |',
-    '| ----- | ---- | ------ | ---------- | --------------------- |',
-    '| p01   | code | passed | 2026-10-01 | reviews/p01-review.md |',
+    ...REVIEW_ROWS,
     '',
     '## Implementation Complete',
     '',
@@ -517,28 +524,16 @@ describe('oat project promote: brief → quick', () => {
     expect(plan).not.toContain('p09');
     expect(plan).not.toMatch(/^## (Goal|Outcomes|Known Unknowns|Phases)$/m);
     expect(plan).toContain('**Goal:** Ship the widget renderer safely.');
-    // Match cells, not padding: the table is re-padded by formatters.
-    expect(
-      plan
-        .split('\n')
-        .filter((line) => line.startsWith('|'))
-        .map((line) =>
-          line
-            .split('|')
-            .slice(1, -1)
-            .map((cell) => cell.trim()),
-        ),
-    ).toEqual([
-      ['Scope', 'Type', 'Status', 'Date', 'Artifact'],
-      ['-----', '----', '------', '----------', '---------------------'],
-      [
-        'p01 (pre-promotion, brief)',
-        'code',
-        'passed',
-        '2026-10-01',
-        'reviews/p01-review.md',
-      ],
-    ]);
+    // Review rows keep their identity cells byte-for-byte; provenance is one
+    // line under the heading, never a Scope-cell suffix.
+    const reviews = sectionOf(plan, '## Reviews');
+    expect(reviews).toContain(
+      'Rows dated on or before 2026-10-10 were recorded pre-promotion under workflow mode brief.',
+    );
+    expect(reviews.split('\n').filter((line) => line.startsWith('|'))).toEqual(
+      REVIEW_ROWS,
+    );
+    expect(plan).not.toContain('(pre-promotion');
     expect(plan).toContain('- Brief archive: `references/brief-archive.md`');
 
     await expect(
