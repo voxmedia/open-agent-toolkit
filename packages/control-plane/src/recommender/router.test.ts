@@ -1216,20 +1216,29 @@ describe('recommendSkill brief routes', () => {
 /**
  * Phase-unit progress as `parseTaskProgress(..., { phaseUnits: true })`
  * produces it: each phase is one unit, accepted units read 1/1, and a
- * provisional phase reads 0/1 regardless of any journal marker.
+ * provisional phase reads 0/1 regardless of any journal marker. An explicit
+ * `completed` overrides the derived count, so a test can build a shape the
+ * parser does not emit (for example a provisional unit reading 1/1).
  */
 function makeBriefUnitProgress(
-  units: Array<{ phaseId: string; accepted?: boolean; provisional?: boolean }>,
+  units: Array<{
+    phaseId: string;
+    accepted?: boolean;
+    provisional?: boolean;
+    completed?: number;
+  }>,
 ): ProjectState['progress'] {
-  const phases = units.map(({ phaseId, accepted = false, provisional }) => ({
-    phaseId,
-    name: `Phase ${phaseId}`,
-    total: 1,
-    completed: accepted && !provisional ? 1 : 0,
-    isRevision: false,
-    unit: 'phase' as const,
-    ...(provisional ? { provisional: true } : {}),
-  }));
+  const phases = units.map(
+    ({ phaseId, accepted = false, provisional, completed }) => ({
+      phaseId,
+      name: `Phase ${phaseId}`,
+      total: 1,
+      completed: completed ?? (accepted && !provisional ? 1 : 0),
+      isRevision: false,
+      unit: 'phase' as const,
+      ...(provisional ? { provisional: true } : {}),
+    }),
+  );
 
   return {
     total: phases.length,
@@ -1285,13 +1294,15 @@ describe('recommendSkill brief-unit guard', () => {
   });
 
   it('treats a provisional phase-unit as incomplete', () => {
+    // The provisional unit reads 1/1 here, so only the guard's `provisional`
+    // clause (not `completed < total`) can keep it incomplete.
     const state = makeState({
       phase: 'implement',
       phaseStatus: 'complete',
       workflowMode: 'brief',
       progress: makeBriefUnitProgress([
         { phaseId: 'p01', accepted: true },
-        { phaseId: 'p02', accepted: true, provisional: true },
+        { phaseId: 'p02', completed: 1, provisional: true },
       ]),
       reviews: passedFinalReview,
       artifacts: missingSummary,
