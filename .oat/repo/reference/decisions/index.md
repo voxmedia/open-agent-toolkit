@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261011-anchor-based-review-scope      | 2026-10-11 | accepted   | Anchor-based review scope for brief modes                                                              | -       |
+| DR-261011-brief-mode-family              | 2026-10-11 | accepted   | Brief mode family and isBriefMode predicate                                                            | -       |
+| DR-261011-brief-to-quick-promotion       | 2026-10-11 | accepted   | Brief to quick promotion migrates by phase state                                                       | -       |
+| DR-261011-phase-unit-progress-contract   | 2026-10-11 | accepted   | Phase-unit progress contract for brief modes                                                           | -       |
+| DR-261011-tasks-are-execution-records    | 2026-10-11 | accepted   | Tasks are execution records in brief modes                                                             | -       |
 | DR-261005-export-only-the-recap-page     | 2026-10-05 | accepted   | Export only the recap page                                                                             | -       |
 | DR-261005-preserve-hand-written          | 2026-10-05 | accepted   | Preserve hand-written knowledge                                                                        | -       |
 | DR-261005-share-one-hook-safe-exact-path | 2026-10-05 | accepted   | Share one hook-safe exact-path commit primitive                                                        | -       |

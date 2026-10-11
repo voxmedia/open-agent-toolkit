@@ -452,6 +452,7 @@
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                               | open   | medium   | feature    | M        |
 | BL-261002-fix-oat-config-describe-gaps   | Fix oat config describe gaps and make config unset reach the layer that holds the key                    | open   | medium   | task       | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan           | open   | medium   | task       | M        |
+| BL-261011-fix-the-phase-commit-grep      | Fix the phase commit-grep regex in review-provide and pr-progress                                        | open   | medium   | task       | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                        | open   | medium   | feature    | L        |
 | BL-260927-give-gate-receipts-portable    | Give gate receipts portable ownership, path-neutral identities, and a shipped ignore rule                | open   | medium   | feature    | M        |
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
@@ -495,6 +496,7 @@
 | BL-261002-wire-the-complexity-review     | Wire the complexity review into the sibling gate-capable skills                                          | open   | medium   | task       | M        |
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                         | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                   | open   | low      | task       | S        |
+| BL-261011-add-brief-to-the-legacy        | Add brief to the legacy generate-oat-state.sh mode table                                                 | open   | low      | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                  | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                              | open   | low      | feature    | L        |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                               | open   | low      | task       | XS       |
@@ -520,8 +522,10 @@
 | BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                          | open   | low      | feature    | M        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                              | open   | low      | task       | S        |
 | BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |
+| BL-261011-resolve-validate-plan-project  | Resolve validate-plan --project-path against --cwd                                                       | open   | low      | task       | XS       |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation              | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                           | open   | low      | task       | M        |
+| BL-261011-route-a-standalone-out         | Route a standalone Out of Scope brief section into discovery on promotion                                | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                        | open   | low      | task       | XS       |
 | BL-261002-split-the-tool-packs-page      | Split the Tool Packs page and restructure the Workflow Gates and Dispatch Policy pages                   | open   | low      | task       | M        |
 | BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
