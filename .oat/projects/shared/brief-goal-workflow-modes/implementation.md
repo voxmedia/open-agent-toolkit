@@ -188,7 +188,7 @@ oat_generated: false
 - L2 grammar example in an HTML comment with bare marker lines → converted: p03-t03 (fence it) (Negligible).
 - Cross-lane notes for p06/p07 (renamed Progress Overview and Deviations columns in the brief journal template; `[] = none` relies on plan-and-resume Step 2.5) carried to those phases.
 
-**New tasks added:** p03-t03. **Fix continuation:** cont-brief-goal-workflow-modes-p03-fix-1 on the original handle → ca1728500 (p03-t03); root re-verified the scoped suite (329/329) and byte-identical bundled copies. **Round 2:** dispatched (reviewed head ca17285004fa03fc011272636199a6efce891a9c); lane verdict recorded on return.
+**New tasks added:** p03-t03. **Fix continuation:** cont-brief-goal-workflow-modes-p03-fix-1 on the original handle → ca1728500 (p03-t03); root re-verified the scoped suite (329/329) and byte-identical bundled copies. **Round 2:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p03-r2-9ea8d283`, reviewed head ca17285004fa03fc011272636199a6efce891a9c, artifact reviews/archived/p03-review-2026-10-11T033254Z.md, reconnaissance not-attempted): 0 critical, 0 high, 0 medium, 0 low. **Lane verdict:** pass at ca1728500; fix-loop count 1; ledger rows and Reviews dispositions at fan-in.
 
 ---
 
