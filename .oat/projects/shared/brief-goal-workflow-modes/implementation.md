@@ -338,11 +338,12 @@ oat_generated: false
 
 ## Phase 5: Brief entry skill and planning surfaces
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
+**Completed:** 2026-10-11
 
 **Base:** 305ede50c3453cc43ef941b2033f4482d988be15
-**Head:** 31c4e56a3411d645145a0ab6d0dad1ca4f605d4c
+**Head:** c86f8558cf466eb04136039a667fa542126154e4
 **Executor:** phase-implementer:impl-p05-50ae8921 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential); host session restarted after p05-t01, continued through the same handle
 
 ### Task p05-t01: `oat-project-brief` skill, shared contract, gate registration and autonomy entries
@@ -361,6 +362,15 @@ oat_generated: false
 - **Files changed:** fourteen planning-surface SKILL.md files
 - **Verification:** order-independent rg sweep prints nothing; validate-skills; format:root; no autonomy re-keys (inventory test green)
 
+### Task p05-t03: (review) Carry the brief contract in the review payload and state the promotion precondition once
+
+**Status:** completed
+**Commit:** c86f8558c
+
+- **Files changed:** .agents/skills/oat-project-brief/SKILL.md (Step 3.6 `artifact_paths.brief_contract` payload entry keyed off `$BRIEF_SKILL_DIR` so user-scope installs resolve; Step 2 "Promotion precondition" paragraph; Step 3.7 option 3 ends with the quick-start hand-off); .agents/docs/autonomy-contract.md (BRIEF-04 cell mirrors the precondition; site line unchanged, no re-keys)
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p05-fix-1` on handle impl-p05-50ae8921; root re-ran validate-skills, format:root and autonomy-gate-inventory (5/5, 17 roots) — all exit 0; tree clean
+- **Review:** no re-review round (passing review, Low fixes on the same handle per Step 7b); root read the diff
+
 ### Review Received: p05
 
 **Date:** 2026-10-11
@@ -374,6 +384,8 @@ oat_generated: false
 - L3 plan verify clause `gate resolve oat-project-brief` is non-discriminating → resolved by root: plan p05-t01 verify clause replaced with the gate-aware pin and the override-parser probe; ledger evidence corrected below.
 
 **New tasks added:** p05-t03 (same handle, fix mode; no re-review round for a passing review per Step 7b's queued-task rule; root verifies the prose change).
+
+**Disposition:** passed at c86f8558c; artifact archived at reviews/archived/p05-review-2026-10-11T043436Z.md.
 
 ---
 
@@ -610,6 +622,7 @@ _- Outstanding Items_
 - Request ID: `impl-p05-50ae8921` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: accepted → child outcome: completed (DONE); head 31c4e56a3; commits d4a1d4fc6, 31c4e56a3; the launching host session restarted after p05-t01 and the same handle was continued (no replacement)
+- Review round 1 (rev-p05-86782b59, Fable 5.1 high at the frontier cap): pass with 3 Low; fix continuation `cont-brief-goal-workflow-modes-p05-fix-1` → c86f8558c; phase p05 closed at c86f8558c
 
 <!-- orchestration-runs-end -->
 
