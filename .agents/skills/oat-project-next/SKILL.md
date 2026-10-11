@@ -337,7 +337,7 @@ routing follows this priority, the first match winning:
 | 4b       | `implementing`: incomplete unit in scope / every unit accepted                                                                | `oat-project-implement`                                         | `scope mNN: …` / `closeout mNN: …`         |
 | 4c       | `reviewing`: queued fixes or a missing, blocked or stale exit carrier                                                         | `oat-project-implement`                                         | `scope mNN: …` / `closeout mNN: …`         |
 | 4c       | `reviewing`: carrier fresh, integrated review missing or stale / produced and unreceived / passed                             | review-provide / review-receive / review-receive                | `code mNN: …` / `receive <artifact>`       |
-| 4d       | `delivering`: passed review and allowed, fresh carrier                                                                        | `oat-project-pr-progress`                                       | `deliver mNN`                              |
+| 4d       | `delivering`: passed review and allowed, fresh carrier; otherwise rows 4c by missing evidence                                 | `oat-project-pr-progress`                                       | `deliver mNN`                              |
 | 4e       | `delivered`                                                                                                                   | `oat-project-goal`                                              | `realign mNN`                              |
 
 Goal progress counts phase-units per active milestone. `delivered` is not the

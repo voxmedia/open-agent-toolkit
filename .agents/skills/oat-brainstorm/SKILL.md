@@ -401,7 +401,7 @@ The payload is staged in memory only — it is not persisted between conversatio
   - Capture as new idea → confirm slug.
   - Extend existing idea → confirm which idea (slug or path).
   - Doc-to-path → confirm path.
-  - Promote to new project → confirm slug + workflow mode (`lite`, `brief`, `quick`, or `spec-driven`, with skill proposing a default based on the chosen direction and scope signals).
+  - Promote to new project → confirm slug + workflow mode (`lite`, `brief`, `goal`, `quick`, or `spec-driven`, with skill proposing a default based on the chosen direction and scope signals; propose `goal` when the direction needs several deliveries over time).
   - Active-project fold-back → for lite, brief, and goal confirm `plan.md`; for import confirm `design.md` or `discovery.md` when present, else `plan.md`; otherwise confirm which artifact (`design.md` if exists, else `discovery.md`; user signal can override toward `discovery.md` for foundational changes).
   - Active-project reference file → confirm filename (default `YYYY-MM-DD-<topic>.md`).
 
@@ -510,7 +510,7 @@ End mode assertion when the backlog-add hands control back.
 
 #### 9g — Promote to new OAT project
 
-The slug and workflow mode (`lite`, `brief`, `quick`, or `spec-driven`) were confirmed at
+The slug and workflow mode (`lite`, `brief`, `goal`, `quick`, or `spec-driven`) were confirmed at
 step 8. Run:
 
 ```bash
@@ -561,6 +561,15 @@ as scaffolded: `oat-project-brief` authors the brief through its interview,
 reading that research first. Do not create `discovery.md` or `design.md`.
 Leave the project state at plan/in-progress, print the `oat-project-brief`
 handoff, and stop.
+
+**Goal branch:** When mode is `goal`, arrive exactly as the brief branch does:
+the goal scaffold holds the same files (its `plan.md` carries
+`oat_plan_source: goal` and the canonical Milestones table header). Write the
+synthesized payload to `<project>/references/research/brainstorm-YYYY-MM-DD.md`,
+leave `plan.md` as scaffolded for `oat-project-goal` to author through its
+interview (including the milestone split), do not create `discovery.md` or
+`design.md`, leave the project state at plan/in-progress, print the
+`oat-project-goal` handoff, and stop.
 
 **Quick/spec-driven branch:** Only for those two modes, continue with the
 discovery flow below.
@@ -862,7 +871,7 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ The terminal-state picker conditionally includes `Promote to N projects` only when `oat project split evaluate-signals` reports `triggered: true`; small-scope convergence keeps the option hidden.
 - ✅ Synthesis payload is built per the design Data Models `SynthesizedPayload` schema: `title`, `summary`, `motivation`, `vision`, `approachesConsidered[]`, `chosenDirection`, `openQuestions[]`, `nextSteps[]`, `transcriptSessionNote`.
 - ✅ Confirmation pattern matches `references/destinations.md`: `full` for scoped backlog item (field-by-field with example wording), `minimal` for slug/path/artifact destinations, `none` for inline-only and summarize-idea-directly.
-- ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` for quick/spec-driven, `plan.md` for lite, and a `references/research/` note for brief — never `design.md` — and does not auto-chain into the next phase.
+- ✅ Each handoff branch (9a-9k) reads the correct downstream `SKILL.md` path and enters at the documented step. Project promotion writes `discovery.md` for quick/spec-driven, `plan.md` for lite, and a `references/research/` note for brief and goal — never `design.md` — and does not auto-chain into the next phase.
 - ✅ Doc-to-path validation handles all four cases: path-is-directory, parent-missing (with explicit out-of-repo confirmation), file-already-exists (overwrite or rename), unwritable (surface OS error).
 - ✅ Fold-back persistence safety contract honored: preflight `git status --porcelain -- "$ARTIFACT_PATH"` runs before any artifact mutation; clean → append + exact-path branch commit for shared/local or validated `oat project push --json` for synced; dirty → three-option picker (persist-prior-first / mix / abort-to-reference-file); handoff prompt prints only after the scope-appropriate receipt succeeds.
 - ✅ Handoff target for fold-back resolves correctly per `oat_workflow_mode` + `oat_pr_status`: `oat-project-plan` (spec-driven, no/closed PR) / `oat-project-quick-start` (quick, no/closed PR) / `oat-project-lite` (lite, no/closed PR) / `oat-project-import-plan` (import, no/closed PR) / `oat-project-brief` or `oat-project-implement` (brief, no/closed PR, by phase) / `oat-project-goal` or `oat-project-implement` (goal, no/closed PR, by milestone state) / `oat-project-revise` (any mode, open PR; goal names the target delivery).

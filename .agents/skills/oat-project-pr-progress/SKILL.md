@@ -383,7 +383,20 @@ review_artifact: null }`;
 
    Commit and stop, reporting the stage owner. Never register stale evidence.
 
-4. **Idempotent registration.** For a new delivery, allocate the next unused
+**3a. Already-registered active delivery.** When the active milestone
+(`oat_milestone`) already has a non-superseded registered delivery (a `dNN`
+entry with `status: open` or `at_endpoint`), after its recovery completes at
+`delivering` or when `oat-project-goal` hands back a stale `delivered`
+milestone, run items 1–2 for that `dNN` instead of registering. On
+`status: ok`, in one bookkeeping write, clear any `oat_goal_recovery` that
+targets it, write `oat_milestone_status: delivered`, and project
+`oat_pr_status` and `oat_pr_url` from its latest member's observed status.
+Register nothing, create no pull request, and append no log entry. On a
+not-fresh report, apply item 3 (active milestone's delivery). A `registering`
+entry is not registered yet and resumes at item 5.
+
+4. **Idempotent registration.** When the active milestone has no
+   non-superseded registered delivery (item 3a), allocate the next unused
    `dNN` and write its entry with `status: registering`: `milestone`, the
    frozen `scope` (the ordered set), the agreed `endpoint` from the brief's
    Delivery endpoint and authority, `kind: pr`, the persisted `lookup` keys
@@ -414,7 +427,11 @@ review_artifact: null }`;
 8. **Recovery targets.** For a pending `oat_goal_recovery` at stage
    `delivering`, push the targeted delivery's fixes to its existing member,
    run steps 1–2 for that `dNN`, and on `status: ok` clear the record
-   (`oat_goal_recovery: null`); the active milestone stays untouched.
+   (`oat_goal_recovery: null`). When the record's milestone is not
+   `oat_milestone` (an older delivery), that is the whole write: the active
+   milestone stays untouched. When it targets the active milestone's own
+   delivery, fall through to item 3a, which clears the record and writes
+   `delivered` in one step.
 
 `delivered` means registered, open and review-ready. Activation of the next
 milestone belongs to `oat-project-goal` once the delivery reaches its agreed

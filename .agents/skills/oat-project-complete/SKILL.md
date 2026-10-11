@@ -298,7 +298,7 @@ PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>
 - **If `PR_ON_COMPLETE` is `false`:** Set `SHOULD_OPEN_PR="false"`. Skip the Open PR question. Print `PR on complete: disabled (from workflow.createPrOnComplete).`
 - **If `PR_ON_COMPLETE` is unset:** Include the Open PR question in the batched prompt as normal (backward compatible).
 - The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
-- **Goal mode (`oat_workflow_mode: goal`):** the completion decision consumes the validated goal coverage from Step 1.5. When the declaration and its exhaustive audit are valid, every terminal delivery is merged (observed at its agreed endpoint), and the snapshot's `pr` step is satisfied by coverage (`satisfied_by: { pr: delivery-coverage }`), set `SHOULD_OPEN_PR="false"`, skip the Open PR question, call no `gh pr create` in Step 11, and print `PR on complete: satisfied by goal delivery coverage` — even when `PR_ON_COMPLETE` is `true`. Genuinely uncovered delivery work never reaches this step: Step 1.5 refuses it and routes to the goal registration owner (`oat-project-pr-final` for terminal registration, `oat-project-pr-progress` for a milestone delivery). A separately intended bookkeeping PR for the completion commits is not a goal delivery: open one only when the user explicitly asks for it in this run, never because of `PR_ON_COMPLETE`, and never register it in `oat_deliveries` or count it toward coverage. Every other mode is unchanged.
+- **Goal mode (`oat_workflow_mode: goal`):** the completion decision consumes the validated goal coverage from Step 1.5. When the declaration and its exhaustive audit are valid, every terminal delivery is at its agreed endpoint (`status: at_endpoint`, or `endpoint_attainment` recorded), and the snapshot's `pr` step is satisfied by coverage (`satisfied_by: { pr: delivery-coverage }`), set `SHOULD_OPEN_PR="false"`, skip the Open PR question, call no `gh pr create` in Step 11, and print `PR on complete: satisfied by goal delivery coverage` — even when `PR_ON_COMPLETE` is `true`. Genuinely uncovered delivery work never reaches this step: Step 1.5 refuses it and routes to the goal registration owner (`oat-project-pr-final` for terminal registration, `oat-project-pr-progress` for a milestone delivery). A separately intended bookkeeping PR for the completion commits is not a goal delivery: open one only when the user explicitly asks for it in this run, never because of `PR_ON_COMPLETE`, and never register it in `oat_deliveries` or count it toward coverage. Every other mode is unchanged.
 
 Select archive prompt participation before assembling the batched prompt:
 
@@ -399,10 +399,11 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
 - `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
 - `summary.md` is `current` when those tracking fields still match the `oat-project-summary` Step 3 comparison inputs
 - In brief modes staleness is decided by fingerprint instead: recompute the
-  phase fingerprint with the `oat-project-summary` Step 3 brief fragment;
-  `summary.md` is `stale` when its `oat_summary_phase_fingerprint` is absent or
-  differs from the recomputed value and `current` when they match.
-  `oat_summary_last_task` is not consulted for a brief project.
+  phase fingerprint with the `oat-project-summary` Step 3 brief fragment, and
+  in goal mode include the Step 3 goal fragment (the delivery IDs at
+  endpoint); `summary.md` is `stale` when its `oat_summary_phase_fingerprint`
+  is absent or differs from the recomputed value and `current` when they
+  match. `oat_summary_last_task` is not consulted for a brief or goal project.
 
 Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.
 The safety-net offer is governed by how this completion run executes, not by how

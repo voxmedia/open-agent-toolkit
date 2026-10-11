@@ -564,9 +564,12 @@ reports `Milestone mNN is ready to activate` only when they hold:
 A failed prerequisite stops with the router's reason; never write
 `implementing` around it. When every prerequisite holds:
 
-1. write `oat_milestone_status: implementing` and set
-   `oat_current_task_id` in `implementation.md` to the milestone's first
-   incomplete phase ID;
+1. write `oat_milestone_status: implementing` and `oat_phase_status:
+in_progress`, project `oat_pr_status` and `oat_pr_url` from the latest
+   delivery member's observed status (`merged`, `closed`, or `open`; both
+   `null` when no delivery exists yet), so a merged previous delivery no
+   longer reads as a live PR, and set `oat_current_task_id` in
+   `implementation.md` to the milestone's first incomplete phase ID;
 2. append the activation structural log entry (Project Log);
 3. commit through the Artifact Persistence rule (adding
    `"$PROJECT_PATH/project-log.md"` when the append wrote it).
