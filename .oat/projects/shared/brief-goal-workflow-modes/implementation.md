@@ -395,23 +395,34 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** a4d7768d5ecf76482168e7bcdabf542c595d59d2
-**Head:** -
+**Head:** d1969527b2e806ec5f5ee75d4bf3f69786ba2138
 **Executor:** phase-implementer:impl-p06-ba2fb5ee (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p06-t01: Implement references for brief execution
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 296a62f4e
+
+- **Files changed:** .agents/skills/oat-project-implement/references/{plan-and-resume,phase-execution,completion-and-closeout}.md; `oat-project-implement/SKILL.md` left unchanged (a note there tripped the 251-line entry-size pin at `skills.test.ts:2913`; the note lives at `plan-and-resume.md:22-25`)
+- **Verification:** validate-skills, format:root exit 0; design read-through file:line list — plan-and-resume.md :8 brief-family loads the contract, :81 resume reconciles open records against git log and live handles, :101 Step 2 reads the whole brief, :148 Step 2.2 document order and provisional-made-concrete, :182/:195 Step 2.5 `[]`/absent = no checkpoints, :385 Step 3 first incomplete phase-unit and finalization only when every unit is accepted, :416/:445 Step 4 implementation-brief template; phase-execution.md :18-138 brief-mode execution (requirement source :27, precedence ladder :33, independence test :51, phase-start record :60, execution records with lookahead :84, Head capture :100, fresh reviewer on anchors :107, late-fix rule :117, root-owned acceptance :125, journal ownership :130), :194 `workflow_mode` adds brief, :243 brief Phase Scope fields, :851 per-phase review pointer, :1042 parallel group, :1096 Step 7a, :1173 Step 7b, :1204 Step 8; completion-and-closeout.md :38 blockers, :48 Step 11 precondition, :61 completion audited against Outcomes, :122 progress lines, :177 final scope from anchors, :942 non-lite sequence and approval path with `pr` → `oat-project-pr-final`, :1332 output summary
+- **Implementer-chosen contract (design gap, flagged for review):** the root writes and commits the phase-start record (`chore(oat): start pNN`) before dispatch and passes `anchor_base` plus the after-commit `phase_base_head`; the phase owner opens each record, makes one implementation commit excluding the journal, closes the record in a journal-only commit, and writes `**Head:**`; only the root writes `**Status:** completed`; in a parallel group the root writes the fork base and the integration-merge heads at fan-in
 
 ### Task p06-t02: Agent roles, regenerated projections and sync manifest
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b260b9063
+
+- **Files changed:** .agents/agents/oat-phase-implementer.md, .agents/agents/oat-reviewer.md (no `version:` bump, p08-t06); 130 regenerated projections under .codex/agents and .cursor/agents (implementer and reviewer variants only)
+- **Verification:** validate-skills, format:root; `skills.test.ts -t "pins portable user-default agents"` pass (root re-ran: 1 passed); autonomy inventory 5/5 (no re-keys); `git diff --stat` shows only the regenerated agent files
+- **Deviation:** `.oat/sync/manifest.json` is not in the commit. `oat sync --scope project` also created the `.claude/skills/oat-project-brief` link and a matching manifest entry (plus `lastUpdated`); both belong to p08-t02, so the implementer restored the manifest and removed the untracked link rather than commit them. p08-t02 re-runs sync and commits the manifest
 
 ### Task p06-t03: Quick-start promoted-brief resume and dispatch example
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d1969527b
+
+- **Files changed:** .agents/skills/oat-project-quick-start/SKILL.md (Step 0.5 promoted-brief resume; `quick_plan_ready` clause 6; Step 3 provenance note; the Step 3.7 disposition is the sign-off for the newly authored tasks), .agents/skills/oat-project-dispatch-subagents/SKILL.md (example accepts `workflow_mode: brief` with a phase ID scope)
+- **Verification:** extracted `quick_plan_ready` probe under `mktemp -d` (deleted): `oat_promotion_pending_phases: ['p02']` exit 1, key absent exit 0, plus seven edge fixtures (`[]` 0, block list 1, bare key + comment + item 1, `null` then another key 0, bare key last line 0, duplicated key 1, scalar 1) agreeing with the built `evaluateQuickPlanReadiness` on all nine; negative control: pre-phase guard exits 0 on the `['p02']` fixture; guard-harness tests `review-skill-contracts.test.ts -t quick` 7/7; validate-skills, format:root
 
 ---
 
@@ -633,6 +644,7 @@ _- Outstanding Items_
 - Request ID: `impl-p06-ba2fb5ee` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base a4d7768d5ecf76482168e7bcdabf542c595d59d2, p05 closeout; the dispatch-plan commit sits between base and the first task commit; p06-t01..t03 in the root checkout after p05 closed at c86f8558c)
+- Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1969527b; commits 296a62f4e, b260b9063, d1969527b; concerns: manifest deferred to p08-t02, implement SKILL.md note relocated to plan-and-resume.md (entry-size pin), extra named-skill-load sentences for p08-t01, implementer-chosen record-ownership contract flagged for review
 
 <!-- orchestration-runs-end -->
 
