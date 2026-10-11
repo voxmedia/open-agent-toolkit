@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 940" width="760" height="940" role="img" aria-labelledby="project-state-machine-title project-state-machine-desc">
   <title id="project-state-machine-title">Project state machine</title>
-  <desc id="project-state-machine-desc">Spec-driven chain from top to bottom: Discovery in progress, Ready for spec, Spec in progress, Ready for design, Design in progress, Ready for plan, Plan in progress, Ready for implement, Implement in progress, Implement complete, PR open (pr_open), then Complete. PR open (pr_open) leads to Revise (in_progress), which leads back to PR open. Implement in progress also leads to a review loop: Review received, Fixes added, Fixes completed, Review passed, and back to Implement in progress. A dashed edge labeled entry point runs from Lite: batched interview (no discovery/spec/design) to Plan in progress, and a second dashed edge labeled entry point runs from Brief: alignment interview (one Project Brief) to Plan in progress.</desc>
+  <desc id="project-state-machine-desc">Spec-driven chain from top to bottom: Discovery in progress, Ready for spec, Spec in progress, Ready for design, Design in progress, Ready for plan, Plan in progress, Ready for implement, Implement in progress, Implement complete, PR open (pr_open), then Complete. PR open (pr_open) leads to Revise (in_progress), which leads back to PR open. Implement in progress also leads to a review loop: Review received, Fixes added, Fixes completed, Review passed, and back to Implement in progress. A dashed edge labeled entry point runs from Lite: batched interview (no discovery/spec/design) to Plan in progress, and a second dashed edge labeled entry point runs from Brief or goal: interview (one Project Brief) to Plan in progress.</desc>
   <style>
     svg {
       --bg: #161d27;
@@ -70,7 +70,7 @@
   <rect class="label-bg" x="78" y="432" width="84" height="22" rx="4" ry="4"/>
   <text class="t-edge" x="120" y="447.5" text-anchor="middle">entry point</text>
 
-  <!-- Brief entry point (dashed) -->
+  <!-- Brief or goal entry point (dashed) -->
   <path class="edge-opt" d="M120 600 L120 530 Q120 520 130 520 L280 520" marker-end="url(#psm-arrow-opt)"/>
   <rect class="label-bg" x="78" y="554" width="84" height="22" rx="4" ry="4"/>
   <text class="t-edge" x="120" y="569.5" text-anchor="middle">entry point</text>
@@ -134,8 +134,8 @@
   <text class="t" x="120" y="351" text-anchor="middle">Lite: batched interview</text>
   <text class="t-2" x="120" y="371" text-anchor="middle">(no discovery/spec/design)</text>
 
-  <!-- Brief -->
+  <!-- Brief or goal -->
   <rect class="node" x="20" y="600" width="200" height="60" rx="8" ry="8"/>
-  <text class="t" x="120" y="625" text-anchor="middle">Brief: alignment interview</text>
+  <text class="t" x="120" y="625" text-anchor="middle">Brief or goal: interview</text>
   <text class="t-2" x="120" y="645" text-anchor="middle">(one Project Brief)</text>
 </svg>

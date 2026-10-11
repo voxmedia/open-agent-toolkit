@@ -30,7 +30,7 @@ instead of `/`):
    summary that `/oat-repo-knowledge-index` writes under
    `.oat/repo/knowledge/`. If that folder has no Markdown file, progress tells
    you to run `/oat-repo-knowledge-index` and stops without a project report,
-   whatever the project's mode; quick, lite, brief and imported projects never
+   whatever the project's mode; quick, lite, brief, goal and imported projects never
    needed the index before, so this can be the first time you see it. Run
    `/oat-repo-knowledge-index` once and then run progress again, or skip to
    step 3: `/oat-project-next` itself does not check for the index (spec-driven

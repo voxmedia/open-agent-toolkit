@@ -70,15 +70,15 @@ in a fresh repository.
    overrides the setting for one shell.
 
 3. **Only `oat-project-new` takes a scope.** It accepts `--scope shared|local|synced`.
-   Quick-start, lite, brief, import, capture, and split have no scope argument.
-   Quick-start, lite, brief, import, and capture always create projects in the
+   Quick-start, lite, brief, goal, import, capture, and split have no scope argument.
+   Quick-start, lite, brief, goal, import, and capture always create projects in the
    default scope. Split uses the active project's scope, or `shared` when no
    project is active. Set the default first if you do not want `synced`.
 
 4. **Build the knowledge index before spec-driven discovery.** `oat-project-discover`
    refuses to start until `.oat/repo/knowledge/project-index.md` exists. Run
    `/oat-repo-knowledge-index` once before your first spec-driven project.
-   Quick-start, lite, brief, import, and capture do not check for it.
+   Quick-start, lite, brief, goal, import, and capture do not check for it.
 
 5. **Know what happens when a project is already active.** Check with
    `oat config get activeProject` before you start:
@@ -111,14 +111,14 @@ Project creation normally activates the new project in `.oat/config.local.json`.
 Check the reported project path before continuing, especially when another
 project is already active.
 
-The new, quick-start, lite, brief, and import skills check inherited Git changes before
+The new, quick-start, lite, brief, goal, and import skills check inherited Git changes before
 scaffolding. Unrelated changes require an explicit disposition in interactive
 runs. One exception: if the only change is `.oat/sync/manifest.json`, it is
 committed automatically as `chore: run sync`. Capture does not run this check.
 Do not assume starting a project also authorizes implementation or a PR.
 
 **Dispatch policy.** Before a plan is marked ready, quick-start, lite, brief,
-and import ask you to choose a _dispatch policy_: the highest tier of models and
+goal, and import ask you to choose a _dispatch policy_: the highest tier of models and
 effort OAT may use when it dispatches implementation and review agents. The
 choices come from `oat project dispatch-ceiling choices`. If your configuration
 has no complete dispatch ladder (the list of models for each tier), the skill
@@ -130,10 +130,11 @@ deliberately. The plan stays not ready until this resolves. See
 **Approval checkpoints.** A _HiLL (human-in-the-loop lifecycle) checkpoint_ is
 a point where a skill stops and waits for your explicit approval before it marks
 a phase complete. Projects created by `oat-project-new` have checkpoints on
-discovery and design by default. Quick, lite, brief, import, and captured
-projects have no workflow-phase checkpoints before implementation. Lite still
-asks you to approve its plan once, and brief asks you to approve its reviewed
-brief once. See [HiLL checkpoints](hill-checkpoints.md).
+discovery and design by default. Quick, lite, brief, goal, import, and
+captured projects have no workflow-phase checkpoints before implementation.
+Lite still asks you to approve its plan once, brief asks you to approve its
+reviewed brief once, and goal asks for that approval and then one per later
+milestone. See [HiLL checkpoints](hill-checkpoints.md).
 
 Several skills also run a configured _exit gate_, an optional review or command
 your repository configures to run before a skill marks its work complete. When

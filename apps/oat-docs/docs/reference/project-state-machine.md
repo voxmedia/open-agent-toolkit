@@ -17,8 +17,8 @@ This page is the compact contract for how project lifecycle state and review sta
 
 === "Diagram"
 
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite and brief enter at planning](/diagrams/project-state-machine-light.svg)
-    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite and brief enter at planning](/diagrams/project-state-machine-dark.svg)
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite, brief and goal enter at planning](/diagrams/project-state-machine-light.svg)
+    ![Project state machine: discovery, spec, design, plan and implementation phases, then PR open and complete; a review loop returns to implementation, a revise loop runs from PR open and back, and lite, brief and goal enter at planning](/diagrams/project-state-machine-dark.svg)
 
 === "Mermaid source"
 
@@ -41,12 +41,14 @@ This page is the compact contract for how project lifecycle state and review sta
       PASSED --> I
 
       LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
-      BRIEF["Brief: alignment interview\n(one Project Brief)"] -. entry point .-> P
+      BRIEF["Brief or goal: interview\n(one Project Brief)"] -. entry point .-> P
     ```
 
-The solid chain is the spec-driven progression. Lite and brief enter at **Plan
-in progress** and never set `oat_phase` to `discovery`, `spec`, or `design`;
-quick and import projects also skip part of the leading chain.
+The solid chain is the spec-driven progression. Lite, brief and goal enter at
+**Plan in progress** and never set `oat_phase` to `discovery`, `spec`, or
+`design`; quick and import projects also skip part of the leading chain. Goal
+adds a milestone state machine inside implementation, described under
+[Goal progression](#goal-progression).
 
 ## Phase status values
 
@@ -107,6 +109,38 @@ A brief project can move to the quick chain with `oat project promote
 `oat_promotion_pending_phases` lists phases that still need tasks. See
 [Lifecycle](../workflows/projects/lifecycle.md#promoting-a-brief-project-to-quick).
 
+### Goal progression
+
+A goal project runs the brief chain once per milestone. `oat_phase` and
+`oat_phase_status` keep their meaning; the milestone loop lives in its own
+`state.md` fields, owned as follows:
+
+| `oat_milestone_status` | Meaning                                                  | Next owner and transition                                                                                                                              |
+| ---------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `aligning`             | The next milestone is being planned or awaits activation | `oat-project-goal` activates it (`implementing`) after review, its `plan` carrier, approval, and the previous delivery observed at its agreed endpoint |
+| `implementing`         | The milestone's phase-units are executing                | Implement's milestone closeout runs the `exit` gate and writes `reviewing`                                                                             |
+| `reviewing`            | The exit carrier is fresh; the integrated review is next | `oat-project-review-receive` writes `delivering` on a clean receive of the integrated review, or `implementing` when fixes are queued                  |
+| `delivering`           | A passed, fresh integrated review and exit carrier       | `oat-project-pr-progress` registers the delivery (`dNN`) and writes `delivered`; stale evidence sends it back to `reviewing`                           |
+| `delivered`            | The delivery is registered, open and review-ready        | `oat-project-goal` re-aligns (`aligning` for the next milestone) once the delivery reaches its endpoint, or records the terminal declaration           |
+
+`oat_goal_status` is `active` until the user declares the goal met
+(`declared_met`) with an exhaustive `oat_goal_outcome_audit`. Recovery of an
+older milestone's delivery is recorded in `oat_goal_recovery` and never moves
+`oat_milestone` or its status. `oat-project-revise` may return the active
+milestone from `delivered` or `delivering` to `implementing` for inline
+feedback. The router reads only these persisted fields; delivery freshness
+comes from `oat project delivery refresh` and `oat project delivery check`.
+
+`delivered` and the registry's `at_endpoint` are different: `delivered` means
+the pull request is registered and open, `at_endpoint` means it has reached
+the agreed endpoint (`open` or `merged`). Re-alignment may draft and approve
+the next milestone while a `merged` endpoint is pending, but activation waits
+for it. Terminal closeout (`oat project closeout-check`,
+`oat project complete-state`) requires the declaration, the audit and delivery
+coverage of every accepted phase. A goal project can move to quick at a settled
+delivery boundary; see
+[Lifecycle](../workflows/projects/lifecycle.md#promoting-a-goal-project-to-quick).
+
 ## Review progression
 
 In `plan.md` Reviews table:
@@ -120,5 +154,5 @@ Do not move to the next lifecycle state if review/state artifacts indicate unres
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/state.md`
-- `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`)
+- `.oat/projects/<scope>/<project>/plan.md` (`## Reviews`, and `## Milestones` for goal)
 - `.oat/projects/<scope>/<project>/implementation.md`

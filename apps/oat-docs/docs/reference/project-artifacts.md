@@ -50,7 +50,7 @@ archive metadata own terminal reachability and retry identity.
 
 Mode-sensitive notes:
 
-- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`, `brief`) for routing.
+- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`, `brief`, `goal`) for routing.
 - `plan.md` remains the canonical execution artifact across all modes.
 
 | Mode          | Core authored artifacts                                                                                                                | Optional artifacts                         |
@@ -60,6 +60,7 @@ Mode-sensitive notes:
 | `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                     |
 | `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout |
 | `brief`       | `plan.md` as a Project Brief (phases with Intent and Exit evidence) and `implementation.md` as the per-phase journal                   | `references/research/`, `project-log.md`   |
+| `goal`        | The brief artifacts, with a `## Milestones` table in `plan.md` and the goal fields in `state.md`                                       | `references/research/`, `project-log.md`   |
 
 Every Lite plan keeps Summary, Decisions, Assumptions, Out of Scope, and
 Validation Criteria. User-visible changes add numbered, testable Product
@@ -90,6 +91,32 @@ it. The journal's Final Summary adds an `**Outcomes audit:**` block with one
 line per numbered Outcome. When a brief artifact gate is configured,
 `state.md` records its outcome as `oat_brief_gate`, with the same core fields
 as `oat_quick_start_gate`.
+
+In goal mode, `plan.md` is the same Project Brief with a filled
+`## Milestones` table: one `| Milestone | Phases |` row per milestone listing
+its ordered phase IDs, every phase (revision phases included) in exactly one
+milestone. Later milestones are appended at re-alignment, and a phase frozen in
+a registered delivery is never removed or reassigned. `state.md` adds the
+goal fields:
+
+- `oat_milestone` and `oat_milestone_status` (`aligning`, `implementing`,
+  `reviewing`, `delivering`, `delivered`), the active milestone;
+- `oat_goal_status` (`active` or `declared_met`) and
+  `oat_goal_outcome_audit`, the exhaustive per-phase and per-outcome audit
+  written at the terminal declaration;
+- `oat_goal_recovery`, the record of an interrupted recovery, which may target
+  an older milestone without moving the active one;
+- `oat_milestone_gates`, one `plan` and one `exit` gate carrier per
+  milestone; and
+- `oat_deliveries`, the delivery registry: one entry per delivery (`dNN`) with
+  its milestone, frozen phase scope, agreed endpoint, status, member pull
+  requests and their observed revisions, the integrated review it was
+  delivered on, its exit-gate binding and the first observed endpoint
+  attainment.
+
+`oat project delivery refresh` writes only observations and derived staleness
+into `oat_deliveries` and the milestone carriers. The terminal declaration is
+recorded as one `**Goal declared met:**` line in the journal's Final Summary.
 
 ## Blockers in state.md
 
