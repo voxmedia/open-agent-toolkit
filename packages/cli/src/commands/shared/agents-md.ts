@@ -9,6 +9,8 @@ import {
 } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+import { acquireAgentsMdAppendLock } from './agents-md-lock';
+
 /**
  * Plans repository AGENTS.md guidance without replacing existing paths.
  *
@@ -759,6 +761,7 @@ async function inspectSections(
   sections: readonly AgentsMdSectionInput[],
   removeSectionKeys: readonly string[],
   fileSystem: AgentsMdFileSystem,
+  validateContent = true,
 ): Promise<InspectedSections> {
   const desired = sections.map(({ key, body }) => ({
     key,
@@ -777,7 +780,7 @@ async function inspectSections(
   await assertPlanUnchanged(
     plan,
     fileSystem,
-    plan.kind === 'missing' ? undefined : content,
+    plan.kind === 'missing' || !validateContent ? undefined : content,
   );
   return { content, desired, classification };
 }
@@ -798,11 +801,12 @@ async function upsertSectionsInternal(
   }
 
   try {
-    const { desired, content, classification } = await inspectSections(
+    let { desired, content, classification } = await inspectSections(
       plan,
       sections,
       removeSectionKeys,
       fileSystem,
+      false,
     );
     if (plan.kind === 'missing') {
       const creation = await createMissingFile(
@@ -822,21 +826,45 @@ async function upsertSectionsInternal(
       }
       throw new Error(IDENTITY_CHANGED);
     }
+    if (classification.absentBlocks.length === 0) {
+      // Non-appending outcomes retain their original content-stability check
+      // without creating a lock; only append candidates use the locked re-read.
+      await assertPlanUnchanged(plan, fileSystem, content);
+      return classification.results;
+    }
     if (classification.absentBlocks.length > 0) {
-      const appended = await appendAbsentSections(
-        plan,
-        classification.absentBlocks,
-        fileSystem,
+      const release = await acquireAgentsMdAppendLock(
+        plan.repoRoot,
+        plan.targetPath,
       );
-      if (appended.kind === 'blocked') throw new Error(appended.reason);
-      if (appended.kind === 'refused') {
-        return classifySections(
+      try {
+        // Revalidate the original identity and classify fresh bytes under the lock.
+        ({ desired, content, classification } = await inspectSections(
           plan,
-          desired,
-          content,
+          sections,
           removeSectionKeys,
-          appended.cause,
-        ).results;
+          fileSystem,
+        ));
+        if (classification.absentBlocks.length > 0) {
+          const appended = await appendAbsentSections(
+            plan,
+            classification.absentBlocks,
+            fileSystem,
+          );
+          if (appended.kind === 'blocked') throw new Error(appended.reason);
+          if (appended.kind === 'refused') {
+            return classifySections(
+              plan,
+              desired,
+              content,
+              removeSectionKeys,
+              appended.cause,
+            ).results;
+          }
+        }
+        return classification.results;
+      } finally {
+        await release();
       }
     }
     return classification.results;

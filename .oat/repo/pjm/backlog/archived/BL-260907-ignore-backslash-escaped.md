@@ -1,7 +1,7 @@
 ---
 id: BL-260907-ignore-backslash-escaped
 title: Ignore backslash-escaped emphasis in skill-script reference extraction
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,9 +11,10 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:40.256Z
-updated: 2026-09-08T16:55:27.000Z
+updated: '2026-10-11T03:13:49Z'
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-10-10-ignore-escaped-emphasis-in-script-references.md
 ---
 
 ## Description
@@ -22,5 +23,5 @@ The skill-script-reference extractor from wave-5 p06 (packages/cli/src/commands/
 
 ## Acceptance Criteria
 
-- [ ] `readOpeningEmphasis` returns null for a backslash-preceded emphasis run and the extracted reference has no trailing backslash
-- [ ] A fixture with the escaped form passes the contract test with zero violations
+- [x] `readOpeningEmphasis` returns null for a backslash-preceded emphasis run and the extracted reference has no trailing backslash
+- [x] A fixture with the escaped form passes the contract test with zero violations

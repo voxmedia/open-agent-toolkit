@@ -180,6 +180,16 @@ describe('extractScriptReferences', () => {
       ['.oat/scripts/underscore-missing.sh'],
     ],
     [
+      'ignores an escaped underscore emphasis opening',
+      String.raw`Run \_.oat/scripts/helper.sh\_ now.`,
+      [],
+    ],
+    [
+      'preserves an emphasis opening after two backslashes',
+      String.raw`Run \\_.oat/scripts/missing.sh_ now.`,
+      ['.oat/scripts/missing.sh'],
+    ],
+    [
       'a nested emphasis pair',
       'Run _**.oat/scripts/nested-missing.sh**_ now.',
       ['.oat/scripts/nested-missing.sh'],
@@ -392,6 +402,22 @@ describe('shipped skill surface', () => {
 });
 
 describe('findUnshippedScriptReferences', () => {
+  it('ignores escaped emphasis while retaining real missing-reference violations', () => {
+    const manifest = [pack('docs', [skillAsset('docs-consumer')])];
+    expect(
+      findUnshippedScriptReferences(
+        [{ ...CONSUMER_SOURCE, text: String.raw`\_.oat/scripts/helper.sh\_` }],
+        manifest,
+      ),
+    ).toEqual([]);
+    expect(
+      findUnshippedScriptReferences(
+        [{ ...CONSUMER_SOURCE, text: '_.oat/scripts/helper.sh_' }],
+        manifest,
+      ).map(({ reference }) => reference),
+    ).toEqual(['.oat/scripts/helper.sh']);
+  });
+
   it("passes when every shipped skill's script references exist in its owning pack", () => {
     expect(
       findUnshippedScriptReferences([CONSUMER_SOURCE], HEALTHY_MANIFEST),

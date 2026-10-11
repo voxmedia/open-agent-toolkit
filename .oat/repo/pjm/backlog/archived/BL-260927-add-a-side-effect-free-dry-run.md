@@ -1,7 +1,7 @@
 ---
 id: BL-260927-add-a-side-effect-free-dry-run
 title: Add a side-effect-free dry run to oat project log append
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -10,11 +10,12 @@ labels:
   - cli
 assignee: null
 created: 2026-09-27T03:35:38.617Z
-updated: 2026-09-27T03:35:38.617Z
+updated: '2026-10-11T03:14:20Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/314
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-10-10-preview-project-log-appends-without-side-effects.md
 ---
 
 ## Description

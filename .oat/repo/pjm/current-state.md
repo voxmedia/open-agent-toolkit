@@ -35,6 +35,12 @@ copying their content here. -->
 
 ## What's Implemented
 
+- The October CLI follow-ups on `feat/october-backlog-fixes` implement escaped
+  emphasis handling, cross-process guidance append serialization, and a
+  side-effect-free project-log append preview. The three source items are
+  archived in this PR; public package versions are prepared at `0.3.18`.
+  Independent review, merge, and publication remain pending.
+
 - Backlog Wave 5 ([PR #356](https://github.com/voxmedia/open-agent-toolkit/pull/356),
   `wave/2026-10-03-backlog-wave-5`) completes ten maintenance tickets and the
   Plain Markdown guided-init option. All 44 tasks, 41 acceptance criteria,

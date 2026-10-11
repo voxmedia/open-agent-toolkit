@@ -4,6 +4,13 @@
 
 ## Curated Overview
 
+- 2026-10-10: Three CLI follow-ups are implemented in `feat/october-backlog-fixes`:
+  [BL-260907-ignore-backslash-escaped — Ignore escaped emphasis in script references](archived/BL-260907-ignore-backslash-escaped.md),
+  [BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends](archived/BL-260928-serialize-concurrent-agents-md.md),
+  and [BL-260927-add-a-side-effect-free-dry-run — Preview project-log appends](archived/BL-260927-add-a-side-effect-free-dry-run.md).
+  Their source records are archived with the capability PR; independent review,
+  merge, and publication remain pending.
+
 - 2026-10-03: The [approved issue triage](../triage/2026-10-02-untriaged-issues.md) captures nine new items and refines bookkeeping-only recovery for GitHub #339–#341 and #343–#349. Policy interviews and an Opus 5.5 medium second opinion are complete; items are ready for planning, with focused technical design retained in their acceptance criteria. The receipt and archive defects are separate slices linked to the broader provenance-envelope and exact-path commit owners.
 
 - 2026-10-02: the `backlog-wave-4` project (lockstep 0.3.16) closed eleven
@@ -488,7 +495,6 @@
 | BL-261002-wire-the-complexity-review     | Wire the complexity review into the sibling gate-capable skills                                          | open   | medium   | task       | M        |
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                         | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                   | open   | low      | task       | S        |
-| BL-260927-add-a-side-effect-free-dry-run | Add a side-effect-free dry run to oat project log append                                                 | open   | low      | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                  | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                              | open   | low      | feature    | L        |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                               | open   | low      | task       | XS       |
@@ -503,7 +509,6 @@
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                            | open   | low      | task       | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                 | open   | low      | task       | S        |
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                        | open   | low      | task       | S        |
-| BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                   | open   | low      | task       | XS       |
 | BL-261002-let-skills-declare-their-side  | Let skills declare their side effects in metadata                                                        | open   | low      | feature    | M        |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                         | open   | low      | task       | S        |
 | BL-261001-make-recon-controller-setup    | Make recon controller setup and preflight self-serve                                                     | open   | low      | feature    | M        |
@@ -517,7 +522,6 @@
 | BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation              | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                           | open   | low      | task       | M        |
-| BL-260928-serialize-concurrent-agents-md | Serialize concurrent AGENTS.md guidance appends                                                          | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                        | open   | low      | task       | XS       |
 | BL-261002-split-the-tool-packs-page      | Split the Tool Packs page and restructure the Workflow Gates and Dispatch Policy pages                   | open   | low      | task       | M        |
 | BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
