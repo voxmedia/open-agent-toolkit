@@ -1245,28 +1245,33 @@ Track test execution during implementation.
 
 ## Final Summary (for PR/docs)
 
-All twelve phases complete (64 tasks incl. review fixes); final integrated review passed at 9881971ba after four rounds; lockstep 0.3.20; v1 shipped as PR #361 from `feat/brief-workflow-mode-v1`, the goal seam follows as a stacked PR. See `summary.md` once generated.
+All twelve phases complete (64 tasks including review fixes); final integrated review passed at 9881971ba after four rounds; lockstep 0.3.20; v1 shipped as PR #361 from `feat/brief-workflow-mode-v1`, the goal seam follows as a PR stacked on it. `summary.md` is the durable record.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- `brief` workflow mode: one reviewed Project Brief in `plan.md` (`plan-brief.md` template) whose phases carry intent and exit evidence; tasks recorded as execution records; phase-unit progress across status, dashboard, next and progress; anchor-based review scope; brief branches in every lifecycle skill; `oat project promote --to quick`.
+- `goal` workflow mode: a Milestones index over global phase ids; `oat_milestone`, `oat_milestone_status`, `oat_deliveries`, `oat_milestone_gates`, `oat_goal_recovery` in `state.md`; `oat project delivery refresh` and `delivery check` with the shared bookkeeping-successor evidence evaluator; goal closeout by verified delivery coverage after a user declaration and an exhaustive outcome audit; goal → quick promotion at a settled boundary; `oat-project-goal` and the review-loop owners across pr-progress, pr-final, review-provide, review-receive, reconcile, revise and complete.
+- Templates, docs, lane and state-machine diagrams, eleven decision records, six backlog items, contract tests for both modes.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat project new --mode brief|goal`; `oat-project-brief` and `oat-project-goal` as entry skills; two new `project delivery` subcommands; twelve goal and seven brief `validate-plan` codes; closeout refusals name a goal owner (`nextOwner`); goal is excluded from autonomous runs.
+- Existing modes (spec-driven, quick, import, lite) are byte-identical in outcome.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/control-plane/src/state/{milestones,goal-audit,parser}.ts`, `recommender/router.ts` - mode registry, phase units, milestones, audit, routes.
+- `packages/cli/src/commands/project/{delivery,closeout-check,complete-state,promote,validate-plan,new}/` - delivery commands and evaluator, coverage boundary, promotion, profiles, scaffold.
+- `.agents/skills/oat-project-brief/references/brief-contract.md` - the winning contract (§1–§12).
+- `.agents/skills/{oat-project-brief,oat-project-goal}/SKILL.md` and the brief/goal branches of the lifecycle skills and agent roles.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Per-phase independent reviews (nineteen rounds) with prove-it-can-fail evidence per guard; real-artifact probes for brief (p08-t03) and goal (p12-t02, 22 rows, driver under `references/`); the full Definition-of-Done gate run with explicit exit codes and a forced uncached test run (CLI 8624, control-plane 275); skill and lockstep bumps validated against `origin/main` and the v1 PR branch; final integrated review with a two-level negative control on the evaluator.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- See "Deviations from Plan / Design" above: the goal declaration lives in the journal, `summary.md` is bookkeeping with a goal-mode deferral of repo-level writes, revise owns `delivered | delivering → implementing`, terminal deliveries share one member PR, review identity and member revisions are set-once and move only with the delivery's own new review artifact (final-review fixes p12-t09..t11).
 
 ## References
 
