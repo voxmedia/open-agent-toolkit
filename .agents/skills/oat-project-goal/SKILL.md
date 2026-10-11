@@ -359,23 +359,35 @@ policy is unresolved.
 ### Step 3.55: Configure Optional Phase Gate Review
 
 Invoke the `Shared Phase Gate Review Setup Contract` from
-`oat-project-plan-writing` (`GOAL-07`). Preserve an explicit
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written
+(`GOAL-07`). Preserve an explicit
 `oat_phase_review_gate` without probing or mutation. Goal projects have no
 HiLL setup. Re-alignment skips this step.
 
 ### Step 3.57: Configure Lifecycle Gate Posture
 
-Invoke the `Shared Lifecycle Gate Posture Setup Contract` from
-`oat-project-plan-writing` with exactly this relevant set: `oat-project-goal`
-and `oat-project-implement`. Apply `GOAL-08`: preserve an existing
-`oat_skill_gate_overrides` without probing, prompting, or mutation; otherwise,
-interactively, offer Keep or Disable for each configured gate in the set and
-persist only disabled choices to `"$PROJECT_PATH/state.md"`. Never modify the
-shared, local, or user configuration layers. Re-alignment skips this step.
+After the brief has stable phase IDs and before Step 3.6,
+invoke the `Shared Lifecycle Gate Posture Setup Contract` from
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written.
+Supply exactly this relevant set: `oat-project-goal` and
+`oat-project-implement`.
+
+Apply `GOAL-08` to the shared contract's interaction. When
+`oat_skill_gate_overrides` already exists, preserve it through the shared
+contract without probing, prompting, or mutation. Otherwise, in interactive
+planning, offer Keep or Disable independently for each configured gate in the
+relevant set. Persist only disabled choices to `"$PROJECT_PATH/state.md"`.
+Never modify the shared, local, or user configuration layers. In
+non-interactive planning, preserve configured gates and do not invent or write
+an override. Re-alignment skips this step.
 
 ### Step 3.6: Run the Artifact Review Loop
 
-Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing` with:
+Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`. Load
+the current `oat-project-plan-writing/SKILL.md` and follow that loop as
+written, with:
 
 - `target: plan`
 - `type: artifact`

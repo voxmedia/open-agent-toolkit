@@ -8671,7 +8671,7 @@ describe('lite mode skill contracts', () => {
     ]);
 
     expect(reviewer).toContain(
-      '`spec-driven` | `quick` | `import` | `lite` | `brief`',
+      '`spec-driven` | `quick` | `import` | `lite` | `brief` | `goal`',
     );
     expect(reviewer).toMatch(
       /\*\*lite\*\*:[\s\S]{0,260}`plan\.md`[\s\S]{0,260}absent by design/i,
@@ -8694,7 +8694,7 @@ describe('lite mode skill contracts', () => {
       /`lite`: read the whole plan\.md requirements contract:[\s\S]{0,200}Summary, Decisions, Assumptions, Out of Scope, and Validation[\s\S]{0,40}Criteria/i,
     );
     expect(implementer).toContain(
-      '`spec-driven`, `quick`, `import`, `lite`, or `brief`',
+      '`spec-driven`, `quick`, `import`, `lite`, `brief`, or `goal`',
     );
     expect(implementer).toMatch(
       /`lite`: read the whole plan\.md requirements contract: the assigned phase/i,
@@ -8722,7 +8722,7 @@ describe('lite mode skill contracts', () => {
       /`import`:[^\n]*`plan\.md`[^\n]*imported plan[^\n]*design\/spec when present/i,
     );
     expect(phaseExecution).toContain(
-      'workflow_mode: {spec-driven|quick|import|lite|brief}',
+      'workflow_mode: {spec-driven|quick|import|lite|brief|goal}',
     );
   });
 
@@ -9138,7 +9138,7 @@ describe('brief mode skill contracts', () => {
       ],
       [
         '.agents/skills/oat-project-new/SKILL.md',
-        /Quick, lite, and brief projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
+        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
       ],
       [
         '.agents/skills/oat-project-plan/SKILL.md',
@@ -9255,6 +9255,162 @@ describe('brief mode skill contracts', () => {
     );
     expect(implementer).toContain('## Brief Mode');
     expect(phaseExecution).toContain('#### Brief-Mode Phase Execution');
+  });
+});
+
+describe('goal mode skill contracts', () => {
+  it('exposes goal from every declared project-entry surface', async () => {
+    const checks = [
+      [
+        '.agents/skills/oat-docs/SKILL.md',
+        /three main approaches[\s\S]{0,900}oat-project-goal/i,
+      ],
+      [
+        '.agents/skills/oat-project-capture/SKILL.md',
+        /started any work[^\n]*oat-project-goal/i,
+      ],
+      [
+        '.agents/skills/oat-pjm-review-backlog/SKILL.md',
+        /recommended project mode[^\n]*oat-project-goal/i,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Start a new project[\s\S]{0,600}oat-project-goal/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Workflow:[\s\S]{0,600}oat-project-goal/,
+      ],
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /projects` array is empty[\s\S]{0,600}oat-project-goal/,
+      ],
+      [
+        '.agents/skills/oat-project-new/SKILL.md',
+        /Quick, lite, brief, and goal projects[\s\S]{0,120}start from their entry skills[\s\S]{0,160}`oat-project-goal`/,
+      ],
+      [
+        '.agents/skills/oat-project-plan/SKILL.md',
+        /\*\*`goal`\*\*: \*\*Stop\.\*\*[^\n]*owned by `oat-project-goal`/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+
+    // Goal is deliberately not an autonomous entry route: each milestone's
+    // approval, re-alignment and the terminal declaration need the user.
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const routeTable = autonomous.slice(
+      autonomous.indexOf('| Persisted state'),
+      autonomous.indexOf('### Step 2:'),
+    );
+    expect(routeTable).toMatch(
+      /\| Existing goal project \(`oat_workflow_mode: goal`\)\s+\| Stop at a product-judgment boundary: goal is not autonomous/,
+    );
+    expect(autonomous).toMatch(
+      /\*\*Goal is excluded\.\*\* Never select `goal`/,
+    );
+    expect(autonomous).toContain(
+      'Workflow mode: {lite | brief | quick | spec-driven}',
+    );
+    expect(autonomous).not.toMatch(/Invoke[^\n]*`oat-project-goal` for goal/);
+  });
+
+  it('guards workflow-mode inventories against omitting goal', async () => {
+    // Any line that already lists quick, spec-driven, lite, and brief together
+    // is a mode inventory; adding a sixth mode means each of them names goal.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillRoot = join(repoRoot, '.agents', 'skills');
+    const agentRoot = join(repoRoot, '.agents', 'agents');
+    const files = [
+      ...(await readdir(skillRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(skillRoot, entry.name, 'SKILL.md')),
+      ...(await readdir(agentRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+        .map((entry) => join(agentRoot, entry.name)),
+    ];
+    // oat-project-autonomous selects among the four autonomous modes and
+    // excludes goal on purpose (its Step 2 says so); the oat-project-next line
+    // wraps, and `goal` opens the following line.
+    const allowlist = [
+      '- Selecting lite, brief, quick, or spec-driven mode from the review-density rule.',
+      'Invoke `oat-project-new` for spec-driven mode, `oat-project-quick-start` for quick, `oat-project-lite` for lite, or `oat-project-brief` for brief;',
+      'Workflow mode: {lite | brief | quick | spec-driven}',
+      '- ✅ Lite/brief/quick/spec-driven selection, when needed, recorded a review-density',
+      'applies identically to `spec-driven`, `quick`, `import`, `lite`, `brief`, and',
+    ];
+    const isInventory = (line: string): boolean =>
+      /quick/i.test(line) &&
+      /spec-driven/i.test(line) &&
+      /\blite\b/i.test(line) &&
+      /\bbrief\b/i.test(line);
+    for (const [line, expected] of [
+      ['spec-driven, quick, lite, or brief', true],
+      ['spec-driven, quick, or lite', false],
+      ['a brief quick note without the other modes', false],
+    ] as const) {
+      expect(isInventory(line), line).toBe(expected);
+    }
+    const violations: string[] = [];
+
+    for (const file of files) {
+      let content: string;
+      try {
+        content = await readFile(file, 'utf8');
+      } catch {
+        continue;
+      }
+      for (const [index, line] of content.split('\n').entries()) {
+        if (
+          isInventory(line) &&
+          !/\bgoal\b/i.test(line) &&
+          !allowlist.some((allowed) => line.includes(allowed))
+        ) {
+          violations.push(`${file}:${index + 1}:${line}`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('registers oat-project-goal as a gateable skill', async () => {
+    const skill = await readRawRepoFile(
+      '.agents/skills/oat-project-goal/SKILL.md',
+    );
+    expect(skill).toMatch(/^oat_gateable:\s*true\s*$/m);
+    expect([...GATE_AWARE_SKILLS]).toContain('oat-project-goal');
+  });
+
+  it('makes reviewer and implementer contracts mode-aware for goal', async () => {
+    const [reviewer, implementer, planAndResume, closeout] = await Promise.all([
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+      ),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+      ),
+    ]);
+
+    expect(reviewer).toMatch(
+      /\*\*goal\*\*: as \*\*brief\*\*, plus the canonical `## Milestones` table/,
+    );
+    expect(reviewer).toMatch(
+      /In `goal` mode an integrated milestone or delivery review judges exactly the explicit ordered phase set/,
+    );
+    expect(implementer).toMatch(
+      /- `goal`: everything `brief` reads, plus the `## Milestones` table/,
+    );
+    expect(implementer).toContain('## Goal Mode');
+    expect(planAndResume).toContain('### Goal Projects');
+    expect(closeout).toContain('### Goal Milestone Closeout');
   });
 });
 

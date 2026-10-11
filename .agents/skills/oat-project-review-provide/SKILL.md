@@ -931,8 +931,8 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Artifact Paths:**
 
-- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import/lite; absent in brief)
-- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import/lite; absent in brief)
+- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import/lite; absent in brief and goal)
+- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import/lite; absent in brief and goal)
 - Plan: {PROJECT_PATH}/plan.md
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md
@@ -1351,7 +1351,7 @@ If running inline (Tier 3), execute the review and write artifact.
 **Review checklist (from oat-reviewer):**
 
 1. Verify scope (don't review out-of-scope changes)
-2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite; the brief's Outcomes, Constraints and Out of Scope, Decisions, and the in-scope phases' Intent and Exit evidence for brief)
+2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite; the brief's Outcomes, Constraints and Out of Scope, Decisions, and the in-scope phases' Intent and Exit evidence for brief and goal)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/High/Medium/Low)

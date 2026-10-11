@@ -208,8 +208,9 @@ registration owner, not a second project PR (brief contract sections 12.7 and
    created, and that shared member is expected, not a duplicate
    (`oat-project-brief/references/brief-contract.md` section 12.7, Shared
    members). Coverage judges each delivery's own scope and bound evidence.
-4. **Same registration contract.** For each terminal delivery run
-   `oat-project-pr-progress` Step 5.5 steps 1–3 and 4–7 (never step 3a, which
+4. **Same registration contract.** Load the current
+   `oat-project-pr-progress/SKILL.md` and, for each terminal delivery, run its
+   Step 5.5 steps 1–3 and 4–7 as written (never step 3a, which
    re-checks the active milestone's own registered delivery) with `kind: pr`: refresh, a
    deliverable `oat project delivery check` (`status: ok`) for the subject,
    stale evidence stopping before registration, the `registering` entry with
