@@ -557,14 +557,23 @@ function judgeDeliveries(
         }
       }
     }
-    // The review record this commit writes is new evidence only when it is
-    // recorded evidence and its identity actually changes here.
+    // The review record this commit writes is new evidence only when it names
+    // a new artifact: a re-review always records a new timestamped artifact,
+    // and scope or bound_revisions changes ride on that artifact change.
+    // Moving the same artifact to its archived counterpart is not new.
     const recordsNewReview =
       recordsEvidence &&
-      REVIEW_IDENTITY_FIELDS.some(
-        (field) =>
-          stable(isRecord(review) ? review[field] : undefined) !==
-          stable((nextReview as Record<string, unknown>)[field]),
+      !(
+        isRecord(review) &&
+        typeof review['artifact'] === 'string' &&
+        artifactVariants(
+          projectRelative(scope.projectDir, review['artifact']),
+        ).includes(
+          projectRelative(
+            scope.projectDir,
+            (nextReview as Record<string, unknown>)['artifact'] as string,
+          ),
+        )
       );
 
     // The delivery's exit-gate binding is persisted evidence (A2): set once,

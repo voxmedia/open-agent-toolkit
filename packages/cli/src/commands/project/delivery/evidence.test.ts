@@ -660,6 +660,38 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       expect(result.reason).toContain('d01 exit gate binding changed');
     });
 
+    it('rejects a reordered review scope with a swapped binding under the unchanged artifact', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredWithBinding(repo);
+      const registered = await repo.read('state.md');
+      const rewritten = registered
+        .replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}\n      scope: [p01, p02]`,
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}\n      scope: [p02, p01]`,
+        )
+        .replace(
+          "decided_at: '2026-10-11T10:00:00Z'\n",
+          "decided_at: '2026-10-12T09:00:00Z'\n",
+        );
+      expect(rewritten).toContain('scope: [p02, p01]');
+      expect(rewritten).toContain("decided_at: '2026-10-12T09:00:00Z'");
+      await repo.write('state.md', rewritten);
+      const published = repo.commitAll('chore(oat): reorder scope, swap gate');
+
+      const result = await evaluateSuccessor(
+        git,
+        scopeFor(repo),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        commit: published,
+      });
+      expect(result.reason).toContain('d01 exit gate binding changed');
+    });
+
     it('accepts a replacement binding that accompanies new integrated-review evidence', async () => {
       repo = await createGoalRepo();
       const chain = await registeredWithBinding(repo);
