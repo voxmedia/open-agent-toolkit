@@ -856,7 +856,7 @@ oat_generated: false
 
 **Base:** 5ac181153129025492ffe119040c9709b32877d6
 **Head:** (pending)
-**Executor:** phase-implementer:impl-p12-f2b82399 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
+**Executor:** phase-implementer:impl-p12-f2b82399 → impl-p12-a7422750 after the T3 restart (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
 
 ### Task p12-t01: Skill contract tests and autonomy coverage for goal
 
@@ -1038,6 +1038,7 @@ _- Outstanding Items_
 - Request ID: `impl-p12-f2b82399` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
+- Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base 311762416 (artifact-cleanup planning commits in between are out of scope)
 
 <!-- orchestration-runs-end -->
 
