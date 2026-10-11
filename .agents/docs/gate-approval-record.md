@@ -62,6 +62,15 @@ replaces the record.
   core, written and read under the same rules as `oat_quick_start_gate`. It is
   absent when no gate is configured, and nothing routes on it: it is provenance
   only.
+- **`oat_milestone_gates[mNN].plan` and `.exit`** (goal mode;
+  `oat-project-goal` writes `plan` after each milestone's approval, and
+  `oat-project-implement`'s milestone closeout writes `exit`) carry the core
+  plus `resolution` (`configured`, `no_gate`, or `project_disabled`), a
+  `subject` binding (`plan` or `code` and the milestone's ordered phase set),
+  and derived `freshness` with `freshness_reason`. `reviewed_head` is `null`
+  for `no_gate` and `project_disabled`, and `no_gate` is written rather than
+  omitted because routing reads these carriers. `oat-project-brief`'s
+  `references/brief-contract.md` section 12.4 is their contract.
 
 ## Reading a quick-start record
 
