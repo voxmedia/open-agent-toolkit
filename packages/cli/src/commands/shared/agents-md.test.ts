@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, fork } from 'node:child_process';
 import { constants } from 'node:fs';
 import {
   appendFile,
@@ -19,6 +19,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,10 +74,200 @@ describe('append-only AGENTS.md guidance', () => {
   async function expectNoPrivateArtifacts(): Promise<void> {
     expect(await readdir(root)).not.toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+        expect.stringMatching(
+          /\.(?:tmp|recovery)|oat-recovery|oat-guidance\.lock/i,
+        ),
       ]),
     );
   }
+
+  it('serializes two real processes after the same first-read observation', async () => {
+    await setup('# Original user guidance\n');
+    const target = join(root, 'AGENTS.md');
+    const before = await lstat(target);
+    const children = [0, 1].map(() =>
+      fork(
+        fileURLToPath(
+          new URL('./__tests__/agents-md-appender.mjs', import.meta.url),
+        ),
+        [
+          fileURLToPath(new URL('./agents-md.ts', import.meta.url)),
+          root,
+          target,
+        ],
+        {
+          execArgv: ['--import', 'tsx'],
+          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        },
+      ),
+    );
+    const ready: Promise<void>[] = [];
+    const results: Promise<{ action: string }>[] = [];
+    for (const child of children) {
+      let markReady!: () => void;
+      ready.push(
+        new Promise((resolve) => {
+          markReady = resolve;
+        }),
+      );
+      results.push(
+        new Promise((resolve, reject) => {
+          let diagnostics = '';
+          child.stderr?.on('data', (chunk) => {
+            diagnostics += chunk;
+          });
+          child.on(
+            'message',
+            (message: { status: string; result: { action: string } }) => {
+              if (message.status === 'ready') markReady();
+              if (message.status === 'result') resolve(message.result);
+            },
+          );
+          child.on('error', reject);
+          child.on('exit', (code) => {
+            if (code !== 0)
+              reject(new Error(`Appender exited ${code}: ${diagnostics}`));
+          });
+        }),
+      );
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        (async () => {
+          await Promise.all(ready);
+          for (const child of children) child.send({ status: 'release' });
+          expect(
+            (await Promise.all(results)).map(({ action }) => action).sort(),
+          ).toEqual(['appended', 'no-change']);
+        })(),
+        new Promise((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('Appender barrier timed out')),
+            10_000,
+          );
+        }),
+      ]);
+      const content = await readAgentsMd();
+      expect(content.startsWith('# Original user guidance\n')).toBe(true);
+      expect(content.split('<!-- OAT tools -->')).toHaveLength(2);
+      expect(content.split('<!-- END OAT tools -->')).toHaveLength(2);
+      expect((await lstat(target)).ino).toBe(before.ino);
+      expect(
+        await upsertAgentsMdSection(
+          root,
+          'tools',
+          '## Tool Packs\n- workflows',
+        ),
+      ).toEqual({ action: 'no-change' });
+      await expectNoPrivateArtifacts();
+    } finally {
+      clearTimeout(timer);
+      await Promise.all(
+        children.map(async (child) => {
+          if (child.exitCode !== null || child.signalCode !== null) return;
+          const exited = new Promise<void>((resolve) =>
+            child.once('exit', () => resolve()),
+          );
+          child.kill('SIGKILL');
+          await exited;
+        }),
+      );
+    }
+  });
+
+  it.each(['direct', 'symlink'] as const)(
+    'refuses a held lock at the canonical %s target without changing its owner',
+    async (kind) => {
+      await setup();
+      const target = join(root, kind === 'direct' ? 'AGENTS.md' : 'shared.md');
+      await writeFile(target, '# Original\n');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+      const lock = `${target}.oat-guidance.lock`;
+      const owner = JSON.stringify({
+        token: 'foreign-token',
+        host: 'foreign-host',
+        pid: process.pid,
+      });
+      await writeFile(lock, owner);
+      const identity = await lstat(lock);
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+      );
+      expect(result).toMatchObject({
+        action: 'blocked',
+        blocked: {
+          reason: expect.stringMatching(
+            /^AGENTS\.md append lock.*Check the recorded host\/PID/,
+          ),
+        },
+      });
+      expect(JSON.stringify(result)).not.toContain(root);
+      expect(result.blocked?.reason).toContain(
+        kind === 'direct'
+          ? 'AGENTS.md.oat-guidance.lock'
+          : 'shared.md.oat-guidance.lock',
+      );
+      expect(await readFile(lock, 'utf8')).toBe(owner);
+      expect((await lstat(lock)).ino).toBe(identity.ino);
+      expect(await readFile(target, 'utf8')).toBe('# Original\n');
+      expect(
+        await previewAgentsMdSection(root, 'tools', 'Tool guidance'),
+      ).toEqual({ action: 'appended' });
+      expect(await readFile(lock, 'utf8')).toBe(owner);
+    },
+  );
+
+  it.each(['malformed', 'symlink', 'directory'] as const)(
+    'fails closed on a %s lock without touching guidance',
+    async (kind) => {
+      await setup('# Original\n');
+      const lock = join(root, 'AGENTS.md.oat-guidance.lock');
+      if (kind === 'malformed') await writeFile(lock, 'not a lock');
+      if (kind === 'symlink') await symlink('AGENTS.md', lock);
+      if (kind === 'directory') await mkdir(lock);
+      expect(
+        await upsertAgentsMdSection(root, 'tools', 'Tool guidance'),
+      ).toMatchObject({
+        action: 'blocked',
+        blocked: { reason: expect.stringContaining('AGENTS.md append lock') },
+      });
+      expect(await readAgentsMd()).toBe('# Original\n');
+      expect((await lstat(lock)).isSymbolicLink()).toBe(kind === 'symlink');
+    },
+  );
+
+  it.each(['replaced', 'retokened'] as const)(
+    'does not remove a %s foreign lock during append',
+    async (kind) => {
+      await setup('# Original\n');
+      const lock = join(root, 'AGENTS.md.oat-guidance.lock');
+      const foreign = JSON.stringify({
+        token: 'replacement-token',
+        host: 'foreign-host',
+        pid: process.pid,
+      });
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          fileSystem: withFileSystem({
+            open: vi.fn(async (...args) => {
+              if (kind === 'replaced') await rm(lock);
+              await writeFile(lock, foreign);
+              return open(...args);
+            }) as AgentsMdFileSystem['open'],
+          }),
+        },
+      );
+      expect(result).toEqual({ action: 'appended' });
+      expect(await readFile(lock, 'utf8')).toBe(foreign);
+    },
+  );
 
   describe('read-only guidance preview', () => {
     it.each([
@@ -559,7 +750,7 @@ describe('append-only AGENTS.md guidance', () => {
         readFile: vi.fn(async (...args) => {
           const value = await readFile(...args);
           reads += 1;
-          if (reads === 1)
+          if (reads === 2)
             await writeFile(target, '# Late user edit\n', 'utf8');
           return value;
         }) as AgentsMdFileSystem['readFile'],
