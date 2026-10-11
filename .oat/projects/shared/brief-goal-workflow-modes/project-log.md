@@ -144,6 +144,10 @@ Phase p10 passed review at 675d5bd27 after two rounds (0/0/2/6 then 0/0/0/1); fi
 
 Phase p11 passed review at 80282f21b after two rounds (0/1/2/5 then 0/0/0/1); fix p11-t04; one Low carried to p12-t04. Key p11-review-passed-80282f21b.
 
+### 2026-10-11 · general · friction · review-cap p12
+
+p12 reached the three-round review cap with a one-clause prose residual (goal terminal deferral condition). Disposition: fix as p12-t08, root-verified; the final integrated review over the whole branch is the independent check instead of a fourth p12 round.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
