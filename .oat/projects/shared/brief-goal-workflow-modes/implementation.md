@@ -424,6 +424,22 @@ oat_generated: false
 - **Files changed:** .agents/skills/oat-project-quick-start/SKILL.md (Step 0.5 promoted-brief resume; `quick_plan_ready` clause 6; Step 3 provenance note; the Step 3.7 disposition is the sign-off for the newly authored tasks), .agents/skills/oat-project-dispatch-subagents/SKILL.md (example accepts `workflow_mode: brief` with a phase ID scope)
 - **Verification:** extracted `quick_plan_ready` probe under `mktemp -d` (deleted): `oat_promotion_pending_phases: ['p02']` exit 1, key absent exit 0, plus seven edge fixtures (`[]` 0, block list 1, bare key + comment + item 1, `null` then another key 0, bare key last line 0, duplicated key 1, scalar 1) agreeing with the built `evaluateQuickPlanReadiness` on all nine; negative control: pre-phase guard exits 0 on the `['p02']` fixture; guard-harness tests `review-skill-contracts.test.ts -t quick` 7/7; validate-skills, format:root
 
+### Review Received: p06
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p06-review-2026-10-11T051021Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p06-dc4c4725`, invocation auto, reviewed head 95a3a0bfa1dacc87935512dab62308a04338dacc, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 1, Low 4 → fixes required (Medium); auto-disposition mode. Only the three expected-red tests fail (p08-t01); sync dry-run shows every projection in sync with only the deferred `oat-project-brief` link pending.
+
+- M1 parallel-group members have no reviewable anchors at per-phase review time → converted: p06-t04 (Important). Root decision: per-phase review stays before fan-in with range `EXPECTED_HEAD..<reported worktree head>`, as group 1 ran; fan-in anchors govern `pNN-pMM` and `final` scopes.
+- L1 record-and-anchor ownership decision consistent but stated only in the references → design.md "Agent roles" sentence corrected in this bookkeeping; `brief-contract.md:72` wording carried to p08-t02 (outside p06's write set).
+- L2 stale "empty list means every phase" sentence in plan-and-resume.md → converted: p06-t05 (Negligible).
+- L3 duplicated `import` bullet in the implementer role and its projections → converted: p06-t05 (Negligible).
+- L4 `implementation-brief.md` lacks an `**Outcomes audit:**` slot and its `**Head:**` placeholder says "when the phase is accepted" → carried to p08-t02 (p03 template, outside p06's write set).
+
+**New tasks added:** p06-t04, p06-t05 (same handle, fix mode; re-review round 2 scoped to the fix commits because a Medium was converted).
+
 ---
 
 ## Phase 7: Review, record and closeout skills

@@ -802,6 +802,68 @@ git commit -m "feat(p06-t03): promoted-brief resume contract in quick-start"
 
 ---
 
+### Task p06-t04: (review) Pin the per-phase review range for parallel-group members
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md` (Brief-Mode "Fresh reviewer on anchors" and "Journal ownership in parallel worktrees" subsections; the Parallel Group Execution note near `:1042-1044`)
+- Modify: `.agents/agents/oat-phase-implementer.md` ("Journal ownership" paragraph near `:402-404`)
+- Regenerate: implementer projections under `.codex/agents` and `.cursor/agents` via `pnpm --filter @open-agent-toolkit/cli build && node packages/cli/dist/index.js sync --scope project` (leave `.oat/sync/manifest.json` and the `oat-project-brief` link uncommitted; p08-t02)
+
+**Step 1: Understand the issue**
+
+Review finding (p06 review, Medium): "Fresh reviewer on anchors" requires `**Base:**` and `**Head:**` before dispatch and routes any failure to reconcile, but "Journal ownership in parallel worktrees" writes every member's anchors only at fan-in, while Parallel Group Execution still dispatches each member's review after its phase report. A group member therefore has no reviewable anchors at per-phase review time.
+Location: `.agents/skills/oat-project-implement/references/phase-execution.md:107-138,1042-1044,1054`; `.agents/agents/oat-phase-implementer.md:402-404`
+
+**Step 2: Implement fix**
+
+Decision (root): keep per-phase review before fan-in, as group 1 of this project ran it. State in the Brief-Mode subsection and the `:1042-1044` note: "For a parallel-group member the per-phase Review Scope range is `EXPECTED_HEAD..<worktree head from the phase report>` with `oat_review_base_sha: EXPECTED_HEAD` and `oat_review_scope_source: anchors`; the fan-in `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and `final` scopes." Mirror one sentence in the implementer role's "Journal ownership" paragraph naming the reported worktree head as the review head. Regenerate projections; commit only the implementer projections that change.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm format:root && node packages/cli/dist/index.js sync --scope project --dry-run | grep -v ':skip \|already in sync'`
+Expected: pass; the dry-run prints only the deferred `create_symlink claude/oat-project-brief` action.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/references/phase-execution.md .agents/agents/oat-phase-implementer.md .codex/agents .cursor/agents
+git commit -m "fix(p06-t04): pin the per-phase review range for parallel-group members"
+```
+
+---
+
+### Task p06-t05: (review) Remove the stale `[]` sentence and the duplicated import bullet
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/plan-and-resume.md` (`:169-170`)
+- Modify: `.agents/agents/oat-phase-implementer.md` (`:560-561` duplicated `import` bullet)
+- Regenerate: implementer projections (same command and exclusions as p06-t04)
+
+**Step 1: Understand the issue**
+
+Review finding (p06 review, Low ×2): the lite-bypass paragraph still says "for other modes, an empty list means every phase", contradicting "Brief checkpoint resolution" in the same step; p06-t02 inserted a second byte-identical `import` bullet above the new `brief` bullet, already propagated to 130 projections.
+Location: `.agents/skills/oat-project-implement/references/plan-and-resume.md:169-170`; `.agents/agents/oat-phase-implementer.md:560-561`
+
+**Step 2: Implement fix**
+
+Reword `:169-170` to "for the task modes (spec-driven, quick, import) an empty list means every phase and therefore cannot represent lite's policy; brief modes read it as none (Brief checkpoint resolution below)". Delete the duplicate bullet at `:561`; regenerate projections.
+
+**Step 3: Verify**
+
+Run: `grep -c 'the imported plan, plus design/spec when present' .agents/agents/oat-phase-implementer.md && pnpm oat:validate-skills && pnpm format:root`
+Expected: count 1; pass; `grep -n 'an empty list means every phase' …/plan-and-resume.md` shows only the reworded sentence.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/references/plan-and-resume.md .agents/agents/oat-phase-implementer.md .codex/agents .cursor/agents
+git commit -m "fix(p06-t05): remove the stale empty-list sentence and the duplicated import bullet"
+```
+
+---
+
 ## Phase 7: Review, record and closeout skills
 
 ### Task p07-t01: Review scope from anchors in review-provide
@@ -894,6 +956,8 @@ git commit -m "test(p08-t01): skill contract and autonomy coverage for brief mod
 - Modify: `packages/cli/src/commands/commands.integration.test.ts` (end-to-end `project new --mode brief` → dashboard route `oat-project-brief`; promote brief → quick end to end; readiness not-ready reason)
 - Modify: `packages/cli/src/commands/project/promote/promote.ts` (command description mentions brief) and `packages/cli/src/commands/help-snapshots.test.ts` (`:1188` description)
 - Modify: `.oat/templates/state.md` (`oat_brief_gate` commented block beside `oat_quick_start_gate`)
+- Modify: `.oat/templates/implementation-brief.md` (carried from the p06 review: add an `**Outcomes audit:**` slot under `## Final Summary (for PR/docs)`; reword the `**Head:**` placeholder at `:56` to "recorded when the phase's work ends, before its review")
+- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md` (carried from the p06 review: `:72` states the ownership decision once — `**Base:**` written by the root in the phase-start commit, `**Head:**` by the committing owner when the phase ends, `**Status:** completed` only by the root at acceptance)
 
 **Verify:** `git ls-files .claude/skills/oat-project-brief` lists the link; `pnpm --filter @open-agent-toolkit/control-plane build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts` passes.
 
@@ -1095,7 +1159,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T033122Z.md                                                                                                                                                                   | 449cdc606a162b5e90966114e35479843c8c7506 | auto       | -                  |
 | p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T035054Z.md                                                                                                                                                                   | 7e3966dcc47c53dbdd6a693789fb82c96c6bc936 | auto       | -                  |
 | p05    | code     | passed          | 2026-10-11 | reviews/archived/p05-review-2026-10-11T043436Z.md                                                                                                                                                                   | a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8 | auto       | fixes at c86f8558c |
-| p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
+| p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T051021Z.md                                                                                                                                                                   | 95a3a0bfa1dacc87935512dab62308a04338dacc | auto       | -                  |
 | p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
 | p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
 | p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
@@ -1121,7 +1185,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 3: 3 tasks - Templates with bundle registration, scaffold behavior, one review fix
 - Phase 4: 6 tasks - Plan profiles, brief → quick promotion, four review fixes
 - Phase 5: 3 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills; one review fix
-- Phase 6: 3 tasks - Implement references, agent roles and projections, quick-start resume contract
+- Phase 6: 5 tasks - Implement references, agent roles and projections, quick-start resume contract; two review fixes
 - Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
 - Phase 8: 6 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR)
 - Phase 9: 2 tasks - Goal registration and routing (v1.5)
@@ -1129,7 +1193,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 43 tasks**
+**Total: 45 tasks**
 
 Ready for code review and merge.
 

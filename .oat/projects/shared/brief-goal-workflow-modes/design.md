@@ -748,8 +748,10 @@ promotion and extraction rules.
 `oat-phase-implementer.md`: `workflow_mode` accepts brief and goal; the
 requirement source is the phase's Intent and Exit evidence plus the brief's
 Outcomes, Constraints and Decisions; creates execution-record tasks (F13),
-commits with `(pNN-tNN)`, records `**Base:**` and `**Head:**`, never
-commits from a nested worker. `oat-reviewer.md`: brief-mode expected
+commits with `(pNN-tNN)`, records `**Head:**` when the phase ends (the root
+records `**Base:**` in the phase-start commit before dispatch and writes
+`**Status:** completed` only at acceptance), never commits from a nested
+worker. `oat-reviewer.md`: brief-mode expected
 artifacts, plan review sources, code review scope from anchors with the
 artifact record above. Projections regenerated with `oat sync --scope
 project`. Both roles bump `version:`.
