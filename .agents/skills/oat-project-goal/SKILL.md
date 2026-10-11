@@ -634,8 +634,12 @@ Declare at `delivered` with no pending `oat_goal_recovery`. Brief contract
 section 12.9 is the audit contract.
 
 1. Ask once whether the user declares the goal met; record the declaration as
-   one line under `## Delivery endpoint and authority`:
-   `- **Goal declared met:** {YYYY-MM-DD} by user at {brief commit SHA}`.
+   one line in `implementation.md` under `## Final Summary (for PR/docs)`:
+   `**Goal declared met:** {YYYY-MM-DD} by user at {brief commit SHA}`. Never
+   record it in `plan.md`: an edit under `## Delivery endpoint and authority`
+   is a substantive change (brief contract section 12.8) and stales every
+   delivery whose member head carries it, such as the terminal deliveries
+   `oat-project-pr-final` registers after the declaration.
 2. Run `oat project delivery refresh --project "$PROJECT_PATH" --json`.
 3. Author the exhaustive audit over the full phase inventory and every
    numbered outcome: each phase `accepted`, `extracted`, `deferred` or
@@ -644,8 +648,9 @@ section 12.9 is the audit contract.
    number with its exact text and `met`, `extracted`, `deferred` or `retired`;
    `disposition: met` only when nothing is deferred or retired, otherwise
    `met_with_deferrals`; `decided_at`, `declaration_ref` (the declaration
-   line), and `brief_identity` (the approved brief commit). Every deferral or
-   retirement is a scope decision the user approved in this step.
+   line in `implementation.md`), and `brief_identity` (the approved brief
+   commit). Every deferral or retirement is a scope decision the user approved
+   in this step.
 4. Write `oat_goal_status: declared_met` and `oat_goal_outcome_audit` in one
    `state.md` write and commit.
 5. Check the declaration read-only:
