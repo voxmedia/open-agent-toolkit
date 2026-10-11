@@ -8666,7 +8666,9 @@ describe('lite mode skill contracts', () => {
       ),
     ]);
 
-    expect(reviewer).toContain('`spec-driven` | `quick` | `import` | `lite`');
+    expect(reviewer).toContain(
+      '`spec-driven` | `quick` | `import` | `lite` | `brief`',
+    );
     expect(reviewer).toMatch(
       /\*\*lite\*\*:[\s\S]{0,260}`plan\.md`[\s\S]{0,260}absent by design/i,
     );
@@ -8688,7 +8690,7 @@ describe('lite mode skill contracts', () => {
       /`lite`: read the whole plan\.md requirements contract:[\s\S]{0,200}Summary, Decisions, Assumptions, Out of Scope, and Validation[\s\S]{0,40}Criteria/i,
     );
     expect(implementer).toContain(
-      '`spec-driven`, `quick`, `import`, or `lite`',
+      '`spec-driven`, `quick`, `import`, `lite`, or `brief`',
     );
     expect(implementer).toMatch(
       /`lite`: read the whole plan\.md requirements contract: the assigned phase/i,
@@ -8716,7 +8718,7 @@ describe('lite mode skill contracts', () => {
       /`import`:[^\n]*`plan\.md`[^\n]*imported plan[^\n]*design\/spec when present/i,
     );
     expect(phaseExecution).toContain(
-      'workflow_mode: {spec-driven|quick|import|lite}',
+      'workflow_mode: {spec-driven|quick|import|lite|brief}',
     );
   });
 
@@ -9041,7 +9043,9 @@ describe('lite mode skill contracts', () => {
     ).toBeUndefined();
     expect(autonomous).toMatch(/Lite:[\s\S]{0,220}single-sitting/i);
     expect(autonomous).toMatch(/Lite plan incomplete[^\n]*`oat-project-lite`/);
-    expect(autonomous).toContain('Workflow mode: {lite | quick | spec-driven}');
+    expect(autonomous).toContain(
+      'Workflow mode: {lite | brief | quick | spec-driven}',
+    );
     expect(autonomous).not.toMatch(
       /ALLOWED Activities[\s\S]*Selecting quick or spec-driven/,
     );
@@ -9098,6 +9102,155 @@ describe('lite mode skill contracts', () => {
     }
 
     expect(violations).toEqual([]);
+  });
+});
+
+describe('brief mode skill contracts', () => {
+  it('exposes brief from every declared project-entry surface', async () => {
+    const checks = [
+      [
+        '.agents/skills/oat-docs/SKILL.md',
+        /three main approaches[\s\S]{0,800}oat-project-brief/i,
+      ],
+      [
+        '.agents/skills/oat-project-capture/SKILL.md',
+        /started any work[^\n]*oat-project-brief/i,
+      ],
+      [
+        '.agents/skills/oat-pjm-review-backlog/SKILL.md',
+        /recommended project mode[^\n]*oat-project-brief/i,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Start a new project[\s\S]{0,500}oat-project-brief/,
+      ],
+      [
+        '.agents/skills/oat-project-progress/SKILL.md',
+        /Workflow:[\s\S]{0,500}oat-project-brief/,
+      ],
+      [
+        '.agents/skills/oat-project-next/SKILL.md',
+        /projects` array is empty[\s\S]{0,500}oat-project-brief/,
+      ],
+      [
+        '.agents/skills/oat-project-new/SKILL.md',
+        /Quick, lite, and brief projects[\s\S]{0,120}start from their entry skills[\s\S]{0,120}`oat-project-brief`/,
+      ],
+      [
+        '.agents/skills/oat-project-plan/SKILL.md',
+        /\*\*`brief`\*\*: \*\*Stop\.\*\*[^\n]*owned by `oat-project-brief`/,
+      ],
+      [
+        '.agents/skills/oat-project-autonomous/SKILL.md',
+        /or `oat-project-brief` for brief;\s+these four entry routes/,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const routeTable = autonomous.slice(
+      autonomous.indexOf('| Persisted state'),
+      autonomous.indexOf('### Step 2:'),
+    );
+    const briefResumeRoute = routeTable.match(
+      /\| Brief not yet reviewed and approved\s+\| `([^`]+)`/,
+    )?.[1];
+    expect(briefResumeRoute).toBe('oat-project-brief');
+    expect(autonomous).toMatch(/Brief:[\s\S]{0,220}one delivery/i);
+    expect(autonomous).toContain(
+      'Workflow mode: {lite | brief | quick | spec-driven}',
+    );
+  });
+
+  it('guards workflow-mode inventories against omitting brief', async () => {
+    // Any line that already lists quick, spec-driven, and lite together is a
+    // mode inventory; adding a fifth mode means each of them names brief too.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillRoot = join(repoRoot, '.agents', 'skills');
+    const agentRoot = join(repoRoot, '.agents', 'agents');
+    const files = [
+      ...(await readdir(skillRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(skillRoot, entry.name, 'SKILL.md')),
+      ...(await readdir(agentRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+        .map((entry) => join(agentRoot, entry.name)),
+    ];
+    // The discover model-invocation gate (frontmatter description and the two
+    // gate paragraphs) was exempted when brief landed in p05; Step 1 of that
+    // skill routes a brief project to `oat-project-brief` instead.
+    const allowlist = [
+      'Do NOT auto-invoke for new ideas or quick/lite-mode projects.',
+      'If no active project exists, route to `oat-project-new` for spec-driven setup',
+      'asks for a quick or lite workflow, or has an active quick/import/lite project',
+    ];
+    const isInventory = (line: string): boolean =>
+      /quick/i.test(line) &&
+      /spec-driven/i.test(line) &&
+      /\blite\b/i.test(line);
+    for (const [line, expected] of [
+      ['spec-driven, quick, or lite', true],
+      ['spec-driven or quick', false],
+      ['a lite quick note without the third mode', false],
+    ] as const) {
+      expect(isInventory(line), line).toBe(expected);
+    }
+    const violations: string[] = [];
+
+    for (const file of files) {
+      let content: string;
+      try {
+        content = await readFile(file, 'utf8');
+      } catch {
+        continue;
+      }
+      for (const [index, line] of content.split('\n').entries()) {
+        if (
+          isInventory(line) &&
+          !/\bbrief\b/i.test(line) &&
+          !allowlist.some((allowed) => line.includes(allowed))
+        ) {
+          violations.push(`${file}:${index + 1}:${line}`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('registers oat-project-brief as a gateable skill', async () => {
+    const skill = await readRawRepoFile(
+      '.agents/skills/oat-project-brief/SKILL.md',
+    );
+    expect(skill).toMatch(/^oat_gateable:\s*true\s*$/m);
+    expect([...GATE_AWARE_SKILLS]).toContain('oat-project-brief');
+  });
+
+  it('makes reviewer and implementer contracts mode-aware for brief', async () => {
+    const [reviewer, implementer, phaseExecution] = await Promise.all([
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ]);
+
+    expect(reviewer).toMatch(
+      /\*\*brief\*\*:[^\n]*`plan\.md`[^\n]*`implementation\.md`[^\n]*absent by design/i,
+    );
+    expect(reviewer).toContain(
+      'oat-project-brief/references/brief-contract.md',
+    );
+    expect(implementer).toMatch(
+      /`brief`: read the assigned `## Phase pNN:` block[\s\S]{0,120}\*\*Intent:\*\*[\s\S]{0,60}\*\*Exit evidence:\*\*/,
+    );
+    expect(implementer).toContain('## Brief Mode');
+    expect(phaseExecution).toContain('#### Brief-Mode Phase Execution');
   });
 });
 

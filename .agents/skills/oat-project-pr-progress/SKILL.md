@@ -16,7 +16,7 @@ Create a progress PR description (typically at a plan phase boundary) and write 
 
 Generate a PR-ready summary that is:
 
-- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference; lite uses the five plan.md contract sections)
+- grounded in OAT artifacts (mode-aware: spec-driven uses spec/design; quick/import may use discovery/import reference; lite uses the five plan.md contract sections; brief uses the Project Brief's Outcomes and each phase's Intent and Exit evidence)
 - scoped to a specific phase (pNN) or an explicit git range
 - easy to paste into GitHub (or used with `gh pr create` if desired)
 
@@ -313,7 +313,7 @@ oat_project: { PROJECT_PATH }
 
 ## Goals / Non-Goals
 
-{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode; discovery/import reference in quick/import mode; Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite}
+{goals addressed by this phase, from available requirement artifacts: spec in spec-driven mode; discovery/import reference in quick/import mode; Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite; the phase's Intent and Exit evidence plus the brief's Outcomes for brief}
 
 ## Changes
 

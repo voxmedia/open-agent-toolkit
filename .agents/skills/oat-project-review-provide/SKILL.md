@@ -878,8 +878,8 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Artifact Paths:**
 
-- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import/lite)
-- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import/lite)
+- Spec: {PROJECT_PATH}/spec.md (required in spec-driven mode; optional in quick/import/lite; absent in brief)
+- Design: {PROJECT_PATH}/design.md (required in spec-driven mode; optional in quick/import/lite; absent in brief)
 - Plan: {PROJECT_PATH}/plan.md
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md

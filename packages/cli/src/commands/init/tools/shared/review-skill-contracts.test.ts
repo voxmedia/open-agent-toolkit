@@ -4717,7 +4717,7 @@ printf '%s\\n' "$EVENTS"`;
     );
     // The guard carries no workflow-mode branch.
     expect(normalizeProse(stepFiveTwo)).toContain(
-      'applies identically to `spec-driven`, `quick`, `import`, and `lite` projects',
+      'applies identically to `spec-driven`, `quick`, `import`, `lite`, and `brief` projects',
     );
 
     // Active branch: the pre-existing route text survives byte for byte.

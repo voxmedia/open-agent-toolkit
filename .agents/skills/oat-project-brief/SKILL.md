@@ -351,19 +351,21 @@ have no HiLL setup.
 
 ### Step 3.57: Configure Lifecycle Gate Posture
 
-Before Step 3.6, invoke the `Shared Lifecycle Gate Posture Setup Contract`
-from `oat-project-plan-writing`: load the current
+After the brief has stable phase IDs and before Step 3.6,
+invoke the `Shared Lifecycle Gate Posture Setup Contract` from
+`oat-project-plan-writing`: load the current
 `oat-project-plan-writing/SKILL.md` and follow that contract as written.
 Supply exactly this relevant set: `oat-project-brief` and
 `oat-project-implement`.
 
 Apply `BRIEF-08` to the shared contract's interaction. When
-`oat_skill_gate_overrides` already exists, preserve it without probing or
-mutation. Otherwise offer Keep or Disable independently for each configured
-gate in the relevant set. Persist only disabled choices to
-`"$PROJECT_PATH/state.md"`; never modify the shared, local, or user
-configuration layers. In non-interactive planning, preserve configured gates
-and write no override.
+`oat_skill_gate_overrides` already exists, preserve it through the shared
+contract without probing, prompting, or mutation. Otherwise, in interactive
+planning, offer Keep or Disable independently for each configured gate in the
+relevant set. Persist only disabled choices to `"$PROJECT_PATH/state.md"`.
+Never modify the shared, local, or user configuration layers. In
+non-interactive planning, preserve configured gates and do not invent or write
+an override.
 
 ### Step 3.6: Run Brief Artifact Review Loop
 

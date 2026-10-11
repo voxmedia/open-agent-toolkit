@@ -9,6 +9,7 @@ const PROJECT_START_SKILLS = [
   'oat-project-new',
   'oat-project-quick-start',
   'oat-project-lite',
+  'oat-project-brief',
   'oat-project-import-plan',
 ] as const;
 
@@ -16,6 +17,7 @@ const PROJECT_START_SKILLS = [
 const GATE_POSTURE_CALLER_SKILLS = [
   'oat-project-quick-start',
   'oat-project-lite',
+  'oat-project-brief',
   'oat-project-plan',
   'oat-project-import-plan',
 ] as const;
@@ -378,7 +380,11 @@ describe('project-start preflight contracts', () => {
             : ': Configure Optional Phase Gate Review',
         );
         const posture = content.indexOf(': Configure Lifecycle Gate Posture');
-        const artifactReview = content.indexOf('Plan Artifact Review Loop');
+        const artifactReview = content.indexOf(
+          name === 'oat-project-brief'
+            ? 'Brief Artifact Review Loop'
+            : 'Plan Artifact Review Loop',
+        );
 
         // Ordering, not mere presence: the posture choice must be persisted
         // after the plan has stable phase IDs and before artifact review.
