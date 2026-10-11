@@ -49,9 +49,10 @@ You will be given a "Review Scope" block including:
 - **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
 - **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **analysis_artifact**: For `type: analysis`, path to the severity-rated analysis artifact to fact-check.
-- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` (default to `spec-driven` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` | `brief` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
-- **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
+- **tasks_in_scope**: Task IDs being reviewed (if task/phase scope). In `brief` mode these are the execution-record IDs under the phases in scope; they label commits and never narrow the range.
+- **Brief anchor record**: For `brief` code reviews, the caller supplies `oat_review_requested_scope`, `oat_review_phase_ids` (ordered), `oat_review_base_sha`, `oat_review_scope_source` (`anchors` | `merge-base-range` | `explicit` | `merge-base` | `narrowed`), and, when they apply, `oat_review_fallback_reason`, `oat_review_integration_commits`, and `oat_review_narrowed_from`. Copy them verbatim into artifact frontmatter (Step 8).
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
 - **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
 - **Code-review provenance**: For artifact-mode code reviews, resolve the authoritative range head with `git rev-parse <authoritative-range-head>^{commit}` and record the resulting full 40-character commit SHA as `oat_review_head_sha`. If the review is narrowed, also record the resolved range, prior artifact path, and prior reviewed head supplied by the caller.
@@ -128,6 +129,7 @@ Use workflow mode to determine required evidence:
 - **quick**: `discovery.md` + `plan.md` are expected (`spec.md`/`design.md` optional if present).
 - **import**: `plan.md` is expected (`references/imported-plan.md` preferred; `spec.md`/`design.md` optional).
 - **lite**: `plan.md` and `implementation.md` are expected; discovery, spec, and design are absent by design.
+- **brief**: `plan.md` (a Project Brief) and `implementation.md` (the per-phase journal) are expected; discovery, spec, and design are absent by design. `oat-project-brief/references/brief-contract.md` defines the brief sections, phase grammar, journal markers, and anchor rules, and the caller supplies it with the Review Scope.
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.
@@ -151,6 +153,7 @@ Read available artifacts to understand what SHOULD have been built:
    - `quick`: read `discovery.md` and `plan.md`; read `spec.md`/`design.md` only if they exist.
    - `import`: read `plan.md` and `references/imported-plan.md` (if present); read `spec.md`/`design.md` only if they exist.
    - `lite`: read `plan.md` and `implementation.md`; do not require discovery, spec, design, or an import reference.
+   - `brief`: read the brief in `plan.md`, the journal in `implementation.md`, and the brief contract when supplied; do not require discovery, spec, design, or an import reference.
 3. For `type: analysis`, read `analysis_artifact` and then inspect only the cited evidence sources needed to verify its findings:
    - `scope: docs`: consult the docs contract, docs navigation/index files, and cited docs source files relevant to the analysis.
    - `scope: agent-instructions`: consult the repo/root instruction files, provider instruction files, and cited skill/agent instruction files relevant to the analysis.
@@ -159,6 +162,8 @@ Read available artifacts to understand what SHOULD have been built:
 ### Step 2: Verify Scope
 
 Only review files/changes within the provided scope.
+
+In `brief` mode the authoritative code-review range comes from the recorded phase anchors: `Base..Head` for one phase, or the first selected base through the last selected phase's head for a range or `final`. Commit-message `(pNN-` matches only label which commits belong to which phase and never narrow the range. When `oat_review_scope_source` is `merge-base-range`, review the entire supplied range. If an anchor is missing, does not exist, or contradicts the ordering rules in brief contract section 10, record a workflow contract gap rather than narrowing silently. Treat the listed integration commits as inside the range.
 
 Do NOT:
 
@@ -176,6 +181,7 @@ For each requirement in scope, use the best available requirement source by mode
 - `quick`: `discovery.md` + `plan.md`
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
 - `lite`: the requirements contract in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also use Product Behavior and/or Technical Design when selected by the recorded `minimal`, `product`, `technical`, or `both` content shape.
+- `brief`: each phase in scope's `**Intent:**` and `**Exit evidence:**` lines plus the brief's Outcomes, Constraints and Out of Scope, and Decisions. A `final` review also audits every numbered Outcome against its observed evidence in the journal; an Outcome with neither evidence nor a recorded deferral is a finding. Execution records are evidence of committed work, not requirements.
 
 Then verify:
 
@@ -266,13 +272,14 @@ Treat the artifact as a product deliverable. Verify it is:
      - `quick`: discovery (+ spec/design if present)
      - `import`: imported-plan reference (+ discovery/spec/design if present)
      - `lite`: plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also review the Product Behavior and/or Technical Design required by its recorded content shape; challenge `minimal` when an observable shape trigger applies.
+     - `brief`: the brief is self-contained; review it against the brief contract and the user's request, with no upstream discovery, spec, or design.
    - For import-mode `plan` reviews, bias findings toward canonical-format conformance and completeness. Do not rewrite the imported author's intent merely to match OAT house style.
 
 4. **Actionable**
    - Clear next steps and readiness signals
    - For spec: Verification entries are meaningful (`method: pointer`)
    - For design: requirement-to-test mapping exists and includes concrete scenarios
-   - For plan: tasks have clear verification commands and commit messages
+   - For plan: tasks have clear verification commands and commit messages (for a brief, each phase has concrete Intent and Exit evidence instead; tasks are not required)
 
 5. **Plan-specific checklist**
    - Canonical-format conformance: required frontmatter and sections are present, the Reviews table exists, and artifact/code rows are shaped consistently.
@@ -282,6 +289,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and has executable verification intent. Require a proportionate implementation and proof strategy only when the applicable workflow plan contract declares it; otherwise review the task's existing verification commands and evidence.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
+   - **Brief plan review** replaces the task-oriented items above with the brief section list: Goal; numbered Outcomes, each naming its intended evidence; Approach (optional `### Design`); Constraints and Out of Scope; Decisions with rationale and rejected alternatives; Known Unknowns, each with the phase that settles it; Delivery endpoint and authority; an empty `## Milestones` section; `## Phase pNN:` blocks with non-empty Intent and Exit evidence, a `**Provisional:**` value of `yes` or `no`, and a concrete first phase; Parallelism; Reviews (preserved rows); Implementation Complete; References. Stable, never-reused phase IDs in document order replace stable task IDs. There is no task requirement; `### Task` headings in a brief are a finding, because execution records belong in the journal. Check that every Outcome is reachable through some phase's Exit evidence and that any declared parallel group passes the independence test in brief contract section 6.
 
 6. **Necessary**
    - Evaluate whether the proposed approach materially serves the requested
@@ -306,7 +314,7 @@ Treat the artifact as a product deliverable. Verify it is:
 
 This step applies to **code reviews** only.
 
-If `design.md` is absent in quick/import/lite mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue.
+If `design.md` is absent in quick/import/lite/brief mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue. A brief's `### Design` subsection, when present, is the design source for this step.
 
 For each design decision relevant to scope:
 
@@ -548,6 +556,8 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings by severity: {N} critical, {N} high, {N} medium, {N} low` count line or the standard `## Findings` sections shown above with every severity subsection present. When more than one count source is present — the frontmatter count fields, the count line, and the sections — the counts must agree; the gate refuses an artifact whose sources contradict each other rather than picking one. How a section is counted is load-bearing: the gate counts only markdown list items (`- `, `* `, `+ `, or `1. `) as findings. A finding written as a bold paragraph, a heading, or any other prose shape counts as zero, so a section of prose findings under a non-zero count line is a contradiction and the gate refuses the artifact — the entire review is rejected, not just the miscounted section.
 
 For every artifact-mode code review, `oat_review_head_sha` is required and must be the full 40-character commit SHA at the head of the authoritative review range. Resolve it with `git rev-parse <authoritative-range-head>^{commit}`. An abbreviated SHA, symbolic ref, or range string is invalid. When the review narrowed, `oat_review_range`, `oat_prior_review_artifact`, and `oat_prior_review_head_sha` are also required; the prior head must likewise be a full 40-character SHA. These code-review fields are independent of the gate-only block and do not apply to artifact, analysis, or structured-output reviews.
+
+For a `brief` code review, also copy the supplied anchor record fields (`oat_review_requested_scope`, `oat_review_phase_ids`, `oat_review_base_sha`, `oat_review_scope_source`, and any supplied `oat_review_fallback_reason`, `oat_review_integration_commits`, and `oat_review_narrowed_from`) verbatim into frontmatter beside `oat_review_head_sha`, which is the aggregate head of the anchored range. Never infer them from commit messages or the current HEAD.
 
 For a narrowed review, do not restate requirements-coverage claims that this pass did not itself verify. Reference the prior artifact's coverage or mark inherited coverage rows as inherited so the union of passes remains auditable.
 

@@ -32,7 +32,7 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, `import`, or `lite`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, `lite`, or `brief`;
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;
@@ -128,9 +128,19 @@ Read each required artifact once at phase start:
   Criteria, and the Product Behavior and/or Technical Design selected by its
   recorded `minimal`, `product`, `technical`, or `both` content shape.
   Discovery, spec, and design are absent by design.
+- `brief`: read the assigned `## Phase pNN:` block (`**Intent:**`,
+  `**Exit evidence:**`, `**Provisional:**`) and the brief's Goal, Outcomes,
+  Approach, Constraints and Out of Scope, Decisions, Known Unknowns, and
+  Delivery endpoint and authority sections in `plan.md`; the phase's section of
+  `implementation.md`; and sections 3, 6, 7, and 10 of
+  `oat-project-brief/references/brief-contract.md`. Discovery, spec, and design
+  are absent by design.
 
 Extract all phase tasks, dependency order, file boundaries, verification
-commands, commit messages, and phase-wide verification before editing.
+commands, commit messages, and phase-wide verification before editing. In
+`brief` mode there are no planned tasks to extract: extract the phase's Intent,
+its Exit evidence as the phase-wide verification, and the Phase Scope's commit
+convention, and follow `## Brief Mode` below.
 
 ## Artifact Hygiene
 
@@ -351,6 +361,70 @@ disposition:
 - Reason: {eligibility or stop-boundary evidence}
 ```
 
+## Brief Mode
+
+This section applies only when `workflow_mode` is `brief`. It replaces task
+extraction and adapts the task loop; every other rule in this contract,
+including recovery, still applies. The brief contract wins where this section
+restates it.
+
+**Requirement source.** The phase's Intent and Exit evidence plus the brief's
+Outcomes, Constraints and Out of Scope, and Decisions. A provisional phase is
+never executed: return `NEEDS_CONTEXT` naming it, because the root makes
+phases concrete before dispatch.
+
+**Execution records replace planned tasks.** Work in coherent units, each tied
+to one implementation commit. For each unit:
+
+1. Open `### Task pNN-tNN: <name>` under the phase's section of
+   `implementation.md` with `**Status:** in_progress`,
+   `**Executor:** phase-implementer:<original_request_id>`, intent, files,
+   proof command, and your handle. Use the next free ordinal in the phase
+   (`prevN-tNN` in a revision phase); never reuse an ID. Lookahead is allowed:
+   you may open several independent records before working them.
+2. Implement the unit and run its proof command plus the Prevention checks.
+3. Create its one implementation commit through `oat internal commit-paths`
+   with identity `${ORIGINAL_REQUEST_ID}:${RECORD_ID}`, a message carrying
+   `(pNN-tNN)`, and an owned-file list that excludes the journal.
+4. Close the record with `**Status:** completed` and `**Commit:** <full SHA>`,
+   or with `failed`, `cancelled`, or `no-change` and no fabricated commit, and
+   commit only `implementation.md` as `chore(oat): record {pNN-tNN}` with
+   identity `${ORIGINAL_REQUEST_ID}:${RECORD_ID}:record`.
+
+Step 2's per-task verification then expects exactly one implementation commit
+inside the record's effective boundary followed by one journal-only record
+commit; a record closed with a terminal status and no implementation commit
+produces only the journal-only commit. A request for a maintained up-front task
+plan is a promotion question for the root, never lookahead.
+
+**Journal ownership.** You write only your phase's section of
+`implementation.md`: its execution records and, in a sequential phase, its
+`**Head:**` line and verification summary. Never write `**Base:**` (the root
+records it before dispatch and passes it as `anchor_base`), never write the
+phase's `**Status:** completed` (acceptance is root-owned), and never edit
+`state.md`, `plan.md`, the `## Reviews` table, or another phase's section. In a
+parallel-group worktree, write the records but no anchors; the root writes the
+group's fork base and integration-merge heads at fan-in.
+
+**Phase head.** After the last record closes and phase-wide verification
+passes, in a sequential phase write `**Head:** <full SHA of the last commit of
+the phase>` plus a short verification summary under the phase heading and
+commit only the journal as `chore(oat): record {pNN} head`. Report the head.
+
+**Nested workers never commit.** An optional nested worker returns edits on
+owned paths; you, the committing owner, create every commit.
+
+**Fix mode.** Record each review fix as a record whose name starts with
+`(review)` and that carries `**Source review:**` with the review filename and
+finding IDs, through the same open, commit, close sequence. While no later
+phase has a `**Base:**`, also advance `**Head:**` to the new last commit in the
+closing journal commit; otherwise stop and report, because the correction
+belongs to a revision phase the root appends.
+
+**Report.** In the Task Outcomes table, list one row per execution record in
+the Task column with its terminal status and commit, and add
+`**Phase anchors:** {anchor_base}..{head}` below the header fields.
+
 ## Mode: Implement
 
 ### 1. Verify Phase Base
@@ -487,6 +561,9 @@ After all task commits:
   - `spec-driven`: `plan.md`, `design.md`, and `spec.md`;
   - `quick`: `plan.md` and `discovery.md`, plus design/spec when present; and
   - `import`: `plan.md` and the imported plan, plus design/spec when present;
+  - `import`: `plan.md` and the imported plan, plus design/spec when present;
+  - `brief`: the phase's Intent and Exit evidence plus the brief's Outcomes,
+    Constraints and Out of Scope, and Decisions;
 - confirm no task boundary or dependency was missed; and
 - report Medium/Low concerns without launching a reviewer.
 
