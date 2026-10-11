@@ -7,7 +7,7 @@ oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
-# Implementation: freestyle-goal-workflow-modes
+# Implementation: brief-goal-workflow-modes
 
 **Started:** 2026-10-11
 **Last Updated:** 2026-10-11

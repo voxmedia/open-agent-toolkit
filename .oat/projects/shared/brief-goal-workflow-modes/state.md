@@ -91,7 +91,7 @@ oat_project_state_updated: '2026-10-11T00:09:32.821Z' # ISO 8601 UTC timestamp â
 oat_generated: false
 ---
 
-# Project State: freestyle-goal-workflow-modes
+# Project State: brief-goal-workflow-modes
 
 **Status:** Discovery
 **Started:** 2026-10-11

@@ -14,7 +14,7 @@ oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
 ---
 
-# Implementation Plan: freestyle-goal-workflow-modes
+# Implementation Plan: brief-goal-workflow-modes
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
