@@ -16,7 +16,7 @@ and updates project state.
   in dependency order.
 - **Task boundary:** each task still produces exactly one bounded, verified
   commit.
-- **Brief phase-units:** in a brief project each phase carries Intent and Exit
+- **Brief phase-units:** in a brief or goal project each phase carries Intent and Exit
   evidence instead of tasks; execution records are opened in the journal as
   work happens, and the phase's `**Base:**`/`**Head:**` anchors scope its
   review.

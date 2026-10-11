@@ -60,11 +60,11 @@ auto-review preference prompt are all skipped in both interactive and autonomous
 runs. Only HiLL approval pauses are absent — the root-owned per-phase review and
 the final review remain required.
 
-### Brief checkpoint resolution
+### Brief and goal checkpoint resolution
 
-Brief projects read `oat_plan_hill_phases` with a brief meaning: `[]` and an
-absent field both mean **no checkpoints**, never "every phase". The brief
-scaffold writes `oat_plan_hill_phases: [] # [] = none for brief modes`, and
+Brief and goal projects read `oat_plan_hill_phases` with a brief meaning: `[]`
+and an absent field both mean **no checkpoints**, never "every phase". The
+brief scaffold, which goal projects share, writes `oat_plan_hill_phases: [] # [] = none for brief modes`, and
 `oat-project-implement` then writes:
 
 ```yaml
@@ -141,8 +141,8 @@ See [Workflow preferences in the Configuration guide](../../../reference/configu
 A HiLL (human-in-the-loop lifecycle) checkpoint is a point where the
 implementing agent stops and waits for a person to approve before it continues.
 This choice decides how often that happens during implementation. Lite projects
-have no checkpoints, and brief projects have none unless they list phases
-explicitly, so it does not apply to them.
+have no checkpoints, and brief and goal projects have none unless they list
+phases explicitly, so it does not apply to them.
 
 | Choice             | Choose it when                                    | What you give up                             |
 | ------------------ | ------------------------------------------------- | -------------------------------------------- |

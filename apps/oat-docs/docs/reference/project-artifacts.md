@@ -112,16 +112,39 @@ goal fields:
   its milestone, frozen phase scope, agreed endpoint, status, member pull
   requests and their observed revisions, the integrated review it was
   delivered on, its exit-gate binding and the first observed endpoint
-  attainment.
+  attainment. A delivery's `status` is `registering`, `open`, `at_endpoint`,
+  or `superseded`, and its agreed `endpoint` is `open` or `merged`. A
+  replacement delivery names its one direct predecessor in `covers_scope_of`,
+  and the predecessor's `superseded_by` points back; only a delivery that never
+  reached its agreed endpoint may be replaced. A correction of a delivery that
+  did reach it is additive (`corrects_delivery_id`, new phase IDs, no inherited
+  coverage). `oat_pr_status` and `oat_pr_url` project the latest member pull
+  request.
 
 Delivery evidence stays fresh across later commits that change only bookkeeping:
 `state.md`, `plan.md` (outside its approved content), `implementation.md`,
 `project-log.md` appends, `summary.md`, and the review artifacts of the
 delivery and of any delivery sharing its pull request.
 
+A delivery's evidence identity is set once: its `exit_gate`, its
+`integrated_review` identity (`artifact`, `scope`, `bound_revisions`), and each
+member's `reviewed_head`. They change only in a commit that records a new
+review artifact of that delivery, one its own `## Reviews` rows name and never
+a sharing delivery's; any other change to them is not bookkeeping. A bound
+revision that disagrees with its member's `reviewed_head` is not fresh
+(`bound-revision-mismatch`).
+
 `oat project delivery refresh` writes only observations and derived staleness
 into `oat_deliveries` and the milestone carriers. The terminal declaration is
 recorded as one `**Goal declared met:**` line in the journal's Final Summary.
+
+Extraction of goal work into another project is manual. A phase moved to a
+linked project gets `**Extracted to:** <slug>` in the brief and the marker pair
+`**Status:** extracted` / `**Extracted to:** <slug>` in the journal, and the
+child project records `oat_extracted_from: <goal slug>` in its `state.md`. The
+brief and journal targets must match. The outcome audit requires the child to
+be complete or its outstanding obligation to carry an approved deferral, and
+promotion of the goal to quick refuses any extracted phase.
 
 ## Blockers in state.md
 

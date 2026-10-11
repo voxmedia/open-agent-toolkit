@@ -127,8 +127,10 @@ executable equivalent of the named **quick plan readiness** predicate that
 `oat-project-quick-start` defines and that `oat-project-plan`,
 `oat-project-progress`, and `oat-project-next` route by: ready frontmatter
 (`oat_status: complete`, `oat_ready_for: oat-project-implement`, `oat_template`
-absent or false), a durable `## Reviews` disposition read fence-aware, and a
-substantive `### Task pNN-tNN:` under a `## Phase` heading. The field reports
+absent or false), a durable `## Reviews` disposition read fence-aware, a
+substantive `### Task pNN-tNN:` under a `## Phase` heading, and an absent or
+empty `oat_promotion_pending_phases`, so a brief or goal project promoted to
+quick is not ready (`promotion-pending-phases`) while it lists phases. The field reports
 `ready` plus the first unmet clause in `failure`, and is omitted on every other
 artifact type.
 

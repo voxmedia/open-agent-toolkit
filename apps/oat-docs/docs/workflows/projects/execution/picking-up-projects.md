@@ -90,6 +90,16 @@ phase-units remain in the active scope") before every later check. The
 implementation it prints a note that `oat project status` and
 `oat-project-next` are the authority for brief projects.
 
+For a goal project, the router also reads the milestone status, any pending
+`oat_goal_recovery` record, the milestone gate carriers, and the delivery
+registry. It sends `aligning` and `delivered` milestones to `oat-project-goal`,
+scopes `oat-project-implement` to the active milestone's phases (or a recovery
+scope), routes the integrated review as `code mNN: …` to
+`oat-project-review-provide`, and routes registration as `deliver mNN` to
+`oat-project-pr-progress`. In the implement phase the dashboard prints a goal
+note that `oat project status` and `oat-project-next` are the authority for
+goal milestone routing.
+
 ## What travels
 
 - The project ref carries the complete active artifact tree and its history.

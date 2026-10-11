@@ -275,7 +275,9 @@ quick project, it resumes quick-start if the plan is not ready, and **starts
 `oat-project-implement` immediately** if the plan is ready. On an import project
 with a plan, it points you to `oat-project-implement`. On a lite project, it
 points you to `oat-project-lite`. On a brief project, it stops and points you
-to `oat-project-brief`, which owns the Project Brief. Do not invoke it on those projects unless you
+to `oat-project-brief`, which owns the Project Brief. On a goal project, it
+stops and points you to `oat-project-goal`, which owns the brief, its
+milestones, and its amendments. Do not invoke it on those projects unless you
 intend that handoff.
 
 **Example scenario:** The webhook design now defines persistence, retries, and

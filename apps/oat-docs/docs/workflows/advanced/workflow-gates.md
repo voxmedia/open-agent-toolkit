@@ -98,7 +98,7 @@ string, and the lifecycle executes it unchanged; OAT does not inject, reorder,
 or rewrite its shell arguments.
 
 `oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`,
-`oat-project-lite`, `oat-project-brief`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
+`oat-project-lite`, `oat-project-brief`, `oat-project-goal`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
 in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
@@ -281,6 +281,19 @@ carries exactly the core:
 committed brief, carries exactly the same core with the same outcome rules. It
 is provenance only: no route reads it back, and the brief's single approval
 still follows the gate.
+
+A goal project records its gate outcomes per milestone instead, in
+`oat_milestone_gates`, and never in `oat_brief_gate`. The configured
+`oat-project-goal` gate on the brief or a milestone amendment becomes that
+milestone's `plan` carrier, `oat_milestone_gates[mNN].plan`, written with
+`status: allowed` only after the artifact review, the gate, and your approval;
+for a re-alignment amendment it is the only approval evidence. The implement
+exit gate at milestone closeout writes `oat_milestone_gates[mNN].exit` (never
+`oat_implement_exit_gate`, which goal uses only at terminal closeout). It runs
+before the milestone's integrated review and runs again after queued fixes.
+`oat project delivery check` reports the exit carrier's freshness, and
+`oat project delivery refresh` marks it stale when delivery evidence no longer
+holds.
 
 `oat-project-next` and `oat-project-progress` report the quick-start record
 (and `oat-project-progress` the brief record) as recorded: status, disposition, `decided_at`, and `config_fingerprint` as
@@ -1239,8 +1252,8 @@ as a failed gate, never as a pass.
 
 How the skills handle that case differs:
 
-- `oat-project-implement`, `oat-project-lite`, and `oat-project-brief` keep it blocked whatever
-  `onFailure` says, so even a `warn` gate does not let them continue.
+- `oat-project-implement`, `oat-project-lite`, `oat-project-brief`, and
+  `oat-project-goal` keep it blocked whatever `onFailure` says, so even a `warn` gate does not let them continue.
 - `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan`
   apply your `onFailure` setting to any failed gate run, including one where no
   review happened. With `block`, they retry and then hand the problem to you,

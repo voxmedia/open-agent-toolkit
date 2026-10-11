@@ -92,7 +92,7 @@ choosing `Leave Unresolved` stops the run. A non-interactive run stops with
 needs your authorization, the skill asks once before any work; if you decline,
 it runs the phases inline in the current session instead.
 
-**Questions on the first run:** Except in a lite or brief project, the first run lists
+**Questions on the first run:** Except in a lite, brief, or goal project, the first run lists
 the plan's phases and asks which checkpoint behavior you want: stop after
 every phase (the default), after specific phases, or only after the final
 phase. Setting `workflow.hillCheckpointDefault` to `every` or `final` answers
@@ -100,8 +100,8 @@ this in advance. It then asks whether to run an extra lifecycle review
 automatically at each checkpoint, unless `workflow.autoReviewAtHillCheckpoints`
 is set. Both answers are written to `plan.md` and are not asked again when you
 resume. A lite project has no checkpoints and skips both questions. A brief
-project skips them too unless its `oat_plan_hill_phases` lists phases
-explicitly; for a brief, `[]` means no checkpoints.
+or goal project skips them too unless its `oat_plan_hill_phases` lists phases
+explicitly; for those modes, `[]` means no checkpoints.
 
 **Brief projects:** Each `## Phase pNN:` block in the brief is one
 phase-unit with Intent and Exit evidence instead of planned tasks. The root
@@ -112,6 +112,19 @@ work ends, a fresh reviewer reviews the anchored `Base..Head` range, and only
 the root writes `**Status:** completed` once review dispositions and selected
 gates settle. Progress and the next-phase decision count phase-units, never
 records.
+
+**Goal projects:** every brief rule above applies, and each run gets a scope
+from the router: the active milestone's ordered phase set, a recovery scope
+for an older delivery, or the terminal scope after the goal is declared met.
+Implement never widens a scope to another milestone's phases. When every phase
+in the milestone's scope is accepted, it runs the scoped milestone closeout:
+the implement exit gate, written to `oat_milestone_gates[mNN].exit`, then
+`oat_milestone_status: reviewing` and a hand-off to
+`oat-project-review-provide` with `code mNN: <ordered phase ids>`. It never
+activates a milestone, registers a delivery, or writes `declared_met`.
+Terminal closeout starts only after the declaration, and when delivery
+coverage already holds at the `pr` step's position it records that step as
+`satisfied_by: { pr: delivery-coverage }`.
 
 **What it does without asking:** After those questions, the run continues
 until a checkpoint, a blocker or the end of the plan without asking again,
