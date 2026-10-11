@@ -784,23 +784,33 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** c2865c3dc88d32c100173eeb507214d82e5cee87
-**Head:** (pending)
+**Head:** 38d84c1b5361559e2ffdbd55fe5f5650c476e5a1 (candidate head at review)
 **Executor:** phase-implementer:impl-p11-2535b029 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 413e9aca5
+
+- **Files changed:** `.agents/skills/oat-project-goal/SKILL.md` (new, `oat_gateable: true` :5; Steps 0–10; Project Log section :158 with structural entries :164–165; approval and `plan` carrier :470/:498/:502; activation :548; re-alignment :574; learnings write :585; declaration :613; "implement never declares" :641) plus two `references/docs/` symlinks; `brief-contract.md` section 12 from :314 (Milestones grammar verbatim from `state/milestones.ts` :322, seven reader codes :353, transitions :393, approval-evidence write order :423, nullable `reviewed_head` :453, ladder exception :460–463, explicit scopes :481, Scope-cell rule :494, delivery registry :523, bookkeeping-successor rule :577–617, terminal declaration :619, project log and learnings :684–705; the five p10 carry-overs at :680, :654, :560–562, :308, :613–617); `.agents/docs/autonomy-contract.md` GOAL-01..13 :179–191 and the eighteenth scan root :296; `frontmatter.ts:98` `GATE_AWARE_SKILLS`; `pack-manifest.ts:138`; `bundle-inputs.mjs:46`; `skill-docs.json`; `starting-projects.md`; generated `docs/skills/index.md`. Beyond the plan: `.agents/docs/gate-approval-record.md` (carrier catalog gains the milestone carriers) and `autonomy-gate-inventory.test.ts` root count 17 → 18 (as p05-t01 did for brief).
+- **Verification:** `oat:validate-skills`, `format:root`; gate resolve on a scratch goal project with the branch-built CLI: unconfigured → `not_configured`, configured → `configured`, project override → `configured_disabled_by_project`.
 
 ### Task p11-t02: Delivery registration, terminal delivery and review-loop owners
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f3485e001
+
+- **Files changed:** 15 skill and role files plus 131 project-scope projections (`.codex/agents`, `.cursor/agents`, `.oat/sync/manifest.json`, new `.claude/skills/oat-project-goal` link; user scope untouched). pr-progress Step 5.5 :357 (refresh :364, `delivery check` :367, stale evidence stops registration :371, older-milestone branch :379, idempotent registration :386, exit-gate capture :393, reciprocal links :395, `gh pr list` resume :402, log entry :409–411, recovery cleared :414); pr-final terminal delivery :189, no redundant PR :197, terminal scope :201, log entry :216; review-provide Step 3.0g :620 (explicit identity :627, exit gate first :638, pre-fan-in as member evidence :648, intervening changes disclosed :651, Scope cell `mNN`/`dNN` :1526, records `received` never `delivering` :1554, recovery → `receiving` :1557); review-receive goal branch :427 (queued fixes and invalidation :441, reads `exit.source`/`status: undeliverable` :447, active :455 / older :458 targets, clean receive :464 with tracked evidence before archival and set-once `exit_gate` in the same commit :474, `delivering` :477); reconcile :191/:211; revise :219/:226/:236; complete coverage decision :301 and goal routing of refusals :232; implement references (`plan-and-resume.md:27`, `completion-and-closeout.md:44–93`, `phase-execution.md:205`, :1222); brainstorm fold-back :767/:790/:170; autonomous goal excluded :308; roles `oat-phase-implementer.md:430`, `oat-reviewer.md:170`. The ladder exception and the bookkeeping-successor rule are stated only in `brief-contract.md`; skills cite its sections.
+- **Verification:** `oat:validate-skills`, `format:root`; `rg -n goal` evidence above; `sync --scope project` then `git status --short` showed only project-scope projections. Guards (branch-built CLI on a scratch goal project with real anchor commits): `goal-recovery-evidence` — stale d01 while m02 active: correct routes `implement closeout m01/d01` with m02 untouched, neutralized moves m02 to `reviewing` and later misroutes to closeout with p03 unfinished; revise on m01 adds `p-rev1` to m01 only, neutralized brief-style yields `phase-without-milestone` / router → `oat-project-goal`, neutralized global-pointer never schedules `p-rev1`; controls pass. `goal-explicit-review-scope` — neutralized `p01-p-rev1` through the real Step 3.0 resolver pulls in p03 from m02; correct context `code m01/d01: p01, p02, p-rev1` with p03's commit disclosed as intervening. `goal-registration-resume` — prose-only (pr-progress :402, brief-contract 12.7).
 
 ### Task p11-t03: Planning surfaces and summary recognize goal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 38d84c1b5
+
+- **Files changed:** plan-writing :567/:680, plan :33/:176, next routing table :322, progress (milestone gates beside the brief gate :218, per-milestone counts :379), summary goal fingerprint fragment :321–340 (bash helper smoke-tested: emits d01 and d03 at endpoint, skips d02), document brief/goal branch :220, discover :111, capture :32, oat-docs :178, pjm-review-backlog :259, wave-execute :204, `autonomy-contract.md` (two prompt sites re-keyed by p11-t02; p10-t04 had none outstanding). Commit body justifies every remaining brief-only line.
+- **Verification:** `autonomy-gate-inventory.test.ts` 5/5; `oat:validate-skills`, `format:root`, root oxlint, markdownlint on the two docs pages, `docs:skills:check` pass; 79 of 82 files / 2,288 of 2,291 tests green. Expected-red inventory (deferred to p12-t01): `skills.test.ts:8696` implementer mode-list pin (and :8725 behind it; :8674 still passes on substring), `named-skill-load-contract.test.ts:3220` 38 unclassified goal sentences (9 in `oat-project-goal`, 5 in `brief-contract.md`, 2 in `oat-project-autonomous/references/gate-inventory.md`), `review-skill-contracts.test.ts:4719` pins next's "applies identically to … and `brief`" sentence; `check:skill-bumps` until p12-t05. Root re-ran `oat:validate-skills`, `format:root`, both builds, the four contract files (3 failed / 395 passed, exactly the three expected pins) and a project-scope sync dry-run ("No changes to apply"): tree clean.
+- **Implementer concerns carried to review and p12:** no persisted marker for pre-registration review staleness (router → review-receive → declines → review-provide, one extra hop); amendment commits pushed onto an open delivery's head branch would stale it (goal skill Step 8 item 5 says not to; p12-t02 probe to confirm); pr-final registers one terminal delivery per milestone while GitHub allows one PR per head/base; brainstorm promote-to-new-project does not offer goal (plan scoped fold-back only); scaffolded goal `state.md` comment still lists the mode set without goal (template, outside p11).
 
 ---
 
@@ -981,6 +991,7 @@ _- Outstanding Items_
 - Request ID: `impl-p11-2535b029` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
+- Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are design gaps recorded under p11-t03) at 38d84c1b5; p11 review follows
 
 <!-- orchestration-runs-end -->
 
