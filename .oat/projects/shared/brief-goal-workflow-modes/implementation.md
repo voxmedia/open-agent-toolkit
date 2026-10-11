@@ -208,3 +208,21 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+## Quick-start record (2026-10-10)
+
+- Design aligned with Astra (gpt-6-astra, high) in three delegated rounds: v1 ALIGNED WITH CHANGES (applied, design revision 3.1); v1.5 NOT ALIGNED, four items carried to the plan-revision review before p09.
+- Dispatch policy: frontier (`oat_dispatch_policy` in state.md); reviewer ladder complete; implementers and reviewers for this run are Claude Opus 5.5 at high effort.
+- Phase gate review: disabled (non-interactive; no selection recorded); Phase gate review remains disabled. Qualifying targets existed (claude-opus-5-5-high, codex-6-sol-xhigh, cursor variants) but no selection was recorded in autonomous planning.
+- Lifecycle gate posture: no `oat_skill_gate_overrides` map written (non-interactive); configured gates for oat-project-quick-start (plan artifact review, block, 2 attempts) and oat-project-implement (final code review, block, 2 attempts) stay in force.
+- HiLL: `oat_plan_hill_phases: ['p12']` (quick mode has no representation for none; `[]` would mean every phase). Under OAT_AUTONOMOUS the checkpoint auto-reviews and continues.
+- Operating rules from Thomas: self-approve the plan after review and gate; at a review cap run the complexity review, apply its recommendation, log and continue; open PRs, never merge.
+
+### Review Received: plan (artifact, gate)
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/artifact-plan-review-2026-10-11T014430Z.md
+
+**Findings:** Critical 0, High 0, Medium 0, Low 0. Gate run `3d1ca87b-c858-497a-b529-d73f88974327`, target `codex-6-sol-xhigh` (gpt-6.1-sol, xhigh), envelope `status: ok`, `receiveEligible: true`, reviewed baseline `3f164e0c0`. No artifact edits; plan artifact event recorded `passed`. Quick-start gate persisted in state.md as `allowed/passed`.
+
+**Plan artifact review ladder:** structured in-memory reviews by oat-reviewer (Claude Opus 5.5 high): initial (H1–H4, M1–M7, L1–L3), retry 1 (H1–H4, M1–M2, L1–L3), retry 2 (M1, L1–L3); retry bound exhausted; all findings applied (plan revisions 2–4). Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, applied in revision 2. Plan approved by Claude under Thomas's 2026-10-10 delegation (self-approve after review and gate).

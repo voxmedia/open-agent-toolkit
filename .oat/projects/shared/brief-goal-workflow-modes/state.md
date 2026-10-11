@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -80,6 +80,12 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 #   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
+oat_quick_start_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: '7ff1ada26ddd44c410c661e39b71c3434475a4182495c7421fb2af0bf53ffa45'
+  reviewed_head: 3f164e0c0b3eab49a048b78d6cd1824b3d88e12f
+  decided_at: '2026-10-11T01:48:04Z'
 # oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
 #   status: allowed # allowed | blocked
 #   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
@@ -91,7 +97,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T00:09:32.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-11T01:03:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-11T01:48:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

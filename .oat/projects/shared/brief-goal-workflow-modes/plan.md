@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-10-10
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p12'] # quick mode cannot express 'none'; [] would mean every phase. Final-phase checkpoint only; under OAT_AUTONOMOUS it auto-reviews and continues.
 oat_plan_parallel_groups: [['p02', 'p03', 'p04'], ['p05', 'p06', 'p07']] # groups of phases that run concurrently in worktrees
 oat_plan_source: quick # spec-driven | quick | imported | lite
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: brief-goal-workflow-modes
@@ -782,24 +782,25 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -             | auto       | -           |
-| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head | Invocation | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ---------- | ----------------- |
+| p01    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p02    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p03    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -                 |
+| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -             | auto       | -                 |
+| plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -             | gate       | codex-6-sol-xhigh |
+| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -             | -          | -                 |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
