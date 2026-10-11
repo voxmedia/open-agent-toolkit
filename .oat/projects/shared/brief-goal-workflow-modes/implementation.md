@@ -816,8 +816,11 @@ oat_generated: false
 
 ### Task p11-t04: (review) Active-milestone re-delivery, revise ownership row, terminal-delivery sharing and four prose gaps
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 80282f21b
+
+- **Files changed:** `oat-project-pr-progress/SKILL.md` Step 5.5 item 3a :386 (already-registered active-milestone delivery re-checked; one write clears the recovery record, sets `delivered`, refreshes `oat_pr_status`/`oat_pr_url`; registers and logs nothing; stale → item 3), item 4 only when no such delivery :399, item 8 untouched-rule limited to older deliveries :433 (H1); `brief-contract.md` 12.6 pr-progress row :518 (one-step clear-and-`delivered`), 12.3 `delivering → delivered` row :405 covers the registered case, new 12.3 row `delivered | delivering → implementing` owned by revise :403 with the 12.6 note :515 (M1; revise :235 unchanged), 12.7 "Shared members" bullet :555 and 12.9 one terminal delivery per milestone sharing the head branch's PR :674 (M2), 12.3 `delivered → aligning` row :406 (L4); `oat-project-pr-final/SKILL.md:208` shared member expected, :212 runs pr-progress steps 1–3 and 4–7 but never 3a (M2); `oat-project-complete/SKILL.md:403/:406` goal fragment and "brief or goal", :301 agreed-endpoint wording (L1, L2); `oat-brainstorm/SKILL.md:404/:513/:565/:874` and `references/destinations.md:125-126` goal in the promote list with the research-note arrival (L3); `oat-project-goal/SKILL.md:567` Step 7 item 1 writes `oat_phase_status: in_progress` and projects PR fields (L4); `oat-project-next/SKILL.md:340` row 4d (L5). No role or projected file changed; sync not re-run.
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p11-fix-1`; `oat:validate-skills`, `format:root`, `autonomy-gate-inventory.test.ts` 5/5, commit-paths exit 0; router probe with the branch-built CLI: S7 (`delivering`, registered open d01, no recovery) → `deliver m01`; S13 (plus recovery at `delivering`) → `deliver m01/d01`; after the 3a write → `realign m01` with activation waiting on d01 `merged`; the old item-8 behavior leaves `delivering` and would re-register. Root re-ran `oat:validate-skills` and `format:root`: exit 0; tree clean.
 
 ### Review Received: p11
 
@@ -1018,7 +1021,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are design gaps recorded under p11-t03) at 38d84c1b5; p11 review follows
-- Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` pending free disk, then round 2 on the fix range
+- Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` → 80282f21b (after Thomas freed disk to 32 GB); round 2 on the fix range follows
 
 <!-- orchestration-runs-end -->
 
