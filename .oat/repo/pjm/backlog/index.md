@@ -4,6 +4,20 @@
 
 ## Curated Overview
 
+- 2026-10-11: the `brief-goal-workflow-modes` project (lockstep 0.3.20; v1 as
+  [PR #361](https://github.com/voxmedia/open-agent-toolkit/pull/361), goal seam
+  stacked on it) closed
+  [BL-261011-fix-the-phase-commit-grep](archived/BL-261011-fix-the-phase-commit-grep.md)
+  and
+  [BL-261011-resolve-validate-plan-project](archived/BL-261011-resolve-validate-plan-project.md)
+  and filed six follow-ups: `BL-261011-add-brief-to-the-legacy`,
+  `BL-261011-route-a-standalone-out`, `BL-261011-persist-pre-registration`,
+  `BL-261011-guard-goal-brief-amendments`,
+  `BL-261011-re-project-oat-pr-status-from`, and
+  `BL-261011-automate-goal-phase-extraction`. The lifecycle-artifact
+  cleanup findings from the archived-project audit are planned as the
+  `artifact-cleanup` project rather than as backlog items.
+
 - 2026-10-10: Three CLI follow-ups are implemented in `feat/october-backlog-fixes`:
   [BL-260907-ignore-backslash-escaped — Ignore escaped emphasis in script references](archived/BL-260907-ignore-backslash-escaped.md),
   [BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends](archived/BL-260928-serialize-concurrent-agents-md.md),
