@@ -638,7 +638,7 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5
-**Head:** 17a996a2e35235a2fd4f2e4bf61eba763723a6a8
+**Head:** 611596345 (fix round 1; candidate head 17a996a2e35235a2fd4f2e4bf61eba763723a6a8 at review round 1)
 **Executor:** phase-implementer:impl-p09-16dc82a3 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p09-t01: Register `goal`, extraction parsing and goal state fields
@@ -656,6 +656,14 @@ oat_generated: false
 
 - **Files changed:** control-plane `recommender/router.ts` (+test; goal block after `getHillOverride`, before `getBriefUnitGuard`; `GOAL_ROUTES`; four-step priority, status table, recovery routes by missing evidence, explicit `mNN/dNN: ordered phases` contexts, `delivered` vs `at_endpoint`; approval = `plan.md` `oat_status: complete`; exit carriers must read `freshness: fresh`, null fails; registry integrated review counts only for its own artifact when its frozen scope covers every target phase), CLI `state/generate.ts` (+test); widened: `types.ts`, `project.ts`, `README.md` (goal-only `planParallelGroups` so the router can see the next dispatched group for the next-group-member-concrete check)
 - **Verification:** full control-plane vitest 270/270 (root re-ran: 270/270; CLI scoped 219/219); guard triples recorded by the implementer — `goal-activation-prerequisites` (6 refusals + pending carrier + activation after declaration all flip when neutralized; valid control `ready to activate`), `goal-recovery-evidence` (five sub-guards: exit-carrier, `fixes_completed`, exact artifact, registry scope coverage, recovery routing; clean receive → `pr-progress deliver m01/d01` with m02 untouched), A1, A3 (audit repair reasons `audit-phase-omitted`/`audit-outcome-omitted`/`audit-missing`; counts unchanged), B4 (merged endpoint blocks activation, `open` permits), placement (block moved after the brief guard misroutes both controls to implement; brief-guard tests unchanged), stage walk (each owner once; disabling implement's stage write repeats the route)
+
+### Task p09-t03: (review) Newest passed review wins over a stale registry entry; tolerant scope labels; normalized id lists
+
+**Status:** completed
+**Commit:** 611596345
+
+- **Files changed:** control-plane `recommender/router.ts` (+test: newest `code` row by label resolved first, registry disposition governs only when the artifact matches; Scope cell `<id>` or `<id>: …`; real-reader cycle test in both registry-disposition variants), `state/parser.ts` (+test: `normalizePhaseId` over recovery, delivery, integrated-review and carrier-subject lists)
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p09-fix-1`; control-plane build, full vitest 275/275, type-check (root re-ran: 275/275, exit 0); tree clean; re-review round 2 on the fix range (High converted)
 
 ### Review Received: p09
 
@@ -880,6 +888,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5, the plan-gate closeout; the dispatch-plan commit sits between base and the first task commit; p09-t01..t02 in the root checkout against design rev 4.0 / plan rev 5)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head 17a996a2e; commits ab17cbd35, 17a996a2e; concerns: two widened edits (router.ts one line in t01; `planParallelGroups` in t02), four design-gap decisions (table grammar, extracted goal-only, approval = plan complete, freshness null fails) flagged for review; parser drops a delivery without `delivery_id` and reads an unparseable recovery as null (p10 validation)
+- Review round 1 (rev-p09-6d0ca3c4, Fable 5.1 high at the frontier cap): 0/1/2/3; fix continuation `cont-brief-goal-workflow-modes-p09-fix-1` → 611596345; round 2 dispatched on the fix range
 
 <!-- orchestration-runs-end -->
 
