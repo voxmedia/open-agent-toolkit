@@ -484,8 +484,12 @@ oat_generated: false
 
 ## Phase 7: Review, record and closeout skills
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** 57a8858ca740372cb0824569d47606806f45842c
+**Head:** -
+**Executor:** phase-implementer:impl-p07-d224f8e5 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p07-t01: Review scope from anchors in review-provide
 
@@ -702,6 +706,12 @@ _- Outstanding Items_
 - Launch status: planned (base a4d7768d5ecf76482168e7bcdabf542c595d59d2, p05 closeout; the dispatch-plan commit sits between base and the first task commit; p06-t01..t03 in the root checkout after p05 closed at c86f8558c)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1969527b; commits 296a62f4e, b260b9063, d1969527b; concerns: manifest deferred to p08-t02, implement SKILL.md note relocated to plan-and-resume.md (entry-size pin), extra named-skill-load sentences for p08-t01, implementer-chosen record-ownership contract flagged for review
 - Review round 1 (rev-p06-dc4c4725, Fable 5.1 high at the frontier cap): 0/0/1/4; fix continuation `cont-brief-goal-workflow-modes-p06-fix-1` → e2fd29c93, 578e88b0c; round 2 (0/0/0/2 Low) passed; `cont-brief-goal-workflow-modes-p06-fix-2` → 1e2ff01dd; phase p06 closed at 1e2ff01dd
+
+#### Phase p07 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p07-d224f8e5` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base 57a8858ca740372cb0824569d47606806f45842c, p06 closeout; the dispatch-plan commit sits between base and the first task commit; p07-t01..t03 in the root checkout after p06 closed at 1e2ff01dd)
 
 <!-- orchestration-runs-end -->
 
