@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Bash
 metadata:
-  version: 1.1.7
+  version: 1.1.8
 ---
 
 # Dispatching OAT Project Subagents
