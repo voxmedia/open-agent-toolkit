@@ -1457,6 +1457,7 @@ describe('scaffoldProject', () => {
     { mode: 'quick' as const, hillCheckpoints: [], phase: 'discovery' },
     { mode: 'import' as const, hillCheckpoints: [], phase: 'plan' },
     { mode: 'lite' as const, hillCheckpoints: [], phase: 'plan' },
+    { mode: 'brief' as const, hillCheckpoints: [], phase: 'plan' },
   ])(
     'renders every real $mode scaffold artifact without unresolved OAT placeholders',
     async ({ mode, hillCheckpoints, phase }) => {
@@ -2023,6 +2024,71 @@ describe('scaffoldProject', () => {
     expect(state).toContain('- **Implementation:** `implementation.md`');
     expect(state).not.toContain('- **Discovery:**');
     expect(state).toContain('Run `oat-project-lite`');
+  });
+
+  it('creates brief mode artifacts from the brief templates with research references', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'brief-mode',
+      mode: 'brief',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    expect(result.createdFiles).toEqual([
+      'state.md',
+      'plan.md',
+      'implementation.md',
+    ]);
+    const projectRoot = join(repoRoot, result.projectPath);
+    for (const file of ['discovery.md', 'spec.md', 'design.md']) {
+      await expect(readFile(join(projectRoot, file), 'utf8')).rejects.toThrow();
+    }
+    await expect(
+      readFile(join(projectRoot, 'references', 'research', '.gitkeep'), 'utf8'),
+    ).resolves.toBe('');
+    for (const dir of ['reviews', 'pr']) {
+      expect((await stat(join(projectRoot, dir))).isDirectory()).toBe(true);
+    }
+
+    const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    const stateFrontmatter = parseFrontmatter(state);
+    expect(stateFrontmatter.oat_workflow_mode).toBe('brief');
+    expect(stateFrontmatter.oat_phase).toBe('plan');
+    expect(stateFrontmatter.oat_phase_status).toBe('in_progress');
+    expect(stateFrontmatter.oat_hill_checkpoints).toEqual([]);
+    expect(stateFrontmatter.oat_template).toBeUndefined();
+    expect(state).toContain('- **Plan:** `plan.md`');
+    expect(state).toContain('- **Research:** `references/research/`');
+    expect(state).not.toContain('- **Discovery:**');
+    expect(state).toContain('Run `oat-project-brief`');
+
+    const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
+    const planFrontmatter = parseFrontmatter(plan);
+    expect(planFrontmatter.oat_template).toBe(true);
+    expect(planFrontmatter.oat_template_name).toBeUndefined();
+    expect(planFrontmatter.oat_plan_source).toBe('brief');
+    expect(planFrontmatter.oat_plan_hill_phases).toEqual([]);
+    expect(plan).toContain('# Project Brief: brief-mode');
+    expect(plan).toMatch(
+      /^## Phase p01: .+\n\n\*\*Intent:\*\* .+\n\*\*Exit evidence:\*\* .+\n\*\*Provisional:\*\* no$/m,
+    );
+
+    const implementation = await readFile(
+      join(projectRoot, 'implementation.md'),
+      'utf8',
+    );
+    const implementationFrontmatter = parseFrontmatter(implementation);
+    expect(implementationFrontmatter.oat_current_task_id).toBe('p01');
+    expect(implementationFrontmatter.oat_template).toBeUndefined();
+    expect(implementation).toContain('# Implementation: brief-mode');
+    expect(implementation).toMatch(
+      /^## Phase p01: .+\n\n\*\*Status:\*\* pending$/m,
+    );
   });
 
   it.each([
