@@ -34,6 +34,7 @@ export async function acquireAgentsMdAppendLock(
       ) {
         throw new Error(
           `AGENTS.md append lock could not be acquired. ${recovery}`,
+          { cause: error },
         );
       }
       // Never steal, truncate, or follow a contender's lock, including stale locks.
@@ -45,7 +46,7 @@ export async function acquireAgentsMdAppendLock(
         );
         const stat = await reader.stat();
         if (!stat.isFile() || stat.nlink !== 1 || stat.size > 4096)
-          throw new Error('Unsafe lock');
+          throw new Error('Unsafe lock', { cause: error });
         const content = await reader.readFile('utf8');
         if (content === '' && attempt < 39) {
           await delay(25);
@@ -58,16 +59,17 @@ export async function acquireAgentsMdAppendLock(
           !Number.isSafeInteger(owner.pid) ||
           owner.pid <= 0
         )
-          throw new Error('Malformed lock');
-      } catch (error) {
+          throw new Error('Malformed lock', { cause: error });
+      } catch (inspectionError) {
         if (
-          error instanceof Error &&
-          'code' in error &&
-          error.code === 'ENOENT'
+          inspectionError instanceof Error &&
+          'code' in inspectionError &&
+          inspectionError.code === 'ENOENT'
         )
           continue;
         throw new Error(
           `AGENTS.md append lock is unsafe or malformed. ${recovery}`,
+          { cause: inspectionError },
         );
       } finally {
         await reader?.close();
