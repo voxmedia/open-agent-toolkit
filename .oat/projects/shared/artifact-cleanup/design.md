@@ -533,6 +533,13 @@ projection, archive retry and generation contract, phase ownership, control
 recipes, documentation inventory. Left to the plan: the exact expected-red
 list and the per-phase gate commands.
 
+## Alignment notes (plan review round 1, no design re-review)
+
+- Writer inventory: `oat-project-complete-auto` (exception block), `oat-project-reconcile` (session entry), `oat-worktree-bootstrap-auto` (baseline warning) and `oat-project-dispatch-subagents` (the caller's run-record instruction) also write the journal and join the phase-2 writer task; their destinations are `## Deviations from Plan / Design` (complete-auto, bootstrap), the owning phase section or `## Deviations from Plan / Design` (reconcile), and the `## Orchestration Runs` run line (dispatch adapter).
+- Summary section: the `summary.md` template never contains `## Workflow Observations`; the CLI appends it, and `writeSummarySection` gains an `omitted` outcome that removes an empty section and never creates one. The template's `## Autonomous Execution Learnings` comment carries the category rule.
+- Outstanding Items (excluded parallel phases, unmerged worktrees) move to lines under `## Deferred Findings`; the `orchestration-runs-start/end` markers stay.
+- Locator token: `oat-project:<slug>#<entry-id>`, never a Markdown link; rewritten to the archive identity at export (phase 3). Override line: `**Override:** <code> · **Authorized by:** <decision id> · **Scope:** <pNN-tNN|pNN> · <reason>` under `## Deviations from Plan / Design`. Staged summary signal: `staged: true` / `resume: roll-up` between complete and the summary skill. D12 writer: complete writes `oat_pr_status_observed_at` before archive.
+
 ## References
 
 - `discovery.md` (D1–D14, success criteria); `references/astra-design-round-{1,2}.md`
