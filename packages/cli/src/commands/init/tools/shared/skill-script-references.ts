@@ -132,7 +132,8 @@ function readReferenceToken(line: string, from: number): string {
  *
  * `null` rejects the match outright for `myrepo_.oat/scripts/x.sh`, where the
  * underscore is glued to an identifier. The identifier test is Unicode-aware so
- * `café_.oat/scripts/x.sh` is rejected too.
+ * `café_.oat/scripts/x.sh` is rejected too. An odd backslash run before
+ * the opening emphasis escapes it; an even run preserves the delimiter.
  */
 function readOpeningEmphasis(line: string, at: number): OpeningEmphasis | null {
   let start = at;
@@ -145,6 +146,12 @@ function readOpeningEmphasis(line: string, at: number): OpeningEmphasis | null {
 
   const preceding = start > 0 ? line[start - 1]! : '';
   if (IDENTIFIER_CHARACTER.test(preceding)) return null;
+
+  let backslashStart = start;
+  while (backslashStart > 0 && line[backslashStart - 1] === '\\') {
+    backslashStart -= 1;
+  }
+  if ((start - backslashStart) % 2 === 1) return null;
 
   return {
     asterisks: run.split('').filter((char) => char === '*').length,

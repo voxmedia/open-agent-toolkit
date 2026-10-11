@@ -71,6 +71,28 @@ oat project log append \
 Structural entries require `--structural`, `--producer`, `--ref`, and `--body`.
 Do not combine structural flags with judgment flags.
 
+### Preview an append
+
+Validate an entry against the current project state before appending it:
+
+```bash
+oat project log append --dry-run \
+  --project .oat/projects/shared/example \
+  --type friction --scope project --area "gate review handoff" \
+  --body "The gate passed but the handoff was missing, so review receipt stopped."
+```
+
+The preview reports whether it would append, create the log, recognize a replay,
+or skip a disabled missing log. It writes no files, acquires no locks, and makes
+no Git changes. `--dry-run --commit` also validates an existing recovery receipt
+without committing or removing it. A would-create preview checks compatible
+bundled assets and validates the template in memory; an existing log does not
+need assets. Sealed logs and invalid entries retain normal append diagnostics.
+
+This is advisory validation of current state. It reserves nothing and does not
+guarantee later permissions, disk space, hook success, or the absence of other
+writers. A normal append validates again under its required lock.
+
 ### Idempotent append and commit
 
 Two optional flags let an interrupted append be replayed safely:

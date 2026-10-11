@@ -18,6 +18,13 @@ This index records selection and ordering. It is not an executable plan or an
 at the SHA above, with fetched origin/main and merge-base equal to that SHA.
 The worktree was clean before plan writes.
 
+## Implementation update — 2026-10-10
+
+All three selected capabilities are implemented on `feat/october-backlog-fixes`
+and their source items are archived in this PR. The selection evidence below
+records the original planning state. Independent review, merge, and publication
+remain pending; the individual plans retain their authored provenance.
+
 ## Selection and review coverage
 
 Only the three operator-approved OAT items were considered. All are open,
@@ -42,11 +49,11 @@ later creation, recorded above.
 
 ## Recommended order
 
-| Order | Plan                                                                                    | Source item                                                                                                     | Depends on | Tracking and rationale                                                                                                       |
-| ----- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1     | [Ignore escaped emphasis](./2026-10-10-ignore-escaped-emphasis-in-script-references.md) | [BL-260907-ignore-backslash-escaped](../../pjm/backlog/items/BL-260907-ignore-backslash-escaped.md)             | None       | Smallest bounded false-positive fix.                                                                                         |
-| 2     | [Serialize guidance appends](./2026-10-10-serialize-agents-md-guidance-appends.md)      | [BL-260928-serialize-concurrent-agents-md](../../pjm/backlog/items/BL-260928-serialize-concurrent-agents-md.md) | None       | Independent target; retain all filesystem defenses.                                                                          |
-| 3     | [Preview log appends](./2026-10-10-preview-project-log-appends-without-side-effects.md) | [BL-260927-add-a-side-effect-free-dry-run](../../pjm/backlog/items/BL-260927-add-a-side-effect-free-dry-run.md) | None       | Existing [issue #314](https://github.com/voxmedia/open-agent-toolkit/issues/314); shared validation and zero-write boundary. |
+| Order | Plan                                                                                    | Source item                                                                                                        | Depends on | Tracking and rationale                                                                                                       |
+| ----- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1     | [Ignore escaped emphasis](./2026-10-10-ignore-escaped-emphasis-in-script-references.md) | [BL-260907-ignore-backslash-escaped](../../pjm/backlog/archived/BL-260907-ignore-backslash-escaped.md)             | None       | Smallest bounded false-positive fix.                                                                                         |
+| 2     | [Serialize guidance appends](./2026-10-10-serialize-agents-md-guidance-appends.md)      | [BL-260928-serialize-concurrent-agents-md](../../pjm/backlog/archived/BL-260928-serialize-concurrent-agents-md.md) | None       | Independent target; retain all filesystem defenses.                                                                          |
+| 3     | [Preview log appends](./2026-10-10-preview-project-log-appends-without-side-effects.md) | [BL-260927-add-a-side-effect-free-dry-run](../../pjm/backlog/archived/BL-260927-add-a-side-effect-free-dry-run.md) | None       | Existing [issue #314](https://github.com/voxmedia/open-agent-toolkit/issues/314); shared validation and zero-write boundary. |
 
 ## Dependency notes
 

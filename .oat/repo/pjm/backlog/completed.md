@@ -8,6 +8,9 @@
 
 ## Completed Items
 
+- 2026-10-11 — BL-260927-add-a-side-effect-free-dry-run — Add a side-effect-free dry run to oat project log append — Preview project-log appends and commit recovery without log, lock, receipt, or Git mutations; retain conditional validation parity.
+- 2026-10-11 — BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends — Serialize cooperating guidance appenders across processes; reclassify under an owned target lock while retaining append-only identity and link protections.
+- 2026-10-11 — BL-260907-ignore-backslash-escaped — Ignore backslash-escaped emphasis in skill-script reference extraction — Ignore odd-backslash escaped script emphasis while preserving even-backslash and genuine missing references.
 - 2026-10-05 — BL-261003-leave-backlog-archive-staging — Leave backlog archive staging to callers and report complete result paths — Keep backlog archive staging-neutral and report the complete operation path set to the owning helper caller.
 - 2026-10-05 — BL-261003-preserve-documented-structured — Preserve documented structured blockers in project status output — Preserve structured blocker fields for JSON consumers while keeping legacy strings and malformed entries visible.
 - 2026-10-05 — BL-261003-require-proportional — Require proportional adversarial probes at changed review boundaries — Require credible proportional changed-boundary probes and accepted controls with honest execution limits.

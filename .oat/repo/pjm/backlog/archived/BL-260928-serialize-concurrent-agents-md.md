@@ -1,7 +1,7 @@
 ---
 id: BL-260928-serialize-concurrent-agents-md
 title: Serialize concurrent AGENTS.md guidance appends
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - concurrency
 assignee: null
 created: 2026-09-28T10:16:22.956Z
-updated: 2026-10-11T00:17:45Z
+updated: '2026-10-11T03:14:20Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-10-10-serialize-agents-md-guidance-appends.md

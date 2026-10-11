@@ -1,6 +1,14 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { hostname, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -9,6 +17,8 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import { resolveAssetsRoot } from '@fs/assets';
+import { OAT_VERSION } from '@shared/oat-version';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -20,6 +30,7 @@ import {
   ProjectLogSealedError,
   type AppendProjectLogDependencies,
   type GateProjectLogReceipt,
+  type ProjectLogAppendCommandDependencies,
 } from './append';
 import { createProjectLogCommand } from './index';
 
@@ -33,7 +44,11 @@ interface Harness {
   command: Command;
 }
 
-function createHarness(cwd: string, stdin = ''): Harness {
+function createHarness(
+  cwd: string,
+  stdin = '',
+  overrides: Partial<ProjectLogAppendCommandDependencies> = {},
+): Harness {
   const capture = createLoggerCapture();
   return {
     capture,
@@ -52,6 +67,7 @@ function createHarness(cwd: string, stdin = ''): Harness {
       resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
       readStdin: async () => stdin,
       now: () => new Date('2026-07-17T12:00:00.000Z'),
+      ...overrides,
     }),
   };
 }
@@ -124,6 +140,286 @@ describe('oat project log append', () => {
     '--body',
     'The gate returned the wrong exit code.',
   ];
+
+  // Semantic filesystem/Git snapshots include ignored receipts and config;
+  // tripwires additionally detect transient writes that a final snapshot misses.
+  async function snapshot(root: string): Promise<unknown> {
+    const files: Record<string, string> = {};
+    async function visit(directory: string, prefix = ''): Promise<void> {
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        if (entry.name === '.git') continue;
+        const name = join(prefix, entry.name);
+        if (entry.isDirectory()) await visit(join(directory, entry.name), name);
+        else
+          files[name] = (await readFile(join(directory, entry.name))).toString(
+            'base64',
+          );
+      }
+    }
+    await visit(root);
+    const git = (args: string[]) =>
+      execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+    return {
+      files,
+      head: git(['rev-parse', 'HEAD']),
+      staged: git(['diff', '--cached']),
+      status: git(['status', '--porcelain', '--untracked-files=all']),
+    };
+  }
+
+  function readOnlyTripwires() {
+    const writeLog = vi.fn(async () => {
+      throw new Error('Preview attempted log write');
+    });
+    const appendLog = vi.fn(async () => {
+      throw new Error('Preview attempted log append');
+    });
+    const now = vi.fn(() => {
+      throw new Error('Preview attempted lock acquisition');
+    });
+    const sleep = vi.fn(async () => {
+      throw new Error('Preview waited for a lock');
+    });
+    return { writeLog, appendLog, lock: { now, sleep, waitMs: 1 } };
+  }
+
+  it.each([
+    { existing: false, foreignLock: false },
+    { existing: true, foreignLock: false },
+    { existing: false, foreignLock: true },
+    { existing: true, foreignLock: true },
+  ])(
+    'previews existing=$existing foreignLock=$foreignLock with zero writes or locks',
+    async ({ existing, foreignLock }) => {
+      const { root, projectPath, logPath } = await createRepo();
+      if (existing) await seedLog(logPath);
+      await writeFile(join(root, '.gitignore'), 'gate-receipts/\n');
+      await mkdir(join(projectPath, 'gate-receipts'));
+      await writeFile(
+        join(projectPath, 'gate-receipts', 'ignored.json'),
+        '{"fixture":true}',
+      );
+      const git = initGitRepo(root);
+      await writeFile(join(root, 'staged.txt'), 'staged unrelated bytes');
+      git(['add', 'staged.txt']);
+      const lockPath = projectLogLockPath(logPath);
+      const lockBytes = JSON.stringify({
+        token: 'fixture-foreign-token',
+        pid: process.pid,
+        host: hostname(),
+        acquiredAt: new Date().toISOString(),
+      });
+      let ownedIdentity: Awaited<ReturnType<typeof lstat>> | undefined;
+      if (foreignLock) {
+        await mkdir(dirname(lockPath), { recursive: true });
+        await writeFile(lockPath, lockBytes, { flag: 'wx' });
+        ownedIdentity = await lstat(lockPath);
+      }
+      const before = await snapshot(root);
+      const tripwires = readOnlyTripwires();
+      const { command, capture } = createHarness(root, '', tripwires);
+      try {
+        await runCommand(command, [...judgmentArgs, '--dry-run']);
+        expect(tripwires.lock.now).not.toHaveBeenCalled();
+        expect(tripwires.lock.sleep).not.toHaveBeenCalled();
+        expect(tripwires.writeLog).not.toHaveBeenCalled();
+        expect(tripwires.appendLog).not.toHaveBeenCalled();
+        expect(capture.jsonPayloads[0]).toEqual({
+          status: 'dry-run',
+          outcome: 'append',
+          logPath,
+          heading: '### 2026-07-17 · project · bug · gate review',
+          wouldAppend: true,
+          wouldCreate: !existing,
+        });
+        expect(process.exitCode).toBe(0);
+        expect(await snapshot(root)).toEqual(before);
+        if (foreignLock) {
+          expect(await readFile(lockPath, 'utf8')).toBe(lockBytes);
+          expect((await lstat(lockPath)).ino).toBe(ownedIdentity!.ino);
+        } else
+          await expect(lstat(lockPath)).rejects.toMatchObject({
+            code: 'ENOENT',
+          });
+      } finally {
+        if (ownedIdentity) {
+          const current = await lstat(lockPath);
+          if (
+            current.ino === ownedIdentity.ino &&
+            current.dev === ownedIdentity.dev &&
+            (await readFile(lockPath, 'utf8')) === lockBytes
+          )
+            await rm(lockPath);
+        }
+      }
+    },
+  );
+
+  it.each([false, true])(
+    'validates real would-create assets in dry-run=%s',
+    async (dryRun) => {
+      for (const version of ['0.0.0-preview-mismatch', OAT_VERSION]) {
+        const { root, logPath } = await createRepo();
+        const bundle = await mkdtemp(join(tmpdir(), 'oat-preview-assets-'));
+        tempDirs.push(bundle);
+        // Producer's required directory contract, independent of append preparation.
+        for (const directory of [
+          'skills',
+          'agents',
+          'templates',
+          'scripts',
+          'docs',
+          'migration',
+          'config',
+        ])
+          await mkdir(join(bundle, directory));
+        await writeFile(
+          join(bundle, 'bundle-metadata.json'),
+          JSON.stringify({ schemaVersion: 1, oatVersion: version }),
+        );
+        await writeFile(
+          join(bundle, 'templates', 'project-log.md'),
+          await readFile(
+            join(CANONICAL_ASSETS_ROOT, 'templates', 'project-log.md'),
+          ),
+        );
+        initGitRepo(root);
+        const before = await snapshot(root);
+        const { command, capture } = createHarness(root, '', {
+          resolveAssetsRoot: () =>
+            resolveAssetsRoot({ OAT_ASSETS_DIR: bundle }),
+          ...(dryRun ? readOnlyTripwires() : {}),
+        });
+        await runCommand(command, [
+          ...judgmentArgs,
+          ...(dryRun ? ['--dry-run'] : []),
+        ]);
+        if (version !== OAT_VERSION) {
+          expect(capture.jsonPayloads[0]).toMatchObject({
+            status: 'error',
+            message: expect.stringContaining(
+              `Bundled assets version mismatch: CLI ${OAT_VERSION}, assets 0.0.0-preview-mismatch.`,
+            ),
+          });
+          expect(process.exitCode).toBe(1);
+          expect(await snapshot(root)).toEqual(before);
+        } else {
+          expect(capture.jsonPayloads[0]).toMatchObject(
+            dryRun
+              ? { status: 'dry-run', wouldCreate: true }
+              : { status: 'appended', created: true },
+          );
+          expect(process.exitCode).toBe(0);
+          if (dryRun) expect(await snapshot(root)).toEqual(before);
+          else
+            expect(await readFile(logPath, 'utf8')).toContain(
+              'The gate returned the wrong exit code.',
+            );
+        }
+      }
+    },
+  );
+
+  it.each([false, true])(
+    'does not resolve assets for an existing unsealed log in dry-run=%s',
+    async (dryRun) => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const resolver = vi.fn(async (): Promise<string> => {
+        throw new Error('Existing log loaded assets');
+      });
+      const { command, capture } = createHarness(root, '', {
+        resolveAssetsRoot: resolver,
+      });
+      await runCommand(command, [
+        ...judgmentArgs,
+        ...(dryRun ? ['--dry-run'] : []),
+      ]);
+      expect(resolver).not.toHaveBeenCalled();
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: dryRun ? 'dry-run' : 'appended',
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('previews disabled missing-log skip before entry or assets validation', async () => {
+    const { root } = await createRepo();
+    await writeFile(
+      join(root, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: { projectLog: false },
+      }),
+    );
+    initGitRepo(root);
+    const before = await snapshot(root);
+    const tripwires = readOnlyTripwires();
+    const { command, capture } = createHarness(root, '', {
+      ...tripwires,
+      resolveAssetsRoot: async () => {
+        throw new Error('Skipped preview resolved assets');
+      },
+    });
+    await runCommand(command, ['--dry-run']);
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'dry-run',
+      outcome: 'skipped',
+      reason: 'projectLog=false',
+      wouldAppend: false,
+      wouldCreate: false,
+    });
+    expect(process.exitCode).toBe(0);
+    expect(await snapshot(root)).toEqual(before);
+    expect(tripwires.lock.now).not.toHaveBeenCalled();
+  });
+
+  it('validates a would-create template without writing an ambiguous project title', async () => {
+    const { root } = await createRepo('demo\u2028## Notes');
+    initGitRepo(root);
+    const before = await snapshot(root);
+    const { command, capture } = createHarness(root, '', readOnlyTripwires());
+    await runCommand(command, [...judgmentArgs, '--dry-run']);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('would put a'),
+    });
+    expect(process.exitCode).toBe(1);
+    expect(await snapshot(root)).toEqual(before);
+  });
+
+  it('reports CRLF normalization in the JSON preview without creating a log', async () => {
+    const { root, logPath } = await createRepo();
+    const { command, capture } = createHarness(
+      root,
+      'First line.\r\nSecond line.',
+    );
+    await runCommand(command, [...judgmentArgs.slice(0, -1), '-', '--dry-run']);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'dry-run',
+      normalizedLineEndings: true,
+    });
+    await expect(readFile(logPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports normalized stdin and no changes in human preview output', async () => {
+    const { root } = await createRepo();
+    const { command, capture } = createHarness(
+      root,
+      'First line.\r\nSecond line.',
+    );
+    await runCommand(
+      command,
+      [...judgmentArgs.slice(0, -1), '-', '--dry-run'],
+      [],
+    );
+    expect(capture.success.join(' ')).toMatch(
+      /Would append.*No changes were made/,
+    );
+    expect(process.exitCode).toBe(0);
+  });
 
   it('creates from the template on first append under auto', async () => {
     const { root, logPath } = await createRepo();
@@ -714,6 +1010,22 @@ describe('oat project log append', () => {
       await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
       expect(countSeals(before)).toBe(1);
       expect(process.exitCode).toBe(0);
+    });
+
+    it('refuses a preview onto a sealed log with identical diagnostic and zero writes', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath, sealedLogEntries(true));
+      initGitRepo(root);
+      const before = await snapshot(root);
+      const { command, capture } = createHarness(root, '', readOnlyTripwires());
+      await runCommand(command, [...judgmentArgs, '--dry-run']);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'sealed',
+        logPath,
+        heading: SEAL_HEADING,
+      });
+      expect(process.exitCode).toBe(1);
+      expect(await snapshot(root)).toEqual(before);
     });
 
     it('refuses a judgment append onto a sealed log', async () => {
@@ -2651,6 +2963,67 @@ describe('oat project log append', () => {
       );
       return { receiptPath, artifactPath: join(root, artifactRelativePath) };
     }
+
+    it.each([false, true])(
+      'previews commit recovery replay=%s without settling its receipt or Git state',
+      async (replay) => {
+        const { root, logPath } = await createRepo();
+        await seedLog(
+          logPath,
+          replay
+            ? `\n### 2026-07-17 · structural · oat gate review · p02\n\ngate finalization run=${key}\n\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed.\n`
+            : '',
+        );
+        initGitRepo(root);
+        const { receiptPath } = await writeReceipt(root);
+        const before = await snapshot(root);
+        const tripwires = readOnlyTripwires();
+        const { command, capture } = createHarness(root, '', tripwires);
+        await runCommand(command, [
+          ...structuralArgs(key),
+          '--idempotency-key',
+          key,
+          '--commit',
+          '--dry-run',
+        ]);
+        expect(tripwires.lock.now).not.toHaveBeenCalled();
+        expect(tripwires.writeLog).not.toHaveBeenCalled();
+        expect(tripwires.appendLog).not.toHaveBeenCalled();
+        expect(capture.jsonPayloads[0]).toEqual({
+          status: 'dry-run',
+          outcome: replay ? 'already-appended' : 'append',
+          logPath,
+          heading: '### 2026-07-17 · structural · oat gate review · p02',
+          wouldAppend: !replay,
+          wouldCreate: false,
+          receipt: { path: receiptPath, removed: false },
+        });
+        expect(process.exitCode).toBe(0);
+        expect(await snapshot(root)).toEqual(before);
+      },
+    );
+
+    it('retains commit-mode receipt mismatch diagnostics during preview', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      initGitRepo(root);
+      await writeReceipt(root, { producer: 'different producer' });
+      const before = await snapshot(root);
+      const { command, capture } = createHarness(root, '', readOnlyTripwires());
+      await runCommand(command, [
+        ...structuralArgs(key),
+        '--idempotency-key',
+        key,
+        '--commit',
+        '--dry-run',
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        type: 'gate-project-log-receipt-mismatch',
+      });
+      expect(process.exitCode).toBe(1);
+      expect(await snapshot(root)).toEqual(before);
+    });
 
     it('completes finalization and removes the receipt', async () => {
       const { root, logPath } = await createRepo();
