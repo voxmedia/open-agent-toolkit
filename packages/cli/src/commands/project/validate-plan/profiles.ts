@@ -2,6 +2,7 @@ import {
   isBriefMode,
   parseProvisionalPhaseIds,
   parseTaskProgress,
+  recordLineMask,
   type WorkflowMode,
 } from '@open-agent-toolkit/control-plane';
 
@@ -195,59 +196,11 @@ export function extractPhaseIds(
 // brief profile
 // ---------------------------------------------------------------------------
 
-const TAB_WIDTH = 4;
-const INDENTED_CODE_COLUMNS = 4;
-
 /**
- * For each line, whether it is a record line: fence lines, fenced content
- * and indented code are not, mirroring the control-plane reader that
- * phase-unit progress and quick plan readiness use, so a fenced example
- * phase block never validates, fails or migrates a real plan.
+ * Plan record lines, through the control-plane reader that phase-unit
+ * progress and quick plan readiness use, so a fenced example phase block
+ * never validates or fails a real plan.
  */
-export function recordLineMask(lines: readonly string[]): boolean[] {
-  const mask: boolean[] = [];
-  let fenceMarker: string | null = null;
-  let fenceLength = 0;
-
-  for (const line of lines) {
-    let columns = 0;
-    let index = 0;
-    for (; index < line.length; index += 1) {
-      const character = line[index];
-      if (character === ' ') columns += 1;
-      else if (character === '\t') columns += TAB_WIDTH - (columns % TAB_WIDTH);
-      else break;
-    }
-    const rest = line.slice(index);
-
-    if (rest.startsWith('```') || rest.startsWith('~~~')) {
-      if (columns < INDENTED_CODE_COLUMNS) {
-        const marker = rest[0] ?? '';
-        let length = 0;
-        while (rest[length] === marker) length += 1;
-        const info = rest.slice(length);
-        if (fenceMarker == null) {
-          fenceMarker = marker;
-          fenceLength = length;
-        } else if (
-          marker === fenceMarker &&
-          length >= fenceLength &&
-          /^[ \t\r\f\v]*$/.test(info)
-        ) {
-          fenceMarker = null;
-          fenceLength = 0;
-        }
-      }
-      mask.push(false);
-      continue;
-    }
-
-    mask.push(fenceMarker == null && columns < INDENTED_CODE_COLUMNS);
-  }
-
-  return mask;
-}
-
 function recordLines(content: string): string[] {
   const lines = content.split('\n');
   const mask = recordLineMask(lines);

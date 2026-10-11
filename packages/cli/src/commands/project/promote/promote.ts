@@ -20,10 +20,7 @@ import {
   type PushResult,
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
-import {
-  parsePhaseHeadingLine,
-  recordLineMask,
-} from '@commands/project/validate-plan/profiles';
+import { parsePhaseHeadingLine } from '@commands/project/validate-plan/profiles';
 import {
   commitExactPaths,
   type ExactPathCommitResult,
@@ -40,6 +37,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import {
   parsePhaseMarkers,
   parseTaskProgress,
+  recordLineMask,
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import YAML from 'yaml';
