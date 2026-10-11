@@ -484,11 +484,12 @@ oat_generated: false
 
 ## Phase 7: Review, record and closeout skills
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
+**Completed:** 2026-10-11
 
 **Base:** 57a8858ca740372cb0824569d47606806f45842c
-**Head:** d1e2a93c1f080f7399aa7768af9c3417e526550c
+**Head:** b65dbad794dfd041bc16a1091d084876d84e335f (fix round 1; candidate head d1e2a93c1f080f7399aa7768af9c3417e526550c at review)
 **Executor:** phase-implementer:impl-p07-d224f8e5 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p07-t01: Review scope from anchors in review-provide
@@ -515,6 +516,14 @@ oat_generated: false
 - **Files changed:** summary (:25, :123 one accepted phase-unit prerequisite; :140 brief source table; :255-318 fingerprint fragment, invariant under whitespace and Intent edits, changes on acceptance, review rows, Outcomes; :495 frontmatter, `oat_summary_last_task` omitted), pr-progress (:158 scope from anchors; artifact set), pr-final (:32 summary required as in quick; :183 reduced-assurance note names the brief; :287 sources), revise (:202 `p-revN` with Intent and Exit evidence, no tasks; :236 pointer and journal section), complete (:393 staleness by fingerprint; archive References brief set), document (:220 brief artifact set), oat-brainstorm/SKILL.md (:404, :513 promote offers brief; :555 brief promote branch; :616-617 fold-back to `plan.md`, import fallback; :764-775 handoff rows), references/destinations.md (:125-126, :135, :166-172 lite/import/brief rows)
 - **Verification:** validate-skills, format:root; read-through recorded above; scoped vitest 1289 passed / 4 failed, all expected reds; root re-ran validate-skills, format:root and the three pin suites (355/358, exactly the expected reds), tree clean
 
+### Task p07-t04: (review) Review-provide label format, continuity notes and the brainstorm checklist
+
+**Status:** completed
+**Commit:** b65dbad79
+
+- **Files changed:** oat-project-review-provide/SKILL.md (:364 and :532 labels `(pNN-` or `(prevN-` listed as `p-revN`; :570 resolver checks fork base and member-head order only, merge-commit property not enforced because step 7 may cherry-pick; :573 single member after fan-in resolves to `fork..<its integration head>` and carries earlier siblings' commits, prefer `pNN-pMM` or the pre-fan-in range, list siblings as context); oat-brainstorm/SKILL.md (:849 promotion writes discovery.md for quick/spec-driven, plan.md for lite, a references/research note for brief, never design.md). `brief_resolve_anchors` unchanged (hash-identical).
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p07-fix-1`; validate-skills, format:root, inventory 5/5 exit 0 (root re-ran all three); no re-key; tree clean; no re-review (Low-only on a passing review)
+
 ### Review Received: p07
 
 **Date:** 2026-10-11
@@ -529,6 +538,8 @@ oat_generated: false
 - L4 brainstorm success-criteria bullet contradicts the brief promote branch → converted: p07-t04 (Negligible).
 
 **New tasks added:** p07-t04 (same handle, fix mode; no re-review round for a passing review per Step 7b; root verifies the prose).
+
+**Disposition:** passed at b65dbad79; artifact archived at reviews/archived/p07-review-2026-10-11T060048Z.md.
 
 ---
 
@@ -737,6 +748,14 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 57a8858ca740372cb0824569d47606806f45842c, p06 closeout; the dispatch-plan commit sits between base and the first task commit; p07-t01..t03 in the root checkout after p06 closed at 1e2ff01dd)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1e2a93c1; commits 4d26e567f, f808aa33e, d1e2a93c1; concerns: autonomy re-key mapped in-commit, pre-existing non-brief commit-grep regex bug left for triage, `final` scope checks accepted phases only (per design)
+- Review round 1 (rev-p07-\*, Fable 5.1 high at the frontier cap): 0/0/0/4 Low → pass; `cont-brief-goal-workflow-modes-p07-fix-1` → b65dbad79; phase p07 closed at b65dbad79
+
+#### Group 2 fan-in (sequential degradation)
+
+- No lane merges: p05, p06 and p07 ran sequentially in the root checkout at the unchanged target, each with its own implementer handle and fresh reviewer (p05 1 round, p06 2 rounds, p07 1 round). Phase heads: p05 c86f8558c, p06 1e2ff01dd, p07 b65dbad79.
+- Integration verification deferred to p08-t06's full gate run (the group's edits are prose and tests; validate-skills, format:root and the pin suites were green at every closeout with exactly the three expected reds).
+- Carried to p08: p08-t01 expected reds plus the new named-skill-load sentences from p05–p07; p08-t02 the manifest and `oat-project-brief` link, `implementation-brief.md` Outcomes-audit slot and Head wording, brief-contract :72, :224 and §10 wording, phase-execution.md:136-144 wording; p08-t05 backlog item for the pre-existing review-provide/pr-progress commit-grep regex bug.
+- Disk: 71 stale isolated-HOME temp dirs (3.3 GB) removed between p06 and p07; later phases use one fake HOME per run.
 
 <!-- orchestration-runs-end -->
 
