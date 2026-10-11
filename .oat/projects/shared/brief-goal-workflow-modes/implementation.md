@@ -549,23 +549,29 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** f5481541727e021804b19595bbb732b2ecd448f1
-**Head:** -
-**Executor:** phase-implementer:impl-p08-057027cb (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (fan-in after group 2)
+**Head:** 6d60af35bb29566b61ab095094c5fe63750aefad
+**Executor:** phase-implementer:impl-p08-057027cb (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (fan-in after group 2); origin/main (0.3.18, #358, #359) merged at bf6c60c49 before launch, no file overlap
 
 ### Task p08-t01: Skill contract tests and autonomy coverage for brief
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 57dec6702
+
+- **Files changed:** named-skill-load-contract.test.ts (31 new rows, `oat-project-brief` added to 7 rows incl. the gate-inventory symlink rows :141/:291; `report.unclassified` empty), skills.test.ts (five-mode pins; new `brief mode skill contracts` block: entry surfaces, quick/spec-driven/lite-also-names-brief inventory guard, gateable, roles), review-skill-contracts.test.ts:4720, project-start-preflight-contracts.test.ts (`PROJECT_START_SKILLS`, `GATE_POSTURE_CALLER_SKILLS`), gate-approval-record-contracts.test.ts (`VENDORING_SKILLS`), post-implement-sequence-contracts.test.ts, .agents/docs/autonomy-contract.md (`9b3abe616c5d -> BRIEF-08`); earlier-phase prose edits required by the new pins: oat-project-brief/SKILL.md:352-368 (Step 3.57 shared posture-contract wording), oat-project-pr-progress/SKILL.md:19,:316 and oat-project-review-provide/SKILL.md:881-882 (mode lists name brief)
+- **Verification:** scoped vitest 1285/1285; validate-skills, format:root, oxlint; prove-it-can-fail: removing the brief mention at oat-project-capture/SKILL.md:32 failed 2 of the 4 brief tests (entry surfaces, inventory guard), restored → 4/4
 
 ### Task p08-t02: Sync output, end-to-end integration tests and deferred snapshot edits
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5f27b8bc3
+
+- **Files changed:** .claude/skills/oat-project-brief (tracked link), .oat/sync/manifest.json, commands.integration.test.ts (`project new --mode brief` → `oat-project-brief` route; promote brief → quick; readiness reason), promote.ts description + help-snapshots.test.ts, .oat/templates/state.md (`oat_brief_gate` block), .oat/templates/implementation-brief.md and the bundled `packages/cli/assets/templates/` copy (`**Outcomes audit:**` slot; Head placeholder "recorded when the phase's work ends, before its review"), brief-contract.md (:79 marker ownership stated once; :229-232 §10 resolver checks fork base and member-head order only; :235 pre-fan-in member-review sentence), phase-execution.md:141-147 (same alignment), oat-project-progress/SKILL.md (`Brief Gate:` line, with pins in gate-approval-record-contracts.test.ts and skills.test.ts)
+- **Verification:** `git ls-files .claude/skills/oat-project-brief` lists the link; integration + help-snapshot suites 92/92; scoped suites 2596/2596; commit made with `git add -f` for the gitignored-but-tracked bundled template (same exception p03-t01 recorded)
 
 ### Task p08-t03: Real-artifact probe
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ce7c57cf8
 
 - **Probe setup:** `pnpm build` exit 0; one isolated `HOME=$(mktemp -d)` for the whole probe; scratch `mktemp -d` repo (deleted after): `git init` + empty initial commit, `node "$CLI" --cwd "$SCRATCH" init --scope project --no-project-guidance --no-hook` exit 0, `node "$CLI" --cwd "$SCRATCH" --json project new brief-probe --mode brief --scope shared` exit 0 (`status: ok`, `mode: brief`, scaffold commit; `--scope shared` added because the default synced scope refuses without an origin remote). The scaffolded journal carries the reworded `**Head:**` placeholder from the bundled template.
 - **Authored artifacts:** a two-phase brief (p01 Alpha, p02 Beta, both taskless, `**Provisional:** no`, `oat_plan_parallel_groups: [['p01', 'p02']]`, plan review row passed, frontmatter complete → `oat-project-implement`); commits fork F `0cc7787` (brief approval), p01 head `69d6070`, p02 head `7efb73b` (integration by cherry-pick order, not merge commits); journal with both phases `**Status:** completed`, `**Base:** F`, their heads, `**Executor:** root`, and an `**Outcomes audit:**` block; committed as `chore(oat): fan-in p01-p02`.
@@ -577,18 +583,28 @@ oat_generated: false
 
 ### Task p08-t04: Docs, lane diagrams and root AGENTS.md
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b322db3c1
+
+- **Files changed:** 21 docs pages (choose-workflow, lifecycle incl. "Promoting a brief project to quick" with the `missing-phase-head` refusal and optional `phases` field, project-state-machine, project-artifacts, oat-directory-structure, cli-reference, approvals-and-automation, starting-projects, …), `public/diagrams/project-lifecycle-8-brief-lane-{light,dark}.svg` (new) and both state-machine SVGs, root AGENTS.md (Workflow Options adds brief, goal noted as v1.5; heuristic row), docs/skills/index.md and apps/oat-docs/index.md regenerated; oat-project-brief/SKILL.md:547-548 Step 5 `**Head:**` wording
+- **Verification:** `pnpm --filter oat-docs check` 0; `pnpm build:docs` 0; `index.md` diff holds only the two generated description lines
 
 ### Task p08-t05: Decision records and backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0349cdd45
+
+- **Files changed:** decision records DR-261011-brief-mode-family, DR-261011-phase-unit-progress-contract, DR-261011-anchor-based-review-scope, DR-261011-tasks-are-execution-records, DR-261011-brief-to-quick-promotion (IDs derive from titles; the plan's slugs were suggestions); backlog BL-261011-add-brief-to-the-legacy (generate-oat-state.sh mode table), BL-261011-route-a-standalone-out (`## Out of Scope` routing), BL-261011-fix-the-phase-commit-grep (pre-existing review-provide/pr-progress `\(` regex bug), BL-261011-resolve-validate-plan-project (probe finding: `validate-plan` ignores `--cwd` with a relative `--project-path`); both indexes regenerated
+- **Caller check (copied from the backlog item body):** `grep -rn "generate-oat-state" --include=*.ts --include=*.mjs --include=*.md --include=*.sh . | grep -v node_modules` → 25 hits, all packaging and tests; no skill or CLI runtime path invokes the script (the plan's note that skills reference it did not hold)
+- **Verification:** `pjm doctor` `adoption.state: declared` (explicit adoption, `pjm.initialized: true`, doctor passes); decision index regenerates with no diff after the commit; tree clean
 
 ### Task p08-t06: Version bumps and the full gate run
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6d60af35b
+
+- **Files changed:** lockstep 0.3.18 → 0.3.19 in the five public `package.json` files and `public-package-versions.json` (origin/main re-fetched: still 0.3.18 at 417a34c57); roles `oat-phase-implementer` 1.1.7 → 1.1.8, `oat-reviewer` 1.2.11 → 1.2.12; 27 skill `metadata.version` bumps (brainstorm 1.3.9, docs 1.0.5, pjm-review-backlog 1.6.4, autonomous 1.0.20, capture 1.0.5, complete 1.7.16, discover 2.2.10, dispatch-subagents 1.1.8, document 1.8.9, implement 2.3.19, import-plan 1.4.21, lite 1.1.9, new 1.4.4, next 1.1.6, plan 1.4.18, plan-writing 1.2.36, pr-final 1.6.10, pr-progress 1.3.3, progress 1.4.6, promote-spec-driven 1.2.6, quick-start 2.3.20, reconcile 1.0.5, review-provide 1.5.14, review-receive 1.6.10, revise 1.0.6, summary 1.5.9, wave-execute 1.9.8; oat-project-brief new at 1.0.0); 56 version pins (54 skills.test.ts, 2 review-skill-contracts.test.ts; coincidental same-number pins for worktree-bootstrap(-auto), wrap-up and recon left alone); projections regenerated, manifest `oatVersion` 0.3.19
+- **Verification (gate table, explicit exit codes):** check 0 · type-check 0 · test 0 · build 0 · check:skill-bumps 0 (30 changed skills/roles) · release:check-versions 0 · release:validate 0 (5 packages) · build:docs 0 (cache replay; forced rerun 0 cached also 0) · forced turbo test 0 (0 cached, no FULL TURBO; CLI 8465, control-plane 200) · test:smoke 0 (163) · test:skills 0 (700) · test:scripts 0 (1) · lint 0 · format 0; check:skill-bumps, release:check-versions and oat:validate-skills re-run green at HEAD; free disk ≥ 3.5 GB throughout; root confirmed the gate logs' tails and `FULL TURBO` count 0 in the forced test log
 
 ---
 
@@ -774,6 +790,7 @@ _- Outstanding Items_
 - Request ID: `impl-p08-057027cb` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f5481541727e021804b19595bbb732b2ecd448f1, p07 closeout plus the friction log; the dispatch-plan commit sits between base and the first task commit; p08-t01..t06 in the root checkout)
+- Launch status: accepted → child outcome: completed (DONE); head 6d60af35b; commits 57dec6702, 5f27b8bc3, ce7c57cf8, b322db3c1, 0349cdd45, 6d60af35b; earlier-phase files edited for pin consistency are listed per task
 
 <!-- orchestration-runs-end -->
 
