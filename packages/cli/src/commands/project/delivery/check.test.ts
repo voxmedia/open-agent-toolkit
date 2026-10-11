@@ -7,6 +7,7 @@ import {
   bookkeepingChain,
   createGoalRepo,
   goalPlan,
+  goalState,
   PROJECT_REL,
   registryYaml,
   removeRepo,
@@ -245,5 +246,63 @@ describe('oat project delivery check', () => {
       status: 'error',
       message: expect.stringContaining('oat-project-goal'),
     });
+  });
+  it('treats a sibling terminal delivery sharing the member PR as bookkeeping (M2)', async () => {
+    // Found by the p12-t02 real-artifact probe: pr-final registers one
+    // terminal delivery per milestone, all sharing the head branch's member
+    // pull request (brief contract 12.7 "Shared members"). Each delivery
+    // records its own review artifact on that shared head, so before the
+    // fix each one judged its sibling's artifact a disallowed path.
+    repo = await createGoalRepo();
+    await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+    const reviewed = repo.commitAll('fix(p02,p03): corrections');
+    const reviews: string[] = [];
+    for (const [delivery, milestone] of [
+      ['d01', 'm01'],
+      ['d02', 'm02'],
+    ] as const) {
+      await repo.write(
+        `reviews/archived/${delivery}-review.md`,
+        `# ${delivery} review\n\nNo findings.\n`,
+      );
+      reviews.push(
+        `| ${delivery} | code | passed | 2026-10-11 | reviews/archived/${delivery}-review.md | ${reviewed} |`,
+      );
+      await repo.write('plan.md', goalPlan({ reviews: reviews.join('\n') }));
+      repo.commitAll(`chore(oat): record ${delivery} review (${milestone})`);
+    }
+    const published = repo.git(['rev-parse', 'HEAD']);
+    const entry = (delivery: string, milestone: string, scope: string) =>
+      registryYaml({
+        reviewed,
+        base: repo!.baseSha,
+        observedHead: published,
+        observedBase: repo!.baseSha,
+      })
+        .replace(/^oat_milestone_gates:[\s\S]*$/m, '')
+        .replace('oat_deliveries:\n', '')
+        .replaceAll('d01', delivery)
+        .replace('milestone: m01', `milestone: ${milestone}`)
+        .replaceAll('[p01, p02]', `[${scope}]`)
+        .replace(
+          'reviews/archived/m01-code-review.md',
+          `reviews/archived/${delivery}-review.md`,
+        );
+    const gates = registryYaml({ reviewed, base: repo.baseSha }).replace(
+      /^[\s\S]*?(?=^oat_milestone_gates:)/m,
+      '',
+    );
+    await repo.write(
+      'state.md',
+      goalState(
+        `oat_milestone: m02\noat_milestone_status: delivered\noat_deliveries:\n${entry('d01', 'm01', 'p01, p02')}${entry('d02', 'm02', 'p03')}${gates}`,
+      ),
+    );
+    repo.commitAll('chore(oat): register d01 and d02 on the shared member');
+
+    const { payload, exitCode } = await check(repo, 'd01');
+    expect(payload.review).toMatchObject({ fresh: true, reason: null });
+    expect(payload.status).toBe('ok');
+    expect(exitCode).toBe(0);
   });
 });

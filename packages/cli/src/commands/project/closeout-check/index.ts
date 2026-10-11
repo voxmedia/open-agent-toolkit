@@ -7,6 +7,7 @@ import {
   reviewRowsFor,
 } from '@commands/project/delivery/check';
 import {
+  deliveriesSharingMembers,
   deliveryEvidenceArtifacts,
   evaluateDeliveryReview,
   evaluateGateCarrier,
@@ -285,6 +286,7 @@ export async function loadGoalCloseoutInputs(
   for (const terminal of graph.terminals) {
     const { delivery, effectiveScope } = terminal;
     if (delivery.status === 'registering') continue;
+    const sharing = deliveriesSharingMembers(observed, delivery);
     const evidenceScope: EvidenceScope = {
       repoRoot: project.repoRoot,
       projectDir: project.projectDir,
@@ -293,7 +295,9 @@ export async function loadGoalCloseoutInputs(
         reviewRowsFor(project.state.reviews, [
           delivery.delivery_id,
           ...(delivery.milestone === null ? [] : [delivery.milestone]),
+          ...sharing.map((entry) => entry.delivery_id),
         ]).map((row) => row.artifact),
+        sharing,
       ),
     };
     const fact: DeliveryEvidenceFact = {

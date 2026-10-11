@@ -26,6 +26,7 @@ import {
 import { Command } from 'commander';
 
 import {
+  deliveriesSharingMembers,
   deliveryEvidenceArtifacts,
   evaluateDeliveryReview,
   evaluateGateCarrier,
@@ -181,13 +182,18 @@ export async function evaluateSubjectEvidence(
   if (delivery) {
     const milestoneId = delivery.milestone;
     const scope = deliveryEffectiveScope(deliveries, delivery);
-    const rows = reviewRowsFor(project.state.reviews, [delivery.delivery_id]);
+    const sharing = deliveriesSharingMembers(deliveries, delivery);
+    const rows = reviewRowsFor(project.state.reviews, [
+      delivery.delivery_id,
+      ...sharing.map((entry) => entry.delivery_id),
+    ]);
     const evidence: EvidenceScope = {
       repoRoot: project.repoRoot,
       projectDir: project.projectDir,
       evidenceArtifacts: deliveryEvidenceArtifacts(
         delivery,
         rows.map((row) => row.artifact),
+        sharing,
       ),
     };
     const publishedHeads = delivery.members.map(

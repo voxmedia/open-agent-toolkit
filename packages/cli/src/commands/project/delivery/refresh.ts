@@ -32,6 +32,7 @@ import {
   type GoalDeliveryProject,
 } from './check';
 import {
+  deliveriesSharingMembers,
   deliveryEvidenceArtifacts,
   evaluateDeliveryReview,
   evaluateGateCarrier,
@@ -439,6 +440,10 @@ function evidenceScope(
   project: GoalDeliveryProject,
   delivery: GoalDelivery,
 ): EvidenceScope {
+  const sharing = deliveriesSharingMembers(
+    project.state.deliveries ?? [],
+    delivery,
+  );
   return {
     repoRoot: project.repoRoot,
     projectDir: project.projectDir,
@@ -447,7 +452,9 @@ function evidenceScope(
       reviewRowsFor(project.state.reviews, [
         delivery.delivery_id,
         ...(delivery.milestone === null ? [] : [delivery.milestone]),
+        ...sharing.map((entry) => entry.delivery_id),
       ]).map((row) => row.artifact),
+      sharing,
     ),
   };
 }

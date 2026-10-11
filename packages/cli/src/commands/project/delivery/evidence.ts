@@ -1135,16 +1135,49 @@ export async function evaluateDeliveryReview(
     : result(true, null, members);
 }
 
-/** Review artifacts a delivery's evidence records, for the bookkeeping allowlist. */
+/**
+ * Review artifacts a delivery's evidence records, for the bookkeeping
+ * allowlist. `sharing` lists the deliveries that share one of its member pull
+ * requests (terminal deliveries registered from one head branch, brief
+ * contract 12.7 "Shared members"): their review artifacts are recorded on the
+ * same member head, so they are bookkeeping for this delivery as well. Each
+ * delivery is still judged on its own frozen scope and bound revisions.
+ */
 export function deliveryEvidenceArtifacts(
   delivery: GoalDelivery,
   reviewRowArtifacts: readonly string[] = [],
+  sharing: readonly GoalDelivery[] = [],
 ): string[] {
   const artifacts = new Set<string>(
     reviewRowArtifacts.filter((artifact) => !placeholder(artifact)),
   );
-  if (delivery.integrated_review?.artifact) {
-    artifacts.add(delivery.integrated_review.artifact);
+  for (const entry of [delivery, ...sharing]) {
+    if (entry.integrated_review?.artifact) {
+      artifacts.add(entry.integrated_review.artifact);
+    }
   }
   return [...artifacts];
+}
+
+/**
+ * The other registered deliveries that share at least one member pull request
+ * URL with `delivery` (brief contract 12.7 "Shared members").
+ */
+export function deliveriesSharingMembers(
+  deliveries: readonly GoalDelivery[],
+  delivery: GoalDelivery,
+): GoalDelivery[] {
+  const urls = new Set(
+    delivery.members
+      .map((member) => member.url)
+      .filter((url): url is string => typeof url === 'string' && url !== ''),
+  );
+  if (urls.size === 0) return [];
+  return deliveries.filter(
+    (entry) =>
+      entry.delivery_id !== delivery.delivery_id &&
+      entry.members.some(
+        (member) => member.url !== null && urls.has(member.url),
+      ),
+  );
 }
