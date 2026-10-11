@@ -855,18 +855,21 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 5ac181153129025492ffe119040c9709b32877d6
-**Head:** (pending)
+**Head:** 644f23e1e (candidate head at review; p12-t01 d2ec5a784 from the first dispatch, the rest from the resume `impl-p12-a7422750`)
 **Executor:** phase-implementer:impl-p12-f2b82399 → impl-p12-a7422750 after the T3 restart (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
 
 ### Task p12-t01: Skill contract tests and autonomy coverage for goal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d2ec5a784
+
+- **Files changed:** `skills.test.ts` (six-mode pins; `goal mode skill contracts` block: entry surfaces, inventory guard, gateable, roles), `named-skill-load-contract.test.ts` (every `oat-project-goal` sentence classified, `report.unclassified` empty), `gate-approval-record-contracts`, `post-implement-sequence-contracts`, `project-start-preflight-contracts`, `review-skill-contracts` inventories, `pack-manifest.test.ts` (13 files). Committed by the first dispatch (`impl-p12-f2b82399`) before the T3 restart; its report was lost.
+- **Verification (by the resume):** both builds 0; `src/validation`, `init/tools/shared`, `tools/shared`, `commands/shared` with one fake HOME: 60 files / 1592 tests, exit 0, no follow-up fix. Prove-it-can-fail: the goal stop line at `oat-project-plan/SKILL.md:33` changed → `goal mode skill contracts` fails 1 of 4 ("exposes goal from every declared project-entry surface"); restored → 4 of 4.
 
 ### Task p12-t02: Real-artifact goal probe
 
 **Status:** completed
-**Commit:** (this commit; probe fixes 96e6d24df, 3ba63e2e5, b0f7cfacd)
+**Commit:** 0b7323a6d (probe fixes 96e6d24df, 3ba63e2e5, b0f7cfacd)
 
 - **Probe setup:** both builds and the CLI rebuilt after each fix; one isolated fake `HOME` for the whole phase; scratch `mktemp -d` repo with a local bare origin (deleted after); a stubbed `gh` on `PATH` that logs every call and answers `pr view` per PR number, `pr list` from a file and `pr create` with a URL; `node packages/cli/dist/index.js --cwd <scratch> init --scope project --no-project-guidance --no-hook` exit 0; `--json project new goal-probe --mode goal --scope shared` exit 0 (`mode: goal`, scaffold commit). Authored a two-milestone brief (`m01: p01, p02`, `m02: p03` provisional until re-alignment), endpoint `merged`; `validate-plan` `{ valid: true }`. Every state was written as the owning skill step writes it (setstate merge of frontmatter keys) and committed; the router was read with `--json project status --project-path`.
 - **Results (expected = observed for every row):**
@@ -902,18 +905,27 @@ oat_generated: false
 
 ### Task p12-t03: Docs, lane diagram and root AGENTS.md for goal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 27de07c27
+
+- **Files changed:** new `apps/oat-docs/public/diagrams/project-lifecycle-9-goal-lane-{light,dark}.svg`; updated `project-state-machine-{light,dark}.svg`; pages choose-workflow, lifecycle (goal lane steps, Goal lane, promoting a goal project to quick, brainstorm), project-state-machine (Goal progression), project-artifacts, oat-directory-structure, cli-reference (`delivery refresh`/`check`, goal `promote`, goal closeout invariants), approvals-and-automation, starting-projects; beyond the plan's list (mode enumerations now naming goal): autonomy, workflow-gates, reviews/index, picking-up-projects, planning-skills; `AGENTS.md` (goal is option 5, options renumbered, heuristic row); `.oat/templates/state.md` mode comment; skills index regenerated (no change); `apps/oat-docs/index.md` regenerated (2 description lines).
+- **Verification:** `pnpm --filter oat-docs check` 0; `pnpm build:docs` 0; `git diff --stat apps/oat-docs/index.md` shows only generated changes. The new doc prose describes code behavior and is checked against source by the p12 reviewer.
 
 ### Task p12-t04: Decision records and backlog for goal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ba56c541e
+
+- **Files changed:** decision records `DR-261011-goal-mode-delivers-one-project`, `DR-261011-goal-deliveries-are-registered`, `DR-261011-goal-milestone-extraction-is`, `DR-261011-bookkeeping-successors-keep`, `DR-261011-goal-completion-requires`, `DR-261011-terminal-goal-deliveries-from` (the p11 M2 shared-member decision); backlog `BL-261011-persist-pre-registration`, `BL-261011-guard-goal-brief-amendments`, `BL-261011-re-project-oat-pr-status-from`, `BL-261011-automate-goal-phase-extraction`, `BL-261011-add-brief-to-the-legacy` updated for goal; both indexes regenerated; brief-contract 12.3 gained the `delivered → reviewing` row with the `oat_phase_status` note (p11 round-2 L1). The matching design.md transition row was added by the root in this bookkeeping (the implementer may not edit the project directory).
+- **Verification:** `pjm doctor` adoption declared; decision index regenerates with no diff; tree clean.
 
 ### Task p12-t05: Version bumps and the full gate run for goal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 644f23e1e
+
+- **Files changed:** 27 skill/role `metadata.version` bumps, lockstep 0.3.19 → 0.3.20 in the five public `package.json` files and `public-package-versions.json`, `.oat/sync/manifest.json`, 50 version pins. Bump base: every skill and role changed since `origin/feat/brief-workflow-mode-v1` (the v1 PR branch) rather than the plan's literal `origin/main`, against which nothing needed a bump, so the goal PR still passes `check:skill-bumps` once #361 merges (validated against both: 31 vs origin/main, 28 vs the v1 branch, all OK).
+- **Verification (gate table, explicit exit codes):** check 0 · type-check 0 · test 0 · build 0 · check:skill-bumps 0 (31) · release:check-versions 0 · release:validate 0 (5 packages at 0.3.20) · build:docs 0 (cache replay; forced rerun 0 cached, exit 0) · forced turbo test: first run 1 (transient `ENOENT` on `packages/cli/assets/scripts/resolve-tracking.sh` in `tool-pack-lifecycle.integration.test.ts` while assets were being rebundled; the same test passed under `pnpm test`), no-edit rerun 0 (12/12 tasks, 0 cached, no `FULL TURBO`, CLI 8619, control-plane 275) · build before smoke 0 · test:smoke 0 (163) · test:skills 0 (700) · test:scripts 0 (1) · lint 0 · format 0. No gate failure needed a fix commit; disk ≥ 29 GB throughout.
 
 ---
 
@@ -1070,7 +1082,8 @@ _- Outstanding Items_
 - Request ID: `impl-p12-f2b82399` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
-- Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base 311762416 (artifact-cleanup planning commits in between are out of scope)
+- Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base f214626dc (artifact-cleanup planning commits in between are out of scope)
+- Resume outcome: DONE_WITH_CONCERNS at 644f23e1e (p12-t01 verified with a fresh prove-it-can-fail; p12-t02 22-row probe with three fixes 96e6d24df/3ba63e2e5/b0f7cfacd; t03–t05 landed; full gate table green at lockstep 0.3.20; concerns: the goal declaration now recorded in the journal Final Summary instead of the brief's endpoint/authority (fix 3, p11 implementer's choice reversed), the bump base, the design row (added by the root), doc prose to be checked against source); p12 review follows
 
 <!-- orchestration-runs-end -->
 
@@ -1098,6 +1111,7 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
+- **p12 (2026-10-11):** `fix(p12-t02)` ×3 reversed decisions the probe falsified: a project-log append before the synthesis section is bookkeeping (`evidence.ts`, `SYNTHESIS_HEADING_PREFIX` exported from `append.ts`); review artifacts of deliveries sharing a member PR are bookkeeping for each other (`delivery/{evidence,check,refresh}.ts`, `closeout-check/index.ts`); the goal declaration (`declared_met`, audit) is recorded in the journal Final Summary rather than the brief's endpoint/authority paragraph (`oat-project-goal/SKILL.md` Step 9), so a declaration does not count as a substantive brief edit. Skill bump base is the v1 PR branch. Probe row 9 confirms that only prose keeps amendment commits off an open delivery's head branch (BL-261011-guard-goal-brief-amendments).
 - **p11 (2026-10-11):** revise owns the `delivered | delivering → implementing` transition for an explicit active-milestone target (p11 review M1; design transition table amended); terminal deliveries registered from one head branch share their member PR because `goal-delivered-scope-changed` keeps frozen scopes per milestone and GitHub allows one PR per head/base (p11 review M2, decision (a); decision record in p12-t04, probe in p12-t02).
 - **p10 (2026-10-11):** the p10-t05 commit message was shortened from the plan's 105-character text to 100 characters at commit time (commitlint `header-max-length`); the M2 fix requires an artifact change (archived-path-equivalent) rather than `recordsEvidence` alone to unlock an `exit_gate` replacement, because `recordsEvidence` is true whenever the delivery's artifact is on the allowlist; p10-t01 landed three validation codes beyond the plan's nine (accepted by review as forced by the p09 reader and the p09 review); two implementer-chosen formats (`satisfied_by: { pr: delivery-coverage }`, the extracted-child deferral shape) are accepted and carried to p11-t01 contract text; plan amendment 5.1 (project-log ownership for goal, retro probe, carried contract sentences) applied in the p10 closeout bookkeeping within the approved outcomes.
 
