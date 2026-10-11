@@ -84,8 +84,8 @@ oat_quick_start_gate:
   status: allowed
   disposition: passed
   config_fingerprint: '7ff1ada26ddd44c410c661e39b71c3434475a4182495c7421fb2af0bf53ffa45'
-  reviewed_head: 3f164e0c0b3eab49a048b78d6cd1824b3d88e12f
-  decided_at: '2026-10-11T01:48:04Z'
+  reviewed_head: 1de4aac6840ff1fa99b59f37ec673c11f8581396
+  decided_at: '2026-10-11T08:17:31Z'
 # oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
 #   status: allowed # allowed | blocked
 #   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
