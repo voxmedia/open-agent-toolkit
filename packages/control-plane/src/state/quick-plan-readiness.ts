@@ -192,8 +192,12 @@ function hasAbsentOrFalseTemplate(frontmatter: string[]): boolean {
  * are the plan's record. CommonMark fences close only on a bare run of their
  * own marker, at least as long as the one that opened them, so an example
  * nested inside another fence stays an example.
+ *
+ * Also used by the phase-unit progress parser (`tasks.ts`), so brief-mode
+ * phase headings and markers share this exact fence and indented-code
+ * exclusion.
  */
-function readRecordLines(lines: string[]): string[] {
+export function readRecordLines(lines: string[]): string[] {
   const record: string[] = [];
   let fenceMarker: string | null = null;
   let fenceLength = 0;

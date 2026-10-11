@@ -1,5 +1,6 @@
 import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
-import type { TaskProgress } from '../types';
+import type { PhaseProgress, TaskProgress } from '../types';
+import { readRecordLines } from './quick-plan-readiness';
 
 /**
  * Phase and task headings are authored in several spellings across real OAT
@@ -79,10 +80,23 @@ function revisionPhaseId(digits: string): string {
   return `p-rev${normalizeOrdinal(digits, 1)}`;
 }
 
+export interface TaskProgressOptions {
+  /**
+   * Count progress in phase-units (brief modes) instead of plan tasks.
+   * Defaults to `false`, which is the task-mode contract.
+   */
+  phaseUnits?: boolean;
+}
+
 export function parseTaskProgress(
   planContent: string,
   implementationContent: string,
+  options: TaskProgressOptions = {},
 ): TaskProgress {
+  if (options.phaseUnits === true) {
+    return parsePhaseUnitProgress(planContent, implementationContent);
+  }
+
   const completedTasks = parseCompletedTaskIds(implementationContent);
   const currentTaskId = parseCurrentTaskId(implementationContent);
   const phases = parsePhaseProgress(planContent, completedTasks);
@@ -244,4 +258,272 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
         isRevision: false,
       }
     : null;
+}
+
+/**
+ * Journal phase status values. Task execution records additionally use
+ * `cancelled` and `no-change`, which are not phase statuses.
+ */
+export type JournalPhaseStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'failed'
+  | 'extracted';
+
+export interface PhaseMarkers {
+  status: JournalPhaseStatus;
+  base: string | null;
+  head: string | null;
+  extractedTo: string | null;
+}
+
+const JOURNAL_PHASE_STATUSES: ReadonlySet<string> = new Set([
+  'pending',
+  'in_progress',
+  'completed',
+  'failed',
+  'extracted',
+]);
+const HEADING_LINE_PATTERN = /^#/;
+const SECTION_HEADING_PATTERN = /^#{1,2}[ \t]/;
+const STATUS_MARKER_PATTERN = /^\*\*Status:\*\*\s+(\S+)$/;
+const BASE_MARKER_PATTERN = /^\*\*Base:\*\*\s+([0-9a-f]{40}|[0-9a-f]{64})$/;
+const HEAD_MARKER_PATTERN = /^\*\*Head:\*\*\s+([0-9a-f]{40}|[0-9a-f]{64})$/;
+const EXTRACTED_TO_MARKER_PATTERN =
+  /^\*\*Extracted to:\*\*\s+([A-Za-z0-9_-]+)$/;
+const PROVISIONAL_YES_PATTERN = /^\*\*Provisional:\*\*\s+yes$/;
+const COMPLETED_STATUS_PATTERN = /^\*\*Status:\*\*\s+completed$/;
+
+interface MarkerAccumulator {
+  status: JournalPhaseStatus | null;
+  base: string | null;
+  head: string | null;
+  extractedTo: string | null;
+}
+
+/**
+ * Read journal phase markers. A `## Phase …` heading opens phase ownership,
+ * and ownership ends at the next line starting with `#` (any heading,
+ * including `### Task`), so a task record's status can never be read as its
+ * phase's status. Markers are exact lines; a line with trailing text, an
+ * unknown status value or an abbreviated SHA is not a marker. Fenced and
+ * indented code is excluded. When a phase repeats a marker, the first one
+ * wins; a phase heading without a valid status reads as `pending`.
+ */
+export function parsePhaseMarkers(
+  implementationContent: string,
+): Map<string, PhaseMarkers> {
+  const accumulators = new Map<string, MarkerAccumulator>();
+  let owner: MarkerAccumulator | null = null;
+
+  for (const line of readRecordLines(implementationContent.split('\n'))) {
+    const phaseHeading = parsePhaseHeading(line);
+    if (phaseHeading?.declaredPhaseId) {
+      const phaseId = phaseHeading.declaredPhaseId;
+      owner = accumulators.get(phaseId) ?? {
+        status: null,
+        base: null,
+        head: null,
+        extractedTo: null,
+      };
+      accumulators.set(phaseId, owner);
+      continue;
+    }
+
+    if (HEADING_LINE_PATTERN.test(line)) {
+      owner = null;
+      continue;
+    }
+
+    if (owner == null) {
+      continue;
+    }
+
+    const trimmed = line.trim();
+    const status = trimmed.match(STATUS_MARKER_PATTERN)?.[1];
+    if (status && JOURNAL_PHASE_STATUSES.has(status)) {
+      owner.status ??= status as JournalPhaseStatus;
+      continue;
+    }
+    const base = trimmed.match(BASE_MARKER_PATTERN)?.[1];
+    if (base) {
+      owner.base ??= base;
+      continue;
+    }
+    const head = trimmed.match(HEAD_MARKER_PATTERN)?.[1];
+    if (head) {
+      owner.head ??= head;
+      continue;
+    }
+    const extractedTo = trimmed.match(EXTRACTED_TO_MARKER_PATTERN)?.[1];
+    if (extractedTo) {
+      owner.extractedTo ??= extractedTo;
+    }
+  }
+
+  const markers = new Map<string, PhaseMarkers>();
+  for (const [phaseId, accumulator] of accumulators) {
+    markers.set(phaseId, {
+      status: accumulator.status ?? 'pending',
+      base: accumulator.base,
+      head: accumulator.head,
+      extractedTo: accumulator.extractedTo,
+    });
+  }
+  return markers;
+}
+
+/**
+ * Phase ids whose plan section carries the exact line `**Provisional:** yes`.
+ * Ownership follows the journal marker rule: it opens at a `## Phase …`
+ * heading and ends at the next line starting with `#`. Fenced and indented
+ * code is excluded. Any other value (including `no`) is not provisional.
+ */
+export function parseProvisionalPhaseIds(planContent: string): Set<string> {
+  const provisional = new Set<string>();
+  let ownerPhaseId: string | null = null;
+
+  for (const line of readRecordLines(planContent.split('\n'))) {
+    const phaseHeading = parsePhaseHeading(line);
+    if (phaseHeading?.declaredPhaseId) {
+      ownerPhaseId = phaseHeading.declaredPhaseId;
+      continue;
+    }
+
+    if (HEADING_LINE_PATTERN.test(line)) {
+      ownerPhaseId = null;
+      continue;
+    }
+
+    if (ownerPhaseId != null && PROVISIONAL_YES_PATTERN.test(line.trim())) {
+      provisional.add(ownerPhaseId);
+    }
+  }
+
+  return provisional;
+}
+
+/**
+ * Execution records per journal phase: `### Task` headings inside a
+ * `## Phase …` section of `implementation.md` whose normalized phase id and
+ * kind match that section. A record is completed by the exact line
+ * `**Status:** completed` before the next heading.
+ */
+function parseJournalTaskRecords(
+  implementationContent: string,
+): Map<string, { total: number; completed: number }> {
+  const records = new Map<string, { total: number; completed: number }>();
+  let section: { phaseId: string; isRevision: boolean } | null = null;
+  let ownerRecord: { total: number; completed: number } | null = null;
+  let ownerCompleted = false;
+
+  for (const line of readRecordLines(implementationContent.split('\n'))) {
+    const phaseHeading = parsePhaseHeading(line);
+    if (phaseHeading?.declaredPhaseId) {
+      section = {
+        phaseId: phaseHeading.declaredPhaseId,
+        isRevision: phaseHeading.isRevision,
+      };
+      ownerRecord = null;
+      continue;
+    }
+
+    if (SECTION_HEADING_PATTERN.test(line)) {
+      section = null;
+      ownerRecord = null;
+      continue;
+    }
+
+    const taskHeading = parseTaskHeading(line);
+    if (taskHeading) {
+      ownerRecord = null;
+      if (
+        section != null &&
+        section.phaseId === taskHeading.phaseId &&
+        section.isRevision === taskHeading.isRevision
+      ) {
+        const record = records.get(section.phaseId) ?? {
+          total: 0,
+          completed: 0,
+        };
+        record.total += 1;
+        records.set(section.phaseId, record);
+        ownerRecord = record;
+        ownerCompleted = false;
+      }
+      continue;
+    }
+
+    if (HEADING_LINE_PATTERN.test(line)) {
+      ownerRecord = null;
+      continue;
+    }
+
+    if (
+      ownerRecord != null &&
+      !ownerCompleted &&
+      COMPLETED_STATUS_PATTERN.test(line.trim())
+    ) {
+      ownerRecord.completed += 1;
+      ownerCompleted = true;
+    }
+  }
+
+  return records;
+}
+
+/**
+ * Phase-unit progress (brief modes). Every `## Phase …` heading in the plan is
+ * one unit, evaluated in precedence order:
+ *
+ * 1. Provisional in the plan → incomplete, regardless of any journal marker.
+ * 2. Journal `**Status:** completed` → accepted.
+ * 3. Otherwise incomplete. In v1 an `extracted` status is read as pending.
+ *
+ * Plan task headings never affect totals; `taskRecords` comes from the
+ * journal only.
+ */
+function parsePhaseUnitProgress(
+  planContent: string,
+  implementationContent: string,
+): TaskProgress {
+  const markers = parsePhaseMarkers(implementationContent);
+  const provisionalPhaseIds = parseProvisionalPhaseIds(planContent);
+  const taskRecords = parseJournalTaskRecords(implementationContent);
+  const phases: PhaseProgress[] = [];
+
+  for (const line of readRecordLines(planContent.split('\n'))) {
+    const phaseHeading = parsePhaseHeading(line);
+    if (!phaseHeading?.declaredPhaseId) {
+      continue;
+    }
+
+    const phaseId = phaseHeading.declaredPhaseId;
+    const provisional = provisionalPhaseIds.has(phaseId);
+    const accepted =
+      !provisional && markers.get(phaseId)?.status === 'completed';
+    const records = taskRecords.get(phaseId);
+
+    phases.push({
+      phaseId,
+      name: phaseHeading.name,
+      total: 1,
+      completed: accepted ? 1 : 0,
+      isRevision: phaseHeading.isRevision,
+      unit: 'phase',
+      provisional,
+      taskRecords: {
+        total: records?.total ?? 0,
+        completed: records?.completed ?? 0,
+      },
+    });
+  }
+
+  return {
+    total: phases.reduce((sum, phase) => sum + phase.total, 0),
+    completed: phases.reduce((sum, phase) => sum + phase.completed, 0),
+    currentTaskId: parseCurrentTaskId(implementationContent),
+    phases,
+  };
 }
