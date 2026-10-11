@@ -180,6 +180,14 @@ Inference rules (first match wins):
 | `implement` | `in_progress` | `code` with current phase scope (derive from `implementation.md` current task) |
 | `implement` | `complete`    | `code final`                                                                   |
 
+When `WORKFLOW_MODE` is `brief`, the `implement` / `in_progress` row derives
+the phase from `oat_current_task_id` by the brief pointer rule
+(`oat-project-brief/references/brief-contract.md` section 8): a task ID
+resolves to its phase, a phase ID to itself, and `null`, an unknown ID, or an
+accepted unit to the first incomplete unit in document order. A brief code
+scope is always a phase-unit (`pNN`, `p-revN`, `pNN-pMM`, or `final`), never an
+execution record.
+
 If inference produces a result, propose it and proceed unless the user overrides:
 
 ```
@@ -193,7 +201,7 @@ If the user confirms (or just presses enter), use the inferred type and scope. I
 
 - Ask: "What type of review? (code / artifact)"
 - Ask: "What scope?"
-  - For code: `pNN-tNN` task / `pNN` phase / `pNN-pMM` contiguous phase range / `final` / `base_sha=SHA` / `SHA..HEAD` range
+  - For code: `pNN-tNN` task / `pNN` phase / `pNN-pMM` contiguous phase range / `final` / `base_sha=SHA` / `SHA..HEAD` range (brief: `pNN` or `p-revN` phase / `pNN-pMM` / `final` / `base_sha=SHA` / `SHA..HEAD`)
   - For artifact: `discovery` / `spec` / `design` (and optionally `plan`)
 
 ### Step 1.5: Resolve Target Branch and Working Directory
@@ -312,6 +320,7 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
 - `quick`: `discovery.md`, `plan.md` (`spec.md`/`design.md` optional if present)
 - `import`: `plan.md` (`references/imported-plan.md` recommended, `spec.md`/`design.md` optional)
 - `lite`: `plan.md`, `implementation.md` (`discovery.md`/`spec.md`/`design.md` are absent by design)
+- `brief`: `plan.md` (the Project Brief) and `implementation.md` (the per-phase journal, which carries the `**Base:**`/`**Head:**` anchors); `discovery.md`, `spec.md`, and `design.md` are absent by design, and research under `references/` is optional
 
 **Required for artifact review:**
 
@@ -324,6 +333,7 @@ WORKFLOW_MODE=$(oat project status --project-path "$PROJECT_PATH" --field projec
   - reviewing `plan` in `spec-driven` mode requires `spec.md` + `design.md`
   - reviewing `plan` in `quick/import` mode may use `discovery.md` and/or `references/imported-plan.md` instead; lite uses the separate rule below
   - reviewing `plan` in `lite` mode requires only `plan.md`; its Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria sections are the complete upstream contract
+  - reviewing `plan` in `brief` mode requires only `plan.md`; the brief and `oat-project-brief/references/brief-contract.md` are the complete upstream contract. `discovery`, `spec`, and `design` are not reviewable artifacts in brief mode
 
 **If missing:** Report missing required artifacts for the current mode and stop if requirements are not met.
 
@@ -337,6 +347,255 @@ If review type is `artifact`:
 
 If review type is `code`, use the scope resolution below.
 
+**Step 3.0: Brief-Mode Anchor Resolution (`brief` only)**
+
+When `WORKFLOW_MODE` is `brief` and the review type is `code`, the review range
+comes from the phase anchors recorded in the journal, not from commit-message
+inference. `oat-project-brief/references/brief-contract.md` section 10 is
+authoritative where this step and the contract differ. This step is inert for
+every other workflow mode.
+
+Resolution order for brief code reviews:
+
+1. **Explicit user input** — unchanged. A supplied `base_sha=<sha>` or
+   `<sha1>..<sha2>` range skips this step; record
+   `oat_review_scope_source: explicit`, the range base as
+   `oat_review_base_sha`, and as `oat_review_phase_ids` the phases whose
+   `(pNN-` or `(p-revN-` commit labels appear in the range (labels only).
+2. **Guarded re-review narrowing** (Step 3a) — unchanged in its guards, with
+   the brief inputs described after the script below.
+3. **Anchor resolution** for a nominal `pNN`, `p-revN`, `pNN-pMM`, or `final`
+   token, by the script below.
+4. **Missing anchors** widen to the entire merge-base range.
+5. **Invalid or contradictory anchors** stop and route to
+   `oat-project-reconcile`; never narrow silently.
+6. Otherwise the explicit-range / merge-base fallback in the priority order
+   below (`oat_review_scope_source: merge-base` when the user selects
+   `merge-base..HEAD`).
+
+A brief code scope names phase-units only. An execution-record token
+(`pNN-tNN`) is not an anchored scope: offer its phase (`pNN`) or an explicit
+`<sha>^..<sha>` range built from the record's `**Commit:**` line instead.
+
+Run the resolver in bash from the reviewed checkout (after Step 1.5) with
+`PROJECT_PATH` and `SCOPE_TOKEN` set. It never edits any file. It sets
+`ANCHOR_VERDICT` (`accepted | fallback | reconcile | invalid-scope`),
+`ANCHOR_REASON`, `PHASE_IDS` (document order), `SCOPE_RANGE`,
+`REVIEW_BASE_SHA`, `AGGREGATE_HEAD`, `SCOPE_SOURCE`, `FALLBACK_REASON`, and
+`INTEGRATION_COMMITS`:
+
+````bash
+brief_phase_ids() {
+  # Phase IDs of the brief in document order; fenced code is excluded.
+  awk '
+    /^[ \t]*(```|~~~)/ { fence = !fence; next }
+    fence { next }
+    /^## Phase (p[0-9]+|p-rev[0-9]+): / { id = $3; sub(/:$/, "", id); print id }
+  ' "$PROJECT_PATH/plan.md"
+}
+
+brief_marker() {
+  # brief_marker PHASE_ID Status|Base|Head: the first exact marker line under
+  # the journal's phase heading. Ownership ends at the next line starting with
+  # "#"; fenced code is excluded; a Base or Head value that is not a full SHA,
+  # or a Status value outside the phase statuses, is not a marker.
+  awk -v id="$1" -v key="$2" '
+    /^[ \t]*(```|~~~)/ { fence = !fence; next }
+    fence { next }
+    /^#/ { owner = (index($0, "## Phase " id ": ") == 1); next }
+    !owner || found { next }
+    index($0, "**" key ":** ") == 1 {
+      v = substr($0, length("**" key ":** ") + 1); sub(/[ \t]+$/, "", v)
+      if (key == "Status" && v !~ /^(pending|in_progress|completed|failed|extracted)$/) next
+      if (key != "Status" && !((length(v) == 40 || length(v) == 64) && v ~ /^[0-9a-f]+$/)) next
+      print v; found = 1
+    }
+  ' "$PROJECT_PATH/implementation.md"
+}
+
+brief_group() {
+  # brief_group PHASE_ID: 1-based index of the declared parallel group in the
+  # brief's single-line oat_plan_parallel_groups that contains the phase.
+  awk -v id="$1" '
+    NR == 1 && /^---[ \t]*$/ { fm = 1; next }
+    fm && /^---[ \t]*$/ { exit }
+    fm && /^oat_plan_parallel_groups:/ {
+      line = $0; sub(/^oat_plan_parallel_groups:[ \t]*/, "", line); sub(/[ \t]+#.*$/, "", line)
+      n = split(line, groups, /\][ \t]*,[ \t]*\[/)
+      for (i = 1; i <= n; i++) {
+        g = groups[i]; gsub(/[^A-Za-z0-9,-]/, "", g)
+        m = split(g, members, ",")
+        for (j = 1; j <= m; j++) if (members[j] == id) { print i; exit }
+      }
+    }
+  ' "$PROJECT_PATH/plan.md"
+}
+
+brief_anchor_reject() { ANCHOR_VERDICT=reconcile; ANCHOR_REASON="$1"; }
+
+brief_resolve_anchors() {
+  ANCHOR_VERDICT=""; ANCHOR_REASON=""; SCOPE_SOURCE=""; FALLBACK_REASON=""
+  SCOPE_RANGE=""; REVIEW_BASE_SHA=""; AGGREGATE_HEAD=""; INTEGRATION_COMMITS=""
+  PHASE_IDS=()
+  local all=() id first last i start=-1 end=-1 key sha missing=0
+  local base head group prev_head="" prev_group="" fork=""
+  while IFS= read -r id; do all+=("$id"); done < <(brief_phase_ids)
+
+  # 1. Expand the requested scope to phase IDs in document order.
+  if [ "$SCOPE_TOKEN" = final ]; then
+    for id in "${all[@]}"; do
+      [ "$(brief_marker "$id" Status)" = completed ] && PHASE_IDS+=("$id")
+    done
+  else
+    first=${SCOPE_TOKEN%%-p*}; last=${SCOPE_TOKEN#"$first"}; last=${last#-}; last=${last:-$first}
+    for i in "${!all[@]}"; do
+      [ "${all[$i]}" = "$first" ] && start=$i
+      [ "${all[$i]}" = "$last" ] && end=$i
+    done
+    if [ "$start" -lt 0 ] || [ "$end" -lt "$start" ]; then
+      ANCHOR_VERDICT=invalid-scope; ANCHOR_REASON="$SCOPE_TOKEN is not a document-order phase run"; return 0
+    fi
+    for ((i = start; i <= end; i++)); do
+      [ "$(brief_marker "${all[$i]}" Status)" = extracted ] || PHASE_IDS+=("${all[$i]}")
+    done
+  fi
+  if [ "${#PHASE_IDS[@]}" -eq 0 ]; then
+    ANCHOR_VERDICT=invalid-scope; ANCHOR_REASON="no reviewable phase-unit in $SCOPE_TOKEN"; return 0
+  fi
+
+  # 2. Existence: every recorded anchor names a commit.
+  for id in "${PHASE_IDS[@]}"; do
+    for key in Base Head; do
+      sha=$(brief_marker "$id" "$key")
+      if [ -z "$sha" ]; then missing=1; continue; fi
+      git cat-file -e "$sha^{commit}" 2>/dev/null || { brief_anchor_reject "existence: $id $key $sha is not a commit"; return 0; }
+    done
+  done
+
+  # 3. Missing anchors widen to the whole merge-base range; (pNN- commit
+  #    matches only label commits and never narrow it.
+  if [ "$missing" = 1 ]; then
+    MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null)
+    REVIEW_BASE_SHA=$MERGE_BASE
+    if [ -z "$REVIEW_BASE_SHA" ]; then
+      ANCHOR_VERDICT=invalid-scope; ANCHOR_REASON="missing anchors and no merge base"; return 0
+    fi
+    AGGREGATE_HEAD=$(git rev-parse HEAD)
+    SCOPE_RANGE="$REVIEW_BASE_SHA..$AGGREGATE_HEAD"
+    INTEGRATION_COMMITS=$(git rev-list --merges "$SCOPE_RANGE")
+    ANCHOR_VERDICT=fallback; SCOPE_SOURCE=merge-base-range; FALLBACK_REASON=missing-anchors
+    return 0
+  fi
+
+  # 4. Per-phase ancestry, then sequential or parallel continuity.
+  for id in "${PHASE_IDS[@]}"; do
+    base=$(brief_marker "$id" Base); head=$(brief_marker "$id" Head); group=$(brief_group "$id")
+    git merge-base --is-ancestor "$base" "$head" 2>/dev/null || { brief_anchor_reject "ancestry: $id base is not an ancestor of its head"; return 0; }
+    if [ -n "$group" ] && [ -n "$prev_head" ] && [ "$group" = "$prev_group" ]; then
+      [ "$base" = "$fork" ] || { brief_anchor_reject "parallel continuity: $id base is not the group fork $fork"; return 0; }
+      git merge-base --is-ancestor "$prev_head" "$head" 2>/dev/null || { brief_anchor_reject "parallel continuity: $id head does not follow the previous member's integration head"; return 0; }
+    else
+      [ -z "$prev_head" ] || git merge-base --is-ancestor "$prev_head" "$base" 2>/dev/null || { brief_anchor_reject "sequential continuity: $id base does not equal or descend from the previous head"; return 0; }
+      fork=$base
+    fi
+    prev_head=$head; prev_group=$group
+  done
+  AGGREGATE_HEAD=$prev_head
+
+  # 5. Aggregate head: the last selected head contains every selected head and
+  #    is on the reviewed branch.
+  for id in "${PHASE_IDS[@]}"; do
+    git merge-base --is-ancestor "$(brief_marker "$id" Head)" "$AGGREGATE_HEAD" 2>/dev/null || { brief_anchor_reject "aggregate head: $id head is not contained in $AGGREGATE_HEAD"; return 0; }
+  done
+  git merge-base --is-ancestor "$AGGREGATE_HEAD" HEAD 2>/dev/null || { brief_anchor_reject "aggregate head: $AGGREGATE_HEAD is not on the reviewed branch"; return 0; }
+
+  REVIEW_BASE_SHA=$(brief_marker "${PHASE_IDS[0]}" Base)
+  SCOPE_RANGE="$REVIEW_BASE_SHA..$AGGREGATE_HEAD"
+  INTEGRATION_COMMITS=$(git rev-list --merges "$SCOPE_RANGE")
+  ANCHOR_VERDICT=accepted; SCOPE_SOURCE=anchors
+}
+
+brief_resolve_anchors
+````
+
+Act on the verdict:
+
+- `accepted`: the range is `SCOPE_RANGE` (first selected base through the
+  aggregate head). Coverage holds by construction: the aggregate head contains
+  every selected phase head, and every selected base sits inside the range or
+  at its start. Bookkeeping commits between sequential phases (a next base
+  that descends from the previous head) are inside the range.
+- `fallback`: the range is the entire merge-base range `MERGE_BASE..HEAD`.
+  On a `manual` invocation, show it and ask the user to confirm it; `auto` and
+  `gate` invocations print it and continue. Commit
+  matches by `(pNN-` label which commits belong to which phase and never
+  narrow the range. Record `oat_review_scope_source: merge-base-range` and
+  `oat_review_fallback_reason: missing-anchors`.
+- `reconcile`: stop. Print
+  `Brief anchors are invalid or contradictory ({ANCHOR_REASON}); run oat-project-reconcile before reviewing {SCOPE_TOKEN}.`
+  and write no review artifact. Never fall back to a narrower range, to the
+  commit grep, or to `merge-base..HEAD`.
+- `invalid-scope`: the token is not a document-order phase run (for example
+  `pMM` precedes `pNN`, an unknown ID, or `final` with no accepted phase) or no
+  merge base exists for the fallback. Report `ANCHOR_REASON` and ask for a
+  valid scope or an explicit range; for a `gate` invocation, stop.
+
+Scope expansion: `pNN` and `p-revN` select one phase; `pNN-pMM` selects the
+contiguous document-order run, excluding extracted phases, and is invalid when
+`pMM` precedes `pNN`; `final` selects every accepted (`**Status:** completed`)
+non-extracted phase, revision phases included. Document order, not numeric
+order, governs.
+
+**Parallel continuity.** Phases in one declared group share a fork base (each
+`**Base:**` is the group's fork commit, `EXPECTED_HEAD` at group start) and
+each `**Head:**` is that phase's integration merge commit on the project
+branch, written at fan-in; the group's aggregate head is the last integration
+merge. Integration and conflict-resolution commits are inside the range: pass
+`INTEGRATION_COMMITS` (the merge commits in the range) plus any
+conflict-resolution commits the fan-in record names to the reviewer as
+integration commits and record them as `oat_review_integration_commits`. A
+group member's per-phase review runs before fan-in, when the member has no
+journal anchors yet: `oat-project-implement` supplies the range
+`EXPECTED_HEAD..<worktree head from the phase report>`, reviewed in that
+member's worktree, with `oat_review_requested_scope: pNN`,
+`oat_review_phase_ids: [pNN]`, `oat_review_base_sha: EXPECTED_HEAD`, and
+`oat_review_scope_source: anchors`. When this skill runs that review, verify
+`git merge-base --is-ancestor "$EXPECTED_HEAD" <worktree head>` first (a
+failure routes to `oat-project-reconcile`), use the supplied range without
+running the resolver, and never record it as `explicit`. The fan-in
+`**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and `final` scopes.
+
+**Late-fix rule.** A review-fix commit may advance a phase's `**Head:**`, base
+unchanged, only while no later phase in document order has a `**Base:**`. Once
+a later phase has started, the correction is an appended revision phase
+`## Phase p-revN:` with its own anchors and `**Corrects:** pNN`; the corrected
+phase keeps its original anchors. Revision phases resolve as ordinary later
+phases, so aggregate containment and sequential continuity hold for the whole
+history: a head advanced after a later phase took its base makes that later
+base precede the previous head, fails sequential continuity, and routes to
+reconcile. A `p-revN` review re-evaluates the corrected phase's findings: name
+the `**Corrects:**` phase in the Review Scope so `oat-project-review-receive`
+can update that phase's review row.
+
+**Brief inputs to Step 3a.** Run this resolver before Step 3a's candidate
+lookup. A `reconcile` or `invalid-scope` verdict stops before any narrowing.
+After `accepted` or `fallback`, Step 3a sets `REVIEW_HEAD` to `AGGREGATE_HEAD`
+(the anchored head, not the current `HEAD`) and keeps its guards unchanged.
+When it narrows, record `oat_review_scope_source: narrowed`,
+`oat_review_narrowed_from: {SCOPE_RANGE before narrowing}`,
+`oat_review_base_sha: {PRIOR_REVIEWED_HEAD}`, and keep `PHASE_IDS` from the
+resolver.
+
+**Brief artifact record.** Every brief code review carries, beside
+`oat_review_head_sha` (the aggregate head of the reviewed range):
+`oat_review_requested_scope` (the scope token as requested),
+`oat_review_phase_ids` (ordered `PHASE_IDS`), `oat_review_base_sha`,
+`oat_review_scope_source` (`anchors | merge-base-range | explicit | merge-base | narrowed`),
+and, when they apply, `oat_review_fallback_reason`,
+`oat_review_integration_commits`, and `oat_review_narrowed_from`. Step 5 passes
+them to the reviewer and Step 8 writes them; `oat-project-review-receive`
+preserves them.
+
 **Step 3a: Detect Re-Review Context**
 
 After parsing the requested scope, distinguish an explicit range override from a
@@ -349,7 +608,9 @@ For every code review, detect re-review context independently from deciding
 whether to narrow:
 
 1. Set `REVIEW_HEAD` to the full commit from
-   `git rev-parse HEAD^{commit}`. Resolve the current lineage:
+   `git rev-parse HEAD^{commit}` (in brief modes, `AGGREGATE_HEAD` from Step
+   3.0 when its verdict is `accepted` or `fallback`). Resolve the current
+   lineage:
    - `manual` and `auto` invocations use lifecycle lineage.
    - A `gate` invocation uses gate lineage qualified by its exact
      `oat_gate_target`.
@@ -422,7 +683,10 @@ narrowed range):**
 - This is the canonical scope format for checkpoint auto-reviews that need to cover multiple previously unpassed phases in one review.
 - When a phase-range token is used, treat it as a range review for artifact naming/storage, but preserve the exact `oat_review_scope` value (for example `p02-p03`) in frontmatter and plan review rows.
 
-2. **Automatic phase detection (if invoked at phase boundary):**
+  In brief modes a nominal `pNN`, `p-revN`, `pNN-pMM`, or `final` token
+  resolves through Step 3.0's anchors, never through rule 2 below.
+
+2. **Automatic phase detection (if invoked at phase boundary; not used in brief modes):**
    - Derive current phase from plan.md + implementation.md
    - Use commit convention grep to find commits:
 
@@ -448,6 +712,11 @@ narrowed range):**
      - Provide `base_sha=<sha>`
      - Provide `<sha1>..<sha2>` range
      - Confirm "review merge-base..HEAD" (all changes on branch)
+
+   In brief modes this fallback applies only when Step 3.0 did not resolve a
+   range (for example no nominal token). A user-selected `merge-base..HEAD`
+   records `oat_review_scope_source: merge-base`; a user-supplied base or
+   range records `explicit`.
 
    **Merge-base approach:**
 
@@ -509,7 +778,9 @@ case "$SCOPE_TOKEN" in
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md")
     elif [[ "$WORKFLOW_MODE" == "quick" ]]; then
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/discovery.md")
-    elif [[ "$WORKFLOW_MODE" == "lite" ]]; then
+    elif [[ "$WORKFLOW_MODE" == "lite" || "$WORKFLOW_MODE" == "brief" ]]; then
+      # brief: the reviewer also receives oat-project-brief/references/brief-contract.md
+      # as the contract reference (Step 5), not as a file in scope.
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md")
     else
       FILES_CHANGED=$(printf "%s\n" "$PROJECT_PATH/plan.md" "$PROJECT_PATH/references/imported-plan.md")
@@ -601,7 +872,7 @@ Build the "Review Scope" metadata for the reviewer:
 - Discovery: {PROJECT_PATH}/discovery.md
 - Imported Plan Reference: {PROJECT_PATH}/references/imported-plan.md (optional; import mode)
 
-**Tasks in Scope (code review only):** {task IDs from plan.md matching scope}
+**Tasks in Scope (code review only):** {task IDs from plan.md matching scope; in brief modes, the execution-record IDs under the phases in scope in implementation.md, which label commits and never narrow the range}
 
 **Files Changed ({FILE_COUNT}):**
 {FILE_LIST}
@@ -657,6 +928,33 @@ and code-final Review Scope explicitly as:
 - Import reference: not required
 - Plan: `{PROJECT_PATH}/plan.md` (Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria are the requirements contract)
 - Implementation: `{PROJECT_PATH}/implementation.md`
+
+For `WORKFLOW_MODE=brief`, render the artifact-path portion of every
+artifact-plan and code Review Scope explicitly as:
+
+- Discovery: not required (absent by design)
+- Spec: not required (absent by design)
+- Design: not required (absent by design; the brief's optional `### Design` subsection and `references/` notes are part of the brief)
+- Import reference: not required
+- Plan: `{PROJECT_PATH}/plan.md` (the Project Brief: Goal, Outcomes, Approach, Constraints and Out of Scope, Decisions, and the in-scope phases' `**Intent:**` and `**Exit evidence:**` are the requirements contract)
+- Implementation: `{PROJECT_PATH}/implementation.md` (the per-phase journal: anchors, execution records, verification evidence)
+- Brief contract: `oat-project-brief/references/brief-contract.md`
+
+and append the brief anchor record to every brief code Review Scope:
+
+```markdown
+**Brief Anchor Record (brief code reviews only):**
+
+- oat_review_requested_scope: {SCOPE_TOKEN as requested}
+- oat_review_phase_ids: [{PHASE_IDS in document order}]
+- oat_review_base_sha: {REVIEW_BASE_SHA, full SHA}
+- oat_review_head_sha: {AGGREGATE_HEAD, full SHA}
+- oat_review_scope_source: {anchors|merge-base-range|explicit|merge-base|narrowed}
+- oat_review_fallback_reason: {missing-anchors, or omit}
+- oat_review_integration_commits: [{INTEGRATION_COMMITS plus named conflict-resolution commits, or omit}]
+- oat_review_narrowed_from: {range before narrowing, or omit}
+- Corrects: {pNN named by a p-revN phase's `**Corrects:**` line, or omit}
+```
 
 Always pass the resolved workflow mode. Never omit it and let the reviewer fall
 back to its spec-driven default.
@@ -987,7 +1285,7 @@ If running inline (Tier 3), execute the review and write artifact.
 **Review checklist (from oat-reviewer):**
 
 1. Verify scope (don't review out-of-scope changes)
-2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite)
+2. If code review: verify alignment to available requirements sources (`spec`/`design` for spec-driven mode; `discovery`/import reference for quick/import; plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria for lite; the brief's Outcomes, Constraints and Out of Scope, Decisions, and the in-scope phases' Intent and Exit evidence for brief)
 3. If code review: verify code quality (correctness, tests, security, maintainability)
 4. If artifact review: verify completeness/clarity/readiness of the artifact and its alignment with upstream artifacts
 5. Categorize findings (Critical/High/Medium/Low)
@@ -1031,6 +1329,14 @@ oat_gate_runtime: { configured runtime }
 oat_invocation_model: { configured model|provider-default|unknown }
 oat_invocation_reasoning_effort: { configured effort|provider-default|unknown }
 oat_invocation_source: { exec-target-config|unknown }
+# Brief code-review only: copy the Step 5 Brief Anchor Record verbatim.
+oat_review_requested_scope: { scope token as requested }
+oat_review_phase_ids: [{ phase IDs in document order }]
+oat_review_base_sha: { full SHA at the base of the reviewed range }
+oat_review_scope_source: { anchors|merge-base-range|explicit|merge-base|narrowed }
+oat_review_fallback_reason: { missing-anchors, only when it applies }
+oat_review_integration_commits: [{ integration commit SHAs, only when they apply }]
+oat_review_narrowed_from: { range before narrowing, only when narrowed }
 ---
 
 # {Code|Artifact} Review: {scope}
