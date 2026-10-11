@@ -166,8 +166,10 @@ re-validation, and adds one `code` row per new phase to the brief's
 
 Resolve `oat_workflow_mode` from project state before any generic checkpoint
 field read. When `oat_workflow_mode` is `lite`, resolve checkpoint state as
-`none` without reading or interpreting `oat_plan_hill_phases`; for other modes,
-an empty list means every phase and therefore cannot represent lite's policy.
+`none` without reading or interpreting `oat_plan_hill_phases`; for the task modes
+(spec-driven, quick, import) an empty list means every phase and therefore
+cannot represent lite's policy; brief modes read it as none (Brief checkpoint
+resolution below).
 Write this plan frontmatter value:
 
 ```yaml

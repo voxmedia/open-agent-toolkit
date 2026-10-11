@@ -556,7 +556,6 @@ After all task commits:
   - `spec-driven`: `plan.md`, `design.md`, and `spec.md`;
   - `quick`: `plan.md` and `discovery.md`, plus design/spec when present; and
   - `import`: `plan.md` and the imported plan, plus design/spec when present;
-  - `import`: `plan.md` and the imported plan, plus design/spec when present;
   - `brief`: the phase's Intent and Exit evidence plus the brief's Outcomes,
     Constraints and Out of Scope, and Decisions;
 - confirm no task boundary or dependency was missed; and
