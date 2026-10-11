@@ -569,8 +569,7 @@ Terminal routing first validates declaration and audit, then repairs
 review/gate/delivery obligations, then registers any uncovered accepted
 phases through the ordinary delivery prerequisites (`oat-project-pr-final`
 registers the terminal delivery, `kind: pr`, scope = those phases, through
-the same registration contract). Once coverage holds, the configured
-post-implement sequence runs unchanged; its `pr` step is satisfied by
+the same registration contract). Once coverage holds, the configured post-implement sequence runs unchanged (before coverage holds, a goal-mode summary defers its repo-level writes per brief-contract 12.5 and the summary skill's Step 6, p12 reviews M1); its `pr` step is satisfied by
 delivery coverage only at that step's position. Audit disposition allows
 explicitly deferred/retired units to leave terminal execution scope without
 changing ordinary progress counts. Declaration and coverage are therefore
