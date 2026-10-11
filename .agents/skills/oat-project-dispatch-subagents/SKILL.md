@@ -260,6 +260,14 @@ lifecycle_outcome:
 Do not rewrite generic route, selector, acceptance, outcome, or diagnostic
 fields inside the lifecycle extension.
 
+`workflow_mode` carries the project's recorded mode, `brief` included. In a
+brief project the lifecycle scope is a phase ID: `phase_id` (such as `p02`)
+names the phase-unit, and `task_id` names the execution record the launch
+executes, or is `null` for a whole-phase launch, because brief phases have no
+planned tasks. The brief's one-committing-owner rule then sets
+`commit_policy`: a nested worker returns edits on owned paths and never
+commits.
+
 ## Failure Boundaries
 
 - Invalid or stale project state: block before generic dispatch.
