@@ -476,7 +476,11 @@ next integrated review. Routing follows the missing evidence:
 5. a received `passed` review with a fresh allowed carrier → delivery.
 
 Per-phase reviews, the optional phase gate and the author self-check are
-unchanged. Terminal closeout runs the ordinary post-implement sequence.
+unchanged. Terminal closeout runs the ordinary post-implement sequence, with
+one goal deferral: a `summary` step before `pr` writes only project-directory
+files and defers its repo-level ledger and decision-record writes until `pr`
+has registered the terminal delivery (the summary skill's Step 6, Goal
+terminal deferral).
 
 ### 12.6 Explicit review scopes and recovery
 

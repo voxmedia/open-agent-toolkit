@@ -217,7 +217,10 @@ registration owner, not a second project PR (brief contract sections 12.7 and
    its lookup keys, reciprocal links, the integrated review and the captured
    `exit_gate`, idempotent create-or-attach through `gh pr list`, and the
    member and `status: open` record. The Step 5 ledger-path guard runs before
-   `gh pr create`.
+   `gh pr create`. A `summary` step configured before `pr` writes only
+   project-directory files and defers its repo-level ledger and decision-record
+   writes until this registration is done (`oat-project-summary` Step 6, Goal
+   terminal deferral), so the terminal subject stays deliverable.
 5. **Log.** After the registration commit, append exactly one structural entry
    and commit it in this step:
    `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-final --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered terminal delivery <dNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.

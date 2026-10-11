@@ -533,6 +533,22 @@ Run this step after `summary.md` has been authored or refreshed, including the
 distinct `## Autonomous Execution Learnings` section when its source artifact
 exists.
 
+**Goal terminal deferral.** When `oat_workflow_mode` is `goal` and this run
+comes before `pr` in the post-implement sequence (`oat_post_implement_sequence`
+lists `pr` but not yet among its completed steps), write only files under
+`$PROJECT_PATH`: skip the `oat project log rollup` call below (it appends to
+the repository ledger) and all of Step 7 (decision-record promotion and the
+regenerated decisions index), and report them as deferred until `pr` has
+registered the terminal delivery. A repo-level commit after the terminal
+milestone's reviewed revision is not bookkeeping (brief contract 12.8), so it
+would make the terminal subject undeliverable for the terminal registration in
+the PR skill's Step 1.5. Perform the deferred writes in the summary run that
+follows `pr`: a `summary` step configured after `pr`, or the summary refresh at
+completion, which the goal fingerprint fragment (Step 3) requires once the
+terminal delivery reaches its endpoint. Both writes are idempotent, so the
+later run needs no extra state. Registered deliveries are unaffected: they are
+judged against their observed member revisions.
+
 Before the roll-up or decision promotion mutates repository-wide outputs,
 preflight the owned paths and snapshot unrelated staged state:
 
@@ -594,6 +610,8 @@ tracked work item; it is not ledger graduation and must not replace the
 append-based `project` → `general` promotion in Step 2.5.
 
 ### Step 7: Promote Key Decisions to Canonical Decision Records
+
+Under the goal terminal deferral (Step 6), skip this step and report it deferred.
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 
