@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { isBriefMode, WORKFLOW_MODES } from '../index';
+import {
+  isBriefMode,
+  type JournalPhaseStatus,
+  parsePhaseMarkers,
+  parseProvisionalPhaseIds,
+  parseTaskProgress,
+  type PhaseMarkers,
+  selectPhaseUnits,
+  type TaskProgressOptions,
+  WORKFLOW_MODES,
+} from '../index';
 import { parseStateFrontmatter } from './parser';
 
 describe('parseStateFrontmatter', () => {
@@ -228,6 +238,33 @@ oat_workflow_mode: bogus
       'lite',
       'brief',
     ]);
+  });
+
+  it('exports the phase-unit parser surface from the package barrel', () => {
+    const options: TaskProgressOptions = { phaseUnits: true };
+    const status: JournalPhaseStatus = 'completed';
+    const markers: PhaseMarkers = {
+      status,
+      base: null,
+      head: null,
+      extractedTo: null,
+    };
+
+    expect(typeof parsePhaseMarkers).toBe('function');
+    expect(typeof parseProvisionalPhaseIds).toBe('function');
+    expect(typeof parseTaskProgress).toBe('function');
+    expect(typeof selectPhaseUnits).toBe('function');
+    expect(
+      parsePhaseMarkers(
+        '## Phase p01: Research\n\n**Status:** completed\n',
+      ).get('p01'),
+    ).toEqual(markers);
+    expect(
+      selectPhaseUnits(
+        parseTaskProgress('## Phase p01: Research\n', '', options),
+        null,
+      ).map((phase) => phase.phaseId),
+    ).toEqual(['p01']);
   });
 
   it('parses brief workflow mode', () => {

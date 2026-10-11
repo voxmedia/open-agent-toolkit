@@ -21,10 +21,18 @@ The package is intentionally pure and read-only. It has no CLI, UI, or server de
 import {
   evaluateQuickPlanReadiness,
   getProjectState,
+  isBriefMode,
   listProjects,
+  parsePhaseMarkers,
+  parseProvisionalPhaseIds,
+  parseTaskProgress,
   quickPlanNotReadyReason,
   recommendSkill,
+  selectPhaseUnits,
   WORKFLOW_MODES,
+  type JournalPhaseStatus,
+  type PhaseMarkers,
+  type TaskProgressOptions,
 } from '@open-agent-toolkit/control-plane';
 ```
 
@@ -33,6 +41,15 @@ import {
 `WorkflowMode` type is derived from this constant. `isBriefMode(mode)` reports
 whether a mode belongs to the brief family (`BRIEF_MODES`), whose plans count
 progress in phase-units rather than tasks.
+
+The phase-unit parser surface is public so plan validation and promotion share
+one marker grammar: `parseTaskProgress(plan, journal, { phaseUnits })` counts
+plan tasks by default and phase-units when `phaseUnits` is true;
+`parsePhaseMarkers(journal)` reads the strict `**Status:**`, `**Base:**`,
+`**Head:**` and `**Extracted to:**` journal markers (`PhaseMarkers`,
+`JournalPhaseStatus`); `parseProvisionalPhaseIds(plan)` returns phases marked
+`**Provisional:** yes`; and `selectPhaseUnits(progress, scope)` returns the
+phases in an active scope in plan document order (`null` selects every phase).
 
 ### `getProjectState(projectPath)`
 
