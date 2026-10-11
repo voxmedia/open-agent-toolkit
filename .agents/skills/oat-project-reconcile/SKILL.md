@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.5
+  version: 1.0.6
 ---
 
 # Reconcile Manual Implementation
@@ -187,6 +187,35 @@ replacements:
   and `oat_current_task` to the first incomplete unit in document order (a
   phase ID, never an extracted or accepted unit), or `null` when every unit is
   accepted.
+
+**Goal-mode branch (`WORKFLOW_MODE=goal`).** The brief-mode branch applies,
+with `oat-project-brief/references/brief-contract.md` section 12 winning where
+this skill differs:
+
+- **Pointer scope.** The pointer is the first incomplete unit within the
+  active milestone's ordered phase set (the shared Milestones reader), never a
+  phase of another milestone.
+- **Interrupted recovery.** When `oat_goal_recovery` is set, repair only that
+  record: check that its `milestone` has a `## Milestones` row, that its
+  `phase_ids` are that row's phases (plus any appended `p-revN` assigned to
+  it), that a non-null `delivery_id` names a registry entry of that milestone,
+  and that a non-null `review_artifact` exists in `reviews/` or
+  `reviews/archived/`. Then set `stage` from the evidence on disk by the
+  section 12.5 missing-evidence order (open fix records → `implementing`; a
+  missing, blocked or stale exit carrier → `exit_gate`; no integrated review
+  of the set → `reviewing`; a produced, unreceived artifact → `receiving`;
+  a received `passed` review with a fresh carrier → `delivering`). Reconcile
+  confirms the repaired record with the user in Step 4. Older-delivery
+  recovery leaves `oat_milestone`, `oat_milestone_status`,
+  `oat_current_task_id`, and `oat_current_task` untouched.
+- **Never for the active milestone.** Reconcile never creates an
+  `oat_goal_recovery` record for the active milestone and never creates one
+  at all: only `oat-project-review-receive`, `oat-project-revise`, and
+  `oat-project-pr-progress` open recovery records.
+- **Registration ambiguity.** A `registering` delivery whose lookup matched
+  more than one pull request is routed here by its registration owner: report
+  the matches and attach the one the user confirms in Step 4; reconcile never
+  creates a pull request.
 
 ### Step 1: Find Checkpoint
 
@@ -694,7 +723,7 @@ oat_current_task_id: { next_pending_task_id } # or null if all complete
 oat_last_updated: { today }
 ```
 
-Find the next pending task by scanning plan order: first task with status not `completed`. In brief modes the pointer is the first incomplete phase-unit, per the brief-mode branch above.
+Find the next pending task by scanning plan order: first task with status not `completed`. In brief modes the pointer is the first incomplete phase-unit, per the brief-mode branch above; in goal mode, within the active milestone's phase set, per the goal-mode branch.
 
 In `state.md`:
 

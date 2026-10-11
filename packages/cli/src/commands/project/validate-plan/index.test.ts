@@ -275,6 +275,99 @@ describe('oat project validate-plan', () => {
     });
   });
 
+  describe('goal profile', () => {
+    async function writeGoalProject(journal: string | null): Promise<string> {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-vplan-'));
+      tempDirs.push(dir);
+      await writeFile(
+        join(dir, 'state.md'),
+        ['---', 'oat_workflow_mode: goal', '---', '', '# State'].join('\n'),
+        'utf8',
+      );
+      await writeFile(
+        join(dir, 'plan.md'),
+        [
+          '---',
+          'oat_plan_source: goal',
+          'oat_plan_parallel_groups: []',
+          '---',
+          '',
+          '# Project Brief',
+          '',
+          '## Milestones',
+          '',
+          '| Milestone | Phases |',
+          '| --------- | ------ |',
+          '| m01 | p01 |',
+          '',
+          ...briefPhase('p01'),
+          ...briefPhase('p02'),
+        ].join('\n'),
+        'utf8',
+      );
+      if (journal !== null) {
+        await writeFile(join(dir, 'implementation.md'), journal, 'utf8');
+      }
+      return dir;
+    }
+
+    it('reads the journal so an extracted phase needs no milestone', async () => {
+      const unextracted = await writeGoalProject(null);
+      const first = createHarness({ json: true });
+      await runCommand(
+        first.command,
+        ['--project-path', unextracted],
+        ['--json'],
+      );
+      expect(first.capture.jsonPayloads[0]).toEqual({
+        valid: false,
+        errors: [expect.stringContaining('goal-phase-without-milestone')],
+      });
+      expect(process.exitCode).toBe(1);
+
+      const extracted = await writeGoalProject(
+        [
+          '## Phase p02: Phase p02',
+          '',
+          '**Status:** extracted',
+          '**Extracted to:** child-project',
+          '',
+        ].join('\n'),
+      );
+      const second = createHarness({ json: true });
+      await runCommand(
+        second.command,
+        ['--project-path', extracted],
+        ['--json'],
+      );
+      expect(second.capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reads the journal from the --cwd-resolved project path', async () => {
+      const extracted = await writeGoalProject(
+        [
+          '## Phase p02: Phase p02',
+          '',
+          '**Status:** extracted',
+          '**Extracted to:** child-project',
+          '',
+        ].join('\n'),
+      );
+      // A relative --project-path from a foreign process cwd: only the
+      // --cwd-resolved journal excuses the extracted phase.
+      expect(process.cwd()).not.toBe(extracted);
+      const { command, capture } = createHarness({ json: true });
+      await runCommand(
+        command,
+        ['--project-path', '.'],
+        ['--json', '--cwd', extracted],
+      );
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode ?? 0).toBe(0);
+    });
+  });
+
   describe('--json mode', () => {
     it('emits { valid: true } when the plan is valid', async () => {
       const dir = await writeValidPlan();

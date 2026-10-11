@@ -337,7 +337,9 @@ and a dispatch policy is already configured. You authorize the bounded
 resumable-export goal through a final PR without ordinary mid-run approval
 pauses. Autonomous entry chooses
 lite, brief, quick, or spec-driven review density from the actual uncertainty and
-invokes its owning creation skill. If an export-filter project is already
+invokes its owning creation skill. It never selects goal: each milestone's
+approval and the final declaration need a person, so an existing goal project
+stops at a product-judgment boundary instead of running unattended. If an export-filter project is already
 active, the second example explicitly resumes its earliest incomplete step
 instead of replaying finished phases.
 

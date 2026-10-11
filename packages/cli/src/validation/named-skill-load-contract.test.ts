@@ -1124,6 +1124,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-lite',
       'oat-project-quick-start',
     ],
@@ -1229,6 +1230,349 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason:
       'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
   },
+  // ---------------------------------------------------------------------- goal
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Mode Assertion',
+    match: '/oat-project-brief/references/brief-contract.md"`, where',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Resolves the path of the shared brief contract to read; it does not invoke the brief entry skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Mode Assertion',
+    match: 'Goal projects are not run by `oat-project-autonomous`',
+    classification: 'non-executing',
+    skills: ['oat-project-autonomous'],
+    reason:
+      'Negative directive: goal projects are excluded from the autonomous runner.',
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Artifact Persistence (Required)',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-goal:1"',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 0 (Preflight): Inherited Git State',
+    match:
+      'oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-goal:2"',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'The skill name is a retained commit operation identity; the command invokes the CLI helper.',
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.5: Resolve Dispatch Ladder and Ceiling',
+    match: 'Managed Dispatch Readiness and Review Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.5: Resolve Dispatch Ladder and Ceiling',
+    match: 'follow that contract as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the complete **Managed Dispatch Readiness and Review Contract** from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.55: Configure Optional Phase Gate Review',
+    match: 'Shared Phase Gate Review Setup Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.57: Configure Lifecycle Gate Posture',
+    match: 'Shared Lifecycle Gate Posture Setup Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.6: Run the Artifact Review Loop',
+    match:
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-goal/SKILL.md',
+    anchor: 'Step 3.6: Run the Artifact Review Loop',
+    match: 'follow that loop as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '12.3 Transitions and owners',
+    match: '| From → To | Owner | Prerequisite |',
+    classification: 'non-executing',
+    skills: [
+      'oat-project-goal',
+      'oat-project-pr-progress',
+      'oat-project-review-receive',
+      'oat-project-revise',
+    ],
+    reason:
+      'Transition-ownership table naming which skill owns each goal status write; an inventory, not a directive.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '12.4 Approval evidence and gate carriers',
+    match:
+      '`plan` is the milestone-scoped plan gate for the brief or its amendment',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Names the skill and gate key that own the milestone plan carrier; the gate runner, not this sentence, executes it.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '12.7 Delivery registry',
+    match: 'more than one stops and routes to `oat-project-reconcile`',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: an ambiguous registration lookup halts and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '12.9 Terminal declaration and outcome audit',
+    match: 'then routes uncovered accepted phases to `oat-project-pr-final`',
+    classification: 'non-executing',
+    skills: ['oat-project-pr-final'],
+    reason:
+      'Describes the router’s terminal recovery order and names the owner; the router recommendation, not this sentence, invokes it.',
+  },
+  {
+    file: '.agents/skills/oat-project-brief/references/brief-contract.md',
+    anchor: '12.10 Re-alignment, project log and learnings',
+    match: 'At `delivered`, `oat-project-goal` re-aligns',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Contract description of what the goal entry skill does at re-alignment; the skill itself owns the steps.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+    anchor: 'Goal Projects',
+    match: 'section 12 wins where this route restates it',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Precedence statement naming a reference file to read; it does not invoke the brief entry skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+    anchor: 'Goal Projects',
+    match: 'stops before dispatch and routes to `oat-project-goal`',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Stop-and-route: invalid milestone membership halts implementation and names the owner; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Goal Milestone Closeout',
+    match:
+      'Resolve and run the configured implement exit gate exactly as Step 14 does',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'The skill name is the gate key passed to `oat gate resolve`; the sentence runs the CLI gate inside implement, not another skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    anchor: 'Goal Milestone Closeout',
+    match:
+      "the step's target `oat-project-pr-final` registers the terminal delivery",
+    classification: 'non-executing',
+    skills: ['oat-project-pr-final'],
+    reason:
+      'Names the owner a `phase-uncovered` refusal routes to; implement stops and does not run pr-final itself.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 1.5: Closeout Invariant Gate',
+    match: 'a refusal routes to its `nextOwner.skill`',
+    classification: 'non-executing',
+    skills: [
+      'oat-project-brief',
+      'oat-project-goal',
+      'oat-project-implement',
+      'oat-project-pr-final',
+      'oat-project-pr-progress',
+    ],
+    reason:
+      'Stop boundary naming the owners a goal closeout refusal routes to; completion stops and does not run them.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 2: Upfront User Questions (Batched)',
+    match: 'Step 1.5 refuses it and routes to the goal registration owner',
+    classification: 'non-executing',
+    skills: ['oat-project-pr-final', 'oat-project-pr-progress'],
+    reason:
+      'Stop-and-route: uncovered goal delivery work is refused and named for its registration owner.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Prerequisites',
+    match: 'Goal planning is owned by `oat-project-goal`',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Terminal handoff: this skill stops and tells the user which entry point owns goal planning.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Step 1.5: Goal Terminal Delivery Registration (`goal` only)',
+    match:
+      'A `not-declared` or `audit-invalid` refusal routes to `oat-project-goal`',
+    classification: 'non-executing',
+    skills: ['oat-project-goal', 'oat-project-pr-progress'],
+    reason:
+      'Stop-and-route: closeout refusals other than `phase-uncovered` halt and name their owners.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Step 1.5: Goal Terminal Delivery Registration (`goal` only)',
+    match: 'Same registration contract.',
+    classification: 'load-required',
+    skills: ['oat-project-pr-progress'],
+    requires: [
+      'Load the current `oat-project-pr-progress/SKILL.md` and, for each terminal delivery, run its Step 5.5 steps 1–3 and 4–7 as written',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 5.5: Goal Delivery Registration (`goal` only)',
+    match: 'when `oat-project-goal` hands back a stale `delivered` milestone',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Names the skill that hands a stale milestone back; a trigger condition, not an invocation.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-progress/SKILL.md',
+    anchor: 'Step 5.5: Goal Delivery Registration (`goal` only)',
+    match: 'more than one stops and routes to `oat-project-reconcile`',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: an ambiguous registration lookup halts and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-progress/SKILL.md',
+    anchor: 'Step 5: Determine Next Skill',
+    match: 'which follows the goal priority that `oat-project-next` tabulates',
+    classification: 'non-executing',
+    skills: [
+      'oat-project-goal',
+      'oat-project-implement',
+      'oat-project-next',
+      'oat-project-pr-progress',
+    ],
+    reason:
+      'Reports the control-plane recommendation and the goal route order; progress recommends and does not invoke.',
+  },
+  {
+    file: '.agents/skills/oat-project-reconcile/SKILL.md',
+    anchor: 'Step 0.5: Prerequisite Check',
+    match: 'section 12 winning where this skill differs:',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Precedence statement naming a reference file to read; it does not invoke the brief entry skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match:
+      'An integrated milestone or delivery review follows `oat-project-brief/references/brief-contract.md` section 12.6',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Cites the brief contract sections that define goal review scope; a reference, not an invocation.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match: 'membership errors route to `oat-project-goal`',
+    classification: 'non-executing',
+    skills: ['oat-project-goal'],
+    reason:
+      'Stop-and-route: a scope mismatch halts the review and names the membership owner.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match:
+      'A missing, blocked or stale exit carrier stops and routes to `oat-project-implement` scoped closeout',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Stop-and-route: the milestone exit gate precedes the integrated review, so the review halts and names the closeout owner.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 3: Determine Scope and Commits',
+    match:
+      'Missing anchors widen to the merge-base range exactly as in Step 3.0; invalid anchors route to',
+    classification: 'non-executing',
+    skills: ['oat-project-reconcile'],
+    reason:
+      'Stop-and-route: a failed anchor check halts this flow and names the repair skill; it does not invoke it.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 3: Determine Task Scope',
+    match: 'section 12 winning where this skill differs (12.3 transitions',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Precedence statement naming a reference file to read; it does not invoke the brief entry skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 3: Determine Task Scope',
+    match: '`status: undeliverable` with a not-fresh `review`',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason:
+      'Stop-and-route: a stale integrated review writes no transition and names the review owner.',
+  },
+  {
+    file: '.agents/skills/oat-project-revise/SKILL.md',
+    anchor: '4c: Create Revision Phase in plan.md',
+    match: 'section 12.6 winning',
+    classification: 'non-executing',
+    skills: ['oat-project-brief'],
+    reason:
+      'Precedence statement naming a reference file to read; it does not invoke the brief entry skill.',
+  },
   // ---------------------------------------------------------------- autonomous
   {
     file: '.agents/skills/oat-project-autonomous/SKILL.md',
@@ -1311,6 +1655,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-design',
       'oat-project-discover',
       'oat-project-implement',
@@ -1347,6 +1692,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-complete',
       'oat-project-design',
       'oat-project-discover',
@@ -1398,6 +1744,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-lite',
       'oat-project-new',
       'oat-project-quick-start',
@@ -1635,6 +1982,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',
       'oat-project-progress',
@@ -2031,6 +2379,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-import-plan',
       'oat-project-lite',
       'oat-project-new',

@@ -323,6 +323,7 @@ Not all workflow modes require every artifact:
 - `import`: imported plan + implementation (spec/design optional)
 - `lite`: single-phase plan + implementation (summary/documentation optional at closeout)
 - `brief`: Project Brief in `plan.md` + per-phase journal in `implementation.md` (`references/research/` scaffolded; no discovery, spec, or design)
+- `goal`: the brief artifact set, with a `## Milestones` table in `plan.md` and the milestone state, gate carriers, delivery registry and outcome audit in `state.md`
 
 ## `.oat/repo/` structure
 

@@ -47,8 +47,9 @@ instead). Saving a brainstorming reference file under the active project also
 commits or pushes that file. Promoting to a new project runs
 `oat project new`, which scaffolds the project and makes it your active
 project, and then writes a completed `discovery.md` (or, for a lite project,
-fills in its `plan.md`; for a brief project, writes a research note under
-`references/research/` and leaves the brief to `oat-project-brief`). Capturing a new idea also sets it as your active
+fills in its `plan.md`; for a brief or goal project, writes a research note
+under `references/research/` and leaves the brief to `oat-project-brief` or
+`oat-project-goal`). Capturing a new idea also sets it as your active
 idea in local OAT config. Each destination is confirmed before anything is
 written.
 

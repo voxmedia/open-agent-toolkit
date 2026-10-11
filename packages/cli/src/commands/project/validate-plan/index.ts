@@ -108,10 +108,23 @@ export function createProjectValidatePlanCommand(
       const profile = resolvePlanProfile(workflowMode);
       const phaseIds = extractPhaseIds(content, profile);
 
+      let implementationContent: string | null = null;
+      if (profile === 'goal') {
+        try {
+          implementationContent = readFileSync(
+            join(projectPath, 'implementation.md'),
+            'utf-8',
+          );
+        } catch {
+          implementationContent = null;
+        }
+      }
+
       const issues = validatePlanForProfile(content, {
         profile,
         workflowMode,
         stateFrontmatter,
+        implementationContent,
       });
       const profileErrors = issues
         .filter((issue) => issue.severity === 'error')

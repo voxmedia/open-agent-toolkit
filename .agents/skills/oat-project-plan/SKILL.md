@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat template:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.4.18
+  version: 1.4.19
 ---
 
 # Planning Phase
@@ -20,8 +20,8 @@ Before a parent-branch commit, verify `oat internal commit-paths --help` succeed
 ## Prerequisites
 
 This skill is the plan authoring path for **spec-driven** projects only. Quick,
-import, lite, and brief modes have dedicated entry skills that produce `plan.md`
-directly.
+import, lite, brief, and goal modes have dedicated entry skills that produce
+`plan.md` directly.
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
@@ -30,6 +30,7 @@ Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`)
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 - **`lite`**: **Stop.** Tell the user: "Lite planning is owned by `oat-project-lite`; run it to author or resume the combined plan contract."
 - **`brief`**: **Stop.** Tell the user: "Brief planning is owned by `oat-project-brief`; run it to author or resume the Project Brief."
+- **`goal`**: **Stop.** Tell the user: "Goal planning is owned by `oat-project-goal`; run it to author, amend, or re-align the Project Brief and its milestones."
 
 ## Plan Format Contract
 
@@ -168,6 +169,16 @@ Exit skill.
 ```
 ⚠️  This project uses brief mode. Run `oat-project-brief` to author or resume
     its Project Brief; brief phases carry intent and exit evidence, not tasks.
+```
+
+Exit skill.
+
+**Mode: `goal`** — **STOP.** Print:
+
+```
+⚠️  This project uses goal mode. Run `oat-project-goal` to author, amend, or
+    re-align its Project Brief and milestones; goal phases carry intent and
+    exit evidence, not tasks.
 ```
 
 Exit skill.

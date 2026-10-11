@@ -100,6 +100,66 @@ Each HOME=$(mktemp -d) vitest run leaves about 48 MB of cache under $TMPDIR; 87 
 
 Phase p08 review round 1 passed (0/0/0/2 Low); both Lows fixed as p08-t07 on the same handle at 5b334a4e7. All gates green at 0.3.19 (origin/main 0.3.18 merged at bf6c60c49). v1 brief seam complete; progress PR for p01–p08 awaits the user-invoked oat-project-pr-progress; Astra v1.5 round 1 dispatched. Key p08-review-pass-5b334a4e7.
 
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Astra v1.5 round 1 (gpt-6-astra high, read-only delegate) resolved carried objections A1–A4 and surfaced B1–B4; applied as design revision 4.0 and plan revision 5 (p09–p12 re-planned, p10-t04 added). Report kept at references/astra-v15-round-1.md. Key astra-v15-round-1-applied.
+
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Astra v1.5 round 2 returned NOT ALIGNED with five paste-ready edits (read-only closeout observation, recovery isolation in reconcile/review-receive, audit phase-entry shape, observed endpoint for activation, goal guard verification supplement); the two-round plan cap was reached, so the edits were applied verbatim as Astra's own text. Report at references/astra-v15-round-2.md. Key astra-v15-round-2-applied.
+
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Plan revision 5 artifact review (Opus 5.5 high): 0/3/7/6; all findings applied (router placement, p11-t03, recovery producers, expected-red list, delivery check, p12 split into five tasks, Low wording). Artifact archived; round-2 re-review of the fixes next. Key plan-rev5-artifact-review-applied.
+
+### 2026-10-11 · structural · oat gate review · plan
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:2,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/brief-goal-workflow-modes/reviews/artifact-plan-review-2026-10-11T080913Z.md run=b28524f9-7d10-4c30-8adb-18944a25be3a
+
+### 2026-10-11 · structural · oat gate review · plan
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/brief-goal-workflow-modes/reviews/artifact-plan-review-2026-10-11T081731Z.md run=1fa1e354-b677-4571-a2df-0431666fd2f2
+
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Configured plan gate on revision 5: attempt 1 0/2/2/0 (applied at 1de4aac68), attempt 2 0/0/0/0 passed; oat_quick_start_gate refreshed to 1de4aac68. v1.5 plan approved for execution; p09 launches next. Key plan-rev5-gate-passed.
+
+### 2026-10-11 · structural · oat-project-implement · 611596345
+
+Phase p09 review round 1 (0/1/2/3) converted the High, a Medium's code side and a Low into p09-t03; round 2 (0/0/0/0) passed. Contract sentences (Scope cell, approval evidence, exit-carrier freshness) recorded in design.md; Milestones grammar and code mapping carried to p11-t01/p10-t01. Phase p09 closed at 611596345. Key p09-review-pass-611596345.
+
+### 2026-10-11 · general · friction · disk space pause
+
+p10 paused after p10-t01 (97f2f1a32): free space fell to 558 MB against the 650 MB stop rule. The p10-t02 working tree is parked as references/p10-t02-recovered.patch. Growth sources are outside the pre-authorized cleanup set (~/.t3/userdata/statev2.sqlite 3.5 GB, ~/.t3/worktrees 8.8 GB, ~/.codex/sessions 6.4 GB, ~/.cache/codex-runtimes 1.5 GB). Resume p10 from p10-t02 once about 1.5 GB is free. Key p10-paused-disk.
+
+### 2026-10-11 · structural · oat-project-pr-progress · https://github.com/voxmedia/open-agent-toolkit/pull/361
+
+Progress PR #361 opened for v1 (p01–p08) from feat/brief-workflow-mode-v1 cut at ebccf5ba3; goal phases continue on feat/freestyle-project-workflow. Key pr-progress-p01-p08-361.
+
+### 2026-10-11 · structural · oat-project-implement · p10
+
+Phase p10 passed review at 675d5bd27 after two rounds (0/0/2/6 then 0/0/0/1); fixes p10-t05 and p10-t06; plan amendment 5.1 applied. Key p10-review-passed-675d5bd27.
+
+### 2026-10-11 · structural · oat-project-implement · p11
+
+Phase p11 passed review at 80282f21b after two rounds (0/1/2/5 then 0/0/0/1); fix p11-t04; one Low carried to p12-t04. Key p11-review-passed-80282f21b.
+
+### 2026-10-11 · general · friction · review-cap p12
+
+p12 reached the three-round review cap with a one-clause prose residual (goal terminal deferral condition). Disposition: fix as p12-t08, root-verified; the final integrated review over the whole branch is the independent check instead of a fourth p12 round.
+
+### 2026-10-11 · structural · oat-project-implement · p12
+
+Phase p12 passed review at da60988b8 after three rounds (0/1/2/4, 0/0/1/1, 0/0/1/2); fixes p12-t06..t08; all twelve phases complete at lockstep 0.3.20. Key p12-review-passed-da60988b8.
+
+### 2026-10-11 · general · friction · review-cap final
+
+The final integrated review reached three rounds; each fix to the delivery-evidence evaluator surfaced an adjacent bypass (same-artifact rebind, set-once member revisions, own-artifact set from the judged state). Disposition: a known evaluator bypass cannot ship, so one more narrow fix (p12-t11, reviewer-verified counterfactual) and a round 4 limited to that guard; lesson for artifact-cleanup and future evaluators: derive trust sets from immutable records (Reviews rows), never from the state being judged.
+
+### 2026-10-11 · structural · oat-project-implement · final
+
+Final integrated review passed at 9881971ba after four rounds (0/1/0/2, 0/1/0/1, 0/1/0/0, 0/0/0/0); fixes p12-t09..t11 to the delivery-evidence evaluator; implementation complete. Key final-review-passed-9881971ba.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

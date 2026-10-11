@@ -176,7 +176,7 @@ This feature is opt-in and disabled by default (missing or `enabled: false`). Fo
 
 Generated planning and analysis artifacts have a separate review loop from code/phase reviews.
 
-For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
+For plans, `oat-project-plan`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, `oat-project-goal` (for the brief and each milestone amendment), and `oat-project-import-plan` run a bounded `plan.md` artifact review before marking the plan ready for implementation. The loop dispatches `oat-reviewer` in structured-output artifact mode with `scope: plan`, applies unambiguous Critical and High artifact-local fixes, offers Medium and Low fixes, and re-runs until clean or the retry bound is exhausted. A clean result records the `plan` row in the plan's `## Reviews` table as `passed`.
 
 For analysis artifacts, `oat-docs-analyze` and `oat-agent-instructions-analyze` run a bounded accuracy review after writing their severity-rated artifacts. The reviewer checks cited evidence, severity, and recommendations before the matching apply workflow consumes the artifact. The analysis loop updates tracking metadata to mark the artifact verified.
 
@@ -232,11 +232,32 @@ or contradictory anchors stop the review and route to `oat-project-reconcile`.
 A brief `final` review also audits every numbered Outcome against the
 journal's evidence.
 
+In a goal project, per-phase reviews (`pNN`, `p-revN`) use the brief anchors.
+A milestone's integrated review names the milestone or delivery and its exact
+ordered phase set, for example `code m01: p01, p02, p-rev1` or
+`code m01/d01: p01, p02, p-rev1`; a `pNN-pMM` or `final` token is refused for
+it, and membership is never expanded from first to last phase. The set must
+match the milestone's `## Milestones` row, a pending `oat_goal_recovery`
+record, or a registered delivery's frozen scope. Before dispatch, the
+milestone's exit carrier must be allowed and fresh; otherwise the review stops
+and routes to implement's milestone closeout. The range runs from the first
+member's base to the last member's head, and phases of other milestones inside
+it are listed under `Intervening changes:` and judged only as context. The
+artifact records `oat_review_requested_scope: mNN` (or `mNN/dNN`) and
+`oat_review_phase_ids` with the exact set, and a narrowed re-review keeps the
+full set. The `## Reviews` Scope cell is the milestone ID (`m01`) or, for a
+registered delivery, the delivery ID (`d01`). The review is recorded as
+`received`; `oat-project-review-receive` moves the milestone to `delivering`
+on a clean receive.
+
 Final review `passed` gate requires:
 
 - No unresolved Critical/High/Medium findings.
 - Deferred Medium findings resurfaced and explicitly dispositioned.
 - Low findings explicitly dispositioned (after plain-language explanation).
+
+A goal milestone delivery is gated by its passed, fresh integrated review and
+exit carrier rather than by a `final` row.
 
 ## Complexity review at budget exhaustion
 

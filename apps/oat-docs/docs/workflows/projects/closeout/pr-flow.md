@@ -10,6 +10,10 @@ Two PR paths:
 - `oat-project-pr-progress`: progress PR for one phase or partial scope
 - `oat-project-pr-final`: final project PR into `main`
 
+In a goal project both skills register deliveries instead: a progress PR is a
+milestone delivery, and pr-final registers terminal deliveries rather than a
+separate final PR.
+
 ## Inputs
 
 Expected artifacts:
@@ -19,13 +23,15 @@ Expected artifacts:
 - Optional (quick/import): `spec.md`, `design.md`
 - Not expected (lite): `discovery.md`, `spec.md`, or `design.md`
 - Not expected (brief): `discovery.md`, `spec.md`, or `design.md`; the Project Brief in `plan.md` and the per-phase journal in `implementation.md` are the sources
+- Not expected (goal): as brief; the Project Brief with its `## Milestones` table, the journal, and the goal state in `state.md` are the sources
 - Recommended (quick mode): `discovery.md`
 - Recommended (import mode): `references/imported-plan.md`
 - Recommended: `implementation.md` final summary
 - Recommended: `summary.md` — pr-final treats it as the primary source for the PR Summary section and automatically refreshes it first when missing or stale
 - Lite source row: `oat-project-pr-final` uses the plan's Summary, Decisions, and Validation Criteria plus the `implementation.md` Final Summary; it does not create `summary.md` unless lite closeout explicitly opts in
 - Brief source row: `summary.md` is required as in quick; its sources are the brief's Goal, Outcomes, Approach, and Decisions, the journal's accepted phases and Outcomes audit, and the review rows. Progress PRs scope a phase or `pNN-pMM` run from the journal's `**Base:**`/`**Head:**` anchors rather than a commit-message search
-- Required gate for final PR: review table final row should be `passed`
+- Goal source row: a progress PR is a milestone delivery. Its scope is the milestone's ordered phase set, or a registered delivery's frozen scope; its Git range runs from the set's first anchored base to its last anchored head and discloses other milestones' phases inside it. The PR is created only after `oat project delivery check` reports `status: ok` and a `registering` entry is committed to `oat_deliveries`. pr-final registers terminal deliveries for uncovered accepted phases instead of opening a separate final PR
+- Required gate for final PR: review table final row should be `passed` (goal: pr-final does not read the final row; each delivery it registers needs a passed, fresh integrated review and an allowed, fresh exit carrier instead)
 
 ## Output
 

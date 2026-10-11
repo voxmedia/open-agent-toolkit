@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), Skill
 metadata:
-  version: 1.1.6
+  version: 1.1.7
 ---
 
 # Project Next
@@ -109,6 +109,7 @@ projects, and synced records whose detached checkout is absent.
   - `oat-project-quick-start` — Start a quick workflow project
   - `oat-project-lite` — Start a lite workflow project
   - `oat-project-brief` — Start a brief workflow project
+  - `oat-project-goal` — Start a goal workflow project
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
@@ -127,17 +128,17 @@ projects, and synced records whose detached checkout is absent.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                     | Used For                                                                                     |
-| ------------------------- | -------------------------------------------------------------------------------------------- |
-| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                        |
-| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                      |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite, brief). Default: `spec-driven`    |
-| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                           |
-| `oat_hill_completed`      | Which HiLL gates have been passed                                                            |
-| `oat_blockers`            | Informational warnings (not routing gates)                                                   |
-| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                    |
-| `oat_quick_start_gate`    | Reported only in the Step 6 announcement; never a routing input                              |
-| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads |
+| Field                     | Used For                                                                                        |
+| ------------------------- | ----------------------------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                           |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                         |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite, brief, goal). Default: `spec-driven` |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                              |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                                               |
+| `oat_blockers`            | Informational warnings (not routing gates)                                                      |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                       |
+| `oat_quick_start_gate`    | Reported only in the Step 6 announcement; never a routing input                                 |
+| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads    |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 
@@ -223,6 +224,7 @@ Phase-to-skill mapping for HiLL override:
 
 In brief mode the `plan` row maps to `oat-project-brief`, which owns brief
 planning; spec-driven planning is never a brief project's current-phase skill.
+In goal mode it maps to `oat-project-goal` the same way.
 
 Note: a `spec` HiLL phase only appears in legacy projects scaffolded before requirements confirmation was folded into `oat-project-design`. New projects scaffold with `['discovery', 'design']` HiLL checkpoints, so `spec` falls through to `oat-project-design` here as a graceful migration. The standalone `oat-project-spec` skill remains available as an opt-in for users who want to formalize requirements separately.
 
@@ -316,6 +318,32 @@ for a quick project.
 Unlike lite, tier 2 stays with `oat-project-brief`: a brief becomes
 implementation-ready only through its recorded review disposition and single
 approval, which that skill owns. Brief progress counts phase-units, not tasks.
+
+**Goal Mode:** the control plane owns goal routing (`oat project status --json`,
+`recommendation.skill` and `recommendation.context`); dispatch that skill with
+that context. Before any milestone state exists, the planning rows match brief
+mode with `oat-project-goal` in place of `oat-project-brief`. After it exists,
+routing follows this priority, the first match winning:
+
+| Priority | Condition                                                                                                                     | Target Skill                                                    | Context                                    |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------ |
+| 1        | `oat_goal_status: declared_met` with an invalid outcome audit                                                                 | `oat-project-goal`                                              | `audit`                                    |
+| 1        | `declared_met`: received feedback, then pending recovery, then incomplete terminal scope, then the post-implementation router | review-receive / stage owner / `oat-project-implement` / Step 5 | `scope terminal: …`                        |
+| 2        | Actionable review artifacts                                                                                                   | `oat-project-review-receive`                                    | —                                          |
+| 2        | Pending `oat_goal_recovery` at `implementing` / `exit_gate`                                                                   | `oat-project-implement`                                         | `scope mNN/dNN: …` / `closeout mNN/dNN: …` |
+| 2        | Pending `oat_goal_recovery` at `reviewing` / `receiving` / `delivering`                                                       | by missing evidence (rows 4c–4d below)                          | the recovery's explicit scope              |
+| 3        | Active milestone membership invalid                                                                                           | `oat-project-goal`                                              | —                                          |
+| 4a       | `aligning`                                                                                                                    | `oat-project-goal`                                              | `align mNN`                                |
+| 4b       | `implementing`: incomplete unit in scope / every unit accepted                                                                | `oat-project-implement`                                         | `scope mNN: …` / `closeout mNN: …`         |
+| 4c       | `reviewing`: queued fixes or a missing, blocked or stale exit carrier                                                         | `oat-project-implement`                                         | `scope mNN: …` / `closeout mNN: …`         |
+| 4c       | `reviewing`: carrier fresh, integrated review missing or stale / produced and unreceived / passed                             | review-provide / review-receive / review-receive                | `code mNN: …` / `receive <artifact>`       |
+| 4d       | `delivering`: passed review and allowed, fresh carrier; otherwise rows 4c by missing evidence                                 | `oat-project-pr-progress`                                       | `deliver mNN`                              |
+| 4e       | `delivered`                                                                                                                   | `oat-project-goal`                                              | `realign mNN`                              |
+
+Goal progress counts phase-units per active milestone. `delivered` is not the
+endpoint: activation of the next milestone waits for the delivery's agreed
+endpoint, which `oat-project-goal` observes. The Step 5 brief phase-unit guard
+applies to goal only within the active milestone's scope at `implementing`.
 
 \* `oat-project-implement` handles both sequential and parallel execution.
 
@@ -504,8 +532,8 @@ and fall through to 5.3, and do not route to `oat-project-implement` even when
 signal here — neither a null current task nor a `complete` or `pr_open`
 `oat_phase_status` is terminal, because an active project reaches both while it
 still owns pending revision work. The guard is workflow-mode independent: it
-applies identically to `spec-driven`, `quick`, `import`, `lite`, and `brief`
-projects.
+applies identically to `spec-driven`, `quick`, `import`, `lite`, `brief`, and
+`goal` projects.
 
 For every other `oat_lifecycle` value the check below is unchanged.
 
@@ -556,7 +584,9 @@ routes directly to `oat-project-pr-final` before the summary check below.
 Announce: "Final review passed — creating final PR". Optional lite summary or
 documentation work is owned by the immutable implementation closeout snapshot,
 not this fallback router. The lite shortcut does not apply to brief projects:
-brief closeout takes 5.5 through 5.7 and never skips the summary.
+brief closeout takes 5.5 through 5.7 and never skips the summary. Goal
+terminal closeout follows brief closeout after a valid declaration; its `pr`
+step is satisfied by delivery coverage.
 
 **5.5: Summary not done**
 

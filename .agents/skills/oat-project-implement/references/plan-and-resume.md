@@ -24,6 +24,32 @@ logged brief edits Step 2.2 allows (adding, splitting, reordering, or making
 phases concrete within the approved outcomes); those are part of brief
 execution, not scope expansion.
 
+### Goal Projects
+
+When `state.md` records `oat_workflow_mode: goal`, every brief-family rule
+above applies, and `oat-project-brief/references/brief-contract.md` section 12
+wins where this route restates it. Goal adds a scope to each run:
+
+- **Active scope.** Read the router's context (`oat project status --json`,
+  `recommendation.context`): `scope mNN: <ordered phase ids>` is the active
+  milestone's ordered phase set from the shared Milestones reader;
+  `scope mNN/dNN: …` or a pending `oat_goal_recovery` record is a recovery
+  scope (its `phase_ids`); `scope terminal: …` is the terminal execution scope
+  after a declaration, which excludes audited `deferred` and `retired`
+  phases; `closeout mNN: …` or `closeout mNN/dNN: …` runs the scoped milestone
+  closeout in `completion-and-closeout.md` (Goal Milestone Closeout) without
+  dispatching a phase. Never widen a scope to phases of another milestone.
+- **Ownership.** Implement never writes `oat_milestone`, never activates a
+  milestone, never registers a delivery, and never writes `declared_met`: it
+  consumes the declaration. It writes only the milestone status and recovery
+  stage transitions that Goal Milestone Closeout names.
+- **Recovery isolation.** Executing a recovery scope for an older delivery
+  leaves `oat_milestone`, `oat_milestone_status`, `oat_current_task_id`, and
+  `oat_current_task` unchanged; progress is recorded in the journal and the
+  recovery record.
+- **Invalid membership.** A `Active milestone membership invalid` reason stops
+  before dispatch and routes to `oat-project-goal`.
+
 ### Step 1: Check Plan Complete
 
 ```bash
@@ -388,7 +414,8 @@ cat "$PROJECT_PATH/implementation.md" 2>/dev/null | head -20
   record ID (brief contract section 8). Resolve a record ID to its phase and a
   phase ID to itself; `null`, an unknown ID, or an accepted or extracted unit
   resolves to the first incomplete phase-unit in document order within the
-  active scope, which is every phase in brief. Phase-units come from the brief's
+  active scope, which is every phase in brief and the Goal Projects scope in
+  goal. Phase-units come from the brief's
   `## Phase` headings, never from task headings, and a provisional phase is
   incomplete. Print `Resuming from {phase_id}.` and apply the Step 2.2
   provisional rule before dispatching it. When every phase-unit in the active

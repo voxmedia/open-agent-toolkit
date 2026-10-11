@@ -77,3 +77,35 @@ A reviewer put the mandatory Reconnaissance signal in its chat reply rather than
 ### 2026-09-06 · general · friction · dispatch journal cannot close out child outcome
 
 oat project dispatch record rejects a revision that changes child_outcome (generic fields are immutable), so a record written at acceptance never carries the terminal outcome; outcomes were recorded in implementation.md instead. Consider a terminal event kind or an outcome revision. (observed on oat 0.2.55)
+
+### 2026-10-11 · general · friction · reviewer child terminated by gateway 503 before artifact
+
+The round-2 p01 reviewer (accepted native launch) was terminated by a transient inference-gateway HTTP 503 before writing anything. Continued through the same accepted handle rather than launching a replacement; the continuation completed normally. Key p01-review2-503-continuation.
+
+### 2026-10-11 · general · friction · reviewer resolver refuses candidate overrides under a capped policy
+
+Operator asked for Opus 5.5 high subagents under a frontier ceiling; dispatch-ceiling resolve rejects --candidate-model for the reviewer role, so root-owned phase reviewers run the cap (claude-fable-5-1/high) while implementers run Opus 5.5 high via the exact-candidate branch. Recorded as a run deviation rather than lowering the ceiling. Key p01-reviewer-cap-deviation.
+
+### 2026-10-11 · general · friction · disk full during parallel-group fan-in
+
+Three concurrent lane worktrees with full installs and builds filled the volume (118 MiB free) and the first integration build died with disk I/O error. Removing the merged worktrees and pruning the pnpm store recovered 3.6 GB; group 2 needs more headroom before bootstrapping three lanes. Key group1-disk-full-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
+### 2026-10-11 · general · friction · parallel group degraded to sequential: insufficient disk
+
+Group 2 [p05,p06,p07] bootstrap preflight failed closed on free space (3.3 GB free, ~5 GB needed for three lanes). Degraded to sequential target-preserving execution in the root checkout; no worktree was created. Key group2-degrade-insufficient-disk.
+
+### 2026-10-11 · general · friction · isolated-HOME temp growth fills the volume
+
+Each HOME=$(mktemp -d) vitest run leaves about 48 MB of cache under $TMPDIR; 87 such dirs (3.3 GB) brought the volume to 370 MiB free mid-group-2. Swept 71 stale ones; later briefs mandate one fake HOME per run. Candidate guidance for the implement skill and AGENTS.md. Key friction-isolated-home-tmp-growth.
+
+### 2026-10-11 · general · friction · disk space pause
+
+p10 paused after p10-t01 (97f2f1a32): free space fell to 558 MB against the 650 MB stop rule. The p10-t02 working tree is parked as references/p10-t02-recovered.patch. Growth sources are outside the pre-authorized cleanup set (~/.t3/userdata/statev2.sqlite 3.5 GB, ~/.t3/worktrees 8.8 GB, ~/.codex/sessions 6.4 GB, ~/.cache/codex-runtimes 1.5 GB). Resume p10 from p10-t02 once about 1.5 GB is free. Key p10-paused-disk.
+
+### 2026-10-11 · general · friction · review-cap p12
+
+p12 reached the three-round review cap with a one-clause prose residual (goal terminal deferral condition). Disposition: fix as p12-t08, root-verified; the final integrated review over the whole branch is the independent check instead of a fourth p12 round.
+
+### 2026-10-11 · general · friction · review-cap final
+
+The final integrated review reached three rounds; each fix to the delivery-evidence evaluator surfaced an adjacent bypass (same-artifact rebind, set-once member revisions, own-artifact set from the judged state). Disposition: a known evaluator bypass cannot ship, so one more narrow fix (p12-t11, reviewer-verified counterfactual) and a round 4 limited to that guard; lesson for artifact-cleanup and future evaluators: derive trust sets from immutable records (Reviews rows), never from the state being judged.

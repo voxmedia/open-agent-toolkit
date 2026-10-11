@@ -74,6 +74,9 @@ type PromotionReason =
   | 'lite-plan-reference-exists'
   | 'invalid-lite-plan'
   | 'brief-archive-exists'
+  | 'goal-milestone-active'
+  | 'goal-delivery-unsettled'
+  | 'goal-recovery-pending'
   | 'extracted-phases'
   | 'invalid-brief-plan'
   | 'missing-phase-head'
@@ -113,6 +116,8 @@ export type PromotionResult =
       reason: Exclude<PromotionReason, 'promoted'>;
       files: string[];
       phases?: string[];
+      /** Goal: the registry entries that are not yet settled. */
+      deliveries?: string[];
       recovery?: PromotionRecovery;
     };
 
@@ -425,7 +430,12 @@ async function promoteProject(
   } catch {
     return { status: 'refused', reason: 'project-unreadable', files: [] };
   }
-  if (stateFrontmatter['oat_workflow_mode'] === 'brief') {
+  const mode = stateFrontmatter['oat_workflow_mode'];
+  if (mode === 'brief' || mode === 'goal') {
+    if (mode === 'goal') {
+      const unsettled = goalPromotionRefusal(stateFrontmatter);
+      if (unsettled !== null) return unsettled;
+    }
     return promoteBriefProject(
       {
         repoRoot,
@@ -435,6 +445,8 @@ async function promoteProject(
         planPath,
         stateContent,
         planContent,
+        sourceMode: mode,
+        stateFrontmatter,
       },
       context,
       dependencies,
@@ -564,6 +576,96 @@ async function promoteProject(
 }
 
 // ---------------------------------------------------------------------------
+// goal → quick: the settled delivery boundary (B3)
+// ---------------------------------------------------------------------------
+
+/** Registry statuses at which a delivery no longer needs goal machinery. */
+const SETTLED_DELIVERY_STATUSES = new Set(['at_endpoint', 'superseded']);
+
+/** The goal state carried verbatim into the promoted state and the archive. */
+const GOAL_HISTORY_KEYS = [
+  'oat_deliveries',
+  'oat_milestone_gates',
+  'oat_goal_outcome_audit',
+] as const;
+
+/**
+ * A goal promotes only at a settled delivery boundary: the active milestone
+ * is `delivered`, every registry entry is `at_endpoint` or `superseded` (none
+ * `registering` or `open`; an empty registry is not settled), and no recovery
+ * is pending. Extracted phases are
+ * refused by the shared migration. Returns the refusal, or null when settled.
+ */
+export function goalPromotionRefusal(
+  stateFrontmatter: Record<string, unknown>,
+): PromotionResult | null {
+  if (stateFrontmatter['oat_milestone_status'] !== 'delivered') {
+    return { status: 'refused', reason: 'goal-milestone-active', files: [] };
+  }
+  const recovery = stateFrontmatter['oat_goal_recovery'];
+  if (recovery !== null && recovery !== undefined) {
+    return { status: 'refused', reason: 'goal-recovery-pending', files: [] };
+  }
+  const registry = stateFrontmatter['oat_deliveries'];
+  const entries = Array.isArray(registry) ? registry : [];
+  const unsettled = entries
+    .filter(
+      (entry: unknown) =>
+        typeof entry !== 'object' ||
+        entry === null ||
+        !SETTLED_DELIVERY_STATUSES.has(
+          String((entry as Record<string, unknown>)['status']),
+        ),
+    )
+    .map((entry: unknown) =>
+      typeof entry === 'object' && entry !== null
+        ? String((entry as Record<string, unknown>)['delivery_id'] ?? '?')
+        : '?',
+    );
+  // `delivered` means registered, open and review-ready (B4): a delivered
+  // milestone with no registry entry is contradictory, never vacuously settled.
+  if (
+    !Array.isArray(registry) ||
+    entries.length === 0 ||
+    unsettled.length > 0
+  ) {
+    return {
+      status: 'refused',
+      reason: 'goal-delivery-unsettled',
+      files: [],
+      deliveries: unsettled,
+    };
+  }
+  return null;
+}
+
+/**
+ * The goal archive: the original brief followed by its delivery history, so
+ * the registry, milestone gates and outcome audit survive under the archive
+ * as well as in the promoted `state.md`.
+ */
+function renderGoalArchive(
+  planContent: string,
+  stateFrontmatter: Record<string, unknown>,
+): string {
+  const history: Record<string, unknown> = {};
+  for (const key of GOAL_HISTORY_KEYS) {
+    history[key] = stateFrontmatter[key] ?? null;
+  }
+  return `${planContent.trimEnd()}
+
+## Delivery History (archived at promotion)
+
+The goal's delivery registry, milestone gate carriers and outcome audit as
+recorded in \`state.md\` when the project was promoted to quick.
+
+\`\`\`yaml
+${YAML.stringify(history).trimEnd()}
+\`\`\`
+`;
+}
+
+// ---------------------------------------------------------------------------
 // brief → quick
 // ---------------------------------------------------------------------------
 
@@ -594,6 +696,9 @@ const SECTION_HEADING_LINE = /^#{1,2}[ \t]/;
 const HEADING_LINE = /^#/;
 
 export type BriefPhaseState = 'accepted' | 'active' | 'pending' | 'provisional';
+
+/** The brief-family mode a promotion starts from. */
+export type BriefSourceMode = 'brief' | 'goal';
 
 interface BriefTaskRecord {
   taskId: string;
@@ -779,22 +884,29 @@ function trimBlank(lines: string[]): string[] {
  * Type and Artifact are review-event identity) and one provenance line under
  * the heading marking the rows recorded before promotion.
  */
-function reviewsWithProvenance(section: BriefSection, today: string): string[] {
+function reviewsWithProvenance(
+  section: BriefSection,
+  today: string,
+  sourceMode: BriefSourceMode,
+): string[] {
   return [
     section.lines[0]!,
     '',
-    `Rows dated on or before ${today} were recorded pre-promotion under workflow mode brief.`,
+    `Rows dated on or before ${today} were recorded pre-promotion under workflow mode ${sourceMode}.`,
     '',
     ...trimBlank(section.lines.slice(1)),
   ];
 }
 
-function renderPlanTask(record: BriefTaskRecord): string[] {
+function renderPlanTask(
+  record: BriefTaskRecord,
+  sourceMode: BriefSourceMode,
+): string[] {
   const commit = record.commit && record.commit !== '-' ? record.commit : null;
   return [
     `### Task ${record.taskId}: ${record.title}`,
     '',
-    `> Accepted before promotion (brief). Execution record: \`implementation.md\`${commit ? ` (commit \`${commit}\`)` : ''}.`,
+    `> Accepted before promotion (${sourceMode}). Execution record: \`implementation.md\`${commit ? ` (commit \`${commit}\`)` : ''}.`,
     ...(trimBlank(record.body).length > 0
       ? ['', ...trimBlank(record.body)]
       : []),
@@ -812,8 +924,11 @@ export function migrateBriefToQuick(input: {
   implementationContent: string;
   projectName: string;
   today: string;
+  /** The actual source mode, named in provenance; defaults to `brief`. */
+  sourceMode?: BriefSourceMode;
 }): BriefMigrationResult {
   const { planContent, implementationContent, projectName, today } = input;
+  const sourceMode = input.sourceMode ?? 'brief';
   const markers = parsePhaseMarkers(implementationContent);
   if ([...markers.values()].some((marker) => marker.status === 'extracted')) {
     return { ok: false, reason: 'extracted-phases' };
@@ -875,7 +990,7 @@ export function migrateBriefToQuick(input: {
   const output: string[] = [
     `# Implementation Plan: ${projectName}`,
     '',
-    `> Promoted from a brief on ${today}. The original brief is archived at \`${BRIEF_ARCHIVE_FILE}\`; its outcomes, decisions, known unknowns and delivery authority are carried into \`discovery.md\`.`,
+    `> Promoted from a ${sourceMode === 'goal' ? 'goal brief' : 'brief'} on ${today}. The original brief is archived at \`${BRIEF_ARCHIVE_FILE}\`; its outcomes, decisions, known unknowns and delivery authority are carried into \`discovery.md\`.`,
     '',
     `**Goal:** ${goal ? goal.split('\n\n')[0]!.replace(/\n/g, ' ') : '{Author from discovery}'}`,
     '',
@@ -927,7 +1042,9 @@ export function migrateBriefToQuick(input: {
             '',
           );
         }
-        for (const record of completed) lines.push(...renderPlanTask(record));
+        for (const record of completed) {
+          lines.push(...renderPlanTask(record, sourceMode));
+        }
 
         if (state === 'accepted' && completed.length === 0) {
           const next = Math.max(0, ...phaseRecords.map((r) => r.ordinal)) + 1;
@@ -963,7 +1080,7 @@ export function migrateBriefToQuick(input: {
     if (/^delivery\b/i.test(title)) continue;
 
     if (title.toLowerCase() === 'reviews') {
-      output.push(...reviewsWithProvenance(section, today), '');
+      output.push(...reviewsWithProvenance(section, today, sourceMode), '');
       continue;
     }
 
@@ -997,7 +1114,7 @@ export function migrateBriefToQuick(input: {
   frontmatter['oat_template'] = true;
   frontmatter['oat_template_name'] = 'plan';
   frontmatter['oat_plan_source'] = 'quick';
-  frontmatter['oat_promoted_from'] = 'brief';
+  frontmatter['oat_promoted_from'] = sourceMode;
   frontmatter['oat_promotion_pending_phases'] = pendingPhases;
 
   const plan = `---\n${YAML.stringify(frontmatter)}---\n\n${output
@@ -1158,6 +1275,8 @@ interface BriefPromotionInput {
   planPath: string;
   stateContent: string;
   planContent: string;
+  sourceMode: BriefSourceMode;
+  stateFrontmatter: Record<string, unknown>;
 }
 
 async function promoteBriefProject(
@@ -1196,6 +1315,7 @@ async function promoteBriefProject(
       implementationContent,
       projectName,
       today,
+      sourceMode: input.sourceMode,
     });
   } catch {
     return { status: 'refused', reason: 'invalid-brief-plan', files: [] };
@@ -1255,7 +1375,7 @@ async function promoteBriefProject(
     'plan.md',
     'state.md',
   ];
-  const identity = `promote:${projectRoot}:brief-to-quick:${randomUUID()}`;
+  const identity = `promote:${projectRoot}:${input.sourceMode}-to-quick:${randomUUID()}`;
   const writtenFiles: string[] = [];
   try {
     await dependencies.mkdir(join(projectRoot, 'references'), {
@@ -1267,7 +1387,13 @@ async function promoteBriefProject(
       'utf8',
     );
     writtenFiles.push('discovery.md');
-    await dependencies.writeFile(archivePath, input.planContent, 'utf8');
+    await dependencies.writeFile(
+      archivePath,
+      input.sourceMode === 'goal'
+        ? renderGoalArchive(input.planContent, input.stateFrontmatter)
+        : input.planContent,
+      'utf8',
+    );
     writtenFiles.push(BRIEF_ARCHIVE_FILE);
     if (migration.implementationChanged) {
       await dependencies.writeFile(
@@ -1316,9 +1442,9 @@ export function createProjectPromoteCommand(
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
   return new Command('promote')
     .description(
-      'Promote an authored lite or brief project to the quick workflow',
+      'Promote an authored lite, brief or settled goal project to the quick workflow',
     )
-    .argument('<project-path>', 'Lite or brief project path to promote')
+    .argument('<project-path>', 'Lite, brief or goal project path to promote')
     .requiredOption('--to <mode>', 'Target workflow mode')
     .action(
       async (
@@ -1341,7 +1467,7 @@ export function createProjectPromoteCommand(
           context.logger.info(`Promoted ${projectPath} to quick.`);
         } else {
           context.logger.error(
-            `Promotion refused: ${result.reason}${result.phases ? ` (${result.phases.join(', ')})` : ''}.${result.recovery ? ` Exact-path persistence ${result.recovery.outcome}; attempts ${result.recovery.attempts}; lock ${result.recovery.lockClass ?? 'none'}; identity ${result.recovery.identity}; receipt ${result.recovery.receipt ?? 'unavailable'}. ${result.recovery.error ?? ''} Recover existing Quick artifacts with: ${result.recovery.command}` : ''}`,
+            `Promotion refused: ${result.reason}${result.phases ? ` (${result.phases.join(', ')})` : ''}${result.deliveries ? ` (${result.deliveries.join(', ')})` : ''}.${result.recovery ? ` Exact-path persistence ${result.recovery.outcome}; attempts ${result.recovery.attempts}; lock ${result.recovery.lockClass ?? 'none'}; identity ${result.recovery.identity}; receipt ${result.recovery.receipt ?? 'unavailable'}. ${result.recovery.error ?? ''} Recover existing Quick artifacts with: ${result.recovery.command}` : ''}`,
           );
         }
         process.exitCode = result.status === 'promoted' ? 0 : 1;

@@ -43,6 +43,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-project-dispatch-subagents',
     'oat-project-discover',
     'oat-project-document',
+    'oat-project-goal',
     'oat-project-implement',
     'oat-project-import-plan',
     'oat-project-lite',

@@ -399,6 +399,18 @@ const BRIEF_ROUTER_AUTHORITY_NOTE =
   'authority for the brief-unit guard: an unaccepted phase-unit sends the project back to ' +
   '`oat-project-implement` before any finalization step.';
 
+/**
+ * Printed for goal projects in the implement phase. Goal routing reads
+ * milestone membership, recovery records, gate carriers, the delivery
+ * registry and phase-unit progress, none of which this dashboard reads.
+ */
+const GOAL_ROUTER_AUTHORITY_NOTE =
+  '> Goal projects route by milestone status, recovery records, gate carriers, the delivery ' +
+  'registry and phase-units, which this dashboard does not read. `oat project status` and ' +
+  '`oat-project-next` use the control-plane router, which is the authority for goal milestone ' +
+  'routing: it scopes implementation to the active milestone and sends review, delivery and ' +
+  'recovery work to its owner.';
+
 function computeNextStep(
   project: ActiveProject,
   hasProjects: boolean,
@@ -461,9 +473,12 @@ function computeNextStep(
       discovery: 'oat-project-discover',
       spec: 'oat-project-design',
       design: 'oat-project-design',
-      plan: isBriefWorkflow(state.workflowMode)
-        ? 'oat-project-brief'
-        : 'oat-project-plan',
+      plan:
+        state.workflowMode === 'goal'
+          ? 'oat-project-goal'
+          : isBriefWorkflow(state.workflowMode)
+            ? 'oat-project-brief'
+            : 'oat-project-plan',
       implement: 'oat-project-implement',
     };
     return {
@@ -566,6 +581,22 @@ function computeNextStep(
       reason: 'Start implementation from the approved brief',
     },
     'brief:implement:in_progress': {
+      step: 'oat-project-implement',
+      reason: 'Continue implementation',
+    },
+    // Goal plan rows mirror the router's GOAL_ROUTES: the goal entry skill
+    // owns the brief, its milestones and milestone activation. Parity is
+    // bounded like brief's; in the implement phase the router's goal priority
+    // block is the authority and the dashboard prints a note saying so.
+    'goal:plan:in_progress': {
+      step: 'oat-project-goal',
+      reason: 'Continue the goal brief and its milestones',
+    },
+    'goal:plan:complete': {
+      step: 'oat-project-goal',
+      reason: 'Align and activate the first milestone',
+    },
+    'goal:implement:in_progress': {
       step: 'oat-project-implement',
       reason: 'Continue implementation',
     },
@@ -824,7 +855,11 @@ function buildDashboardMarkdown(
     state.phase === 'implement' &&
     isBriefWorkflow(state.workflowMode)
   ) {
-    lines.push(BRIEF_ROUTER_AUTHORITY_NOTE);
+    lines.push(
+      state.workflowMode === 'goal'
+        ? GOAL_ROUTER_AUTHORITY_NOTE
+        : BRIEF_ROUTER_AUTHORITY_NOTE,
+    );
     lines.push('');
   }
 
@@ -837,6 +872,7 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-import-plan` - Import an external provider plan');
   lines.push('- `oat-project-lite` - Create a lite workflow project');
   lines.push('- `oat-project-brief` - Create a brief workflow project');
+  lines.push('- `oat-project-goal` - Create a goal workflow project');
   lines.push('- `oat project open <name>` - Open or resume a project');
   lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');

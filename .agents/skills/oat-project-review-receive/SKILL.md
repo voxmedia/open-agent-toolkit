@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.10
+  version: 1.6.11
 ---
 
 # Receive Review
@@ -424,6 +424,70 @@ Never write `### Task` headings into the brief, and never write `**Base:**` or
 `**Head:**`: `oat-project-implement` records anchors when the phase starts and
 ends.
 
+**Goal mode (`oat_workflow_mode: goal`).** The brief-mode rules above apply,
+with `oat-project-brief/references/brief-contract.md` section 12 winning where
+this skill differs (12.3 transitions, 12.5 the goal ladder exception, 12.6
+explicit scopes and recovery, 12.7 the registry). A phase-unit review (`pNN`,
+`p-revN`) is received exactly as in brief mode. For an integrated milestone or
+delivery review:
+
+1. **Identity.** The target is the artifact's `oat_review_requested_scope`
+   (`mNN` or `mNN/dNN`) with its ordered `oat_review_phase_ids`, or the
+   pending `oat_goal_recovery` record whose `review_artifact` names this
+   artifact. A recovery record that names a different artifact is never
+   satisfied by this one. The target is **older** when its milestone is not
+   `oat_milestone`, or its delivery belongs to an earlier milestone;
+   otherwise it is the **active** milestone.
+2. **Queued fixes.** Place the fixes by the late-fix rule above, with the
+   reviewed phase being the last phase of the explicit set. An appended
+   `p-revN` joins the **target** milestone's `## Milestones` row (append it to
+   that row's phase list); a frozen delivery scope is never edited. Then
+   invalidate the evidence: run
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`,
+   confirm the report's `exit.source` is `milestone-carrier` and its `status`
+   is `undeliverable`, and write `oat_milestone_gates[mNN].exit.freshness: stale`
+   with `freshness_reason: "fixes queued from reviews/archived/{REVIEW_FILENAME}"`
+   followed by the report's `exit.reason` when present; for a registered
+   delivery also write its `integrated_review.disposition: stale`. Queued fixes
+   invalidate the review and exit-gate evidence even when the check would
+   still report them fresh, so the exit gate runs again before the next
+   integrated review.
+   - **Active target:** update the execution pointer as in brief mode and
+     write `oat_milestone_status: implementing` (from `reviewing` or
+     `delivering`).
+   - **Older target:** write only `oat_goal_recovery: { milestone,
+delivery_id, phase_ids, stage: implementing, review_artifact: null }`,
+     with `phase_ids` the explicit set plus any appended `p-revN` (create the
+     record, or move an existing one for this target back to `implementing`).
+     Leave `oat_milestone`, `oat_milestone_status`, `oat_current_task_id`, and
+     `oat_current_task` unchanged; Step 7's brief pointer write is skipped.
+3. **Clean receive.** `fixes_completed` is not a passed review. When no fixes
+   are queued, write the Reviews event `passed` (Step 6) and persist the
+   authoritative evidence in tracked records before Step 7.5 archives the file:
+   the Reviews row keeps its `Reviewed Head`; for a registered delivery the
+   same write rewrites `integrated_review` (`artifact:
+reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
+   `bound_revisions` from the reviewed member base and head,
+   `disposition: passed`), writes each `members[i].reviewed_head` to the
+   reviewed member head that `bound_revisions` binds for it, and replaces
+   `exit_gate` with the current allowed milestone exit carrier. The delivery's
+   `exit_gate` and `members[].reviewed_head` are set once and may change only
+   in the commit that records a review naming a different artifact of this
+   delivery (section 12.8), so never split these writes. Commit them (Step 7.6), then
+   re-validate scope, revisions and the exit carrier with
+   `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`:
+   - `status: ok` → **active target:** write `oat_milestone_status: delivering`
+     (`reviewing → delivering`); **older target:** advance the recovery record
+     to `stage: delivering`. Only review-receive writes this transition.
+   - `status: undeliverable` with a not-fresh `exit` → write
+     `exit.freshness: stale` with the report's `exit.reason`; the router
+     sends the scoped closeout back to `oat-project-implement`.
+   - `status: undeliverable` with a not-fresh `review` → write no transition
+     and route to `oat-project-review-provide` for a new integrated review of
+     the same explicit set.
+
+   Commit the transition or invalidation as its own bookkeeping commit.
+
 ### Step 4: Determine Next Task IDs
 
 Read plan.md to find the last task ID in the target phase:
@@ -826,6 +890,11 @@ Low findings handling is scope-aware:
   - Hard guard: do not mark final review `passed` until this explicit choice is recorded.
 
 ### Step 10: Route to Next Action
+
+**Goal mode:** report the router's next skill (`oat project status --json`)
+instead of offering a task list when the receive wrote `delivering`, advanced a
+recovery record, or routed to review-provide or scoped closeout; older-target
+fixes resume through the recovery record, never through the active milestone.
 
 **Ask user:**
 

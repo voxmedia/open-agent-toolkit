@@ -17,8 +17,10 @@ responsible for file boundaries, verification, and task commits.
 
 #### Brief-Mode Phase Execution
 
-When `oat_workflow_mode` is `brief`, each phase is one phase-unit with Intent
-and Exit evidence instead of planned tasks. Every rule in this route still
+When `oat_workflow_mode` is `brief` or `goal`, each phase is one phase-unit
+with Intent and Exit evidence instead of planned tasks; goal also scopes every
+run to a milestone, recovery or terminal phase set (`plan-and-resume.md`, Goal
+Projects). Every rule in this route still
 applies except where this subsection replaces it, and
 `oat-project-brief/references/brief-contract.md` (sections 3, 6, 7, and 10) is
 authoritative where the two differ. The subsection is inert for every other
@@ -200,7 +202,7 @@ Before each phase:
      spec: {PROJECT_PATH}/spec.md
      implementation: {PROJECT_PATH}/implementation.md
      discovery: {PROJECT_PATH}/discovery.md
-   workflow_mode: {spec-driven|quick|import|lite|brief} # lite is always a single phase; brief phases carry Intent and Exit evidence, not tasks
+   workflow_mode: {spec-driven|quick|import|lite|brief|goal} # lite is always a single phase; brief and goal phases carry Intent and Exit evidence, not tasks
    active_provider: {codex|claude|cursor|other}
    phase_base_head: {PHASE_BASE_HEAD}
    worktree: {assigned checkout}
@@ -1217,6 +1219,11 @@ summary, and design/plan deviations. `oat_plan_hill_phases` lists phases after
 which execution pauses; an empty list means every phase.
 In brief modes an empty list means none (`plan-and-resume.md` Step 2.5), and a
 phase boundary is reached only when the phase-unit is accepted.
+In goal mode the last accepted phase of a milestone or recovery scope leads to
+Goal Milestone Closeout (`completion-and-closeout.md`), not to the final
+review: the milestone's integrated review is requested with its explicit
+`code mNN: <ordered phase ids>` scope after the exit carrier is allowed and
+fresh, and `code final` belongs to terminal closeout only.
 
 Before a configured non-final HiLL pause, run auto-review when enabled. Scope
 starts after the last passed whole-phase review and ends at the current phase.

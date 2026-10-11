@@ -120,7 +120,7 @@ different things can happen, and only two of them stop the workflow:
   out without writing a review, or wrote a review OAT could not validate or
   match to this run. Nothing was reviewed. `oat-project-implement` and
   `oat-project-lite` keep these failures blocked whatever `onFailure` says,
-  and so does `oat-project-brief`.
+  and so do `oat-project-brief` and `oat-project-goal`.
   The planning skills handle them differently; see
   [When the gate finds blocking problems](../../advanced/workflow-gates.md#when-the-gate-finds-blocking-problems).
 - **Reviewer selection falls back.** By default (`--avoid same-family`) the gate
@@ -458,9 +458,11 @@ request.
 **Prerequisites:** An initialized project must resolve from the active pointer
 or an explicitly supplied project/review target. Its core artifacts must be
 committed before review. Code review needs completed implementation work and
-the mode-appropriate requirements sources; lite and brief reviews do not
+the mode-appropriate requirements sources; lite, brief, and goal reviews do not
 require absent discovery, spec or design artifacts. A brief code review takes
-its range from the journal's phase anchors. Code reviews and plan artifact reviews
+its range from the journal's phase anchors. A goal integrated review names its
+milestone or delivery and its exact ordered phase set; see
+[Phase and final review](index.md#phase-and-final-review). Code reviews and plan artifact reviews
 also need a resolved dispatch policy (`oat_dispatch_policy` in `state.md` or
 `workflow.dispatchPolicy.*` in config); without one the review stops before
 launching a reviewer. Discovery, spec and design artifact reviews run without

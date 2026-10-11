@@ -22,8 +22,8 @@ constraints:
   agents to implement and review each phase, or no cap, or leaving model choice
   to the provider; and deciding where the list of candidate models (the
   _ladder_) is stored.
-- **Who needs it:** anyone starting a quick, spec-driven, lite, or imported
-  project, because planning asks you to choose a policy; and team leads who
+- **Who needs it:** anyone starting a quick, spec-driven, lite, brief, goal,
+  or imported project, because planning asks you to choose a policy; and team leads who
   manage model cost.
 - **Know first:** there is no default policy, and a policy set in any config
   file overrides the one each project chose. A tier is a cap: phase agents may

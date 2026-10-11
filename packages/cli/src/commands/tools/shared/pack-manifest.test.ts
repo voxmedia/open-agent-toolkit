@@ -66,6 +66,20 @@ describe('PACK_MANIFEST', () => {
     );
   });
 
+  it('registers oat-project-goal in the workflows pack', () => {
+    const workflows = PACK_MANIFEST.find(({ name }) => name === 'workflows');
+
+    expect(workflows?.assets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'skill:oat-project-goal',
+          source: 'skills/oat-project-goal',
+          destination: '.agents/skills/oat-project-goal',
+        }),
+      ]),
+    );
+  });
+
   it('registers the brief plan and journal templates in the workflows pack', () => {
     const workflows = PACK_MANIFEST.find(({ name }) => name === 'workflows');
 

@@ -4,6 +4,7 @@ import { createProjectArchiveCommand } from './archive';
 import { createProjectCloseoutCheckCommand } from './closeout-check';
 import { createProjectCompleteDiscoveryCommand } from './complete-discovery';
 import { createProjectCompleteStateCommand } from './complete-state';
+import { createProjectDeliveryCommand } from './delivery';
 import { createProjectDispatchCommand } from './dispatch';
 import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
 import { createProjectLinksCommand } from './links';
@@ -30,6 +31,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectCloseoutCheckCommand())
     .addCommand(createProjectCompleteDiscoveryCommand())
     .addCommand(createProjectCompleteStateCommand())
+    .addCommand(createProjectDeliveryCommand())
     .addCommand(createProjectDispatchCommand())
     .addCommand(createProjectDispatchCeilingCommand())
     .addCommand(createProjectListCommand())

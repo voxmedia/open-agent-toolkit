@@ -1,6 +1,6 @@
 ---
 title: Lifecycle
-description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, and import paths.'
+description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, brief, goal, and import paths.'
 ---
 
 # Lifecycle
@@ -29,9 +29,9 @@ For a one-page view of where people approve and what runs automatically in each 
 
 ## Quick Look
 
-- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick, lite, brief, and import lanes.
+- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick, lite, brief, goal, and import lanes.
 - When to use it: when you need the actual project execution model, not just a high-level overview of workflow mode.
-- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, `oat-project-import-plan`, `oat-project-implement`
+- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-brief`, `oat-project-goal`, `oat-project-import-plan`, `oat-project-implement`
 
 ## Lifecycle Map
 
@@ -51,9 +51,10 @@ For a one-page view of where people approve and what runs automatically in each 
       DOC --> C["Complete"]
     ```
 
-This map shows the spec-driven default. The quick, lite, brief, import, and
-capture lanes each skip part of it — see [Lane diagrams](#lane-diagrams) below.
-Lite and brief in particular have no discovery, spec, or design step at all.
+This map shows the spec-driven default. The quick, lite, brief, goal, import,
+and capture lanes each skip part of it — see [Lane diagrams](#lane-diagrams)
+below. Lite, brief, and goal in particular have no discovery, spec, or design
+step at all.
 
 ## Post-implementation flow
 
@@ -345,6 +346,16 @@ See [Implementation Execution](execution/implementation-execution.md) for the fu
 4. `oat-project-pr-final`, through the same post-implementation sequence as quick
 5. Optional `oat project promote <project-path> --to quick` when you want a maintained task plan instead
 
+### Goal lane steps
+
+1. `oat-project-goal` runs the brief interview for the whole outcome, writes one Project Brief whose `## Milestones` table assigns every phase to exactly one milestone (`| m01 | p01, p02 |`), runs the artifact review and any configured `oat-project-goal` gate, asks for one approval, and activates the first milestone
+2. Implement: `oat-project-implement` executes the active milestone's phase-units as brief does, then runs the milestone closeout, whose `exit` gate runs before the integrated review
+3. `oat-project-review-provide` reviews the milestone as `code mNN: <ordered phases>`; `oat-project-review-receive` moves a clean review to delivery
+4. `oat-project-pr-progress` checks the evidence with `oat project delivery check`, registers the delivery (`dNN`) in `oat_deliveries`, and opens its pull request
+5. `oat-project-goal` re-aligns at `delivered`: it refreshes delivery observations, captures learnings, amends the brief with the next milestone, takes the amendment through review and approval, and activates it once the previous delivery reaches its agreed endpoint
+6. Repeat from step 2 per milestone; when the user declares the goal met, `oat-project-goal` records an exhaustive outcome audit, `oat-project-pr-final` registers terminal deliveries for any accepted phases no delivery covers, and `oat-project-complete` closes out once every accepted phase is covered
+7. Optional `oat project promote <project-path> --to quick` at a settled delivery boundary
+
 ### Import lane steps
 
 1. `oat-project-import-plan` (checks inherited git state before import scaffolding so sync-generated or unrelated dirty files do not silently roll into project bookkeeping)
@@ -559,6 +570,94 @@ phases (`invalid-brief-plan`), or an accepted phase has neither a completed
 record nor a `**Head:**` anchor to synthesize from (`missing-phase-head`, which
 lists the refused phases).
 
+### Goal lane
+
+=== "Diagram"
+
+    ![Goal lane: an alignment interview and one reviewed Project Brief with a Milestones table, then per milestone activation, phase-units with per-phase reviews, milestone closeout with the exit gate, the integrated review, a registered delivery through pr-progress, and re-alignment that loops to the next milestone once the previous delivery reaches its endpoint; finally the terminal declaration with an exhaustive outcome audit and coverage closeout, with promotion to quick at a settled delivery boundary](/diagrams/project-lifecycle-9-goal-lane-light.svg)
+    ![Goal lane: an alignment interview and one reviewed Project Brief with a Milestones table, then per milestone activation, phase-units with per-phase reviews, milestone closeout with the exit gate, the integrated review, a registered delivery through pr-progress, and re-alignment that loops to the next milestone once the previous delivery reaches its endpoint; finally the terminal declaration with an exhaustive outcome audit and coverage closeout, with promotion to quick at a settled delivery boundary](/diagrams/project-lifecycle-9-goal-lane-dark.svg)
+
+=== "Mermaid source"
+
+    ```mermaid
+    flowchart TD
+      A["Alignment interview\n(whole outcome, milestone split)"] --> B["Project Brief + Milestones\n(review, gate, one approval)"]
+      B --> M["Activate milestone mNN\n(oat-project-goal)"]
+      M --> I["Phase-units\n(implement, per-phase reviews)"]
+      I --> X["Milestone closeout\n(exit gate before the review)"]
+      X --> R["Integrated review\n(code mNN: ordered phases)"]
+      R --> D["Delivery dNN\n(oat-project-pr-progress)"]
+      D --> RA["Re-alignment\n(learnings, amendment, approval)"]
+      RA -->|Next milestone at endpoint| M
+      RA --> T["Terminal declaration\n(exhaustive outcome audit)"]
+      T --> C["Coverage closeout\n(pr-final for uncovered, complete)"]
+      D -->|Settled boundary| Q["Promote to Quick"]
+    ```
+
+A goal project is a brief project delivered in milestones. The Project Brief
+carries a `## Milestones` table (`| Milestone | Phases |`) in which every
+phase, including appended `p-revN` revision phases, belongs to exactly one
+milestone; `oat project validate-plan` reports membership errors as `goal-`
+codes. Each milestone is approved through its own `plan` gate carrier in
+`state.md` (`oat_milestone_gates.mNN.plan`): the first approval also marks
+`plan.md` complete, and every later amendment is approved only by the next
+milestone's carrier.
+
+**Milestone delivery.** For goal the end of the brief ladder is reordered: the
+milestone's `exit` gate runs at closeout before the integrated review, and
+queued fixes invalidate both, so the gate runs again before the next review.
+The integrated review names its milestone (or delivery) and the exact ordered
+phase set, for example `code m01: p01, p02, p-rev1`; that set is never derived
+from a first–last range. `oat-project-pr-progress` registers a delivery only
+when `oat project delivery check --subject <mNN|dNN>` reports `status: ok`,
+writing the `oat_deliveries` entry (`registering`) before it creates the pull
+request so an interrupted run resumes by `gh pr list` instead of opening a
+duplicate.
+
+**Freshness.** Evidence keeps the revision actually reviewed. Commits after it
+count as bookkeeping only when they touch the project's tracking files in
+permitted ways (routing, progress, evidence, project-log appends); a code
+change, an edit to approved brief content such as Outcomes or a phase's Intent,
+or a substantive change followed by its revert stales the delivery.
+`oat project delivery refresh` observes each member pull request with
+`gh pr view` and records staleness; it never writes milestone status or
+recovery. Because the project branch is the delivery's head branch, do not
+push a brief amendment while that delivery is still open.
+
+**Recovery.** Stale evidence on the active milestone's delivery returns it to
+`reviewing`. Fixes or inline feedback for an older milestone open an
+`oat_goal_recovery` record targeting that milestone and delivery, scheduling a
+`p-revN` phase in its row, while the active milestone, its status and the
+execution pointer stay untouched.
+
+**Re-alignment and the end.** At `delivered`, `oat-project-goal` refreshes the
+observations, writes one learnings entry, amends the brief with the next
+milestone, and runs the review, gate and approval for the amendment; it may do
+all of that while a `merged` endpoint is pending, but it activates the next
+milestone only once refresh observes the previous delivery at its endpoint.
+When the user declares the goal met, the declaration is recorded in
+`implementation.md` and `state.md` gets `oat_goal_status: declared_met` and an
+exhaustive outcome audit: every phase `accepted`, `extracted`, `deferred` or
+`retired`, every numbered outcome bound to its exact text. Terminal closeout
+requires the declaration, the audit and delivery coverage of every accepted
+phase; `oat-project-pr-final` registers one terminal delivery per milestone
+that still has uncovered phases, all sharing the head branch's pull request.
+`oat-project-complete` then opens no further pull request, even with
+`workflow.createPrOnComplete: true`, because the deliveries already cover the
+work.
+
+### Promoting a goal project to quick
+
+`oat project promote <project-path> --to quick` accepts a goal project only at
+a settled delivery boundary: the active milestone is `delivered`, every
+registry entry is `at_endpoint` or `superseded`, and no recovery is pending.
+It otherwise refuses without writing, with `goal-milestone-active`,
+`goal-recovery-pending`, or `goal-delivery-unsettled` (which lists the open or
+`registering` deliveries, and also covers an empty registry). A settled goal
+promotes like a brief, and the archive `references/brief-archive.md` carries
+the delivery history (registry, milestone gates and outcome audit) after the
+original brief. `oat-project-quick-start` resumes the promoted project.
+
 ### Import lane
 
 === "Diagram"
@@ -668,15 +767,15 @@ actionable `oat pjm init` stop instead of scaffolding implicitly. See
 
 ### Seeding a new project from a brainstorm
 
-When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and one of four modes: `lite`, `brief`, `quick`, or `spec-driven`. For Quick and Spec-Driven projects, it runs `oat project new <slug> --mode <mode>` and writes `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, and Open Questions. It writes only `discovery.md` (never a partial `design.md`), then points to `oat-project-quick-start` or `oat-project-design` without auto-chaining. For Lite projects, it instead seeds the five sections in `plan.md`, leaves `discovery.md` and `design.md` absent, and points to `oat-project-lite`. For Brief projects, it writes the payload to a research note under `references/research/`, leaves the scaffolded `plan.md` for the brief interview, and points to `oat-project-brief`.
+When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and one of five modes: `lite`, `brief`, `goal`, `quick`, or `spec-driven`. For Quick and Spec-Driven projects, it runs `oat project new <slug> --mode <mode>` and writes `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, and Open Questions. It writes only `discovery.md` (never a partial `design.md`), then points to `oat-project-quick-start` or `oat-project-design` without auto-chaining. For Lite projects, it instead seeds the five sections in `plan.md`, leaves `discovery.md` and `design.md` absent, and points to `oat-project-lite`. For Brief projects, it writes the payload to a research note under `references/research/`, leaves the scaffolded `plan.md` for the brief interview, and points to `oat-project-brief`. Goal projects arrive the same way and point to `oat-project-goal`, which authors the brief and its milestone split.
 
-This is a parallel entry path into all four lanes, not a new lane. Quick and Spec-Driven users arrive at `oat-project-quick-start` or `oat-project-design` with discovery already populated; Lite users arrive at `oat-project-lite` with the single-phase plan already seeded; Brief users arrive at `oat-project-brief` with the brainstorm payload saved as a research note under `references/research/` and the scaffolded `plan.md` left for the interview.
+This is a parallel entry path into all five lanes, not a new lane. Quick and Spec-Driven users arrive at `oat-project-quick-start` or `oat-project-design` with discovery already populated; Lite users arrive at `oat-project-lite` with the single-phase plan already seeded; Brief and goal users arrive at `oat-project-brief` or `oat-project-goal` with the brainstorm payload saved as a research note under `references/research/` and the scaffolded `plan.md` left for the interview.
 
 ### Folding back into an active project
 
 When `oat-brainstorm` fires while a project is active, it offers a 3-way picker before any pack-filtered destination shows up:
 
-- **Related to the project** → for Lite, fold the synthesis into `plan.md` immediately above `## Phase 1` and hand off to `oat-project-lite`; for Brief, fold it into `plan.md` immediately above the first `## Phase` heading so the receiving skill integrates it as new or amended phases; for Quick and Spec-Driven, use the most-specific upstream artifact (`design.md` if it exists, otherwise `discovery.md`) and hand off to `oat-project-quick-start` or `oat-project-plan`. Any mode with an open PR hands off to `oat-project-revise`. The fold-back commit is safety-gated: a preflight `git status --porcelain -- "$ARTIFACT_PATH"` checks for dirty state, staging is exactly `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), and the handoff prompt only prints after the scoped commit succeeds.
+- **Related to the project** → for Lite, fold the synthesis into `plan.md` immediately above `## Phase 1` and hand off to `oat-project-lite`; for Brief, fold it into `plan.md` immediately above the first `## Phase` heading so the receiving skill integrates it as new or amended phases; Goal folds into `plan.md` the same way, never editing the `## Milestones` table, and hands off to `oat-project-goal` (or `oat-project-implement` inside the active milestone's approved scope); for Quick and Spec-Driven, use the most-specific upstream artifact (`design.md` if it exists, otherwise `discovery.md`) and hand off to `oat-project-quick-start` or `oat-project-plan`. Any mode with an open PR hands off to `oat-project-revise`. The fold-back commit is safety-gated: a preflight `git status --porcelain -- "$ARTIFACT_PATH"` checks for dirty state, staging is exactly `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), and the handoff prompt only prints after the scoped commit succeeds.
 - **Independent of the project** → the active project is acknowledged but doesn't constrain the picker; brainstorm routes through its standard pack-filtered terminal-state options (new project, backlog item, idea, doc-to-path, inline).
 - **Related but supplementary** → write a brainstorming reference file at `.oat/projects/<scope>/<project>/brainstorming/YYYY-MM-DD-<topic>.md`, alongside `pr/` and `reviews/`. No lifecycle artifact is touched.
 

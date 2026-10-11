@@ -35,6 +35,26 @@ copying their content here. -->
 
 ## What's Implemented
 
+- CLI `0.3.20` (`brief-goal-workflow-modes`, implementation complete; v1 open
+  as [PR #361](https://github.com/voxmedia/open-agent-toolkit/pull/361), the
+  goal seam staged on it) adds two workflow modes: `brief`, one delivery from
+  one reviewed Project Brief whose phases carry intent and exit evidence while
+  tasks are recorded as execution happens, and `goal`, a greenfield effort
+  delivered in milestones with a delivery registry in `state.md`,
+  `oat project delivery refresh|check`, bookkeeping-successor evidence
+  freshness, goal closeout by verified delivery coverage after a user
+  declaration and an exhaustive outcome audit, and goal → quick promotion.
+  Entry skills `oat-project-brief` and `oat-project-goal`, the shared
+  `brief-contract.md`, brief/goal branches across the lifecycle skills and
+  agent roles, new `plan-brief.md`/`implementation-brief.md` templates, docs
+  and lane diagrams, eleven decision records (`DR-261011-*`) and six backlog
+  follow-ups shipped; existing modes are unchanged. Goal is excluded from
+  autonomous runs. Twelve phases, nineteen independent review rounds, final
+  integrated review passed at round four with every Definition-of-Done gate
+  green. A planned, not-yet-active `artifact-cleanup` project carries the
+  lifecycle-artifact noise fixes identified by an audit of all 102 archived
+  projects during this run.
+
 - The October CLI follow-ups on `feat/october-backlog-fixes` implement escaped
   emphasis handling, cross-process guidance append serialization, and a
   side-effect-free project-log append preview. The three source items are

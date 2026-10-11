@@ -1256,3 +1256,182 @@ describe('generateStateDashboard brief routes', () => {
     expect(markdown).not.toContain('phase-units');
   });
 });
+
+// Bounded parity for goal mode, like brief: the dashboard reads `state.md`
+// frontmatter only, so parity with `recommendSkill` is asserted for the
+// plan-phase states and an implementing milestone with work remaining. In the
+// implement phase the router's goal priority block is the authority.
+describe('generateStateDashboard goal routes', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const GOAL_BODY = [
+    '# Project Brief: demo',
+    '',
+    '## Milestones',
+    '',
+    '| Milestone | Phases |',
+    '| --------- | ------ |',
+    '| m01       | p01, p02 |',
+    '',
+    '## Phase p01: Research',
+    '',
+    '**Intent:** Learn.',
+    '**Exit evidence:** Notes recorded.',
+    '',
+    '## Phase p02: Build',
+    '',
+    '**Intent:** Build.',
+    '**Exit evidence:** Tests pass.',
+    '',
+  ].join('\n');
+
+  const goalPlan = (frontmatter: string) =>
+    ['---', frontmatter, 'oat_plan_source: goal', '---', '', GOAL_BODY].join(
+      '\n',
+    );
+  const TIER_3_PLAN = goalPlan(
+    'oat_status: in_progress\noat_ready_for: null\noat_template: true',
+  );
+  const TIER_2_PLAN = goalPlan(
+    'oat_status: in_progress\noat_ready_for: null\noat_template: false',
+  );
+  const COMPLETE_PLAN = goalPlan(
+    'oat_status: complete\noat_ready_for: oat-project-implement\noat_template: false',
+  );
+  const PLAN_CARRIER = [
+    '',
+    '  m01:',
+    '    plan:',
+    '      status: allowed',
+    '      resolution: configured',
+    '      disposition: passed',
+    '      subject: { kind: plan, scope: [p01, p02] }',
+    '      freshness: fresh',
+  ].join('\n');
+
+  async function goalFixture(state: Record<string, string>, plan: string) {
+    const root = await createTempRepo();
+    tempDirs.push(root);
+    const projectPath = '.oat/projects/shared/goal-proj';
+    await writeLocalConfig(root, { activeProject: projectPath });
+    await writeStateFile(root, projectPath, {
+      oat_workflow_mode: 'goal',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+      ...state,
+    });
+    await writeFile(join(root, projectPath, 'plan.md'), plan, 'utf8');
+
+    const dashboard = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-10-11',
+      git: mockGit,
+    });
+    const { recommendation } = await getProjectState(join(root, projectPath));
+    return {
+      dashboard,
+      recommendation,
+      markdown: await readFile(dashboard.dashboardPath, 'utf8'),
+    };
+  }
+
+  const ALIGNING = { oat_milestone: 'm01', oat_milestone_status: 'aligning' };
+
+  it.each([
+    ['plan:in_progress tier 3', 'plan', 'in_progress', TIER_3_PLAN, '[]', {}],
+    ['plan:in_progress tier 2', 'plan', 'in_progress', TIER_2_PLAN, '[]', {}],
+    ['plan:complete', 'plan', 'complete', COMPLETE_PLAN, '[]', ALIGNING],
+    [
+      'plan:complete with a pending plan HiLL checkpoint',
+      'plan',
+      'complete',
+      COMPLETE_PLAN,
+      '["plan"]',
+      ALIGNING,
+    ],
+    [
+      'implement:in_progress',
+      'implement',
+      'in_progress',
+      COMPLETE_PLAN,
+      '[]',
+      {
+        oat_milestone: 'm01',
+        oat_milestone_status: 'implementing',
+        oat_milestone_gates: PLAN_CARRIER,
+      },
+    ],
+  ])(
+    'matches the router skill for a goal at %s',
+    async (_label, phase, phaseStatus, plan, checkpoints, extra) => {
+      const { dashboard, recommendation } = await goalFixture(
+        {
+          oat_phase: phase,
+          oat_phase_status: phaseStatus,
+          oat_hill_checkpoints: checkpoints,
+          ...extra,
+        },
+        plan,
+      );
+
+      expect(dashboard.recommendedStep).toBe(recommendation.skill);
+    },
+  );
+
+  it('keeps goal planning and its plan HiLL checkpoint with the goal entry skill', async () => {
+    const inProgress = await goalFixture(
+      { oat_phase: 'plan', oat_phase_status: 'in_progress' },
+      TIER_2_PLAN,
+    );
+    expect(inProgress.dashboard.recommendedStep).toBe('oat-project-goal');
+
+    const hill = await goalFixture(
+      {
+        oat_phase: 'plan',
+        oat_phase_status: 'complete',
+        oat_hill_checkpoints: '["plan"]',
+        ...ALIGNING,
+      },
+      COMPLETE_PLAN,
+    );
+    expect(hill.dashboard.recommendedStep).toBe('oat-project-goal');
+    expect(hill.dashboard.recommendedReason).toContain('HiLL approval');
+  });
+
+  it('shows the goal help line and prints the goal router-authority note only in the implement phase', async () => {
+    const planning = await goalFixture(
+      { oat_phase: 'plan', oat_phase_status: 'in_progress' },
+      TIER_2_PLAN,
+    );
+    expect(planning.markdown).toContain('| Mode | goal |');
+    expect(planning.markdown).toContain(
+      '- `oat-project-goal` - Create a goal workflow project',
+    );
+    expect(planning.markdown).not.toContain('Goal projects route');
+
+    const implementing = await goalFixture(
+      {
+        oat_phase: 'implement',
+        oat_phase_status: 'complete',
+        oat_milestone: 'm01',
+        oat_milestone_status: 'reviewing',
+      },
+      COMPLETE_PLAN,
+    );
+    expect(implementing.markdown).toContain(
+      'Goal projects route by milestone status',
+    );
+    expect(implementing.markdown).toContain('`oat project status`');
+    expect(implementing.markdown).not.toContain('brief-unit guard');
+    // The router owns the reviewing route the dashboard cannot see.
+    expect(implementing.recommendation.skill).toBe('oat-project-implement');
+    expect(implementing.recommendation.context).toBe('closeout m01: p01, p02');
+  });
+});

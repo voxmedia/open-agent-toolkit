@@ -282,6 +282,14 @@
       "applicabilityNotes": "Requires an existing project and the lifecycle artifacts/readiness appropriate to this action; resolve the configured active project or the supported explicit project target."
     },
     {
+      "name": "oat-project-goal",
+      "family": "Project entry",
+      "page": "workflows/projects/planning/starting-projects.md",
+      "anchor": "oat-project-goal",
+      "applicability": "none",
+      "applicabilityNotes": "Interviews for and scaffolds a goal project; resumes an active goal project at authoring, activation, re-alignment or the terminal declaration."
+    },
+    {
       "name": "oat-project-import-plan",
       "family": "Project entry",
       "page": "workflows/projects/planning/starting-projects.md",

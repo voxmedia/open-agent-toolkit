@@ -1176,6 +1176,7 @@ describe('help output snapshots', () => {
         closeout-check [options] <project-path>      Report whether a project closeout snapshot permits terminal completion (read-only)
         complete-discovery [options] <project-path>  Validate and mark a project discovery.md complete
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
+        delivery                                     Observe goal delivery registry members and check delivery evidence freshness
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
@@ -1185,7 +1186,7 @@ describe('help output snapshots', () => {
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
-        promote [options] <project-path>             Promote an authored lite or brief project to the quick workflow
+        promote [options] <project-path>             Promote an authored lite, brief or settled goal project to the quick workflow
         prune [options] [project-path|slug]          Permanently remove a synced project and its ref
         push [options] [project-path|slug]           Commit and publish a synced OAT project
         pull [options] [project-path|slug]           Materialize or update a synced OAT project
@@ -1306,6 +1307,93 @@ describe('help output snapshots', () => {
     `);
   });
 
+  it('project delivery --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery [options] [command]
+
+      Observe goal delivery registry members and check delivery evidence freshness
+
+      Options:
+        -h, --help         display help for command
+
+      Global Options:
+        -V, --version      output the version number
+        --json             Output a single JSON document
+        --verbose          Enable verbose debug output
+        --cwd <path>       Override working directory
+
+      Commands:
+        refresh [options]  Observe registered goal delivery members with gh and
+                           persist observations, endpoint attainment and derived
+                           staleness in state.md
+        check [options]    Report integrated-review and milestone exit-carrier
+                           freshness for a goal milestone or delivery under the
+                           bookkeeping-successor contract (read-only; status
+                           undeliverable and exit 1 when not deliverable)
+        help [command]     display help for command
+      "
+    `);
+  });
+
+  it('project delivery refresh --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+      'refresh',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery refresh [options]
+
+      Observe registered goal delivery members with gh and persist observations,
+      endpoint attainment and derived staleness in state.md
+
+      Options:
+        --project <path>  Goal project path
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
+      "
+    `);
+  });
+
+  it('project delivery check --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'delivery',
+      'check',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat project delivery check [options]
+
+      Report integrated-review and milestone exit-carrier freshness for a goal
+      milestone or delivery under the bookkeeping-successor contract (read-only;
+      status undeliverable and exit 1 when not deliverable)
+
+      Options:
+        --project <path>  Goal project path
+        --subject <id>    Milestone (mNN) or registered delivery (dNN) to evaluate
+        -h, --help        display help for command
+
+      Global Options:
+        -V, --version     output the version number
+        --json            Output a single JSON document
+        --verbose         Enable verbose debug output
+        --cwd <path>      Override working directory
+      "
+    `);
+  });
+
   it('project complete-state --help matches snapshot', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, [
@@ -1351,7 +1439,7 @@ describe('help output snapshots', () => {
 
       Options:
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
-                            "lite", "brief", default: "spec-driven")
+                            "lite", "brief", "goal", default: "spec-driven")
         --scope <scope>     Project scope (choices: "shared", "local", "synced")
         --force             Allow a duplicate slug in another scope; scaffold remains
                             non-destructive

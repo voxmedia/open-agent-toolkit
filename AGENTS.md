@@ -255,17 +255,21 @@ Present these options to the user, with a recommendation based on the assessment
    → Use `oat-project-lite`
 
 4. **Brief workflow** — Design-aligned interview → one reviewed Project Brief in plan.md (phases carry intent and exit evidence, no task plan) → one approval → implement phase by phase
-   _Best for: one delivery whose outcome and design can be agreed in conversation, where tasks are better recorded as the work runs than planned up front. A many-milestone `goal` mode is planned for v1.5 and is not available yet._
+   _Best for: one delivery whose outcome and design can be agreed in conversation, where tasks are better recorded as the work runs than planned up front._
    → Use `oat-project-brief`
 
-5. **Import external plan** — Normalize an existing plan into OAT format → Implement
+5. **Goal workflow** — Brief interview for the whole outcome → one reviewed Project Brief with a Milestones table → one approval → per milestone: implement, integrated review, delivery as its own PR, re-alignment and approval of the next milestone → declaration that the goal is met, audited against the Outcomes
+   _Best for: an outcome that needs several deliveries over time, where the first milestone can be agreed in conversation and later milestones are re-aligned after each delivery. Not available to autonomous runs._
+   → Use `oat-project-goal`
+
+6. **Import external plan** — Normalize an existing plan into OAT format → Implement
    _Best for: plans already drafted in another tool, session, or document._
    → Use `oat-project-import-plan`
 
-6. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
+7. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
    _Best for: users who prefer provider planning UX but want OAT tracking._
 
-7. **No project workflow** — Proceed without OAT project tracking.
+8. **No project workflow** — Proceed without OAT project tracking.
    _Best for: small fixes, straightforward changes, or explicit user preference._
 
 ### Recommendation Heuristic
@@ -276,9 +280,10 @@ Before presenting options, assess the request and lead with a recommendation:
 - **Bounded feature of any size, some design questions but clear requirements** → Recommend quick (#2)
 - **Single-sitting change with a clear outcome** → Recommend lite (#3)
 - **One delivery whose outcome and design can be agreed in conversation, no up-front task plan wanted** → Recommend brief (#4)
-- **User references an existing plan or external artifact** → Recommend import (#5)
-- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#6)
-- **User explicitly says "just do it" or declines tracking** → Recommend no workflow (#7)
+- **An outcome that needs several deliveries over time, re-aligned between them** → Recommend goal (#5)
+- **User references an existing plan or external artifact** → Recommend import (#6)
+- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#7)
+- **User explicitly says "just do it" or declines tracking** → Recommend no workflow (#8)
 
 The distinguishing factor is **requirements clarity and design risk**, not task count. A large but well-understood migration is fine for quick mode. A small but architecturally unclear feature might need spec-driven.
 

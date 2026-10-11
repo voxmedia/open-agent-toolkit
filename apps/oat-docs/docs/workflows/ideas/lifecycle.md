@@ -63,8 +63,9 @@ Where to start:
 - **Worth exploring:** `oat-idea-new`. `oat-idea-ideate` resumes an idea, can
   start one from a scratchpad seed, and can reopen a summarized idea.
 - **Scoped work for later:** `oat-pjm-add-backlog-item` (needs `oat pjm init`).
-- **Ready to build:** `oat-project-lite`, `oat-project-quick-start`,
-  `oat-project-new`, or `oat-project-import-plan` for a plan written elsewhere.
+- **Ready to build:** `oat-project-lite`, `oat-project-brief`,
+  `oat-project-goal`, `oat-project-quick-start`, `oat-project-new`, or
+  `oat-project-import-plan` for a plan written elsewhere.
 
 Optional moves:
 

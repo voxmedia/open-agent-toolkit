@@ -80,12 +80,35 @@ function revisionPhaseId(digits: string): string {
   return `p-rev${normalizeOrdinal(digits, 1)}`;
 }
 
+const ORDINARY_PHASE_ID_PATTERN = /^p(\d+)$/;
+const REVISION_PHASE_ID_PATTERN = /^p-rev(\d+)$/;
+
+/**
+ * Normalize one authored phase id (`p1`, `p01`, `p-rev1`, `p-rev01`) to the
+ * same canonical id the heading parser produces; anything else is `null`.
+ */
+export function normalizePhaseId(token: string): string | null {
+  const revision = token.match(REVISION_PHASE_ID_PATTERN)?.[1];
+  if (revision !== undefined) {
+    return revisionPhaseId(revision);
+  }
+  const ordinary = token.match(ORDINARY_PHASE_ID_PATTERN)?.[1];
+  return ordinary === undefined ? null : ordinaryPhaseId(ordinary);
+}
+
 export interface TaskProgressOptions {
   /**
    * Count progress in phase-units (brief modes) instead of plan tasks.
    * Defaults to `false`, which is the task-mode contract.
    */
   phaseUnits?: boolean;
+  /**
+   * Goal mode only: honor the extraction precedence, so a journal phase marked
+   * `**Status:** extracted` with `**Extracted to:** <slug>` reads as an
+   * extracted unit. Ignored unless `phaseUnits` is true; brief keeps reading
+   * an extracted marker as pending. Defaults to `false`.
+   */
+  extractedUnits?: boolean;
 }
 
 export function parseTaskProgress(
@@ -94,7 +117,11 @@ export function parseTaskProgress(
   options: TaskProgressOptions = {},
 ): TaskProgress {
   if (options.phaseUnits === true) {
-    return parsePhaseUnitProgress(planContent, implementationContent);
+    return parsePhaseUnitProgress(
+      planContent,
+      implementationContent,
+      options.extractedUnits === true,
+    );
   }
 
   const completedTasks = parseCompletedTaskIds(implementationContent);
@@ -264,6 +291,11 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
  * The phases inside an active scope, in plan document order. A `null` scope
  * selects every phase; scope ids that name no phase are ignored, and the
  * order of `scope` never reorders the result.
+ *
+ * Because unknown scope ids are ignored here, a goal scope must come from
+ * validated milestone membership (`readMilestoneMembership`): membership
+ * errors are surfaced on the project state before any scope reaches this
+ * function. An extracted unit counts zero, so it is never incomplete.
  */
 export function selectPhaseUnits(
   progress: TaskProgress,
@@ -494,9 +526,13 @@ function parseJournalTaskRecords(
  * Phase-unit progress (brief modes). Every `## Phase …` heading in the plan is
  * one unit, evaluated in precedence order:
  *
- * 1. Provisional in the plan → incomplete, regardless of any journal marker.
- * 2. Journal `**Status:** completed` → accepted.
- * 3. Otherwise incomplete. In v1 an `extracted` status is read as pending.
+ * 1. Extracted (goal only, `extractedUnits`): journal `**Status:** extracted`
+ *    with `**Extracted to:** <slug>` → `{ total: 0, completed: 0, extracted }`,
+ *    excluded from aggregate totals. An extracted marker without its target
+ *    reads as pending, and brief reads every extracted marker as pending.
+ * 2. Provisional in the plan → incomplete, regardless of any journal marker.
+ * 3. Journal `**Status:** completed` → accepted.
+ * 4. Otherwise incomplete.
  *
  * Plan task headings never affect totals; `taskRecords` comes from the
  * journal only.
@@ -504,6 +540,7 @@ function parseJournalTaskRecords(
 function parsePhaseUnitProgress(
   planContent: string,
   implementationContent: string,
+  extractedUnits: boolean,
 ): TaskProgress {
   const markers = parsePhaseMarkers(implementationContent);
   const provisionalPhaseIds = parseProvisionalPhaseIds(planContent);
@@ -517,10 +554,34 @@ function parsePhaseUnitProgress(
     }
 
     const phaseId = phaseHeading.declaredPhaseId;
-    const provisional = provisionalPhaseIds.has(phaseId);
-    const accepted =
-      !provisional && markers.get(phaseId)?.status === 'completed';
+    const marker = markers.get(phaseId);
     const records = taskRecords.get(phaseId);
+    const taskRecordCounts = {
+      total: records?.total ?? 0,
+      completed: records?.completed ?? 0,
+    };
+
+    if (
+      extractedUnits &&
+      marker?.status === 'extracted' &&
+      marker.extractedTo !== null
+    ) {
+      phases.push({
+        phaseId,
+        name: phaseHeading.name,
+        total: 0,
+        completed: 0,
+        isRevision: phaseHeading.isRevision,
+        unit: 'phase',
+        provisional: false,
+        extracted: { to: marker.extractedTo },
+        taskRecords: taskRecordCounts,
+      });
+      continue;
+    }
+
+    const provisional = provisionalPhaseIds.has(phaseId);
+    const accepted = !provisional && marker?.status === 'completed';
 
     phases.push({
       phaseId,
@@ -530,10 +591,7 @@ function parsePhaseUnitProgress(
       isRevision: phaseHeading.isRevision,
       unit: 'phase',
       provisional,
-      taskRecords: {
-        total: records?.total ?? 0,
-        completed: records?.completed ?? 0,
-      },
+      taskRecords: taskRecordCounts,
     });
   }
 

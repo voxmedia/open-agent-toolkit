@@ -28,6 +28,7 @@ const VENDORING_SKILLS = [
   'oat-project-next',
   'oat-project-progress',
   'oat-project-brief',
+  'oat-project-goal',
 ] as const;
 
 const QUICK_START = '.agents/skills/oat-project-quick-start/SKILL.md';

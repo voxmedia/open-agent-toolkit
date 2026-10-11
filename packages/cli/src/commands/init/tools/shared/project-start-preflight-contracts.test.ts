@@ -10,6 +10,7 @@ const PROJECT_START_SKILLS = [
   'oat-project-quick-start',
   'oat-project-lite',
   'oat-project-brief',
+  'oat-project-goal',
   'oat-project-import-plan',
 ] as const;
 
@@ -18,6 +19,7 @@ const GATE_POSTURE_CALLER_SKILLS = [
   'oat-project-quick-start',
   'oat-project-lite',
   'oat-project-brief',
+  'oat-project-goal',
   'oat-project-plan',
   'oat-project-import-plan',
 ] as const;
@@ -383,7 +385,9 @@ describe('project-start preflight contracts', () => {
         const artifactReview = content.indexOf(
           name === 'oat-project-brief'
             ? 'Brief Artifact Review Loop'
-            : 'Plan Artifact Review Loop',
+            : name === 'oat-project-goal'
+              ? 'Step 3.6: Run the Artifact Review Loop'
+              : 'Plan Artifact Review Loop',
         );
 
         // Ordering, not mere presence: the posture choice must be persisted

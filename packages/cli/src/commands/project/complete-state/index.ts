@@ -6,7 +6,9 @@ import {
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import {
   checkProjectCloseout,
+  DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES,
   formatCloseoutRefusal,
+  type CloseoutInputDependencies,
 } from '@commands/project/closeout-check/index';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveEffectiveConfig } from '@config/resolve';
@@ -23,7 +25,7 @@ interface ProjectCompleteStateOptions {
   autonomous?: boolean;
 }
 
-interface ProjectCompleteStateDependencies {
+interface ProjectCompleteStateDependencies extends CloseoutInputDependencies {
   buildCommandContext: (
     options: Parameters<typeof buildCommandContext>[0],
   ) => CommandContext;
@@ -39,6 +41,12 @@ interface ProjectCompleteStateDependencies {
 }
 
 const DEFAULT_DEPENDENCIES: ProjectCompleteStateDependencies = {
+  // Goal boundary observation (gh, git, project reader, child lookup) is
+  // read-only and shared with closeout-check.
+  gh: DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES.gh,
+  git: DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES.git,
+  getProjectState: DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES.getProjectState,
+  listDirectories: DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES.listDirectories,
   buildCommandContext,
   resolveProjectRoot,
   readFile: defaultReadFile,

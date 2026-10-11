@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.10
+  version: 1.6.11
 ---
 
 # Project PR (Final)
@@ -181,6 +181,55 @@ ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" 2>/dev/null
 ```
 
 If `WORKFLOW_MODE` is `quick`, `import`, `lite`, or `brief`, proceed without spec/design and include a reduced assurance note in the PR body. For lite, explicitly note that plan.md is the reduced artifact contract and the absence of discovery/spec/design is intentional. For brief, the note names the Project Brief (`plan.md`) as the requirements contract, audited against its numbered Outcomes, with the phase journal as the evidence record; the absence of discovery/spec/design is intentional.
+
+**Goal mode (`oat_workflow_mode: goal`).** pr-final is the terminal delivery
+registration owner, not a second project PR (brief contract sections 12.7 and
+12.9). Run Step 1.5 instead of Steps 2–6.
+
+### Step 1.5: Goal Terminal Delivery Registration (`goal` only)
+
+1. **Declaration first.** Require `oat_goal_status: declared_met` and a valid
+   outcome audit: run `oat project closeout-check "$PROJECT_PATH" --json`
+   (read-only). A `not-declared` or `audit-invalid` refusal routes to
+   `oat-project-goal`; refusals naming the review owners, scoped implement, or
+   `oat-project-pr-progress` route there. Continue only when the remaining
+   refusal is `phase-uncovered` (`nextOwner.skill: oat-project-pr-final`).
+2. **No redundant PR.** When the boundary reports no uncovered accepted phase,
+   delivery coverage already holds: create no pull request, write no state, and
+   report that the configured `pr` step is satisfied by delivery coverage at its
+   position (implement records `satisfied_by: { pr: delivery-coverage }`).
+3. **Terminal scope.** The terminal delivery's frozen `scope` is the uncovered
+   accepted phases named by the refusal, ordered by the brief, never audited
+   `deferred`, `retired`, or `extracted` phases. A delivery never spans
+   milestones (`goal-delivered-scope-changed`), so uncovered phases in several
+   milestones register one terminal delivery per milestone, in milestone order.
+   Registered from one head branch, they share the same member pull request:
+   the second delivery's `gh pr list` attach finds the PR the first one
+   created, and that shared member is expected, not a duplicate
+   (`oat-project-brief/references/brief-contract.md` section 12.7, Shared
+   members). Coverage judges each delivery's own scope and bound evidence.
+4. **Same registration contract.** Load the current
+   `oat-project-pr-progress/SKILL.md` and, for each terminal delivery, run its
+   Step 5.5 steps 1–3 and 4–7 as written (never step 3a, which
+   re-checks the active milestone's own registered delivery) with `kind: pr`: refresh, a
+   deliverable `oat project delivery check` (`status: ok`) for the subject,
+   stale evidence stopping before registration, the `registering` entry with
+   its lookup keys, reciprocal links, the integrated review and the captured
+   `exit_gate`, idempotent create-or-attach through `gh pr list`, and the
+   member and `status: open` record. The Step 5 ledger-path guard runs before
+   `gh pr create`. While the boundary still reports `phase-uncovered`, a
+   `summary` step configured before `pr` writes only project-directory files
+   and defers its repo-level ledger and decision-record
+   writes until this registration is done (`oat-project-summary` Step 6, Goal
+   terminal deferral), so the terminal subject stays deliverable.
+5. **Log.** After the registration commit, append exactly one structural entry
+   and commit it in this step:
+   `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-final --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered terminal delivery <dNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.
+   Never pre-check log configuration: the helper no-ops when logging is
+   disabled.
+6. Re-run `oat project closeout-check "$PROJECT_PATH" --json` and report the
+   next owner. Coverage completes only when every terminal delivery reaches its
+   agreed endpoint (`oat project delivery refresh` observes it).
 
 ### Step 2: Check Final Review Status
 
@@ -787,3 +836,4 @@ If `state.md` is missing, skip with a warning.
 - User has clear next step to open PR (manual or gh)
 - Project `state.md` shows `oat_phase_status: pr_open`
 - Next milestone references both `oat-project-revise` (for feedback) and both supported `oat-project-complete` orderings
+- Goal mode: a terminal delivery was registered only after a valid declaration and audit, only for uncovered accepted phases, through the pr-progress registration contract, with one structural log entry per registration; no PR was created when coverage already held

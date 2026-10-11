@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.9
+  version: 1.5.10
 ---
 
 # Project Summary
@@ -22,7 +22,7 @@ Produce a `summary.md` that serves as institutional memory — capturing what wa
 
 ## Prerequisites
 
-**Required:** Active project with `implementation.md` that has meaningful progress (at least one completed task; in brief modes, at least one accepted phase-unit).
+**Required:** Active project with `implementation.md` that has meaningful progress (at least one completed task; in brief and goal modes, at least one accepted phase-unit).
 
 ## Mode Assertion
 
@@ -150,6 +150,14 @@ design:
 | `implementation.md` Final Summary                                                  | Shipped results; takes precedence over the brief's plans                                              |
 | `state.md`, `project-log.md`, `oat-execution-learnings.md`, `references/research/` | Same roles as below, when present                                                                     |
 
+For `oat_workflow_mode: goal`, read the brief sources above, plus the
+`## Milestones` table (organize What Was Implemented by milestone), the
+`state.md` delivery registry (`oat_deliveries`: each delivery's scope, members
+and endpoint observation are shipped results), and, after a declaration, the
+outcome audit (`oat_goal_outcome_audit`) as the authoritative per-outcome
+disposition, with deferred and retired obligations listed under Follow-up
+Items.
+
 For every other workflow mode, read all available artifacts for synthesis:
 
 - `"$PROJECT_PATH/discovery.md"` — initial request, decisions, constraints
@@ -250,7 +258,7 @@ test -f "$PROJECT_PATH/summary.md"
 
 Copy template: `oat template resolve summary --output "$PROJECT_PATH/summary.md"`
 
-**Brief modes (`oat_workflow_mode: brief`): freshness by phase fingerprint.**
+**Brief modes (`oat_workflow_mode: brief` or `goal`): freshness by phase fingerprint.**
 Replace the task and revision comparison above with
 `oat_summary_phase_fingerprint`, a stable hash of the ordered accepted phase
 IDs; for each accepted phase its `**Head:**`, its `**Status:**` line, and the
@@ -310,13 +318,36 @@ brief_summary_fingerprint() {
 CURRENT_PHASE_FINGERPRINT=$(brief_summary_fingerprint)
 ````
 
+**Goal fragment.** In goal mode the fingerprint also covers the delivery IDs
+at endpoint, so a delivery newly observed at its agreed endpoint requires a
+refresh. Append one `delivery=<dNN>` line per registry entry with
+`status: at_endpoint` or a recorded `endpoint_attainment`, in registry order,
+to the hashed input:
+
+```bash
+goal_summary_deliveries() {
+  oat project status --project-path "$PROJECT_PATH" --field project.deliveries 2>/dev/null |
+    node -e 'let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+      for (const d of JSON.parse(s.trim() || "null") ?? [])
+        if (d.status === "at_endpoint" || d.endpoint_attainment) console.log(`delivery=${d.delivery_id}`);
+    })'
+}
+
+if [ "$(oat project status --project-path "$PROJECT_PATH" --field project.workflowMode 2>/dev/null)" = goal ]; then
+  CURRENT_PHASE_FINGERPRINT=$(
+    { printf '%s\n' "$CURRENT_PHASE_FINGERPRINT"; goal_summary_deliveries; } |
+      { command -v sha256sum >/dev/null 2>&1 && sha256sum || shasum -a 256; } | cut -d' ' -f1
+  )
+fi
+```
+
 - No existing summary, or `oat_summary_phase_fingerprint` differs from
   `CURRENT_PHASE_FINGERPRINT`: refresh. Update What Was Implemented from the
   newly accepted phases, Revision History when an accepted `p-revN` is new, and
   Follow-up Items from review dispositions.
 - Fingerprint unchanged: no phase-driven update. The autonomous-learnings and
   project-log triggers above stay independent and can still require a refresh.
-- A brief summary never reads or writes `oat_summary_last_task`; execution
+- A brief or goal summary never reads or writes `oat_summary_last_task`; execution
   records are not units. `oat-project-complete` recomputes the same
   fingerprint with this fragment to decide whether `summary.md` is stale.
 
@@ -492,7 +523,7 @@ oat_summary_includes_revisions: [{ list of p-revN IDs reflected }]
 ---
 ```
 
-In brief modes write `oat_summary_phase_fingerprint: {CURRENT_PHASE_FINGERPRINT}`
+In brief and goal modes write `oat_summary_phase_fingerprint: {CURRENT_PHASE_FINGERPRINT}`
 (Step 3) and omit `oat_summary_last_task`; keep `oat_summary_revision_count`
 and `oat_summary_includes_revisions` as informational fields.
 
@@ -501,6 +532,28 @@ and `oat_summary_includes_revisions` as informational fields.
 Run this step after `summary.md` has been authored or refreshed, including the
 distinct `## Autonomous Execution Learnings` section when its source artifact
 exists.
+
+**Goal terminal deferral.** When `oat_workflow_mode` is `goal`, this run
+comes before `pr` in the post-implement sequence (`oat_post_implement_sequence`
+lists `pr` but not yet among its completed steps), and
+`oat project closeout-check "$PROJECT_PATH" --json` (read-only) still reports
+`phase-uncovered` (a terminal delivery is still to be registered), write only
+files under `$PROJECT_PATH`: skip the `oat project log rollup` call below (it
+appends to the repository ledger and also writes the `## Workflow Observations`
+section, which the later run supplies) and all of Step 7 (decision-record
+promotion and the regenerated decisions index). Report them as deferred with:
+`Deferred: ledger roll-up and decision promotion run in the completion summary refresh; do not decline it.`
+A repo-level commit after the terminal milestone's reviewed revision is not
+bookkeeping (brief contract 12.8), so it would make the terminal subject
+undeliverable for the terminal registration in the PR skill's Step 1.5.
+Without `phase-uncovered` there is nothing to defer (delivery coverage already
+holds and `pr` registers nothing): run Steps 6 and 7 as usual. Perform the
+deferred writes in the next summary run after `phase-uncovered` clears: a
+`summary` step configured after `pr`, or the summary refresh at completion,
+which the goal fingerprint fragment (Step 3) marks stale once the terminal
+delivery reaches its endpoint. Both writes are idempotent, so the later run
+needs no extra state. Registered deliveries are unaffected: they are judged
+against their observed member revisions.
 
 Before the roll-up or decision promotion mutates repository-wide outputs,
 preflight the owned paths and snapshot unrelated staged state:
@@ -563,6 +616,8 @@ tracked work item; it is not ledger graduation and must not replace the
 append-based `project` → `general` promotion in Step 2.5.
 
 ### Step 7: Promote Key Decisions to Canonical Decision Records
+
+Under the goal terminal deferral (Step 6), skip this step and report it deferred.
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 

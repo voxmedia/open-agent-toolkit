@@ -131,6 +131,28 @@ For a synced project, project artifacts are published to the project ref with
 refreshes project metadata. Declining leaves the description available without
 claiming a PR exists.
 
+**Goal projects:** in a goal project a progress PR is a milestone delivery,
+and this skill registers it. Its scope is the router's `deliver mNN` (or
+`deliver mNN/dNN`) context or a pending `oat_goal_recovery` record at stage
+`delivering`: the milestone's ordered phase set, or a registered delivery's
+frozen scope, never a `pNN-pMM` range or commit labels. The description's Git
+range runs from the set's first anchored base to its last anchored head and
+names any other milestone's phases that fall inside it. In place of the
+optional PR question, the skill runs `oat project delivery refresh` when
+deliveries exist and registers only when
+`oat project delivery check --subject <mNN|dNN>` reports `status: ok`. It
+commits a `registering` registry entry before creating anything, then creates
+the PR, or on resume attaches the single PR that `gh pr list` finds for the
+head branch (more than one match stops at `oat-project-reconcile`). It then
+records the member, `status: open`, and `oat_milestone_status: delivered`, and
+appends one structural project-log entry. Stale review or exit-gate evidence
+stops before registration: for the active milestone the skill writes
+`oat_milestone_status: reviewing` and an `oat_goal_recovery` record at the
+stage the missing evidence names; for an older milestone it writes only the
+recovery record. A milestone that already has a registered delivery is
+re-checked and returned to `delivered` when its evidence is fresh, never
+registered twice.
+
 **Next step:** Review the description and choose whether to open the progress
 PR. Continue remaining project tasks through `oat-project-implement`.
 
@@ -150,8 +172,9 @@ inputs select its destination and title.
 **Prerequisites:** Needs an active OAT project: yes. If no project is active,
 the skill asks for the project name and sets that project as active. The
 project needs `plan.md`. Spec-driven mode also requires `spec.md` and `design.md`. Quick,
-import, lite, and brief accept their mode-appropriate reduced artifacts. The latest
-`final` code-review event in the plan's Reviews ledger should be `passed`.
+import, lite, brief, and goal accept their mode-appropriate reduced artifacts.
+Outside goal mode, the latest `final` code-review event in the plan's Reviews
+ledger should be `passed`.
 Autonomous execution stops if it is not passed. Interactive execution warns
 and asks before proceeding anyway.
 
@@ -171,6 +194,19 @@ with `oat project push` before and after creating the PR. Besides the PR title
 and base branch when you did not pass them, the only question it asks is
 whether to continue when the latest final review has not passed. It never
 merges the PR.
+
+**Goal projects:** in a goal project this skill is the terminal delivery
+registration owner, not a second project PR. It runs its own registration step
+in place of the final-review check and PR creation described above. It
+requires `oat_goal_status: declared_met` and a valid outcome audit, read
+through `oat project closeout-check`; any refusal other than `phase-uncovered`
+routes to the skill named in `nextOwner.skill`. When no accepted phase is
+uncovered, it creates no PR and writes no state, because delivery coverage
+already satisfies the `pr` step. Otherwise it registers one terminal delivery
+per milestone that owns uncovered accepted phases, in milestone order, through
+the same registration contract as `oat-project-pr-progress`. Deliveries
+registered from one head branch share its pull request. Coverage completes
+when every terminal delivery reaches its agreed endpoint.
 
 **Example scenario:** Export filters and audit reporting are implemented, the
 latest final review has passed, and you have authorized publication. Final PR
@@ -351,6 +387,17 @@ implementation tracking, and state are updated for execution. Inline requests
 are not severity-triaged. Structured GitHub feedback and review artifacts route
 through their corresponding review-receive skills and use those contracts.
 
+**Goal projects:** inline feedback needs an explicit target before anything is
+written: a milestone or delivery identity (`mNN` or `mNN/dNN`). The skill asks
+for it when you did not name it, and never infers it from the open PR's commit
+labels. The revision is a phase-only `p-revN` appended to that milestone's
+`## Milestones` row; a registered delivery's frozen scope is never edited. The
+target's exit carrier, and a registered target delivery's integrated review,
+are marked stale. When the target is the active milestone, the skill returns
+it to `oat_milestone_status: implementing`. Feedback on an older milestone
+creates or advances an `oat_goal_recovery` record instead and leaves the
+active milestone's status and execution pointer unchanged.
+
 **Next step:** If revise did not continue into implementation on its own, run
 `oat-project-implement` to execute the revision tasks. After verification,
 update the open PR and its review evidence. Revise itself does not write code
@@ -378,9 +425,13 @@ path. The target needs `state.md` and at least `plan.md` or
 `implementation.md`. Completed
 implementation provides shipped evidence. If only a plan exists, the skill can
 proceed but must identify recommendations as based on planned work rather than
-verified implementation. Lite and brief projects do not require discovery,
-spec, or design; a brief's documentation sources are the Project Brief and the
-per-phase journal.
+verified implementation. Lite, brief, and goal projects do not require
+discovery, spec, or design; a brief's documentation sources are the Project
+Brief and the per-phase journal. A goal project adds two shipped-result
+sources from `state.md`: the outcome audit (`oat_goal_outcome_audit`) and the
+delivery registry (`oat_deliveries`). The skill documents only what those
+deliveries shipped and names audited deferrals rather than documenting them as
+delivered.
 
 **Example scenario:** Export filters shipped, but the user guide still describes
 only unfiltered exports. Document verifies the actual endpoint and CLI behavior,
@@ -435,7 +486,9 @@ Lite uses its plan contract and implementation results without requiring
 discovery, spec, or design artifacts. Brief needs at least one accepted
 phase-unit and draws on the brief's Goal, Outcomes, Approach, and Decisions
 plus the journal; its staleness fingerprint changes when a phase is accepted,
-not when execution records change.
+not when execution records change. A goal summary's fingerprint also covers
+the deliveries observed at their agreed endpoint, so a delivery newly reaching
+its endpoint makes the summary stale.
 
 **Example scenario:** The first export phase is delivered, and another engineer
 will own the reporting phase next week. Summary records the shipped filter
@@ -471,6 +524,15 @@ It only offers, and does not create without your answer, backlog items for
 follow-up entries in the project log. It does not invent tasks or silently
 rewrite the execution plan.
 
+In a goal project, while `oat project closeout-check` still reports
+`phase-uncovered` and the closeout sequence has not yet run its `pr` step, the
+skill writes only files in the project directory. It defers the repository
+ledger roll-up and decision-record promotion and reports them as deferred,
+because a repository-level commit after the terminal milestone's reviewed
+revision would make the terminal delivery undeliverable. The next summary run
+after `phase-uncovered` clears performs them: a `summary` step configured after
+`pr`, or the summary refresh at completion. Do not decline that refresh.
+
 **Next step:** Use the summary as a source for documentation, PR description,
 and later project handoff. Refresh it after revisions. Complete the project
 only when its lifecycle closeout requirements are satisfied.
@@ -497,7 +559,12 @@ you invoke it by name. Before it changes anything, it runs a read-only check
 that the project's stored closeout sequence is finished (or that the project
 has none). If an implementation closeout is still incomplete, the skill sends
 you back to `oat-project-implement`; no phase-status value bypasses that
-check.
+check. For a goal project the check also applies the goal boundary: a valid
+declaration, an exhaustive outcome audit, resolved extractions, an observation
+of every terminal delivery's pull requests, and delivery coverage of every
+accepted phase. A goal refusal routes to the skill it names in
+`nextOwner.skill`, such as `oat-project-goal`, `oat-project-pr-progress`, or
+`oat-project-pr-final`, rather than to implement alone.
 
 **What it does without asking:** the skill asks once, then acts. One combined
 prompt asks you to confirm completion and, where they apply, whether to
@@ -517,6 +584,12 @@ with `gh pr edit` when archiving or for a synced project. A summary refresh
 runs `oat-project-summary`, with its own commit and decision promotion, and an
 archive runs `oat project archive`, including an S3 upload when
 `archive.s3SyncOnComplete` is enabled.
+
+In a goal project whose `pr` step is satisfied by delivery coverage, the skill
+creates no PR, even with `workflow.createPrOnComplete: true`, and reports
+`PR on complete: satisfied by goal delivery coverage`. It opens a separate
+bookkeeping PR for the completion commits only when you ask for one in that
+run, and never counts it as a goal delivery.
 
 **Example scenario:** The export project has passed final verification and its
 stored closeout sequence, but the PR is still open. Complete finalizes lifecycle

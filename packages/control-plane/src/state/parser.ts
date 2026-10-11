@@ -4,8 +4,19 @@ import {
   parseBoolean,
 } from '../shared/utils/normalize';
 import {
+  GOAL_RECOVERY_STAGES,
+  GOAL_STATUSES,
+  MILESTONE_STATUSES,
   WORKFLOW_MODES,
+  type DeliveryMember,
+  type DeliveryMemberStatus,
   type ExecutionMode,
+  type GoalDelivery,
+  type GoalRecovery,
+  type GoalStatus,
+  type MilestoneGateCarrier,
+  type MilestoneGates,
+  type MilestoneStatus,
   type ExplainerDecisionV1,
   type Lifecycle,
   type Phase,
@@ -13,6 +24,7 @@ import {
   type ProjectBlocker,
   type WorkflowMode,
 } from '../types';
+import { normalizePhaseId } from './tasks';
 
 const PHASES = [
   'discovery',
@@ -81,6 +93,30 @@ export interface ParsedStateFrontmatter {
   projectRecap: ExplainerDecisionV1 | null;
   generated: boolean;
   template: boolean;
+  /**
+   * Goal state, parsed only when `oat_workflow_mode: goal` (absent for every
+   * other mode). Values are read leniently: an unknown enum value reads as
+   * `null` and a malformed record reads as `null`, so validation owners report
+   * the defect instead of the reader inventing a value. The terminal audit is
+   * kept raw for `validateGoalOutcomeAudit`.
+   */
+  milestone?: string | null;
+  milestoneStatus?: MilestoneStatus | null;
+  goalStatus?: GoalStatus | null;
+  goalOutcomeAudit?: Record<string, unknown> | null;
+  goalRecovery?: GoalRecovery | null;
+  deliveries?: GoalDelivery[];
+  milestoneGates?: Record<string, MilestoneGates>;
+}
+
+export interface ParsedGoalStateFrontmatter {
+  milestone: string | null;
+  milestoneStatus: MilestoneStatus | null;
+  goalStatus: GoalStatus | null;
+  goalOutcomeAudit: Record<string, unknown> | null;
+  goalRecovery: GoalRecovery | null;
+  deliveries: GoalDelivery[];
+  milestoneGates: Record<string, MilestoneGates>;
 }
 
 const EMPTY_PARSED_STATE: ParsedStateFrontmatter = {
@@ -116,6 +152,8 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
     return EMPTY_PARSED_STATE;
   }
 
+  const workflowMode = normalizeEnum(parsed.oat_workflow_mode, WORKFLOW_MODES);
+
   return {
     currentTask: normalizeNullableString(parsed.oat_current_task, {
       treatPlaceholdersAsNull: true,
@@ -139,7 +177,7 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
     pauseReason: normalizeNullableString(parsed.oat_pause_reason, {
       treatPlaceholdersAsNull: true,
     }),
-    workflowMode: normalizeEnum(parsed.oat_workflow_mode, WORKFLOW_MODES),
+    workflowMode,
     workflowOrigin: normalizeNullableString(parsed.oat_workflow_origin, {
       treatPlaceholdersAsNull: true,
     }),
@@ -174,7 +212,229 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
     ),
     generated: parseBoolean(parsed.oat_generated),
     template: parseBoolean(parsed.oat_template),
+    ...(workflowMode === 'goal' && parseGoalStateRecord(parsed)),
   };
+}
+
+/** Goal state fields from a parsed `state.md` frontmatter record. */
+export function parseGoalStateRecord(
+  parsed: Record<string, unknown>,
+): ParsedGoalStateFrontmatter {
+  return {
+    milestone: normalizeMilestoneId(parsed.oat_milestone),
+    milestoneStatus: normalizeEnum(
+      parsed.oat_milestone_status,
+      MILESTONE_STATUSES,
+    ),
+    goalStatus: normalizeEnum(parsed.oat_goal_status, GOAL_STATUSES),
+    goalOutcomeAudit: isPlainRecord(parsed.oat_goal_outcome_audit)
+      ? parsed.oat_goal_outcome_audit
+      : null,
+    goalRecovery: parseGoalRecovery(parsed.oat_goal_recovery),
+    deliveries: Array.isArray(parsed.oat_deliveries)
+      ? parsed.oat_deliveries
+          .map(parseDelivery)
+          .filter((delivery): delivery is GoalDelivery => delivery !== null)
+      : [],
+    milestoneGates: parseMilestoneGates(parsed.oat_milestone_gates),
+  };
+}
+
+const MILESTONE_ID_PATTERN = /^m(\d+)$/;
+
+/**
+ * Normalize a milestone id to its canonical form (`m1` and `m01` both become
+ * `m01`); anything else reads as `null`.
+ */
+export function normalizeMilestoneId(value: unknown): string | null {
+  const normalized = normalizeNullableString(value, {
+    treatPlaceholdersAsNull: true,
+  });
+  const digits = normalized?.match(MILESTONE_ID_PATTERN)?.[1];
+  return digits === undefined
+    ? null
+    : `m${digits.replace(/^0+(?=\d)/, '').padStart(2, '0')}`;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readString(value: unknown): string | null {
+  return normalizeNullableString(value, { treatPlaceholdersAsNull: true });
+}
+
+function readStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((item) => readString(item))
+    .filter((item): item is string => item !== null);
+}
+
+/**
+ * A persisted phase-id list with every id normalized the way the Milestones
+ * reader normalizes membership (`p1` → `p01`); tokens that are not phase ids
+ * are dropped, and plan validation reports them.
+ */
+function readPhaseIdList(value: unknown): string[] {
+  return readStringList(value)
+    .map((item) => normalizePhaseId(item))
+    .filter((item): item is string => item !== null);
+}
+
+function parseGoalRecovery(value: unknown): GoalRecovery | null {
+  if (!isPlainRecord(value)) {
+    return null;
+  }
+  const milestone = normalizeMilestoneId(value.milestone);
+  const stage = normalizeEnum(value.stage, GOAL_RECOVERY_STAGES);
+  if (milestone === null || stage === null) {
+    return null;
+  }
+  return {
+    milestone,
+    delivery_id: readString(value.delivery_id),
+    phase_ids: readPhaseIdList(value.phase_ids),
+    stage,
+    review_artifact: readString(value.review_artifact),
+  };
+}
+
+const MEMBER_STATUSES = ['open', 'merged', 'closed'] as const;
+
+function parseMember(value: unknown): DeliveryMember | null {
+  if (!isPlainRecord(value)) {
+    return null;
+  }
+  return {
+    url: readString(value.url),
+    base: readString(value.base),
+    reviewed_head: readString(value.reviewed_head),
+    observed_head: readString(value.observed_head),
+    observed_base: readString(value.observed_base),
+    status: normalizeEnum<DeliveryMemberStatus>(value.status, MEMBER_STATUSES),
+  };
+}
+
+function parseDelivery(value: unknown): GoalDelivery | null {
+  if (!isPlainRecord(value)) {
+    return null;
+  }
+  const deliveryId = readString(value.delivery_id);
+  if (deliveryId === null) {
+    return null;
+  }
+  const lookup = isPlainRecord(value.lookup) ? value.lookup : null;
+  const review = isPlainRecord(value.integrated_review)
+    ? value.integrated_review
+    : null;
+  const attainment = isPlainRecord(value.endpoint_attainment)
+    ? value.endpoint_attainment
+    : null;
+
+  return {
+    delivery_id: deliveryId,
+    milestone: normalizeMilestoneId(value.milestone),
+    scope: readPhaseIdList(value.scope),
+    endpoint: normalizeEnum(value.endpoint, ['open', 'merged'] as const),
+    kind: normalizeEnum(value.kind, ['pr', 'stack'] as const),
+    status: normalizeEnum(value.status, [
+      'registering',
+      'open',
+      'at_endpoint',
+      'superseded',
+    ] as const),
+    superseded_by: readString(value.superseded_by),
+    corrects_delivery_id: readString(value.corrects_delivery_id),
+    covers_scope_of: readString(value.covers_scope_of),
+    lookup: lookup && {
+      repository: readString(lookup.repository),
+      head_branch: readString(lookup.head_branch),
+      head_sha_at_registration: readString(lookup.head_sha_at_registration),
+    },
+    members: Array.isArray(value.members)
+      ? value.members
+          .map(parseMember)
+          .filter((member): member is DeliveryMember => member !== null)
+      : [],
+    integrated_review: review && {
+      artifact: readString(review.artifact),
+      scope: readPhaseIdList(review.scope),
+      bound_revisions: Array.isArray(review.bound_revisions)
+        ? review.bound_revisions.filter(isPlainRecord).map((revision) => ({
+            member: typeof revision.member === 'number' ? revision.member : 0,
+            base: readString(revision.base),
+            head: readString(revision.head),
+          }))
+        : [],
+      disposition: normalizeEnum(review.disposition, [
+        'passed',
+        'stale',
+        'failed',
+      ] as const),
+    },
+    exit_gate: parseGateCarrier(value.exit_gate),
+    endpoint_attainment: attainment && {
+      observed_at: readString(attainment.observed_at),
+      members: Array.isArray(attainment.members)
+        ? attainment.members.filter(isPlainRecord).map((member) => ({
+            url: readString(member.url),
+            head: readString(member.head),
+            base: readString(member.base),
+            status: normalizeEnum<DeliveryMemberStatus>(
+              member.status,
+              MEMBER_STATUSES,
+            ),
+          }))
+        : [],
+    },
+  };
+}
+
+function parseGateCarrier(value: unknown): MilestoneGateCarrier | null {
+  if (!isPlainRecord(value)) {
+    return null;
+  }
+  const subject = isPlainRecord(value.subject) ? value.subject : null;
+  const subjectKind = subject ? readString(subject.kind) : null;
+  return {
+    status: readString(value.status),
+    resolution: readString(value.resolution),
+    disposition: readString(value.disposition),
+    config_fingerprint: readString(value.config_fingerprint),
+    reviewed_head: readString(value.reviewed_head),
+    subject:
+      subject && subjectKind
+        ? {
+            kind: subjectKind,
+            scope: readPhaseIdList(subject.scope),
+            ref: readString(subject.ref),
+          }
+        : null,
+    decided_at: readString(value.decided_at),
+    freshness: normalizeEnum(value.freshness, ['fresh', 'stale'] as const),
+    freshness_reason: readString(value.freshness_reason),
+  };
+}
+
+function parseMilestoneGates(value: unknown): Record<string, MilestoneGates> {
+  if (!isPlainRecord(value)) {
+    return {};
+  }
+  const gates: Record<string, MilestoneGates> = {};
+  for (const [key, carriers] of Object.entries(value)) {
+    const milestoneId = normalizeMilestoneId(key);
+    if (milestoneId === null || !isPlainRecord(carriers)) {
+      continue;
+    }
+    gates[milestoneId] = {
+      plan: parseGateCarrier(carriers.plan),
+      exit: parseGateCarrier(carriers.exit),
+    };
+  }
+  return gates;
 }
 
 function parseExplainerDecision(

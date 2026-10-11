@@ -27,6 +27,16 @@ and title so this map remains readable without a board lookup.
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
+- **`artifact-cleanup` (planned quick project, not active):** make lifecycle
+  artifacts readable for newly archived projects — a bounded observations
+  digest instead of the verbatim log roll-up in `summary.md`, one canonical
+  journal format with a mode-aware `oat project journal check` at three
+  boundaries, a one-line dispatch run record, fixed journal slots and slimmer
+  templates moved with every writer, `oat-execution-learnings.md` folded into
+  `project-log.md`, and archive retries that cannot create twins. Starts after
+  the `brief-goal-workflow-modes` goal PR lands. Project:
+  `.oat/projects/shared/artifact-cleanup` (design and plan approved 2026-10-11).
+
 - **BL-260724-support-provider-directory: Support provider directory symlinks as full collection sync** — Prefer collection-level links until real divergence, then fall back safely to per-entry sync. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260828-add-project-level-oat-guidance: Add project-level OAT guidance prompt during init and workflow installation** — Add the explicit project-adoption prompt and managed AGENTS.md section without coupling it to user-scope pack placement. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260806-fail-closed-when-configured: Fail closed when configured closeout snapshot is absent** — Persist the normalized closeout sequence before child dispatch and prevent terminal completion until every configured child is durably recorded.

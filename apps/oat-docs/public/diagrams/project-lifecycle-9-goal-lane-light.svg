@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 1084" width="760" height="1084" role="img" aria-labelledby="title desc">
+  <title id="title">Goal lane</title>
+  <desc id="desc">Goal lane: Alignment interview (whole outcome, milestone split), then Project Brief + Milestones (review, gate, one approval), Activate milestone mNN (oat-project-goal), Phase-units (implement, per-phase reviews), Milestone closeout (exit gate before the review), Integrated review (code mNN: ordered phases), Delivery dNN (oat-project-pr-progress), Re-alignment (learnings, amendment, approval), Terminal declaration (exhaustive outcome audit), and Coverage closeout (pr-final for uncovered, complete). Next milestone leads from Re-alignment back to Activate milestone mNN once the previous delivery reaches its agreed endpoint. From Delivery dNN, Settled boundary leads to Promote to Quick.</desc>
+  <style>
+    svg {
+      --bg: #ffffff;
+      --node: #f4f6f9;
+      --node-em: #e8eef7;
+      --border: #c9d1dc;
+      --text: #16202e;
+      --text-2: #4b5563;
+      --accent: #1b4f8a;
+      --muted: #5d6a7c;
+      --warn: #a14a08;
+    }
+    .bg { fill: var(--bg); }
+    .node { fill: var(--node); stroke: var(--border); stroke-width: 1.5; }
+    .node-em { fill: var(--node-em); stroke: var(--border); stroke-width: 1.5; }
+    .decision { fill: var(--node-em); stroke: var(--accent); stroke-width: 1.5; }
+    .group { fill: none; stroke: var(--border); stroke-width: 1.5; }
+    .edge { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+    .arrowhead { fill: var(--accent); }
+    .label-bg { fill: var(--bg); }
+    .t { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .t2 { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 15px; font-weight: 500; fill: var(--text); }
+    .m2 { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; font-size: 13px; fill: var(--text-2); }
+    .el { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: var(--text-2); }
+    .gl { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; fill: var(--text-2); }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="760" height="1084" rx="12"/>
+  <path class="edge" d="M270,98 L270,137" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,204 L270,243" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,310 L270,349" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,416 L270,455" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,522 L270,561" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,628 L270,667" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,734 L270,773" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,840 L270,879" marker-end="url(#arrow)"/>
+  <path class="edge" d="M270,946 L270,985" marker-end="url(#arrow)"/>
+  <path class="edge" d="M130,807 L105,807 Q95,807 95,797 L95,287 Q95,277 105,277 L129,277" marker-end="url(#arrow)"/>
+  <rect class="label-bg" x="41" y="524" width="108" height="36" rx="4"/>
+  <text class="el" x="95" y="538.5" text-anchor="middle">Next milestone</text>
+  <text class="el" x="95" y="554.5" text-anchor="middle">(at endpoint)</text>
+  <path class="edge" d="M410,701 L559,701" marker-end="url(#arrow)"/>
+  <rect class="label-bg" x="425" y="691" width="120" height="20" rx="4"/>
+  <text class="el" x="485" y="705.5" text-anchor="middle">Settled boundary</text>
+  <rect class="node-em" x="130" y="32" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="61" text-anchor="middle">Alignment interview</text>
+  <text class="t2" x="270" y="79" text-anchor="middle">(whole outcome, milestone split)</text>
+  <rect class="node" x="130" y="138" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="167" text-anchor="middle">Project Brief + Milestones</text>
+  <text class="t2" x="270" y="185" text-anchor="middle">(review, gate, one approval)</text>
+  <rect class="node" x="130" y="244" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="273" text-anchor="middle">Activate milestone mNN</text>
+  <text class="m2" x="270" y="291" text-anchor="middle">(oat-project-goal)</text>
+  <rect class="node" x="130" y="350" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="379" text-anchor="middle">Phase-units</text>
+  <text class="t2" x="270" y="397" text-anchor="middle">(implement, per-phase reviews)</text>
+  <rect class="node" x="130" y="456" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="485" text-anchor="middle">Milestone closeout</text>
+  <text class="t2" x="270" y="503" text-anchor="middle">(exit gate before the review)</text>
+  <rect class="node" x="130" y="562" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="591" text-anchor="middle">Integrated review</text>
+  <text class="t2" x="270" y="609" text-anchor="middle">(code mNN: ordered phases)</text>
+  <rect class="node" x="130" y="668" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="697" text-anchor="middle">Delivery dNN</text>
+  <text class="m2" x="270" y="715" text-anchor="middle">(oat-project-pr-progress)</text>
+  <rect class="node" x="130" y="774" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="803" text-anchor="middle">Re-alignment</text>
+  <text class="t2" x="270" y="821" text-anchor="middle">(learnings, amendment, approval)</text>
+  <rect class="node" x="130" y="880" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="909" text-anchor="middle">Terminal declaration</text>
+  <text class="t2" x="270" y="927" text-anchor="middle">(exhaustive outcome audit)</text>
+  <rect class="node" x="130" y="986" width="280" height="66" rx="8"/>
+  <text class="t" x="270" y="1015" text-anchor="middle">Coverage closeout</text>
+  <text class="t2" x="270" y="1033" text-anchor="middle">(pr-final for uncovered, complete)</text>
+  <rect class="node" x="560" y="677" width="170" height="48" rx="8"/>
+  <text class="t" x="645" y="706" text-anchor="middle">Promote to Quick</text>
+</svg>

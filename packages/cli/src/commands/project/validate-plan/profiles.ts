@@ -1,8 +1,12 @@
 import {
   isBriefMode,
+  normalizeMilestoneId,
+  normalizePhaseId,
   parseProvisionalPhaseIds,
   parseTaskProgress,
+  readMilestoneMembership,
   recordLineMask,
+  type MilestoneMembershipErrorCode,
   type WorkflowMode,
 } from '@open-agent-toolkit/control-plane';
 
@@ -17,8 +21,11 @@ import { parseFrontmatterFromContent } from './frontmatter';
  * - `lite`: the lite single-phase rules.
  * - `brief`: taskless phase blocks (`**Intent:**`, `**Exit evidence:**`,
  *   optional `**Provisional:**`). Phase ids come from `## Phase` headings.
- * - `goal`: reserved for the goal mode; until its milestone rules land it
- *   validates exactly like `brief`.
+ * - `goal`: every `brief` rule plus the goal milestone rules: membership
+ *   read through the control-plane Milestones reader (its error codes map
+ *   onto `goal-*` codes), frozen delivery scopes from `oat_deliveries`,
+ *   parallel groups inside one milestone, `oat_plan_source: goal`, and
+ *   canonical phase ids in persisted registry lists.
  */
 export type PlanProfile = 'task' | 'lite' | 'brief' | 'goal';
 
@@ -26,6 +33,11 @@ export interface ValidationContext {
   profile: PlanProfile;
   workflowMode: WorkflowMode | null;
   stateFrontmatter: Record<string, unknown> | null;
+  /**
+   * The journal (`implementation.md`), when readable. Goal membership reads it
+   * so a phase the journal marks extracted need not belong to a milestone.
+   */
+  implementationContent?: string | null;
 }
 
 export type BriefValidationErrorCode =
@@ -39,6 +51,20 @@ export type BriefValidationErrorCode =
 
 export type BriefValidationWarningCode = 'brief-task-headings-ignored';
 
+export type GoalValidationErrorCode =
+  | 'goal-milestones-missing'
+  | 'goal-milestones-malformed'
+  | 'goal-duplicate-milestone'
+  | 'goal-milestone-empty'
+  | 'goal-milestone-unknown-phase'
+  | 'goal-phase-in-multiple-milestones'
+  | 'goal-phase-without-milestone'
+  | 'goal-shipped-milestone-changed'
+  | 'goal-delivered-scope-changed'
+  | 'goal-group-crosses-milestone'
+  | 'goal-plan-source'
+  | 'goal-noncanonical-phase-id';
+
 export type LiteValidationErrorCode =
   | 'lite-multi-phase'
   | 'lite-parallel-groups'
@@ -47,7 +73,10 @@ export type LiteValidationErrorCode =
 export type ValidationIssue =
   | {
       severity: 'error';
-      code: BriefValidationErrorCode | LiteValidationErrorCode;
+      code:
+        | BriefValidationErrorCode
+        | GoalValidationErrorCode
+        | LiteValidationErrorCode;
       message: string;
     }
   | {
@@ -388,9 +417,232 @@ export function validatePlanForProfile(
         : [{ severity: 'error', code: result.code, message: result.message }];
     }
     case 'brief':
-    case 'goal':
       return validateBriefPlan(content);
+    case 'goal':
+      return [...validateBriefPlan(content), ...validateGoalPlan(content, ctx)];
     case 'task':
       return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// goal profile
+// ---------------------------------------------------------------------------
+
+/**
+ * Each Milestones reader error code maps onto exactly one goal rule code, so
+ * the reader stays the one membership predicate and validation never
+ * re-parses the table.
+ */
+export const GOAL_MEMBERSHIP_RULE_CODES: Readonly<
+  Record<MilestoneMembershipErrorCode, GoalValidationErrorCode>
+> = {
+  'milestones-missing': 'goal-milestones-missing',
+  'milestones-malformed': 'goal-milestones-malformed',
+  'milestone-duplicate': 'goal-duplicate-milestone',
+  'milestone-empty': 'goal-milestone-empty',
+  'milestone-unknown-phase': 'goal-milestone-unknown-phase',
+  'phase-in-multiple-milestones': 'goal-phase-in-multiple-milestones',
+  'phase-without-milestone': 'goal-phase-without-milestone',
+};
+
+function goalError(
+  code: GoalValidationErrorCode,
+  message: string,
+): ValidationIssue {
+  return { severity: 'error', code, message: `${code}: ${message}` };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function rawList(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+interface RawDelivery {
+  label: string;
+  milestone: string | null;
+  scope: string[];
+}
+
+function readRawDeliveries(
+  state: Record<string, unknown> | null,
+): RawDelivery[] {
+  return rawList(state?.['oat_deliveries'])
+    .filter(isRecord)
+    .map((entry, index) => ({
+      label:
+        typeof entry['delivery_id'] === 'string'
+          ? entry['delivery_id']
+          : `oat_deliveries[${index}]`,
+      milestone: normalizeMilestoneId(entry['milestone']),
+      scope: rawList(entry['scope'])
+        .map((token) => normalizePhaseId(String(token)))
+        .filter((token): token is string => token !== null),
+    }));
+}
+
+/**
+ * Persisted phase-id lists in the goal registry. The state reader normalizes
+ * these and drops tokens that are not phase ids; validation reports every
+ * token that is not already canonical so the drift is repaired at its source.
+ */
+function persistedPhaseIdLists(
+  state: Record<string, unknown> | null,
+): { field: string; values: unknown[] }[] {
+  if (state === null) return [];
+  const lists: { field: string; values: unknown[] }[] = [];
+  const carrierLists = (prefix: string, carrier: unknown): void => {
+    if (isRecord(carrier) && isRecord(carrier['subject'])) {
+      lists.push({
+        field: `${prefix}.subject.scope`,
+        values: rawList(carrier['subject']['scope']),
+      });
+    }
+  };
+
+  const recovery = state['oat_goal_recovery'];
+  if (isRecord(recovery)) {
+    lists.push({
+      field: 'oat_goal_recovery.phase_ids',
+      values: rawList(recovery['phase_ids']),
+    });
+  }
+  for (const [index, entry] of rawList(state['oat_deliveries']).entries()) {
+    if (!isRecord(entry)) continue;
+    const prefix = `oat_deliveries[${index}]`;
+    lists.push({ field: `${prefix}.scope`, values: rawList(entry['scope']) });
+    if (isRecord(entry['integrated_review'])) {
+      lists.push({
+        field: `${prefix}.integrated_review.scope`,
+        values: rawList(entry['integrated_review']['scope']),
+      });
+    }
+    carrierLists(`${prefix}.exit_gate`, entry['exit_gate']);
+  }
+  const gates = state['oat_milestone_gates'];
+  if (isRecord(gates)) {
+    for (const [milestone, carriers] of Object.entries(gates)) {
+      if (!isRecord(carriers)) continue;
+      carrierLists(`oat_milestone_gates.${milestone}.plan`, carriers['plan']);
+      carrierLists(`oat_milestone_gates.${milestone}.exit`, carriers['exit']);
+    }
+  }
+  return lists;
+}
+
+function validateGoalPlan(
+  content: string,
+  ctx: ValidationContext,
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const frontmatter = parseFrontmatterFromContent(content);
+  const planData = frontmatter.kind === 'invalid' ? {} : frontmatter.data;
+
+  if (planData['oat_plan_source'] !== 'goal') {
+    issues.push(
+      goalError(
+        'goal-plan-source',
+        `Goal plans must declare "oat_plan_source: goal"; found ${JSON.stringify(planData['oat_plan_source'] ?? null)}.`,
+      ),
+    );
+  }
+
+  const membership = readMilestoneMembership(
+    content,
+    ctx.implementationContent ?? '',
+  );
+  for (const error of membership.errors) {
+    issues.push(
+      goalError(GOAL_MEMBERSHIP_RULE_CODES[error.code], error.message),
+    );
+  }
+
+  const owners = new Map<string, string>();
+  for (const row of membership.milestones) {
+    for (const phaseId of row.phaseIds) {
+      if (!owners.has(phaseId)) owners.set(phaseId, row.milestoneId);
+    }
+  }
+  const declaredMilestones = new Set(
+    membership.milestones.map((row) => row.milestoneId),
+  );
+  const declaredPhases = new Set(extractBriefPhaseIds(content));
+
+  for (const delivery of readRawDeliveries(ctx.stateFrontmatter)) {
+    if (!membership.present || delivery.milestone === null) continue;
+    if (!declaredMilestones.has(delivery.milestone)) {
+      issues.push(
+        goalError(
+          'goal-shipped-milestone-changed',
+          `Delivery ${delivery.label} shipped milestone ${delivery.milestone}, which the Milestones table no longer declares.`,
+        ),
+      );
+      continue;
+    }
+    for (const phaseId of delivery.scope) {
+      if (!declaredPhases.has(phaseId)) {
+        issues.push(
+          goalError(
+            'goal-delivered-scope-changed',
+            `Delivery ${delivery.label} froze ${phaseId} in its scope, but the brief no longer declares it.`,
+          ),
+        );
+        continue;
+      }
+      const owner = owners.get(phaseId);
+      if (owner !== undefined && owner !== delivery.milestone) {
+        issues.push(
+          goalError(
+            'goal-delivered-scope-changed',
+            `Delivery ${delivery.label} froze ${phaseId} under ${delivery.milestone}, but the Milestones table now assigns it to ${owner}.`,
+          ),
+        );
+      } else if (owner === undefined) {
+        issues.push(
+          goalError(
+            'goal-delivered-scope-changed',
+            `Delivery ${delivery.label} froze ${phaseId} under ${delivery.milestone}, but the Milestones table no longer lists it there.`,
+          ),
+        );
+      }
+    }
+  }
+
+  for (const [index, group] of rawList(
+    planData['oat_plan_parallel_groups'],
+  ).entries()) {
+    const groupOwners = new Set<string>();
+    for (const member of rawList(group)) {
+      const phaseId = normalizePhaseId(String(member));
+      const owner = phaseId === null ? undefined : owners.get(phaseId);
+      if (owner !== undefined) groupOwners.add(owner);
+    }
+    if (groupOwners.size > 1) {
+      issues.push(
+        goalError(
+          'goal-group-crosses-milestone',
+          `Parallel group ${index} spans milestones ${[...groupOwners].join(', ')}; a group must sit inside one milestone.`,
+        ),
+      );
+    }
+  }
+
+  for (const { field, values } of persistedPhaseIdLists(ctx.stateFrontmatter)) {
+    for (const value of values) {
+      const token = typeof value === 'string' ? value : String(value);
+      if (normalizePhaseId(token) !== token) {
+        issues.push(
+          goalError(
+            'goal-noncanonical-phase-id',
+            `${field} holds ${JSON.stringify(value)}, which is not a canonical phase id like "p01" or "p-rev1".`,
+          ),
+        );
+      }
+    }
+  }
+
+  return issues;
 }

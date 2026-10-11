@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "oatVersion": "0.3.19",
+  "oatVersion": "0.3.20",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -951,8 +951,18 @@
       "isFile": false,
       "lastSynced": "2026-10-11T06:19:07.771Z",
       "strategy": "symlink"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-project-goal",
+      "providerPath": ".claude/skills/oat-project-goal",
+      "provider": "claude",
+      "contentType": "skill",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-10-11T14:37:43.558Z",
+      "strategy": "symlink"
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-10-11T06:19:07.771Z"
+  "lastUpdated": "2026-10-11T14:37:43.558Z"
 }

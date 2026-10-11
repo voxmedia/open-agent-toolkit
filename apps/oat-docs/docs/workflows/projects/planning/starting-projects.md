@@ -7,8 +7,8 @@ description: 'Choose a project entry skill, import an existing plan, capture com
 
 Choose an entry path based on what you already know and what already exists.
 These skills do not require an existing active project. They create or import
-tracked work, although quick-start, lite, and brief resume an active project of
-their own mode, and import writes into whichever project is active.
+tracked work, although quick-start, lite, brief, and goal resume an active
+project of their own mode, and import writes into whichever project is active.
 
 | Your situation                                                       | Entry skill               | Result                                                                            |
 | -------------------------------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
@@ -16,6 +16,7 @@ their own mode, and import writes into whichever project is active.
 | The outcome is bounded, with optional design decisions to resolve.   | `oat-project-quick-start` | Discovery and an executable plan, with lightweight design when needed.            |
 | The change fits one implementation sitting.                          | `oat-project-lite`        | One approved plan with requirements and validation criteria.                      |
 | One delivery whose outcome and design you can agree in conversation. | `oat-project-brief`       | One reviewed, approved Project Brief whose phases carry intent and exit evidence. |
+| An outcome that needs several deliveries over time.                  | `oat-project-goal`        | One approved Project Brief with milestones, delivered and re-aligned in turn.     |
 | You already have a Markdown plan.                                    | `oat-project-import-plan` | The original source preserved beside a normalized OAT plan.                       |
 | Implementation happened without project tracking.                    | `oat-project-capture`     | Retroactive discovery and implementation records from the session and commits.    |
 | A confirmed scope contains several coordinated projects.             | `oat-project-split`       | A coordination parent and children that resume at discovery.                      |
@@ -69,15 +70,15 @@ in a fresh repository.
    overrides the setting for one shell.
 
 3. **Only `oat-project-new` takes a scope.** It accepts `--scope shared|local|synced`.
-   Quick-start, lite, brief, import, capture, and split have no scope argument.
-   Quick-start, lite, brief, import, and capture always create projects in the
+   Quick-start, lite, brief, goal, import, capture, and split have no scope argument.
+   Quick-start, lite, brief, goal, import, and capture always create projects in the
    default scope. Split uses the active project's scope, or `shared` when no
    project is active. Set the default first if you do not want `synced`.
 
 4. **Build the knowledge index before spec-driven discovery.** `oat-project-discover`
    refuses to start until `.oat/repo/knowledge/project-index.md` exists. Run
    `/oat-repo-knowledge-index` once before your first spec-driven project.
-   Quick-start, lite, brief, import, and capture do not check for it.
+   Quick-start, lite, brief, goal, import, and capture do not check for it.
 
 5. **Know what happens when a project is already active.** Check with
    `oat config get activeProject` before you start:
@@ -110,14 +111,14 @@ Project creation normally activates the new project in `.oat/config.local.json`.
 Check the reported project path before continuing, especially when another
 project is already active.
 
-The new, quick-start, lite, brief, and import skills check inherited Git changes before
+The new, quick-start, lite, brief, goal, and import skills check inherited Git changes before
 scaffolding. Unrelated changes require an explicit disposition in interactive
 runs. One exception: if the only change is `.oat/sync/manifest.json`, it is
 committed automatically as `chore: run sync`. Capture does not run this check.
 Do not assume starting a project also authorizes implementation or a PR.
 
 **Dispatch policy.** Before a plan is marked ready, quick-start, lite, brief,
-and import ask you to choose a _dispatch policy_: the highest tier of models and
+goal, and import ask you to choose a _dispatch policy_: the highest tier of models and
 effort OAT may use when it dispatches implementation and review agents. The
 choices come from `oat project dispatch-ceiling choices`. If your configuration
 has no complete dispatch ladder (the list of models for each tier), the skill
@@ -129,10 +130,11 @@ deliberately. The plan stays not ready until this resolves. See
 **Approval checkpoints.** A _HiLL (human-in-the-loop lifecycle) checkpoint_ is
 a point where a skill stops and waits for your explicit approval before it marks
 a phase complete. Projects created by `oat-project-new` have checkpoints on
-discovery and design by default. Quick, lite, brief, import, and captured
-projects have no workflow-phase checkpoints before implementation. Lite still
-asks you to approve its plan once, and brief asks you to approve its reviewed
-brief once. See [HiLL checkpoints](hill-checkpoints.md).
+discovery and design by default. Quick, lite, brief, goal, import, and
+captured projects have no workflow-phase checkpoints before implementation.
+Lite still asks you to approve its plan once, brief asks you to approve its
+reviewed brief once, and goal asks for that approval and then one per later
+milestone. See [HiLL checkpoints](hill-checkpoints.md).
 
 Several skills also run a configured _exit gate_, an optional review or command
 your repository configures to run before a skill marks its work complete. When
@@ -370,6 +372,50 @@ the scaffold and start `oat-project-quick-start` instead. See
 [Lifecycle](../lifecycle.md#promoting-a-brief-project-to-quick).
 
 **Next step:** Run `oat-project-implement` after the brief is approved.
+
+## oat-project-goal
+
+Use goal when an outcome needs several deliveries over time. Goal writes one
+reviewed Project Brief like brief does, and adds a `## Milestones` table that
+groups its phases into milestones. Each milestone is implemented, reviewed,
+delivered as its own pull request, and followed by a short re-alignment before
+the next one starts.
+
+**Invocation:** Provide the slug and the intended outcome.
+
+```text
+/oat-project-goal audit-exports "Give administrators audit exports in CSV first, then scheduled delivery."
+```
+
+**Prerequisites:** No active project is needed. If the active project is a
+goal project, goal resumes it at the step its state calls for: authoring,
+milestone activation, re-alignment, or the terminal declaration.
+
+**Example scenario:** Administrators need audit exports now and scheduled
+delivery later. Goal interviews you once for the whole outcome, splits it into
+milestone m01 (CSV export) and m02 (scheduled delivery), and activates m01.
+When m01's pull request is delivered, goal asks what changed, amends the brief
+with m02's phases, takes the amendment through review and approval, and
+activates m02 once m01 reaches the endpoint you agreed, such as merged.
+
+**Expected output:** One Project Brief in `plan.md` with
+`oat_plan_source: goal`, a canonical `| Milestone | Phases |` table in which
+every phase belongs to exactly one milestone, and the first milestone approved
+and activated. Each milestone's approval is recorded as its `plan` gate carrier
+in `state.md`; deliveries are recorded in the `oat_deliveries` registry by the
+delivery skills.
+
+**What it does without asking:** It creates the project through
+`oat project new --mode goal`, commits the brief before review, runs the
+artifact review and any configured `oat-project-goal` gate, refreshes delivery
+observations with `oat project delivery refresh`, and appends one project-log
+entry at each activation and re-alignment. It asks before: proceeding with a
+dirty working tree, the interview decisions and milestone split, each approval,
+the re-alignment questions, and declaring the goal met.
+
+**Next step:** Run `oat-project-implement` after the first milestone is
+activated. Between milestones, `oat-project-goal` re-aligns and activates the
+next milestone once the previous delivery reaches its agreed endpoint.
 
 ## oat-project-import-plan
 

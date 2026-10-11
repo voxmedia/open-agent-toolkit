@@ -466,6 +466,7 @@ describe('post-implementation sequence contracts', () => {
       'oat-project-quick-start',
       'oat-project-lite',
       'oat-project-brief',
+      'oat-project-goal',
       'oat-project-import-plan',
     ]) {
       const skill = readLifecycleGateSkill(skillName);

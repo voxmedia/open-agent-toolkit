@@ -30,7 +30,7 @@ instead of `/`):
    summary that `/oat-repo-knowledge-index` writes under
    `.oat/repo/knowledge/`. If that folder has no Markdown file, progress tells
    you to run `/oat-repo-knowledge-index` and stops without a project report,
-   whatever the project's mode; quick, lite, brief and imported projects never
+   whatever the project's mode; quick, lite, brief, goal and imported projects never
    needed the index before, so this can be the first time you see it. Run
    `/oat-repo-knowledge-index` once and then run progress again, or skip to
    step 3: `/oat-project-next` itself does not check for the index (spec-driven
@@ -89,6 +89,16 @@ phase-units remain in the active scope") before every later check. The
 `.oat/state.md` dashboard does not read phase-units, so at the end of
 implementation it prints a note that `oat project status` and
 `oat-project-next` are the authority for brief projects.
+
+For a goal project, the router also reads the milestone status, any pending
+`oat_goal_recovery` record, the milestone gate carriers, and the delivery
+registry. It sends `aligning` and `delivered` milestones to `oat-project-goal`,
+scopes `oat-project-implement` to the active milestone's phases (or a recovery
+scope), routes the integrated review as `code mNN: …` to
+`oat-project-review-provide`, and routes registration as `deliver mNN` to
+`oat-project-pr-progress`. In the implement phase the dashboard prints a goal
+note that `oat project status` and `oat-project-next` are the authority for
+goal milestone routing.
 
 ## What travels
 
