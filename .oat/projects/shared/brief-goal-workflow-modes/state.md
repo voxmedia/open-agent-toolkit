@@ -1,8 +1,7 @@
 ---
 oat_current_task: p10-t02
 oat_last_commit: 97f2f1a32100a2174e5414f32040e9b0e97d22b7
-oat_blockers:
-  - 'disk: root volume under 600 MB free (T3 statev2.sqlite, ~/.t3/worktrees of other projects and ~/.codex/sessions hold ~18 GB); p10 paused after p10-t01, p10-t02 patch parked under references/'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -94,11 +93,11 @@ oat_quick_start_gate:
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/361' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T00:09:32.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-11T04:20:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-11T12:51:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

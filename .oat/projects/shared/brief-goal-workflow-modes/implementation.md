@@ -630,6 +630,8 @@ oat_generated: false
 
 **Disposition:** passed at 5b334a4e7; artifact archived at reviews/archived/p08-review-2026-10-11T070155Z.md. v1 (brief) is complete at this head; the progress PR for p01–p08 is opened through `oat-project-pr-progress` (user-invoked) and the Astra v1.5 plan-revision round precedes p09.
 
+**Progress PR (2026-10-11):** [#361](https://github.com/voxmedia/open-agent-toolkit/pull/361) opened by `oat-project-pr-progress` (user-invoked) from `feat/brief-workflow-mode-v1`, a branch cut at the p08 closeout commit ebccf5ba3 so the PR carries only v1 (range 417a34c57..ebccf5ba3). Per Thomas, the v1.5 goal phases continue on `feat/freestyle-project-workflow` and `oat-project-pr-final` opens a separate PR from it; the earlier "pr-final retitles the progress PR" note no longer applies. PR artifact: pr/progress-p01-p08-2026-10-11.md (local).
+
 ---
 
 ## Phase 9: Goal registration and control-plane transitions (v1.5)
