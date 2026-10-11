@@ -27,15 +27,16 @@ priority alignment are historical context: alignment predates every selected
 item and is explicitly labelled stale by the review. No rankings or ownership
 claims from those artifacts were assumed current.
 
-| Item                                                                                                        | Review coverage and current evidence                                                                                                                                                                              | Value / effort / risk / confidence | plan_ready | execution_ready |
-| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | --------------- |
-| BL-260907-ignore-backslash-escaped — Ignore backslash-escaped emphasis in skill-script reference extraction | Explicit review row 216; guard absent at `skill-script-references.ts:146-147`; current criteria unchanged.                                                                                                        | Low / XS / low / high              | yes        | yes             |
-| BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends                  | Created after review and not considered there. Independently verified `agents-md.ts:801-829` stale classification window and existing safety suite.                                                               | Low / S / medium / high            | yes        | yes             |
-| BL-260927-add-a-side-effect-free-dry-run — Add a side-effect-free dry run to oat project log append         | Created after review's printed September 26 date but explicitly included at row 136; note this chronology inconsistency. Live code has no flag and mutates lock state before validation. Issue #314 remains open. | Low / S / medium / high            | yes        | yes             |
+| Item                                                                                                        | Review coverage and current evidence                                                                                                                                                                            | Value / effort / risk / confidence | plan_ready | execution_ready |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------- | --------------- |
+| BL-260907-ignore-backslash-escaped — Ignore backslash-escaped emphasis in skill-script reference extraction | Explicit review row 216; guard absent at `skill-script-references.ts:146-147`; current criteria unchanged.                                                                                                      | Low / XS / low / high              | yes        | yes             |
+| BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends                  | Created after review and not considered there. Independently verified `agents-md.ts:801-829` stale classification window and existing safety suite.                                                             | Low / S / medium / high            | yes        | yes             |
+| BL-260927-add-a-side-effect-free-dry-run — Add a side-effect-free dry run to oat project log append         | Created September 27 UTC / September 26 CDT and explicitly included at row 136, consistent with the local review date. Live code has no flag and mutates lock state before validation. Issue #314 remains open. | Low / S / medium / high            | yes        | yes             |
 
 The serializer is selected on independently settled criteria and current code,
-not its timestamp. Dry-run is explicitly covered by the living review despite
-its date header; requirements were rechecked independently. No selected item
+not its timestamp. Dry-run is explicitly covered by the living review; its UTC creation timestamp
+falls on September 26 in America/Chicago, matching the review date. Requirements
+were rechecked independently. No selected item
 was found materially changed beyond review coverage, except the serializer's
 later creation, recorded above.
 
@@ -88,10 +89,12 @@ No excluded directory was used to invent findings or additional candidates.
 Planning used `oat pjm doctor --json` (declared adoption, exit 1 only for the
 pre-existing completed-unarchived warning affecting 11 other items), clean-tree
 and provenance Git reads, current GitHub PR/issue reads, source/test inspection,
-and plan/frontmatter/link conservation checks. No source fix, automated test,
-production probe, or generated-plan execution occurred. Full root CI Definition
-of Done gates are not claimed run in this planning stage; the coordinating
-workflow owns remaining pre-publication checks. Individual plans name future
+and plan/frontmatter/link conservation checks. No source fix, behavioral regression test,
+production probe, or generated-plan execution occurred. The coordinating
+workflow runs the root Definition of Done gates and records exact results;
+this index does not claim full-CI success. Review corrections run only the
+existing focused external-plan acceptance test; that test checks these planning
+contracts, not the proposed fixes. Individual plans name future
 focused regressions and all implementation gates.
 
 Plan writes and exact reverse links are the only product of this stage. Do not

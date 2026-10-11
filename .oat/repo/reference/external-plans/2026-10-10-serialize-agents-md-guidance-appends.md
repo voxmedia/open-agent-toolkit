@@ -23,9 +23,9 @@ created: '2026-10-11T00:17:45Z'
 >
 > **Execution status: READY.** No unsatisfied hard dependency was found.
 
-## Source and provenance
+## Source and live evidence
 
-- Source: [BL-260928-serialize-concurrent-agents-md](../../pjm/backlog/items/BL-260928-serialize-concurrent-agents-md.md).
+- Source backlog item: [BL-260928-serialize-concurrent-agents-md](../../pjm/backlog/items/BL-260928-serialize-concurrent-agents-md.md).
 - Review: [Backlog and roadmap review](../../pjm/backlog/reviews/backlog-and-roadmap-review.md).
 - Inspected HEAD: `0702df1305492a4886ee5d97be744b35a3633e55`.
 - Compared fetched `origin/main` and merge-base: `0702df1305492a4886ee5d97be744b35a3633e55`; both equal the inspected HEAD.
@@ -65,8 +65,21 @@ read-only and existing differing blocks still require a manual patch.
 - This item was created on September 28, after the September 26 review, and
   is not considered in that review. Its explicit three acceptance criteria,
   current read/classify/append gap, and existing filesystem tests independently
-  establish readiness. The source cites an archived review not present in this
-  checkout; the plan relies on current source rather than that missing artifact.
+  establish readiness. The complete archived review is not in this checkout;
+  its deferred Medium finding and gate event are retained in the
+  [backlog-wave-2 summary](../project-summaries/20260928-backlog-wave-2.md)
+  at `:258` and `:286`.
+- [DR-260928 — AGENTS.md guidance appends](../decisions/DR-260928-agents-md-guidance-appends.md)
+  records this exact cross-process serialization follow-up in Consequences.
+  Preserve the original decision/history. At shipment, follow decision-record
+  guidance to append a dated resolution note linking the implementation and
+  archived backlog item; do not claim resolution during planning or rewrite
+  the original decision. No decision file is changed by this planning pass.
+- All direct consumers found by the upsert-symbol search are
+  `commands/pjm/init.ts`, `commands/init/tools/index.ts`,
+  `commands/init/tools/workflows/index.ts`, `commands/docs/init/index.ts`, and
+  `commands/decision/agents-guidance.ts`. `commands/tools/guidance` and
+  `commands/tools/install` also exercise the shared behavior through consumers.
 
 ## Dependencies
 
@@ -87,7 +100,7 @@ No unsatisfied hard dependency remains.
 ## Drift check
 
 ```bash
-git diff --stat 0702df1305492a4886ee5d97be744b35a3633e55..HEAD -- packages/cli/src/commands/shared/agents-md.ts packages/cli/src/commands/shared/agents-md.test.ts packages/cli/src/commands/pjm/init.ts packages/cli/src/commands/init/tools/index.ts
+git diff --stat 0702df1305492a4886ee5d97be744b35a3633e55..HEAD -- packages/cli/src/commands/shared/agents-md.ts packages/cli/src/commands/shared/agents-md.test.ts packages/cli/src/commands/pjm/init.ts packages/cli/src/commands/pjm/init.test.ts packages/cli/src/commands/init/tools/index.ts packages/cli/src/commands/init/tools/index.test.ts packages/cli/src/commands/init/tools/workflows packages/cli/src/commands/docs/init packages/cli/src/commands/decision/agents-guidance.ts packages/cli/src/commands/decision/agents-guidance.test.ts packages/cli/src/commands/tools/guidance packages/cli/src/commands/tools/install .oat/repo/reference/decisions/DR-260928-agents-md-guidance-appends.md
 ```
 
 ## Scope
@@ -106,7 +119,9 @@ marker syntax, guidance contents, provider sync, or repair existing duplicates.
 In `agents-md.test.ts`, launch two isolated child processes against a temp
 repository containing an existing regular AGENTS.md and no requested block.
 Each imports the real exported upsert function; wrap the existing filesystem
-read dependency to pause after its initial absent-block inspection. Coordinate
+read dependency to pause once, immediately after its first successful read of
+the target. Mark that first-read barrier consumed before waiting; all later
+reads pass through without pausing, including re-reads under the new lock. Coordinate
 readiness and release by IPC or explicit barrier files in the test's separate
 temp control directory, never by sleeps. Both readers must reach the same
 pre-lock observation before release. Assert the final marker count, ordered
@@ -119,8 +134,11 @@ If a fixture is needed, place it under `commands/shared/__tests__/` and avoid
 shipping it as a runtime asset.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts`
-— the new case fails against the baseline because two appends create duplicate
-markers, not because child launch or imports fail.
+— the baseline cannot satisfy the required outcome: depending on interleaving,
+it may append twice or return `blocked` after a changed-content check. Record
+the actual baseline outcome. A launch/import failure is not regression proof.
+After the fix, require one `appended`, one `no-change`, one marker pair, and a
+clean rerun; do not pin an incidental baseline interleaving.
 
 ### 2. Lock the target and recompute the authoritative decision
 
@@ -132,7 +150,18 @@ on contention exhaustion or unsafe lock state, return a clear `blocked` result
 without writing guidance. Keep malformed/foreign locks fail-closed; do not
 implement time-based lock stealing or automatic stale-lock deletion in this
 bounded fix. Include actionable manual recovery after verifying the owner is
-gone. Release only this invocation's owned lock, with identity/token checking,
+gone. Make this message survive `safeReason` at `agents-md.ts:388-395`: use
+an allowed prefix such as `AGENTS.md append lock ...` and include actionable
+recovery in the reason, because `blockedResult.action` remains the generic
+path/marker instruction. Never include absolute private paths in diagnostics;
+name the repository-relative lock location. A leftover lock after abrupt
+termination is intentionally visible in `git status` and blocks mutation;
+document checking the recorded host/PID before manual removal. Normal success,
+error and interrupt handling must release an owned lock when the process can
+run cleanup; SIGKILL cannot guarantee cleanup. Do not add ignore rules or move
+the lock to tmpdir: the source explicitly chooses a lock beside AGENTS.md.
+The project-log tmpdir lock is comparison context, not this target's owner.
+Release only this invocation's owned lock, with identity/token checking,
 in `finally` on all outcomes. Never remove another writer's lock.
 
 Keep any pre-lock inspection advisory: a content-only change before lock acquisition
@@ -141,12 +170,14 @@ error instead of the required no-change result. Identity changes remain blocked.
 The first inspection may remain optimistic to avoid lock writes for previews,
 no-change results, and manual-only cases. Before any actual mutation, acquire
 the target lock, validate the original target identity, re-read current content,
-and classify markers again. Serialize missing-file creation through the same
-canonical lock identity, preserving exclusive `wx` and appeared-file retry.
-Accept a file created by another cooperating writer only via the existing
-bounded replan rule; replacement of an originally existing target stays blocked.
-The loser must observe the newly added block under lock and return `no-change`.
-Hold the lock through the entire append/create and handle close.
+and classify markers again. Preserve the existing missing-file exclusive `wx` creation and single
+appeared-file replan instead of redesigning it around a lock. If that replan
+finds an existing file still requiring an append, enter the locked existing-file
+path. An already matching file returns `no-change`. Replacement of an
+originally existing target remains blocked. Do not promise that unrelated
+missing-file races outside the existing EEXIST/replan path are fixed here.
+The losing existing-file appender must observe the newly added block under
+lock and return `no-change`. Hold the lock through the append and handle close.
 
 Do not replace `appendAbsentSections` with a rewrite or rename. Retain
 `O_WRONLY | O_APPEND | O_NOFOLLOW | O_NONBLOCK`, opened device/inode/link count
@@ -161,12 +192,12 @@ remain green. Removing the lock/recheck must turn the duplicate-block test red.
 
 Extend existing cases only where new lock lifecycle behavior needs protection:
 lock released after no-change/error; held/unsafe lock produces bounded refusal
-with unchanged target; direct/symlink aliases contend on one lock identity;
+with unchanged target and an actionable reason preserved through `safeReason`; direct/symlink aliases contend on one lock identity;
 read-only preview creates no lock. Use existing file-system injection for
 errors and a real temp filesystem for identity and lock semantics. Run the
-actual PJM/init and tools consumers without modifying their output contracts.
+complete consumer set listed in live evidence without modifying their output contracts.
 
-**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts src/commands/pjm/init.test.ts src/commands/init/tools/index.test.ts`
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/agents-md.test.ts src/commands/pjm/init.test.ts src/commands/init/tools/index.test.ts src/commands/init/tools/workflows/index.test.ts src/commands/docs/init/index.test.ts src/commands/decision/agents-guidance.test.ts src/commands/tools/guidance/index.test.ts src/commands/tools/install/index.test.ts`
 — all pass; no temporary lock or child remains after settled calls.
 
 ## Test plan
@@ -176,7 +207,11 @@ Public boundaries: exported `upsertAgentsMdSection(s)` and
 literal ordered marker pair, the original file prefix/inode, `appended` plus
 `no-change`, and a clean rerun. A second same-block writer is a distinct failure
 from existing concurrent-user-text tests; a process-local mutex must fail the
-new cross-process case.
+new cross-process case. Keep independent processes: the backlog description
+and DR-260928 require serialization across processes. A two-call in-process
+harness plus a pre-existing-lock refusal case proves less: it need not exercise
+two independent processes contending, re-reading, and releasing the same live
+lock. The bounded child harness therefore protects a distinct requirement.
 
 Protects against: cross-process duplicate managed blocks; not already caught
 because existing concurrency tests append unrelated user text inside one
@@ -187,11 +222,12 @@ write, and append-only tests as named safety keepers.
 
 ## Done criteria
 
-- [ ] Deterministic baseline duplicate reproduced; fixed run gives one append and one no-change.
+- [ ] First-read-only barrier gives baseline evidence (duplicate or blocked); fixed run gives one append and one no-change.
 - [ ] Third invocation is no-change; target prefix/inode and all existing protections survive.
-- [ ] Cross-process lock covers classification through write, and owned lock cleanup is bounded.
+- [ ] Cross-process lock covers existing-target classification through append, and owned lock cleanup is bounded; existing exclusive creation/replan remains intact.
 - [ ] Preview/manual-only paths remain read-only; blocked lock never permits an unlocked append.
 - [ ] Focused consumer suites and repository gates pass; no unrelated refactoring.
+- [ ] At shipment, a dated DR-260928 resolution annotation links the fix and archived item without rewriting history.
 
 ## STOP conditions
 
@@ -205,7 +241,7 @@ reap locks whose owner cannot be proven gone.
 
 Recheck ownership, source status, and exact execution HEAD after integration,
 after any guidance helper/caller landing, or after seven days. Confirm the
-baseline two-child test still reaches the observed duplicate race. Reconcile
+baseline two-child test still rejects the observed duplicate-or-blocked outcome. Reconcile
 new safety guards before editing and preserve the authored provenance.
 
 ## Repository conventions and final verification

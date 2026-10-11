@@ -23,9 +23,9 @@ created: '2026-10-11T00:17:45Z'
 >
 > **Execution status: READY.** No unsatisfied hard dependency was found.
 
-## Source and provenance
+## Source and live evidence
 
-- Source: [BL-260907-ignore-backslash-escaped](../../pjm/backlog/items/BL-260907-ignore-backslash-escaped.md).
+- Source backlog item: [BL-260907-ignore-backslash-escaped](../../pjm/backlog/items/BL-260907-ignore-backslash-escaped.md).
 - Review: [Backlog and roadmap review](../../pjm/backlog/reviews/backlog-and-roadmap-review.md).
 - Inspected HEAD: `0702df1305492a4886ee5d97be744b35a3633e55`.
 - Compared fetched `origin/main` and merge-base: `0702df1305492a4886ee5d97be744b35a3633e55`; both equal the inspected HEAD.
@@ -39,8 +39,10 @@ created: '2026-10-11T00:17:45Z'
 
 ## Outcome
 
-An emphasis run immediately preceded by a backslash does not open an
-extractable reference. The literal Markdown `\_.oat/scripts/helper.sh\_`
+An emphasis run preceded by an odd-length contiguous backslash run does not
+open an extractable reference. An even-length run preserves the existing
+reference detection because it ends with an escaped backslash, not an escaped
+emphasis delimiter. The literal Markdown `\_.oat/scripts/helper.sh\_`
 produces no reference and therefore no false unshipped-script violation.
 This is the backlog's explicit `readOpeningEmphasis`-returns-null behavior:
 it does **not** normalize the escaped spelling into a script path. Ordinary
@@ -54,9 +56,9 @@ emphasis and malformed real references retain their existing behavior.
 - The same file at `:254-277`: `extractScriptReferences` skips a candidate when
   the opening reader returns null. Trailing decoration stripping otherwise
   removes the underscore and leaves the preceding backslash in the token.
-- `packages/cli/src/commands/init/tools/shared/skill-script-references.test.ts:166-236`
+- `packages/cli/src/commands/init/tools/shared/skill-script-references.test.ts:163-296`
   has extraction rows for real emphasis, globs, and glued identifiers, but no
-  escaped-opening row. Its `findUnshippedScriptReferences` suite at `:397`
+  escaped-opening row. Its `findUnshippedScriptReferences` suite at `:394`
   already supplies small independent manifest fixtures.
 - `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts:4460`
   consumes the same extractor for shipped Markdown. Do not change product
@@ -67,6 +69,16 @@ emphasis and malformed real references retain their existing behavior.
   introduced the extractor; it does not plan this escaped-emphasis follow-up.
   The source item's historical claim of zero live instances was not recounted
   by scanning excluded skill directories during this bounded pass.
+
+Code-path verification also establishes a preservation case: with two literal
+backslashes before `_.oat/scripts/missing.sh_`, the start regex admits the dot,
+`readOpeningEmphasis` counts one underscore, the current preceding-character
+guard admits the backslash, and trailing decoration removes the closing
+underscore. `PLACEHOLDER_SYNTAX` does not reject `missing.sh`, so the scanner
+emits `.oat/scripts/missing.sh`. An unconditional preceding-backslash guard
+would silently remove that existing detection. This is static reasoning from
+the complete extraction path, not a runtime probe. The bounded odd/even guard
+below avoids that regression without adopting a general Markdown parser.
 
 ## Dependencies
 
@@ -95,8 +107,10 @@ git diff --stat 0702df1305492a4886ee5d97be744b35a3633e55..HEAD -- packages/cli/s
 Change only `skill-script-references.ts` and its colocated test file, plus
 required release and source-item closeout bookkeeping at shipment. Run the
 existing bundled contract suite without adding redundant copies of the same
-fixture. Markdown grammar redesign, escape-parity interpretation, skill prose,
-pack ownership, manifest changes, and other reference syntaxes are out of scope.
+fixture. Markdown grammar redesign, general escape interpretation, skill prose,
+pack ownership, manifest changes, and other reference syntaxes are out of scope. The only parity handling in scope is the
+contiguous backslashes immediately before the opening emphasis run, needed to
+preserve a reference the current scanner already detects.
 
 ## Implementation steps
 
@@ -107,7 +121,11 @@ escaped underscore opening and closing, expecting `[]`. Use a raw string or
 explicit double backslashes so the runtime input contains both backslashes.
 Add a small contract fixture through `findUnshippedScriptReferences` using the
 existing manifest helper, expecting zero violations. Keep an ordinary missing
-script in real underscore emphasis as the accepted positive detection control.
+script in real underscore emphasis as the existing positive detection control.
+Add one preservation row with two literal backslashes before the opening
+underscore and an ordinary closing underscore, expecting the literal
+`.oat/scripts/missing.sh` reference. It passes on the current scanner and must
+remain passing; it is distinct from the new escaped-opening regression.
 Do not export `readOpeningEmphasis` merely to test its private return value.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skill-script-references.test.ts`
@@ -117,9 +135,12 @@ changing implementation.
 
 ### 2. Reject the escaped opening and retain fail-closed cases
 
-At `readOpeningEmphasis`, return null when the character immediately preceding
-a nonempty emphasis run is `\`, alongside the identifier guard. Update the
-nearby comments to describe both reasons for skipping a candidate. Do not trim
+At `readOpeningEmphasis`, count contiguous backslashes immediately before the
+nonempty emphasis run and return null only for odd parity, alongside the
+existing identifier guard. Zero or even parity retains current behavior.
+This refines the item's single-backslash example to preserve an already
+supported real reference; it does not add broader escape normalization.
+Update nearby comments to describe the guard. Do not trim
 arbitrary backslashes from extracted names or globally loosen terminators.
 
 **Verify:** rerun the step 1 command; all cases pass. Then run
@@ -142,7 +163,7 @@ No test infrastructure or production test hook is needed.
 
 ## Done criteria
 
-- [ ] Escaped opening is ignored, with no trailing-backslash reference emitted.
+- [ ] Odd-parity escaped opening is ignored, with no trailing-backslash reference emitted; the even-parity reference still emits its existing filename.
 - [ ] Escaped contract fixture has zero violations; genuine missing references still fail.
 - [ ] Baseline red and fixed green are recorded; focused and repository gates pass.
 - [ ] Only scoped implementation, release bookkeeping, and source closeout changed.

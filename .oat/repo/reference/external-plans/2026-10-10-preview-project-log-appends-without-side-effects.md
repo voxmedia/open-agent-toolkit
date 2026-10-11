@@ -23,9 +23,9 @@ created: '2026-10-11T00:17:45Z'
 >
 > **Execution status: READY.** No unsatisfied hard dependency was found.
 
-## Source and provenance
+## Source and live evidence
 
-- Source: [BL-260927-add-a-side-effect-free-dry-run](../../pjm/backlog/items/BL-260927-add-a-side-effect-free-dry-run.md).
+- Source backlog item: [BL-260927-add-a-side-effect-free-dry-run](../../pjm/backlog/items/BL-260927-add-a-side-effect-free-dry-run.md).
 - Review: [Backlog and roadmap review](../../pjm/backlog/reviews/backlog-and-roadmap-review.md).
 - Inspected HEAD: `0702df1305492a4886ee5d97be744b35a3633e55`.
 - Compared fetched `origin/main` and merge-base: `0702df1305492a4886ee5d97be744b35a3633e55`; both equal the inspected HEAD.
@@ -40,7 +40,7 @@ created: '2026-10-11T00:17:45Z'
 ## Outcome
 
 `oat project log append --dry-run` validates the proposed entry and its target,
-including asset/CLI compatibility and sealed-state rules, and returns a clear
+including asset/CLI compatibility when creating a log and sealed-state rules, and returns a clear
 preview without writing a log, lock, receipt, config, Git index, or commit.
 Failures use the same diagnostic paths and non-zero exits as append validation.
 A successful preview is advisory current-state validation, not a reservation or
@@ -58,7 +58,7 @@ a promise about later filesystem permissions, disk space, hooks, or other writer
   files. Entering this path and then suppressing `writeLog` is not read-only.
 - `appendLockedProjectLog` at `:1523-1672` owns config skip, grammar,
   idempotency, ambiguity and seal validation, then resolves assets only for a
-  missing log and writes/ appends. Existing logs do not currently resolve assets.
+  missing log and writes/appends. Existing logs do not currently resolve assets.
 - `runAppendCommand` at `:1842-1869` validates a gate receipt for commit recovery;
   `:1903-1919` commits and removes a settled receipt. Dry-run must retain
   applicable receipt validation while bypassing all finalization writes.
@@ -68,9 +68,10 @@ a promise about later filesystem permissions, disk space, hooks, or other writer
 - `append.test.ts:34-122` supplies a real temp-project command harness; the
   file also covers idempotency, sealing, actual Git commits, and receipt recovery.
 - The September 26-labelled review explicitly contains this September 27 item
-  at `:136` and its low-effort test matrix. Record it as explicitly covered,
-  while noting the header/item chronology inconsistency. Current criteria are
-  independently verified rather than inferred from the review date.
+  at `:136` and its low-effort test matrix. Its creation timestamp
+  `2026-09-27T03:35:38.617Z` is September 26 at 22:35 CDT (America/Chicago),
+  consistent with the review's local date and its triage note at `:1289`.
+  Current criteria are independently verified, not inferred from date alone.
 - [CLI-owned log mutations](../decisions/DR-260718-cli-owned-log-mutations.md)
   centralizes validation; [automatic first-append creation](../decisions/DR-260718-automatic-create-on-first.md)
   requires no artifact before an actual append and preserves writes to existing
@@ -109,20 +110,34 @@ Registration in `project/log/index.ts` may change only if propagation requires
 it. Read `fs/assets.ts` and `assets.test.ts`; do not redesign their contract.
 
 Use a separate preview result/API or internal preparation result so existing
-`ProjectLogAppendResult` consumers do not acquire a fictitious `appended`
-result or a new mandatory status variant. CLI success can report
-`status: 'dry-run'` plus `wouldAppend`/`wouldCreate` and the predicted target;
-text output must say no changes were made. A no-op replay or disabled missing
-log should remain recognizable in preview output.
+`ProjectLogAppendResult` consumers retain their current union. Pin these CLI
+JSON success shapes; all exit 0 and never claim a completed mutation:
 
-For asset parity, share real resolver validation for append-eligible entries
-in both modes, including existing unsealed logs. This intentionally detects a
-broken CLI/assets installation before a new append instead of only at first
-log creation. Keep disabled missing-log and recognized replay short-circuits
-unchanged: they would not append. Preserve validation ordering for grammar,
-malformed logs, sealed failures, replay recognition, and receipts so preview
-and mutation report the same relevant failure. Template loading/instantiation
-remains necessary only for a would-create case, and must occur in memory.
+- Would append: `{ status: 'dry-run', outcome: 'append', logPath, heading,
+wouldAppend: true, wouldCreate: boolean }`. Include
+  `normalizedLineEndings: true` only when the existing validator normalizes CRLF.
+- Recognized replay: `{ status: 'dry-run', outcome: 'already-appended', logPath,
+heading, wouldAppend: false, wouldCreate: false }`, with the existing heading.
+- Disabled missing log: `{ status: 'dry-run', outcome: 'skipped',
+reason: 'projectLog=false', wouldAppend: false, wouldCreate: false }`.
+  Do not invent a logPath/heading after the existing skip short-circuit.
+
+Dry-run errors retain the existing `status: 'sealed'` or `status: 'error'`
+shape and non-zero exit. Human output names the predicted append, replay or
+skip and explicitly says no changes were made. A valid commit-mode receipt
+may be reported as `{ receipt: { path, removed: false } }`; never include a
+successful commit result for preview. Preserve existing receipt-mismatch
+failure output unchanged.
+
+Validation parity is conditional on the same real-append path. Resolve assets
+and instantiate/validate the template in memory only when the normal append
+would create a log. Existing unsealed logs do not resolve assets in either
+mode, and disabled missing-log/recognized replay short-circuits remain intact.
+The source's asset criterion applies when the real append needs assets; it
+is not a new health-check gate for existing logs. This preserves
+DR-260718-automatic-create-on-first and normal append behavior. Keep ordering
+for grammar, malformed logs, sealed failures, replay recognition, and receipts
+so both modes produce the same relevant diagnostic.
 
 `--dry-run --commit` is a read-only preview: validate any existing recovery
 receipt exactly as normal commit mode does, but do not commit, stage, delete a
@@ -138,10 +153,26 @@ Extend the existing temp-repository harness in `append.test.ts`. Add valid
 missing-log and existing-log previews; real asset mismatch; sealed-log refusal;
 and a `--dry-run --commit` receipt/replay case. Feed the same command options
 through the real Commander command. Snapshot file paths and bytes (including
-ignored project-local artifacts), Git HEAD, index bytes when present, and
-receipt bytes before/after. Assert unchanged values and no log created.
+ignored project-local artifacts), Git HEAD, staged diff and porcelain status,
+and receipt bytes before/after. Assert unchanged values and no log created.
+Do not compare raw Git index bytes: read-only Git status may refresh them.
 Use existing injected write/append dependencies as tripwires for attempted
 writes as well: final equality alone would miss write-then-restore behavior.
+
+Cover the actual lock location and transient path, not only project files:
+`projectLogLockPath(logPath)` at `append.ts:177-182` points under `os.tmpdir()`.
+The existing `lock.now` dependency (`:124-130`) runs at `:396` before exclusive
+lock creation (`:398`). Supply a throwing or counted `lock.now` tripwire to
+a valid preview and assert zero calls; a mutation-path regression must trip it,
+even if a lock would otherwise be created then removed. No new hook is needed.
+Separately create a fixture-owned live same-host foreign-token lock at the
+exported path, recording a known-live test PID and unchanged bytes/identity.
+With bounded short `waitMs` and a `sleep` tripwire, preview must succeed without
+waiting, replacing or reclaiming it. Clean up only the exact fixture-owned
+lock afterward. Pair with an absent-lock fixture asserting no lock appears;
+its zero-call `now` tripwire catches transient acquisition that final absence
+would miss. Existing write/append tripwires cover log mutations, not locks.
+Record the location and semantic Git checks; do not mutate a real project.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts`
 — new command tests initially fail because `--dry-run` is unsupported; after
@@ -152,8 +183,8 @@ lock/write path rather than just argument parsing.
 
 Factor current validation into a read-only preparation routine in `append.ts`.
 It resolves project/config, reads the current log, validates entry and key,
-checks ambiguity/seal/replay, resolves compatible assets for eligible entries,
-and, if needed, prepares and validates the template in memory. Return enough
+checks ambiguity/seal/replay, and resolves compatible assets plus prepares and
+validates the template in memory only for a would-create case. Return enough
 information to report preview without exposing test-only internals.
 
 The real append must still acquire its existing required lock first and run
@@ -174,17 +205,21 @@ against equivalent fresh fixture states. Existing normal append cases pass.
 ### 3. Prove parity and document the probe
 
 Extend table-driven boundary cases only for uncovered validation parity:
-invalid judgment type/scope, structural grammar, ambiguous log, malformed
-first-log template, disabled missing log, and recognized idempotent replay on
-a sealed log. Use the real resolver with a temporary bundle mismatch fixture
+would-create template, disabled missing log, and recognized idempotent replay
+on a sealed log. Retain existing grammar/type/ambiguity tests as keepers; add
+mode-parity cases for them only if extraction changes their routing and leaves
+an observed gap. Do not duplicate all validators merely because a mode exists. Use the real resolver with a temporary bundle mismatch fixture
 following `fs/assets.test.ts`; do not mock an internal resolver to throw the
 very error the test purports to prove. Keep fixture metadata independent of
 the append implementation and route it through the existing resolver override.
-A matched-version valid bundle is the acceptance control.
+A matched-version valid bundle is the acceptance control. On an existing
+unsealed log, use a resolver tripwire to prove neither real append nor preview
+loads assets; normal append succeeds and preview reports would-append. Keep
+this distinct from the missing-log mismatch case.
 
 Document one copyable append command with `--dry-run` on the existing project-log
 page, explain no writes/locks/commit and the current-state limit, and describe
-asset validation for existing logs. Read the docs app AGENTS before editing;
+asset validation only for a would-create probe, matching real append. Read the docs app AGENTS before editing;
 no new page or navigation entry is needed for an inline usage section.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts src/commands/project/log/lifecycle.integration.test.ts src/commands/project/log/log-matrix.test.ts src/fs/assets.test.ts`
@@ -201,8 +236,8 @@ operations may be wrapped with tripwires through existing dependency seams.
 
 Protects against: dry-run accidentally creating locks or finalizing receipts;
 not already caught because current tests exercise mutating append/recovery;
-covered by command cases combining filesystem/Git invariants with existing
-write/append dependency tripwires. Add no production-only exported test hooks.
+covered by command cases combining semantic filesystem/Git invariants, existing
+write/append and lock.now tripwires, and a preserved live foreign-lock fixture. Add no production-only exported test hooks.
 Preserve the test-owned temporary scope and do not point probes at real projects.
 
 The mismatch oracle is the resolver's documented category and versions from an
@@ -214,9 +249,9 @@ must both succeed in separate fixture states.
 ## Done criteria
 
 - [ ] Help and command accept dry-run; preview truthfully reports no mutation.
-- [ ] Every applicable validation is shared; mismatch/seal failures retain diagnostics and non-zero exits.
+- [ ] Conditional validation parity holds; would-create asset mismatch and sealed failures retain diagnostics and non-zero exits, with no new existing-log asset gate.
 - [ ] Missing log, existing log, config skip, replay, and commit/receipt combinations remain read-only.
-- [ ] Normal append still revalidates under its required lock and preserves its result contract.
+- [ ] Normal append still revalidates under its required lock and preserves its behavior/result contract; explicit preview shapes cover append, replay and skip.
 - [ ] Negative controls, focused suites, docs validation, and repository gates pass.
 - [ ] User docs explain current-state validation and no guarantee of later I/O or commit success.
 
