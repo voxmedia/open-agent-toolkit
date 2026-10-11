@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -27,9 +27,9 @@ oat_generated: false
 | Phase    | Status   | Tasks | Completed |
 | -------- | -------- | ----- | --------- |
 | Phase 1  | complete | 6     | 6/6       |
-| Phase 2  | pending  | 3     | 0/3       |
-| Phase 3  | pending  | 2     | 0/2       |
-| Phase 4  | pending  | 2     | 0/2       |
+| Phase 2  | complete | 5     | 5/5       |
+| Phase 3  | complete | 3     | 3/3       |
+| Phase 4  | complete | 6     | 6/6       |
 | Phase 5  | pending  | 2     | 0/2       |
 | Phase 6  | pending  | 3     | 0/3       |
 | Phase 7  | pending  | 3     | 0/3       |
@@ -39,7 +39,7 @@ oat_generated: false
 | Phase 11 | pending  | 2     | 0/2       |
 | Phase 12 | pending  | 1     | 0/1       |
 
-**Total:** 6/35 tasks completed
+**Total:** 20/42 tasks completed
 
 ---
 
@@ -128,23 +128,58 @@ oat_generated: false
 
 ## Phase 2: Router and dashboard routes
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-10-11
+
+**Base:** 212e1bdc0718d5f5dba02898826abb2201368afc
+**Head:** d0e1f817ec779d27af4accf8882090d817083c5d
+**Executor:** phase-implementer:impl-p02-a7c1a9c0 (oat-phase-implementer-claude-claude-opus-5-5-high) in worktree brief-goal-workflow-modes/p02; merged into root at cf5cae32a (no-ff)
+
+### Phase Summary (fill when phase is complete)
+
+- **Outcome:** accepted. Round-1 root review (Fable 5.1 high, auto; head 2826da694; C/H/M/L 0/0/1/1) passed and queued review-fix tasks on the same implementer handle; round-2 review (head d0e1f817e; C/H/M/L 0/0/0/0) passed. Fix-loop count 1.
+- **Verification:** lane verification per task below; integration verification on the merged head 97d8f986f: control-plane 200/200, CLI 410 files / 8422 tests (isolated HOME), forced type-check 11/11.
+- **Notes:** review artifacts reviews/archived/p02-review-2026-10-11T031650Z.md, reviews/archived/p02-review-2026-10-11T032434Z.md.
 
 ### Task p02-t01: Brief routes and mode-aware planning ownership
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 32a502de3
+
+- **Files changed:** packages/control-plane/src/recommender/router.ts, router.test.ts
+- **Verification:** router.test 53/53 (RED first, 4 failures)
 
 ### Task p02-t02: Brief-unit guard before post-implementation routing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b7d8516a5
+
+- **Files changed:** router.ts, router.test.ts
+- **Verification:** router.test 60/60 (RED first, 3 failures); type-check; prove-it-can-fail: phase condition and lifecycle clause each fail exactly one test when removed, restored byte-identical
 
 ### Task p02-t03: Dashboard route map, help text and bounded parity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2826da694
+
+- **Files changed:** packages/cli/src/commands/state/generate.ts, generate.test.ts, packages/cli/src/commands/project/status.test.ts
+- **Verification:** generate + status 73/73 after control-plane build (RED first, 6 failures); CLI check; type-check
+
+### Task p02-t04: (review fix)
+
+**Status:** completed
+**Commit:** 8595e103e
+
+- **Files changed:** router.test.ts
+- **Verification:** router.test 60/60; neutralizing the provisional clause fails exactly the provisional case (59/60), restored byte-identical
+
+### Task p02-t05: (review fix)
+
+**Status:** completed
+**Commit:** d0e1f817e
+
+- **Files changed:** generate.ts, generate.test.ts
+- **Verification:** generate.test 48/48 after build; CLI check
 
 ### Review Received: p02 (parallel group 1, pre-fan-in)
 
@@ -163,18 +198,42 @@ oat_generated: false
 
 ## Phase 3: Templates and scaffold
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-10-11
+
+**Base:** 212e1bdc0718d5f5dba02898826abb2201368afc
+**Head:** ca17285004fa03fc011272636199a6efce891a9c
+**Executor:** phase-implementer:impl-p03-735f410f (oat-phase-implementer-claude-claude-opus-5-5-high) in worktree brief-goal-workflow-modes/p03; merged into root at 44523a3ae (no-ff)
+
+### Phase Summary (fill when phase is complete)
+
+- **Outcome:** accepted. Round-1 root review (Fable 5.1 high, auto; head 2a5c52f24; C/H/M/L 0/0/0/2) passed and queued review-fix tasks on the same implementer handle; round-2 review (head ca1728500; C/H/M/L 0/0/0/0) passed. Fix-loop count 1.
+- **Verification:** lane verification per task below; integration verification on the merged head 97d8f986f: control-plane 200/200, CLI 410 files / 8422 tests (isolated HOME), forced type-check 11/11.
+- **Notes:** review artifacts reviews/archived/p03-review-2026-10-11T032218Z.md, reviews/archived/p03-review-2026-10-11T033254Z.md.
 
 ### Task p03-t01: Brief plan and journal templates with bundle registration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b3e2abf40
+
+- **Files changed:** .oat/templates/plan-brief.md (new), implementation-brief.md (new), state.md, plan.md; packages/cli/assets/templates/{plan-brief,implementation-brief}.md (force-added); packages/cli/scripts/bundle-inputs.mjs; packages/cli/src/commands/tools/shared/pack-manifest.ts (+test); packages/cli/src/commands/project/new/scaffold.test.ts
+- **Verification:** scoped vitest 90/90 and 95/95; CLI build; template resolve plan-brief → repository tier; committed with plain git add -f + git commit (commit-paths refuses ignored paths)
 
 ### Task p03-t02: Scaffold behavior for brief projects
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2a5c52f24
+
+- **Files changed:** scaffold.ts, scaffold.test.ts
+- **Verification:** RED (missing references/research/.gitkeep) then 77/77; oat_template re-add proven by test
+
+### Task p03-t03: (review fix)
+
+**Status:** completed
+**Commit:** ca1728500
+
+- **Files changed:** .oat/templates/plan-brief.md, implementation-brief.md and bundled copies
+- **Verification:** bundle + cmp identical; project/new + tools/shared 329/329; parser probe 2 units, p02 provisional
 
 ### Review Received: p03 (parallel group 1, pre-fan-in)
 
@@ -194,18 +253,66 @@ oat_generated: false
 
 ## Phase 4: Plan profiles and promotion
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-10-11
+
+**Base:** 212e1bdc0718d5f5dba02898826abb2201368afc
+**Head:** df13e2b71
+**Executor:** phase-implementer:impl-p04-a8c76fdd (oat-phase-implementer-claude-claude-opus-5-5-high) in worktree brief-goal-workflow-modes/p04; merged into root at 97d8f986f (no-ff)
+
+### Phase Summary (fill when phase is complete)
+
+- **Outcome:** accepted. Round-1 root review (Fable 5.1 high, auto; head 449cdc606; C/H/M/L 0/0/2/3) passed and queued review-fix tasks on the same implementer handle; round-2 review (head 7e3966dcc; C/H/M/L 0/0/0/2) passed. Fix-loop count 1. Round-2 Low L1 executed as p04-t06 on the same handle and verified by root; L2 deferred with rationale (Deferred Findings).
+- **Verification:** lane verification per task below; integration verification on the merged head 97d8f986f: control-plane 200/200, CLI 410 files / 8422 tests (isolated HOME), forced type-check 11/11.
+- **Notes:** review artifacts reviews/archived/p04-review-2026-10-11T033122Z.md, reviews/archived/p04-review-2026-10-11T035054Z.md.
 
 ### Task p04-t01: Plan profiles in validate-plan
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5fdcbf020
+
+- **Files changed:** validate-plan/{profiles.ts (new), profiles.test.ts (new), frontmatter.ts (new), validate-plan.ts, validate-plan.test.ts, index.ts, index.test.ts}
+- **Verification:** validate-plan suite 62/62; oxlint/oxfmt/tsc clean
 
 ### Task p04-t02: Promote brief → quick
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 449cdc606
+
+- **Files changed:** promote/promote.ts, promote.brief.test.ts (new), validate-plan/profiles.ts (exports)
+- **Verification:** promote suite 43/43 (36 lite unchanged); project suite 1373/1373; type-check; help-snapshots unchanged
+
+### Task p04-t03: (review fix)
+
+**Status:** completed
+**Commit:** e028bb016
+
+- **Files changed:** promote.ts, promote.brief.test.ts
+- **Verification:** promote 43/43; review rows byte-identical incl. pending placeholders; one provenance line
+
+### Task p04-t04: (review fix)
+
+**Status:** completed
+**Commit:** 1f0eb78a7
+
+- **Files changed:** control-plane quick-plan-readiness.ts (+test), index.ts (lane widened); profiles.ts; promote.ts (import line)
+- **Verification:** quick-plan-readiness 35/35 with fence-length and indent pins; validate-plan + promote 105/105; type-check; no local recordLineMask
+
+### Task p04-t05: (review fix)
+
+**Status:** completed
+**Commit:** 7e3966dcc
+
+- **Files changed:** profiles.ts (+test), promote.ts (+test)
+- **Verification:** validate-plan + promote 108/108; one new case per finding
+
+### Task p04-t06: (review fix)
+
+**Status:** completed
+**Commit:** df13e2b71
+
+- **Files changed:** promote.ts, promote.brief.test.ts
+- **Verification:** promote 46/46; type-check; fenced ### line survives, real ### Design demoted
 
 ### Review Received: p04 (parallel group 1, pre-fan-in)
 
@@ -462,11 +569,23 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Bootstrap: success (strict; worktree HEAD = base 212e1bdc0; repository init pass; git clean; sync commit skipped) · Launch status: accepted (native Agent, background, concurrent with the group)
 
+#### Group 1 fan-in
+
+- Lane verdicts: p02 pass at d0e1f817e (fix continuation cont-…-p02-fix-1; reviews rounds 1–2), p03 pass at ca1728500 (cont-…-p03-fix-1; rounds 1–2), p04 pass at df13e2b71 (cont-…-p04-fix-1 and -fix-2; rounds 1–2). Review dispatches recorded under each phase's "Review Received" section.
+- Merges (plan order, `git merge --no-ff`): p02 → cf5cae32a, p03 → 44523a3ae, p04 → 97d8f986f; no conflicts (merge-tree dry run clean for all three). The first merge attempt was rejected by commitlint for the `merge(...)` type and completed with a `chore(pNN)` subject.
+- Integration verification on 97d8f986f: control-plane build; control-plane 200/200; CLI build; CLI 410 files / 8422 tests (isolated HOME); forced turbo type-check 11/11 — all exit 0. The first attempt failed with `disk I/O error` because the volume was full; the three merged lane worktrees (5.5 GB) were removed and the pnpm store pruned before the rerun.
+- Worktrees: all three removed after merge (artifacts copied to reviews/archived first); lane branches deleted after this bookkeeping.
+- Outstanding items: none for group 1. Carried to p08: docs for the promote `missing-phase-head` reason and optional `phases` field; backlog item for standalone `## Out of Scope` routing; mode-list prose pins (expected-red list) belong to group 2 and p08.
+
 <!-- orchestration-runs-end -->
 
 ---
 
 ## Implementation Log
+
+### 2026-10-11 (group 1)
+
+- p02, p03, p04 implemented in parallel worktrees by Opus 5.5 high implementers; each reviewed twice (round 1 with fix tasks, round 2 clean/low-only); merged no-ff (cf5cae32a/44523a3ae/97d8f986f); integration verification green on 97d8f986f.
 
 ### 2026-10-11 (p01)
 
@@ -485,15 +604,19 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                                                                                                     | Planned / Documented | Actual / Accepted                                                                                                                                                     | Reason | Source of Truth | Follow-up                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------- | ----------------------------------------------------------------------------------------------- |
-| p01-t02       | design.md names the journal status type `PhaseStatus`; that name is already the dashboard type                      | -                    | Named the journal enum `JournalPhaseStatus` and the record `PhaseMarkers` (exported from tasks.ts)                                                                    | -      | implementation  | implementation is source of truth; design naming note to be reconciled at p08 docs/records      |
-| p01-t02       | `readRecordLines` in quick-plan-readiness.ts was private                                                            | -                    | Exported it (export keyword only) so brief-mode scans reuse the exact fence/indent exclusion the design cites                                                         | -      | implementation  | in-phase mechanical addition, reported by the implementer                                       |
-| p01           | plan step 3 says prove-it-can-fail cycles are recorded in implementation.md by the implementer                      | -                    | Implementer returned them in its report; root copied them into the p01-t02 task row                                                                                   | -      | implementation  | bookkeeping is root-owned under the implement contract                                          |
-| p01           | global `oat` 0.3.16 lacks `internal commit-paths`                                                                   | -                    | Task commits made with the branch build `node packages/cli/dist/index.js internal commit-paths` (hooks on; same primitive)                                            | -      | implementation  | none                                                                                            |
-| run           | operator asked for Opus 5.5 high subagents; the reviewer resolver refuses candidate overrides under a capped policy | -                    | Implementers run Opus 5.5 high via the exact-candidate branch; root-owned phase reviewers run the configured frontier cap `oat-reviewer-claude-claude-fable-5-1-high` | -      | implementation  | the frontier ceiling the operator set is preserved; review rung is policy-bound for determinism |
-| -             | -                                                                                                                   | -                    | -                                                                                                                                                                     | -      | -               | -                                                                                               |
-| p04-t03       | design.md said historical review rows are "annotated `(pre-promotion, brief)`"                                      | -                    | p04 review showed a Scope-cell annotation breaks review-event identity; the promotion now writes one provenance line under `## Reviews` and leaves rows untouched     | -      | implementation  | design.md corrected in revision 3.2 (same fan-in)                                               |
+| Task / Review | Source Artifact                                                                                                     | Planned / Documented | Actual / Accepted                                                                                                                                                      | Reason | Source of Truth | Follow-up                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------- | ----------------------------------------------------------------------------------------------- |
+| p01-t02       | design.md names the journal status type `PhaseStatus`; that name is already the dashboard type                      | -                    | Named the journal enum `JournalPhaseStatus` and the record `PhaseMarkers` (exported from tasks.ts)                                                                     | -      | implementation  | implementation is source of truth; design naming note to be reconciled at p08 docs/records      |
+| p01-t02       | `readRecordLines` in quick-plan-readiness.ts was private                                                            | -                    | Exported it (export keyword only) so brief-mode scans reuse the exact fence/indent exclusion the design cites                                                          | -      | implementation  | in-phase mechanical addition, reported by the implementer                                       |
+| p01           | plan step 3 says prove-it-can-fail cycles are recorded in implementation.md by the implementer                      | -                    | Implementer returned them in its report; root copied them into the p01-t02 task row                                                                                    | -      | implementation  | bookkeeping is root-owned under the implement contract                                          |
+| p01           | global `oat` 0.3.16 lacks `internal commit-paths`                                                                   | -                    | Task commits made with the branch build `node packages/cli/dist/index.js internal commit-paths` (hooks on; same primitive)                                             | -      | implementation  | none                                                                                            |
+| run           | operator asked for Opus 5.5 high subagents; the reviewer resolver refuses candidate overrides under a capped policy | -                    | Implementers run Opus 5.5 high via the exact-candidate branch; root-owned phase reviewers run the configured frontier cap `oat-reviewer-claude-claude-fable-5-1-high`  | -      | implementation  | the frontier ceiling the operator set is preserved; review rung is policy-bound for determinism |
+| -             | -                                                                                                                   | -                    | -                                                                                                                                                                      | -      | -               | -                                                                                               |
+| p04-t03       | design.md said historical review rows are "annotated `(pre-promotion, brief)`"                                      | -                    | p04 review showed a Scope-cell annotation breaks review-event identity; the promotion now writes one provenance line under `## Reviews` and leaves rows untouched      | -      | implementation  | design.md corrected in revision 3.2 (same fan-in)                                               |
+| p03-t01       | plan commit route via `internal commit-paths`                                                                       | -                    | `commit-paths` refuses gitignored bundled template copies even after `git add -f`; committed with plain `git add -f` + `git commit` (hooks on)                         | -      | implementation  | none; later bundled-copy commits use the same route                                             |
+| p04-t04       | p04 lane write set (validate-plan, promote)                                                                         | -                    | Lane widened by the root to control-plane `quick-plan-readiness.ts`, its test and the barrel to share one index-preserving fence reader (no sibling lane touches them) | -      | implementation  | none                                                                                            |
+| group 1       | merge commits `merge(pNN): …`                                                                                       | -                    | commitlint rejects the `merge` type; fan-in merges use `chore(pNN): merge parallel-group phase …`                                                                      | -      | implementation  | none                                                                                            |
+| group 1       | three concurrent lane worktrees each with a full install and build                                                  | -                    | Filled the volume (118 MiB free) and broke the first integration run; merged worktrees removed before rerun                                                            | -      | implementation  | group 2 needs ~6 GB free before bootstrap; see root judgment log                                |
 
 ## Test Results
 
@@ -502,7 +625,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                                        | Passed | Failed | Coverage |
 | ----- | ---------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | control-plane 180, CLI 8363 (post-build), type-check, pnpm check | all    | 0      | -        |
-| 2     | -                                                                | -      | -      | -        |
+| 2     | control-plane 197, CLI generate+status 73                        | all    | 0      | -        |
 
 ## Final Summary (for PR/docs)
 

@@ -56,6 +56,26 @@ The round-2 p01 reviewer (accepted native launch) was terminated by a transient 
 
 Operator asked for Opus 5.5 high subagents under a frontier ceiling; dispatch-ceiling resolve rejects --candidate-model for the reviewer role, so root-owned phase reviewers run the cap (claude-fable-5-1/high) while implementers run Opus 5.5 high via the exact-candidate branch. Recorded as a run deviation rather than lowering the ceiling. Key p01-reviewer-cap-deviation.
 
+### 2026-10-11 · structural · oat-project-implement · p02
+
+Phase p02 outcome: pass (parallel group 1, worktree lane). Root reviews: round 1 passed with queued fix tasks, round 2 passed. Fix-loop count 1. Key group1-p02-outcome-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
+### 2026-10-11 · structural · oat-project-implement · p03
+
+Phase p03 outcome: pass (parallel group 1, worktree lane). Root reviews: round 1 passed with queued fix tasks, round 2 passed. Fix-loop count 1. Key group1-p03-outcome-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
+### 2026-10-11 · structural · oat-project-implement · p04
+
+Phase p04 outcome: pass (parallel group 1, worktree lane). Root reviews: round 1 passed with queued fix tasks, round 2 passed. Fix-loop count 1. Key group1-p04-outcome-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
+### 2026-10-11 · structural · oat-project-implement · group-1
+
+Parallel group 1 fan-in: merged p02 (cf5cae32a), p03 (44523a3ae), p04 (97d8f986f) no-ff without conflicts; integration verification green (control-plane 200, CLI 8422, forced type-check). Key group1-merge-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
+### 2026-10-11 · general · friction · disk full during parallel-group fan-in
+
+Three concurrent lane worktrees with full installs and builds filled the volume (118 MiB free) and the first integration build died with disk I/O error. Removing the merged worktrees and pruning the pnpm store recovered 3.6 GB; group 2 needs more headroom before bootstrapping three lanes. Key group1-disk-full-97d8f986f0f13c7334746b4bd0ec871057c7848d.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
