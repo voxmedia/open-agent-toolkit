@@ -37,6 +37,16 @@ export interface EvidenceScope {
    * bookkeeping.
    */
   evidenceArtifacts: readonly string[];
+  /**
+   * Each delivery's OWN review artifacts (its own Reviews rows and recorded
+   * integrated review), keyed by delivery ID, kept apart from the shared
+   * allowlist above. Only a new artifact from this set may replace a
+   * delivery's review identity or member revisions, so a sharing sibling's
+   * artifact, which the allowlist admits as bookkeeping, never unlocks them.
+   * When a delivery has no entry, an artifact that another registry entry
+   * records is never treated as its own.
+   */
+  ownEvidenceArtifacts?: ReadonlyMap<string, readonly string[]>;
 }
 
 export type FreshnessFailureCode =
@@ -551,7 +561,31 @@ function judgeDeliveries(
     ),
   );
 
-  for (const [id, previous] of deliveryMap(beforeValue)) {
+  const before = deliveryMap(beforeValue);
+  const artifactOf = (entry: Record<string, unknown> | undefined) => {
+    const review = entry?.['integrated_review'];
+    return isRecord(review) && typeof review['artifact'] === 'string'
+      ? artifactVariants(projectRelative(scope.projectDir, review['artifact']))
+      : [];
+  };
+  const otherArtifacts = (id: string): Set<string> =>
+    new Set(
+      [...before, ...after]
+        .filter(([other]) => other !== id)
+        .flatMap(([, entry]) => artifactOf(entry)),
+    );
+  const ownArtifactsFor = (id: string): Set<string> | null => {
+    const own = scope.ownEvidenceArtifacts?.get(id);
+    return own === undefined
+      ? null
+      : new Set(
+          own.flatMap((artifact) =>
+            artifactVariants(projectRelative(scope.projectDir, artifact)),
+          ),
+        );
+  };
+
+  for (const [id, previous] of before) {
     const next = after.get(id);
     if (next === undefined) {
       return refuse(`delivery ${id} was removed from the registry`);
@@ -561,6 +595,34 @@ function judgeDeliveries(
         return refuse(`delivery ${id} changed its recorded ${field}`);
       }
     }
+
+    const review = previous['integrated_review'];
+    const nextReview = next['integrated_review'];
+    const nextArtifact =
+      isRecord(nextReview) && typeof nextReview['artifact'] === 'string'
+        ? projectRelative(scope.projectDir, nextReview['artifact'])
+        : null;
+    const recordsEvidence = nextArtifact !== null && evidence.has(nextArtifact);
+    // The review record this commit writes is new evidence only when it names
+    // a new artifact: a re-review always records a new timestamped artifact,
+    // and scope or bound_revisions changes ride on that artifact change.
+    // Moving the same artifact to its archived counterpart is not new.
+    const sameArtifact =
+      isRecord(review) &&
+      nextArtifact !== null &&
+      typeof review['artifact'] === 'string' &&
+      artifactVariants(
+        projectRelative(scope.projectDir, review['artifact']),
+      ).includes(nextArtifact);
+    // ...and only when that artifact is this delivery's own, never a sharing
+    // sibling's (which the allowlist admits as bookkeeping).
+    const ownArtifacts = ownArtifactsFor(id);
+    const ownArtifact =
+      nextArtifact !== null &&
+      (ownArtifacts === null
+        ? !otherArtifacts(id).has(nextArtifact)
+        : ownArtifacts.has(nextArtifact));
+    const recordsNewReview = recordsEvidence && !sameArtifact && ownArtifact;
 
     const previousMembers = Array.isArray(previous['members'])
       ? previous['members']
@@ -572,32 +634,27 @@ function judgeDeliveries(
       if (!isRecord(successor)) {
         return refuse(`delivery ${id} lost member ${index}`);
       }
-      for (const field of ['url', 'base', 'reviewed_head']) {
+      for (const field of ['url', 'base']) {
         if (!setOnce(member[field], successor[field])) {
           return refuse(`delivery ${id} member ${index} changed its ${field}`);
         }
       }
+      // The member's reviewed revision moves only with this delivery's own new
+      // review artifact, and only to the head that review binds for it.
+      if (
+        !setOnce(member['reviewed_head'], successor['reviewed_head']) &&
+        !(
+          recordsNewReview &&
+          typeof successor['reviewed_head'] === 'string' &&
+          successor['reviewed_head'] === boundHeadFor(nextReview, index)
+        )
+      ) {
+        return refuse(
+          `delivery ${id} member ${index} changed its reviewed_head without recording a new review artifact`,
+        );
+      }
     }
 
-    const review = previous['integrated_review'];
-    const nextReview = next['integrated_review'];
-    const recordsEvidence =
-      isRecord(nextReview) &&
-      typeof nextReview['artifact'] === 'string' &&
-      evidence.has(projectRelative(scope.projectDir, nextReview['artifact']));
-    // The review record this commit writes is new evidence only when it names
-    // a new artifact: a re-review always records a new timestamped artifact,
-    // and scope or bound_revisions changes ride on that artifact change.
-    // Moving the same artifact to its archived counterpart is not new.
-    const sameArtifact =
-      isRecord(review) &&
-      isRecord(nextReview) &&
-      typeof review['artifact'] === 'string' &&
-      typeof nextReview['artifact'] === 'string' &&
-      artifactVariants(
-        projectRelative(scope.projectDir, review['artifact']),
-      ).includes(projectRelative(scope.projectDir, nextReview['artifact']));
-    const recordsNewReview = recordsEvidence && !sameArtifact;
     if (isRecord(review)) {
       if (!isRecord(nextReview)) {
         return refuse(`delivery ${id} lost its integrated review evidence`);
@@ -636,6 +693,19 @@ function judgeDeliveries(
 }
 
 const REVIEW_IDENTITY_FIELDS = ['artifact', 'scope', 'bound_revisions'];
+
+/** The head a review record binds for one member, or null. */
+function boundHeadFor(review: unknown, member: number): string | null {
+  if (!isRecord(review) || !Array.isArray(review['bound_revisions'])) {
+    return null;
+  }
+  const bound: unknown = review['bound_revisions'].find(
+    (revision: unknown) => isRecord(revision) && revision['member'] === member,
+  );
+  return isRecord(bound) && typeof bound['head'] === 'string'
+    ? bound['head']
+    : null;
+}
 
 function judgeCarrierChange(
   before: unknown,
@@ -1228,6 +1298,18 @@ export function deliveryEvidenceScope(
     ...(delivery.milestone === null ? [] : [delivery.milestone]),
     ...sharing.map((entry) => entry.delivery_id),
   ];
+  const ownEvidenceArtifacts = new Map<string, readonly string[]>(
+    [delivery, ...sharing].map((entry) => [
+      entry.delivery_id,
+      deliveryEvidenceArtifacts(
+        entry,
+        reviewRowsFor(project.state.reviews, [
+          entry.delivery_id,
+          ...(entry.milestone === null ? [] : [entry.milestone]),
+        ]).map((row) => row.artifact),
+      ),
+    ]),
+  );
   return {
     repoRoot: project.repoRoot,
     projectDir: project.projectDir,
@@ -1236,6 +1318,7 @@ export function deliveryEvidenceScope(
       reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
       sharing,
     ),
+    ownEvidenceArtifacts,
   };
 }
 

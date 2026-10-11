@@ -357,11 +357,12 @@ If review type is `code`, use the scope resolution below.
 
 **Step 3.0: Brief-Family Anchor Resolution (`brief` and goal phase-unit reviews)**
 
-When `WORKFLOW_MODE` is `brief` and the review type is `code`, the review range
-comes from the phase anchors recorded in the journal, not from commit-message
-inference. `oat-project-brief/references/brief-contract.md` section 10 is
-authoritative where this step and the contract differ. This step is inert for
-every other workflow mode.
+When `WORKFLOW_MODE` is `brief` — or `goal` for a phase-unit review routed
+here by Step 3.0g — and the review type is `code`, the review range comes from
+the phase anchors recorded in the journal, not from commit-message inference.
+`oat-project-brief/references/brief-contract.md` section 10 is authoritative
+where this step and the contract differ. This step is inert for every other
+workflow mode and for goal integrated reviews (Step 3.0g).
 
 Resolution order for brief code reviews:
 

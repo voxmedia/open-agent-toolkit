@@ -17,8 +17,10 @@ import {
   OUTCOME,
   PROJECT_REL,
   registryYaml,
+  goalState,
   removeRepo,
   reviewRow,
+  sharedMemberScenario,
   type GoalRepo,
 } from './__tests__/goal-repo';
 import {
@@ -838,6 +840,179 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       expect(honest).toMatchObject({ fresh: false });
       expect(honest.reason).not.toContain('bound-revision-mismatch');
       expect(honest.reason).toMatch(/disallowed-path|substantive-change/);
+    });
+  });
+
+  describe('member revisions move with the delivery own new review artifact (final review round 2)', () => {
+    const RE_REVIEW = 'reviews/archived/m01-code-review-2.md';
+
+    /** Registration at R, then a fix commit F pushed to the existing member. */
+    async function registeredThenFixed(target: GoalRepo) {
+      const chain = await bookkeepingChain(target);
+      await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const fixed = target.commitAll('fix(p-rev1): correct the build');
+      return { ...chain, fixed };
+    }
+
+    /** The clean receive of the re-review: artifact, bound head and member revision. */
+    async function receive(
+      target: GoalRepo,
+      chain: { reviewed: string; fixed: string },
+      edit: {
+        artifact?: string;
+        reviewedHead?: string;
+        boundHead?: string;
+      } = {},
+    ) {
+      await target.write(RE_REVIEW, '# d01 re-review\n\nNo findings.\n');
+      await target.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed),
+            reviewRow('passed', RE_REVIEW, chain.fixed, 'd01'),
+          ].join('\n'),
+        }),
+      );
+      const state = (await target.read('state.md'))
+        .replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+          `artifact: ${edit.artifact ?? RE_REVIEW}`,
+        )
+        .replace(
+          `head: '${chain.reviewed}' }]`,
+          `head: '${edit.boundHead ?? chain.fixed}' }]`,
+        )
+        .replace(
+          `reviewed_head: '${chain.reviewed}'`,
+          `reviewed_head: '${edit.reviewedHead ?? chain.fixed}'`,
+        );
+      await target.write('state.md', state);
+      return target.commitAll('chore(oat): receive the d01 re-review');
+    }
+
+    const ownScope = (target: GoalRepo): EvidenceScope => ({
+      ...scopeFor(target),
+      evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, RE_REVIEW],
+      ownEvidenceArtifacts: new Map([
+        ['d01', [ARCHIVED_REVIEW_ARTIFACT, RE_REVIEW]],
+      ]),
+    });
+
+    it('accepts the recovery of an open delivery: fix F, then one receive moving artifact, bound head and reviewed_head together', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredThenFixed(repo);
+      const received = await receive(repo, chain);
+
+      await expect(
+        evaluateSuccessor(git, ownScope(repo), chain.fixed, received),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+
+      const recovered = delivery({
+        base: repo.baseSha,
+        reviewed_head: chain.fixed,
+        observed_head: received,
+        observed_base: repo.baseSha,
+      });
+      recovered.integrated_review!.artifact = RE_REVIEW;
+      await expect(
+        evaluateDeliveryReview(git, ownScope(repo), recovered, ['p01', 'p02']),
+      ).resolves.toMatchObject({ fresh: true, reason: null });
+    });
+
+    it('rejects a reviewed_head move without a new review artifact', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredThenFixed(repo);
+      const received = await receive(repo, chain, {
+        artifact: ARCHIVED_REVIEW_ARTIFACT,
+        boundHead: chain.reviewed,
+      });
+
+      const result = await evaluateSuccessor(
+        git,
+        ownScope(repo),
+        chain.fixed,
+        received,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+      });
+      expect(result.reason).toContain(
+        'member 0 changed its reviewed_head without recording a new review artifact',
+      );
+    });
+
+    it('rejects a reviewed_head that differs from the head the new review binds', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredThenFixed(repo);
+      const received = await receive(repo, chain, {
+        reviewedHead: chain.received,
+      });
+
+      const result = await evaluateSuccessor(
+        git,
+        ownScope(repo),
+        chain.fixed,
+        received,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+      });
+      expect(result.reason).toContain('changed its reviewed_head');
+    });
+
+    it('rejects moving revisions together with a sharing sibling artifact', async () => {
+      repo = await createGoalRepo();
+      const shared = await sharedMemberScenario(repo);
+      await repo.write(
+        'state.md',
+        goalState(
+          `oat_milestone: m02\noat_milestone_status: delivered\n${shared.registry()}`,
+        ),
+      );
+      repo.commitAll('chore(oat): register d01 and d02');
+      await repo.writeRepo('src/app.ts', 'export const value = 9;\n');
+      const fixed = repo.commitAll('fix: unreviewed change');
+      const state = await repo.read('state.md');
+      const d02At = state.indexOf('  - delivery_id: d02');
+      const d01 = state
+        .slice(0, d02At)
+        .replace(
+          'artifact: reviews/archived/d01-review.md',
+          'artifact: reviews/archived/d02-review.md',
+        )
+        .replace(`head: '${shared.reviewed}' }]`, `head: '${fixed}' }]`)
+        .replace(
+          `reviewed_head: '${shared.reviewed}'`,
+          `reviewed_head: '${fixed}'`,
+        );
+      await repo.write('state.md', d01 + state.slice(d02At));
+      const swapped = repo.commitAll('chore(oat): point d01 at the d02 review');
+
+      const siblings = [
+        'reviews/archived/d01-review.md',
+        'reviews/archived/d02-review.md',
+      ];
+      for (const scope of [
+        {
+          ...scopeFor(repo),
+          evidenceArtifacts: siblings,
+          ownEvidenceArtifacts: new Map([
+            ['d01', [siblings[0]!]],
+            ['d02', [siblings[1]!]],
+          ]),
+        },
+        // Without an own map, another entry's artifact is never this one's.
+        { ...scopeFor(repo), evidenceArtifacts: siblings },
+      ]) {
+        const result = await evaluateSuccessor(git, scope, fixed, swapped);
+        expect(result).toMatchObject({
+          fresh: false,
+          code: 'substantive-change',
+        });
+      }
     });
   });
 

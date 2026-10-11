@@ -468,10 +468,12 @@ delivery_id, phase_ids, stage: implementing, review_artifact: null }`,
    same write rewrites `integrated_review` (`artifact:
 reviews/archived/{REVIEW_FILENAME}`, `scope` from `oat_review_phase_ids`,
    `bound_revisions` from the reviewed member base and head,
-   `disposition: passed`) and replaces `exit_gate` with the current allowed
-   milestone exit carrier. The delivery's `exit_gate` is set once and may
-   change only in the commit that records a review naming a different artifact
-   (section 12.8), so never split these writes. Commit them (Step 7.6), then
+   `disposition: passed`), writes each `members[i].reviewed_head` to the
+   reviewed member head that `bound_revisions` binds for it, and replaces
+   `exit_gate` with the current allowed milestone exit carrier. The delivery's
+   `exit_gate` and `members[].reviewed_head` are set once and may change only
+   in the commit that records a review naming a different artifact of this
+   delivery (section 12.8), so never split these writes. Commit them (Step 7.6), then
    re-validate scope, revisions and the exit carrier with
    `oat project delivery check --project "$PROJECT_PATH" --subject <mNN|dNN> --json`:
    - `status: ok` → **active target:** write `oat_milestone_status: delivering`

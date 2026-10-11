@@ -620,10 +620,15 @@ Missing Git objects, failed inspection, unknown paths or disallowed edits fail
 closed. A member base change (`observed_base` differs from `base`) invalidates
 delivery evidence independently. Historical deliveries are checked against
 their own observed member revisions, never the branch's latest HEAD. Unequal
-heads alone never invalidate evidence. A delivery's persisted `exit_gate` is
-set once and is replaced only by a commit that records a review naming a
-different artifact (an artifact and its `reviews/archived/` counterpart are the
-same artifact).
+heads alone never invalidate evidence. A delivery's persisted `exit_gate`,
+its `integrated_review` identity (`artifact`, `scope`, `bound_revisions`) and
+its `members[].reviewed_head` are set once and are replaced only by a commit
+that records a review naming a different artifact of that delivery (an
+artifact and its `reviews/archived/` counterpart are the same artifact; a
+sharing sibling's artifact never counts), with each `reviewed_head` equal to
+the head the new `bound_revisions` binds for that member. A bound revision
+that disagrees with its member's `reviewed_head` is not fresh
+(`bound-revision-mismatch`).
 
 The shared evaluator (`delivery/evidence.ts`) implements this rule for
 `delivery check`, `delivery refresh` and the closeout boundary. It accepts two
