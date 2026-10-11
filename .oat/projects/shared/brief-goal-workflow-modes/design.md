@@ -596,8 +596,12 @@ phase that still needs executable tasks: active, pending, provisional);
 `oat_phase_status: in_progress`, `oat_ready_for: oat-project-quick-start`.
 The brief's Outcomes, Decisions, Known Unknowns and Delivery authority are
 rendered into `discovery.md`; the original brief is copied to
-`references/brief-archive.md`; historical `## Reviews` rows are kept and
-annotated `(pre-promotion, brief)`.
+`references/brief-archive.md`; historical `## Reviews` rows are kept with their
+cells untouched (Scope + Type + Artifact identity is load-bearing for
+review-receive, implement bookkeeping and readiness), and one provenance line
+is added under `## Reviews` stating that rows dated on or before the
+promotion were recorded under workflow mode brief (revision 3.2, from the p04
+review).
 
 **Promoted-brief resume contract** (changes `oat-project-quick-start` and
 `quick-plan-readiness.ts`): the readiness predicate gains clause 6,
