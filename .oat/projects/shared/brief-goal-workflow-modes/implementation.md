@@ -929,6 +929,31 @@ oat_generated: false
 
 ---
 
+### Task p12-t06: (review) Shared-member and summary bookkeeping in the contract, one evidence-scope helper, tests and ledger evidence
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p12
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p12-review-2026-10-11T170802Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p12-4f942fb8`, invocation auto, reviewed head 9a645c1d88511971f3f94b38cf6218905dc5511c, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 1, Medium 2, Low 4 → fix task queued; auto-disposition mode. Verified green: all nine gates exit 0; probe rows 7, 9 and 22 reproduced with the branch CLI incl. both row-22 negative controls; stub `gh` saw 0 `pr create`; 28 skills/roles bumped exactly once vs the v1 branch, lockstep 0.3.20, pins and manifest consistent, `sync --dry-run` clean; the three probe fixes judged correct design (fix (c) matches 12.9 and §9: no contract text ever named the brief as the declaration's home); no docs-versus-source mismatch across 15 pages and both SVG pairs.
+
+- H1 brief-contract 12.8 and design A2 confine the allowlist to the delivery's own review artifacts while the code, DR and CLI reference admit sibling deliveries' artifacts on a shared member → converted: p12-t06 (contract); design A2 amended in this bookkeeping.
+- M1 a configured pre-`pr` `summary` step commits `summary.md`, which the evaluator refuses, so the terminal milestone is `undeliverable` at pr-final Step 1.5 (probed) → decision (a): `summary.md` is bookkeeping (derived institutional memory, never the authority for outcomes or approvals) → converted: p12-t06 (evaluator, contract, test); design A2 amended here.
+- M2 shared-member allowlist tested only on the `check` path; `refresh` and the closeout boundary hand-build it → converted: p12-t06 (one `deliveryEvidenceScope` helper + tests).
+- L1 `check.ts` omits the milestone's own review rows → converted: p12-t06 (helper).
+- L2 `isProjectLogAppend` accepts a tail append into the synthesis section despite its docstring → converted: p12-t06.
+- L3 the p12-t02 ledger does not preserve exact probe commands → converted: p12-t06 (`references/p12-probe-driver.md`).
+- L4 p12-t01 edited five skill files beyond the plan's scope without a Deviations line → recorded below.
+
+**New tasks added:** p12-t06 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p12-fix-1`); round-2 re-review on the fix range follows because a High was converted.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1084,6 +1109,7 @@ _- Outstanding Items_
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
 - Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base f214626dc (artifact-cleanup planning commits in between are out of scope)
 - Resume outcome: DONE_WITH_CONCERNS at 644f23e1e (p12-t01 verified with a fresh prove-it-can-fail; p12-t02 22-row probe with three fixes 96e6d24df/3ba63e2e5/b0f7cfacd; t03–t05 landed; full gate table green at lockstep 0.3.20; concerns: the goal declaration now recorded in the journal Final Summary instead of the brief's endpoint/authority (fix 3, p11 implementer's choice reversed), the bump base, the design row (added by the root), doc prose to be checked against source); p12 review follows
+- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` then round 2 on the fix range
 
 <!-- orchestration-runs-end -->
 
@@ -1111,6 +1137,7 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
+- **p12 (2026-10-11, review):** p12-t01 edited five skill files beyond the plan's test-only scope (`oat-project-review-provide`, `oat-project-new`, `oat-project-pr-final`, `oat-project-pr-progress`, `oat-project-goal`: "for brief and goal" inventory lines; pr-final loads the current pr-progress skill) so the inventory guard and the named-skill-load scan could classify them; all bumped in 644f23e1e (p12 review L4). Decision (a) on p12 review M1: `summary.md` joins the bookkeeping allowlist as a derived record; approved outcomes, approach, constraints, decisions and endpoint live in the brief, so a summary commit after the reviewed head never changes evidence (design A2 amended by the root; contract 12.8 and the evaluator in p12-t06).
 - **p12 (2026-10-11):** `fix(p12-t02)` ×3 reversed decisions the probe falsified: a project-log append before the synthesis section is bookkeeping (`evidence.ts`, `SYNTHESIS_HEADING_PREFIX` exported from `append.ts`); review artifacts of deliveries sharing a member PR are bookkeeping for each other (`delivery/{evidence,check,refresh}.ts`, `closeout-check/index.ts`); the goal declaration (`declared_met`, audit) is recorded in the journal Final Summary rather than the brief's endpoint/authority paragraph (`oat-project-goal/SKILL.md` Step 9), so a declaration does not count as a substantive brief edit. Skill bump base is the v1 PR branch. Probe row 9 confirms that only prose keeps amendment commits off an open delivery's head branch (BL-261011-guard-goal-brief-amendments).
 - **p11 (2026-10-11):** revise owns the `delivered | delivering → implementing` transition for an explicit active-milestone target (p11 review M1; design transition table amended); terminal deliveries registered from one head branch share their member PR because `goal-delivered-scope-changed` keeps frozen scopes per milestone and GitHub allows one PR per head/base (p11 review M2, decision (a); decision record in p12-t04, probe in p12-t02).
 - **p10 (2026-10-11):** the p10-t05 commit message was shortened from the plan's 105-character text to 100 characters at commit time (commitlint `header-max-length`); the M2 fix requires an artifact change (archived-path-equivalent) rather than `recordsEvidence` alone to unlock an `exit_gate` replacement, because `recordsEvidence` is true whenever the delivery's artifact is on the allowlist; p10-t01 landed three validation codes beyond the plan's nine (accepted by review as forced by the p09 reader and the p09 review); two implementer-chosen formats (`satisfied_by: { pr: delivery-coverage }`, the extracted-child deferral shape) are accepted and carried to p11-t01 contract text; plan amendment 5.1 (project-log ownership for goal, retro probe, carried contract sentences) applied in the p10 closeout bookkeeping within the approved outcomes.

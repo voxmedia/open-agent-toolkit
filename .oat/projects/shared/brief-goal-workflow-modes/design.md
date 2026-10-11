@@ -877,10 +877,7 @@ Rules:
   bookkeeping. Inspect every commit, including merge-introduced changes; a
   substantive change followed by a revert is not a bookkeeping successor.
   Missing Git objects, failed inspection, unknown paths or disallowed edits
-  fail closed. The path allowlist is confined to this project's `state.md`,
-  `plan.md`, `implementation.md`, `project-log.md`, and the exact review
-  artifacts belonging to the evidence being recorded or archived; path
-  membership alone is insufficient. Permitted changes are routing/progress
+  fail closed. The path allowlist is confined to this project's `state.md`, `plan.md`, `implementation.md`, `project-log.md`, `summary.md` (derived institutional memory, never the authority for outcomes, approach, constraints, decisions or endpoint, which live in the brief; any change to it is bookkeeping — p12 review M1, decision (a)), and the exact review artifacts belonging to the evidence being recorded or archived and, for a delivery whose member pull request is shared, the review artifacts recorded for the deliveries that share it, each delivery still judged on its own frozen scope, reviewed revisions and `exit_gate` (p12 review H1); path membership alone is insufficient for the other files. Permitted changes are routing/progress
   updates, evidence recording, review dispositions, registration/observation
   metadata and append-only execution observations. Changes to approved
   outcomes, approach, constraints, decisions, endpoint/authority, phase
