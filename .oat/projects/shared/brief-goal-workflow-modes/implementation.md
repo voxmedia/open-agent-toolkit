@@ -634,8 +634,12 @@ oat_generated: false
 
 ## Phase 9: Goal registration and control-plane transitions (v1.5)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5
+**Head:** -
+**Executor:** phase-implementer:impl-p09-16dc82a3 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p09-t01: Register `goal`, extraction parsing and goal state fields
 
@@ -846,6 +850,12 @@ _- Outstanding Items_
 - Launch status: planned (base f5481541727e021804b19595bbb732b2ecd448f1, p07 closeout plus the friction log; the dispatch-plan commit sits between base and the first task commit; p08-t01..t06 in the root checkout)
 - Launch status: accepted → child outcome: completed (DONE); head 6d60af35b; commits 57dec6702, 5f27b8bc3, ce7c57cf8, b322db3c1, 0349cdd45, 6d60af35b; earlier-phase files edited for pin consistency are listed per task
 - Review round 1 (rev-p08-6b8f9c86, Fable 5.1 high at the frontier cap): 0/0/0/2 Low → pass; `cont-brief-goal-workflow-modes-p08-fix-1` → 5b334a4e7; phase p08 closed at 5b334a4e7 (v1 brief seam complete)
+
+#### Phase p09 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p09-16dc82a3` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5, the plan-gate closeout; the dispatch-plan commit sits between base and the first task commit; p09-t01..t02 in the root checkout against design rev 4.0 / plan rev 5)
 
 <!-- orchestration-runs-end -->
 
