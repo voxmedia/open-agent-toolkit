@@ -118,7 +118,21 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1
+
+**Started:** 2026-10-11
+**Tier:** 1 (subagents) · **Provider:** claude · **Dispatch policy:** frontier (project state)
+
+#### Phase p01 implementation dispatch
+
+- Request ID: `impl-p01-6392fd49`
+- Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` (native Agent, effort-pinned generated variant)
+- Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0
+- Selection reason: native-catalog · Candidates considered: `claude-opus-5-5/high` (requested candidate under the frontier ceiling)
+- Task class: default-implementation (classification source: phase scope analysis; parser contract change inside one bounded package set, dispersed test pins)
+- Managed Claude record: `oat project dispatch record` → validated-only
+- Dispatch stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (updated on acceptance / terminal outcome below)
 
 <!-- orchestration-runs-end -->
 
