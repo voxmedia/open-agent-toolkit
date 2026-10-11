@@ -35,9 +35,20 @@ Options:
 3. Modify plan to address blocker
 ```
 
+In brief modes `task_id` is the open execution record's ID, or the phase ID
+when no record is open. Brief record statuses have no `blocked` value: keep the
+record `**Status:** in_progress` with the `**Blocker:**` line, or close it
+`failed` when the attempt is abandoned. Option 3 edits the brief's phases under
+the `plan-and-resume.md` Step 2.2 rules.
+
 ### Step 11: Prepare Final Closeout Baseline
 
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
+
+In brief modes this step starts only when every phase-unit in the active scope
+is accepted (`**Status:** completed` under its journal heading), no phase is
+provisional, and no execution record is open. Closed records alone never start
+it, and extracted units are outside the active scope.
 
 **Update "Final Summary" (required):**
 
@@ -47,6 +58,15 @@ When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` ta
   - Verification performed (tests/lint/typecheck/build/manual)
   - Design deltas (if any)
 - This should reflect **what was actually implemented**, including any deviations from design and any review-fix work.
+- **Brief modes: completion is audited against the brief's Outcomes.** Add an
+  `**Outcomes audit:**` block to the Final Summary with one line per numbered
+  Outcome naming its observed evidence (accepted phase, commit, or
+  verification result from the journal) or the explicit scope decision that
+  defers it. An Outcome with neither blocks closeout until it is resolved or
+  the user records the deferral. Report `Brief deltas` (the journal template's
+  heading) instead of design deltas, and fill the brief's
+  `## Implementation Complete` section with one line per accepted phase and the
+  phase total.
 - Reconcile `"$PROJECT_PATH/state.md"`, `"$PROJECT_PATH/implementation.md"`,
   and `"$PROJECT_PATH/plan.md"` so task totals, phase statuses, current-task
   pointers, the final summary, and test results describe the same terminal
@@ -99,6 +119,10 @@ Implementation - Tasks complete; awaiting final review.
 - ⧗ Awaiting final review
 ```
 
+In brief modes the progress list names the brief and its phase-units instead of
+the discovery, specification, design, and plan lines: `✓ Brief approved`,
+`✓ All phase-units accepted`, `⧗ Awaiting final review`.
+
 **Baseline bookkeeping commit (required):**
 
 **DO NOT SKIP.** This commit prevents state drift across sessions.
@@ -149,6 +173,11 @@ All must pass before proceeding.
 An accepted reviewer `BLOCKED` terminal blocks final review. It does not invoke
 fallback and must not be interpreted as a pass due to absent findings. Stop and
 surface the review target and blocker reason.
+
+In brief modes the `final` scope is every accepted non-extracted phase,
+revision phases included, resolved from the recorded `**Base:**` and
+`**Head:**` anchors in document order (brief contract section 10). Invalid or
+contradictory anchors stop at `oat-project-reconcile` rather than narrowing.
 
 Before requesting final review, ensure the latest project-artifact bookkeeping is already committed. Review should evaluate the implementation state as it actually stands on the branch, not a half-tracked working tree.
 
@@ -910,6 +939,14 @@ phase) or when it explicitly contains that final phase ID. Defer only a
 checkpoint on the final implementation phase; non-final checkpoint behavior
 remains unchanged.
 
+Brief modes take this non-lite path. Their `[]` means none
+(`plan-and-resume.md` Step 2.5), so a final HiLL checkpoint exists for a brief
+only when `oat_plan_hill_phases` explicitly lists the final phase, which is the
+last phase-unit in document order. The generic sequence normalization, the
+autonomous lifecycle-tail default, the project recap, and the non-lite algorithm
+below then apply unchanged; with no final checkpoint, item 5 of that algorithm
+governs. In v1 the `pr` step keeps its target, `oat-project-pr-final`.
+
 Run final verification (Step 12). Final review must be `passed` and the
 configured implementation exit gate in Step 14 must be allowed before any
 pre-approval dispatch. If final checkpoint auto-review is enabled, Step 8 has
@@ -1291,3 +1328,6 @@ Final review:
 
 Next: Create PR or run the oat-project-pr-final skill (when available)
 ```
+
+In brief modes report `Phases: {N} accepted` and `Execution records: {N}
+closed` instead of the task count, and include the Outcomes audit result.
