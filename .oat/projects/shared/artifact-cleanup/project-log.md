@@ -48,6 +48,10 @@ Review reconnaissance: writer inventory and archive trace completed; root reconc
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:7,low:1 exit=0 status=ok artifact=.oat/projects/shared/artifact-cleanup/reviews/artifact-plan-review-2026-10-11T162428Z.md run=4266e002-d5cc-4a36-8d8a-3491ee266dfb
 
+### 2026-10-11 · structural · oat-project-quick-start · plan
+
+Plan revision 5 approved by the orchestrator after Fable artifact rounds 1-2, the configured gate (0/0/7/1 passed) and Astra plan rounds 1-2 (ALIGNED); ready for oat-project-implement, not active until brief-goal-workflow-modes ships. Key ac-plan-approved-rev5.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

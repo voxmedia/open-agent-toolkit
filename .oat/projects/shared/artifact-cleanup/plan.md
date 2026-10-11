@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-10-11
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p04'] # quick mode cannot express 'none'; [] would mean every phase. Final-phase checkpoint only; under OAT_AUTONOMOUS it auto-reviews and continues.
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # fully sequential: design revision 3 ("Implementation Phases") shows phases 1–2 share the CLI reference, the summary contract and the validator's producers
@@ -238,21 +238,22 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                          |
-| p02    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                          |
-| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                          |
-| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                          |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                          |
-| design | artifact | received    | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                |
-| design | artifact | received    | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                              |
-| design | artifact | passed      | 2026-10-11 | references/astra-design-round-3.md                          | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced                                              |
-| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md           | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2                                            |
-| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md           | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3                                  |
-| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | 91b3727bf48912d91f735d946ff7133a474ac777 | gate       | codex-6-sol-xhigh: 0/0/7/1, passed at threshold high; applied in revision 4                                |
-| plan   | artifact | fixes_added | 2026-10-11 | references/astra-plan-round-1.md                            | 6a5a7986bcab5880f240961c43306ec1150d6c1a | manual     | Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, 5 important / 2 minor; applied in revision 5 |
-| plan   | artifact | received    | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T162428Z.md          | -                                        | -          | -                                                                                                          |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                               |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p02    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| design | artifact | received    | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                               |
+| design | artifact | received    | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                                                                             |
+| design | artifact | passed      | 2026-10-11 | references/astra-design-round-3.md                          | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced                                                                                             |
+| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md           | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2                                                                                           |
+| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md           | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3                                                                                 |
+| plan   | artifact | fixes_added | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | 91b3727bf48912d91f735d946ff7133a474ac777 | gate       | codex-6-sol-xhigh: 0/0/7/1, passed at threshold high; applied in revision 4                                                                               |
+| plan   | artifact | fixes_added | 2026-10-11 | references/astra-plan-round-1.md                            | 6a5a7986bcab5880f240961c43306ec1150d6c1a | manual     | Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, 5 important / 2 minor; applied in revision 5                                                |
+| plan   | artifact | passed      | 2026-10-11 | references/astra-plan-round-2.md                            | 6ddc7476114babe72d7307d2c41f2ac45fcc3709 | manual     | Astra plan round 2: ALIGNED; plan revision 5 approved by the orchestrator per the autonomous-run rules (D13); ready for oat-project-implement, not active |
+| plan   | artifact | received    | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T162428Z.md          | -                                        | -          | -                                                                                                                                                         |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
