@@ -538,6 +538,97 @@ git commit -m "feat(p04-t02): promote brief projects to quick with disposition-a
 
 ---
 
+### Task p04-t03: (review) Carry the pre-promotion annotation outside review-row identity cells
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.brief.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding (p04 review, Medium): `(pre-promotion, brief)` is appended to each review row's Scope cell, which breaks the Scope + Type + artifact identity that implement Step 7b, review-receive, `review latest` and the readiness `PLAN_ARTIFACT_ROW` key on; it also rewrites `pending` placeholder rows.
+Location: `promote.ts` (`PRE_PROMOTION_ANNOTATION`, row rewrite)
+
+**Step 2: Implement fix**
+
+Leave every review row's cells untouched. Record provenance as a single line under `## Reviews` (for example `Rows above dated on or before <date> were recorded pre-promotion under workflow mode brief.`), never in identity cells and never on `pending` rows. Update the tests at `promote.brief.test.ts:521-541` to assert row identity is preserved and the provenance line exists.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote`
+Expected: pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.brief.test.ts
+git commit -m "fix(p04-t03): keep review-row identity intact when promoting a brief"
+```
+
+---
+
+### Task p04-t04: (review) Share one index-preserving record-line reader between control-plane and the CLI
+
+**Files:**
+
+- Modify: `packages/control-plane/src/state/quick-plan-readiness.ts` (export an index-preserving reader, for example `recordLineMask(lines): boolean[]`, alongside `readRecordLines`)
+- Modify: `packages/control-plane/src/index.ts` (barrel export)
+- Modify: `packages/control-plane/src/state/quick-plan-readiness.test.ts` (pin the mask against fenced and indented examples)
+- Modify: `packages/cli/src/commands/project/validate-plan/profiles.ts` (consume the export; delete the local `recordLineMask`)
+
+**Step 1: Understand the issue**
+
+Review finding (p04 review, Medium): `recordLineMask` in `profiles.ts` duplicates control-plane's fence and indented-code exclusion; the design's "same fence and indented-code exclusion" rule exists to prevent that drift. Promotion needs line indices, so a bare export of `readRecordLines` is insufficient.
+Location: `profiles.ts` (`recordLineMask`), `quick-plan-readiness.ts` (`readRecordLines`)
+
+**Step 2: Implement fix**
+
+Add the index-preserving reader next to `readRecordLines` (same CommonMark fence and four-column indentation rules, one boolean per line), export it from the barrel, pin it, and make `profiles.ts` use it. Lane note: these two control-plane files are not touched by p02 or p03, so the widening is merge-safe.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/quick-plan-readiness.test.ts && pnpm --filter @open-agent-toolkit/control-plane build && HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan src/commands/project/promote && pnpm type-check`
+Expected: pass; `grep -n "function recordLineMask" packages/cli/src/commands/project/validate-plan/profiles.ts` prints nothing.
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/state/quick-plan-readiness.ts packages/control-plane/src/index.ts packages/control-plane/src/state/quick-plan-readiness.test.ts packages/cli/src/commands/project/validate-plan/profiles.ts
+git commit -m "fix(p04-t04): share the index-preserving record-line reader from control-plane"
+```
+
+---
+
+### Task p04-t05: (review) Reject malformed provisional markers, refuse promotion without a phase head, and carry Approach into discovery
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/validate-plan/profiles.ts`, `profiles.test.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`, `promote.brief.test.ts`
+
+**Step 1: Understand the issue**
+
+Review findings (p04 review, Low ×3): `**Provisional:**yes` (no space) validates clean while the control-plane parser does not treat it as provisional; an accepted phase without `**Head:**` synthesizes `**Commit:** -`; the brief's `## Approach` is dropped from both working artifacts.
+
+**Step 2: Implement fix**
+
+Validate the provisional line with the same expression the parser uses (space required), reporting `brief-provisional-invalid` otherwise. Refuse promotion of an accepted phase that lacks a `**Head:**` marker with a new reason `missing-phase-head` instead of synthesizing a dash. Render the brief's Approach section into `discovery.md` under `## Solution Space` / `### Chosen Direction` so the design content survives promotion.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane build && HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan src/commands/project/promote`
+Expected: pass, with one new case per finding.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/validate-plan/profiles.ts packages/cli/src/commands/project/validate-plan/profiles.test.ts packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.brief.test.ts
+git commit -m "fix(p04-t05): strict provisional marker, refuse headless promotion, carry Approach into discovery"
+```
+
+---
+
 ## Phase 5: Brief entry skill and planning surfaces
 
 ### Task p05-t01: `oat-project-brief` skill, shared contract, gate registration and autonomy entries
@@ -940,7 +1031,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T030140Z.md                                                                                                                                                                   | f73b4e904b96de4be741daf526d0afcacfdbe05c | auto       | -                 |
 | p02    | code     | fixes_added     | 2026-10-11 | reviews/archived/p02-review-2026-10-11T031650Z.md                                                                                                                                                                   | 2826da694b6dce2df126f36599d97b7daecac265 | auto       | -                 |
 | p03    | code     | fixes_added     | 2026-10-11 | reviews/archived/p03-review-2026-10-11T032218Z.md                                                                                                                                                                   | 2a5c52f241e48395054efb6399b101a257eaa801 | auto       | -                 |
-| p04    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p04    | code     | fixes_added     | 2026-10-11 | reviews/archived/p04-review-2026-10-11T033122Z.md                                                                                                                                                                   | 449cdc606a162b5e90966114e35479843c8c7506 | auto       | -                 |
 | p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
@@ -966,7 +1057,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 1: 6 tasks - Control-plane registry, phase-unit parsing, scope seam and readers, readiness clause, two review fixes
 - Phase 2: 5 tasks - Router routes, brief-unit guard, dashboard parity, two review fixes
 - Phase 3: 3 tasks - Templates with bundle registration, scaffold behavior, one review fix
-- Phase 4: 2 tasks - Plan profiles, brief → quick promotion
+- Phase 4: 5 tasks - Plan profiles, brief → quick promotion, three review fixes
 - Phase 5: 2 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills
 - Phase 6: 3 tasks - Implement references, agent roles and projections, quick-start resume contract
 - Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
@@ -976,7 +1067,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 38 tasks**
+**Total: 41 tasks**
 
 Ready for code review and merge.
 

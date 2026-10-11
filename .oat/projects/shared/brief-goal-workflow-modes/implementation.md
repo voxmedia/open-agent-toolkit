@@ -207,6 +207,22 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Review Received: p04 (parallel group 1, pre-fan-in)
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p04-review-2026-10-11T033122Z.md (produced in the p04 worktree; copied into the root archive at fan-in)
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p04-22f99828`, invocation auto, reviewed head 449cdc606a162b5e90966114e35479843c8c7506, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 2, Low 3 → phase review passes; auto-disposition mode.
+
+- M1 `(pre-promotion, brief)` written into review-row Scope cells breaks Scope+Type+artifact identity → converted: p04-t03 (Minor). Agree. design.md "Promote brief → quick" wording ("annotated") is corrected at fan-in to a provenance line.
+- M2 `recordLineMask` duplicates control-plane's fence reader; an index-preserving export is needed → converted: p04-t04 (Minor), with the p04 lane boundary widened to `quick-plan-readiness.ts`, its test and the barrel (no sibling lane touches them).
+- L1 `**Provisional:**yes` accepted by the validator but not the parser → converted: p04-t05 (Negligible).
+- L2 accepted phase without `**Head:**` synthesizes `**Commit:** -` → converted: p04-t05 (refuse with `missing-phase-head`).
+- L3 `## Approach` dropped from working artifacts → converted: p04-t05 (render into discovery Solution Space).
+
+**New tasks added:** p04-t03, p04-t04, p04-t05. **Next:** resume the p04 implementer (request impl-p04-a8c76fdd) in fix mode; re-review round 2; ledger rows at fan-in.
+
 ---
 
 ## Phase 5: Brief entry skill and planning surfaces
