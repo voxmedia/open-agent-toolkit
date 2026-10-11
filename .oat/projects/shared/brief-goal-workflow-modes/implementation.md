@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-11
-oat_current_task_id: p01-t05
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 | Phase 11 | pending     | 2     | 0/2       |
 | Phase 12 | pending     | 1     | 0/1       |
 
-**Total:** 4/35 tasks completed
+**Total:** 6/35 tasks completed
 
 ---
 
@@ -49,7 +49,7 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 8f8465b957d6beaf414a2cfb90c61195a9129951
-**Head:** 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b
+**Head:** 522659033 (fix head; original phase head 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b)
 **Executor:** phase-implementer:impl-p01-6392fd49 (oat-phase-implementer-claude-claude-opus-5-5-high)
 
 ### Phase Summary (fill when phase is complete)
@@ -93,13 +93,21 @@ oat_generated: false
 
 ### Task p01-t05: (review) Export the phase-unit parser surface from the package barrel
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** af7d01fbd
+
+- **Files changed:** packages/control-plane/src/index.ts, packages/control-plane/src/state/parser.test.ts, packages/control-plane/README.md
+- **Verification:** RED first (1 failed/40); parser.test.ts 41/41; control-plane build; dist probe [true,true,true,true]; control-plane check.
+- **Continuation:** cont-brief-goal-workflow-modes-p01-fix-1 (resumed original handle impl-p01-6392fd49, mode fix)
 
 ### Task p01-t06: (review) Read block lists across blank and comment lines in readiness clause 6
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 522659033
+
+- **Files changed:** packages/control-plane/src/state/quick-plan-readiness.ts, packages/control-plane/src/state/quick-plan-readiness.test.ts
+- **Verification:** RED first (2 failed/30); quick-plan-readiness.test.ts 32/32; pnpm type-check; control-plane check.
+- **Continuation:** cont-brief-goal-workflow-modes-p01-fix-1 (resumed original handle impl-p01-6392fd49, mode fix)
 
 ### Review Received: p01
 
@@ -383,6 +391,7 @@ _- Outstanding Items_
 
 - p01 implemented by `oat-phase-implementer-claude-claude-opus-5-5-high` (request impl-p01-6392fd49): 4 tasks, 4 commits, verification green; root re-verified; ledger recorded before review (Step 7a).
 - p01 reviewed (auto, Fable 5.1 high): pass with 1 medium, 2 low; M1 and L1 converted to p01-t05/p01-t06; L2 fixed in bookkeeping.
+- p01 fix continuation (cont-brief-goal-workflow-modes-p01-fix-1, same handle): p01-t05 af7d01fbd, p01-t06 522659033; root re-verified control-plane 183/183 and forced type-check; event → fixes_completed; re-review round 2 dispatched.
 
 Chronological log of implementation progress.
 
