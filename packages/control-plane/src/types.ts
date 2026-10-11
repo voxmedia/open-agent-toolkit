@@ -13,8 +13,24 @@ export const WORKFLOW_MODES = [
   'quick',
   'import',
   'lite',
+  'brief',
 ] as const;
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
+
+/**
+ * Workflow modes whose plans are Project Briefs: phases carry intent and exit
+ * evidence instead of executable tasks, and progress is counted in
+ * phase-units.
+ */
+export const BRIEF_MODES = ['brief'] as const;
+export type BriefMode = (typeof BRIEF_MODES)[number];
+
+/** True when `mode` belongs to the brief mode family. */
+export function isBriefMode(
+  mode: WorkflowMode | null | undefined,
+): mode is BriefMode {
+  return mode != null && (BRIEF_MODES as readonly string[]).includes(mode);
+}
 
 export type ExecutionMode = 'single-thread' | 'subagent-driven';
 

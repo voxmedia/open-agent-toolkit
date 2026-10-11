@@ -29,8 +29,10 @@ import {
 ```
 
 `WORKFLOW_MODES` is the ordered runtime list of supported modes:
-`spec-driven`, `quick`, `import`, and `lite`. The exported `WorkflowMode` type
-is derived from this constant.
+`spec-driven`, `quick`, `import`, `lite`, and `brief`. The exported
+`WorkflowMode` type is derived from this constant. `isBriefMode(mode)` reports
+whether a mode belongs to the brief family (`BRIEF_MODES`), whose plans count
+progress in phase-units rather than tasks.
 
 ### `getProjectState(projectPath)`
 

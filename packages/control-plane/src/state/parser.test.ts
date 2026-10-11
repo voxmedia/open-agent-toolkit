@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { WORKFLOW_MODES } from '../index';
+import { isBriefMode, WORKFLOW_MODES } from '../index';
 import { parseStateFrontmatter } from './parser';
 
 describe('parseStateFrontmatter', () => {
@@ -221,7 +221,32 @@ oat_workflow_mode: bogus
   });
 
   it('exports the complete ordered workflow mode list', () => {
-    expect(WORKFLOW_MODES).toEqual(['spec-driven', 'quick', 'import', 'lite']);
+    expect(WORKFLOW_MODES).toEqual([
+      'spec-driven',
+      'quick',
+      'import',
+      'lite',
+      'brief',
+    ]);
+  });
+
+  it('parses brief workflow mode', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_workflow_mode: brief
+---
+`),
+    ).toMatchObject({ workflowMode: 'brief' });
+  });
+
+  it('identifies the brief mode family with isBriefMode', () => {
+    expect(isBriefMode('brief')).toBe(true);
+    expect(isBriefMode('quick')).toBe(false);
+    expect(isBriefMode('lite')).toBe(false);
+    expect(isBriefMode('spec-driven')).toBe(false);
+    expect(isBriefMode('import')).toBe(false);
+    expect(isBriefMode(null)).toBe(false);
+    expect(isBriefMode(undefined)).toBe(false);
   });
 
   it('parses complete lifecycle values when present', () => {

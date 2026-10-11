@@ -132,6 +132,11 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     { source: 'plan-lite.md', target: 'plan.md' },
     'implementation.md',
   ],
+  brief: [
+    'state.md',
+    { source: 'plan-brief.md', target: 'plan.md' },
+    { source: 'implementation-brief.md', target: 'implementation.md' },
+  ],
 };
 
 function normalizeTemplateEntry(entry: TemplateEntry): {
@@ -231,6 +236,22 @@ const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
       '- ⧗ Awaiting critical interview and plan authoring',
     ],
     nextMilestone: 'Run `oat-project-lite` to author and approve the plan',
+  },
+  brief: {
+    hillCheckpoints: '[]',
+    phase: 'plan',
+    status: 'Plan',
+    currentPhase: 'Plan - Authoring the Project Brief',
+    artifacts: [
+      '- **Plan:** `plan.md` (scaffolded Project Brief template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)',
+    ],
+    progress: [
+      '- ✓ Brief project scaffolded',
+      '- ✓ Brief and implementation artifacts scaffolded',
+      '- ⧗ Awaiting brief interview and authoring',
+    ],
+    nextMilestone: 'Run `oat-project-brief` to author and approve the brief',
   },
 };
 
