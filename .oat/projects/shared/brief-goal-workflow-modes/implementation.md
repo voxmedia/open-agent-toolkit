@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-11
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -33,75 +33,272 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Control-plane registry, phase-unit contract and readiness clause
 
 **Status:** in_progress
 **Started:** 2026-10-11
 
+**Base:** 8f8465b957d6beaf414a2cfb90c61195a9129951
+**Head:** 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b
+**Executor:** phase-implementer:impl-p01-6392fd49 (oat-phase-implementer-claude-claude-opus-5-5-high)
+
 ### Phase Summary (fill when phase is complete)
 
-**Outcome (what changed):**
+- **Outcome:** tasks complete; root review pending. `brief` registered in `WORKFLOW_MODES` with `isBriefMode`; phase-unit parsing (`parsePhaseMarkers`, `parseProvisionalPhaseIds`, `phaseUnits` option) with strict journal markers; `selectPhaseUnits` seam and brief-aware readers; readiness clause 6 (`promotion-pending-phases`) with its router reason-map entry.
+- **Verification:** phase-wide: control-plane suite 180/180; CLI suite 8363/8363 after a control-plane build (isolated HOME); `pnpm check` pass. Root re-ran the control-plane suite (180/180) and `pnpm type-check` (pass) before bookkeeping.
+- **Notes:** report status DONE_WITH_CONCERNS (informational concerns only; no recovery attempts, 0/10).
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+### Task p01-t01: Register `brief` and the mode-family predicate
 
-**Key files touched:**
+**Status:** completed
+**Commit:** b1b134917
 
-- `{path}` - {why}
+- **Files changed:** packages/control-plane/src/types.ts, packages/control-plane/src/state/parser.test.ts, packages/control-plane/README.md, packages/cli/src/commands/project/new/scaffold.ts, packages/cli/src/commands/project/new/index.test.ts, packages/cli/src/commands/help-snapshots.test.ts
+- **Verification:** RED confirmed (3 failing in parser.test.ts); parser.test.ts 40/40; control-plane build; CLI new/index.test.ts + help-snapshots.test.ts 80/80; pnpm type-check 11/11.
 
-**Verification:**
+### Task p01-t02: Phase-unit parsing with strict markers and public fields
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Status:** completed
+**Commit:** ff024a0bd
 
-**Notes / Decisions:**
+- **Files changed:** packages/control-plane/src/types.ts, packages/control-plane/src/state/tasks.ts, packages/control-plane/src/state/tasks.test.ts, packages/control-plane/src/state/quick-plan-readiness.ts (export of readRecordLines; mechanical in-phase addition)
+- **Verification:** RED confirmed (10 new failing); tasks.test.ts 22/22; control-plane check; type-check. Prove-it-can-fail cycles (a)–(e) below.
+- **Prove-it-can-fail evidence** (mutate `tasks.ts`, run `tasks.test.ts`, restore from backup, `cmp` byte-identical): (a) disabled the heading reset in `parsePhaseMarkers` → "ends phase marker ownership at any heading" failed (1/21), restore 22/22; (b) removed `!provisional &&` → "lets a provisional plan phase override a journal completion" failed, restore 22/22; (c) made plan `### Task` lines add to `total` → "ignores plan task headings for totals" failed, restore 22/22; (d) dropped the `$` anchor from `STATUS_MARKER_PATTERN` → "rejects a status marker with trailing text" failed, restore 22/22; (e) removed the `phaseId !== null` filter → the new taskless-phase pin and the existing "keeps adjacent large phase ordinals distinct" failed, restore 22/22.
 
-- {trade-offs or deviations discovered during implementation}
+### Task p01-t03: Scope seam and reader wiring
 
-### Task p01-t01: {Task Name}
+**Status:** completed
+**Commit:** 38512dbf1
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+- **Files changed:** packages/control-plane/src/state/tasks.ts, packages/control-plane/src/project.ts, packages/control-plane/src/project.test.ts, packages/control-plane/src/state/tasks.test.ts
+- **Verification:** RED confirmed (5 failing); project.test.ts + tasks.test.ts 38/38; full control-plane suite 175/175 with isolated HOME.
 
-**Outcome (required when completed):**
+### Task p01-t04: Readiness clause for promoted briefs
 
-- {what materially changed (not “did task”, but “system now does X”)}
+**Status:** completed
+**Commit:** 81cfbd853
 
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+- **Files changed:** packages/control-plane/src/types.ts, packages/control-plane/src/recommender/router.ts, packages/control-plane/src/state/quick-plan-readiness.ts, packages/control-plane/src/state/quick-plan-readiness.test.ts, packages/control-plane/src/recommender/router.test.ts
+- **Verification:** RED confirmed (4 failing); quick-plan-readiness.test.ts + router.test.ts 76/76; type-check.
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 2: Router and dashboard routes
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Brief routes and mode-aware planning ownership
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Brief-unit guard before post-implementation routing
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Dashboard route map, help text and bounded parity
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Templates and scaffold
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Brief plan and journal templates with bundle registration
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Scaffold behavior for brief projects
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Plan profiles and promotion
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Plan profiles in validate-plan
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Promote brief → quick
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Brief entry skill and planning surfaces
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: `oat-project-brief` skill, shared contract, gate registration and autonomy entries
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Planning-surface skills recognize brief
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Execution skills and agent roles
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Implement references for brief execution
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Agent roles, regenerated projections and sync manifest
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Quick-start promoted-brief resume and dispatch example
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 7: Review, record and closeout skills
+
+**Status:** pending
+**Started:** -
+
+### Task p07-t01: Review scope from anchors in review-provide
+
+**Status:** pending
+**Commit:** -
+
+### Task p07-t02: Review-receive and reconcile brief branches
+
+**Status:** pending
+**Commit:** -
+
+### Task p07-t03: Summary, PR, revise, complete, document and brainstorm
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 8: Contracts, integration, docs, records and the v1 progress PR
+
+**Status:** pending
+**Started:** -
+
+### Task p08-t01: Skill contract tests and autonomy coverage for brief
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t02: Sync output, end-to-end integration tests and deferred snapshot edits
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t03: Real-artifact probe
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t04: Docs, lane diagrams and root AGENTS.md
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t05: Decision records and backlog items
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t06: Version bumps and the full gate run
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 9: Goal registration and control-plane transitions (v1.5)
+
+**Status:** pending
+**Started:** -
+
+### Task p09-t01: Register `goal`, extraction parsing and goal state fields
+
+**Status:** pending
+**Commit:** -
+
+### Task p09-t02: Goal routing priority and transition table
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 10: Goal CLI: validation, delivery registry, refresh and closeout (v1.5)
+
+**Status:** pending
+**Started:** -
+
+### Task p10-t01: Goal validation profile
+
+**Status:** pending
+**Commit:** -
+
+### Task p10-t02: Delivery registry types and `oat project delivery refresh`
+
+**Status:** pending
+**Commit:** -
+
+### Task p10-t03: Closeout boundary inputs, coverage predicate and gate carriers
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 11: Goal skills and roles (v1.5)
+
+**Status:** pending
+**Started:** -
+
+### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
+
+**Status:** pending
+**Commit:** -
+
+### Task p11-t02: Delivery registration, terminal delivery and review-loop owners
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
+
+**Status:** pending
+**Started:** -
+
+### Task p12-t01: Contract tests, probe, docs, records and bumps for goal
 
 **Status:** pending
 **Commit:** -
@@ -132,13 +329,18 @@ _- Outstanding Items_
 - Task class: default-implementation (classification source: phase scope analysis; parser contract change inside one bounded package set, dispersed test pins)
 - Managed Claude record: `oat project dispatch record` → validated-only
 - Dispatch stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
-- Launch status: planned (updated on acceptance / terminal outcome below)
+- Launch status: accepted (native Agent launch, background) → child outcome: completed, report status DONE_WITH_CONCERNS; phase head 81cfbd853b23e0ce6e7057e67b7199cfadf63b3b; commits b1b134917, ff024a0bd, 38512dbf1, 81cfbd853; recovery attempts 0/10; optional nested dispatches: none
+- Runtime confirmation: not-observable (no independent runtime identity captured)
 
 <!-- orchestration-runs-end -->
 
 ---
 
 ## Implementation Log
+
+### 2026-10-11 (p01)
+
+- p01 implemented by `oat-phase-implementer-claude-claude-opus-5-5-high` (request impl-p01-6392fd49): 4 tasks, 4 commits, verification green; root re-verified; ledger recorded before review (Step 7a).
 
 Chronological log of implementation progress.
 
@@ -181,18 +383,23 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                                                                                     | Planned / Documented                                                                                                                                                  | Actual / Accepted                                                                               | Reason | Source of Truth | Follow-up |
+| ------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------ | --------------- | --------- |
+| p01-t02       | design.md names the journal status type `PhaseStatus`; that name is already the dashboard type                      | Named the journal enum `JournalPhaseStatus` and the record `PhaseMarkers` (exported from tasks.ts)                                                                    | implementation is source of truth; design naming note to be reconciled at p08 docs/records      |
+| p01-t02       | `readRecordLines` in quick-plan-readiness.ts was private                                                            | Exported it (export keyword only) so brief-mode scans reuse the exact fence/indent exclusion the design cites                                                         | in-phase mechanical addition, reported by the implementer                                       |
+| p01           | plan step 3 says prove-it-can-fail cycles are recorded in implementation.md by the implementer                      | Implementer returned them in its report; root copied them into the p01-t02 task row                                                                                   | bookkeeping is root-owned under the implement contract                                          |
+| p01           | global `oat` 0.3.16 lacks `internal commit-paths`                                                                   | Task commits made with the branch build `node packages/cli/dist/index.js internal commit-paths` (hooks on; same primitive)                                            | none                                                                                            |
+| run           | operator asked for Opus 5.5 high subagents; the reviewer resolver refuses candidate overrides under a capped policy | Implementers run Opus 5.5 high via the exact-candidate branch; root-owned phase reviewers run the configured frontier cap `oat-reviewer-claude-claude-fable-5-1-high` | the frontier ceiling the operator set is preserved; review rung is policy-bound for determinism |
+| -             | -                                                                                                                   | -                                                                                                                                                                     | -                                                                                               | -      | -               | -         |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                        | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | control-plane 180, CLI 8363 (post-build), type-check, pnpm check | all    | 0      | -        |
+| 2     | -                                                                | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
