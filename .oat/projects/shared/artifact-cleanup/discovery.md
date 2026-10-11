@@ -173,21 +173,22 @@ stay. Default scope `project`; `general` only for a reusable lesson.
 
 ## Key Decisions
 
-| ID  | Decision                                                                                                                                                                | Rationale                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| D1  | Writers only; no history rewrite; success measured on fresh output                                                                                                      | Thomas; historical metrics cannot move without rewriting sealed records                            |
-| D2  | Reviews are not archived; journal and plan records stand without them; review paths are local-only citations                                                            | Thomas: reviews are noise; the journal already carries findings, dispositions and fix-task sources |
-| D3  | Keep `implementation.md`, `project-log.md`, `summary.md`, `reviews/`, `references/project-retro.md`; retire only new writes to `oat-execution-learnings.md`, losslessly | both reviewers; rename surface about 300 files for no noise reduction                              |
-| D4  | Summary roll-up becomes a bounded observations digest without structural entries; general-scope graduation unchanged                                                    | Option A                                                                                           |
-| D5  | One canonical journal format plus a mode-aware terminal validator; no second ledger; no table parsing for completion                                                    | Option B                                                                                           |
-| D6  | Slim run record produced by the writer and checked at the finalization boundary                                                                                         | Option C                                                                                           |
-| D7  | Fixed append anchors, template slots and the log header change together                                                                                                 | the slots only help if every writer targets them                                                   |
-| D8  | `state.md` owns gate transitions; the journal keeps terminal dispositions, waivers, overrides and authority decisions                                                   | receipts are more than status mirrors                                                              |
-| D9  | Mechanical refreshes belong to closeout; evidence corrections and accepted design changes remain tasks                                                                  | refresh-only tasks distort the ledger                                                              |
-| D10 | Stale present-tense status prose is rewritten at closeout; real follow-ups and timestamped historical observations stay                                                 | a tense rule must not falsify history                                                              |
-| D11 | Reopened work is a follow-up project or a new archive generation; local archive retries reuse identical snapshots and refuse conflicting content                        | the wave-5 double copy; keep the synced protections from `49aeb5075`                               |
-| D12 | `oat_pr_status` in archives is labelled as an observation at archive time; no host-state observer                                                                       | truthful and cheap                                                                                 |
-| D13 | Project runs in this worktree after the goal phases, frontier ceiling, no HiLL                                                                                          | Thomas                                                                                             |
+| ID  | Decision                                                                                                                                                                                   | Rationale                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| D1  | Writers only; no history rewrite; success measured on fresh output                                                                                                                         | Thomas; historical metrics cannot move without rewriting sealed records                                          |
+| D2  | Reviews are not archived; journal and plan records stand without them; review paths are local-only citations                                                                               | Thomas: reviews are noise; the journal already carries findings, dispositions and fix-task sources               |
+| D3  | Keep `implementation.md`, `project-log.md`, `summary.md`, `reviews/`, `references/project-retro.md`; retire only new writes to `oat-execution-learnings.md`, losslessly                    | both reviewers; rename surface about 300 files for no noise reduction                                            |
+| D4  | Summary roll-up becomes a bounded observations digest without structural entries; general-scope graduation unchanged                                                                       | Option A                                                                                                         |
+| D5  | One canonical journal format plus a mode-aware terminal validator; no second ledger; no table parsing for completion                                                                       | Option B                                                                                                         |
+| D6  | Slim run record produced by the writer and checked at the finalization boundary                                                                                                            | Option C                                                                                                         |
+| D7  | Fixed append anchors, template slots and the log header change together                                                                                                                    | the slots only help if every writer targets them                                                                 |
+| D8  | `state.md` owns gate transitions; the journal keeps terminal dispositions, waivers, overrides and authority decisions                                                                      | receipts are more than status mirrors                                                                            |
+| D9  | Mechanical refreshes belong to closeout; evidence corrections and accepted design changes remain tasks                                                                                     | refresh-only tasks distort the ledger                                                                            |
+| D10 | Stale present-tense status prose is rewritten at closeout; real follow-ups and timestamped historical observations stay                                                                    | a tense rule must not falsify history                                                                            |
+| D11 | Reopened work is a follow-up project or a new archive generation; local archive retries reuse identical snapshots and refuse conflicting content                                           | the wave-5 double copy; keep the synced protections from `49aeb5075`                                             |
+| D12 | `oat_pr_status` in archives is labelled as an observation at archive time; no host-state observer                                                                                          | truthful and cheap                                                                                               |
+| D13 | Project runs in this worktree after the goal phases, frontier ceiling, no HiLL                                                                                                             | Thomas                                                                                                           |
+| D14 | With the project log disabled, learnings are not persisted: producers append unconditionally, warn once when append no-ops, and continue; no producer creates `oat-execution-learnings.md` | Thomas (2026-10-11): disabling the log is the operator's choice; replaces the goal skill's disabled-log fallback |
 
 ## Constraints
 
@@ -234,9 +235,11 @@ References` is the last section; no template placeholder survives
   override is written into the journal, not only the log.
 - Gate transitions appear once in `state.md`; the journal carries one terminal
   line per gate run.
-- Learnings written by an autonomous run land in `project-log.md` with their
-  category intact, and summary and retro read them; the learnings file is no
-  longer created for new projects while existing files are still read.
+- Learnings written by an autonomous, cloud or goal run land in
+  `project-log.md` with their category intact, and summary and retro read
+  them; no producer creates `oat-execution-learnings.md` for any new project
+  (with the log disabled the producer warns and continues, D14) while
+  existing files are still read.
 - A second `oat project archive` of the same project does not create a
   timestamp-suffixed twin; reopened work is refused with the follow-up
   guidance.
@@ -271,7 +274,8 @@ References` is the last section; no template placeholder survives
 - Design: the exact digest selection rule (which judgment entries qualify,
   how many, and the archive-locator format for exported summaries).
 - Design: whether the override at completion is a CLI flag with a reason or a
-  journal section the operator writes first.
+  journal section the operator writes first. (Resolved in design revision 2:
+  journal-only reason codes recorded by complete.)
 - Design: the category field's position in the judgment heading grammar
   versus the body, given `JUDGMENT_HEADING_RE` and existing consumers.
 
