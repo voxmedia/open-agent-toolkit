@@ -106,18 +106,19 @@ completion line.
 
 **Fresh reviewer on anchors.** Per-Phase Review dispatches a fresh reviewer for
 every phase: never the phase implementer, never a reviewer handle from an
-earlier phase. Before dispatch, verify that both anchors exist and that
-`**Base:**` is an ancestor of `**Head:**`; a failed check routes to
-`oat-project-reconcile` and is never narrowed. The Review Scope's range is
-`Base..Head`, its in-scope IDs are the phase's execution-record IDs, and it
-carries the artifact record fields `oat_review_requested_scope: pNN`,
+earlier phase. For a sequential phase, before dispatch verify that both anchors
+exist and that `**Base:**` is an ancestor of `**Head:**`; a failed check routes
+to `oat-project-reconcile` and is never narrowed. For a parallel-group member,
+step 3's check that the worktree head descends from `EXPECTED_HEAD` stands in
+for that pre-check, because the member has no journal anchors until fan-in. The
+per-phase Review Scope range is `Base..Head` for a sequential phase and
+`EXPECTED_HEAD..<worktree head from the phase report>` for a parallel-group
+member, whose `oat_review_base_sha` is `EXPECTED_HEAD`; the fan-in
+`**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and `final` scopes.
+In both cases the in-scope IDs are the phase's execution-record IDs, and the
+scope carries the artifact record fields `oat_review_requested_scope: pNN`,
 `oat_review_phase_ids: [pNN]`, `oat_review_base_sha`, and
 `oat_review_scope_source: anchors` for the reviewer to copy into its artifact.
-For a parallel-group member the per-phase Review Scope range is
-`EXPECTED_HEAD..<worktree head from the phase report>` with
-`oat_review_base_sha: EXPECTED_HEAD` and `oat_review_scope_source: anchors`;
-the fan-in `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and
-`final` scopes.
 
 **Late-fix rule.** A review-fix commit may advance the phase's `**Head:**`, base
 unchanged, only while no later phase in document order has a `**Base:**`. Once
