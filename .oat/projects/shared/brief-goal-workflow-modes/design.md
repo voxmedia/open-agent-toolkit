@@ -427,8 +427,9 @@ reader; under `declared_met` the terminal execution scope excludes audited
 The router reads only persisted derived freshness
 (`integrated_review.disposition`, and
 `oat_milestone_gates[mNN].exit.freshness: fresh | stale | null` with
-`freshness_reason`, written by implement's scoped closeout and by
-review-receive's invalidation from `delivery check` output) and never
+`freshness_reason`, written by implement's scoped closeout, by
+review-receive's invalidation from `delivery check` output, and by
+`delivery refresh` for a registered delivery's milestone) and never
 evaluates Git. Skills reach the shared
 evaluator before registration through the read-only
 `oat project delivery check --project <path> --subject <milestone|delivery>
