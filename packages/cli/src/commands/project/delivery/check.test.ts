@@ -24,7 +24,12 @@ interface CheckPayload {
     disposition: string | null;
     reason: string | null;
   };
-  exit?: { outcome: string; freshness: string; reason: string | null };
+  exit?: {
+    outcome: string;
+    freshness: string;
+    reason: string | null;
+    source: string;
+  };
   deliverable?: boolean;
   message?: string;
 }
@@ -117,7 +122,12 @@ describe('oat project delivery check', () => {
       kind: 'milestone',
       scope: ['p01', 'p02'],
       review: { fresh: true, disposition: 'passed', reason: null },
-      exit: { outcome: 'allowed', freshness: 'fresh', reason: null },
+      exit: {
+        outcome: 'allowed',
+        freshness: 'fresh',
+        reason: null,
+        source: 'milestone-carrier',
+      },
       deliverable: true,
     });
     expect(exitCode).toBe(0);
@@ -135,7 +145,7 @@ describe('oat project delivery check', () => {
     const { payload, exitCode } = await check(repo!, 'm01');
 
     expect(payload).toMatchObject({
-      status: 'ok',
+      status: 'undeliverable',
       review: { fresh: false },
       deliverable: false,
     });
@@ -181,6 +191,7 @@ describe('oat project delivery check', () => {
     expect(payload.exit).toMatchObject({ freshness: 'stale' });
     expect(payload.exit?.reason).toMatch(/^subject-changed/);
     expect(payload.deliverable).toBe(false);
+    expect(payload.status).toBe('undeliverable');
   });
 
   it('evaluates a registered delivery against its observed member revisions', async () => {
@@ -203,7 +214,12 @@ describe('oat project delivery check', () => {
       milestone: 'm01',
       scope: ['p01', 'p02'],
       review: { fresh: true, disposition: 'passed' },
-      exit: { outcome: 'allowed', freshness: 'fresh' },
+      // A registered delivery is still judged by the milestone working carrier.
+      exit: {
+        outcome: 'allowed',
+        freshness: 'fresh',
+        source: 'milestone-carrier',
+      },
       deliverable: true,
     });
     expect(exitCode).toBe(0);

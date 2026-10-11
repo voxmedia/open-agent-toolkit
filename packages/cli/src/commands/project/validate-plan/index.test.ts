@@ -343,6 +343,29 @@ describe('oat project validate-plan', () => {
       expect(second.capture.jsonPayloads[0]).toEqual({ valid: true });
       expect(process.exitCode).toBe(0);
     });
+
+    it('reads the journal from the --cwd-resolved project path', async () => {
+      const extracted = await writeGoalProject(
+        [
+          '## Phase p02: Phase p02',
+          '',
+          '**Status:** extracted',
+          '**Extracted to:** child-project',
+          '',
+        ].join('\n'),
+      );
+      // A relative --project-path from a foreign process cwd: only the
+      // --cwd-resolved journal excuses the extracted phase.
+      expect(process.cwd()).not.toBe(extracted);
+      const { command, capture } = createHarness({ json: true });
+      await runCommand(
+        command,
+        ['--project-path', '.'],
+        ['--json', '--cwd', extracted],
+      );
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode ?? 0).toBe(0);
+    });
   });
 
   describe('--json mode', () => {

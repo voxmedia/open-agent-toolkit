@@ -13,6 +13,7 @@ import {
   goalPlan,
   OUTCOME,
   PROJECT_REL,
+  registryYaml,
   removeRepo,
   reviewRow,
   type GoalRepo,
@@ -585,6 +586,109 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       await expect(
         evaluateSuccessor(git, scopeFor(repo), chain.reviewed, progress),
       ).resolves.toMatchObject({ fresh: true });
+    });
+  });
+
+  describe('set-once delivery exit-gate binding (M2)', () => {
+    const binding = (
+      decidedAt: string,
+      reviewedHead = 'null',
+      scope = '[p01, p02]',
+    ) =>
+      `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: ${reviewedHead}
+      subject: { kind: code, scope: ${scope} }
+      decided_at: '${decidedAt}'`;
+
+    async function registeredWithBinding(target: GoalRepo) {
+      return bookkeepingChain(target, {
+        register: (reviewed) =>
+          `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+            reviewed,
+            base: target.baseSha,
+            deliveryExitGate: binding('2026-10-11T10:00:00Z', `'${reviewed}'`),
+          })}`,
+      });
+    }
+
+    it('keeps the registration commit that first sets the binding a bookkeeping successor', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredWithBinding(repo);
+      expect(await repo.read('state.md')).toContain('    exit_gate:\n');
+      await expect(
+        evaluateSuccessor(
+          git,
+          scopeFor(repo),
+          chain.reviewed,
+          chain.registered,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+
+    it('rejects a successor that rewrites the binding with a new decided_at', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredWithBinding(repo);
+      const registered = await repo.read('state.md');
+      const rewritten = registered
+        .replace(
+          "decided_at: '2026-10-11T10:00:00Z'\n",
+          "decided_at: '2026-10-12T09:00:00Z'\n",
+        )
+        .replace(
+          `      reviewed_head: '${chain.reviewed}'\n      subject: { kind: code, scope: [p01, p02] }\n      decided_at: '2026-10-12`,
+          `      reviewed_head: '${chain.received}'\n      subject: { kind: code, scope: [p01] }\n      decided_at: '2026-10-12`,
+        );
+      expect(rewritten).toContain("decided_at: '2026-10-12T09:00:00Z'");
+      expect(rewritten).toContain('subject: { kind: code, scope: [p01] }');
+      await repo.write('state.md', rewritten);
+      const published = repo.commitAll('chore(oat): swap the d01 exit gate');
+
+      const result = await evaluateSuccessor(
+        git,
+        scopeFor(repo),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        commit: published,
+      });
+      expect(result.reason).toContain('d01 exit gate binding changed');
+    });
+
+    it('accepts a replacement binding that accompanies new integrated-review evidence', async () => {
+      repo = await createGoalRepo();
+      const chain = await registeredWithBinding(repo);
+      const second = 'reviews/archived/m01-code-review-2.md';
+      await repo.write(second, '# m01 re-review\n\nNo findings.\n');
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md'))
+          .replace(
+            `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+            `artifact: ${second}`,
+          )
+          .replace(
+            "decided_at: '2026-10-11T10:00:00Z'\n",
+            "decided_at: '2026-10-12T09:00:00Z'\n",
+          ),
+      );
+      const published = repo.commitAll('chore(oat): record the m01 re-review');
+      await expect(
+        evaluateSuccessor(
+          git,
+          {
+            ...scopeFor(repo),
+            evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, second],
+          },
+          chain.reviewed,
+          published,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
     });
   });
 

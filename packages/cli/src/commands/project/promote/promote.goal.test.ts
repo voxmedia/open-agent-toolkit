@@ -469,6 +469,16 @@ describe('oat project promote: goal → quick (B3)', () => {
       { reason: 'goal-delivery-unsettled', deliveries: ['d02'] },
     ],
     [
+      'a delivered milestone with an empty registry',
+      { state: goalState({ deliveries: 'oat_deliveries: []' }) },
+      { reason: 'goal-delivery-unsettled', deliveries: [] },
+    ],
+    [
+      'a delivered milestone with no registry',
+      { state: goalState({ deliveries: '' }) },
+      { reason: 'goal-delivery-unsettled', deliveries: [] },
+    ],
+    [
       'a pending recovery',
       {
         state: goalState({

@@ -291,6 +291,8 @@ export interface RegistryOptions {
   endpoint?: string;
   disposition?: string;
   attainment?: string;
+  /** The delivery's persisted exit-gate binding (YAML under `exit_gate:`). */
+  deliveryExitGate?: string;
   exit?: string;
 }
 
@@ -324,7 +326,7 @@ export function registryYaml(options: RegistryOptions): string {
       scope: [p01, p02]
       bound_revisions: [{ member: 0, base: ${quote(options.base)}, head: ${quote(options.reviewed)} }]
       disposition: ${options.disposition ?? 'passed'}
-${options.attainment ?? ''}oat_milestone_gates:
+${options.deliveryExitGate === undefined ? '' : `    exit_gate:\n${options.deliveryExitGate}\n`}${options.attainment ?? ''}oat_milestone_gates:
   m01:
     exit:
 ${

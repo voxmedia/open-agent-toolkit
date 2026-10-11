@@ -541,14 +541,15 @@ function judgeDeliveries(
 
     const review = previous['integrated_review'];
     const nextReview = next['integrated_review'];
+    const recordsEvidence =
+      isRecord(nextReview) &&
+      typeof nextReview['artifact'] === 'string' &&
+      evidence.has(projectRelative(scope.projectDir, nextReview['artifact']));
     if (isRecord(review)) {
       if (!isRecord(nextReview)) {
         return refuse(`delivery ${id} lost its integrated review evidence`);
       }
-      const recordsEvidence =
-        typeof nextReview['artifact'] === 'string' &&
-        evidence.has(projectRelative(scope.projectDir, nextReview['artifact']));
-      for (const field of ['artifact', 'scope', 'bound_revisions']) {
+      for (const field of REVIEW_IDENTITY_FIELDS) {
         if (!recordsEvidence && !setOnce(review[field], nextReview[field])) {
           return refuse(
             `delivery ${id} changed its integrated review ${field} without recording this evidence`,
@@ -556,16 +557,33 @@ function judgeDeliveries(
         }
       }
     }
+    // The review record this commit writes is new evidence only when it is
+    // recorded evidence and its identity actually changes here.
+    const recordsNewReview =
+      recordsEvidence &&
+      REVIEW_IDENTITY_FIELDS.some(
+        (field) =>
+          stable(isRecord(review) ? review[field] : undefined) !==
+          stable((nextReview as Record<string, unknown>)[field]),
+      );
 
-    const carrier = judgeCarrierChange(
-      previous['exit_gate'],
-      next['exit_gate'],
-      `delivery ${id} exit gate binding`,
-    );
-    if (!carrier.ok) return carrier;
+    // The delivery's exit-gate binding is persisted evidence (A2): set once,
+    // replaced only together with the new integrated review it accompanies.
+    // The `decided_at` rerun escape belongs to the milestone working carrier.
+    if (
+      isRecord(previous['exit_gate']) &&
+      !recordsNewReview &&
+      !setOnce(previous['exit_gate'], next['exit_gate'])
+    ) {
+      return refuse(
+        `delivery ${id} exit gate binding changed without recording new integrated review evidence`,
+      );
+    }
   }
   return OK;
 }
+
+const REVIEW_IDENTITY_FIELDS = ['artifact', 'scope', 'bound_revisions'];
 
 function judgeCarrierChange(
   before: unknown,

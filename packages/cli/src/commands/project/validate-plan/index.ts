@@ -112,7 +112,7 @@ export function createProjectValidatePlanCommand(
       if (profile === 'goal') {
         try {
           implementationContent = readFileSync(
-            join(options.projectPath, 'implementation.md'),
+            join(projectPath, 'implementation.md'),
             'utf-8',
           );
         } catch {

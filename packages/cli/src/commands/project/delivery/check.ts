@@ -152,10 +152,18 @@ export interface SubjectEvidenceReport {
   scope: string[];
   publishedHeads: (string | null)[];
   review: ReviewEvaluation;
-  exit: CarrierEvaluation;
+  /**
+   * `source` names the carrier evaluated: `delivery check` judges the
+   * milestone's working carrier (`oat_milestone_gates[mNN].exit`), while the
+   * closeout boundary judges the delivery's persisted `exit_gate` binding.
+   */
+  exit: CarrierEvaluation & { source: ExitCarrierSource };
   /** Passed, fresh integrated review and an allowed, fresh exit carrier. */
   deliverable: boolean;
 }
+
+/** Which exit carrier an evaluation judged. */
+export type ExitCarrierSource = 'milestone-carrier' | 'delivery-binding';
 
 /**
  * Evaluate the delivery evidence for one subject. A registered delivery is
@@ -186,7 +194,7 @@ export async function evaluateSubjectEvidence(
       (member) => member.observed_head,
     );
     const review = await evaluateDeliveryReview(git, evidence, delivery, scope);
-    const exit = await evaluateGateCarrier(
+    const exitEvaluation = await evaluateGateCarrier(
       milestoneId === null
         ? null
         : (project.state.milestoneGates?.[milestoneId]?.exit ?? null),
@@ -198,6 +206,7 @@ export async function evaluateSubjectEvidence(
       },
       { git, scope: evidence, publishedHeads },
     );
+    const exit = { ...exitEvaluation, source: 'milestone-carrier' as const };
     return {
       subject,
       kind: 'delivery',
@@ -275,11 +284,14 @@ export async function evaluateSubjectEvidence(
     };
   }
 
-  const exit = await evaluateGateCarrier(
-    project.state.milestoneGates?.[milestoneId]?.exit ?? null,
-    { kind: 'code', scope, overrideDisabled: project.exitGateDisabled },
-    { git, scope: evidence, publishedHeads: [publishedHead] },
-  );
+  const exit = {
+    ...(await evaluateGateCarrier(
+      project.state.milestoneGates?.[milestoneId]?.exit ?? null,
+      { kind: 'code', scope, overrideDisabled: project.exitGateDisabled },
+      { git, scope: evidence, publishedHeads: [publishedHead] },
+    )),
+    source: 'milestone-carrier' as const,
+  };
   return {
     subject,
     kind: 'milestone',
@@ -318,7 +330,7 @@ function formatEvidenceReport(report: SubjectEvidenceReport): string {
   return [
     `Delivery evidence for ${report.subject} (${report.kind}; scope ${report.scope.join(', ')}):`,
     `  integrated review: ${review}`,
-    `  exit carrier: ${exit}`,
+    `  exit carrier (${report.exit.source}): ${exit}`,
     `  deliverable: ${report.deliverable ? 'yes' : 'no'}`,
   ].join('\n');
 }
@@ -329,7 +341,7 @@ export function createProjectDeliveryCheckCommand(
   const dependencies = { ...DEFAULT_CHECK_DEPENDENCIES, ...overrides };
   return new Command('check')
     .description(
-      'Report integrated-review and exit-carrier freshness for a goal milestone or delivery under the bookkeeping-successor contract (read-only)',
+      'Report integrated-review and milestone exit-carrier freshness for a goal milestone or delivery under the bookkeeping-successor contract (read-only; status undeliverable and exit 1 when not deliverable)',
     )
     .requiredOption('--project <path>', 'Goal project path')
     .requiredOption(
@@ -356,7 +368,12 @@ export function createProjectDeliveryCheckCommand(
             dependencies.git,
           );
           if (context.json) {
-            context.logger.json({ status: 'ok', ...report });
+            // `ok` means deliverable; an evaluated but refusing subject is
+            // `undeliverable`, with the full report and exit 1.
+            context.logger.json({
+              status: report.deliverable ? 'ok' : 'undeliverable',
+              ...report,
+            });
           } else {
             context.logger.info(formatEvidenceReport(report));
           }

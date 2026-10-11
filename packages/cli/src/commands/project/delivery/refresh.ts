@@ -91,33 +91,61 @@ export interface ObservationWrite {
 /** The only frontmatter keys a refresh writes under. */
 const REFRESH_WRITE_ROOTS = new Set(['oat_deliveries', 'oat_milestone_gates']);
 
-/**
- * Leaves that hold observations or derived freshness, which a later
- * observation legitimately replaces. Every other leaf — reviewed revisions,
- * member bases, frozen scopes, review identities and the first endpoint
- * attainment — is historical evidence and is written only while unset.
- */
-const OBSERVATION_LEAVES = new Set([
+const MEMBER_OBSERVATION_LEAVES = new Set([
   'observed_head',
   'observed_base',
   'status',
-  'disposition',
-  'freshness',
-  'freshness_reason',
 ]);
+const CARRIER_FRESHNESS_LEAVES = new Set(['freshness', 'freshness_reason']);
 
 /**
- * The never-overwrite rule (A4): a write may replace a stored value only when
- * it is an `observe` write to an observation leaf. Reviewed revisions and the
- * first observed endpoint attainment are never rewritten by an observation.
+ * The never-overwrite rule (A4), structural rather than by leaf name: a
+ * stored value may be replaced only by an `observe` write at one of the
+ * observation paths —
+ *
+ * - `oat_deliveries[d].members[i].{observed_head, observed_base, status}`;
+ * - `oat_deliveries[d].status`, only while the stored value is `open`;
+ * - `oat_deliveries[d].integrated_review.disposition`;
+ * - `oat_milestone_gates[m].{plan, exit}.{freshness, freshness_reason}`.
+ *
+ * Every other path — reviewed revisions, member bases, frozen scopes, review
+ * identities, carrier outcomes and the first endpoint attainment — is
+ * historical evidence and is written only while unset.
  */
-function mayReplaceStoredValue(write: ObservationWrite): boolean {
-  const leaf = write.path.at(-1);
-  return (
-    write.mode === 'observe' &&
-    typeof leaf === 'string' &&
-    OBSERVATION_LEAVES.has(leaf)
-  );
+function mayReplaceStoredValue(
+  write: ObservationWrite,
+  stored: unknown,
+): boolean {
+  if (write.mode !== 'observe') return false;
+  const [root, , ...rest] = write.path;
+  if (root === 'oat_deliveries') {
+    if (
+      rest.length === 3 &&
+      rest[0] === 'members' &&
+      typeof rest[1] === 'number' &&
+      typeof rest[2] === 'string' &&
+      MEMBER_OBSERVATION_LEAVES.has(rest[2])
+    ) {
+      return true;
+    }
+    if (rest.length === 1 && rest[0] === 'status') {
+      return stored === 'open';
+    }
+    return (
+      rest.length === 2 &&
+      rest[0] === 'integrated_review' &&
+      rest[1] === 'disposition'
+    );
+  }
+  if (root === 'oat_milestone_gates') {
+    return (
+      rest.length === 2 &&
+      (rest[0] === 'exit' || rest[0] === 'plan') &&
+      typeof rest[1] === 'string' &&
+      CARRIER_FRESHNESS_LEAVES.has(rest[1])
+    );
+  }
+  return false;
 }
 
 export interface DeliveryRefreshResult {
@@ -509,7 +537,13 @@ export function applyObservationWrites(
     const path = resolvePath(document, write.path);
     if (path === null) continue;
     const current = document.getIn(path, true);
-    if (!isUnsetNode(current) && !mayReplaceStoredValue(write)) {
+    if (
+      !isUnsetNode(current) &&
+      !mayReplaceStoredValue(
+        write,
+        isScalar(current) ? current.value : document.getIn(path),
+      )
+    ) {
       continue;
     }
     const previous = document.getIn(path);

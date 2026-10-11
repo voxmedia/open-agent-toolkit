@@ -316,6 +316,57 @@ describe('oat project delivery refresh', () => {
       expect(result.applied).toHaveLength(1);
     });
 
+    it('refuses a status or disposition leaf outside the observation paths', () => {
+      const reviewed = 'a'.repeat(40);
+      const content = goalState(
+        `oat_milestone: m01\n${registryYaml({
+          reviewed,
+          base: 'b'.repeat(40),
+          status: 'at_endpoint',
+          memberStatus: 'merged',
+        })}`,
+      );
+      const d01Ref = { deliveryId: 'd01' };
+      const m01 = { milestone: 'm01' };
+      const result = applyObservationWrites(content, [
+        // Carrier outcome fields share the leaf names but are evidence.
+        {
+          path: ['oat_milestone_gates', m01, 'exit', 'status'],
+          value: 'blocked',
+          mode: 'observe',
+        },
+        {
+          path: ['oat_milestone_gates', m01, 'exit', 'disposition'],
+          value: 'failed',
+          mode: 'observe',
+        },
+        // A delivery past `open` never regresses.
+        {
+          path: ['oat_deliveries', d01Ref, 'status'],
+          value: 'open',
+          mode: 'observe',
+        },
+        // The member observation path still updates.
+        {
+          path: ['oat_deliveries', d01Ref, 'members', 0, 'status'],
+          value: 'closed',
+          mode: 'observe',
+        },
+      ]);
+      const parsed = frontmatter(result.content);
+      const gates = parsed['oat_milestone_gates'] as Record<
+        string,
+        Record<string, Record<string, unknown>>
+      >;
+      expect(gates['m01']!['exit']).toMatchObject({
+        status: 'allowed',
+        disposition: 'no_gate',
+      });
+      expect(d01(result.content)).toMatchObject({ status: 'at_endpoint' });
+      expect(member(result.content)).toMatchObject({ status: 'closed' });
+      expect(result.applied).toHaveLength(1);
+    });
+
     it('refuses to write milestone status or goal recovery', () => {
       const content = goalState(
         'oat_milestone: m01\noat_milestone_status: delivered',

@@ -1331,9 +1331,10 @@ describe('help output snapshots', () => {
         refresh [options]  Observe registered goal delivery members with gh and
                            persist observations, endpoint attainment and derived
                            staleness in state.md
-        check [options]    Report integrated-review and exit-carrier freshness for a
-                           goal milestone or delivery under the bookkeeping-successor
-                           contract (read-only)
+        check [options]    Report integrated-review and milestone exit-carrier
+                           freshness for a goal milestone or delivery under the
+                           bookkeeping-successor contract (read-only; status
+                           undeliverable and exit 1 when not deliverable)
         help [command]     display help for command
       "
     `);
@@ -1375,8 +1376,9 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat project delivery check [options]
 
-      Report integrated-review and exit-carrier freshness for a goal milestone or
-      delivery under the bookkeeping-successor contract (read-only)
+      Report integrated-review and milestone exit-carrier freshness for a goal
+      milestone or delivery under the bookkeeping-successor contract (read-only;
+      status undeliverable and exit 1 when not deliverable)
 
       Options:
         --project <path>  Goal project path

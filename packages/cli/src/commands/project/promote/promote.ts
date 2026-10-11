@@ -592,7 +592,8 @@ const GOAL_HISTORY_KEYS = [
 /**
  * A goal promotes only at a settled delivery boundary: the active milestone
  * is `delivered`, every registry entry is `at_endpoint` or `superseded` (none
- * `registering` or `open`), and no recovery is pending. Extracted phases are
+ * `registering` or `open`; an empty registry is not settled), and no recovery
+ * is pending. Extracted phases are
  * refused by the shared migration. Returns the refusal, or null when settled.
  */
 export function goalPromotionRefusal(
@@ -621,8 +622,11 @@ export function goalPromotionRefusal(
         ? String((entry as Record<string, unknown>)['delivery_id'] ?? '?')
         : '?',
     );
+  // `delivered` means registered, open and review-ready (B4): a delivered
+  // milestone with no registry entry is contradictory, never vacuously settled.
   if (
-    (registry !== null && registry !== undefined && !Array.isArray(registry)) ||
+    !Array.isArray(registry) ||
+    entries.length === 0 ||
     unsettled.length > 0
   ) {
     return {
