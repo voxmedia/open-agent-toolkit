@@ -96,6 +96,10 @@ Phase p07 review round 1 passed (0/0/0/4 Low); all four Lows fixed as p07-t04 on
 
 Each HOME=$(mktemp -d) vitest run leaves about 48 MB of cache under $TMPDIR; 87 such dirs (3.3 GB) brought the volume to 370 MiB free mid-group-2. Swept 71 stale ones; later briefs mandate one fake HOME per run. Candidate guidance for the implement skill and AGENTS.md. Key friction-isolated-home-tmp-growth.
 
+### 2026-10-11 · structural · oat-project-implement · 5b334a4e7
+
+Phase p08 review round 1 passed (0/0/0/2 Low); both Lows fixed as p08-t07 on the same handle at 5b334a4e7. All gates green at 0.3.19 (origin/main 0.3.18 merged at bf6c60c49). v1 brief seam complete; progress PR for p01–p08 awaits the user-invoked oat-project-pr-progress; Astra v1.5 round 1 dispatched. Key p08-review-pass-5b334a4e7.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

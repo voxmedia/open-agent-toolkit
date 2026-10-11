@@ -545,11 +545,12 @@ oat_generated: false
 
 ## Phase 8: Contracts, integration, docs, records and the v1 progress PR
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
+**Completed:** 2026-10-11
 
 **Base:** f5481541727e021804b19595bbb732b2ecd448f1
-**Head:** 6d60af35bb29566b61ab095094c5fe63750aefad
+**Head:** 5b334a4e79c3630067fd159425f72bcda8e0ddbd (fix round 1; candidate head 6d60af35bb29566b61ab095094c5fe63750aefad at review)
 **Executor:** phase-implementer:impl-p08-057027cb (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (fan-in after group 2); origin/main (0.3.18, #358, #359) merged at bf6c60c49 before launch, no file overlap
 
 ### Task p08-t01: Skill contract tests and autonomy coverage for brief
@@ -606,6 +607,14 @@ oat_generated: false
 - **Files changed:** lockstep 0.3.18 → 0.3.19 in the five public `package.json` files and `public-package-versions.json` (origin/main re-fetched: still 0.3.18 at 417a34c57); roles `oat-phase-implementer` 1.1.7 → 1.1.8, `oat-reviewer` 1.2.11 → 1.2.12; 27 skill `metadata.version` bumps (brainstorm 1.3.9, docs 1.0.5, pjm-review-backlog 1.6.4, autonomous 1.0.20, capture 1.0.5, complete 1.7.16, discover 2.2.10, dispatch-subagents 1.1.8, document 1.8.9, implement 2.3.19, import-plan 1.4.21, lite 1.1.9, new 1.4.4, next 1.1.6, plan 1.4.18, plan-writing 1.2.36, pr-final 1.6.10, pr-progress 1.3.3, progress 1.4.6, promote-spec-driven 1.2.6, quick-start 2.3.20, reconcile 1.0.5, review-provide 1.5.14, review-receive 1.6.10, revise 1.0.6, summary 1.5.9, wave-execute 1.9.8; oat-project-brief new at 1.0.0); 56 version pins (54 skills.test.ts, 2 review-skill-contracts.test.ts; coincidental same-number pins for worktree-bootstrap(-auto), wrap-up and recon left alone); projections regenerated, manifest `oatVersion` 0.3.19
 - **Verification (gate table, explicit exit codes):** check 0 · type-check 0 · test 0 · build 0 · check:skill-bumps 0 (30 changed skills/roles) · release:check-versions 0 · release:validate 0 (5 packages) · build:docs 0 (cache replay; forced rerun 0 cached also 0) · forced turbo test 0 (0 cached, no FULL TURBO; CLI 8465, control-plane 200) · test:smoke 0 (163) · test:skills 0 (700) · test:scripts 0 (1) · lint 0 · format 0; check:skill-bumps, release:check-versions and oat:validate-skills re-run green at HEAD; free disk ≥ 3.5 GB throughout; root confirmed the gate logs' tails and `FULL TURBO` count 0 in the forced test log
 
+### Task p08-t07: (review) Brief arrival point in the brainstorm docs and the gate template comment
+
+**Status:** completed
+**Commit:** 5b334a4e7
+
+- **Files changed:** apps/oat-docs/docs/workflows/projects/lifecycle.md:673 (Brief users arrive at `oat-project-brief` with the research note and the scaffolded plan.md); .oat/templates/state.md:85 ("read back by no route"); `packages/cli/assets/templates/state.md` is gitignored (not one of the force-tracked brief templates) and was refreshed locally only
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p08-fix-1`; `pnpm --filter oat-docs check`, gate-approval-record + help-snapshot suites (75/75), validate-skills, format:root — exit 0 (root re-ran all four); tree clean; no re-review (Low-only on a passing review); no version bump (lockstep already above origin/main)
+
 ### Review Received: p08
 
 **Date:** 2026-10-11
@@ -618,6 +627,8 @@ oat_generated: false
 - L2 `.oat/templates/state.md:85` `oat_brief_gate` comment "read back by nothing" contradicts the progress skill's `Brief Gate:` line → converted: p08-t07 (Negligible).
 
 **New tasks added:** p08-t07 (same handle, fix mode; no re-review for a passing review per Step 7b; root verifies).
+
+**Disposition:** passed at 5b334a4e7; artifact archived at reviews/archived/p08-review-2026-10-11T070155Z.md. v1 (brief) is complete at this head; the progress PR for p01–p08 is opened through `oat-project-pr-progress` (user-invoked) and the Astra v1.5 plan-revision round precedes p09.
 
 ---
 
@@ -804,6 +815,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f5481541727e021804b19595bbb732b2ecd448f1, p07 closeout plus the friction log; the dispatch-plan commit sits between base and the first task commit; p08-t01..t06 in the root checkout)
 - Launch status: accepted → child outcome: completed (DONE); head 6d60af35b; commits 57dec6702, 5f27b8bc3, ce7c57cf8, b322db3c1, 0349cdd45, 6d60af35b; earlier-phase files edited for pin consistency are listed per task
+- Review round 1 (rev-p08-6b8f9c86, Fable 5.1 high at the frontier cap): 0/0/0/2 Low → pass; `cont-brief-goal-workflow-modes-p08-fix-1` → 5b334a4e7; phase p08 closed at 5b334a4e7 (v1 brief seam complete)
 
 <!-- orchestration-runs-end -->
 
