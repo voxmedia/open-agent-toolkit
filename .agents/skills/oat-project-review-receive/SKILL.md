@@ -385,6 +385,45 @@ Applies to `code` reviews only. (`artifact` reviews are handled via Step 2.6, th
 3. If scope is `pNN-pMM` (contiguous phase range): add fix tasks to the last phase in the range (`pMM`)
 4. If scope is `final` or SHA/range review: add fix tasks to a new "Review Fixes" phase or the last phase
 
+**Brief modes (`oat_workflow_mode: brief`).** The brief never carries planned
+tasks, so fix work becomes execution records in the journal and
+`oat-project-brief/references/brief-contract.md` (sections 3, 7, and 10) wins
+where this skill differs. Resolve the target phase and apply the late-fix rule:
+
+1. **Reviewed phase.** For `pNN` or `p-revN`, the reviewed phase is that
+   phase. For `pNN-pMM`, `final`, or an explicit SHA range, it is the last
+   phase in the artifact's ordered `oat_review_phase_ids`; when that field is
+   absent or empty, it is the last phase in document order whose journal
+   section has a `**Base:**`.
+2. **Late-fix rule.** If no later phase in document order has a `**Base:**`
+   in `implementation.md`, the fixes go under the reviewed phase, whose
+   journal `**Status:** completed` line is rewritten to `**Status:** in_progress`
+   (an `in_progress` phase stays `in_progress`). Its `**Base:**` never changes;
+   the fix commits advance its `**Head:**` when the phase ends again.
+3. Otherwise a later phase has started: append a revision phase with the next
+   unused `p-revN` ID. In `plan.md`, add it after the last phase block (before
+   `## Parallelism` when present) in the exact phase grammar plus the marker:
+
+   ```markdown
+   ## Phase p-revN: Review fixes for pNN
+
+   **Intent:** resolve {finding IDs} from reviews/archived/{REVIEW_FILENAME}
+   **Exit evidence:** a passing re-review of p-revN that re-evaluates pNN's findings
+   **Provisional:** no
+   **Corrects:** pNN
+   ```
+
+   In `implementation.md`, add the matching `## Phase p-revN: Review fixes for pNN`
+   section after the last phase section with `**Status:** pending` and
+   `**Corrects:** pNN` directly under the heading, and a Progress Overview row.
+   Add a pending `p-revN` `code` row to the brief's `## Reviews` table and
+   update the `## Implementation Complete` phase total. The corrected phase
+   keeps its original anchors and status.
+
+Never write `### Task` headings into the brief, and never write `**Base:**` or
+`**Head:**`: `oat-project-implement` records anchors when the phase starts and
+ends.
+
 ### Step 4: Determine Next Task IDs
 
 Read plan.md to find the last task ID in the target phase:
@@ -413,6 +452,12 @@ Derive `TASK_PREFIX` from scope:
 
 - Find highest task number in target phase using the correct `TASK_PREFIX` (e.g., `prev1-t02`)
 - New tasks continue sequentially: `prev1-t03`, `prev1-t04`, etc.
+
+In brief modes read the execution records under the target phase's section of
+`implementation.md` instead of `plan.md`
+(`^### Task ${TASK_PREFIX}-t[0-9]+:` inside that section). Record IDs take the
+next free ordinal and are never reused, including failed, cancelled, and
+no-change records. A new revision phase starts at `prevN-t01`.
 
 ### Step 5: Convert Findings to Tasks
 
@@ -462,6 +507,26 @@ guard instead of the branch commit template above.
 - Prefix with `(review)` to indicate review-generated task
 - Use active verb: "Fix...", "Add...", "Update..."
 
+**Brief modes:** record each Critical, High, and Medium finding (and each Low
+the disposition converts) as an execution record under the target phase in
+`implementation.md`, after that phase's existing records, instead of a plan
+task:
+
+```markdown
+### Task {task_id}: (review) {Finding title}
+
+**Status:** pending
+**Source review:** reviews/archived/{REVIEW_FILENAME} ({finding IDs})
+
+Intent: {issue description and fix guidance from the review}
+Files: `{file from finding}`
+Proof: `{verification command from review or standard test command}`
+```
+
+The executor fills `**Executor:**`, the live handle, and the closing
+`**Commit:**` when the work runs, and commits with `fix({task_id}): …` so the
+message keeps `(pNN-tNN)`. Queued records never change phase totals.
+
 ### Step 6: Update Plan.md
 
 Add new tasks to plan.md in the target phase. When adding or editing tasks, preserve/restore shared `plan.md` invariants per the `oat-project-plan-writing` contract (stable task IDs, required sections, review table preservation, accurate `## Implementation Complete` totals).
@@ -483,6 +548,19 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
     row as only five or eight cells.
   - Update `## Implementation Complete` totals (phase counts + total task count) so downstream PR/review summaries don’t go stale.
   - If the plan includes any phase rollups that reference task counts, update those too.
+
+In brief modes `plan.md` changes only in its `## Reviews` table and, under the
+late-fix rule, by an appended `## Phase p-revN:` block; there are no task
+totals to update. The Reviews event update below is unchanged: the same
+artifact-identified event moves to `fixes_added` with its `Reviewed Head`,
+`Invocation`, and `Gate Target` provenance preserved, and the archived
+artifact keeps its brief anchor record fields (`oat_review_requested_scope`,
+`oat_review_phase_ids`, `oat_review_base_sha`, `oat_review_scope_source`, and
+any `oat_review_fallback_reason`, `oat_review_integration_commits`, and
+`oat_review_narrowed_from`) unchanged. When a `p-revN` review is received with
+no fixes needed, its own event moves to `passed` and the event of the phase
+named by its `**Corrects:**` line that this skill set to `fixes_added` also
+moves to `passed`, citing the revision review in the implementation note.
 
 **Keep plan runnable:**
 
@@ -563,6 +641,13 @@ After the fix tasks are complete:
     - `oat_phase_status: in_progress`
     - `oat_current_task: {first_fix_task_id}` (or next incomplete)
     - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+  - In brief modes, write the `### Review Received: {scope}` note inside the
+    target phase's journal section after its markers, list the queued
+    execution-record IDs as the new tasks, set both `oat_current_task_id` in
+    `implementation.md` and `oat_current_task` in `state.md` to the target
+    phase ID (the reviewed phase, or the new `p-revN`), and update that phase's
+    Progress Overview row status. The phase-unit totals change only when a
+    revision phase was appended.
 
 ### Step 7.5: Archive the Consumed Review Artifact
 
