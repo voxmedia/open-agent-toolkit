@@ -8,7 +8,7 @@ oat_external_plan_sources:
 oat_external_plan_commit: 0702df1305492a4886ee5d97be744b35a3633e55
 oat_external_plan_main_commit: 0702df1305492a4886ee5d97be744b35a3633e55
 oat_external_plan_date: '2026-10-10'
-oat_execution_status: IMPLEMENTED
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260928-serialize-concurrent-agents-md
 oat_issue_url: null
@@ -21,7 +21,7 @@ created: '2026-10-11T00:17:45Z'
 > `plan.md`. Execute directly when authorized, or optionally import with
 > `oat-project-import-plan .oat/repo/reference/external-plans/2026-10-10-serialize-agents-md-guidance-appends.md`. Begin with the drift check.
 >
-> **Execution status: IMPLEMENTED.** Capability code and regression evidence are committed on `feat/october-backlog-fixes`; independent PR review remains pending.
+> **Execution readiness: READY.** Implementation is complete: capability code and regression evidence are committed on `feat/october-backlog-fixes`; independent PR review remains pending.
 
 ## Source and live evidence
 
