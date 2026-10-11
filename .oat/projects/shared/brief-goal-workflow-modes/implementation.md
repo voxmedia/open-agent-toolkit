@@ -176,6 +176,20 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Review Received: p03 (parallel group 1, pre-fan-in)
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p03-review-2026-10-11T032218Z.md (produced in the p03 worktree; copied into the root archive at fan-in)
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p03-2f0c98db`, invocation auto, reviewed head 2a5c52f241e48395054efb6399b101a257eaa801, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 0, Low 2 → phase review passes; auto-disposition mode.
+
+- L1 `implementation-brief.md` lists `extracted` without the `**Extracted to:**` companion → converted: p03-t03 (Negligible).
+- L2 grammar example in an HTML comment with bare marker lines → converted: p03-t03 (fence it) (Negligible).
+- Cross-lane notes for p06/p07 (renamed Progress Overview and Deviations columns in the brief journal template; `[] = none` relies on plan-and-resume Step 2.5) carried to those phases.
+
+**New tasks added:** p03-t03. **Next:** resume the p03 implementer (request impl-p03-735f410f) in fix mode; re-review round 2; ledger rows at fan-in.
+
 ---
 
 ## Phase 4: Plan profiles and promotion
