@@ -521,6 +521,10 @@ Resolution order in `oat-project-review-provide` for brief modes:
      project branch; the group's aggregate head is the last integration
      merge. Integration and conflict-resolution commits are inside the
      range and are listed to the reviewer as integration commits.
+     A group member's per-phase review runs before fan-in on
+     `EXPECTED_HEAD..<worktree head from the phase report>` with
+     `oat_review_scope_source: anchors`; the fan-in anchors govern
+     `pNN-pMM` and `final` scopes.
    - Range = `firstBase..H`. Coverage holds by construction: `H` contains
      every phase head, and every phase base is inside or at the start.
 4. **Missing anchors** (any selected phase lacks `**Base:**` or

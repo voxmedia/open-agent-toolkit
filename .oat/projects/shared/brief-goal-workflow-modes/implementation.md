@@ -456,6 +456,19 @@ oat_generated: false
 
 **New tasks added:** p06-t04, p06-t05 (same handle, fix mode; re-review round 2 scoped to the fix commits because a Medium was converted).
 
+### Review Received: p06 (round 2)
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p06-review-2026-10-11T052142Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p06-dc4c4725` round 2, invocation auto, reviewed head eebab37c3aa981c0f773ae85f39d5b9e7e7d29f2, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 0, Low 2 → phase review passes; round-1 M1, L2, L3 resolved with evidence; auto-disposition mode.
+
+- L1 the anchor pre-check sentence at phase-execution.md:109 is still unqualified for group members → converted: p06-t06 (Negligible; same handle, no re-review).
+- L2 brief-contract.md:214-230 and design.md "Parallel continuity" have no rung for the pre-fan-in member review → design.md sentence added in this bookkeeping; brief-contract.md:224 sentence carried to p08-t02 (outside p06's write set).
+
+**New tasks added:** p06-t06.
+
 ---
 
 ## Phase 7: Review, record and closeout skills

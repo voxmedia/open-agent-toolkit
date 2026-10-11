@@ -864,6 +864,35 @@ git commit -m "fix(p06-t05): remove the stale empty-list sentence and the duplic
 
 ---
 
+### Task p06-t06: (review) Scope the anchor pre-check to sequential phases
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md` ("Fresh reviewer on anchors", the pre-check sentence near `:109-111`)
+
+**Step 1: Understand the issue**
+
+Review finding (p06 review round 2, Low): the pre-check "Before dispatch, verify that both anchors exist and that `**Base:**` is an ancestor of `**Head:**`; a failed check routes to `oat-project-reconcile` and is never narrowed" is still unqualified, so a literal reader routes a parallel-group member (which has no journal anchors at step 5) to reconcile despite the range sentence that follows.
+Location: `.agents/skills/oat-project-implement/references/phase-execution.md:109-111`
+
+**Step 2: Implement fix**
+
+Scope the pre-check in place: "For a sequential phase, before dispatch verify that both anchors exist and that `**Base:**` is an ancestor of `**Head:**`; a failed check routes to `oat-project-reconcile` and is never narrowed. For a parallel-group member, step 3's check that the worktree head descends from `EXPECTED_HEAD` stands in for that pre-check, and the per-phase Review Scope range is …" followed by the existing range sentence. Skill reference only; no projection regeneration.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm format:root`
+Expected: pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/references/phase-execution.md
+git commit -m "fix(p06-t06): scope the anchor pre-check to sequential phases"
+```
+
+---
+
 ## Phase 7: Review, record and closeout skills
 
 ### Task p07-t01: Review scope from anchors in review-provide
@@ -957,7 +986,7 @@ git commit -m "test(p08-t01): skill contract and autonomy coverage for brief mod
 - Modify: `packages/cli/src/commands/project/promote/promote.ts` (command description mentions brief) and `packages/cli/src/commands/help-snapshots.test.ts` (`:1188` description)
 - Modify: `.oat/templates/state.md` (`oat_brief_gate` commented block beside `oat_quick_start_gate`)
 - Modify: `.oat/templates/implementation-brief.md` (carried from the p06 review: add an `**Outcomes audit:**` slot under `## Final Summary (for PR/docs)`; reword the `**Head:**` placeholder at `:56` to "recorded when the phase's work ends, before its review")
-- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md` (carried from the p06 review: `:72` states the ownership decision once — `**Base:**` written by the root in the phase-start commit, `**Head:**` by the committing owner when the phase ends, `**Status:** completed` only by the root at acceptance)
+- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md` (carried from the p06 review round 2: after `:224` add "A group member's per-phase review runs before fan-in on `EXPECTED_HEAD..<worktree head>` with `oat_review_scope_source: anchors`; the fan-in anchors govern `pNN-pMM` and `final`"; carried from the p06 review: `:72` states the ownership decision once — `**Base:**` written by the root in the phase-start commit, `**Head:**` by the committing owner when the phase ends, `**Status:** completed` only by the root at acceptance)
 
 **Verify:** `git ls-files .claude/skills/oat-project-brief` lists the link; `pnpm --filter @open-agent-toolkit/control-plane build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts` passes.
 
@@ -1148,29 +1177,30 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head                            | Invocation | Gate Target        |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------ |
-| p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T024911Z.md                                                                                                                                                                   | 2ac285d80a0035837150bd77943331a86f51db29 | auto       | -                  |
-| p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T030140Z.md                                                                                                                                                                   | f73b4e904b96de4be741daf526d0afcacfdbe05c | auto       | -                  |
-| p02    | code     | passed          | 2026-10-11 | reviews/archived/p02-review-2026-10-11T031650Z.md                                                                                                                                                                   | 2826da694b6dce2df126f36599d97b7daecac265 | auto       | -                  |
-| p02    | code     | passed          | 2026-10-11 | reviews/archived/p02-review-2026-10-11T032434Z.md                                                                                                                                                                   | d0e1f817ec779d27af4accf8882090d817083c5d | auto       | -                  |
-| p03    | code     | passed          | 2026-10-11 | reviews/archived/p03-review-2026-10-11T032218Z.md                                                                                                                                                                   | 2a5c52f241e48395054efb6399b101a257eaa801 | auto       | -                  |
-| p03    | code     | passed          | 2026-10-11 | reviews/archived/p03-review-2026-10-11T033254Z.md                                                                                                                                                                   | ca17285004fa03fc011272636199a6efce891a9c | auto       | -                  |
-| p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T033122Z.md                                                                                                                                                                   | 449cdc606a162b5e90966114e35479843c8c7506 | auto       | -                  |
-| p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T035054Z.md                                                                                                                                                                   | 7e3966dcc47c53dbdd6a693789fb82c96c6bc936 | auto       | -                  |
-| p05    | code     | passed          | 2026-10-11 | reviews/archived/p05-review-2026-10-11T043436Z.md                                                                                                                                                                   | a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8 | auto       | fixes at c86f8558c |
-| p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T051021Z.md                                                                                                                                                                   | 95a3a0bfa1dacc87935512dab62308a04338dacc | auto       | -                  |
-| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                  |
-| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -                                        | auto       | -                  |
-| plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -                                        | gate       | codex-6-sol-xhigh  |
-| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -                                        | -          | -                  |
+| Scope  | Type     | Status          | Date       | Artifact                                                                                                                                                                                                            | Reviewed Head                            | Invocation | Gate Target                         |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------------- |
+| p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T024911Z.md                                                                                                                                                                   | 2ac285d80a0035837150bd77943331a86f51db29 | auto       | -                                   |
+| p01    | code     | passed          | 2026-10-11 | reviews/archived/p01-review-2026-10-11T030140Z.md                                                                                                                                                                   | f73b4e904b96de4be741daf526d0afcacfdbe05c | auto       | -                                   |
+| p02    | code     | passed          | 2026-10-11 | reviews/archived/p02-review-2026-10-11T031650Z.md                                                                                                                                                                   | 2826da694b6dce2df126f36599d97b7daecac265 | auto       | -                                   |
+| p02    | code     | passed          | 2026-10-11 | reviews/archived/p02-review-2026-10-11T032434Z.md                                                                                                                                                                   | d0e1f817ec779d27af4accf8882090d817083c5d | auto       | -                                   |
+| p03    | code     | passed          | 2026-10-11 | reviews/archived/p03-review-2026-10-11T032218Z.md                                                                                                                                                                   | 2a5c52f241e48395054efb6399b101a257eaa801 | auto       | -                                   |
+| p03    | code     | passed          | 2026-10-11 | reviews/archived/p03-review-2026-10-11T033254Z.md                                                                                                                                                                   | ca17285004fa03fc011272636199a6efce891a9c | auto       | -                                   |
+| p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T033122Z.md                                                                                                                                                                   | 449cdc606a162b5e90966114e35479843c8c7506 | auto       | -                                   |
+| p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T035054Z.md                                                                                                                                                                   | 7e3966dcc47c53dbdd6a693789fb82c96c6bc936 | auto       | -                                   |
+| p05    | code     | passed          | 2026-10-11 | reviews/archived/p05-review-2026-10-11T043436Z.md                                                                                                                                                                   | a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8 | auto       | fixes at c86f8558c                  |
+| p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T051021Z.md                                                                                                                                                                   | 95a3a0bfa1dacc87935512dab62308a04338dacc | auto       | -                                   |
+| p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T052142Z.md                                                                                                                                                                   | eebab37c3aa981c0f773ae85f39d5b9e7e7d29f2 | auto       | round 2; fixes e2fd29c93, 578e88b0c |
+| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                   |
+| plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -                                        | auto       | -                                   |
+| plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                         | -                                        | gate       | codex-6-sol-xhigh                   |
+| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -                                        | -          | -                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1185,7 +1215,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 3: 3 tasks - Templates with bundle registration, scaffold behavior, one review fix
 - Phase 4: 6 tasks - Plan profiles, brief → quick promotion, four review fixes
 - Phase 5: 3 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills; one review fix
-- Phase 6: 5 tasks - Implement references, agent roles and projections, quick-start resume contract; two review fixes
+- Phase 6: 6 tasks - Implement references, agent roles and projections, quick-start resume contract; three review fixes
 - Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
 - Phase 8: 6 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR)
 - Phase 9: 2 tasks - Goal registration and routing (v1.5)
@@ -1193,7 +1223,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 45 tasks**
+**Total: 46 tasks**
 
 Ready for code review and merge.
 
