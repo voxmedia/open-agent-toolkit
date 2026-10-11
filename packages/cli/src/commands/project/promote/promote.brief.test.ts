@@ -632,6 +632,29 @@ describe('oat project promote: brief → quick', () => {
     );
   });
 
+  it('demotes only real Approach subheadings, never fenced example lines', async () => {
+    const plan = MIXED_PLAN.replace(
+      'Render through the existing pipeline.',
+      [
+        'Render through the existing pipeline.',
+        '',
+        '```markdown',
+        '### not a heading',
+        '```',
+      ].join('\n'),
+    );
+    const { repoRoot, projectPath, projectRoot } = await seed({ plan });
+    const { command } = createHarness(repoRoot);
+
+    await runPromote(command, projectPath);
+
+    const discovery = await read(projectRoot, 'discovery.md');
+    expect(discovery).toMatch(/^#### Design$/m);
+    expect(discovery).not.toMatch(/^### Design$/m);
+    expect(discovery).toContain('```markdown\n### not a heading\n```');
+    expect(discovery).not.toContain('#### not a heading');
+  });
+
   it('keeps the promoted plan not ready while phases still need tasks', async () => {
     const { repoRoot, projectPath, projectRoot } = await seed();
     const { command } = createHarness(repoRoot);

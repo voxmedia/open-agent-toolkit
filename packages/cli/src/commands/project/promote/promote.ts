@@ -1100,10 +1100,18 @@ function renderBriefDiscovery(
 /**
  * Carry the brief's `## Approach` into discovery's `## Solution Space` as the
  * `### Chosen Direction` body. Headings inside the approach (for example
- * `### Design`) are demoted one level so they stay under Chosen Direction.
+ * `### Design`) are demoted one level so they stay under Chosen Direction;
+ * lines inside fenced or indented code are left byte-for-byte.
  */
 function renderChosenDirection(content: string, approach: string): string {
-  const body = approach.replace(/^(#{3,5})(?=[ \t])/gm, '#$1').trim();
+  const approachLines = approach.split('\n');
+  const mask = recordLineMask(approachLines);
+  const body = approachLines
+    .map((line, index) =>
+      mask[index] ? line.replace(/^(#{3,5})(?=[ \t])/, '#$1') : line,
+    )
+    .join('\n')
+    .trim();
   const chosen = /^### Chosen Direction[ \t]*$/m.exec(content);
   if (chosen) {
     const bodyStart = chosen.index + chosen[0].length;
