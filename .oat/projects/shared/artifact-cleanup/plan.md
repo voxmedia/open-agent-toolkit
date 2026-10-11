@@ -227,6 +227,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 | final  | code     | pending  | -          | -                                  | -             | -          | -                                                             |
 | design | artifact | received | 2026-10-11 | references/astra-design-round-1.md | fd158b6f5     | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13   |
 | design | artifact | received | 2026-10-11 | references/astra-design-round-2.md | e07fa3be7     | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded |
+| design | artifact | passed   | 2026-10-11 | references/astra-design-round-3.md | c2648e860     | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced |
 | plan   | artifact | pending  | -          | -                                  | -             | -          | -                                                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
@@ -252,6 +253,6 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (lightweight design, revision 3; Astra rounds in `references/astra-design-round-{1,2,3}.md`)
+- Design: `design.md` (lightweight design, revision 3 final; Astra rounds in `references/astra-design-round-{1,2,3}.md`)
 - Discovery: `discovery.md` (D1–D14)
 - Evidence (machine-local): `.oat/repo/analysis/2026-10-11-archived-artifact-audit.md`, `…-sol-review.md`
