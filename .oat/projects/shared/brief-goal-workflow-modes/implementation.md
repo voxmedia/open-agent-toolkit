@@ -157,7 +157,7 @@ oat_generated: false
 - M1 provisional-unit guard clause not proven by its test (fixture always `completed: 0`) → converted: p02-t04 (Minor). Agree: a test that cannot fail is not evidence.
 - L1 router-authority note printed in every brief phase → converted: p02-t05 (Negligible).
 
-**New tasks added:** p02-t04, p02-t05. **Next:** resume the p02 implementer (request impl-p02-a7c1a9c0) in fix mode in its worktree; re-review round 2 on the updated range; ledger rows at fan-in.
+**New tasks added:** p02-t04, p02-t05. **Fix continuation:** cont-brief-goal-workflow-modes-p02-fix-1 on the original handle → 8595e103e (p02-t04), d0e1f817e (p02-t05); root re-verified router.test 60/60 and generate.test 48/48. **Round 2:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p02-r2-766d0616`, reviewed head d0e1f817ec779d27af4accf8882090d817083c5d, artifact reviews/archived/p02-review-2026-10-11T032434Z.md, reconnaissance not-attempted): 0 critical, 0 high, 0 medium, 0 low. **Lane verdict:** pass at d0e1f817e; fix-loop count 1; ledger rows and Reviews dispositions at fan-in.
 
 ---
 
