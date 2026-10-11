@@ -14,6 +14,7 @@ export const WORKFLOW_MODES = [
   'import',
   'lite',
   'brief',
+  'goal',
 ] as const;
 export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
@@ -22,7 +23,7 @@ export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
  * evidence instead of executable tasks, and progress is counted in
  * phase-units.
  */
-export const BRIEF_MODES = ['brief'] as const;
+export const BRIEF_MODES = ['brief', 'goal'] as const;
 export type BriefMode = (typeof BRIEF_MODES)[number];
 
 /** True when `mode` belongs to the brief mode family. */
@@ -108,6 +109,14 @@ export interface PhaseProgress {
    */
   provisional?: boolean;
   /**
+   * Goal mode only: the journal marks this phase `**Status:** extracted` with
+   * `**Extracted to:** <slug>`, so its obligation moved to the named child
+   * project. An extracted unit counts `{ total: 0, completed: 0 }`: it is
+   * excluded from aggregate totals and can never be an incomplete unit, while
+   * its identity stays visible to the outcome audit.
+   */
+  extracted?: { to: string };
+  /**
    * Brief modes only: execution records (`### Task` headings) under this
    * phase in `implementation.md`. Display metadata; never feeds
    * `total`/`completed`.
@@ -157,6 +166,253 @@ export type ProjectBlocker =
       since: string;
     };
 
+/** Goal milestone lifecycle status (`oat_milestone_status`). */
+export const MILESTONE_STATUSES = [
+  'aligning',
+  'implementing',
+  'reviewing',
+  'delivering',
+  'delivered',
+] as const;
+export type MilestoneStatus = (typeof MILESTONE_STATUSES)[number];
+
+/** Goal status (`oat_goal_status`). `declared_met` opens terminal closeout. */
+export const GOAL_STATUSES = ['active', 'declared_met'] as const;
+export type GoalStatus = (typeof GOAL_STATUSES)[number];
+
+/** Stage of an interrupted goal recovery (`oat_goal_recovery.stage`). */
+export const GOAL_RECOVERY_STAGES = [
+  'implementing',
+  'exit_gate',
+  'reviewing',
+  'receiving',
+  'delivering',
+] as const;
+export type GoalRecoveryStage = (typeof GOAL_RECOVERY_STAGES)[number];
+
+/**
+ * A persisted interrupted recovery (`oat_goal_recovery`, A1). Recovery of an
+ * older delivery names its milestone, delivery and ordered phase set
+ * explicitly and never moves the active milestone pointer.
+ */
+export interface GoalRecovery {
+  milestone: string;
+  delivery_id: string | null;
+  phase_ids: string[];
+  stage: GoalRecoveryStage;
+  review_artifact: string | null;
+}
+
+export type GoalAuditDisposition = 'met' | 'met_with_deferrals';
+export type GoalAuditPhaseDisposition =
+  | 'accepted'
+  | 'extracted'
+  | 'deferred'
+  | 'retired';
+export type GoalAuditOutcomeDisposition =
+  | 'met'
+  | 'extracted'
+  | 'deferred'
+  | 'retired';
+
+/** One phase entry of the terminal outcome audit (A3). */
+export interface GoalAuditPhaseEntry {
+  disposition: GoalAuditPhaseDisposition;
+  /** Required non-empty for `deferred` and `retired`. */
+  reason: string | null;
+  /** Required non-empty for `deferred` and `retired`. */
+  scope_decision_ref: string | null;
+}
+
+/** One outcome entry of the terminal outcome audit, bound to its text. */
+export interface GoalAuditOutcomeEntry {
+  disposition: GoalAuditOutcomeDisposition;
+  evidence_or_ref: string | null;
+  /** The numbered outcome's text as written in the brief. */
+  text: string;
+}
+
+/**
+ * The terminal outcome audit (`oat_goal_outcome_audit`, A3), written only by
+ * `oat-project-goal` after the user's explicit declaration.
+ */
+export interface GoalOutcomeAudit {
+  disposition: GoalAuditDisposition;
+  decided_at: string;
+  declaration_ref: string;
+  brief_identity: string;
+  phases: Record<string, GoalAuditPhaseEntry>;
+  outcomes: Record<string, GoalAuditOutcomeEntry>;
+}
+
+export type GoalAuditErrorCode =
+  | 'audit-missing'
+  | 'audit-malformed'
+  | 'audit-disposition-invalid'
+  | 'audit-field-missing'
+  | 'audit-phase-unknown'
+  | 'audit-phase-duplicate'
+  | 'audit-phase-omitted'
+  | 'audit-phase-disposition-invalid'
+  | 'audit-phase-not-accepted'
+  | 'audit-phase-not-extracted'
+  | 'audit-phase-contradictory'
+  | 'audit-deferral-reason-missing'
+  | 'audit-outcome-unknown'
+  | 'audit-outcome-duplicate'
+  | 'audit-outcome-omitted'
+  | 'audit-outcome-disposition-invalid'
+  | 'audit-outcome-text-changed'
+  | 'audit-outcome-evidence-missing'
+  | 'audit-met-with-deferrals';
+
+export interface GoalAuditError {
+  code: GoalAuditErrorCode;
+  message: string;
+  /** Phase id or outcome number the error is about, when it has one. */
+  subject?: string;
+}
+
+/**
+ * Result of the single audit predicate `validateGoalOutcomeAudit`. `audit` is
+ * the normalized audit when `valid`, otherwise `null`.
+ */
+export interface GoalOutcomeAuditValidation {
+  valid: boolean;
+  errors: GoalAuditError[];
+  audit: GoalOutcomeAudit | null;
+}
+
+/** A numbered outcome read from the brief's `## Outcomes` list. */
+export interface BriefOutcome {
+  number: string;
+  text: string;
+}
+
+/** One `## Milestones` row: a milestone and its ordered phase set. */
+export interface MilestoneMembershipRow {
+  milestoneId: string;
+  phaseIds: string[];
+}
+
+export type MilestoneMembershipErrorCode =
+  | 'milestones-missing'
+  | 'milestones-malformed'
+  | 'milestone-duplicate'
+  | 'milestone-empty'
+  | 'milestone-unknown-phase'
+  | 'phase-in-multiple-milestones'
+  | 'phase-without-milestone';
+
+export interface MilestoneMembershipError {
+  code: MilestoneMembershipErrorCode;
+  message: string;
+  milestoneId?: string;
+  phaseId?: string;
+}
+
+/**
+ * Milestone membership read from the brief's canonical `## Milestones` table
+ * (B1). Errors are surfaced, never dropped: a consumer must not select phase
+ * units for a scope while `errors` is non-empty.
+ */
+export interface MilestoneMembership {
+  /** The `## Milestones` section and its canonical table header exist. */
+  present: boolean;
+  milestones: MilestoneMembershipRow[];
+  errors: MilestoneMembershipError[];
+}
+
+/** Gate-approval-record core plus the milestone carrier fields (A2). */
+export interface MilestoneGateCarrier {
+  status: string | null;
+  resolution: string | null;
+  disposition: string | null;
+  config_fingerprint: string | null;
+  /** The head actually reviewed; null when no review occurred. */
+  reviewed_head: string | null;
+  /** The approved plan or code scope this resolution applies to. */
+  subject: { kind: string; scope: string[]; ref: string | null } | null;
+  decided_at: string | null;
+  /** Derived freshness written by its producers; never evaluated by the router. */
+  freshness: 'fresh' | 'stale' | null;
+  freshness_reason: string | null;
+}
+
+export interface MilestoneGates {
+  plan: MilestoneGateCarrier | null;
+  exit: MilestoneGateCarrier | null;
+}
+
+export type DeliveryEndpoint = 'open' | 'merged';
+export type DeliveryStatus =
+  | 'registering'
+  | 'open'
+  | 'at_endpoint'
+  | 'superseded';
+export type DeliveryMemberStatus = 'open' | 'merged' | 'closed';
+
+export interface DeliveryMember {
+  url: string | null;
+  base: string | null;
+  reviewed_head: string | null;
+  observed_head: string | null;
+  observed_base: string | null;
+  status: DeliveryMemberStatus | null;
+}
+
+export interface DeliveryIntegratedReview {
+  artifact: string | null;
+  scope: string[];
+  bound_revisions: {
+    member: number;
+    base: string | null;
+    head: string | null;
+  }[];
+  disposition: 'passed' | 'stale' | 'failed' | null;
+}
+
+/**
+ * First observed attainment of a delivery's agreed endpoint (A4). Preserved as
+ * historical evidence; later observations never overwrite it.
+ */
+export interface DeliveryEndpointAttainment {
+  observed_at: string | null;
+  members: {
+    url: string | null;
+    head: string | null;
+    base: string | null;
+    status: DeliveryMemberStatus | null;
+  }[];
+}
+
+/** One `oat_deliveries` registry entry. */
+export interface GoalDelivery {
+  delivery_id: string;
+  milestone: string | null;
+  /** Frozen on registration. */
+  scope: string[];
+  endpoint: DeliveryEndpoint | null;
+  kind: 'pr' | 'stack' | null;
+  status: DeliveryStatus | null;
+  /** Replacement link: the delivery that superseded this one. */
+  superseded_by: string | null;
+  /** Additive correction link; contributes no inherited coverage. */
+  corrects_delivery_id: string | null;
+  /** Replacement link: the direct predecessor whose scope this inherits. */
+  covers_scope_of: string | null;
+  lookup: {
+    repository: string | null;
+    head_branch: string | null;
+    head_sha_at_registration: string | null;
+  } | null;
+  members: DeliveryMember[];
+  integrated_review: DeliveryIntegratedReview | null;
+  /** The accepted exit-gate binding persisted with the delivery's evidence. */
+  exit_gate: MilestoneGateCarrier | null;
+  endpoint_attainment: DeliveryEndpointAttainment | null;
+}
+
 export interface ProjectState {
   name: string;
   path: string;
@@ -186,6 +442,22 @@ export interface ProjectState {
     stateUpdated: string;
   };
   recommendation: SkillRecommendation;
+  /**
+   * Goal mode only (absent for every other mode): the active milestone
+   * (`oat_milestone`), its status, the goal status, the raw terminal audit and
+   * its validation result, the pending recovery record, the delivery registry,
+   * the milestone gate carriers and the `## Milestones` membership with its
+   * errors.
+   */
+  milestone?: string | null;
+  milestoneStatus?: MilestoneStatus | null;
+  goalStatus?: GoalStatus | null;
+  goalOutcomeAudit?: Record<string, unknown> | null;
+  goalOutcomeAuditValidation?: GoalOutcomeAuditValidation | null;
+  goalRecovery?: GoalRecovery | null;
+  deliveries?: GoalDelivery[];
+  milestoneGates?: Record<string, MilestoneGates>;
+  milestoneMembership?: MilestoneMembership;
 }
 
 export interface ProjectSummary {

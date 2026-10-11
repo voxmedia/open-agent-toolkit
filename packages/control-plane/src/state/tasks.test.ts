@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  normalizePhaseId,
   parsePhaseMarkers,
   parseProvisionalPhaseIds,
   parseTaskProgress,
@@ -740,6 +741,73 @@ Summary prose without a phase status marker.
     expect(progress.phases[0]).not.toHaveProperty('extracted');
   });
 
+  it('reads an extracted goal phase as an extracted unit excluded from totals', () => {
+    const planContent = `## Phase p01: Research
+
+**Intent:** Learn.
+
+## Phase p02: Build
+
+**Intent:** Build.
+**Provisional:** yes
+
+## Phase p03: Ship
+
+**Intent:** Ship.
+`;
+    const implementationContent = `## Phase p01: Research
+
+**Status:** completed
+
+## Phase p02: Build
+
+**Status:** extracted
+**Extracted to:** build-child
+
+## Phase p03: Ship
+
+**Status:** extracted
+`;
+
+    const progress = parseTaskProgress(planContent, implementationContent, {
+      phaseUnits: true,
+      extractedUnits: true,
+    });
+    expect(progress).toMatchObject({ total: 2, completed: 1 });
+    expect(progress.phases).toEqual([
+      expect.objectContaining({ phaseId: 'p01', total: 1, completed: 1 }),
+      {
+        phaseId: 'p02',
+        name: 'Build',
+        total: 0,
+        completed: 0,
+        isRevision: false,
+        unit: 'phase',
+        provisional: false,
+        extracted: { to: 'build-child' },
+        taskRecords: { total: 0, completed: 0 },
+      },
+      // Extracted without its target reads as pending.
+      expect.objectContaining({ phaseId: 'p03', total: 1, completed: 0 }),
+    ]);
+    expect(progress.phases[2]).not.toHaveProperty('extracted');
+    // Every selected unit stays visible; the extracted one counts zero.
+    expect(
+      selectPhaseUnits(progress, ['p02', 'p03']).map((phase) => phase.phaseId),
+    ).toEqual(['p02', 'p03']);
+
+    // The extraction precedence is goal-only: brief keeps reading it as
+    // pending, and the option is ignored without phase-units.
+    expect(
+      parseTaskProgress(planContent, implementationContent, phaseUnits),
+    ).toMatchObject({ total: 3, completed: 1 });
+    expect(
+      parseTaskProgress(planContent, implementationContent, {
+        extractedUnits: true,
+      }),
+    ).toEqual(parseTaskProgress(planContent, implementationContent));
+  });
+
   it('ignores phase headings and markers inside fenced examples', () => {
     const planContent = `## Phase p01: Research
 
@@ -841,6 +909,16 @@ describe('parseProvisionalPhaseIds', () => {
 **Provisional:** yes
 `),
     ).toEqual(new Set(['p02']));
+  });
+});
+
+describe('normalizePhaseId', () => {
+  it('normalizes ordinary and revision spellings and rejects anything else', () => {
+    expect(normalizePhaseId('p1')).toBe('p01');
+    expect(normalizePhaseId('p001')).toBe('p01');
+    expect(normalizePhaseId('p-rev01')).toBe('p-rev1');
+    expect(normalizePhaseId('m01')).toBeNull();
+    expect(normalizePhaseId('p01-t01')).toBeNull();
   });
 });
 

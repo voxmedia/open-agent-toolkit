@@ -37,6 +37,7 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { dirExists, fileExists } from '@fs/io';
 import {
   isBriefMode,
+  MILESTONES_TABLE_HEADER,
   type WorkflowMode,
 } from '@open-agent-toolkit/control-plane';
 import { assertValidProjectStateContent } from '@validation/project-state';
@@ -136,6 +137,13 @@ const TEMPLATES_BY_MODE: Record<WorkflowMode, TemplateEntry[]> = {
     'implementation.md',
   ],
   brief: [
+    'state.md',
+    { source: 'plan-brief.md', target: 'plan.md' },
+    { source: 'implementation-brief.md', target: 'implementation.md' },
+  ],
+  // Goal shares the brief templates; scaffold renders its plan source and the
+  // canonical Milestones table header (see renderGoalBrief).
+  goal: [
     'state.md',
     { source: 'plan-brief.md', target: 'plan.md' },
     { source: 'implementation-brief.md', target: 'implementation.md' },
@@ -256,6 +264,24 @@ const STATE_TEMPLATE_BY_MODE: Record<WorkflowMode, StateTemplateContent> = {
       '- ⧗ Awaiting brief interview and authoring',
     ],
     nextMilestone: 'Run `oat-project-brief` to author and approve the brief',
+  },
+  goal: {
+    hillCheckpoints: '[]',
+    phase: 'plan',
+    status: 'Plan',
+    currentPhase: 'Plan - Authoring the goal Project Brief and its milestones',
+    artifacts: [
+      '- **Plan:** `plan.md` (scaffolded goal Project Brief template — not started)',
+      '- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)',
+      '- **Research:** `references/research/` (empty)',
+    ],
+    progress: [
+      '- ✓ Goal project scaffolded',
+      '- ✓ Brief and implementation artifacts scaffolded',
+      '- ⧗ Awaiting goal interview, milestones and brief authoring',
+    ],
+    nextMilestone:
+      'Run `oat-project-goal` to author the brief and its milestones and approve the first milestone',
   },
 };
 
@@ -442,6 +468,9 @@ async function scaffoldModeTemplates(
     if ((mode === 'lite' || isBriefMode(mode)) && target === 'plan.md') {
       rendered = rendered.replace(/^---\n/, '---\noat_template: true\n');
     }
+    if (mode === 'goal' && target === 'plan.md') {
+      rendered = renderGoalBrief(rendered);
+    }
     assertNoUnresolvedOatPlaceholders(rendered, source);
     if (target === 'state.md') {
       assertValidProjectStateContent(rendered, { filePath: dest });
@@ -451,6 +480,38 @@ async function scaffoldModeTemplates(
   }
 
   return { createdFiles, skippedFiles };
+}
+
+const BRIEF_PLAN_SOURCE_PATTERN = /^oat_plan_source:[ \t]*brief\b[^\n]*$/m;
+const BRIEF_MILESTONES_PLACEHOLDER_PATTERN =
+  /^<!-- Reserved for goal mode\.[^\n]*-->[ \t]*$/m;
+const MILESTONES_HEADING_LINE_PATTERN = /^## Milestones[ \t]*$/m;
+const GOAL_MILESTONES_GUIDANCE =
+  '<!-- One row per milestone: its id (m01, m02, …) and its ordered, comma-separated phase ids. Every phase, including revision phases, belongs to exactly one milestone. -->';
+
+/**
+ * Goal shares the brief template: render `oat_plan_source: goal` (the
+ * template hardcodes `brief`) and replace the brief-only Milestones
+ * placeholder with the canonical table header the shared Milestones reader
+ * parses. A template without the placeholder still gets the header under its
+ * `## Milestones` heading.
+ */
+function renderGoalBrief(rendered: string): string {
+  const withSource = rendered.replace(
+    BRIEF_PLAN_SOURCE_PATTERN,
+    'oat_plan_source: goal',
+  );
+  const milestonesBlock = `${GOAL_MILESTONES_GUIDANCE}\n\n${MILESTONES_TABLE_HEADER}`;
+  if (BRIEF_MILESTONES_PLACEHOLDER_PATTERN.test(withSource)) {
+    return withSource.replace(
+      BRIEF_MILESTONES_PLACEHOLDER_PATTERN,
+      milestonesBlock,
+    );
+  }
+  return withSource.replace(
+    MILESTONES_HEADING_LINE_PATTERN,
+    `## Milestones\n\n${milestonesBlock}`,
+  );
 }
 
 async function scaffoldProjectLog(

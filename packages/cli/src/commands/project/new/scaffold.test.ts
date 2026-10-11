@@ -23,6 +23,11 @@ import {
   commitRecordChange,
   createSyncedProject,
 } from '@commands/project/sync/ref-sync';
+import {
+  getProjectState,
+  MILESTONES_TABLE_HEADER,
+  readMilestoneMembership,
+} from '@open-agent-toolkit/control-plane';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -1458,6 +1463,7 @@ describe('scaffoldProject', () => {
     { mode: 'import' as const, hillCheckpoints: [], phase: 'plan' },
     { mode: 'lite' as const, hillCheckpoints: [], phase: 'plan' },
     { mode: 'brief' as const, hillCheckpoints: [], phase: 'plan' },
+    { mode: 'goal' as const, hillCheckpoints: [], phase: 'plan' },
   ])(
     'renders every real $mode scaffold artifact without unresolved OAT placeholders',
     async ({ mode, hillCheckpoints, phase }) => {
@@ -2089,6 +2095,85 @@ describe('scaffoldProject', () => {
     expect(implementation).toMatch(
       /^## Phase p01: .+\n\n\*\*Status:\*\* pending$/m,
     );
+  });
+
+  it('creates goal mode artifacts with the goal plan source and the canonical Milestones header', async () => {
+    const repoRoot = await createRepoRootWithRealTemplates();
+    tempDirs.push(repoRoot);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'goal-mode',
+      mode: 'goal',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+
+    expect(result.createdFiles).toEqual([
+      'state.md',
+      'plan.md',
+      'implementation.md',
+    ]);
+    const projectRoot = join(repoRoot, result.projectPath);
+    await expect(
+      readFile(join(projectRoot, 'references', 'research', '.gitkeep'), 'utf8'),
+    ).resolves.toBe('');
+
+    const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+    const stateFrontmatter = parseFrontmatter(state);
+    expect(stateFrontmatter.oat_workflow_mode).toBe('goal');
+    expect(stateFrontmatter.oat_phase).toBe('plan');
+    expect(stateFrontmatter.oat_hill_checkpoints).toEqual([]);
+    expect(state).toContain('Run `oat-project-goal`');
+
+    const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
+    const planFrontmatter = parseFrontmatter(plan);
+    expect(planFrontmatter.oat_plan_source).toBe('goal');
+    expect(planFrontmatter.oat_template).toBe(true);
+    expect(plan).toContain('# Project Brief: goal-mode');
+    expect(plan).not.toContain('Reserved for goal mode');
+    expect(plan).toContain(`## Milestones\n\n<!-- One row per milestone`);
+    expect(plan).toContain(
+      `-->\n\n${MILESTONES_TABLE_HEADER}\n\n## Phase p01:`,
+    );
+
+    // The shared Milestones reader reads the scaffolded header back as a
+    // present, empty table whose phases are not yet owned by a milestone.
+    expect(readMilestoneMembership(plan)).toEqual({
+      present: true,
+      milestones: [],
+      errors: [
+        expect.objectContaining({
+          code: 'phase-without-milestone',
+          phaseId: 'p01',
+        }),
+        expect.objectContaining({
+          code: 'phase-without-milestone',
+          phaseId: 'p02',
+        }),
+      ],
+    });
+    const projectState = await getProjectState(projectRoot);
+    expect(projectState.workflowMode).toBe('goal');
+    expect(projectState.milestoneMembership?.present).toBe(true);
+
+    // The brief scaffold is unchanged: brief source and reserved placeholder.
+    const brief = await scaffoldProject({
+      repoRoot,
+      projectName: 'brief-beside-goal',
+      mode: 'brief',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+    const briefPlan = await readFile(
+      join(repoRoot, brief.projectPath, 'plan.md'),
+      'utf8',
+    );
+    expect(parseFrontmatter(briefPlan).oat_plan_source).toBe('brief');
+    expect(briefPlan).toContain('Reserved for goal mode');
+    expect(briefPlan).not.toContain(MILESTONES_TABLE_HEADER);
   });
 
   it.each([

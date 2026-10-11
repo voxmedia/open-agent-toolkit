@@ -472,6 +472,7 @@ function getWorkflowRoutes(
     case 'lite':
       return LITE_ROUTES;
     case 'brief':
+    case 'goal':
       return BRIEF_ROUTES;
     case 'spec-driven':
     default:

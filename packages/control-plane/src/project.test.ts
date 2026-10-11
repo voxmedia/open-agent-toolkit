@@ -552,7 +552,291 @@ oat_template: false
     const [summary] = await listProjects(projectsRoot);
     expect(summary?.progress).toEqual({ total: 1, completed: 0 });
   });
+
+  it('exposes goal state, milestone membership and recovery through both readers', async () => {
+    const repoRoot = await createDir('oat-control-plane-goal-state-');
+    const projectsRoot = join(repoRoot, '.oat', 'projects', 'shared');
+    const projectDir = join(projectsRoot, 'goal-demo');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+
+    await createGoalProject(projectDir, {
+      state: `oat_milestone: m02
+oat_milestone_status: implementing
+oat_goal_status: active
+oat_goal_recovery:
+  milestone: m01
+  delivery_id: d01
+  phase_ids: [p01, p02]
+  stage: reviewing
+  review_artifact: null`,
+      milestones: `| m01 | p01, p02 |
+| m02 | p03, p04 |`,
+      journal: GOAL_JOURNAL,
+    });
+
+    const projectState = await getProjectState(projectDir);
+    expect(projectState).toMatchObject({
+      workflowMode: 'goal',
+      milestone: 'm02',
+      milestoneStatus: 'implementing',
+      goalStatus: 'active',
+      goalOutcomeAudit: null,
+      goalOutcomeAuditValidation: null,
+      goalRecovery: {
+        milestone: 'm01',
+        delivery_id: 'd01',
+        phase_ids: ['p01', 'p02'],
+        stage: 'reviewing',
+        review_artifact: null,
+      },
+      deliveries: [],
+      milestoneGates: {},
+      milestoneMembership: {
+        present: true,
+        milestones: [
+          { milestoneId: 'm01', phaseIds: ['p01', 'p02'] },
+          { milestoneId: 'm02', phaseIds: ['p03', 'p04'] },
+        ],
+        errors: [],
+      },
+    });
+    // p04 is extracted: identity kept, excluded from totals.
+    expect(projectState.progress).toMatchObject({ total: 3, completed: 2 });
+    expect(projectState.progress.phases[3]).toMatchObject({
+      phaseId: 'p04',
+      total: 0,
+      extracted: { to: 'p04-child' },
+    });
+
+    const [summary] = await listProjects(projectsRoot);
+    expect(summary).toMatchObject({
+      name: 'goal-demo',
+      workflowMode: 'goal',
+      progress: { total: 3, completed: 2 },
+    });
+  });
+
+  it.each([
+    [
+      'a malformed Milestones table',
+      '| m01 p01, p02 |\n| m02 | p03, p04 |',
+      ['milestones-malformed'],
+    ],
+    [
+      'an unknown phase id',
+      '| m01 | p01, p02, p09 |\n| m02 | p03, p04 |',
+      ['milestone-unknown-phase'],
+    ],
+    [
+      'a phase in two milestones',
+      '| m01 | p01, p02, p03 |\n| m02 | p03, p04 |',
+      ['phase-in-multiple-milestones'],
+    ],
+  ])(
+    'surfaces %s as a membership error instead of dropping the phase from progress',
+    async (_label, milestones, expectedCodes) => {
+      const repoRoot = await createDir('oat-control-plane-goal-membership-');
+      const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'goal');
+      await mkdir(join(repoRoot, '.oat'), { recursive: true });
+      await createGoalProject(projectDir, {
+        state: 'oat_milestone: m02\noat_milestone_status: implementing',
+        milestones,
+        journal: GOAL_JOURNAL,
+      });
+
+      const projectState = await getProjectState(projectDir);
+      const membership = projectState.milestoneMembership;
+      expect(membership?.errors.map((error) => error.code)).toEqual(
+        expect.arrayContaining(expectedCodes),
+      );
+      expect(membership?.errors.length).toBeGreaterThan(0);
+      // Every brief phase is still visible to progress.
+      expect(
+        projectState.progress.phases.map((phase) => phase.phaseId),
+      ).toEqual(['p01', 'p02', 'p03', 'p04']);
+    },
+  );
+
+  it('exposes the terminal audit validation result when the goal is declared met', async () => {
+    const repoRoot = await createDir('oat-control-plane-goal-audit-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'goal');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    const audit = (p03Line: string) => `oat_goal_outcome_audit:
+  disposition: met
+  decided_at: '2026-10-11T12:00:00Z'
+  declaration_ref: project-log.md#declared
+  brief_identity: plan.md@abc1234
+  phases:
+    p01: { disposition: accepted, reason: null, scope_decision_ref: null }
+    p02: { disposition: accepted, reason: null, scope_decision_ref: null }
+${p03Line}    p04: { disposition: extracted, reason: null, scope_decision_ref: null }
+  outcomes:
+    1: { disposition: met, evidence_or_ref: reader tests, text: '**Goal works** — Evidence: tests' }`;
+    const declaredState = (p03Line: string) => `oat_milestone: m02
+oat_milestone_status: delivered
+oat_goal_status: declared_met
+${audit(p03Line)}`;
+    const completedJournal = GOAL_JOURNAL.replace(
+      '**Status:** in_progress',
+      '**Status:** completed',
+    );
+
+    await createGoalProject(projectDir, {
+      state: declaredState(''),
+      milestones: '| m01 | p01, p02 |\n| m02 | p03, p04 |',
+      journal: completedJournal,
+    });
+    const omitted = await getProjectState(projectDir);
+    expect(omitted.goalOutcomeAuditValidation).toMatchObject({
+      valid: false,
+      audit: null,
+      errors: [
+        expect.objectContaining({
+          code: 'audit-phase-omitted',
+          subject: 'p03',
+        }),
+      ],
+    });
+
+    await createGoalProject(projectDir, {
+      state: declaredState(
+        '    p03: { disposition: accepted, reason: null, scope_decision_ref: null }\n',
+      ),
+      milestones: '| m01 | p01, p02 |\n| m02 | p03, p04 |',
+      journal: completedJournal,
+    });
+    const exhaustive = await getProjectState(projectDir);
+    expect(exhaustive.goalOutcomeAuditValidation).toMatchObject({
+      valid: true,
+      errors: [],
+    });
+
+    await createGoalProject(projectDir, {
+      state: 'oat_milestone: m02\noat_goal_status: declared_met',
+      milestones: '| m01 | p01, p02 |\n| m02 | p03, p04 |',
+      journal: GOAL_JOURNAL,
+    });
+    const undeclared = await getProjectState(projectDir);
+    expect(undeclared.goalOutcomeAuditValidation?.errors).toEqual([
+      expect.objectContaining({ code: 'audit-missing' }),
+    ]);
+  });
+
+  it('exposes no goal fields for a brief project', async () => {
+    const repoRoot = await createDir('oat-control-plane-brief-no-goal-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'brief');
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await createBriefProject(projectDir, {
+      workflowMode: 'brief',
+      journal: '## Phase p01: Research the parser contract\n',
+    });
+
+    const projectState = await getProjectState(projectDir);
+    for (const key of [
+      'milestone',
+      'milestoneStatus',
+      'goalStatus',
+      'goalOutcomeAuditValidation',
+      'goalRecovery',
+      'deliveries',
+      'milestoneGates',
+      'milestoneMembership',
+    ]) {
+      expect(projectState).not.toHaveProperty(key);
+    }
+  });
 });
+
+const GOAL_JOURNAL = `## Phase p01: Research
+
+**Status:** completed
+
+## Phase p02: Build
+
+**Status:** completed
+
+## Phase p03: Ship
+
+**Status:** in_progress
+
+## Phase p04: Spin out
+
+**Status:** extracted
+**Extracted to:** p04-child
+`;
+
+/**
+ * A goal project with four phases, one outcome, the supplied `## Milestones`
+ * rows under the canonical header, the supplied extra state lines and journal.
+ */
+async function createGoalProject(
+  projectDir: string,
+  options: { state: string; milestones: string; journal: string },
+): Promise<void> {
+  await mkdir(projectDir, { recursive: true });
+  const phases = ['Research', 'Build', 'Ship', 'Spin out']
+    .map(
+      (name, index) => `## Phase p0${index + 1}: ${name}
+
+**Intent:** ${name}.
+**Exit evidence:** ${name} done.
+**Provisional:** no
+`,
+    )
+    .join('\n');
+  await Promise.all([
+    writeFile(
+      join(projectDir, 'state.md'),
+      `---
+oat_current_task: null
+oat_blockers: []
+oat_hill_checkpoints: []
+oat_hill_completed: []
+oat_phase: implement
+oat_phase_status: in_progress
+oat_execution_mode: single-thread
+oat_lifecycle: active
+oat_workflow_mode: goal
+${options.state}
+---
+`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'plan.md'),
+      `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_plan_source: goal
+oat_template: false
+---
+
+# Project Brief: goal
+
+## Outcomes
+
+1. **Goal works** — Evidence: tests
+
+## Milestones
+
+| Milestone | Phases |
+| --------- | ------ |
+${options.milestones}
+
+${phases}`,
+      'utf8',
+    ),
+    writeFile(
+      join(projectDir, 'implementation.md'),
+      `---
+oat_current_task_id: null
+---
+
+${options.journal}`,
+      'utf8',
+    ),
+  ]);
+}
 
 /**
  * A minimal brief-mode project: one taskless phase in the plan and the

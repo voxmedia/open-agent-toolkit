@@ -3,7 +3,15 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { recommendSkill } from './recommender/router';
 import { scanArtifacts } from './state/artifacts';
-import { parseStateFrontmatter } from './state/parser';
+import {
+  parseBriefOutcomes,
+  validateGoalOutcomeAudit,
+} from './state/goal-audit';
+import { readMilestoneMembership } from './state/milestones';
+import {
+  type ParsedStateFrontmatter,
+  parseStateFrontmatter,
+} from './state/parser';
 import {
   parseReviewArtifactIdentity,
   parseReviewTable,
@@ -13,6 +21,7 @@ import { parseTaskProgress } from './state/tasks';
 import {
   isBriefMode,
   type ProjectState,
+  type TaskProgress,
   type ProjectSummary,
   type ReviewArtifactStatus,
   type ReviewStatus,
@@ -44,9 +53,11 @@ export async function getProjectState(
     tableReviews,
   );
   const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
-  const progress = parseTaskProgress(planContent, implementationContent, {
-    phaseUnits: isBriefMode(parsedState.workflowMode),
-  });
+  const progress = parseProjectProgress(
+    parsedState,
+    planContent,
+    implementationContent,
+  );
 
   const projectStateWithoutRecommendation: Omit<
     ProjectState,
@@ -79,6 +90,7 @@ export async function getProjectState(
       completed: parsedState.projectCompleted,
       stateUpdated: parsedState.projectStateUpdated ?? '',
     },
+    ...readGoalState(parsedState, planContent, implementationContent, progress),
   };
 
   return {
@@ -122,9 +134,11 @@ export async function listProjects(
         tableReviews,
       );
       const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
-      const progress = parseTaskProgress(planContent, implementationContent, {
-        phaseUnits: isBriefMode(parsedState.workflowMode),
-      });
+      const progress = parseProjectProgress(
+        parsedState,
+        planContent,
+        implementationContent,
+      );
 
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
         name: basename(projectDir),
@@ -154,6 +168,12 @@ export async function listProjects(
           completed: parsedState.projectCompleted,
           stateUpdated: parsedState.projectStateUpdated ?? '',
         },
+        ...readGoalState(
+          parsedState,
+          planContent,
+          implementationContent,
+          progress,
+        ),
       };
 
       return {
@@ -175,6 +195,75 @@ export async function listProjects(
   return summaries
     .filter((summary): summary is ProjectSummary => summary !== null)
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+/**
+ * Progress for one project. Brief modes count phase-units; goal additionally
+ * honors the extraction precedence.
+ */
+function parseProjectProgress(
+  parsedState: ParsedStateFrontmatter,
+  planContent: string,
+  implementationContent: string,
+): TaskProgress {
+  return parseTaskProgress(planContent, implementationContent, {
+    phaseUnits: isBriefMode(parsedState.workflowMode),
+    extractedUnits: parsedState.workflowMode === 'goal',
+  });
+}
+
+type GoalStateFields = Pick<
+  ProjectState,
+  | 'milestone'
+  | 'milestoneStatus'
+  | 'goalStatus'
+  | 'goalOutcomeAudit'
+  | 'goalOutcomeAuditValidation'
+  | 'goalRecovery'
+  | 'deliveries'
+  | 'milestoneGates'
+  | 'milestoneMembership'
+>;
+
+/**
+ * Goal state shared by both project readers: the persisted goal fields, the
+ * `## Milestones` membership with its errors, and the terminal audit's
+ * validation result (computed whenever an audit is recorded or the goal is
+ * declared met). Every other mode gets no goal fields.
+ */
+function readGoalState(
+  parsedState: ParsedStateFrontmatter,
+  planContent: string,
+  implementationContent: string,
+  progress: TaskProgress,
+): GoalStateFields | Record<string, never> {
+  if (parsedState.workflowMode !== 'goal') {
+    return {};
+  }
+
+  const goalOutcomeAudit = parsedState.goalOutcomeAudit ?? null;
+  const goalStatus = parsedState.goalStatus ?? null;
+  return {
+    milestone: parsedState.milestone ?? null,
+    milestoneStatus: parsedState.milestoneStatus ?? null,
+    goalStatus,
+    goalOutcomeAudit,
+    goalOutcomeAuditValidation:
+      goalOutcomeAudit !== null || goalStatus === 'declared_met'
+        ? validateGoalOutcomeAudit(
+            goalOutcomeAudit,
+            progress.phases,
+            parseBriefOutcomes(planContent),
+          )
+        : null,
+    goalRecovery: parsedState.goalRecovery ?? null,
+    deliveries: parsedState.deliveries ?? [],
+    milestoneGates: parsedState.milestoneGates ?? {},
+    milestoneMembership: readMilestoneMembership(
+      planContent,
+      implementationContent,
+    ),
+  };
 }
 
 async function resolveProjectDisplayPath(projectPath: string): Promise<string> {

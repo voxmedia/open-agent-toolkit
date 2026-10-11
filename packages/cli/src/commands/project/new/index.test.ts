@@ -19,7 +19,7 @@ type CommitScaffoldStatus =
 
 interface HarnessOptions {
   result?: {
-    mode: 'spec-driven' | 'quick' | 'import' | 'lite' | 'brief';
+    mode: 'spec-driven' | 'quick' | 'import' | 'lite' | 'brief' | 'goal';
     scope?: 'shared' | 'local' | 'synced';
     ref?: string;
     sha?: string;
@@ -155,6 +155,19 @@ describe('createProjectNewCommand', () => {
     expect(
       command.options.find((option) => option.long === '--mode')?.argChoices,
     ).toEqual(WORKFLOW_MODES);
+  });
+
+  it('forwards goal mode to scaffold core', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await runCommand(command, ['demo', '--mode', 'goal']);
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'goal' }),
+    );
+    expect(
+      command.options.find((option) => option.long === '--mode')?.argChoices,
+    ).toContain('goal');
   });
 
   it('forwards an omitted scope as undefined for scaffold defaulting', async () => {

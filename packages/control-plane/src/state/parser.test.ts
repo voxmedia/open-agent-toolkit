@@ -237,6 +237,7 @@ oat_workflow_mode: bogus
       'import',
       'lite',
       'brief',
+      'goal',
     ]);
   });
 
@@ -278,12 +279,158 @@ oat_workflow_mode: brief
 
   it('identifies the brief mode family with isBriefMode', () => {
     expect(isBriefMode('brief')).toBe(true);
+    expect(isBriefMode('goal')).toBe(true);
     expect(isBriefMode('quick')).toBe(false);
     expect(isBriefMode('lite')).toBe(false);
     expect(isBriefMode('spec-driven')).toBe(false);
     expect(isBriefMode('import')).toBe(false);
     expect(isBriefMode(null)).toBe(false);
     expect(isBriefMode(undefined)).toBe(false);
+  });
+
+  it('parses goal state fields only for goal projects', () => {
+    const goalState = `oat_milestone: m2
+oat_milestone_status: reviewing
+oat_goal_status: active
+oat_goal_outcome_audit: null
+oat_goal_recovery:
+  milestone: m01
+  delivery_id: d01
+  phase_ids: [p01, p02]
+  stage: exit_gate
+  review_artifact: null
+oat_deliveries:
+  - delivery_id: d01
+    milestone: m01
+    scope: [p01, p02]
+    endpoint: merged
+    kind: pr
+    status: open
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: owner/name
+      head_branch: feat/demo
+      head_sha_at_registration: ${'a'.repeat(40)}
+    members:
+      - url: https://example.com/pull/1
+        base: ${'b'.repeat(40)}
+        reviewed_head: ${'c'.repeat(40)}
+        observed_head: ${'d'.repeat(40)}
+        observed_base: ${'b'.repeat(40)}
+        status: open
+    integrated_review:
+      artifact: reviews/review-m01.md
+      scope: [p01, p02]
+      bound_revisions: [{ member: 0, base: ${'b'.repeat(40)}, head: ${'c'.repeat(40)} }]
+      disposition: passed
+    endpoint_attainment: null
+  - not-a-delivery
+oat_milestone_gates:
+  m01:
+    plan:
+      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: abc
+      reviewed_head: ${'e'.repeat(40)}
+      subject: { kind: plan, scope: [p01, p02], ref: plan.md }
+      decided_at: '2026-10-11T00:00:00Z'
+    exit:
+      status: allowed
+      resolution: no_gate
+      disposition: no_gate
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T00:00:00Z'
+      freshness: stale
+      freshness_reason: member base changed
+  bogus: {}`;
+
+    const goal = parseStateFrontmatter(
+      `---\noat_workflow_mode: goal\n${goalState}\n---\n`,
+    );
+    expect(goal).toMatchObject({
+      workflowMode: 'goal',
+      milestone: 'm02',
+      milestoneStatus: 'reviewing',
+      goalStatus: 'active',
+      goalOutcomeAudit: null,
+      goalRecovery: {
+        milestone: 'm01',
+        delivery_id: 'd01',
+        phase_ids: ['p01', 'p02'],
+        stage: 'exit_gate',
+        review_artifact: null,
+      },
+    });
+    expect(goal.deliveries).toHaveLength(1);
+    expect(goal.deliveries?.[0]).toMatchObject({
+      delivery_id: 'd01',
+      milestone: 'm01',
+      scope: ['p01', 'p02'],
+      endpoint: 'merged',
+      status: 'open',
+      superseded_by: null,
+      covers_scope_of: null,
+      lookup: { repository: 'owner/name', head_branch: 'feat/demo' },
+      members: [{ status: 'open', reviewed_head: 'c'.repeat(40) }],
+      integrated_review: {
+        scope: ['p01', 'p02'],
+        bound_revisions: [
+          { member: 0, base: 'b'.repeat(40), head: 'c'.repeat(40) },
+        ],
+        disposition: 'passed',
+      },
+      exit_gate: null,
+      endpoint_attainment: null,
+    });
+    expect(Object.keys(goal.milestoneGates ?? {})).toEqual(['m01']);
+    expect(goal.milestoneGates?.m01?.exit).toEqual({
+      status: 'allowed',
+      resolution: 'no_gate',
+      disposition: 'no_gate',
+      config_fingerprint: null,
+      reviewed_head: null,
+      subject: { kind: 'code', scope: ['p01', 'p02'], ref: null },
+      decided_at: '2026-10-11T00:00:00Z',
+      freshness: 'stale',
+      freshness_reason: 'member base changed',
+    });
+    expect(goal.milestoneGates?.m01?.plan?.freshness).toBeNull();
+
+    // The same keys under brief are not goal state.
+    const brief = parseStateFrontmatter(
+      `---\noat_workflow_mode: brief\n${goalState}\n---\n`,
+    );
+    expect(brief).not.toHaveProperty('milestone');
+    expect(brief).not.toHaveProperty('deliveries');
+  });
+
+  it('reads unknown goal enum values and malformed records as null', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_workflow_mode: goal
+oat_milestone: first
+oat_milestone_status: shipping
+oat_goal_status: done
+oat_goal_outcome_audit: [met]
+oat_goal_recovery: { milestone: m01, stage: later }
+oat_deliveries: not-a-list
+oat_milestone_gates: []
+---
+`),
+    ).toMatchObject({
+      milestone: null,
+      milestoneStatus: null,
+      goalStatus: null,
+      goalOutcomeAudit: null,
+      goalRecovery: null,
+      deliveries: [],
+      milestoneGates: {},
+    });
   });
 
   it('parses complete lifecycle values when present', () => {
