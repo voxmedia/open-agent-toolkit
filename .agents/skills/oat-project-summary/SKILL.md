@@ -22,7 +22,7 @@ Produce a `summary.md` that serves as institutional memory — capturing what wa
 
 ## Prerequisites
 
-**Required:** Active project with `implementation.md` that has meaningful progress (at least one completed task).
+**Required:** Active project with `implementation.md` that has meaningful progress (at least one completed task; in brief modes, at least one accepted phase-unit).
 
 ## Mode Assertion
 
@@ -120,6 +120,12 @@ test -f "$PROJECT_PATH/implementation.md"
 
 **If exists:** Read the file. Check for at least one task with `**Status:** completed`. If no completed tasks, warn: "No completed tasks found. Summary will be minimal."
 
+In brief modes the prerequisite is one accepted phase-unit instead: a
+`**Status:** completed` line directly under a `## Phase` heading of the
+journal, before that phase's first `### Task` record (a completed execution
+record is not an accepted unit). If no phase-unit is accepted, warn: "No
+accepted phase-units found. Summary will be minimal."
+
 ### Step 2: Read Project Artifacts
 
 For `oat_workflow_mode: lite`, use the reduced artifact contract and skip the
@@ -130,6 +136,19 @@ Summary (for PR/docs)`. Read `state.md` only for routing metadata. A lite
 project accepts `discovery.md`, `spec.md`, and `design.md` as absent; do not
 read or require them. Ground the summary in what actually shipped, with
 `implementation.md` taking precedence over the plan.
+
+For `oat_workflow_mode: brief`, read the brief's sources instead of the
+ordinary list below; `discovery.md`, `spec.md`, and `design.md` are absent by
+design:
+
+| Source                                                                             | Use                                                                                                   |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `plan.md` Goal, Outcomes, Approach                                                 | Overview and what the project set out to do; audit What Was Implemented against the numbered Outcomes |
+| `plan.md` Decisions, Constraints and Out of Scope                                  | Key Decisions and Tradeoffs Made                                                                      |
+| `plan.md` phases and `## Reviews`                                                  | Phase intent and review dispositions                                                                  |
+| `implementation.md` phase sections                                                 | Accepted phases, anchors, execution records, verification evidence, deviations, and `Brief deltas`    |
+| `implementation.md` Final Summary                                                  | Shipped results; takes precedence over the brief's plans                                              |
+| `state.md`, `project-log.md`, `oat-execution-learnings.md`, `references/research/` | Same roles as below, when present                                                                     |
 
 For every other workflow mode, read all available artifacts for synthesis:
 
@@ -230,6 +249,76 @@ test -f "$PROJECT_PATH/summary.md"
 **If does not exist (first run):**
 
 Copy template: `oat template resolve summary --output "$PROJECT_PATH/summary.md"`
+
+**Brief modes (`oat_workflow_mode: brief`): freshness by phase fingerprint.**
+Replace the task and revision comparison above with
+`oat_summary_phase_fingerprint`, a stable hash of the ordered accepted phase
+IDs; for each accepted phase its `**Head:**`, its `**Status:**` line, and the
+`Status` of the latest `## Reviews` `code` row for that phase; and the brief's
+Goal, Outcomes, and Decisions sections with whitespace normalized. Compute it
+in bash from the project root with `PROJECT_PATH` set:
+
+````bash
+brief_summary_marker() {
+  awk -v id="$1" -v key="$2" '
+    /^[ \t]*(```|~~~)/ { fence = !fence; next }
+    fence { next }
+    /^#/ { owner = (index($0, "## Phase " id ": ") == 1); next }
+    !owner || found { next }
+    index($0, "**" key ":** ") == 1 {
+      v = substr($0, length("**" key ":** ") + 1); sub(/[ \t]+$/, "", v); print v; found = 1
+    }
+  ' "$PROJECT_PATH/implementation.md"
+}
+
+brief_summary_fingerprint() {
+  local plan="$PROJECT_PATH/plan.md" id status head review section
+  {
+    for id in $(awk '
+      /^[ \t]*(```|~~~)/ { fence = !fence; next }
+      fence { next }
+      /^## Phase (p[0-9]+|p-rev[0-9]+): / { id = $3; sub(/:$/, "", id); print id }
+    ' "$plan"); do
+      status=$(brief_summary_marker "$id" Status)
+      [ "$status" = completed ] || continue
+      head=$(brief_summary_marker "$id" Head)
+      review=$(awk -v id="$id" '
+        /^## Reviews[ \t]*$/ { in_reviews = 1; next }
+        in_reviews && /^## / { exit }
+        !in_reviews || !/^\|/ { next }
+        {
+          n = split($0, cells, "|")
+          for (i = 2; i < n; i++) { c = cells[i]; gsub(/^[ \t]+|[ \t]+$/, "", c); cells[i] = c }
+          if (!sc) { for (i = 2; i < n; i++) { if (cells[i] == "Scope") sc = i; if (cells[i] == "Type") ty = i; if (cells[i] == "Status") st = i }; next }
+          if (cells[sc] == id && cells[ty] == "code") last = cells[st]
+        }
+        END { print (last == "" ? "-" : last) }
+      ' "$plan")
+      printf 'phase=%s head=%s status=%s review=%s\n' "$id" "${head:--}" "$status" "$review"
+    done
+    for section in Goal Outcomes Decisions; do
+      printf 'section=%s ' "$section"
+      awk -v heading="## $section" '
+        /^## / { in_section = ($0 == heading); next }
+        in_section { print }
+      ' "$plan" | tr -s ' \t\n' '   ' | sed 's/^ //; s/ $//'
+      printf '\n'
+    done
+  } | { command -v sha256sum >/dev/null 2>&1 && sha256sum || shasum -a 256; } | cut -d' ' -f1
+}
+
+CURRENT_PHASE_FINGERPRINT=$(brief_summary_fingerprint)
+````
+
+- No existing summary, or `oat_summary_phase_fingerprint` differs from
+  `CURRENT_PHASE_FINGERPRINT`: refresh. Update What Was Implemented from the
+  newly accepted phases, Revision History when an accepted `p-revN` is new, and
+  Follow-up Items from review dispositions.
+- Fingerprint unchanged: no phase-driven update. The autonomous-learnings and
+  project-log triggers above stay independent and can still require a refresh.
+- A brief summary never reads or writes `oat_summary_last_task`; execution
+  records are not units. `oat-project-complete` recomputes the same
+  fingerprint with this fragment to decide whether `summary.md` is stale.
 
 ### Step 4: Generate / Update Summary Sections
 
@@ -402,6 +491,10 @@ oat_summary_revision_count: { count of p-revN phases }
 oat_summary_includes_revisions: [{ list of p-revN IDs reflected }]
 ---
 ```
+
+In brief modes write `oat_summary_phase_fingerprint: {CURRENT_PHASE_FINGERPRINT}`
+(Step 3) and omit `oat_summary_last_task`; keep `oat_summary_revision_count`
+and `oat_summary_includes_revisions` as informational fields.
 
 ### Step 6: Roll Up Project Observations and Offer Backlog Graduation
 

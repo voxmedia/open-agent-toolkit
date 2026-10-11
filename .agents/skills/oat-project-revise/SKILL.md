@@ -199,13 +199,30 @@ Fix tasks that edit synced artifacts use `oat project push` under the scope
 guard instead of the branch commit template above.
 ````
 
+**Brief modes (`oat_workflow_mode: brief`):** the brief never carries tasks.
+Insert the revision phase after the last phase block of `plan.md` (before
+`## Parallelism` when present), with Intent and Exit evidence and no
+`### Task` headings:
+
+```markdown
+## Phase p-rev{N}: Revision {N}
+
+**Intent:** {the feedback items, one clause each} (source: inline feedback, {today})
+**Exit evidence:** {verification that shows each item is addressed, and a passing review of p-rev{N}}
+**Provisional:** no
+```
+
+Add a pending `p-rev{N}` `code` row to the brief's `## Reviews` table. The
+executor opens `prev{N}-tNN` execution records in `implementation.md` when the
+work starts and commits them as `fix(prev{N}-tNN): …`; revise writes none.
+
 **Task naming:** Prefix with `(revision)` — following the `(review)` convention in review-receive.
 
 **Task IDs:** `prev{N}-t{NN}` format (e.g., `prev1-t01`, `prev1-t02`).
 
 #### 4d: Update plan.md Totals
 
-Update `## Implementation Complete` section to include the new revision phase and tasks in the totals.
+Update `## Implementation Complete` section to include the new revision phase and tasks in the totals. In brief modes the total counts phases only.
 
 #### 4e: Update implementation.md
 
@@ -215,6 +232,12 @@ Update frontmatter to point at the first revision task so `oat-project-implement
 - `oat_status: in_progress`
 
 Update the Progress Overview table to include the new revision phase (e.g., add a `Phase p-rev{N}` row with task count and `in_progress` status).
+
+In brief modes point the journal at the phase instead of a task: set
+`oat_current_task_id: p-rev{N}`, add a `## Phase p-rev{N}: Revision {N}`
+section after the last phase section with `**Status:** pending` directly under
+the heading (the root writes `**Base:**` when the phase starts), and add a
+`p-rev{N}` Progress Overview row with one unit, `0/1` accepted.
 
 Add a "Revision Received" entry:
 
@@ -237,7 +260,7 @@ Add a "Revision Received" entry:
 #### 4f: Update state.md
 
 - `oat_phase_status: in_progress`
-- `oat_current_task: prev{N}-t01`
+- `oat_current_task: prev{N}-t01` (brief modes: `p-rev{N}`)
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 
 #### 4g: Route to Implement
@@ -265,7 +288,7 @@ This is the key value revise adds: state transition management so agents know th
 - **Review artifact feedback:** Delegate to `oat-project-review-receive`
 - Delegating means loading the selected skill's current `SKILL.md` and following it, or dispatching a child that carries it, if environment supports skill chaining; otherwise tell the user which skill to run and stop. Never act from a remembered delegation outcome.
 
-These skills use their existing conventions: `(review)` task prefix, severity classification, standard task IDs appended to the last plan phase. This is correct — structured review feedback should go through the structured triage model.
+These skills use their existing conventions: `(review)` task prefix, severity classification, standard task IDs appended to the last plan phase. This is correct — structured review feedback should go through the structured triage model. In brief modes `oat-project-review-receive` records the fixes as `(review)` execution records in the journal under its brief-mode late-fix rule, never as plan tasks.
 
 #### 5c: Post-Delegation State
 

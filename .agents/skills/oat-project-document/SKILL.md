@@ -217,6 +217,16 @@ shipped results. A lite project accepts `discovery.md`, `spec.md`, and
 `design.md` as absent; do not read or require them. Build the documentation
 delta from what actually shipped and continue with code verification.
 
+For `oat_workflow_mode: brief`, use the brief artifact set instead of the
+numbered list below. Read `plan.md` (the Project Brief: Goal, Outcomes,
+Approach and any `### Design` subsection, Constraints and Out of Scope,
+Decisions, and the phases' Intent and Exit evidence), then `implementation.md`
+phase sections, execution records, `Brief deltas`, and `Final Summary (for
+PR/docs)` as the shipped results, plus `summary.md` and `references/research/`
+when present. A brief project accepts `discovery.md`, `spec.md`, and
+`design.md` as absent; do not read or require them. Build the documentation
+delta from what actually shipped and continue with code verification.
+
 For every other workflow mode, read the numbered artifact list below.
 
 **Read in order:**
