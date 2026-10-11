@@ -21,6 +21,10 @@ import {
   type SyncTarget,
 } from '@commands/project/sync/ref-sync';
 import {
+  parsePhaseHeadingLine,
+  recordLineMask,
+} from '@commands/project/validate-plan/profiles';
+import {
   commitExactPaths,
   type ExactPathCommitResult,
 } from '@commands/shared/exact-path-commit';
@@ -33,6 +37,10 @@ import { resolveTemplate as defaultResolveTemplate } from '@commands/shared/temp
 import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists as defaultFileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
+import {
+  parsePhaseMarkers,
+  parseTaskProgress,
+} from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import YAML from 'yaml';
 
@@ -67,6 +75,9 @@ type PromotionReason =
   | 'not-lite'
   | 'lite-plan-reference-exists'
   | 'invalid-lite-plan'
+  | 'brief-archive-exists'
+  | 'extracted-phases'
+  | 'invalid-brief-plan'
   | 'scope-unresolved'
   | 'project-unreadable'
   | 'template-unreadable'
@@ -337,6 +348,7 @@ async function persistPromotion(
   scope: 'shared' | 'local' | 'synced',
   identity: string,
   dependencies: ProjectPromoteDependencies,
+  files: readonly string[] = PROMOTED_FILES,
 ): Promise<void> {
   const message = `chore(oat): promote ${projectName} to quick`;
   if (scope === 'synced') {
@@ -355,7 +367,7 @@ async function persistPromotion(
     return;
   }
 
-  const pathspecs = PROMOTED_FILES.map((file) =>
+  const pathspecs = files.map((file) =>
     repoRelativePath(repoRoot, join(projectRoot, file)),
   );
   await dependencies.gitRunner.run(['rev-parse', '--is-inside-work-tree'], {
@@ -412,6 +424,21 @@ async function promoteProject(
     stateFrontmatter = readObjectFrontmatter(stateContent, statePath);
   } catch {
     return { status: 'refused', reason: 'project-unreadable', files: [] };
+  }
+  if (stateFrontmatter['oat_workflow_mode'] === 'brief') {
+    return promoteBriefProject(
+      {
+        repoRoot,
+        projectRoot,
+        projectName,
+        statePath,
+        planPath,
+        stateContent,
+        planContent,
+      },
+      context,
+      dependencies,
+    );
   }
   if (stateFrontmatter['oat_workflow_mode'] !== 'lite') {
     return { status: 'refused', reason: 'not-lite', files: [] };
@@ -534,6 +561,694 @@ async function promoteProject(
     reason: 'promoted',
     files: [...PROMOTED_FILES],
   };
+}
+
+// ---------------------------------------------------------------------------
+// brief → quick
+// ---------------------------------------------------------------------------
+
+const BRIEF_ARCHIVE_FILE = 'references/brief-archive.md';
+const PRE_PROMOTION_ANNOTATION = '(pre-promotion, brief)';
+const SYNTHESIZED_TASK_TITLE = 'Accepted via phase evidence';
+
+/** Brief sections rendered into `discovery.md` and dropped from the quick plan. */
+const BRIEF_ONLY_SECTIONS = [
+  'goal',
+  'outcomes',
+  'approach',
+  'constraints and out of scope',
+  'constraints',
+  'out of scope',
+  'decisions',
+  'known unknowns',
+  'delivery endpoint and authority',
+  'delivery authority',
+  'milestones',
+  'phases',
+];
+
+const TASK_RECORD_HEADING = /^### Task ((p-?rev\d+|p\d+)-t(\d+)): (.+)$/;
+const RECORD_STATUS_LINE = /^\*\*Status:\*\*\s+(\S+)$/;
+const RECORD_COMMIT_LINE = /^\*\*Commit:\*\*\s+(\S+)$/;
+const RECORD_MARKER_LINE = /^\*\*(Status|Commit|Executor):\*\*/;
+const SECTION_HEADING_LINE = /^#{1,2}[ \t]/;
+const HEADING_LINE = /^#/;
+
+export type BriefPhaseState = 'accepted' | 'active' | 'pending' | 'provisional';
+
+interface BriefTaskRecord {
+  taskId: string;
+  ordinal: number;
+  title: string;
+  status: string | null;
+  commit: string | null;
+  body: string[];
+}
+
+interface BriefSection {
+  heading: string | null;
+  lines: string[];
+}
+
+export interface BriefMigration {
+  plan: string;
+  implementation: string;
+  implementationChanged: boolean;
+  pendingPhases: string[];
+  phaseStates: Record<string, BriefPhaseState>;
+}
+
+export type BriefMigrationResult =
+  | { ok: true; migration: BriefMigration }
+  | { ok: false; reason: 'extracted-phases' | 'invalid-brief-plan' };
+
+function stripFrontmatter(content: string): string {
+  const match = /^---\n[\s\S]*?\n---[^\n]*(?:\n|$)/.exec(content);
+  return match ? content.slice(match[0].length) : content;
+}
+
+function normalizeOrdinal(digits: string, width: number): string {
+  return digits.replace(/^0+(?=\d)/, '').padStart(width, '0');
+}
+
+function taskPhaseId(prefix: string): string {
+  const revision = /^p-?rev(\d+)$/.exec(prefix);
+  if (revision?.[1]) return `p-rev${normalizeOrdinal(revision[1], 1)}`;
+  return `p${normalizeOrdinal(prefix.slice(1), 2)}`;
+}
+
+function taskPrefixForPhase(phaseId: string): string {
+  return phaseId.startsWith('p-rev') ? `prev${phaseId.slice(5)}` : phaseId;
+}
+
+/** Split markdown into `## ` sections, ignoring headings inside code. */
+function splitSections(body: string): BriefSection[] {
+  const lines = body.split('\n');
+  const mask = recordLineMask(lines);
+  const sections: BriefSection[] = [{ heading: null, lines: [] }];
+  for (const [index, line] of lines.entries()) {
+    if (mask[index] && /^##[ \t]/.test(line)) {
+      sections.push({ heading: line, lines: [line] });
+    } else {
+      sections[sections.length - 1]!.lines.push(line);
+    }
+  }
+  return sections;
+}
+
+function sectionTitle(heading: string): string {
+  return heading.replace(/^##[ \t]+/, '').trim();
+}
+
+function sectionBody(section: BriefSection): string {
+  return section.lines.slice(1).join('\n').trim();
+}
+
+function findBriefSection(
+  sections: BriefSection[],
+  matches: (title: string) => boolean,
+): string | null {
+  const section = sections.find(
+    (candidate) =>
+      candidate.heading != null &&
+      matches(sectionTitle(candidate.heading).toLowerCase()),
+  );
+  const body = section ? sectionBody(section) : '';
+  return body.length > 0 ? body : null;
+}
+
+/**
+ * Execution records per journal phase section: `### Task` headings whose
+ * normalized phase id matches the enclosing `## Phase` section. Also returns
+ * each phase section's end line (exclusive) for appending records.
+ */
+function readJournalRecords(lines: string[]): {
+  records: Map<string, BriefTaskRecord[]>;
+  sectionEnds: Map<string, number>;
+} {
+  const mask = recordLineMask(lines);
+  const records = new Map<string, BriefTaskRecord[]>();
+  const sectionEnds = new Map<string, number>();
+  let phaseId: string | null = null;
+  let current: BriefTaskRecord | null = null;
+
+  const closeSection = (end: number): void => {
+    if (phaseId != null) sectionEnds.set(phaseId, end);
+  };
+
+  for (const [index, line] of lines.entries()) {
+    if (!mask[index]) {
+      current?.body.push(line);
+      continue;
+    }
+
+    if (SECTION_HEADING_LINE.test(line)) {
+      closeSection(index);
+      current = null;
+      phaseId = parsePhaseHeadingLine(line)?.phaseId ?? null;
+      continue;
+    }
+
+    const task = TASK_RECORD_HEADING.exec(line);
+    if (task && phaseId != null) {
+      current = null;
+      if (taskPhaseId(task[2]!) === phaseId) {
+        current = {
+          taskId: task[1]!,
+          ordinal: Number.parseInt(task[3]!, 10),
+          title: task[4]!,
+          status: null,
+          commit: null,
+          body: [],
+        };
+        const list = records.get(phaseId) ?? [];
+        list.push(current);
+        records.set(phaseId, list);
+      }
+      continue;
+    }
+
+    if (HEADING_LINE.test(line)) {
+      current = null;
+      continue;
+    }
+
+    if (current == null) continue;
+    const trimmed = line.trim();
+    const status = RECORD_STATUS_LINE.exec(trimmed)?.[1];
+    if (status !== undefined) {
+      current.status ??= status;
+      continue;
+    }
+    const commit = RECORD_COMMIT_LINE.exec(trimmed)?.[1];
+    if (commit !== undefined) {
+      current.commit ??= commit;
+      continue;
+    }
+    if (!RECORD_MARKER_LINE.test(trimmed)) current.body.push(line);
+  }
+  closeSection(lines.length);
+
+  return { records, sectionEnds };
+}
+
+/** Plan phase block lines owned by the phase heading (up to the first `#`). */
+function ownedPhaseLines(section: BriefSection): string[] {
+  const owned: string[] = [];
+  const mask = recordLineMask(section.lines);
+  for (const [index, line] of section.lines.slice(1).entries()) {
+    if (mask[index + 1] && HEADING_LINE.test(line)) break;
+    owned.push(line);
+  }
+  while (owned.length > 0 && owned[owned.length - 1]!.trim() === '') {
+    owned.pop();
+  }
+  return owned;
+}
+
+function trimBlank(lines: string[]): string[] {
+  let start = 0;
+  let end = lines.length;
+  while (start < end && lines[start]!.trim() === '') start += 1;
+  while (end > start && lines[end - 1]!.trim() === '') end -= 1;
+  return lines.slice(start, end);
+}
+
+function annotateReviewRows(section: BriefSection): string[] {
+  const mask = recordLineMask(section.lines);
+  let headerSeen = false;
+  return section.lines.map((line, index) => {
+    if (!mask[index] || !line.trimStart().startsWith('|')) return line;
+    if (!headerSeen) {
+      headerSeen = true;
+      return line;
+    }
+    if (/^\s*\|[\s:|-]+\|?\s*$/.test(line)) return line;
+    if (line.includes(PRE_PROMOTION_ANNOTATION)) return line;
+    return line.replace(
+      /^(\s*\|\s*)([^|]*?)(\s*\|)/,
+      (_, open: string, scope: string, close: string) =>
+        `${open}${scope} ${PRE_PROMOTION_ANNOTATION}${close}`,
+    );
+  });
+}
+
+function renderPlanTask(record: BriefTaskRecord): string[] {
+  const commit = record.commit && record.commit !== '-' ? record.commit : null;
+  return [
+    `### Task ${record.taskId}: ${record.title}`,
+    '',
+    `> Accepted before promotion (brief). Execution record: \`implementation.md\`${commit ? ` (commit \`${commit}\`)` : ''}.`,
+    ...(trimBlank(record.body).length > 0
+      ? ['', ...trimBlank(record.body)]
+      : []),
+    '',
+  ];
+}
+
+/**
+ * Pure brief → quick migration. Phase states follow the phase-unit progress
+ * contract: accepted (journal `completed`, not provisional), active (any other
+ * started status), pending, or provisional. An extracted phase refuses.
+ */
+export function migrateBriefToQuick(input: {
+  planContent: string;
+  implementationContent: string;
+  projectName: string;
+  today: string;
+}): BriefMigrationResult {
+  const { planContent, implementationContent, projectName, today } = input;
+  const markers = parsePhaseMarkers(implementationContent);
+  if ([...markers.values()].some((marker) => marker.status === 'extracted')) {
+    return { ok: false, reason: 'extracted-phases' };
+  }
+
+  const progress = parseTaskProgress(planContent, implementationContent, {
+    phaseUnits: true,
+  });
+  if (progress.phases.length === 0) {
+    return { ok: false, reason: 'invalid-brief-plan' };
+  }
+
+  const phaseStates: Record<string, BriefPhaseState> = {};
+  for (const phase of progress.phases) {
+    const status = markers.get(phase.phaseId)?.status ?? 'pending';
+    phaseStates[phase.phaseId] = phase.provisional
+      ? 'provisional'
+      : phase.completed === 1
+        ? 'accepted'
+        : status === 'pending'
+          ? 'pending'
+          : 'active';
+  }
+  const pendingPhases = progress.phases
+    .map((phase) => phase.phaseId)
+    .filter(
+      (phaseId, index, all) =>
+        phaseStates[phaseId] !== 'accepted' && all.indexOf(phaseId) === index,
+    );
+
+  const journalLines = implementationContent.split('\n');
+  const { records, sectionEnds } = readJournalRecords(journalLines);
+  const insertions: { at: number; lines: string[] }[] = [];
+
+  const frontmatter = getFrontmatterBlock(planContent)
+    ? readObjectFrontmatter(planContent, 'plan.md')
+    : {};
+  const sections = splitSections(stripFrontmatter(planContent));
+  const goal = findBriefSection(sections, (title) => title === 'goal');
+
+  const output: string[] = [
+    `# Implementation Plan: ${projectName}`,
+    '',
+    `> Promoted from a brief on ${today}. The original brief is archived at \`${BRIEF_ARCHIVE_FILE}\`; its outcomes, decisions, known unknowns and delivery authority are carried into \`discovery.md\`.`,
+    '',
+    `**Goal:** ${goal ? goal.split('\n\n')[0]!.replace(/\n/g, ' ') : '{Author from discovery}'}`,
+    '',
+    '**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`',
+    '',
+  ];
+  let referencesSeen = false;
+  const seenPhases = new Set<string>();
+
+  for (const section of sections) {
+    if (section.heading == null) continue;
+    const title = sectionTitle(section.heading);
+    const phaseHeading = parsePhaseHeadingLine(section.heading);
+
+    if (phaseHeading) {
+      const { phaseId, name } = phaseHeading;
+      if (seenPhases.has(phaseId)) continue;
+      seenPhases.add(phaseId);
+      const state = phaseStates[phaseId] ?? 'pending';
+      const phaseRecords = records.get(phaseId) ?? [];
+      const lines: string[] = [`## Phase ${phaseId}: ${name}`, ''];
+      const owned = trimBlank(ownedPhaseLines(section));
+      if (owned.length > 0) lines.push(...owned, '');
+
+      if (state === 'accepted' || state === 'active') {
+        const completed = phaseRecords.filter((r) => r.status === 'completed');
+        const unfinished =
+          state === 'active'
+            ? phaseRecords.filter(
+                (r) => r.status === 'pending' || r.status === 'in_progress',
+              )
+            : [];
+        const historical = phaseRecords.filter(
+          (r) => r.status !== 'completed' && !unfinished.includes(r),
+        );
+        if (historical.length > 0) {
+          lines.push(
+            `**Historical records:** ${historical
+              .map((r) => `${r.taskId} (${r.status ?? 'unknown'})`)
+              .join(', ')}`,
+            '',
+          );
+        }
+        if (unfinished.length > 0) {
+          lines.push(
+            `**Unfinished records:** ${unfinished
+              .map((r) => `${r.taskId} (${r.status})`)
+              .join(', ')}`,
+            '',
+          );
+        }
+        for (const record of completed) lines.push(...renderPlanTask(record));
+
+        if (state === 'accepted' && completed.length === 0) {
+          const next = Math.max(0, ...phaseRecords.map((r) => r.ordinal)) + 1;
+          const taskId = `${taskPrefixForPhase(phaseId)}-t${String(next).padStart(2, '0')}`;
+          const head = markers.get(phaseId)?.head ?? '-';
+          lines.push(
+            `### Task ${taskId}: ${SYNTHESIZED_TASK_TITLE}`,
+            '',
+            `> Synthesized at promotion: the phase was accepted on its exit evidence (head \`${head}\`) without a completed execution record.`,
+            '',
+          );
+          const end = sectionEnds.get(phaseId) ?? journalLines.length;
+          insertions.push({
+            at: end,
+            lines: [
+              `### Task ${taskId}: ${SYNTHESIZED_TASK_TITLE}`,
+              '',
+              '**Status:** completed',
+              `**Commit:** ${head}`,
+              '**Executor:** reconciled',
+              '',
+              `Synthesized by \`oat project promote --to quick\` on ${today}: the phase was accepted on its exit evidence without a completed execution record.`,
+              '',
+            ],
+          });
+        }
+      }
+      output.push(...lines);
+      continue;
+    }
+
+    if (BRIEF_ONLY_SECTIONS.includes(title.toLowerCase())) continue;
+    if (/^delivery\b/i.test(title)) continue;
+
+    if (title.toLowerCase() === 'reviews') {
+      output.push(...trimBlank(annotateReviewRows(section)), '');
+      continue;
+    }
+
+    if (title.toLowerCase() === 'references') {
+      referencesSeen = true;
+      output.push(
+        ...trimBlank(section.lines),
+        `- Brief archive: \`${BRIEF_ARCHIVE_FILE}\``,
+        '- Discovery: `discovery.md`',
+        '',
+      );
+      continue;
+    }
+
+    output.push(...trimBlank(section.lines), '');
+  }
+
+  if (!referencesSeen) {
+    output.push(
+      '## References',
+      '',
+      `- Brief archive: \`${BRIEF_ARCHIVE_FILE}\``,
+      '- Discovery: `discovery.md`',
+      '',
+    );
+  }
+
+  frontmatter['oat_status'] = 'in_progress';
+  frontmatter['oat_ready_for'] = null;
+  frontmatter['oat_last_updated'] = today;
+  frontmatter['oat_template'] = true;
+  frontmatter['oat_template_name'] = 'plan';
+  frontmatter['oat_plan_source'] = 'quick';
+  frontmatter['oat_promoted_from'] = 'brief';
+  frontmatter['oat_promotion_pending_phases'] = pendingPhases;
+
+  const plan = `---\n${YAML.stringify(frontmatter)}---\n\n${output
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trimEnd()}\n`;
+
+  const nextJournal = [...journalLines];
+  for (const insertion of [...insertions].sort((a, b) => b.at - a.at)) {
+    const before = nextJournal.slice(0, insertion.at);
+    while (before.length > 0 && before[before.length - 1]!.trim() === '') {
+      before.pop();
+    }
+    const after = nextJournal.slice(insertion.at);
+    nextJournal.splice(
+      0,
+      nextJournal.length,
+      ...before,
+      '',
+      ...insertion.lines,
+      ...after,
+    );
+  }
+  const implementation = nextJournal.join('\n');
+
+  return {
+    ok: true,
+    migration: {
+      plan,
+      implementation,
+      implementationChanged: insertions.length > 0,
+      pendingPhases,
+      phaseStates,
+    },
+  };
+}
+
+function upsertDiscoverySection(
+  content: string,
+  heading: string,
+  body: string,
+): string {
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (new RegExp(`^## ${escapedHeading}[ \\t]*$`, 'm').test(content)) {
+    return replaceSection(content, heading, body);
+  }
+  const section = `## ${heading}\n\n${body.trim()}\n\n`;
+  const nextSteps = /^## Next Steps[ \t]*$/m.exec(content);
+  return nextSteps
+    ? `${content.slice(0, nextSteps.index)}${section}${content.slice(nextSteps.index)}`
+    : `${content.trimEnd()}\n\n${section}`;
+}
+
+function renderBriefDiscovery(
+  template: string,
+  projectName: string,
+  today: string,
+  nowUtc: string,
+  briefPlan: string,
+): string {
+  let rendered = applyTemplateReplacements(
+    template,
+    projectName,
+    today,
+    nowUtc,
+    'quick',
+  );
+  const frontmatter = readObjectFrontmatter(rendered, 'rendered discovery.md');
+  frontmatter['oat_ready_for'] = 'oat-project-quick-start';
+  rendered = replaceFrontmatter(
+    rendered,
+    YAML.stringify(frontmatter).trimEnd(),
+  );
+  const sections = splitSections(stripFrontmatter(briefPlan));
+  const carried: [string, string | null][] = [
+    ['Initial Request', findBriefSection(sections, (t) => t === 'goal')],
+    ['Success Criteria', findBriefSection(sections, (t) => t === 'outcomes')],
+    ['Key Decisions', findBriefSection(sections, (t) => t === 'decisions')],
+    [
+      'Constraints',
+      findBriefSection(sections, (t) => t.startsWith('constraints')),
+    ],
+    [
+      'Open Questions',
+      findBriefSection(sections, (t) => t === 'known unknowns'),
+    ],
+    [
+      'Delivery Endpoint and Authority (from brief)',
+      findBriefSection(sections, (t) => t.startsWith('delivery')),
+    ],
+  ];
+  for (const [heading, body] of carried) {
+    if (body) rendered = upsertDiscoverySection(rendered, heading, body);
+  }
+  return rendered;
+}
+
+function renderPromotedBriefState(
+  stateContent: string,
+  statePath: string,
+  nowUtc: string,
+): string {
+  const frontmatter = readObjectFrontmatter(stateContent, statePath);
+  frontmatter['oat_workflow_mode'] = 'quick';
+  frontmatter['oat_phase'] = 'plan';
+  frontmatter['oat_phase_status'] = 'in_progress';
+  frontmatter['oat_ready_for'] = 'oat-project-quick-start';
+  frontmatter['oat_project_state_updated'] = nowUtc;
+  return replaceFrontmatter(
+    stateContent,
+    YAML.stringify(frontmatter).trimEnd(),
+  );
+}
+
+interface BriefPromotionInput {
+  repoRoot: string;
+  projectRoot: string;
+  projectName: string;
+  statePath: string;
+  planPath: string;
+  stateContent: string;
+  planContent: string;
+}
+
+async function promoteBriefProject(
+  input: BriefPromotionInput,
+  context: CommandContext,
+  dependencies: ProjectPromoteDependencies,
+): Promise<PromotionResult> {
+  const { repoRoot, projectRoot, projectName, statePath, planPath } = input;
+  const archivePath = join(projectRoot, BRIEF_ARCHIVE_FILE);
+  const implementationPath = join(projectRoot, 'implementation.md');
+
+  if (await dependencies.fileExists(archivePath)) {
+    return { status: 'refused', reason: 'brief-archive-exists', files: [] };
+  }
+
+  let implementationContent = '';
+  if (await dependencies.fileExists(implementationPath)) {
+    try {
+      implementationContent = await dependencies.readFile(
+        implementationPath,
+        'utf8',
+      );
+    } catch {
+      return { status: 'refused', reason: 'project-unreadable', files: [] };
+    }
+  }
+
+  const now = dependencies.now();
+  const nowUtc = now.toISOString();
+  const today = nowUtc.slice(0, 10);
+
+  let migrated: BriefMigrationResult;
+  try {
+    migrated = migrateBriefToQuick({
+      planContent: input.planContent,
+      implementationContent,
+      projectName,
+      today,
+    });
+  } catch {
+    return { status: 'refused', reason: 'invalid-brief-plan', files: [] };
+  }
+  if (!migrated.ok) {
+    return { status: 'refused', reason: migrated.reason, files: [] };
+  }
+  const { migration } = migrated;
+
+  const projectsRoot = await dependencies.resolveProjectsRoot(
+    repoRoot,
+    dependencies.processEnv,
+  );
+  const scope = resolveProjectScope(projectRoot, projectsRoot, repoRoot);
+  if (!scope) {
+    return { status: 'refused', reason: 'scope-unresolved', files: [] };
+  }
+
+  let discoveryContent: string;
+  let quickStateContent: string;
+  try {
+    const discoveryTemplate = (
+      await dependencies.resolveTemplate({
+        name: 'discovery.md',
+        templatesRoot: join(repoRoot, '.oat', 'templates'),
+        home: context.home,
+        assetsRoot: () => resolveAssetsRoot(),
+      })
+    ).content;
+    discoveryContent = renderBriefDiscovery(
+      discoveryTemplate,
+      projectName,
+      today,
+      nowUtc,
+      input.planContent,
+    );
+    quickStateContent = renderPromotedBriefState(
+      input.stateContent,
+      statePath,
+      nowUtc,
+    );
+  } catch {
+    return { status: 'refused', reason: 'template-unreadable', files: [] };
+  }
+
+  const files = [
+    'discovery.md',
+    BRIEF_ARCHIVE_FILE,
+    ...(migration.implementationChanged ? ['implementation.md'] : []),
+    'plan.md',
+    'state.md',
+  ];
+  const identity = `promote:${projectRoot}:brief-to-quick:${randomUUID()}`;
+  const writtenFiles: string[] = [];
+  try {
+    await dependencies.mkdir(join(projectRoot, 'references'), {
+      recursive: true,
+    });
+    await dependencies.writeFile(
+      join(projectRoot, 'discovery.md'),
+      discoveryContent,
+      'utf8',
+    );
+    writtenFiles.push('discovery.md');
+    await dependencies.writeFile(archivePath, input.planContent, 'utf8');
+    writtenFiles.push(BRIEF_ARCHIVE_FILE);
+    if (migration.implementationChanged) {
+      await dependencies.writeFile(
+        implementationPath,
+        migration.implementation,
+        'utf8',
+      );
+      writtenFiles.push('implementation.md');
+    }
+    await dependencies.writeFile(planPath, migration.plan, 'utf8');
+    writtenFiles.push('plan.md');
+    await dependencies.writeFile(statePath, quickStateContent, 'utf8');
+    writtenFiles.push('state.md');
+  } catch {
+    return { status: 'refused', reason: 'write-failed', files: writtenFiles };
+  }
+
+  try {
+    await persistPromotion(
+      repoRoot,
+      projectsRoot,
+      projectRoot,
+      projectName,
+      scope,
+      identity,
+      dependencies,
+      files,
+    );
+  } catch (error) {
+    return {
+      status: 'refused',
+      reason: 'persistence-failed',
+      files: writtenFiles,
+      ...(error instanceof PromotionPersistenceError
+        ? { recovery: error.recovery }
+        : {}),
+    };
+  }
+
+  return { status: 'promoted', reason: 'promoted', files };
 }
 
 export function createProjectPromoteCommand(

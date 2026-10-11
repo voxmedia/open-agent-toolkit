@@ -154,16 +154,21 @@ function extractTaskHeadingPhaseIds(planContent: string): string[] {
 }
 
 /**
- * The normalized id of a `## Phase` heading line, or `null` when the line is
- * not a well-formed phase heading. Delegates to the control-plane phase-unit
- * parser so heading spellings (`## Phase 1:`, `## Phase p01:`,
+ * The normalized id and name of a `## Phase` heading line, or `null` when the
+ * line is not a well-formed phase heading. Delegates to the control-plane
+ * phase-unit parser so heading spellings (`## Phase 1:`, `## Phase p01:`,
  * `## Phase p-rev1:`, `## Revision Phase 1:`) normalize exactly as progress
  * reads them.
  */
+export function parsePhaseHeadingLine(
+  line: string,
+): { phaseId: string; name: string } | null {
+  const phase = parseTaskProgress(line, '', { phaseUnits: true }).phases[0];
+  return phase ? { phaseId: phase.phaseId, name: phase.name } : null;
+}
+
 function phaseIdOfHeading(line: string): string | null {
-  return (
-    parseTaskProgress(line, '', { phaseUnits: true }).phases[0]?.phaseId ?? null
-  );
+  return parsePhaseHeadingLine(line)?.phaseId ?? null;
 }
 
 /**
@@ -194,17 +199,17 @@ const TAB_WIDTH = 4;
 const INDENTED_CODE_COLUMNS = 4;
 
 /**
- * Plan record lines: fence lines, fenced content and indented code are
- * dropped, mirroring the control-plane reader that phase-unit progress and
- * quick plan readiness use, so a fenced example phase block never validates
- * or fails a real plan.
+ * For each line, whether it is a record line: fence lines, fenced content
+ * and indented code are not, mirroring the control-plane reader that
+ * phase-unit progress and quick plan readiness use, so a fenced example
+ * phase block never validates, fails or migrates a real plan.
  */
-function recordLines(content: string): string[] {
-  const record: string[] = [];
+export function recordLineMask(lines: readonly string[]): boolean[] {
+  const mask: boolean[] = [];
   let fenceMarker: string | null = null;
   let fenceLength = 0;
 
-  for (const line of content.split('\n')) {
+  for (const line of lines) {
     let columns = 0;
     let index = 0;
     for (; index < line.length; index += 1) {
@@ -233,14 +238,20 @@ function recordLines(content: string): string[] {
           fenceLength = 0;
         }
       }
+      mask.push(false);
       continue;
     }
 
-    if (fenceMarker != null || columns >= INDENTED_CODE_COLUMNS) continue;
-    record.push(line);
+    mask.push(fenceMarker == null && columns < INDENTED_CODE_COLUMNS);
   }
 
-  return record;
+  return mask;
+}
+
+function recordLines(content: string): string[] {
+  const lines = content.split('\n');
+  const mask = recordLineMask(lines);
+  return lines.filter((_, index) => mask[index]);
 }
 
 const PHASE_HEADING_CANDIDATE = /^##[ \t]+(?:Revision[ \t]+)?Phase\b/;
