@@ -19,6 +19,7 @@ import { resolveScopeRoot } from '@commands/shared/project-scope';
 import { readOatLocalConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
 import {
+  BRIEF_MODES,
   evaluateQuickPlanReadiness,
   quickPlanNotReadyReason,
   type QuickPlanReadiness,
@@ -377,6 +378,26 @@ function calculateStaleness(
   return result;
 }
 
+/**
+ * True when the frontmatter workflow mode belongs to the brief mode family.
+ * The dashboard keeps the raw frontmatter string, so it checks membership
+ * against the control plane's registry rather than a local list.
+ */
+function isBriefWorkflow(workflowMode: string): boolean {
+  return (BRIEF_MODES as readonly string[]).includes(workflowMode);
+}
+
+/**
+ * Printed for brief projects. The dashboard reads `state.md` frontmatter only
+ * and never phase-unit progress, so it cannot apply the router's brief-unit
+ * guard at `implement:complete`/`pr_open`.
+ */
+const BRIEF_ROUTER_AUTHORITY_NOTE =
+  '> Brief projects count progress in phase-units, which this dashboard does not read. ' +
+  '`oat project status` and `oat-project-next` use the control-plane router, which is the ' +
+  'authority for the brief-unit guard: an unaccepted phase-unit sends the project back to ' +
+  '`oat-project-implement` before any finalization step.';
+
 function computeNextStep(
   project: ActiveProject,
   hasProjects: boolean,
@@ -433,11 +454,15 @@ function computeNextStep(
     // projects whose state.md still lists `spec` in oat_hill_checkpoints route
     // to oat-project-design here so they finish through the consolidated flow
     // rather than being pushed back at the deprecated standalone skill.
+    // Brief modes own their plan phase through the brief entry skill, as the
+    // router's mode-aware current-phase lookup does.
     const phaseSkillMap: Record<string, string> = {
       discovery: 'oat-project-discover',
       spec: 'oat-project-design',
       design: 'oat-project-design',
-      plan: 'oat-project-plan',
+      plan: isBriefWorkflow(state.workflowMode)
+        ? 'oat-project-brief'
+        : 'oat-project-plan',
       implement: 'oat-project-implement',
     };
     return {
@@ -523,6 +548,25 @@ function computeNextStep(
     'lite:plan:in_progress': {
       step: 'oat-project-lite',
       reason: 'Continue lite planning',
+    },
+    // Brief routes mirror the router's BRIEF_ROUTES. Parity with
+    // `recommendSkill` is bounded to these plan-phase states and
+    // `implement:in_progress` (generate.test.ts pins it): this dashboard has no
+    // phase-unit progress, so at `implement:complete`/`pr_open` a brief follows
+    // the shared post-implementation map below and the router, reached through
+    // `oat project status` and `oat-project-next`, is the authority for the
+    // brief-unit guard. The dashboard prints a note saying so.
+    'brief:plan:in_progress': {
+      step: 'oat-project-brief',
+      reason: 'Continue the project brief',
+    },
+    'brief:plan:complete': {
+      step: 'oat-project-implement',
+      reason: 'Start implementation from the approved brief',
+    },
+    'brief:implement:in_progress': {
+      step: 'oat-project-implement',
+      reason: 'Continue implementation',
     },
   };
 
@@ -773,6 +817,14 @@ function buildDashboardMarkdown(
   lines.push('');
   lines.push(`**${nextStep.step}** - ${nextStep.reason}`);
   lines.push('');
+  if (
+    project.status === 'active' &&
+    state &&
+    isBriefWorkflow(state.workflowMode)
+  ) {
+    lines.push(BRIEF_ROUTER_AUTHORITY_NOTE);
+    lines.push('');
+  }
 
   lines.push('## Quick Commands');
   lines.push('');
@@ -782,6 +834,7 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-quick-start` - Create a quick workflow project');
   lines.push('- `oat-project-import-plan` - Import an external provider plan');
   lines.push('- `oat-project-lite` - Create a lite workflow project');
+  lines.push('- `oat-project-brief` - Create a brief workflow project');
   lines.push('- `oat project open <name>` - Open or resume a project');
   lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');
