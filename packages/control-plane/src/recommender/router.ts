@@ -1,8 +1,10 @@
+import { selectPhaseUnits } from '../state/tasks';
 import {
   type ArtifactStatus,
   type BoundaryTier,
   isBriefMode,
   type Phase,
+  type PhaseProgress,
   type ProjectState,
   type QuickPlanReadiness,
   type QuickPlanReadinessFailure,
@@ -128,6 +130,11 @@ export function recommendSkill(
   const hillOverride = getHillOverride(state);
   if (hillOverride) {
     return hillOverride;
+  }
+
+  const briefUnitGuard = getBriefUnitGuard(state);
+  if (briefUnitGuard) {
+    return briefUnitGuard;
   }
 
   if (
@@ -271,6 +278,43 @@ function getHillOverride(
   }
 
   return null;
+}
+
+/**
+ * Brief modes count progress in phase-units, so a brief project whose
+ * implement phase reads `complete` or `pr_open` while a unit in its active
+ * scope is still unaccepted resumes implementation before any finalization
+ * route. The guard is conditioned on the implement phase so planning routes
+ * stay reachable, and `lifecycle: complete` stays terminal exactly as it does
+ * for the task-mode revision reopen. The active scope is the whole plan for
+ * brief (`null`).
+ */
+function getBriefUnitGuard(
+  state: Omit<ProjectState, 'recommendation'>,
+): SkillRecommendation | null {
+  if (
+    state.phase === 'implement' &&
+    isBriefMode(state.workflowMode) &&
+    state.lifecycle !== 'complete' &&
+    hasIncompletePhaseUnit(selectPhaseUnits(state.progress, null))
+  ) {
+    return {
+      skill: normalizeImplementationSkill('oat-project-implement', state),
+      reason: 'Incomplete phase-units remain in the active scope',
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Ordinary and revision phases count alike; a provisional unit is incomplete
+ * regardless of its counts.
+ */
+function hasIncompletePhaseUnit(units: readonly PhaseProgress[]): boolean {
+  return units.some(
+    (unit) => unit.provisional === true || unit.completed < unit.total,
+  );
 }
 
 function getPostImplementationRecommendation(
