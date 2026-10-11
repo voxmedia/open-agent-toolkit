@@ -851,12 +851,16 @@ oat_generated: false
 
 ## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
 
 **Base:** 5ac181153129025492ffe119040c9709b32877d6
-**Head:** 644f23e1e (candidate head at review; p12-t01 d2ec5a784 from the first dispatch, the rest from the resume `impl-p12-a7422750`)
-**Executor:** phase-implementer:impl-p12-f2b82399 → impl-p12-a7422750 after the T3 restart (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
+**Head:** da60988b8 (fix round 3; candidate heads 644f23e1e at round 1, 4c4a7c09a at round 2, 2195e6fbd at round 3; p12-t01 d2ec5a784 from the first dispatch, the rest from the resume `impl-p12-a7422750`)
+**Status:** completed
+
+- **Outcome:** accepted. Review rounds (Fable 5.1 high, auto): 1 → 0/1/2/4 (p12-t06), 2 → 0/0/1/1 (p12-t07), 3 → 0/0/1/2 (p12-t08, root-verified at the cap; the final integrated review covers the range). Fix-loop count 3. Decisions recorded: `summary.md` is a bookkeeping path; shared-member review artifacts are bookkeeping for each other; goal-mode summaries defer repo-level writes while `phase-uncovered` holds. Docs verified against source by the round-1 reviewer; lockstep 0.3.20; bumps validated against origin/main and the v1 PR branch.
+- **Verification:** full gate table at p12-t05 (all exit 0; forced turbo test 12/12 uncached); round-2 reviewer gates 34 files / 1221 tests; root re-runs after each fix exit 0.
+  **Executor:** phase-implementer:impl-p12-f2b82399 → impl-p12-a7422750 after the T3 restart (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
 
 ### Task p12-t01: Skill contract tests and autonomy coverage for goal
 
@@ -959,8 +963,11 @@ oat_generated: false
 
 ### Task p12-t08: (review) Narrow the goal terminal deferral to uncovered phases
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** da60988b8
+
+- **Files changed:** `oat-project-summary/SKILL.md:536-551` deferral only while `oat project closeout-check --json` (read-only) still reports `phase-uncovered`, the deferred writes run in the next summary run after it clears (M1); :553 trigger wording ("marks stale once the terminal delivery reaches its endpoint") and the deferral report line "Deferred: ledger roll-up and decision promotion run in the completion summary refresh; do not decline it." (L1); :542 the skipped roll-up also writes `## Workflow Observations`, supplied by the later run (L2); `oat-project-pr-final/SKILL.md:220` and `brief-contract.md:480-481` state the same condition. Indirect wording keeps the named-skill-load scan and autonomy inventory green.
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p12-fix-3`; validate-skills, format:root, docs check, validation + init/tools/shared 25 files / 1064 tests exit 0. Root re-ran validate-skills, format:root and the two contract suites: exit 0; `phase-uncovered` present at three lines; tree clean. Root-verified at the review cap; the final integrated review covers the range.
 
 ### Task p12-t07: (review) Defer repo-level summary writes until the terminal delivery is registered
 
@@ -1127,7 +1134,7 @@ _- Outstanding Items_
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
 - Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base f214626dc (artifact-cleanup planning commits in between are out of scope)
 - Resume outcome: DONE_WITH_CONCERNS at 644f23e1e (p12-t01 verified with a fresh prove-it-can-fail; p12-t02 22-row probe with three fixes 96e6d24df/3ba63e2e5/b0f7cfacd; t03–t05 landed; full gate table green at lockstep 0.3.20; concerns: the goal declaration now recorded in the journal Final Summary instead of the brief's endpoint/authority (fix 3, p11 implementer's choice reversed), the bump base, the design row (added by the root), doc prose to be checked against source); p12 review follows
-- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` → 4c4a7c09a; round 2 (rev-p12-fae693e0, head daa352161): 0/0/1/1 → passed; M1 → p12-t07 via `cont-brief-goal-workflow-modes-p12-fix-2` → 2195e6fbd; round 3 (rev-p12-48b3195b, head 9b696a199): 0/0/1/2 → passed; M1 (deferral over-fires when `pr` is coverage-satisfied; deferred writes never run) + L1/L2 → p12-t08 via `cont-brief-goal-workflow-modes-p12-fix-3`. Review cap (three rounds) reached: per the run rules the complexity disposition is recorded here — the residual is a one-clause prose condition with no code; the root verifies the fix and the final integrated review (which spans this range) is the independent check; no round 4
+- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` → 4c4a7c09a; round 2 (rev-p12-fae693e0, head daa352161): 0/0/1/1 → passed; M1 → p12-t07 via `cont-brief-goal-workflow-modes-p12-fix-2` → 2195e6fbd; round 3 (rev-p12-48b3195b, head 9b696a199): 0/0/1/2 → passed; M1 (deferral over-fires when `pr` is coverage-satisfied; deferred writes never run) + L1/L2 → p12-t08 via `cont-brief-goal-workflow-modes-p12-fix-3` → da60988b8; phase p12 closed at da60988b8. Review cap (three rounds) reached: per the run rules the complexity disposition is recorded here — the residual is a one-clause prose condition with no code; the root verifies the fix and the final integrated review (which spans this range) is the independent check; no round 4
 
 <!-- orchestration-runs-end -->
 

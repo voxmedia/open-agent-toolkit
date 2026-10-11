@@ -148,6 +148,10 @@ Phase p11 passed review at 80282f21b after two rounds (0/1/2/5 then 0/0/0/1); fi
 
 p12 reached the three-round review cap with a one-clause prose residual (goal terminal deferral condition). Disposition: fix as p12-t08, root-verified; the final integrated review over the whole branch is the independent check instead of a fourth p12 round.
 
+### 2026-10-11 · structural · oat-project-implement · p12
+
+Phase p12 passed review at da60988b8 after three rounds (0/1/2/4, 0/0/1/1, 0/0/1/2); fixes p12-t06..t08; all twelve phases complete at lockstep 0.3.20. Key p12-review-passed-da60988b8.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
