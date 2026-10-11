@@ -1,7 +1,7 @@
 ---
 id: BL-261011-resolve-validate-plan-project
 title: Resolve validate-plan --project-path against --cwd
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - cli
 assignee: null
 created: 2026-10-11T06:34:53.773Z
-updated: 2026-10-11T06:34:53.773Z
+updated: '2026-10-11T12:57:10Z'
 associated_issues: []
 external_plans: []
 ---

@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-10-11 — BL-261011-resolve-validate-plan-project — Resolve validate-plan --project-path against --cwd — Fixed on feat/brief-workflow-mode-v1 (PR #361): validate-plan resolves a relative --project-path against context.cwd with a --cwd regression test
+- 2026-10-11 — BL-261011-fix-the-phase-commit-grep — Fix the phase commit-grep regex in review-provide and pr-progress — Fixed on feat/brief-workflow-mode-v1 (PR #361): review-provide and pr-progress use --fixed-strings --grep with --max-count instead of a BRE group and HEAD~N range; scripted control recorded in the commit
 - 2026-10-11 — BL-260927-add-a-side-effect-free-dry-run — Add a side-effect-free dry run to oat project log append — Preview project-log appends and commit recovery without log, lock, receipt, or Git mutations; retain conditional validation parity.
 - 2026-10-11 — BL-260928-serialize-concurrent-agents-md — Serialize concurrent AGENTS.md guidance appends — Serialize cooperating guidance appenders across processes; reclassify under an owned target lock while retaining append-only identity and link protections.
 - 2026-10-11 — BL-260907-ignore-backslash-escaped — Ignore backslash-escaped emphasis in skill-script reference extraction — Ignore odd-backslash escaped script emphasis while preserving even-backslash and genuine missing references.

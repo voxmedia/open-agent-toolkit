@@ -1,7 +1,7 @@
 ---
 id: BL-261011-fix-the-phase-commit-grep
 title: Fix the phase commit-grep regex in review-provide and pr-progress
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - reviews
 assignee: null
 created: 2026-10-11T06:34:53.566Z
-updated: 2026-10-11T06:34:53.566Z
+updated: '2026-10-11T12:57:10Z'
 associated_issues: []
 external_plans: []
 ---
