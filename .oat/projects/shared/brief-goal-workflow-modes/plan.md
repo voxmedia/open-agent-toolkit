@@ -1315,6 +1315,16 @@ git commit -m "fix(p09-t03): newest passed review wins, tolerant scope labels, n
 
 ---
 
+### Task p11-t04: (review) Active-milestone re-delivery, revise ownership row, terminal-delivery sharing and four prose gaps
+
+**Source:** p11 review round 1 (reviews/archived/p11-review-2026-10-11T151221Z.md) H1, M1, M2, L1–L5.
+
+**Files:** `oat-project-pr-progress/SKILL.md` Step 5.5: a branch before item 4 — when the active milestone already has a non-superseded registered delivery, run items 1–2 for that `dNN`; on `status: ok` write `oat_milestone_status: delivered` and refresh `oat_pr_status`/`oat_pr_url` from its latest member, register nothing, log nothing new; on a not-fresh report apply item 3; item 8's "active milestone stays untouched" restricted to targets whose milestone is not `oat_milestone`, with the active milestone's own delivery falling through to the new branch (H1). `brief-contract.md` 12.6 pr-progress row: the clear-and-`delivered` write is one step for the active milestone (H1); 12.3 new row `delivered | delivering → implementing`, owner `oat-project-revise`, prerequisite "inline feedback with an explicit active-milestone target; appended `p-revN` joins the milestone row; delivery evidence invalidated", writes status and pointer, and 12.6 notes that this active-target branch is the one status write revise owns (M1; revise `:234-235` unchanged); 12.7/12.9: terminal deliveries registered from one head branch share their member PR, coverage judges each delivery's own scope and bound evidence (M2, decision (a), recorded in p12-t04 and probed in p12-t02); 12.3 `delivered → aligning` row: activation also writes `oat_phase_status: in_progress` and projects `oat_pr_status`/`oat_pr_url` from the latest member's observed status (L4). `oat-project-pr-final/SKILL.md:205`: the shared member is expected (M2). `oat-project-goal/SKILL.md` Step 7 item 1: the same two writes (L4). `oat-project-complete/SKILL.md:401-405`: goal mode includes the summary Step 3 goal fragment, "a brief or goal project" (L1); `:301`: "every terminal delivery is at its agreed endpoint (`status: at_endpoint`, or `endpoint_attainment` recorded)" (L2). `oat-brainstorm/SKILL.md:404`, `:865` and `references/destinations.md:125`: `goal` in the promote-to-new-project list with the same research-note arrival as brief and a "several deliveries" default signal (L3). `oat-project-next/SKILL.md:342` row 4d: "otherwise rows 4c by missing evidence" (L5). Project-scope projections regenerated with `sync --scope project` if any role or projected file changes.
+
+**Verify:** `pnpm oat:validate-skills`; `pnpm format:root`; `rg -n` showing each clause at its line; the scratch goal-project router probe from the review (S7/S13 shapes) re-run to show the new branch is the one the router reaches after recovery completes at `delivering` with a registered `dNN`. **Commit:** `fix(p11-t04): active-milestone re-delivery, revise ownership and terminal-delivery sharing`
+
+---
+
 ## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
 
 ### Task p12-t01: Skill contract tests and autonomy coverage for goal
@@ -1393,7 +1403,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p09    | code     | passed          | 2026-10-11 | reviews/archived/p09-review-2026-10-11T091238Z.md                                                                                                                                                                   | 8113ced43022a83572d635b22db9ecd7ee287862 | auto       | round 2 (0/0/0/0)                                                                                                   |
 | p10    | code     | fixes_added     | 2026-10-11 | reviews/archived/p10-review-2026-10-11T135002Z.md                                                                                                                                                                   | bb69bb0650dc1cc076b5d432b8a53702bd6190c1 | auto       | 0/0/2/6; M1, M2, L1, L2, L3, L6 → p10-t05; L4 carried to p11-t01 contract text; L5 design edit in root bookkeeping  |
 | p10    | code     | passed          | 2026-10-11 | reviews/archived/p10-review-2026-10-11T140916Z.md                                                                                                                                                                   | 7a18e197e68831359e977fba46fcf0600466057a | auto       | round 2 (0/0/0/1); fixes b290081e2; L1 → p10-t06 (no re-review, Low-only on a passing review)                       |
-| p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
+| p11    | code     | fixes_added     | 2026-10-11 | reviews/archived/p11-review-2026-10-11T151221Z.md                                                                                                                                                                   | ee16af1b8788b1b680f7442005027e4abd3d208f | auto       | 0/1/2/5; H1, M1, M2 (decision a), L1–L5 → p11-t04; M1/M2 design rows in root bookkeeping                            |
 | p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
@@ -1421,10 +1431,10 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
 - Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
 - Phase 10: 6 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); two review fixes
-- Phase 11: 3 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
+- Phase 11: 4 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
 - Phase 12: 5 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5)
 
-**Total: 57 tasks**
+**Total: 58 tasks**
 
 Ready for code review and merge.
 

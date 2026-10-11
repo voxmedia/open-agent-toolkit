@@ -814,6 +814,32 @@ oat_generated: false
 
 ---
 
+### Task p11-t04: (review) Active-milestone re-delivery, revise ownership row, terminal-delivery sharing and four prose gaps
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p11
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p11-review-2026-10-11T151221Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p11-cf02c1ad`, invocation auto, reviewed head ee16af1b8788b1b680f7442005027e4abd3d208f, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 1, Medium 2, Low 5 → fix tasks queued; auto-disposition mode. Items 1–9 verdicts recorded in the artifact; the scratch-project router probe (S1–S15) matched `GOAL_ROUTES` at every stage; `delivery check` returned the documented `undeliverable` / `exit.source: milestone-carrier` shape; both builds, validate-skills, format:root and the project-scope sync dry-run exit 0; vitest red only on the three expected pins (3/1053).
+
+- H1 pr-progress Step 5.5 never returns an already-registered active-milestone delivery to `delivered` after recovery; the next pass would allocate a duplicate `dNN` that the boundary refuses → converted: p11-t04.
+- M1 revise writes `oat_milestone_status: implementing` for the active milestone from `delivered`/`delivering`, a transition no owner table names (defensible; without it `p-revN` is never scheduled) → converted: p11-t04 (contract 12.3 row) + design transition row added in this bookkeeping.
+- M2 pr-final registers one terminal delivery per milestone (forced by `goal-delivered-scope-changed`) while contract 12.9 and the design say "the terminal delivery", and the shared PR member is unspecified → decision (a): terminal deliveries from one head branch share their member PR; coverage judges each delivery's own scope and evidence; no change to the p10 validate-plan rule. Converted: p11-t04 (contract 12.7/12.9, pr-final sentence); recorded for p12-t04 (decision record) and p12-t02 (probe); design updated in this bookkeeping.
+- L1 complete's fingerprint mirror names only the brief fragment → converted: p11-t04.
+- L2 complete conflates `merged` with `at_endpoint` → converted: p11-t04.
+- L3 brainstorm promote-to-new-project omits goal → converted: p11-t04.
+- L4 `oat_phase_status: pr_open` / `oat_pr_status: open` never reset at the next activation → converted: p11-t04.
+- L5 next's row 4d omits the missing-evidence branch at `delivering` → converted: p11-t04.
+
+**New tasks added:** p11-t04 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p11-fix-1`); round-2 re-review on the fix range follows because a High was converted. Dispatch of the fix waits for free disk above 1.5 GB (863 MB at receive time).
+
+---
+
 ## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
 
 **Status:** pending
@@ -992,6 +1018,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are design gaps recorded under p11-t03) at 38d84c1b5; p11 review follows
+- Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` pending free disk, then round 2 on the fix range
 
 <!-- orchestration-runs-end -->
 
@@ -1019,6 +1046,7 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
+- **p11 (2026-10-11):** revise owns the `delivered | delivering → implementing` transition for an explicit active-milestone target (p11 review M1; design transition table amended); terminal deliveries registered from one head branch share their member PR because `goal-delivered-scope-changed` keeps frozen scopes per milestone and GitHub allows one PR per head/base (p11 review M2, decision (a); decision record in p12-t04, probe in p12-t02).
 - **p10 (2026-10-11):** the p10-t05 commit message was shortened from the plan's 105-character text to 100 characters at commit time (commitlint `header-max-length`); the M2 fix requires an artifact change (archived-path-equivalent) rather than `recordsEvidence` alone to unlock an `exit_gate` replacement, because `recordsEvidence` is true whenever the delivery's artifact is on the allowlist; p10-t01 landed three validation codes beyond the plan's nine (accepted by review as forced by the p09 reader and the p09 review); two implementer-chosen formats (`satisfied_by: { pr: delivery-coverage }`, the extracted-child deferral shape) are accepted and carried to p11-t01 contract text; plan amendment 5.1 (project-log ownership for goal, retro probe, carried contract sentences) applied in the p10 closeout bookkeeping within the approved outcomes.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
