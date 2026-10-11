@@ -1,23 +1,45 @@
-import type {
-  ArtifactStatus,
-  BoundaryTier,
-  Phase,
-  ProjectState,
-  QuickPlanReadiness,
-  QuickPlanReadinessFailure,
-  SkillRecommendation,
-  WorkflowMode,
+import { selectPhaseUnits } from '../state/tasks';
+import {
+  type ArtifactStatus,
+  type BoundaryTier,
+  isBriefMode,
+  type Phase,
+  type PhaseProgress,
+  type ProjectState,
+  type QuickPlanReadiness,
+  type QuickPlanReadinessFailure,
+  type SkillRecommendation,
+  type WorkflowMode,
 } from '../types';
 
-const CURRENT_PHASE_SKILLS: Record<
-  Exclude<Phase, 'implement' | 'decomposition'>,
-  string
-> = {
+type PlanningPhase = Exclude<Phase, 'implement' | 'decomposition'>;
+
+const CURRENT_PHASE_SKILLS: Record<PlanningPhase, string> = {
   discovery: 'oat-project-discover',
   spec: 'oat-project-spec',
   design: 'oat-project-design',
   plan: 'oat-project-plan',
 };
+
+/**
+ * Brief modes own their planning phase through the brief entry skill, so the
+ * spec-driven planning skill is never their current-phase default (HiLL
+ * override or untiered fallback).
+ */
+const BRIEF_PHASE_SKILLS: Partial<Record<PlanningPhase, string>> = {
+  plan: 'oat-project-brief',
+};
+
+function getCurrentPhaseSkill(
+  phase: PlanningPhase,
+  workflowMode: WorkflowMode,
+): string {
+  if (isBriefMode(workflowMode)) {
+    return BRIEF_PHASE_SKILLS[phase] ?? CURRENT_PHASE_SKILLS[phase];
+  }
+
+  return CURRENT_PHASE_SKILLS[phase];
+}
 
 const CURRENT_ARTIFACT_BY_PHASE: Record<
   Exclude<Phase, 'decomposition'>,
@@ -88,6 +110,16 @@ const LITE_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'implement:in_progress:any': 'oat-project-implement',
 };
 
+// Unlike lite, tier 2 stays with the entry skill: a brief is
+// implementation-ready only through its recorded review disposition and
+// approval, which `oat-project-brief` owns.
+const BRIEF_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
+  'plan:in_progress:3': 'oat-project-brief',
+  'plan:in_progress:2': 'oat-project-brief',
+  'plan:complete:1': 'oat-project-implement',
+  'implement:in_progress:any': 'oat-project-implement',
+};
+
 export function recommendSkill(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
@@ -98,6 +130,11 @@ export function recommendSkill(
   const hillOverride = getHillOverride(state);
   if (hillOverride) {
     return hillOverride;
+  }
+
+  const briefUnitGuard = getBriefUnitGuard(state);
+  if (briefUnitGuard) {
+    return briefUnitGuard;
   }
 
   if (
@@ -235,12 +272,49 @@ function getHillOverride(
     !state.hillCompleted.includes(state.phase)
   ) {
     return {
-      skill: CURRENT_PHASE_SKILLS[state.phase],
+      skill: getCurrentPhaseSkill(state.phase, state.workflowMode),
       reason: 'HiLL gate is pending for the current phase',
     };
   }
 
   return null;
+}
+
+/**
+ * Brief modes count progress in phase-units, so a brief project whose
+ * implement phase reads `complete` or `pr_open` while a unit in its active
+ * scope is still unaccepted resumes implementation before any finalization
+ * route. The guard is conditioned on the implement phase so planning routes
+ * stay reachable, and `lifecycle: complete` stays terminal exactly as it does
+ * for the task-mode revision reopen. The active scope is the whole plan for
+ * brief (`null`).
+ */
+function getBriefUnitGuard(
+  state: Omit<ProjectState, 'recommendation'>,
+): SkillRecommendation | null {
+  if (
+    state.phase === 'implement' &&
+    isBriefMode(state.workflowMode) &&
+    state.lifecycle !== 'complete' &&
+    hasIncompletePhaseUnit(selectPhaseUnits(state.progress, null))
+  ) {
+    return {
+      skill: normalizeImplementationSkill('oat-project-implement', state),
+      reason: 'Incomplete phase-units remain in the active scope',
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Ordinary and revision phases count alike; a provisional unit is incomplete
+ * regardless of its counts.
+ */
+function hasIncompletePhaseUnit(units: readonly PhaseProgress[]): boolean {
+  return units.some(
+    (unit) => unit.provisional === true || unit.completed < unit.total,
+  );
 }
 
 function getPostImplementationRecommendation(
@@ -384,7 +458,7 @@ function getEarlyPhaseRoute(
     return getDecompositionRecommendation(state).skill;
   }
 
-  return CURRENT_PHASE_SKILLS[state.phase];
+  return getCurrentPhaseSkill(state.phase, state.workflowMode);
 }
 
 function getWorkflowRoutes(
@@ -397,6 +471,8 @@ function getWorkflowRoutes(
       return IMPORT_ROUTES;
     case 'lite':
       return LITE_ROUTES;
+    case 'brief':
+      return BRIEF_ROUTES;
     case 'spec-driven':
     default:
       return SPEC_DRIVEN_ROUTES;

@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { scanArtifacts } from '../state/artifacts';
-import type { ArtifactStatus, ProjectState, ReviewStatus } from '../types';
+import {
+  type ArtifactStatus,
+  type ProjectState,
+  type ReviewStatus,
+  WORKFLOW_MODES,
+} from '../types';
 import { recommendSkill } from './router';
 
 // Captured from discovery.md produced by `oat project promote` after p06-t10.
@@ -1099,5 +1104,289 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
 
     expect(recommendSkill(implementing).skill).toBe('oat-project-implement');
     expect(recommendSkill(discovering).skill).toBe('oat-project-quick-start');
+  });
+});
+
+// Brief mode owns its planning phase through the brief entry skill. The
+// router performs exact `phase:status:tier` lookups, so every planning tier is
+// pinned explicitly here.
+describe('recommendSkill brief routes', () => {
+  const briefPlan = (
+    boundaryTier: 1 | 2 | 3,
+    status: 'in_progress' | 'complete',
+    overrides: Partial<Omit<ProjectState, 'recommendation'>> = {},
+  ) =>
+    makeState({
+      phase: 'plan',
+      phaseStatus: status,
+      workflowMode: 'brief',
+      artifacts: makeArtifacts({
+        type: 'plan',
+        boundaryTier,
+        status,
+      }),
+      ...overrides,
+    });
+
+  it('keeps brief planning at tier 3 and tier 2 with the brief entry skill', () => {
+    expect(recommendSkill(briefPlan(3, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+    expect(recommendSkill(briefPlan(2, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+  });
+
+  it('keeps an untiered in-progress brief plan with the brief entry skill', () => {
+    expect(recommendSkill(briefPlan(1, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+  });
+
+  it('routes a complete brief plan to implement', () => {
+    expect(recommendSkill(briefPlan(1, 'complete')).skill).toBe(
+      'oat-project-implement',
+    );
+  });
+
+  it('routes brief implementation in progress to implement', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'in_progress',
+      workflowMode: 'brief',
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  it('sends a pending brief plan HiLL checkpoint to the brief entry skill', () => {
+    const state = briefPlan(1, 'complete', {
+      hillCheckpoints: ['plan'],
+      hillCompleted: [],
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-brief',
+      reason: 'HiLL gate is pending for the current phase',
+    });
+  });
+
+  it('keeps the spec-driven planning skill for a pending spec-driven plan HiLL checkpoint', () => {
+    const state = makeState({
+      phase: 'plan',
+      phaseStatus: 'complete',
+      hillCheckpoints: ['plan'],
+      hillCompleted: [],
+      artifacts: makeArtifacts({
+        type: 'plan',
+        boundaryTier: 1,
+        status: 'complete',
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-plan');
+  });
+
+  it('never routes a non-spec-driven tier-3 plan to the spec-driven planning skill', () => {
+    const routed = WORKFLOW_MODES.map((workflowMode) => ({
+      workflowMode,
+      skill: recommendSkill(
+        makeState({
+          phase: 'plan',
+          phaseStatus: 'in_progress',
+          workflowMode,
+          artifacts: makeArtifacts({ type: 'plan', boundaryTier: 3 }),
+        }),
+      ).skill,
+    }));
+
+    for (const { workflowMode, skill } of routed) {
+      if (workflowMode === 'spec-driven') {
+        expect(skill).toBe('oat-project-plan');
+      } else {
+        expect(skill, workflowMode).not.toBe('oat-project-plan');
+      }
+    }
+    expect(routed.find((r) => r.workflowMode === 'brief')?.skill).toBe(
+      'oat-project-brief',
+    );
+  });
+});
+
+/**
+ * Phase-unit progress as `parseTaskProgress(..., { phaseUnits: true })`
+ * produces it: each phase is one unit, accepted units read 1/1, and a
+ * provisional phase reads 0/1 regardless of any journal marker. An explicit
+ * `completed` overrides the derived count, so a test can build a shape the
+ * parser does not emit (for example a provisional unit reading 1/1).
+ */
+function makeBriefUnitProgress(
+  units: Array<{
+    phaseId: string;
+    accepted?: boolean;
+    provisional?: boolean;
+    completed?: number;
+  }>,
+): ProjectState['progress'] {
+  const phases = units.map(
+    ({ phaseId, accepted = false, provisional, completed }) => ({
+      phaseId,
+      name: `Phase ${phaseId}`,
+      total: 1,
+      completed: completed ?? (accepted && !provisional ? 1 : 0),
+      isRevision: false,
+      unit: 'phase' as const,
+      ...(provisional ? { provisional: true } : {}),
+    }),
+  );
+
+  return {
+    total: phases.length,
+    completed: phases.filter((phase) => phase.completed === 1).length,
+    currentTaskId: null,
+    phases,
+  };
+}
+
+describe('recommendSkill brief-unit guard', () => {
+  const passedFinalReview = [makeReview({ scope: 'final', status: 'passed' })];
+  const missingSummary = makeArtifacts({
+    type: 'summary',
+    exists: false,
+    boundaryTier: 3,
+  });
+
+  it('resumes implement when a brief reaches implement:complete with an incomplete phase-unit', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'brief',
+      progress: makeBriefUnitProgress([
+        { phaseId: 'p01', accepted: true },
+        { phaseId: 'p02' },
+      ]),
+      reviews: passedFinalReview,
+      artifacts: missingSummary,
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-implement',
+      reason: 'Incomplete phase-units remain in the active scope',
+    });
+  });
+
+  it('resumes implement for a brief at pr_open with an incomplete phase-unit', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'pr_open',
+      workflowMode: 'brief',
+      progress: makeBriefUnitProgress([
+        { phaseId: 'p01', accepted: true },
+        { phaseId: 'p02' },
+      ]),
+      reviews: passedFinalReview,
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-implement',
+      reason: 'Incomplete phase-units remain in the active scope',
+    });
+  });
+
+  it('treats a provisional phase-unit as incomplete', () => {
+    // The provisional unit reads 1/1 here, so only the guard's `provisional`
+    // clause (not `completed < total`) can keep it incomplete.
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'brief',
+      progress: makeBriefUnitProgress([
+        { phaseId: 'p01', accepted: true },
+        { phaseId: 'p02', completed: 1, provisional: true },
+      ]),
+      reviews: passedFinalReview,
+      artifacts: missingSummary,
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-implement',
+      reason: 'Incomplete phase-units remain in the active scope',
+    });
+  });
+
+  it('does not reopen implementation for a complete-lifecycle brief', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'pr_open',
+      workflowMode: 'brief',
+      lifecycle: 'complete',
+      progress: makeBriefUnitProgress([
+        { phaseId: 'p01', accepted: true },
+        { phaseId: 'p02' },
+      ]),
+      reviews: passedFinalReview,
+      artifacts: makeArtifacts({
+        type: 'summary',
+        exists: true,
+        status: 'complete',
+        boundaryTier: 1,
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-complete');
+  });
+
+  it('keeps a planning brief with an incomplete phase on the brief entry skill', () => {
+    const state = makeState({
+      phase: 'plan',
+      phaseStatus: 'in_progress',
+      workflowMode: 'brief',
+      progress: makeBriefUnitProgress([{ phaseId: 'p01' }, { phaseId: 'p02' }]),
+      artifacts: makeArtifacts({ type: 'plan', boundaryTier: 3 }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-brief');
+  });
+
+  it('routes a brief with every phase-unit accepted and no summary to summary', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'brief',
+      progress: makeBriefUnitProgress([
+        { phaseId: 'p01', accepted: true },
+        { phaseId: 'p02', accepted: true },
+      ]),
+      reviews: passedFinalReview,
+      artifacts: missingSummary,
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-summary');
+  });
+
+  it('leaves quick post-implementation routing unchanged by incomplete ordinary phases', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
+      progress: {
+        total: 2,
+        completed: 1,
+        currentTaskId: null,
+        phases: [
+          {
+            phaseId: 'p01',
+            name: 'Phase p01',
+            total: 2,
+            completed: 1,
+            isRevision: false,
+          },
+        ],
+      },
+      reviews: passedFinalReview,
+      artifacts: missingSummary,
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-summary');
   });
 });
