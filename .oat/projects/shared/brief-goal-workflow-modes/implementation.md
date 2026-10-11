@@ -221,7 +221,7 @@ oat_generated: false
 - L2 accepted phase without `**Head:**` synthesizes `**Commit:** -` → converted: p04-t05 (refuse with `missing-phase-head`).
 - L3 `## Approach` dropped from working artifacts → converted: p04-t05 (render into discovery Solution Space).
 
-**New tasks added:** p04-t03, p04-t04, p04-t05. **Next:** resume the p04 implementer (request impl-p04-a8c76fdd) in fix mode; re-review round 2; ledger rows at fan-in.
+**New tasks added:** p04-t03, p04-t04, p04-t05. **Fix continuation:** cont-brief-goal-workflow-modes-p04-fix-1 on the original handle → e028bb016 (p04-t03), 1f0eb78a7 (p04-t04, lane widened to control-plane `quick-plan-readiness.ts`, its test and the barrel), 7e3966dcc (p04-t05); root re-verified control-plane 186/186 and validate-plan + promote 108/108, no local `recordLineMask`. Deferred to p08: docs for `missing-phase-head` and the optional `phases` refusal field; standalone `## Out of Scope` routing into discovery (round-1 note, outside the fix scope). **Round 2:** dispatched (reviewed head 7e3966dcc47c53dbdd6a693789fb82c96c6bc936); lane verdict recorded on return.
 
 ---
 
