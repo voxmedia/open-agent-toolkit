@@ -217,8 +217,9 @@ registration owner, not a second project PR (brief contract sections 12.7 and
    its lookup keys, reciprocal links, the integrated review and the captured
    `exit_gate`, idempotent create-or-attach through `gh pr list`, and the
    member and `status: open` record. The Step 5 ledger-path guard runs before
-   `gh pr create`. A `summary` step configured before `pr` writes only
-   project-directory files and defers its repo-level ledger and decision-record
+   `gh pr create`. While the boundary still reports `phase-uncovered`, a
+   `summary` step configured before `pr` writes only project-directory files
+   and defers its repo-level ledger and decision-record
    writes until this registration is done (`oat-project-summary` Step 6, Goal
    terminal deferral), so the terminal subject stays deliverable.
 5. **Log.** After the registration commit, append exactly one structural entry

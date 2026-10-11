@@ -533,21 +533,27 @@ Run this step after `summary.md` has been authored or refreshed, including the
 distinct `## Autonomous Execution Learnings` section when its source artifact
 exists.
 
-**Goal terminal deferral.** When `oat_workflow_mode` is `goal` and this run
+**Goal terminal deferral.** When `oat_workflow_mode` is `goal`, this run
 comes before `pr` in the post-implement sequence (`oat_post_implement_sequence`
-lists `pr` but not yet among its completed steps), write only files under
-`$PROJECT_PATH`: skip the `oat project log rollup` call below (it appends to
-the repository ledger) and all of Step 7 (decision-record promotion and the
-regenerated decisions index), and report them as deferred until `pr` has
-registered the terminal delivery. A repo-level commit after the terminal
-milestone's reviewed revision is not bookkeeping (brief contract 12.8), so it
-would make the terminal subject undeliverable for the terminal registration in
-the PR skill's Step 1.5. Perform the deferred writes in the summary run that
-follows `pr`: a `summary` step configured after `pr`, or the summary refresh at
-completion, which the goal fingerprint fragment (Step 3) requires once the
-terminal delivery reaches its endpoint. Both writes are idempotent, so the
-later run needs no extra state. Registered deliveries are unaffected: they are
-judged against their observed member revisions.
+lists `pr` but not yet among its completed steps), and
+`oat project closeout-check "$PROJECT_PATH" --json` (read-only) still reports
+`phase-uncovered` (a terminal delivery is still to be registered), write only
+files under `$PROJECT_PATH`: skip the `oat project log rollup` call below (it
+appends to the repository ledger and also writes the `## Workflow Observations`
+section, which the later run supplies) and all of Step 7 (decision-record
+promotion and the regenerated decisions index). Report them as deferred with:
+`Deferred: ledger roll-up and decision promotion run in the completion summary refresh; do not decline it.`
+A repo-level commit after the terminal milestone's reviewed revision is not
+bookkeeping (brief contract 12.8), so it would make the terminal subject
+undeliverable for the terminal registration in the PR skill's Step 1.5.
+Without `phase-uncovered` there is nothing to defer (delivery coverage already
+holds and `pr` registers nothing): run Steps 6 and 7 as usual. Perform the
+deferred writes in the next summary run after `phase-uncovered` clears: a
+`summary` step configured after `pr`, or the summary refresh at completion,
+which the goal fingerprint fragment (Step 3) marks stale once the terminal
+delivery reaches its endpoint. Both writes are idempotent, so the later run
+needs no extra state. Registered deliveries are unaffected: they are judged
+against their observed member revisions.
 
 Before the roll-up or decision promotion mutates repository-wide outputs,
 preflight the owned paths and snapshot unrelated staged state:
