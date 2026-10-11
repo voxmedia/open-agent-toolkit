@@ -343,8 +343,9 @@ Log`, the per-phase `## Test Results` table and the "Conventions"
 Deviations from Plan / Design`, filled by review-receive and complete.
   `implementation-brief.md` gets the same two slots and keeps its phase-unit
   records. `project-log.md`: the 39-line header becomes two lines and a docs
-  link; the sample entry is dropped. `summary.md`: `## Workflow
-Observations` becomes the digest section with the omit-when-empty rule.
+  link; the sample entry is dropped. `summary.md`: no observations heading in the template; the CLI appends or
+  omits `## Workflow Observations` (alignment note 2), and the
+  `## Autonomous Execution Learnings` comment carries the category rule.
   Registration in `packages/cli/scripts/bundle-inputs.mjs` is conserved and
   verified; bundle assets regenerate through normal tooling.
 - One ownership contract for all writers: implement references,
