@@ -29,6 +29,8 @@ oat_template_name: implementation-brief
 >   `**Status:** pending | in_progress | completed | failed | extracted`,
 >   `**Base:** <full SHA>`, `**Head:** <full SHA>`, and
 >   `**Executor:** root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled`.
+>   `**Status:** extracted` always pairs with `**Extracted to:** <slug>` naming
+>   the linked project; without it the phase reads as `pending`.
 >   Phase ownership ends at the next heading, so a task record's status is never
 >   read as its phase's status.
 > - `### Task pNN-tNN:` blocks are execution records, opened when work starts

@@ -25,6 +25,19 @@ oat_template_name: plan-brief
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
 
+**Phase block grammar (strict):** each phase is one `## Phase pNN: <name>`
+heading followed by a blank line and these exact lines:
+
+```markdown
+**Intent:** one or more non-empty lines
+**Exit evidence:** one or more non-empty lines
+**Provisional:** no
+```
+
+Phase IDs are stable and document order governs execution. `**Provisional:**`
+accepts `yes` or `no`; absent means `no`. The first phase must not be
+provisional. Do not add `### Task` headings to phases.
+
 ## Goal
 
 [State the outcome this project must achieve and why it matters.]
@@ -63,19 +76,6 @@ oat_template_name: plan-brief
 ## Milestones
 
 <!-- Reserved for goal mode. Brief projects deliver once and leave this section empty. -->
-
-<!--
-Phase block grammar (strict): each phase is one `## Phase pNN: <name>` heading
-followed by these exact lines.
-
-**Intent:** one or more non-empty lines
-**Exit evidence:** one or more non-empty lines
-**Provisional:** yes | no
-
-Phase IDs are stable and document order governs execution. `**Provisional:**`
-accepts `yes` or `no`; absent means `no`. The first phase must not be
-provisional. Do not add `### Task` headings to phases.
--->
 
 ## Phase p01: [Phase Name]
 
