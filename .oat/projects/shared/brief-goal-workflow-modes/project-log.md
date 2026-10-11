@@ -156,6 +156,10 @@ Phase p12 passed review at da60988b8 after three rounds (0/1/2/4, 0/0/1/1, 0/0/1
 
 The final integrated review reached three rounds; each fix to the delivery-evidence evaluator surfaced an adjacent bypass (same-artifact rebind, set-once member revisions, own-artifact set from the judged state). Disposition: a known evaluator bypass cannot ship, so one more narrow fix (p12-t11, reviewer-verified counterfactual) and a round 4 limited to that guard; lesson for artifact-cleanup and future evaluators: derive trust sets from immutable records (Reviews rows), never from the state being judged.
 
+### 2026-10-11 · structural · oat-project-implement · final
+
+Final integrated review passed at 9881971ba after four rounds (0/1/0/2, 0/1/0/1, 0/1/0/0, 0/0/0/0); fixes p12-t09..t11 to the delivery-evidence evaluator; implementation complete. Key final-review-passed-9881971ba.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
