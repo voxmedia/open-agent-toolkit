@@ -160,6 +160,10 @@ The final integrated review reached three rounds; each fix to the delivery-evide
 
 Final integrated review passed at 9881971ba after four rounds (0/1/0/2, 0/1/0/1, 0/1/0/0, 0/0/0/0); fixes p12-t09..t11 to the delivery-evidence evaluator; implementation complete. Key final-review-passed-9881971ba.
 
+### 2026-10-11 · structural · oat-project-pr-final · https://github.com/voxmedia/open-agent-toolkit/pull/362
+
+Stack #363 landed: #361 (v1 brief) merged at 3352af96e with a merge commit, #362 (goal) merged at 573d5b820; both via the asynchronous stack merge endpoint. Key pr-final-362-merged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
