@@ -567,6 +567,14 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+- **Probe setup:** `pnpm build` exit 0; one isolated `HOME=$(mktemp -d)` for the whole probe; scratch `mktemp -d` repo (deleted after): `git init` + empty initial commit, `node "$CLI" --cwd "$SCRATCH" init --scope project --no-project-guidance --no-hook` exit 0, `node "$CLI" --cwd "$SCRATCH" --json project new brief-probe --mode brief --scope shared` exit 0 (`status: ok`, `mode: brief`, scaffold commit; `--scope shared` added because the default synced scope refuses without an origin remote). The scaffolded journal carries the reworded `**Head:**` placeholder from the bundled template.
+- **Authored artifacts:** a two-phase brief (p01 Alpha, p02 Beta, both taskless, `**Provisional:** no`, `oat_plan_parallel_groups: [['p01', 'p02']]`, plan review row passed, frontmatter complete → `oat-project-implement`); commits fork F `0cc7787` (brief approval), p01 head `69d6070`, p02 head `7efb73b` (integration by cherry-pick order, not merge commits); journal with both phases `**Status:** completed`, `**Base:** F`, their heads, `**Executor:** root`, and an `**Outcomes audit:**` block; committed as `chore(oat): fan-in p01-p02`.
+- **`project status --json --project-path`:** exit 0; `workflowMode: brief`, `progress.total 2, completed 2`, each phase `unit: phase`, `total 1/completed 1`, `provisional: false`, `taskRecords 0/0`; recommendation `oat-project-implement` (plan pointer; state.md still at plan) — expected.
+- **`project validate-plan --project-path`:** valid (exit 0) with the taskless group when the path is absolute or the process cwd is the scratch repo. Negative control: `[['p01']]` → exit 1 with the singleton-group error; restored → valid. Observation (pre-existing since 2026-04, not brief-introduced): with `--cwd "$SCRATCH"` and a relative `--project-path`, validate-plan reads `plan.md` relative to the process cwd and exits 2 (`ENOENT`); backlog item filed in p08-t05.
+- **`state refresh`:** exit 0 at `plan/in_progress` → dashboard `oat-project-brief — Continue the project brief`; after setting state.md to `implement/complete` → exit 0, dashboard `oat-project-document` with the brief-unit authority note printed (the documented bounded parity: the dashboard has no phase-unit progress).
+- **Control-plane `getProjectState` (imported from `packages/control-plane/dist/index.js` by absolute path):** `workflowMode brief`, units `p01`/`p02` each `unit: phase`, `1/1`, not provisional, total 2/2; router recommends `oat-project-review-provide` (`code final`, "Final code review is required"). Negative control: p02 `**Status:** in_progress` → `completed 1`, router `oat-project-implement` "Incomplete phase-units remain in the active scope"; restored → 2/2.
+- **Result:** every probed command returned its expected categorical result; no owning-phase fix was needed.
+
 ### Task p08-t04: Docs, lane diagrams and root AGENTS.md
 
 **Status:** pending
