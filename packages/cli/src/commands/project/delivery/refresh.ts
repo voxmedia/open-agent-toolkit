@@ -27,13 +27,11 @@ import {
   DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
   deliveryEffectiveScope,
   loadGoalDeliveryProject,
-  reviewRowsFor,
   type DeliveryProjectDependencies,
   type GoalDeliveryProject,
 } from './check';
 import {
-  deliveriesSharingMembers,
-  deliveryEvidenceArtifacts,
+  deliveryEvidenceScope,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   type CarrierEvaluation,
@@ -440,23 +438,11 @@ function evidenceScope(
   project: GoalDeliveryProject,
   delivery: GoalDelivery,
 ): EvidenceScope {
-  const sharing = deliveriesSharingMembers(
+  return deliveryEvidenceScope(
+    project,
     project.state.deliveries ?? [],
     delivery,
   );
-  return {
-    repoRoot: project.repoRoot,
-    projectDir: project.projectDir,
-    evidenceArtifacts: deliveryEvidenceArtifacts(
-      delivery,
-      reviewRowsFor(project.state.reviews, [
-        delivery.delivery_id,
-        ...(delivery.milestone === null ? [] : [delivery.milestone]),
-        ...sharing.map((entry) => entry.delivery_id),
-      ]).map((row) => row.artifact),
-      sharing,
-    ),
-  };
 }
 
 // ---------------------------------------------------------------------------

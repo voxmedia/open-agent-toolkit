@@ -21,13 +21,12 @@ import {
   normalizeMilestoneId,
   type GoalDelivery,
   type ProjectState,
-  type ReviewStatus,
 } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 
 import {
-  deliveriesSharingMembers,
-  deliveryEvidenceArtifacts,
+  deliveryEvidenceScope,
+  reviewRowsFor,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
@@ -131,20 +130,7 @@ export function deliveryEffectiveScope(
   return scope;
 }
 
-/** Code review rows whose Scope cell names a label (the bare id or `<id>: …`). */
-export function reviewRowsFor(
-  reviews: readonly ReviewStatus[],
-  labels: readonly string[],
-): ReviewStatus[] {
-  const ids = labels.map((label) => label.toLowerCase());
-  return reviews.filter((review) => {
-    const cell = review.scope.trim().toLowerCase();
-    return (
-      review.type === 'code' &&
-      ids.some((id) => cell === id || cell.startsWith(`${id}:`))
-    );
-  });
-}
+export { reviewRowsFor } from './evidence';
 
 export interface SubjectEvidenceReport {
   subject: string;
@@ -182,20 +168,7 @@ export async function evaluateSubjectEvidence(
   if (delivery) {
     const milestoneId = delivery.milestone;
     const scope = deliveryEffectiveScope(deliveries, delivery);
-    const sharing = deliveriesSharingMembers(deliveries, delivery);
-    const rows = reviewRowsFor(project.state.reviews, [
-      delivery.delivery_id,
-      ...sharing.map((entry) => entry.delivery_id),
-    ]);
-    const evidence: EvidenceScope = {
-      repoRoot: project.repoRoot,
-      projectDir: project.projectDir,
-      evidenceArtifacts: deliveryEvidenceArtifacts(
-        delivery,
-        rows.map((row) => row.artifact),
-        sharing,
-      ),
-    };
+    const evidence = deliveryEvidenceScope(project, deliveries, delivery);
     const publishedHeads = delivery.members.map(
       (member) => member.observed_head,
     );

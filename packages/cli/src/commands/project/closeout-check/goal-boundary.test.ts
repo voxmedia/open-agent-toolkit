@@ -5,8 +5,11 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { createProjectCompleteStateCommand } from '@commands/project/complete-state/index';
 import {
   createGoalRepo,
+  goalState,
+  OUTCOME as GOAL_REPO_OUTCOME,
   PROJECT_REL,
   removeRepo,
+  sharedMemberScenario,
   type GoalRepo,
 } from '@commands/project/delivery/__tests__/goal-repo';
 import type { GhRunner } from '@commands/project/links/refresh';
@@ -537,6 +540,76 @@ describe('goal closeout boundary (end to end)', () => {
     );
     expect((await closeoutCheck(gh)).payload).toMatchObject({
       status: 'complete',
+    });
+  });
+  describe('shared member PR (probe row 22, M2)', () => {
+    const sharedJournal = `---
+oat_current_task_id: null
+---
+
+# Implementation: goal
+
+## Phase p01: Research
+
+**Status:** completed
+
+## Phase p02: Build
+
+**Status:** completed
+
+## Phase p03: Ship
+
+**Status:** completed
+
+## Final Summary (for PR/docs)
+
+**Goal declared met:** 2026-10-11 by user at abc1234
+`;
+    const declared = `oat_goal_status: declared_met
+oat_goal_outcome_audit:
+  disposition: met
+  decided_at: '2026-10-11T12:00:00Z'
+  declaration_ref: implementation.md#final-summary-for-prdocs
+  brief_identity: plan.md@abc1234
+  phases:
+    p01: { disposition: accepted, reason: null, scope_decision_ref: null }
+    p02: { disposition: accepted, reason: null, scope_decision_ref: null }
+    p03: { disposition: accepted, reason: null, scope_decision_ref: null }
+  outcomes:
+    1: { disposition: met, evidence_or_ref: evaluator tests, text: '${GOAL_REPO_OUTCOME}' }`;
+
+    async function sharedTerminal(omit?: 'd02') {
+      repo = await createGoalRepo('oat-goal-shared-');
+      await repo.write('implementation.md', sharedJournal);
+      repo.commitAll('chore(oat): record phase heads');
+      const shared = await sharedMemberScenario(repo);
+      await repo.write(
+        'state.md',
+        goalState(
+          `oat_milestone: m02\noat_milestone_status: delivered\n${declared.replace('oat_goal_status: declared_met\n', '')}\n${shared.registry(omit ? { omit } : {})}`,
+        ).replace('oat_goal_status: active', 'oat_goal_status: declared_met'),
+      );
+      const head = repo.commitAll('chore(oat): declare and register d01, d02');
+      return observed(() => head);
+    }
+
+    it('accepts two terminal deliveries on one member PR, each judged on its own scope', async () => {
+      const gh = await sharedTerminal();
+      const checked = await closeoutCheck(gh);
+      expect(JSON.stringify(checked.payload)).not.toContain('review-not-fresh');
+      expect(['complete', 'not_required']).toContain(checked.payload['status']);
+      expect(checked.exitCode ?? 0).toBe(0);
+    });
+
+    it('reports the sibling-only phase uncovered when one shared delivery is removed', async () => {
+      const gh = await sharedTerminal('d02');
+      const checked = await closeoutCheck(gh);
+      expect(checked.payload).toMatchObject({
+        status: 'incomplete',
+        invariant: 'goal_coverage_incomplete',
+      });
+      expect(JSON.stringify(checked.payload)).toContain('phase-uncovered');
+      expect(checked.exitCode).toBe(1);
     });
   });
 });

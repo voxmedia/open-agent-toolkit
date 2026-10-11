@@ -16,6 +16,8 @@ import {
   PROJECT_REL,
   registryYaml,
   removeRepo,
+  SHARED_MEMBER_URL,
+  sharedMemberScenario,
   type GoalRepo,
 } from './__tests__/goal-repo';
 import {
@@ -425,6 +427,43 @@ describe('oat project delivery refresh', () => {
       oat_goal_recovery: null,
     });
     expect(payload).toMatchObject({ status: 'ok' });
+  });
+
+  it('keeps both shared-member deliveries passed across the sibling review records (M2)', async () => {
+    // Probe row 22: d01 and d02 share one member PR, and each one's review
+    // record is committed after the reviewed revision, so each evaluation
+    // crosses the other's review artifact on the way to the shared head.
+    repo = await createGoalRepo();
+    const scenario = await sharedMemberScenario(repo);
+    await repo.write(
+      'state.md',
+      goalState(
+        `oat_milestone: m02\noat_milestone_status: delivered\noat_goal_recovery: null\n${scenario.registry()}`,
+      ),
+    );
+    const head = repo.commitAll('chore(oat): register d01 and d02');
+    const gh = stubGh(() => ({
+      state: 'OPEN',
+      head,
+      base: repo!.baseSha,
+    }));
+
+    const { exitCode } = await refresh(repo, gh);
+
+    expect(exitCode).toBe(0);
+    expect(gh.calls.every((call) => call[2] === SHARED_MEMBER_URL)).toBe(true);
+    const deliveries = frontmatter(await repo.read('state.md'))[
+      'oat_deliveries'
+    ] as Record<string, unknown>[];
+    for (const entry of deliveries) {
+      expect(
+        entry['integrated_review'],
+        String(entry['delivery_id']),
+      ).toMatchObject({
+        disposition: 'passed',
+      });
+    }
+    expect(scenario.published).not.toBe(scenario.reviewed);
   });
 
   it('marks the review stale when the member base changed', async () => {

@@ -342,3 +342,120 @@ ${
       freshness_reason: null`
 }`;
 }
+
+/** The member pull request two terminal deliveries share (12.7 Shared members). */
+export const SHARED_MEMBER_URL = 'https://github.com/owner/name/pull/1';
+
+export interface SharedMemberScenario {
+  reviewed: string;
+  /** The shared member's head: both review records sit between it and `reviewed`. */
+  published: string;
+  /** `oat_deliveries` + `oat_milestone_gates` YAML for d01 (m01) and d02 (m02). */
+  registry: (options?: {
+    omit?: 'd02';
+    observedHead?: string | null;
+    memberStatus?: string;
+  }) => string;
+}
+
+/**
+ * Probe row 22 (p12-t02) as a fixture: one reviewed revision R completing
+ * p01-p03, then the d01 (m01: p01, p02) and d02 (m02: p03) review records in
+ * separate commits after R, both registered on one shared member pull request.
+ * Each delivery's evaluation therefore crosses the sibling's review artifact.
+ */
+export async function sharedMemberScenario(
+  repo: GoalRepo,
+): Promise<SharedMemberScenario> {
+  await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+  const reviewed = repo.commitAll('feat(p01-p03): build and ship');
+  const rows: string[] = [];
+  for (const delivery of ['d01', 'd02']) {
+    await repo.write(
+      `reviews/archived/${delivery}-review.md`,
+      `# ${delivery} review\n\nNo findings.\n`,
+    );
+    rows.push(
+      reviewRow(
+        'passed',
+        `reviews/archived/${delivery}-review.md`,
+        reviewed,
+        delivery,
+      ),
+    );
+    await repo.write('plan.md', goalPlan({ reviews: rows.join('\n') }));
+    repo.commitAll(`chore(oat): record ${delivery} review`);
+  }
+  const published = repo.git(['rev-parse', 'HEAD']);
+  const quote = (value: string | null) =>
+    value === null ? 'null' : `'${value}'`;
+  const entry = (
+    id: string,
+    milestone: string,
+    scope: string,
+    observedHead: string | null,
+    memberStatus: string,
+  ) => `  - delivery_id: ${id}
+    milestone: ${milestone}
+    scope: [${scope}]
+    endpoint: merged
+    kind: pr
+    status: open
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: null
+    lookup:
+      repository: owner/name
+      head_branch: feat/goal
+      head_sha_at_registration: '${reviewed}'
+    members:
+      - url: ${SHARED_MEMBER_URL}
+        base: '${repo.baseSha}'
+        reviewed_head: '${reviewed}'
+        observed_head: ${quote(observedHead)}
+        observed_base: ${observedHead === null ? 'null' : `'${repo.baseSha}'`}
+        status: ${memberStatus}
+    integrated_review:
+      artifact: reviews/archived/${id}-review.md
+      scope: [${scope}]
+      bound_revisions: [{ member: 0, base: '${repo.baseSha}', head: '${reviewed}' }]
+      disposition: passed
+    exit_gate:
+      status: allowed
+      resolution: no_gate
+      disposition: no_gate
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [${scope}] }
+      decided_at: '2026-10-11T10:00:00Z'
+`;
+  const carrier = (scope: string) => `    exit:
+      status: allowed
+      resolution: no_gate
+      disposition: no_gate
+      config_fingerprint: null
+      reviewed_head: null
+      subject: { kind: code, scope: [${scope}] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`;
+  return {
+    reviewed,
+    published,
+    registry: (options = {}) => {
+      const observedHead =
+        options.observedHead === undefined ? null : options.observedHead;
+      const memberStatus = options.memberStatus ?? 'open';
+      return `oat_deliveries:
+${entry('d01', 'm01', 'p01, p02', observedHead, memberStatus)}${
+        options.omit === 'd02'
+          ? ''
+          : entry('d02', 'm02', 'p03', observedHead, memberStatus)
+      }oat_milestone_gates:
+  m01:
+${carrier('p01, p02')}
+  m02:
+${carrier('p03')}`;
+    },
+  };
+}

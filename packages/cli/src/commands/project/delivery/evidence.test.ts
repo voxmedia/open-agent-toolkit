@@ -230,6 +230,31 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
     });
 
+    it('rejects a tail append into the synthesis section and accepts the insert-before form (L2)', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await appendLogEntry(repo, 'm01', 'Activated m01 (p01, p02).');
+      const opened = repo.commitAll('chore(oat): log m01 activation');
+      const original = await repo.read('project-log.md');
+      expect(original).toContain('\n## End-of-run synthesis');
+
+      await repo.write(
+        'project-log.md',
+        `${original.trimEnd()}\n\n### 2026-10-11 · structural · x · d01\n\nTail.\n`,
+      );
+      const tail = repo.commitAll('chore(oat): append at the tail');
+      await expect(
+        evaluateSuccessor(git, scopeFor(repo), chain.reviewed, tail),
+      ).resolves.toMatchObject({ fresh: false, code: 'substantive-change' });
+
+      repo.git(['reset', '-q', '--hard', opened]);
+      await appendLogEntry(repo, 'd01', 'Registered d01 for m01 (p01, p02).');
+      const inserted = repo.commitAll('chore(oat): log d01 registration');
+      await expect(
+        evaluateSuccessor(git, scopeFor(repo), chain.reviewed, inserted),
+      ).resolves.toMatchObject({ fresh: true });
+    });
+
     it('rejects a project-log change that edits an entry or the synthesis section', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);

@@ -6,6 +6,7 @@ import {
   recordLineMask,
   type GoalDelivery,
   type MilestoneGateCarrier,
+  type ReviewStatus,
 } from '@open-agent-toolkit/control-plane';
 import YAML from 'yaml';
 
@@ -300,6 +301,7 @@ export type BookkeepingPathKind =
   | 'plan'
   | 'implementation'
   | 'project-log'
+  | 'summary'
   | 'review-artifact';
 
 function projectRelative(projectDir: string, artifact: string): string {
@@ -322,8 +324,9 @@ function artifactVariants(artifact: string): string[] {
 /**
  * The bookkeeping kind of a repository-relative path, or `null` when the
  * path is outside the allowlist: this project's `state.md`, `plan.md`,
- * `implementation.md`, `project-log.md`, and the exact review artifacts of
- * the evidence being recorded or archived.
+ * `implementation.md`, `project-log.md`, `summary.md`, and the exact review
+ * artifacts of the evidence being recorded or archived (including those of
+ * deliveries that share its member pull request).
  */
 export function classifyPath(
   scope: EvidenceScope,
@@ -343,6 +346,8 @@ export function classifyPath(
       return 'implementation';
     case 'project-log.md':
       return 'project-log';
+    case 'summary.md':
+      return 'summary';
   }
   const permitted = scope.evidenceArtifacts.flatMap((artifact) =>
     artifactVariants(projectRelative(projectDir, artifact)),
@@ -357,6 +362,12 @@ function judgeBookkeepingChange(
   after: string | null,
   scope: EvidenceScope,
 ): Verdict {
+  // `summary.md` is derived institutional memory, never the authority for
+  // outcomes, approach, constraints, decisions or endpoint (those live in the
+  // brief), so any change to it is bookkeeping (brief contract 12.8).
+  if (kind === 'summary') {
+    return OK;
+  }
   if (kind === 'review-artifact') {
     return status === 'A' || status === 'M' || status === 'D'
       ? OK
@@ -395,13 +406,13 @@ function judgeBookkeepingChange(
  * an existing entry, or a change to the synthesis section is a rewrite.
  */
 export function isProjectLogAppend(before: string, after: string): boolean {
-  if (after.startsWith(before.trimEnd())) {
-    return true;
-  }
   const synthesisIndex = before.indexOf(SYNTHESIS_HEADING_PREFIX);
   if (synthesisIndex < 0) {
-    return false;
+    // No synthesis section yet: the writer appends at the end of the log.
+    return after.startsWith(before.trimEnd());
   }
+  // Once a synthesis section exists, only the insert-before form is an
+  // append; text added at the tail lands inside the synthesis and rewrites it.
   const entries = before.slice(0, synthesisIndex);
   const synthesis = before.slice(synthesisIndex);
   if (
@@ -1157,6 +1168,56 @@ export function deliveryEvidenceArtifacts(
     }
   }
   return [...artifacts];
+}
+
+/** Code review rows whose Scope cell names a label (the bare id or `<id>: …`). */
+export function reviewRowsFor(
+  reviews: readonly ReviewStatus[],
+  labels: readonly string[],
+): ReviewStatus[] {
+  const ids = labels.map((label) => label.toLowerCase());
+  return reviews.filter((review) => {
+    const cell = review.scope.trim().toLowerCase();
+    return (
+      review.type === 'code' &&
+      ids.some((id) => cell === id || cell.startsWith(`${id}:`))
+    );
+  });
+}
+
+/** The project facts the evidence scope of a delivery is built from. */
+export interface DeliveryEvidenceProject {
+  repoRoot: string;
+  projectDir: string;
+  state: { reviews: readonly ReviewStatus[] };
+}
+
+/**
+ * The one evidence scope for a registered delivery, shared by `delivery
+ * check`, `delivery refresh` and the closeout boundary: the review rows
+ * labelled with the delivery, its milestone and every delivery sharing one of
+ * its member pull requests, plus their integrated-review artifacts.
+ */
+export function deliveryEvidenceScope(
+  project: DeliveryEvidenceProject,
+  deliveries: readonly GoalDelivery[],
+  delivery: GoalDelivery,
+): EvidenceScope {
+  const sharing = deliveriesSharingMembers(deliveries, delivery);
+  const labels = [
+    delivery.delivery_id,
+    ...(delivery.milestone === null ? [] : [delivery.milestone]),
+    ...sharing.map((entry) => entry.delivery_id),
+  ];
+  return {
+    repoRoot: project.repoRoot,
+    projectDir: project.projectDir,
+    evidenceArtifacts: deliveryEvidenceArtifacts(
+      delivery,
+      reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
+      sharing,
+    ),
+  };
 }
 
 /**

@@ -114,6 +114,10 @@ goal fields:
   delivered on, its exit-gate binding and the first observed endpoint
   attainment.
 
+Delivery evidence stays fresh across later commits that change only bookkeeping:
+`state.md`, `plan.md` (outside its approved content), `implementation.md`,
+`project-log.md` appends, `summary.md`, and the review artifacts of the
+delivery and of any delivery sharing its pull request.
 `oat project delivery refresh` writes only observations and derived staleness
 into `oat_deliveries` and the milestone carriers. The terminal declaration is
 recorded as one `**Goal declared met:**` line in the journal's Final Summary.

@@ -176,6 +176,36 @@ describe('oat project delivery check', () => {
     expect(chain.reviewed).not.toBe(repo!.git(['rev-parse', 'HEAD']));
   });
 
+  it('treats a summary.md commit as bookkeeping but not an Outcome edit after it (M1)', async () => {
+    // p12 review M1: the configured post-implement sequence runs `summary`
+    // before `pr`, so oat-project-summary commits summary.md after the
+    // reviewed revision; it is derived institutional memory (contract 12.8).
+    await receivedMilestone();
+    expect((await check(repo!, 'm01')).payload.status).toBe('ok');
+
+    await repo!.write('summary.md', '# Summary\n\nGoal milestone m01.\n');
+    repo!.commitAll('chore(oat): generate summary');
+    process.exitCode = undefined;
+    const afterSummary = await check(repo!, 'm01');
+    expect(afterSummary.payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, reason: null },
+    });
+    expect(afterSummary.exitCode).toBe(0);
+
+    const plan = await repo!.read('plan.md');
+    await repo!.write(
+      'plan.md',
+      plan.replace('Delivery evidence holds', 'Delivery evidence drifts'),
+    );
+    repo!.commitAll('chore(oat): edit outcome');
+    process.exitCode = undefined;
+    const afterOutcome = await check(repo!, 'm01');
+    expect(afterOutcome.payload.status).toBe('undeliverable');
+    expect(afterOutcome.payload.review?.reason).toMatch(/^substantive-change/);
+    expect(afterOutcome.exitCode).toBe(1);
+  });
+
   it('reports a stale exit carrier when its subject no longer matches the milestone', async () => {
     await receivedMilestone();
     const plan = await repo!.read('plan.md');

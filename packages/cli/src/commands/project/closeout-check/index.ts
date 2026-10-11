@@ -2,16 +2,11 @@ import { readFile as defaultReadFile, readdir } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { loadGoalDeliveryProject } from '@commands/project/delivery/check';
 import {
-  loadGoalDeliveryProject,
-  reviewRowsFor,
-} from '@commands/project/delivery/check';
-import {
-  deliveriesSharingMembers,
-  deliveryEvidenceArtifacts,
+  deliveryEvidenceScope,
   evaluateDeliveryReview,
   evaluateGateCarrier,
-  type EvidenceScope,
 } from '@commands/project/delivery/evidence';
 import { observeMember } from '@commands/project/delivery/refresh';
 import {
@@ -286,20 +281,7 @@ export async function loadGoalCloseoutInputs(
   for (const terminal of graph.terminals) {
     const { delivery, effectiveScope } = terminal;
     if (delivery.status === 'registering') continue;
-    const sharing = deliveriesSharingMembers(observed, delivery);
-    const evidenceScope: EvidenceScope = {
-      repoRoot: project.repoRoot,
-      projectDir: project.projectDir,
-      evidenceArtifacts: deliveryEvidenceArtifacts(
-        delivery,
-        reviewRowsFor(project.state.reviews, [
-          delivery.delivery_id,
-          ...(delivery.milestone === null ? [] : [delivery.milestone]),
-          ...sharing.map((entry) => entry.delivery_id),
-        ]).map((row) => row.artifact),
-        sharing,
-      ),
-    };
+    const evidenceScope = deliveryEvidenceScope(project, observed, delivery);
     const fact: DeliveryEvidenceFact = {
       scope: effectiveScope,
       review: await evaluateDeliveryReview(

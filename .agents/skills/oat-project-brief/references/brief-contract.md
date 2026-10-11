@@ -591,8 +591,15 @@ ancestor of H and every intervening commit, merge-introduced changes included,
 changes only permitted bookkeeping:
 
 - **Paths:** this project's `state.md`, `plan.md`, `implementation.md`,
-  `project-log.md`, and the exact review artifacts belonging to the evidence
-  being recorded or archived. Path membership alone is insufficient.
+  `project-log.md`, `summary.md`, and the exact review artifacts belonging to
+  the evidence being recorded or archived, and, for a delivery whose member
+  pull request is shared (12.7, Shared members), the review artifacts recorded
+  for the deliveries that share it; each delivery is still judged on its own
+  frozen scope, reviewed revisions and `exit_gate`. `summary.md` is derived
+  institutional memory, never the authority for outcomes, approach,
+  constraints, decisions or endpoint, which live in the brief; any change to
+  it is bookkeeping. Path membership alone is insufficient for the other
+  paths.
 - **Permitted changes:** routing and progress updates, evidence recording,
   review dispositions, registration and observation metadata, and append-only
   execution observations.
