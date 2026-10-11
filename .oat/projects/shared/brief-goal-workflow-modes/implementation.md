@@ -693,12 +693,16 @@ oat_generated: false
 
 ## Phase 10: Goal CLI: validation, delivery registry, refresh and closeout (v1.5)
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-11
 
 **Base:** 0cc095c5ae394a782efcec066880375f6725ddd1
-**Head:** 7d4fbe12bafe05338ce79c53133475bc02f4e56b (candidate head at review; p10-t01 97f2f1a32 from the first dispatch, p10-t02..t04 from the resume)
-**Executor:** phase-implementer:impl-p10-7ff59906 → impl-p10-abc8a9b0 after the disk pause (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
+**Head:** 675d5bd27b584b082003afcdc464504442e22e47 (fix round 2; candidate head 7d4fbe12b at review round 1, b290081e2 at round 2; p10-t01 97f2f1a32 from the first dispatch, p10-t02..t04 from the resume after the disk pause)
+**Status:** completed
+
+- **Outcome:** accepted. Round-1 root review (Fable 5.1 high, auto; head bb69bb065; C/H/M/L 0/0/2/6) queued p10-t05 on the same handle; round 2 (head 7a18e197e; 0/0/0/1) passed and its Low became p10-t06 without re-review. Fix-loop count 1. Review verdicts accepted the three extra p10-t01 validation codes, the journal read, and the two implementer-chosen formats (carried to p11-t01 contract text by plan amendment 5.1). `references/p10-t02-recovered.patch` removed at closeout (its content landed in aff0b65fe).
+- **Verification:** root re-ran the delivery, closeout-check, complete-state, promote, validate-plan and help-snapshot suites after each fix (16 files / 353 tests at p10-t05; 9 files / 149 tests at p10-t06), CLI type-check and lint, `oat:validate-skills`, `format:root`: all exit 0; tree clean.
+  **Executor:** phase-implementer:impl-p10-7ff59906 → impl-p10-abc8a9b0 after the disk pause (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p10-t01: Goal validation profile
 
@@ -745,8 +749,11 @@ oat_generated: false
 
 ### Task p10-t06: (review) Order-insensitive review identity in the delivery exit-gate unlock
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 675d5bd27
+
+- **Files changed:** `delivery/evidence.ts:560-578` `recordsNewReview` keyed on the artifact itself (true only when the commit records evidence and the next review names a different artifact; `scope`/`bound_revisions` changes no longer unlock the swap), with one deviation from the suggested one-liner: an artifact and its `reviews/archived/` counterpart count as the same artifact, otherwise receive's archival move would read as a new review and reopen the escape; `evidence.test.ts:663` "rejects a reordered review scope with a swapped binding under the unchanged artifact".
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p10-fix-2`; prove-it-can-fail: order-sensitive comparison restored → new test fails, accepted control passes; fix restored → both pass; delivery suite 3 files / 45 tests, CLI type-check, lint, oxfmt, CLI build exit 0. Root re-ran delivery + closeout-check + complete-state (9 files / 149 tests, isolated HOME) and type-check: exit 0. No re-review (Low-only on a passing review).
 
 ### Review Received: p10
 
@@ -963,7 +970,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f3fcae68c, the goal branch after merging the v1 fix commits from `feat/brief-workflow-mode-v1`; the dispatch-plan commit sits between base and the first task commit; p10-t02..t04 in the root checkout; p10-t02 starts from `references/p10-t02-recovered.patch`; disk 8.1 GB free with a 1 GB stop rule in the brief)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are the two implementer-chosen formats carried to p11 and the two carrier consumers noted in p10-t03) at 7d4fbe12b; p10 review follows
-- Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` → b290081e2 (first commit attempt refused by commitlint for a 105-char header; 100-char message authorized); round 2 (rev-p10-8eee09f4, head 7a18e197e): 0/0/0/1 → passed; L1 → p10-t06 via `cont-brief-goal-workflow-modes-p10-fix-2`
+- Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` → b290081e2 (first commit attempt refused by commitlint for a 105-char header; 100-char message authorized); round 2 (rev-p10-8eee09f4, head 7a18e197e): 0/0/0/1 → passed; L1 → p10-t06 via `cont-brief-goal-workflow-modes-p10-fix-2` → 675d5bd27; phase p10 closed at 675d5bd27
 
 <!-- orchestration-runs-end -->
 
@@ -990,6 +997,8 @@ Chronological log of implementation progress.
 - (p07) Pre-existing bug outside brief scope: review-provide's quick/spec-driven commit grep `git log --oneline --grep="\(p${PHASE}-" HEAD~50..HEAD` (~:696-707) errors with `parentheses not balanced` under git's default basic regex, so that path finds 0 commits; pr-progress's `--grep="\\(${PHASE}-"` likely shares it. Carried to p08 as a backlog item (fix changes non-brief behavior).
 
 ## Deviations from Plan / Design
+
+- **p10 (2026-10-11):** the p10-t05 commit message was shortened from the plan's 105-character text to 100 characters at commit time (commitlint `header-max-length`); the M2 fix requires an artifact change (archived-path-equivalent) rather than `recordsEvidence` alone to unlock an `exit_gate` replacement, because `recordsEvidence` is true whenever the delivery's artifact is on the allowlist; p10-t01 landed three validation codes beyond the plan's nine (accepted by review as forced by the p09 reader and the p09 review); two implementer-chosen formats (`satisfied_by: { pr: delivery-coverage }`, the extracted-child deferral shape) are accepted and carried to p11-t01 contract text; plan amendment 5.1 (project-log ownership for goal, retro probe, carried contract sentences) applied in the p10 closeout bookkeeping within the approved outcomes.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 

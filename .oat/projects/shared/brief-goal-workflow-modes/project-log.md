@@ -136,6 +136,10 @@ p10 paused after p10-t01 (97f2f1a32): free space fell to 558 MB against the 650 
 
 Progress PR #361 opened for v1 (p01–p08) from feat/brief-workflow-mode-v1 cut at ebccf5ba3; goal phases continue on feat/freestyle-project-workflow. Key pr-progress-p01-p08-361.
 
+### 2026-10-11 · structural · oat-project-implement · p10
+
+Phase p10 passed review at 675d5bd27 after two rounds (0/0/2/6 then 0/0/0/1); fixes p10-t05 and p10-t06; plan amendment 5.1 applied. Key p10-review-passed-675d5bd27.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
