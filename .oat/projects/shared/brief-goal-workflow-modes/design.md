@@ -439,9 +439,25 @@ and review freshness with reasons.
 **Recovery producers.** `pr-progress` writes `delivering → reviewing`
 (`oat_milestone_status: reviewing` plus `oat_goal_recovery: { milestone,
 delivery_id, phase_ids, stage }`, stage chosen by the A1 missing-evidence
-rule) when refresh reports the integrated review or `exit` carrier stale,
-and stops before registration. `review-receive` creates the record (stage `implementing`) when fixes
-target an older delivery. Each stage owner advances
+rule) when refresh reports the integrated review or `exit` carrier stale
+for the **active** milestone's delivery, and stops before registration.
+When the stale delivery belongs to an older milestone, every stage owner
+(pr-progress, implement, review-provide, review-receive) writes only the
+targeted recovery record and its evidence; the active milestone's ID,
+status and both execution pointers stay unchanged. `review-receive` creates the record (stage `implementing`) when fixes
+target an older delivery; `oat-project-revise` does the same for inline
+feedback that targets an older delivery (explicit milestone/delivery target,
+phase-only `p-revN` with exact membership, evidence invalidation, no global
+pointer or status write), and for the active milestone it writes the
+ordinary pointer. `oat-project-complete` consumes validated goal coverage
+when deciding whether a delivery PR is already satisfied: with an
+exhaustive declaration/audit, merged deliveries and a coverage-satisfied
+`pr` step it creates no PR even when `workflow.createPrOnComplete` is true;
+genuinely uncovered delivery work routes to the goal registration owner,
+and a separately intended bookkeeping PR is never registered as a goal
+delivery. `oat-project-document` reads the brief and journal for brief and
+goal alike and names the goal audit and delivery evidence as shipped
+results. Each stage owner advances
 `oat_goal_recovery.stage` when its step completes cleanly: implement (fixes
 accepted → `exit_gate`; scoped closeout carrier `allowed` and fresh →
 `reviewing`), review-provide (artifact recorded `received` → `receiving`),
