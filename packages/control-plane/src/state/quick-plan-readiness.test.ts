@@ -474,4 +474,66 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
       expect(evaluateQuickPlanReadiness(content).ready).toBe(true);
     });
   });
+
+  describe('promotion-pending phases clause', () => {
+    function withPending(line: string): string {
+      return plan(
+        READY_FRONTMATTER.replace(
+          'oat_template: false\n',
+          `oat_template: false\n${line}\n`,
+        ),
+        PHASE_WITH_TASK,
+        PASSED_REVIEW_ROW,
+      );
+    }
+
+    it('rejects an otherwise-ready plan with a flow list of pending phases', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending("oat_promotion_pending_phases: ['p03']"),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
+    it('rejects a block list of pending phases', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases:\n  - p03\n  - p04'),
+        ).failure,
+      ).toBe('promotion-pending-phases');
+    });
+
+    it('rejects a duplicated declaration', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending(
+            'oat_promotion_pending_phases: []\noat_promotion_pending_phases: []',
+          ),
+        ).failure,
+      ).toBe('promotion-pending-phases');
+    });
+
+    it('accepts an empty list, a null value, or an absent key', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: []'),
+        ),
+      ).toEqual({ ready: true, failure: null });
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: [ ] # all authored'),
+        ).ready,
+      ).toBe(true);
+      expect(
+        evaluateQuickPlanReadiness(withPending('oat_promotion_pending_phases:'))
+          .ready,
+      ).toBe(true);
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases: ~'),
+        ).ready,
+      ).toBe(true);
+      expect(evaluateQuickPlanReadiness(READY_PLAN).ready).toBe(true);
+    });
+  });
 });

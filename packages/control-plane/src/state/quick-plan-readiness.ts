@@ -23,6 +23,12 @@ import type { QuickPlanReadiness, QuickPlanReadinessFailure } from '../types';
  * 5. At least one `### Task pNN-tNN:` heading under a `## Phase` heading,
  *    outside fenced examples, whose title still reads as text once every
  *    `{placeholder}` is removed.
+ * 6. `oat_promotion_pending_phases` is absent or empty, so a brief promoted
+ *    to quick is not ready while any of its phases still lacks executable
+ *    tasks. Empty means declared exactly once as `[]`, `null`, `~`, or a bare
+ *    key with no block-list items; a duplicated key is contradictory. The
+ *    `oat-project-quick-start` guard gains the matching clause alongside the
+ *    promoted-brief resume.
  *
  * Indentation is measured the same way on both sides: in columns, with tab
  * stops of four, so a tab-indented example is indented code here exactly as a
@@ -96,6 +102,10 @@ export function evaluateQuickPlanReadiness(
     return notReady('substantive-task-missing');
   }
 
+  if (!hasNoPromotionPendingPhases(lines)) {
+    return notReady('promotion-pending-phases');
+  }
+
   return ready();
 }
 
@@ -114,6 +124,51 @@ function hasReadyFrontmatter(lines: string[]): boolean {
   }
 
   return hasAbsentOrFalseTemplate(frontmatter);
+}
+
+const PROMOTION_PENDING_PHASES_KEY = 'oat_promotion_pending_phases';
+const BLOCK_LIST_ITEM = /^[ \t\r\f\v]*-([ \t\r\f\v]|$)/;
+
+/**
+ * Clause 6: a promoted brief records the phases that still need executable
+ * tasks in `oat_promotion_pending_phases`. The plan is ready only when that
+ * key is absent, or declared once with an empty value (`[]`, `null`, `~`, or
+ * a bare key followed by no block-list item). A non-empty flow or block list,
+ * any other scalar, or a duplicated key is not ready.
+ */
+function hasNoPromotionPendingPhases(lines: string[]): boolean {
+  const frontmatter = readFrontmatterLines(lines);
+  if (frontmatter == null) {
+    return false;
+  }
+
+  const declared = countKey(frontmatter, PROMOTION_PENDING_PHASES_KEY);
+  if (declared === 0) {
+    return true;
+  }
+  if (declared > 1) {
+    return false;
+  }
+
+  const keyLine = new RegExp(`^${keyPattern(PROMOTION_PENDING_PHASES_KEY)}`);
+  const index = frontmatter.findIndex((line) => keyLine.test(line));
+  const declaration = frontmatter[index] ?? '';
+
+  const emptyFlowList = new RegExp(
+    `^${keyPattern(PROMOTION_PENDING_PHASES_KEY)}${SPACE}*\\[${SPACE}*\\]${SPACE}*(#.*)?$`,
+  );
+  if (emptyFlowList.test(declaration)) {
+    return true;
+  }
+
+  const nullValue = new RegExp(
+    `^${keyPattern(PROMOTION_PENDING_PHASES_KEY)}${SPACE}*(null|~)?${SPACE}*(#.*)?$`,
+  );
+  if (!nullValue.test(declaration)) {
+    return false;
+  }
+
+  return !BLOCK_LIST_ITEM.test(frontmatter[index + 1] ?? '');
 }
 
 /**

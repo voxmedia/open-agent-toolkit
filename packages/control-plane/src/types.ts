@@ -66,7 +66,8 @@ export type QuickPlanReadinessFailure =
   | 'plan-missing'
   | 'frontmatter-not-ready'
   | 'review-disposition-missing'
-  | 'substantive-task-missing';
+  | 'substantive-task-missing'
+  | 'promotion-pending-phases';
 
 export interface QuickPlanReadiness {
   ready: boolean;

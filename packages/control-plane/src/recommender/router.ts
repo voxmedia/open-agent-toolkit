@@ -192,6 +192,8 @@ const QUICK_PLAN_FAILURE_REASONS: Record<QuickPlanReadinessFailure, string> = {
   'review-disposition-missing':
     'the Reviews section records no plan review disposition',
   'substantive-task-missing': 'no phase carries a substantive task',
+  'promotion-pending-phases':
+    'promoted brief phases still need executable tasks',
 };
 
 function describeQuickPlanFailure(

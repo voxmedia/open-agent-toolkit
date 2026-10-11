@@ -987,6 +987,21 @@ oat_template: false
     });
   });
 
+  it('routes a ready-looking promoted brief with pending phases to quick-start', async () => {
+    const state = await planState(
+      `${READY_FRONTMATTER.replace(
+        'oat_template: false\n',
+        "oat_template: false\noat_promoted_from: brief\noat_promotion_pending_phases: ['p03']\n",
+      )}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${RECORDED_DISPOSITION}`,
+    );
+
+    expect(recommendSkill(state)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (promoted brief phases still need executable tasks); resume the quick workflow in place',
+    });
+  });
+
   it('routes a tier-1b quick plan with no oat_ready_for to quick-start', async () => {
     const state = await planState(
       `---
