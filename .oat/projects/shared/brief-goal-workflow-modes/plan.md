@@ -953,6 +953,36 @@ git commit -m "feat(p07-t03): brief-mode summary, PR, revise, complete, document
 
 ---
 
+### Task p07-t04: (review) Review-provide label format, continuity notes and the brainstorm checklist
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md` (`:364` label pattern; after `:552` resolver-scope sentence; "Parallel continuity" single-member note)
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (`:849` success-criteria bullet)
+
+**Step 1: Understand the issue**
+
+Review finding (p07 review, Low ×4): (1) explicit-range phase labelling says `(p-revN-` but revision commits carry `(prevN-tNN)`, so a revision phase is silently dropped from `oat_review_phase_ids`; (2) the parallel-continuity prose still promises an integration-merge head that the resolver no longer checks (dropped because step 7 may integrate by cherry-pick); (3) a single group member reviewed after fan-in resolves to `fork..aggregate head` and silently carries earlier siblings' integration work; (4) the brainstorm checklist still says promotion writes `discovery.md` only.
+Location: `.agents/skills/oat-project-review-provide/SKILL.md:364,536-556`; `.agents/skills/oat-brainstorm/SKILL.md:849`
+
+**Step 2: Implement fix**
+
+Change the label pattern to "`(pNN-` or `(prevN-`" and map `prevN` back to phase ID `p-revN` when listing phase IDs. Add one sentence after `:552`: the resolver verifies fork base and member-head ordering only; the merge-commit property is not enforced because step 7 may integrate by cherry-pick. Under "Parallel continuity" state that a single group member reviewed after fan-in carries its earlier siblings' integration commits inside the range, recommend the group's `pNN-pMM` run or the pre-fan-in member range for that case, and list sibling phases in the Review Scope as context when a single member is requested. Reword the brainstorm bullet to "Project promotion writes `discovery.md` for quick/spec-driven, `plan.md` for lite, and a `references/research/` note for brief — never `design.md`". Do not touch the resolver script (byte-identical to the tested block) unless the label change requires it; if it does, re-run case 1 and the `p-rev1` extra.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm format:root && HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`
+Expected: pass; no autonomy re-key (or mapped in the same commit).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-brainstorm/SKILL.md
+git commit -m "fix(p07-t04): revision label format, continuity notes and the brainstorm promotion checklist"
+```
+
+---
+
 ## Phase 8: Contracts, integration, docs, records and the v1 progress PR
 
 ### Task p08-t01: Skill contract tests and autonomy coverage for brief
@@ -986,6 +1016,7 @@ git commit -m "test(p08-t01): skill contract and autonomy coverage for brief mod
 - Modify: `packages/cli/src/commands/project/promote/promote.ts` (command description mentions brief) and `packages/cli/src/commands/help-snapshots.test.ts` (`:1188` description)
 - Modify: `.oat/templates/state.md` (`oat_brief_gate` commented block beside `oat_quick_start_gate`)
 - Modify: `.oat/templates/implementation-brief.md` (carried from the p06 review: add an `**Outcomes audit:**` slot under `## Final Summary (for PR/docs)`; reword the `**Head:**` placeholder at `:56` to "recorded when the phase's work ends, before its review")
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md` and `.agents/skills/oat-project-brief/references/brief-contract.md` §10 (carried from the p07 review: align "each phase head is its integration merge" with the review-provide resolver, which verifies fork base and member-head ordering only because step 7 may integrate by cherry-pick)
 - Modify: `.agents/skills/oat-project-brief/references/brief-contract.md` (carried from the p06 review round 2: after `:224` add "A group member's per-phase review runs before fan-in on `EXPECTED_HEAD..<worktree head>` with `oat_review_scope_source: anchors`; the fan-in anchors govern `pNN-pMM` and `final`"; carried from the p06 review: `:72` states the ownership decision once — `**Base:**` written by the root in the phase-start commit, `**Head:**` by the committing owner when the phase ends, `**Status:** completed` only by the root at acceptance)
 
 **Verify:** `git ls-files .claude/skills/oat-project-brief` lists the link; `pnpm --filter @open-agent-toolkit/control-plane build && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts` passes.
@@ -1190,7 +1221,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p05    | code     | passed          | 2026-10-11 | reviews/archived/p05-review-2026-10-11T043436Z.md                                                                                                                                                                   | a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8 | auto       | fixes at c86f8558c                             |
 | p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T051021Z.md                                                                                                                                                                   | 95a3a0bfa1dacc87935512dab62308a04338dacc | auto       | -                                              |
 | p06    | code     | passed          | 2026-10-11 | reviews/archived/p06-review-2026-10-11T052142Z.md                                                                                                                                                                   | eebab37c3aa981c0f773ae85f39d5b9e7e7d29f2 | auto       | round 2; fixes e2fd29c93, 578e88b0c, 1e2ff01dd |
-| p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
+| p07    | code     | fixes_added     | 2026-10-11 | reviews/archived/p07-review-2026-10-11T060048Z.md                                                                                                                                                                   | f2cb39c80effd19effb9f49a05c9053be7cc299c | auto       | -                                              |
 | p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
 | p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
 | p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
@@ -1216,14 +1247,14 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 4: 6 tasks - Plan profiles, brief → quick promotion, four review fixes
 - Phase 5: 3 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills; one review fix
 - Phase 6: 6 tasks - Implement references, agent roles and projections, quick-start resume contract; three review fixes
-- Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
+- Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
 - Phase 8: 6 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR)
 - Phase 9: 2 tasks - Goal registration and routing (v1.5)
 - Phase 10: 3 tasks - Goal validation, delivery refresh, closeout coverage (v1.5)
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 46 tasks**
+**Total: 47 tasks**
 
 Ready for code review and merge.
 

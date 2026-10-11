@@ -515,6 +515,21 @@ oat_generated: false
 - **Files changed:** summary (:25, :123 one accepted phase-unit prerequisite; :140 brief source table; :255-318 fingerprint fragment, invariant under whitespace and Intent edits, changes on acceptance, review rows, Outcomes; :495 frontmatter, `oat_summary_last_task` omitted), pr-progress (:158 scope from anchors; artifact set), pr-final (:32 summary required as in quick; :183 reduced-assurance note names the brief; :287 sources), revise (:202 `p-revN` with Intent and Exit evidence, no tasks; :236 pointer and journal section), complete (:393 staleness by fingerprint; archive References brief set), document (:220 brief artifact set), oat-brainstorm/SKILL.md (:404, :513 promote offers brief; :555 brief promote branch; :616-617 fold-back to `plan.md`, import fallback; :764-775 handoff rows), references/destinations.md (:125-126, :135, :166-172 lite/import/brief rows)
 - **Verification:** validate-skills, format:root; read-through recorded above; scoped vitest 1289 passed / 4 failed, all expected reds; root re-ran validate-skills, format:root and the three pin suites (355/358, exactly the expected reds), tree clean
 
+### Review Received: p07
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p07-review-2026-10-11T060048Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p07-8b097c29`, invocation auto, reviewed head f2cb39c80effd19effb9f49a05c9053be7cc299c, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 0, Low 4 → phase review passes; auto-disposition mode. The reviewer re-ran the scripted anchor check (cases 1–7 and the three extras) with outcomes matching the ledger, reproduced the pre-existing commit-grep bug and agrees it is outside p07 scope; only the three expected-red tests fail (p08-t01).
+
+- L1 explicit-range label pattern `(p-revN-` never matches (`prevN-tNN` commits) → converted: p07-t04 (Negligible).
+- L2 parallel-continuity prose promises a merge-commit head the resolver does not check → converted: p07-t04 (one sentence); brief-contract §10 and phase-execution.md:136-144 wording carried to p08-t02.
+- L3 single group member reviewed after fan-in carries siblings' integration commits (documentation gap) → converted: p07-t04 (Negligible).
+- L4 brainstorm success-criteria bullet contradicts the brief promote branch → converted: p07-t04 (Negligible).
+
+**New tasks added:** p07-t04 (same handle, fix mode; no re-review round for a passing review per Step 7b; root verifies the prose).
+
 ---
 
 ## Phase 8: Contracts, integration, docs, records and the v1 progress PR
