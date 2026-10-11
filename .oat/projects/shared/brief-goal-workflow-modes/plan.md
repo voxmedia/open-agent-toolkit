@@ -677,7 +677,7 @@ git commit -m "fix(p04-t06): fence-aware Approach heading demotion on promotion"
 
 **Steps:** write the skill and reference; register; add the autonomy rows and the docs mapping; run `pnpm oat:validate-skills`.
 
-**Verify:** `pnpm oat:validate-skills` passes; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/validation/autonomy-gate-inventory.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/gate-approval-record-contracts.test.ts` passes (the 17-root pin updated here) and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "gate-aware skill set"` passes; `pnpm --filter oat-docs docs:skills:check` passes after the catalog regeneration; `pnpm --filter @open-agent-toolkit/cli build && node packages/cli/dist/index.js gate resolve oat-project-brief --project .oat/projects/shared/brief-goal-workflow-modes --json` returns a resolution.
+**Verify:** `pnpm oat:validate-skills` passes; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/shared/pack-manifest.test.ts src/validation/autonomy-gate-inventory.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/gate-approval-record-contracts.test.ts` passes (the 17-root pin updated here) and `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "gate-aware skill set"` passes; `pnpm --filter oat-docs docs:skills:check` passes after the catalog regeneration; registration is proven by the live gate-aware pin (`skills.test.ts` "pins the gate-aware skill set against live oat_gateable declarations") and by the `oat_skill_gate_overrides` parser accepting `oat-project-brief` while rejecting an unregistered name (`gate resolve <name>` returns `not_configured` for any name and is not evidence).
 
 **Commit:**
 
@@ -709,6 +709,36 @@ git commit -m "feat(p05-t01): oat-project-brief entry skill, shared brief contra
 ```bash
 git add .agents/docs/autonomy-contract.md .agents/skills/oat-project-plan-writing .agents/skills/oat-project-plan .agents/skills/oat-project-next .agents/skills/oat-project-progress .agents/skills/oat-project-discover .agents/skills/oat-project-autonomous .agents/skills/oat-project-new .agents/skills/oat-project-lite .agents/skills/oat-project-import-plan .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-capture .agents/skills/oat-docs .agents/skills/oat-pjm-review-backlog .agents/skills/oat-wave-execute
 git commit -m "feat(p05-t02): planning-surface skills recognize brief mode"
+```
+
+---
+
+### Task p05-t03: (review) Carry the brief contract in the review payload and state the promotion precondition once
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-brief/SKILL.md`
+- Modify: `.agents/docs/autonomy-contract.md` (BRIEF-04 cell)
+
+**Step 1: Understand the issue**
+
+Review finding (p05 review, Low ×2): Step 3.6 says the reviewer receives `references/brief-contract.md`, but the loop payload lists only lite's five fields, so nothing carries it; promotion to quick is offered "once a brief is committed" in prose, yet BRIEF-04 and Step 3.7 option 3 do not state the precondition or the hand-off, and `promote` does not refuse a placeholder scaffold.
+Location: `.agents/skills/oat-project-brief/SKILL.md:255,369-375,490-492`; `.agents/docs/autonomy-contract.md:171`
+
+**Step 2: Implement fix**
+
+Add an explicit payload entry under the Step 3.6 list (for example `artifact_paths: { precedent: ".agents/skills/oat-project-brief/references/brief-contract.md" }`) and reword the sentence to say the dispatch includes it; keep the five existing fields. State the promotion precondition once (only after Step 3's validated, committed brief; before that abandon the scaffold and start `oat-project-quick-start`), reuse it in the workflow-fit bullet, mirror it in BRIEF-04's autonomous-resolution cell, and end Step 3.7 option 3 with "then stop; the project is now quick and resumes through `oat-project-quick-start`".
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm format:root && HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`
+Expected: pass (inventory still 17 roots; any re-keyed BRIEF site mapped in the same commit).
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-brief/SKILL.md .agents/docs/autonomy-contract.md
+git commit -m "fix(p05-t03): carry the brief contract in the review payload and state the promotion precondition"
 ```
 
 ---
@@ -1064,7 +1094,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p03    | code     | passed          | 2026-10-11 | reviews/archived/p03-review-2026-10-11T033254Z.md                                                                                                                                                                   | ca17285004fa03fc011272636199a6efce891a9c | auto       | -                 |
 | p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T033122Z.md                                                                                                                                                                   | 449cdc606a162b5e90966114e35479843c8c7506 | auto       | -                 |
 | p04    | code     | passed          | 2026-10-11 | reviews/archived/p04-review-2026-10-11T035054Z.md                                                                                                                                                                   | 7e3966dcc47c53dbdd6a693789fb82c96c6bc936 | auto       | -                 |
-| p05    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
+| p05    | code     | fixes_added     | 2026-10-11 | reviews/archived/p05-review-2026-10-11T043436Z.md                                                                                                                                                                   | a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8 | auto       | -                 |
 | p06    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p07    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
 | p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                 |
@@ -1090,7 +1120,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 2: 5 tasks - Router routes, brief-unit guard, dashboard parity, two review fixes
 - Phase 3: 3 tasks - Templates with bundle registration, scaffold behavior, one review fix
 - Phase 4: 6 tasks - Plan profiles, brief → quick promotion, four review fixes
-- Phase 5: 2 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills
+- Phase 5: 3 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills; one review fix
 - Phase 6: 3 tasks - Implement references, agent roles and projections, quick-start resume contract
 - Phase 7: 3 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills
 - Phase 8: 6 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR)
@@ -1099,7 +1129,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 42 tasks**
+**Total: 43 tasks**
 
 Ready for code review and merge.
 

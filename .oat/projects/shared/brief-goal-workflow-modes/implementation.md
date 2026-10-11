@@ -351,7 +351,7 @@ oat_generated: false
 **Commit:** d4a1d4fc6
 
 - **Files changed:** .agents/skills/oat-project-brief/{SKILL.md, references/brief-contract.md, references/docs/{autonomy-contract,gate-approval-record}.md symlinks}; .agents/docs/{autonomy-contract,gate-approval-record}.md; packages/cli/src/commands/shared/frontmatter.ts; pack-manifest.ts (+test); bundle-inputs.mjs; autonomy-gate-inventory.test.ts (17 roots); apps/oat-docs/skill-docs.json; starting-projects.md; docs/skills/index.md
-- **Verification:** validate-skills, format:root, docs:skills:check, scoped vitest 269/269 (pack-manifest, autonomy inventory, bundled-docs, gate-record, preflight, frontmatter), gate-aware pin; gate resolve oat-project-brief → not_configured
+- **Verification:** validate-skills, format:root, docs:skills:check, scoped vitest 269/269 (pack-manifest, autonomy inventory, bundled-docs, gate-record, preflight, frontmatter), gate-aware pin (`skills.test.ts` live pin) and the override-parser probe (the earlier `gate resolve … → not_configured` line was non-discriminating and is withdrawn as evidence)
 
 ### Task p05-t02: Planning-surface skills recognize brief
 
@@ -360,6 +360,20 @@ oat_generated: false
 
 - **Files changed:** fourteen planning-surface SKILL.md files
 - **Verification:** order-independent rg sweep prints nothing; validate-skills; format:root; no autonomy re-keys (inventory test green)
+
+### Review Received: p05
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p05-review-2026-10-11T043436Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p05-86782b59`, invocation auto, reviewed head a4585a9cbe09a2208b54f3f38c3c4cf523cc04e8, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 0, Low 3 → phase review passes; auto-disposition mode. Only the three expected-red tests fail (p08-t01).
+
+- L1 Step 3.6 promises the reviewer receives `brief-contract.md` but the payload has no carrier → converted: p05-t03 (Negligible).
+- L2 promotion precondition and hand-off under-specified (SKILL.md, BRIEF-04) → converted: p05-t03 (Negligible).
+- L3 plan verify clause `gate resolve oat-project-brief` is non-discriminating → resolved by root: plan p05-t01 verify clause replaced with the gate-aware pin and the override-parser probe; ledger evidence corrected below.
+
+**New tasks added:** p05-t03 (same handle, fix mode; no re-review round for a passing review per Step 7b's queued-task rule; root verifies the prose change).
 
 ---
 
