@@ -11,9 +11,10 @@ labels:
   - concurrency
 assignee: null
 created: 2026-09-28T10:16:22.956Z
-updated: 2026-09-28T10:16:22.956Z
+updated: 2026-10-11T00:17:45Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-10-10-serialize-agents-md-guidance-appends.md
 ---
 
 ## Description

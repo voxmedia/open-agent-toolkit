@@ -10,11 +10,12 @@ labels:
   - cli
 assignee: null
 created: 2026-09-27T03:35:38.617Z
-updated: 2026-09-27T03:35:38.617Z
+updated: 2026-10-11T00:17:45Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/314
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-10-10-preview-project-log-appends-without-side-effects.md
 ---
 
 ## Description
