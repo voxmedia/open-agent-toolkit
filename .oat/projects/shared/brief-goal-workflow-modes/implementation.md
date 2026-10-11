@@ -851,8 +851,12 @@ oat_generated: false
 
 ## Phase 12: Goal contracts, docs, records and the final PR (v1.5)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** 5ac181153129025492ffe119040c9709b32877d6
+**Head:** (pending)
+**Executor:** phase-implementer:impl-p12-f2b82399 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 fan-in)
 
 ### Task p12-t01: Skill contract tests and autonomy coverage for goal
 
@@ -1028,6 +1032,12 @@ _- Outstanding Items_
 - Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are design gaps recorded under p11-t03) at 38d84c1b5; p11 review follows
 - Review round 1 (rev-p11-cf02c1ad, Fable 5.1 high at the frontier cap, head ee16af1b8): 0/1/2/5 → p11-t04 (H1, M1, M2 decision (a), L1–L5); fix continuation `cont-brief-goal-workflow-modes-p11-fix-1` → 80282f21b (after Thomas freed disk to 32 GB); round 2 (rev-p11-e605870b, head a7aefa911): 0/0/0/1 → passed; phase p11 closed at 80282f21b
+
+#### Phase p12 implementation dispatch (fan-in, root checkout)
+
+- Request ID: `impl-p12-f2b82399` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p12 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
 
 <!-- orchestration-runs-end -->
 
