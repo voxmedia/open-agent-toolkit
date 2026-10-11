@@ -1126,6 +1126,36 @@ After p08 is accepted and reviewed, run `oat-project-pr-progress` for p01–p08 
 
 ---
 
+### Task p08-t07: (review) Brief arrival point in the brainstorm docs and the gate template comment
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md` (`:673` brainstorm entry paragraph)
+- Modify: `.oat/templates/state.md` (`:85` `oat_brief_gate` block comment) and its bundled copy under `packages/cli/assets/templates/` if one is tracked
+
+**Step 1: Understand the issue**
+
+Review finding (p08 review, Low ×2): the brainstorm entry paragraph was widened to four lanes but lists only three arrival points, leaving the brief reader without the hand-off `oat-brainstorm/SKILL.md:556-559` defines; the `oat_brief_gate` template comment says "read back by nothing" while `oat-project-progress` reads and reports it, and the skill's own wording is "read back by no route".
+Location: `apps/oat-docs/docs/workflows/projects/lifecycle.md:673`; `.oat/templates/state.md:85`
+
+**Step 2: Implement fix**
+
+Append "; Brief users arrive at `oat-project-brief` with the brainstorm payload saved as a research note under `references/research/` and the scaffolded `plan.md` left for the interview." to the lifecycle sentence. Change the template comment clause to "provenance only, read back by no route" (matching `oat-project-progress/SKILL.md:233`); keep the bundled copy identical. No further version bump: the lockstep already exceeds `origin/main` on this branch.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter oat-docs check && HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/gate-approval-record-contracts.test.ts src/commands/help-snapshots.test.ts && pnpm oat:validate-skills && pnpm format:root`
+Expected: all exit 0; `git diff --stat` touches only the named files.
+
+**Step 4: Commit**
+
+```bash
+git add apps/oat-docs/docs/workflows/projects/lifecycle.md .oat/templates/state.md packages/cli/assets/templates/state.md
+git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the gate template comment"
+```
+
+---
+
 ## Phase 9: Goal registration and control-plane transitions (v1.5)
 
 ### Task p09-t01: Register `goal`, extraction parsing and goal state fields
@@ -1222,7 +1252,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p06    | code     | fixes_added     | 2026-10-11 | reviews/archived/p06-review-2026-10-11T051021Z.md                                                                                                                                                                   | 95a3a0bfa1dacc87935512dab62308a04338dacc | auto       | -                                              |
 | p06    | code     | passed          | 2026-10-11 | reviews/archived/p06-review-2026-10-11T052142Z.md                                                                                                                                                                   | eebab37c3aa981c0f773ae85f39d5b9e7e7d29f2 | auto       | round 2; fixes e2fd29c93, 578e88b0c, 1e2ff01dd |
 | p07    | code     | passed          | 2026-10-11 | reviews/archived/p07-review-2026-10-11T060048Z.md                                                                                                                                                                   | f2cb39c80effd19effb9f49a05c9053be7cc299c | auto       | fixes at b65dbad79                             |
-| p08    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
+| p08    | code     | fixes_added     | 2026-10-11 | reviews/archived/p08-review-2026-10-11T070155Z.md                                                                                                                                                                   | 7b268c896b86b8efd20486a2cacb8d2909821b6a | auto       | -                                              |
 | p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
 | p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
 | p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                              |
@@ -1248,13 +1278,13 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 5: 3 tasks - Brief entry skill, contract, gate and autonomy entries; planning-surface skills; one review fix
 - Phase 6: 6 tasks - Implement references, agent roles and projections, quick-start resume contract; three review fixes
 - Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
-- Phase 8: 6 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR)
+- Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
 - Phase 9: 2 tasks - Goal registration and routing (v1.5)
 - Phase 10: 3 tasks - Goal validation, delivery refresh, closeout coverage (v1.5)
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 47 tasks**
+**Total: 48 tasks**
 
 Ready for code review and merge.
 

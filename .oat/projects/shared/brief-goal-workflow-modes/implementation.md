@@ -606,6 +606,19 @@ oat_generated: false
 - **Files changed:** lockstep 0.3.18 → 0.3.19 in the five public `package.json` files and `public-package-versions.json` (origin/main re-fetched: still 0.3.18 at 417a34c57); roles `oat-phase-implementer` 1.1.7 → 1.1.8, `oat-reviewer` 1.2.11 → 1.2.12; 27 skill `metadata.version` bumps (brainstorm 1.3.9, docs 1.0.5, pjm-review-backlog 1.6.4, autonomous 1.0.20, capture 1.0.5, complete 1.7.16, discover 2.2.10, dispatch-subagents 1.1.8, document 1.8.9, implement 2.3.19, import-plan 1.4.21, lite 1.1.9, new 1.4.4, next 1.1.6, plan 1.4.18, plan-writing 1.2.36, pr-final 1.6.10, pr-progress 1.3.3, progress 1.4.6, promote-spec-driven 1.2.6, quick-start 2.3.20, reconcile 1.0.5, review-provide 1.5.14, review-receive 1.6.10, revise 1.0.6, summary 1.5.9, wave-execute 1.9.8; oat-project-brief new at 1.0.0); 56 version pins (54 skills.test.ts, 2 review-skill-contracts.test.ts; coincidental same-number pins for worktree-bootstrap(-auto), wrap-up and recon left alone); projections regenerated, manifest `oatVersion` 0.3.19
 - **Verification (gate table, explicit exit codes):** check 0 · type-check 0 · test 0 · build 0 · check:skill-bumps 0 (30 changed skills/roles) · release:check-versions 0 · release:validate 0 (5 packages) · build:docs 0 (cache replay; forced rerun 0 cached also 0) · forced turbo test 0 (0 cached, no FULL TURBO; CLI 8465, control-plane 200) · test:smoke 0 (163) · test:skills 0 (700) · test:scripts 0 (1) · lint 0 · format 0; check:skill-bumps, release:check-versions and oat:validate-skills re-run green at HEAD; free disk ≥ 3.5 GB throughout; root confirmed the gate logs' tails and `FULL TURBO` count 0 in the forced test log
 
+### Review Received: p08
+
+**Date:** 2026-10-11
+**Review artifact:** reviews/archived/p08-review-2026-10-11T070155Z.md
+**Reviewer dispatch:** `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p08-6b8f9c86`, invocation auto, reviewed head 7b268c896b86b8efd20486a2cacb8d2909821b6a, reconnaissance not-attempted)
+
+**Findings:** Critical 0, High 0, Medium 0, Low 2 → phase review passes; auto-disposition mode. The reviewer independently re-proved the brief contract block can fail on a different p05 mention, confirmed every former expected-red pin is now the five-mode form, checked the tracked link and a clean sync dry-run ("No changes to apply"), `check:skill-bumps` (30 changed) and `release:check-versions` after a fresh fetch, all exit 0.
+
+- L1 lifecycle.md:673 brainstorm entry paragraph lists three arrival points for four lanes → converted: p08-t07 (Negligible).
+- L2 `.oat/templates/state.md:85` `oat_brief_gate` comment "read back by nothing" contradicts the progress skill's `Brief Gate:` line → converted: p08-t07 (Negligible).
+
+**New tasks added:** p08-t07 (same handle, fix mode; no re-review for a passing review per Step 7b; root verifies).
+
 ---
 
 ## Phase 9: Goal registration and control-plane transitions (v1.5)
