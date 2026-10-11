@@ -214,7 +214,9 @@ const TASK_HEADING = /^###[ \t]+Task\b/;
 const FIELD_MARKER = /^\*\*[^*\n]+:\*\*/;
 const INTENT_MARKER = /^\*\*Intent:\*\*(.*)$/;
 const EXIT_EVIDENCE_MARKER = /^\*\*Exit evidence:\*\*(.*)$/;
-const PROVISIONAL_MARKER = /^\*\*Provisional:\*\*(.*)$/;
+const PROVISIONAL_LINE = /^\*\*Provisional:\*\*/;
+// The control-plane parser's grammar: a space after the marker, then the value.
+const PROVISIONAL_VALID = /^\*\*Provisional:\*\*\s+(?:yes|no)$/;
 
 interface BriefPhaseBlock {
   phaseId: string;
@@ -338,12 +340,12 @@ function validateBriefPlan(content: string): ValidationIssue[] {
       });
     }
     for (const line of block.lines) {
-      const value = line.trim().match(PROVISIONAL_MARKER)?.[1]?.trim();
-      if (value !== undefined && value !== 'yes' && value !== 'no') {
+      const trimmed = line.trim();
+      if (PROVISIONAL_LINE.test(trimmed) && !PROVISIONAL_VALID.test(trimmed)) {
         issues.push({
           severity: 'error',
           code: 'brief-provisional-invalid',
-          message: `brief-provisional-invalid: Phase ${block.phaseId} has **Provisional:** "${value}"; use yes or no.`,
+          message: `brief-provisional-invalid: Phase ${block.phaseId} has "${trimmed}"; use "**Provisional:** yes" or "**Provisional:** no".`,
         });
       }
     }

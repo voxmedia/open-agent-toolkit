@@ -87,6 +87,10 @@ function briefPlan(phases: string[][]): string {
     '',
     'Incremental phases.',
     '',
+    '### Design',
+    '',
+    'Render through the existing pipeline.',
+    '',
     '## Constraints and Out of Scope',
     '',
     '- No new runtime dependencies.',
@@ -249,6 +253,16 @@ const DISCOVERY_TEMPLATE = [
   '## Key Decisions',
   '',
   '{Decisions}',
+  '',
+  '## Solution Space',
+  '',
+  '### Approach 1: {Strategy Name}',
+  '',
+  '**Description:** {What this approach involves}',
+  '',
+  '### Chosen Direction',
+  '',
+  '**Approach:** {Which approach was selected}',
   '',
   '## Constraints',
   '',
@@ -596,6 +610,28 @@ describe('oat project promote: brief → quick', () => {
     expect(state.recommendation.skill).toBe('oat-project-quick-start');
   });
 
+  it('carries the brief Approach into discovery as the chosen direction', async () => {
+    const { repoRoot, projectPath, projectRoot } = await seed();
+    const { command } = createHarness(repoRoot);
+
+    await runPromote(command, projectPath);
+
+    const discovery = await read(projectRoot, 'discovery.md');
+    // The brief's Approach becomes discovery's Chosen Direction, with its own
+    // subheadings demoted to stay inside it.
+    const solutionSpace = sectionOf(discovery, '## Solution Space');
+    const chosen = solutionSpace.slice(
+      solutionSpace.indexOf('### Chosen Direction'),
+    );
+    expect(chosen).toContain('Incremental phases.');
+    expect(chosen).toContain('#### Design');
+    expect(chosen).toContain('Render through the existing pipeline.');
+    expect(chosen).not.toContain('{Which approach was selected}');
+    expect(discovery.indexOf('### Chosen Direction')).toBeLessThan(
+      discovery.indexOf('## Constraints'),
+    );
+  });
+
   it('keeps the promoted plan not ready while phases still need tasks', async () => {
     const { repoRoot, projectPath, projectRoot } = await seed();
     const { command } = createHarness(repoRoot);
@@ -708,6 +744,41 @@ describe('oat project promote: brief → quick', () => {
       ],
     ).toEqual(['p01', 'p02', 'p03']);
     expect(await read(projectRoot, 'plan.md')).not.toMatch(/^### Task/m);
+  });
+
+  it('refuses an accepted phase without a head instead of fabricating a record', async () => {
+    const plan = briefPlan([
+      phaseBlock('p01', 'Headless'),
+      phaseBlock('p02', 'Pending'),
+    ]);
+    const journalContent = journal([
+      journalPhase('p01', 'Headless', ['**Status:** completed'], []),
+    ]);
+    const { repoRoot, projectPath, projectRoot } = await seed({
+      plan,
+      journal: journalContent,
+    });
+    const { capture, command, gitRunner } = createHarness(repoRoot);
+
+    await runPromote(command, projectPath);
+
+    expect(capture.jsonPayloads).toEqual([
+      {
+        status: 'refused',
+        reason: 'missing-phase-head',
+        files: [],
+        phases: ['p01'],
+      },
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(gitRunner.run).not.toHaveBeenCalled();
+    await expect(read(projectRoot, 'implementation.md')).resolves.toBe(
+      journalContent,
+    );
+    await expect(read(projectRoot, 'plan.md')).resolves.toBe(plan);
+    await expect(read(projectRoot, 'discovery.md')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it.each([

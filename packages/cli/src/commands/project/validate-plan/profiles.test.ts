@@ -219,6 +219,21 @@ describe('validatePlanForProfile: brief', () => {
     ).toEqual(['brief-provisional-invalid']);
   });
 
+  it('reports brief-provisional-invalid for a marker without the space the progress parser requires', () => {
+    const plan = briefPlan([
+      phaseBlock('p01'),
+      [
+        '## Phase p02: Later',
+        '',
+        '**Intent:** x',
+        '**Exit evidence:** y',
+        '**Provisional:**yes',
+        '',
+      ],
+    ]);
+    expect(codes(plan)).toEqual(['brief-provisional-invalid']);
+  });
+
   it('reports brief-first-phase-provisional', () => {
     expect(
       codes(

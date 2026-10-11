@@ -76,6 +76,7 @@ type PromotionReason =
   | 'brief-archive-exists'
   | 'extracted-phases'
   | 'invalid-brief-plan'
+  | 'missing-phase-head'
   | 'scope-unresolved'
   | 'project-unreadable'
   | 'template-unreadable'
@@ -111,6 +112,7 @@ export type PromotionResult =
       status: 'refused';
       reason: Exclude<PromotionReason, 'promoted'>;
       files: string[];
+      phases?: string[];
       recovery?: PromotionRecovery;
     };
 
@@ -617,7 +619,8 @@ export interface BriefMigration {
 
 export type BriefMigrationResult =
   | { ok: true; migration: BriefMigration }
-  | { ok: false; reason: 'extracted-phases' | 'invalid-brief-plan' };
+  | { ok: false; reason: 'extracted-phases' | 'invalid-brief-plan' }
+  | { ok: false; reason: 'missing-phase-head'; phases: string[] };
 
 function stripFrontmatter(content: string): string {
   const match = /^---\n[\s\S]*?\n---[^\n]*(?:\n|$)/.exec(content);
@@ -845,6 +848,24 @@ export function migrateBriefToQuick(input: {
   const { records, sectionEnds } = readJournalRecords(journalLines);
   const insertions: { at: number; lines: string[] }[] = [];
 
+  // An accepted phase without a completed record is synthesized against its
+  // phase head; without a head there is no evidence anchor, so refuse rather
+  // than fabricate a completed record.
+  const headless = progress.phases
+    .map((phase) => phase.phaseId)
+    .filter(
+      (phaseId, index, all) =>
+        all.indexOf(phaseId) === index &&
+        phaseStates[phaseId] === 'accepted' &&
+        !(records.get(phaseId) ?? []).some(
+          (record) => record.status === 'completed',
+        ) &&
+        markers.get(phaseId)?.head == null,
+    );
+  if (headless.length > 0) {
+    return { ok: false, reason: 'missing-phase-head', phases: headless };
+  }
+
   const frontmatter = getFrontmatterBlock(planContent)
     ? readObjectFrontmatter(planContent, 'plan.md')
     : {};
@@ -911,7 +932,7 @@ export function migrateBriefToQuick(input: {
         if (state === 'accepted' && completed.length === 0) {
           const next = Math.max(0, ...phaseRecords.map((r) => r.ordinal)) + 1;
           const taskId = `${taskPrefixForPhase(phaseId)}-t${String(next).padStart(2, '0')}`;
-          const head = markers.get(phaseId)?.head ?? '-';
+          const head = markers.get(phaseId)!.head!;
           lines.push(
             `### Task ${taskId}: ${SYNTHESIZED_TASK_TITLE}`,
             '',
@@ -1071,7 +1092,37 @@ function renderBriefDiscovery(
   for (const [heading, body] of carried) {
     if (body) rendered = upsertDiscoverySection(rendered, heading, body);
   }
+  const approach = findBriefSection(sections, (t) => t === 'approach');
+  if (approach) rendered = renderChosenDirection(rendered, approach);
   return rendered;
+}
+
+/**
+ * Carry the brief's `## Approach` into discovery's `## Solution Space` as the
+ * `### Chosen Direction` body. Headings inside the approach (for example
+ * `### Design`) are demoted one level so they stay under Chosen Direction.
+ */
+function renderChosenDirection(content: string, approach: string): string {
+  const body = approach.replace(/^(#{3,5})(?=[ \t])/gm, '#$1').trim();
+  const chosen = /^### Chosen Direction[ \t]*$/m.exec(content);
+  if (chosen) {
+    const bodyStart = chosen.index + chosen[0].length;
+    const next = /^#{1,3}[ \t]/m.exec(content.slice(bodyStart));
+    const bodyEnd = next ? bodyStart + next.index : content.length;
+    return `${content.slice(0, bodyStart)}\n\n${body}\n\n${content.slice(bodyEnd).replace(/^\s*/, '')}`;
+  }
+  const solutionSpace = /^## Solution Space[ \t]*$/m.exec(content);
+  if (solutionSpace) {
+    const bodyStart = solutionSpace.index + solutionSpace[0].length;
+    const next = /^##[ \t]/m.exec(content.slice(bodyStart));
+    const at = next ? bodyStart + next.index : content.length;
+    return `${content.slice(0, at).trimEnd()}\n\n### Chosen Direction\n\n${body}\n\n${content.slice(at)}`;
+  }
+  return upsertDiscoverySection(
+    content,
+    'Solution Space',
+    `### Chosen Direction\n\n${body}`,
+  );
 }
 
 function renderPromotedBriefState(
@@ -1142,7 +1193,14 @@ async function promoteBriefProject(
     return { status: 'refused', reason: 'invalid-brief-plan', files: [] };
   }
   if (!migrated.ok) {
-    return { status: 'refused', reason: migrated.reason, files: [] };
+    return {
+      status: 'refused',
+      reason: migrated.reason,
+      files: [],
+      ...(migrated.reason === 'missing-phase-head'
+        ? { phases: migrated.phases }
+        : {}),
+    };
   }
   const { migration } = migrated;
 
@@ -1273,7 +1331,7 @@ export function createProjectPromoteCommand(
           context.logger.info(`Promoted ${projectPath} to quick.`);
         } else {
           context.logger.error(
-            `Promotion refused: ${result.reason}.${result.recovery ? ` Exact-path persistence ${result.recovery.outcome}; attempts ${result.recovery.attempts}; lock ${result.recovery.lockClass ?? 'none'}; identity ${result.recovery.identity}; receipt ${result.recovery.receipt ?? 'unavailable'}. ${result.recovery.error ?? ''} Recover existing Quick artifacts with: ${result.recovery.command}` : ''}`,
+            `Promotion refused: ${result.reason}${result.phases ? ` (${result.phases.join(', ')})` : ''}.${result.recovery ? ` Exact-path persistence ${result.recovery.outcome}; attempts ${result.recovery.attempts}; lock ${result.recovery.lockClass ?? 'none'}; identity ${result.recovery.identity}; receipt ${result.recovery.receipt ?? 'unavailable'}. ${result.recovery.error ?? ''} Recover existing Quick artifacts with: ${result.recovery.command}` : ''}`,
           );
         }
         process.exitCode = result.status === 'promoted' ? 0 : 1;
