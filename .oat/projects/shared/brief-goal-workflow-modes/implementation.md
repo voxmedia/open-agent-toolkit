@@ -391,8 +391,12 @@ oat_generated: false
 
 ## Phase 6: Execution skills and agent roles
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** a4d7768d5ecf76482168e7bcdabf542c595d59d2
+**Head:** -
+**Executor:** phase-implementer:impl-p06-ba2fb5ee (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p06-t01: Implement references for brief execution
 
@@ -623,6 +627,12 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: accepted → child outcome: completed (DONE); head 31c4e56a3; commits d4a1d4fc6, 31c4e56a3; the launching host session restarted after p05-t01 and the same handle was continued (no replacement)
 - Review round 1 (rev-p05-86782b59, Fable 5.1 high at the frontier cap): pass with 3 Low; fix continuation `cont-brief-goal-workflow-modes-p05-fix-1` → c86f8558c; phase p05 closed at c86f8558c
+
+#### Phase p06 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p06-ba2fb5ee` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base a4d7768d5ecf76482168e7bcdabf542c595d59d2, p05 closeout; the dispatch-plan commit sits between base and the first task commit; p06-t01..t03 in the root checkout after p05 closed at c86f8558c)
 
 <!-- orchestration-runs-end -->
 
