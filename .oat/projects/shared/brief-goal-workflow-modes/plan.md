@@ -1195,11 +1195,41 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ---
 
+### Task p09-t03: (review) Newest passed review wins over a stale registry entry; tolerant scope labels; normalized id lists
+
+**Files:**
+
+- Modify: `packages/control-plane/src/recommender/router.ts` (+test)
+- Modify: `packages/control-plane/src/state/parser.ts` (+test)
+
+**Step 1: Understand the issue**
+
+Review finding (p09 review, High + Medium + Low): `readIntegratedReview` sets `registered = delivery.integrated_review` for every status-table route and (a) returns `stale` outright when the registry disposition is stale/failed, (b) otherwise looks up the Reviews row by the registry's artifact, so after `delivering → implementing → reviewing → received → passed` on a new artifact the newest `passed` row is invisible; the row lookup accepts only a bare `mNN`/`dNN` Scope cell; persisted phase-id lists (`oat_goal_recovery.phase_ids`, `oat_deliveries[].scope`, `integrated_review.scope`, carrier `subject.scope`) are read verbatim while membership ids are normalized.
+Location: `packages/control-plane/src/recommender/router.ts:701-759,722-731`; `packages/control-plane/src/state/parser.ts:275-283,343,381-386`
+
+**Step 2: Implement fix**
+
+When `target.artifact === null`, resolve the newest `code` row matching the milestone/delivery label first and let the registry's disposition govern only when that row's artifact equals `registered.artifact` (a superseded registry entry never vetoes a newer passed artifact). Accept a Scope cell equal to the id or starting with `<id>:`. Run `normalizePhaseId` over the four persisted lists in `parser.ts`, dropping tokens it rejects. Add a real-reader router test for the active-milestone cycle `delivering → implementing → reviewing → (received) → (passed) → pr-progress` with a registered delivery, in both registry-disposition variants, plus the `| m01: p01, p02 |` label case and a `p1` → `p01` list case.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane build && HOME=$FH pnpm --filter @open-agent-toolkit/control-plane exec vitest run`
+Expected: pass; the new cycle test fails with the lookup reverted (neutralize, observe, restore).
+
+**Step 4: Commit**
+
+```bash
+git add packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts
+git commit -m "fix(p09-t03): newest passed review wins, tolerant scope labels, normalized id lists"
+```
+
+---
+
 ## Phase 10: Goal CLI: validation, delivery registry, refresh and closeout (v1.5)
 
 ### Task p10-t01: Goal validation profile
 
-**Files:** `validate-plan/profiles.ts` (+test): `goal` rules (`goal-milestones-missing`, `goal-duplicate-milestone`, `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`, `goal-phase-without-milestone` (B1; every executable phase incl. `p-revN`), `goal-shipped-milestone-changed`, `goal-delivered-scope-changed` (B2; a frozen delivery scope lost or reassigned a phase — appending a correction phase to its recovery milestone is permitted), `goal-group-crosses-milestone`, `goal-plan-source` (B1; `oat_plan_source: goal`)); the profile consumes the shared Milestones reader from p09-t01.
+**Files:** `validate-plan/profiles.ts` (+test): `goal` rules (`goal-milestones-missing`, `goal-duplicate-milestone`, `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`, `goal-phase-without-milestone` (B1; every executable phase incl. `p-revN`), `goal-shipped-milestone-changed`, `goal-delivered-scope-changed` (B2; a frozen delivery scope lost or reassigned a phase — appending a correction phase to its recovery milestone is permitted), `goal-group-crosses-milestone`, `goal-plan-source` (B1; `oat_plan_source: goal`)); the profile consumes the shared Milestones reader from p09-t01 and maps its codes onto the reader's error codes (`milestones-missing`, `milestones-malformed`, `milestone-duplicate`, `milestone-empty`, `milestone-unknown-phase`, `phase-in-multiple-milestones`, `phase-without-milestone`) rather than re-parsing (carried from the p09 review); non-canonical phase ids in persisted registry lists are reported as a validation error.
 
 **Verify:** scoped vitest with one accepted fixture per rule and the matching rejection; the B2 pair (append permitted, removal/reassignment refused). Guard `goal-profile-rules`: for each new rule code, neutralize the rule and show its rejection fixture validates; restore and show the code; the shared valid fixture passes every rule. **Commit:** `feat(p10-t01): goal plan profile rules`
 
@@ -1239,7 +1269,7 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
 
-**Files:** `.agents/skills/oat-project-goal/SKILL.md` (gateable; brief steps plus the canonical Milestones table, milestone state, `plan` carrier bound to the approved brief/amendment and membership at activation (A2), re-alignment entry at `delivered` that may draft and review the next milestone but activates it only at the agreed endpoint (B4), terminal declaration entry that alone writes `declared_met` and authors the exhaustive outcome audit with phase and outcome dispositions (A3); implement consumes the declaration and never declares the goal met), `oat-project-brief/references/brief-contract.md` goal sections (membership grammar, plan versus code gate subjects with nullable `reviewed_head`, the bounded bookkeeping-successor rule, explicit goal review scopes, the goal exception to the shared ladder), `packages/cli/src/commands/shared/frontmatter.ts` `GATE_AWARE_SKILLS`, pack manifest and bundle inputs, `.agents/docs/autonomy-contract.md` GOAL rows and the 18th root, `apps/oat-docs/skill-docs.json` mapping and a minimal docs section.
+**Files:** `.agents/skills/oat-project-goal/SKILL.md` (gateable; brief steps plus the canonical Milestones table, milestone state, `plan` carrier bound to the approved brief/amendment and membership at activation (A2), re-alignment entry at `delivered` that may draft and review the next milestone but activates it only at the agreed endpoint (B4), terminal declaration entry that alone writes `declared_met` and authors the exhaustive outcome audit with phase and outcome dispositions (A3); implement consumes the declaration and never declares the goal met), `oat-project-brief/references/brief-contract.md` goal sections (the Milestones table grammar verbatim from `state/milestones.ts` — header cells `Milestone`/`Phases`, separator row, one `mNN` per row with `m1` → `m01`, comma-separated optionally backticked phase ids normalized, row order = ordered phase set, trailing columns ignored, extracted phases exempt from `phase-without-milestone`, the seven error codes — carried from the p09 review; the Scope-cell rule for goal integrated reviews; the approval-evidence rule: `plan.md` `oat_status: complete` once, then each milestone's `plan` carrier written `allowed` only after that milestone's artifact review, gate and approval — p11-t01 owns that write order; plan versus code gate subjects with nullable `reviewed_head`, the bounded bookkeeping-successor rule, explicit goal review scopes, the goal exception to the shared ladder), `packages/cli/src/commands/shared/frontmatter.ts` `GATE_AWARE_SKILLS`, pack manifest and bundle inputs, `.agents/docs/autonomy-contract.md` GOAL rows and the 18th root, `apps/oat-docs/skill-docs.json` mapping and a minimal docs section.
 
 **Verify:** `pnpm oat:validate-skills`; gate resolve on a scratch goal project after a CLI build. **Commit:** `feat(p11-t01): oat-project-goal skill and goal brief contract`
 
@@ -1337,7 +1367,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | plan   | plan     | passed          | 2026-10-11 | reviews/archived/plan-review-2026-10-11T075745Z.md                                                                                                                                                                  | dc9409c6a83efae643450de64696cd03b6337bc5 | auto       | round 3 (0/0/0/1 Low, applied); plan revision 5 approved by the orchestrator per the run rules                      |
 | plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T080913Z.md                                                                                                                                                         | f5548ebfdef3f98819b9a24320c72d3597f803da | gate       | configured plan gate rerun on revision 5 (0/2/2/0); fixes applied in root bookkeeping, gate rerun attempt 2 follows |
 | plan   | artifact | passed          | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T081731Z.md                                                                                                                                                         | 1de4aac6840ff1fa99b59f37ec673c11f8581396 | gate       | configured plan gate attempt 2 on revision 5: 0/0/0/0; `oat_quick_start_gate` refreshed                             |
-| p09    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
+| p09    | code     | fixes_added     | 2026-10-11 | reviews/archived/p09-review-2026-10-11T090259Z.md                                                                                                                                                                   | 29a4b914f311343c4f51e6431874d72e56814cb5 | auto       | -                                                                                                                   |
 | p10    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
@@ -1365,12 +1395,12 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 6: 6 tasks - Implement references, agent roles and projections, quick-start resume contract; three review fixes
 - Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
 - Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
-- Phase 9: 2 tasks - Goal registration and routing (v1.5)
+- Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
 - Phase 10: 4 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5)
 - Phase 11: 3 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
 - Phase 12: 5 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5)
 
-**Total: 54 tasks**
+**Total: 55 tasks**
 
 Ready for code review and merge.
 

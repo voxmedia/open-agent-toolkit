@@ -407,6 +407,15 @@ assigned explicitly to its recovery milestone, without moving the active
 milestone. Frozen delivery scopes remain immutable; appending correction
 phases does not mutate an earlier delivery's scope. Pre-fan-in member
 reviews are member evidence only; delivery evidence uses integration heads.
+A goal integrated review's `## Reviews` Scope cell is exactly the milestone
+id (`mNN`) or, for a registered delivery, the delivery id (`dNN`); the
+ordered phase set lives in the artifact's `oat_review_phase_ids` and the
+request context, never in the Scope cell (the router also tolerates a cell
+of the form `<id>: …`). A registered delivery's recorded
+`integrated_review` governs only while it names the newest `code` row for
+that label; a newer `passed` row with a different artifact supersedes it,
+and review-receive's clean receive rewrites the registered delivery's
+`integrated_review` (`artifact`, `scope`, `disposition: passed`).
 
 **`delivered` versus `at_endpoint` (B4).** `delivered` means the delivery
 is registered, open and review-ready; `at_endpoint` is the registry's
@@ -430,8 +439,17 @@ The router reads only persisted derived freshness
 `freshness_reason`, written by implement's scoped closeout, by
 review-receive's invalidation from `delivery check` output, and by
 `delivery refresh` for a registered delivery's milestone) and never
-evaluates Git. Skills reach the shared
-evaluator before registration through the read-only
+evaluates Git. An exit carrier without a recorded `freshness` is not
+fresh: implement's scoped closeout writes `freshness: fresh` with every
+carrier it records, `no_gate`/`project_disabled` included; plan carriers
+carry freshness only when a producer marks them `stale`. The router
+evidences brief approval by `plan.md` `oat_status: complete` (written once
+by `oat-project-goal` after the first approval); each re-alignment's
+approval is evidenced only by that milestone's
+`oat_milestone_gates[mNN].plan` carrier, which `oat-project-goal` writes
+`allowed` with a `plan` subject bound to the milestone's membership only
+after that milestone's artifact review, gate and user approval. Skills
+reach the shared evaluator before registration through the read-only
 `oat project delivery check --project <path> --subject <milestone|delivery>
 --json`, which runs `evidence.ts` for a milestone scope and reports carrier
 and review freshness with reasons.
