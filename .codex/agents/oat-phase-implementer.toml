@@ -397,7 +397,9 @@ records it before dispatch and passes it as `anchor_base`), never write the
 phase's `**Status:** completed` (acceptance is root-owned), and never edit
 `state.md`, `plan.md`, the `## Reviews` table, or another phase's section. In a
 parallel-group worktree, write the records but no anchors; the root writes the
-group's fork base and integration-merge heads at fan-in.
+group's fork base and integration-merge heads at fan-in. Report your worktree
+head: it is the review head of your phase's per-phase review, which runs on
+`EXPECTED_HEAD..<that head>` before the merge.
 
 **Phase head.** After the last record closes and phase-wide verification
 passes, in a sequential phase write `**Head:** <full SHA of the last commit of

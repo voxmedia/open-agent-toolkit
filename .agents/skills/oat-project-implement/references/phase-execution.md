@@ -113,6 +113,11 @@ earlier phase. Before dispatch, verify that both anchors exist and that
 carries the artifact record fields `oat_review_requested_scope: pNN`,
 `oat_review_phase_ids: [pNN]`, `oat_review_base_sha`, and
 `oat_review_scope_source: anchors` for the reviewer to copy into its artifact.
+For a parallel-group member the per-phase Review Scope range is
+`EXPECTED_HEAD..<worktree head from the phase report>` with
+`oat_review_base_sha: EXPECTED_HEAD` and `oat_review_scope_source: anchors`;
+the fan-in `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and
+`final` scopes.
 
 **Late-fix rule.** A review-fix commit may advance the phase's `**Head:**`, base
 unchanged, only while no later phase in document order has a `**Base:**`. Once
@@ -1041,7 +1046,12 @@ For a multi-phase schedule entry:
 
 In brief modes, step 6 merges passing phases in document order, and step 10's
 bookkeeping writes every member's anchors and phase-local records as the
-Brief-Mode Phase Execution subsection describes.
+Brief-Mode Phase Execution subsection describes. Step 5's per-phase review
+still runs before the merge: For a parallel-group member the per-phase Review Scope range is
+`EXPECTED_HEAD..<worktree head from the phase report>` with
+`oat_review_base_sha: EXPECTED_HEAD` and `oat_review_scope_source: anchors`;
+the fan-in `**Base:**`/`**Head:**` written afterwards govern `pNN-pMM` and
+`final` scopes.
 
 1. Capture `EXPECTED_HEAD=$(git rev-parse HEAD)`.
 2. Bootstrap one worktree per phase through `oat-worktree-bootstrap-auto` with
