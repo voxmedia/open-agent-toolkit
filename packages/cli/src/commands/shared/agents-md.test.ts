@@ -240,6 +240,53 @@ describe('append-only AGENTS.md guidance', () => {
     },
   );
 
+  it.skipIf(process.getuid?.() === 0)(
+    'reports an owned-lock cleanup refusal after the guidance was written',
+    async () => {
+      await setup('# Original\n');
+      const mode = (await lstat(root)).mode & 0o7777;
+      try {
+        const result = await upsertAgentsMdSection(
+          root,
+          'tools',
+          'Tool guidance',
+          {
+            fileSystem: withFileSystem({
+              open: vi.fn(async (...args) => {
+                const handle = await open(...args);
+                // The held append handle remains writable, but unlink in this real
+                // fixture directory must fail. No lock implementation is mocked.
+                await chmod(root, 0o500);
+                return handle;
+              }) as AgentsMdFileSystem['open'],
+            }),
+          },
+        );
+        expect(result).toMatchObject({
+          action: 'blocked',
+          blocked: {
+            reason: expect.stringMatching(
+              /^AGENTS\.md append lock cleanup failed.*guidance may already have been written/,
+            ),
+          },
+        });
+        expect(result.blocked?.reason).toContain('Check the recorded host/PID');
+        expect(result.blocked?.reason).toContain('AGENTS.md.oat-guidance.lock');
+        expect(JSON.stringify(result)).not.toContain(root);
+        expect(await readAgentsMd()).toBe(
+          '# Original\n\n<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n',
+        );
+        const owner = JSON.parse(
+          await readFile(join(root, 'AGENTS.md.oat-guidance.lock'), 'utf8'),
+        );
+        expect(owner.pid).toBe(process.pid);
+        expect(owner.token).toEqual(expect.any(String));
+      } finally {
+        await chmod(root, mode);
+      }
+    },
+  );
+
   it.each(['replaced', 'retokened'] as const)(
     'does not remove a %s foreign lock during append',
     async (kind) => {

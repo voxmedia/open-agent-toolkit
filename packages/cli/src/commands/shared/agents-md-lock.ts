@@ -116,7 +116,12 @@ export async function acquireAgentsMdAppendLock(
           await handle.close();
           if (interrupted) process.kill(process.pid, interrupted);
         }
-      })();
+      })().catch((error: unknown) => {
+        throw new Error(
+          `AGENTS.md append lock cleanup failed; guidance may already have been written. ${recovery}`,
+          { cause: error },
+        );
+      });
       return releasing;
     };
     const readOwnedBytes = async () => {
