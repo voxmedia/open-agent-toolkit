@@ -503,6 +503,24 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
       ).toBe('promotion-pending-phases');
     });
 
+    it('rejects a block list separated from its bare key by a blank line', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending('oat_promotion_pending_phases:\n\n  - p03'),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
+    it('rejects a block list separated from its bare key by a comment line', () => {
+      expect(
+        evaluateQuickPlanReadiness(
+          withPending(
+            'oat_promotion_pending_phases:\n# phases still needing tasks\n  - p03',
+          ),
+        ),
+      ).toEqual({ ready: false, failure: 'promotion-pending-phases' });
+    });
+
     it('rejects a duplicated declaration', () => {
       expect(
         evaluateQuickPlanReadiness(

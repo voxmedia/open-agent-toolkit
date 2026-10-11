@@ -26,7 +26,8 @@ import type { QuickPlanReadiness, QuickPlanReadinessFailure } from '../types';
  * 6. `oat_promotion_pending_phases` is absent or empty, so a brief promoted
  *    to quick is not ready while any of its phases still lacks executable
  *    tasks. Empty means declared exactly once as `[]`, `null`, `~`, or a bare
- *    key with no block-list items; a duplicated key is contradictory. The
+ *    key whose next frontmatter line, after any blank or `#` comment lines,
+ *    is not a block-list item; a duplicated key is contradictory. The
  *    `oat-project-quick-start` guard gains the matching clause alongside the
  *    promoted-brief resume.
  *
@@ -133,8 +134,11 @@ const BLOCK_LIST_ITEM = /^[ \t\r\f\v]*-([ \t\r\f\v]|$)/;
  * Clause 6: a promoted brief records the phases that still need executable
  * tasks in `oat_promotion_pending_phases`. The plan is ready only when that
  * key is absent, or declared once with an empty value (`[]`, `null`, `~`, or
- * a bare key followed by no block-list item). A non-empty flow or block list,
- * any other scalar, or a duplicated key is not ready.
+ * a bare key followed by no block-list item). Blank and `#` comment lines
+ * between the key and its items do not end a block list, so they are skipped
+ * before the item test; otherwise a separated list would read as empty and
+ * fail open. A non-empty flow or block list, any other scalar, or a
+ * duplicated key is not ready.
  */
 function hasNoPromotionPendingPhases(lines: string[]): boolean {
   const frontmatter = readFrontmatterLines(lines);
@@ -168,7 +172,17 @@ function hasNoPromotionPendingPhases(lines: string[]): boolean {
     return false;
   }
 
-  return !BLOCK_LIST_ITEM.test(frontmatter[index + 1] ?? '');
+  let next = index + 1;
+  while (next < frontmatter.length && isBlankOrComment(frontmatter[next])) {
+    next += 1;
+  }
+
+  return !BLOCK_LIST_ITEM.test(frontmatter[next] ?? '');
+}
+
+function isBlankOrComment(line: string | undefined): boolean {
+  const trimmed = (line ?? '').trim();
+  return trimmed === '' || trimmed.startsWith('#');
 }
 
 /**
