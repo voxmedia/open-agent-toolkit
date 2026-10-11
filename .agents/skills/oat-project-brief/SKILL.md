@@ -253,15 +253,20 @@ interview length:
   or `oat-project-split` for a confirmed broad scope. Goal mode, for many
   milestones, is not registered yet.
 - A design question cannot be settled without a separate design artifact →
-  recommend quick with lightweight design, reached through
-  `oat project promote "$PROJECT_PATH" --to quick --json` once a brief is
-  committed, or `oat-project-quick-start` before one exists.
-- The user wants a maintained, approved up-front task plan → offer the same
-  promotion to quick. Execution-time lookahead does not need it.
+  recommend quick with lightweight design, reached under the promotion
+  precondition below.
+- The user wants a maintained, approved up-front task plan → offer quick under
+  the same precondition. Execution-time lookahead does not need it.
 - The change fits one sitting with no phase structure → `oat-project-lite`
   remains available.
 
 Otherwise record in Decisions why brief fits and continue.
+
+**Promotion precondition.** Promotion to quick through
+`oat project promote "$PROJECT_PATH" --to quick --json` is offered only after
+Step 3 has written, validated, and committed the brief, because promotion
+migrates the committed brief's phases. Before that point, abandon the brief
+scaffold and start `oat-project-quick-start` instead.
 
 ### Step 3: Write the Brief in One Pass and Commit
 
@@ -371,9 +376,11 @@ written, with:
 - `scope: plan`
 - `artifact_path: "$PROJECT_PATH/plan.md"`
 - `oat_output_mode: structured`
+- `artifact_paths: { brief_contract: "$BRIEF_SKILL_DIR/references/brief-contract.md" }`,
+  where `BRIEF_SKILL_DIR` is the directory this `SKILL.md` was loaded from
 
-The reviewer receives the committed brief and `references/brief-contract.md`,
-never the interview session. Resolve `workflow.autoArtifactReview.plan`; only
+The review dispatch includes the committed brief and the brief contract through
+that payload, never the interview session. Resolve `workflow.autoArtifactReview.plan`; only
 explicit `false` skips the loop. Keep review at the current planning parent
 unless the shared managed-dispatch contract proves the exception route is
 required. Accepted handles are never replaced.
@@ -488,8 +495,10 @@ according to its `onFailure` policy.
       here. An editorial fix that changes no Outcome, Approach, Decision,
       phase boundary, or authority does not re-run the ladder.
    3. Promote to quick for an approved up-front task plan, through
-      `oat project promote "$PROJECT_PATH" --to quick --json` (see
-      `references/brief-contract.md` for refusals).
+      `oat project promote "$PROJECT_PATH" --to quick --json` (the Step 2
+      promotion precondition holds here; see `references/brief-contract.md`
+      for refusals), then stop; the project is now quick and resumes through
+      `oat-project-quick-start`.
 
    Under `OAT_AUTONOMOUS=1`, apply `BRIEF-11`: approve the recorded brief and
    write the approval evidence; contradictory or materially incomplete
