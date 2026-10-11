@@ -318,7 +318,7 @@ Persisted fields in `state.md` (v1.5):
 oat_milestone: m02
 oat_milestone_status: implementing # aligning | implementing | reviewing | delivering | delivered
 oat_goal_status: active # active | declared_met
-oat_goal_outcome_audit: null # null | { disposition: met | met_with_deferrals, decided_at, declaration_ref, brief_identity, phases: { pNN: accepted | extracted | deferred | retired, … }, outcomes: { n: { disposition: met | extracted | deferred | retired, evidence_or_ref, text } } }
+oat_goal_outcome_audit: null # null | { disposition: met | met_with_deferrals, decided_at, declaration_ref, brief_identity, phases: { pNN: { disposition: accepted | extracted | deferred | retired, reason: null, scope_decision_ref: null } }, outcomes: { n: { disposition: met | extracted | deferred | retired, evidence_or_ref, text } } }
 oat_goal_recovery: null # null | { milestone, delivery_id, phase_ids, stage: implementing | exit_gate | reviewing | receiving | delivering, review_artifact }
 oat_milestone_gates: # one entry per milestone; each carrier uses the gate-approval-record core
   m01:
@@ -341,6 +341,10 @@ oat_milestone_gates: # one entry per milestone; each carrier uses the gate-appro
         decided_at: …,
       }
 ```
+
+Deferred and retired phase entries require non-empty `reason` and
+`scope_decision_ref`. Audit validation enumerates the full phase inventory
+before extraction or execution-scope filtering.
 
 Gate carriers: `plan` is the milestone-scoped plan gate for the brief or
 its amendment, run by `oat-project-goal` (the same configured
@@ -440,28 +444,30 @@ decomposition/HiLL checks):
 
 **Transition table** (owner, prerequisite, write, recovery):
 
-| From → To                 | Owner                                 | Prerequisite                                                                                                                        | Write                                       | Recovery                                      |
-| ------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------- |
-| new → aligning            | `oat-project-goal`                    | scaffold (`oat_plan_source: goal` rendered)                                                                                         | `oat_milestone: m01`                        | `oat-project-goal`                            |
-| aligning → implementing   | `oat-project-goal`                    | artifact review passed; `plan` carrier `allowed`; approval; the next phase (and every member of the next dispatched group) concrete | status, pointer                             | `oat-project-goal`                            |
-| implementing → reviewing  | implement milestone closeout          | all units in the milestone scope accepted; `exit` carrier `allowed` and fresh                                                       | status, exit carrier                        | implement (scoped closeout)                   |
-| reviewing → delivering    | review-receive                        | clean receive of the exact integrated review (`passed`), scope, revisions and exit carrier still valid                              | status, review row `passed`                 | review-receive                                |
-| reviewing → implementing  | review-receive                        | fixes queued from the integrated review (invalidates review and exit-gate evidence)                                                 | status, phase reopened, pointer             | implement                                     |
-| delivering → implementing | review-receive                        | fixes queued from a delivery-time review                                                                                            | as above                                    | implement                                     |
-| delivering → reviewing    | refresh or pr-progress                | integrated review or `exit` carrier stale under the successor contract                                                              | status, `oat_goal_recovery`                 | A1 owner by missing evidence                  |
-| delivering → delivered    | pr-progress                           | delivery registered, members open, review fresh                                                                                     | registry entry, status, `oat_pr_*`          | pr-progress (idempotent)                      |
-| delivered → aligning      | `oat-project-goal`                    | learnings captured; previous delivery at its agreed endpoint, or endpoint `open` agreed                                             | `oat_milestone: m(N+1)`, status             | `oat-project-goal`                            |
-| delivered → terminal      | `oat-project-goal` (user declaration) | exhaustive outcome audit recorded (A3)                                                                                              | `oat_goal_status: declared_met`, audit      | terminal recovery                             |
-| any → older-delivery fix  | review-receive / implement            | `oat_goal_recovery` names the delivery, phases and stage                                                                            | recovery record; active milestone untouched | resume from the recovery record until cleared |
+| From → To                 | Owner                                 | Prerequisite                                                                                                                          | Write                                       | Recovery                                      |
+| ------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------- |
+| new → aligning            | `oat-project-goal`                    | scaffold (`oat_plan_source: goal` rendered)                                                                                           | `oat_milestone: m01`                        | `oat-project-goal`                            |
+| aligning → implementing   | `oat-project-goal`                    | artifact review passed; `plan` carrier `allowed`; approval; the next phase (and every member of the next dispatched group) concrete   | status, pointer                             | `oat-project-goal`                            |
+| implementing → reviewing  | implement milestone closeout          | all units in the milestone scope accepted; `exit` carrier `allowed` and fresh                                                         | status, exit carrier                        | implement (scoped closeout)                   |
+| reviewing → delivering    | review-receive                        | clean receive of the exact integrated review (`passed`), scope, revisions and exit carrier still valid                                | status, review row `passed`                 | review-receive                                |
+| reviewing → implementing  | review-receive                        | fixes queued from the integrated review (invalidates review and exit-gate evidence)                                                   | status, phase reopened, pointer             | implement                                     |
+| delivering → implementing | review-receive                        | fixes queued from a delivery-time review                                                                                              | as above                                    | implement                                     |
+| delivering → reviewing    | refresh or pr-progress                | integrated review or `exit` carrier stale under the successor contract                                                                | status, `oat_goal_recovery`                 | A1 owner by missing evidence                  |
+| delivering → delivered    | pr-progress                           | delivery registered, members open, review fresh                                                                                       | registry entry, status, `oat_pr_*`          | pr-progress (idempotent)                      |
+| delivered → aligning      | `oat-project-goal`                    | learnings captured; fresh observations establish the previous delivery at its agreed endpoint, including when that endpoint is `open` | `oat_milestone: m(N+1)`, status             | `oat-project-goal`                            |
+| delivered → terminal      | `oat-project-goal` (user declaration) | exhaustive outcome audit recorded (A3)                                                                                                | `oat_goal_status: declared_met`, audit      | terminal recovery                             |
+| any → older-delivery fix  | review-receive / implement            | `oat_goal_recovery` names the delivery, phases and stage                                                                              | recovery record; active milestone untouched | resume from the recovery record until cleared |
 
-**Endpoint refresh** is owned by a new CLI command,
-`oat project delivery refresh --project <path>`, which queries the host
-(`gh pr view <url> --json state,headRefOid,baseRefOid`) and writes each
-member's `observed_head`, `observed_base` and `status`. It is run by
-`pr-progress` before registration completes, by `oat-project-goal` on
-entry at `delivered`, and by the closeout boundary before coverage is
-evaluated. A member whose `observed_head` differs from `reviewed_head`
-marks the integrated review `stale` and the `exit` carrier `stale`.
+**Endpoint observation and refresh.** `oat project delivery refresh
+--project <path>` queries member state, head and base (`gh pr view <url>
+--json state,headRefOid,baseRefOid`) and persists observations
+(`observed_head`, `observed_base`, `status`). `pr-progress` runs it before
+registration completes; `oat-project-goal` runs it on entry at `delivered`.
+The closeout boundary obtains the same fresh observations read-only, without
+invoking the persisting command. All consumers derive freshness through the
+shared bookkeeping-successor evaluator; unequal heads alone do not
+invalidate evidence. Reviewed revisions and gate outcome status remain
+unchanged.
 
 **Terminal declaration (A3).** Only `oat-project-goal`, after the user's
 explicit declaration, writes `oat_goal_status: declared_met` and
@@ -674,7 +680,9 @@ anchors. Unmatched commits in a phase's range get a synthesized record with
 `**Executor:** reconciled`. Live handles are checked before any record is
 closed. Reconcile closes task records and may set a phase to
 `in_progress`; it never writes `completed` for a phase. Pointer → first
-incomplete unit.
+incomplete unit within the active scope, except older-delivery goal
+recovery, which advances only `oat_goal_recovery` and preserves the active
+milestone, its status and execution pointer.
 
 **`oat-project-review-receive`, brief-mode branch:** fix work is recorded as
 execution-record tasks under the reviewed phase in `implementation.md`
@@ -685,9 +693,13 @@ rewritten from `completed` to `in_progress`; otherwise review-receive
 appends `## Phase p-revN:` (Intent: the findings; Exit evidence: the
 re-review; `**Corrects:** pNN`) in both `plan.md` and the journal and
 records the fixes under it. In both cases it updates the Reviews event to
-`fixes_added` with preserved provenance, sets `oat_current_task_id` to the
-phase (or revision phase) ID, and in goal mode writes `oat_milestone_status: implementing`
-(from `reviewing` or `delivering`). For `final` or range scopes the fixes go
+`fixes_added` with preserved provenance. Ordinary brief execution and
+active-milestone goal fixes update the execution pointer
+(`oat_current_task_id` → the phase or revision phase ID); active-milestone
+goal fixes also set `oat_milestone_status: implementing` (from `reviewing`
+or `delivering`). Older-delivery fixes instead update the explicit recovery
+scope and stage in `oat_goal_recovery`, leaving the active milestone, its
+status and pointer untouched. For `final` or range scopes the fixes go
 under the last phase in scope.
 
 ### Promote brief → quick (R2-4)

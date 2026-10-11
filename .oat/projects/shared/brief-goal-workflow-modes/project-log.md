@@ -104,6 +104,10 @@ Phase p08 review round 1 passed (0/0/0/2 Low); both Lows fixed as p08-t07 on the
 
 Astra v1.5 round 1 (gpt-6-astra high, read-only delegate) resolved carried objections A1–A4 and surfaced B1–B4; applied as design revision 4.0 and plan revision 5 (p09–p12 re-planned, p10-t04 added). Report kept at references/astra-v15-round-1.md. Key astra-v15-round-1-applied.
 
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Astra v1.5 round 2 returned NOT ALIGNED with five paste-ready edits (read-only closeout observation, recovery isolation in reconcile/review-receive, audit phase-entry shape, observed endpoint for activation, goal guard verification supplement); the two-round plan cap was reached, so the edits were applied verbatim as Astra's own text. Report at references/astra-v15-round-2.md. Key astra-v15-round-2-applied.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
