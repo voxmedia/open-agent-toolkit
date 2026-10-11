@@ -826,6 +826,12 @@ async function upsertSectionsInternal(
       }
       throw new Error(IDENTITY_CHANGED);
     }
+    if (classification.absentBlocks.length === 0) {
+      // Non-appending outcomes retain their original content-stability check
+      // without creating a lock; only append candidates use the locked re-read.
+      await assertPlanUnchanged(plan, fileSystem, content);
+      return classification.results;
+    }
     if (classification.absentBlocks.length > 0) {
       const release = await acquireAgentsMdAppendLock(
         plan.repoRoot,
