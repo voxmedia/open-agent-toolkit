@@ -395,7 +395,7 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** a4d7768d5ecf76482168e7bcdabf542c595d59d2
-**Head:** d1969527b2e806ec5f5ee75d4bf3f69786ba2138
+**Head:** 578e88b0c (fix round 1; candidate head d1969527b2e806ec5f5ee75d4bf3f69786ba2138 at review round 1)
 **Executor:** phase-implementer:impl-p06-ba2fb5ee (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (group 2 sequential)
 
 ### Task p06-t01: Implement references for brief execution
@@ -423,6 +423,22 @@ oat_generated: false
 
 - **Files changed:** .agents/skills/oat-project-quick-start/SKILL.md (Step 0.5 promoted-brief resume; `quick_plan_ready` clause 6; Step 3 provenance note; the Step 3.7 disposition is the sign-off for the newly authored tasks), .agents/skills/oat-project-dispatch-subagents/SKILL.md (example accepts `workflow_mode: brief` with a phase ID scope)
 - **Verification:** extracted `quick_plan_ready` probe under `mktemp -d` (deleted): `oat_promotion_pending_phases: ['p02']` exit 1, key absent exit 0, plus seven edge fixtures (`[]` 0, block list 1, bare key + comment + item 1, `null` then another key 0, bare key last line 0, duplicated key 1, scalar 1) agreeing with the built `evaluateQuickPlanReadiness` on all nine; negative control: pre-phase guard exits 0 on the `['p02']` fixture; guard-harness tests `review-skill-contracts.test.ts -t quick` 7/7; validate-skills, format:root
+
+### Task p06-t04: (review) Pin the per-phase review range for parallel-group members
+
+**Status:** completed
+**Commit:** e2fd29c93
+
+- **Files changed:** phase-execution.md ("Fresh reviewer on anchors" and the Parallel Group Execution brief note carry the group-member range sentence), oat-phase-implementer.md ("Journal ownership" names the reported worktree head as the per-phase review head), 65 regenerated implementer projections; manifest and the `oat-project-brief` link left to p08-t02
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p06-fix-1`; validate-skills, format:root exit 0; sync dry-run filtered prints only the deferred `create_symlink claude/oat-project-brief`; root re-ran all three plus the agents pin (1 passed), tree clean
+
+### Task p06-t05: (review) Remove the stale `[]` sentence and the duplicated import bullet
+
+**Status:** completed
+**Commit:** 578e88b0c
+
+- **Files changed:** plan-and-resume.md:169-172 (task modes read `[]` as every phase; brief modes as none), oat-phase-implementer.md (one `import` bullet), 65 regenerated projections
+- **Verification:** `grep -c` import bullet = 1; the only "empty list means every phase" match is the reworded sentence; validate-skills, format:root, agents pin, inventory 5/5; no `version:` changes
 
 ### Review Received: p06
 
@@ -661,6 +677,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base a4d7768d5ecf76482168e7bcdabf542c595d59d2, p05 closeout; the dispatch-plan commit sits between base and the first task commit; p06-t01..t03 in the root checkout after p05 closed at c86f8558c)
 - Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head d1969527b; commits 296a62f4e, b260b9063, d1969527b; concerns: manifest deferred to p08-t02, implement SKILL.md note relocated to plan-and-resume.md (entry-size pin), extra named-skill-load sentences for p08-t01, implementer-chosen record-ownership contract flagged for review
+- Review round 1 (rev-p06-dc4c4725, Fable 5.1 high at the frontier cap): 0/0/1/4; fix continuation `cont-brief-goal-workflow-modes-p06-fix-1` → e2fd29c93, 578e88b0c; round 2 dispatched on the fix range
 
 <!-- orchestration-runs-end -->
 
