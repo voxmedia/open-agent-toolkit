@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { scanArtifacts } from '../state/artifacts';
-import type { ArtifactStatus, ProjectState, ReviewStatus } from '../types';
+import {
+  type ArtifactStatus,
+  type ProjectState,
+  type ReviewStatus,
+  WORKFLOW_MODES,
+} from '../types';
 import { recommendSkill } from './router';
 
 // Captured from discovery.md produced by `oat project promote` after p06-t10.
@@ -1099,5 +1104,111 @@ Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
 
     expect(recommendSkill(implementing).skill).toBe('oat-project-implement');
     expect(recommendSkill(discovering).skill).toBe('oat-project-quick-start');
+  });
+});
+
+// Brief mode owns its planning phase through the brief entry skill. The
+// router performs exact `phase:status:tier` lookups, so every planning tier is
+// pinned explicitly here.
+describe('recommendSkill brief routes', () => {
+  const briefPlan = (
+    boundaryTier: 1 | 2 | 3,
+    status: 'in_progress' | 'complete',
+    overrides: Partial<Omit<ProjectState, 'recommendation'>> = {},
+  ) =>
+    makeState({
+      phase: 'plan',
+      phaseStatus: status,
+      workflowMode: 'brief',
+      artifacts: makeArtifacts({
+        type: 'plan',
+        boundaryTier,
+        status,
+      }),
+      ...overrides,
+    });
+
+  it('keeps brief planning at tier 3 and tier 2 with the brief entry skill', () => {
+    expect(recommendSkill(briefPlan(3, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+    expect(recommendSkill(briefPlan(2, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+  });
+
+  it('keeps an untiered in-progress brief plan with the brief entry skill', () => {
+    expect(recommendSkill(briefPlan(1, 'in_progress')).skill).toBe(
+      'oat-project-brief',
+    );
+  });
+
+  it('routes a complete brief plan to implement', () => {
+    expect(recommendSkill(briefPlan(1, 'complete')).skill).toBe(
+      'oat-project-implement',
+    );
+  });
+
+  it('routes brief implementation in progress to implement', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'in_progress',
+      workflowMode: 'brief',
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  it('sends a pending brief plan HiLL checkpoint to the brief entry skill', () => {
+    const state = briefPlan(1, 'complete', {
+      hillCheckpoints: ['plan'],
+      hillCompleted: [],
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-brief',
+      reason: 'HiLL gate is pending for the current phase',
+    });
+  });
+
+  it('keeps the spec-driven planning skill for a pending spec-driven plan HiLL checkpoint', () => {
+    const state = makeState({
+      phase: 'plan',
+      phaseStatus: 'complete',
+      hillCheckpoints: ['plan'],
+      hillCompleted: [],
+      artifacts: makeArtifacts({
+        type: 'plan',
+        boundaryTier: 1,
+        status: 'complete',
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-plan');
+  });
+
+  it('never routes a non-spec-driven tier-3 plan to the spec-driven planning skill', () => {
+    const routed = WORKFLOW_MODES.map((workflowMode) => ({
+      workflowMode,
+      skill: recommendSkill(
+        makeState({
+          phase: 'plan',
+          phaseStatus: 'in_progress',
+          workflowMode,
+          artifacts: makeArtifacts({ type: 'plan', boundaryTier: 3 }),
+        }),
+      ).skill,
+    }));
+
+    for (const { workflowMode, skill } of routed) {
+      if (workflowMode === 'spec-driven') {
+        expect(skill).toBe('oat-project-plan');
+      } else {
+        expect(skill, workflowMode).not.toBe('oat-project-plan');
+      }
+    }
+    expect(routed.find((r) => r.workflowMode === 'brief')?.skill).toBe(
+      'oat-project-brief',
+    );
   });
 });
