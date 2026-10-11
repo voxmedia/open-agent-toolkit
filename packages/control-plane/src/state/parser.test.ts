@@ -409,6 +409,33 @@ oat_milestone_gates:
     expect(brief).not.toHaveProperty('deliveries');
   });
 
+  it('normalizes persisted phase-id lists and drops rejected tokens', () => {
+    const goal = parseStateFrontmatter(`---
+oat_workflow_mode: goal
+oat_goal_recovery:
+  milestone: m01
+  delivery_id: d01
+  phase_ids: [p1, p-rev01, phase-two]
+  stage: implementing
+oat_deliveries:
+  - delivery_id: d01
+    milestone: m01
+    scope: [p1, p02, m01]
+    integrated_review:
+      scope: [p001, nope]
+oat_milestone_gates:
+  m01:
+    exit:
+      status: allowed
+      subject: { kind: code, scope: [p1, p2-t01] }
+---
+`);
+    expect(goal.goalRecovery?.phase_ids).toEqual(['p01', 'p-rev1']);
+    expect(goal.deliveries?.[0]?.scope).toEqual(['p01', 'p02']);
+    expect(goal.deliveries?.[0]?.integrated_review?.scope).toEqual(['p01']);
+    expect(goal.milestoneGates?.m01?.exit?.subject?.scope).toEqual(['p01']);
+  });
+
   it('reads unknown goal enum values and malformed records as null', () => {
     expect(
       parseStateFrontmatter(`---

@@ -24,6 +24,7 @@ import {
   type ProjectBlocker,
   type WorkflowMode,
 } from '../types';
+import { normalizePhaseId } from './tasks';
 
 const PHASES = [
   'discovery',
@@ -272,6 +273,17 @@ function readStringList(value: unknown): string[] {
     .filter((item): item is string => item !== null);
 }
 
+/**
+ * A persisted phase-id list with every id normalized the way the Milestones
+ * reader normalizes membership (`p1` → `p01`); tokens that are not phase ids
+ * are dropped, and plan validation reports them.
+ */
+function readPhaseIdList(value: unknown): string[] {
+  return readStringList(value)
+    .map((item) => normalizePhaseId(item))
+    .filter((item): item is string => item !== null);
+}
+
 function parseGoalRecovery(value: unknown): GoalRecovery | null {
   if (!isPlainRecord(value)) {
     return null;
@@ -284,7 +296,7 @@ function parseGoalRecovery(value: unknown): GoalRecovery | null {
   return {
     milestone,
     delivery_id: readString(value.delivery_id),
-    phase_ids: readStringList(value.phase_ids),
+    phase_ids: readPhaseIdList(value.phase_ids),
     stage,
     review_artifact: readString(value.review_artifact),
   };
@@ -325,7 +337,7 @@ function parseDelivery(value: unknown): GoalDelivery | null {
   return {
     delivery_id: deliveryId,
     milestone: normalizeMilestoneId(value.milestone),
-    scope: readStringList(value.scope),
+    scope: readPhaseIdList(value.scope),
     endpoint: normalizeEnum(value.endpoint, ['open', 'merged'] as const),
     kind: normalizeEnum(value.kind, ['pr', 'stack'] as const),
     status: normalizeEnum(value.status, [
@@ -349,7 +361,7 @@ function parseDelivery(value: unknown): GoalDelivery | null {
       : [],
     integrated_review: review && {
       artifact: readString(review.artifact),
-      scope: readStringList(review.scope),
+      scope: readPhaseIdList(review.scope),
       bound_revisions: Array.isArray(review.bound_revisions)
         ? review.bound_revisions.filter(isPlainRecord).map((revision) => ({
             member: typeof revision.member === 'number' ? revision.member : 0,
@@ -397,7 +409,7 @@ function parseGateCarrier(value: unknown): MilestoneGateCarrier | null {
       subject && subjectKind
         ? {
             kind: subjectKind,
-            scope: readStringList(subject.scope),
+            scope: readPhaseIdList(subject.scope),
             ref: readString(subject.ref),
           }
         : null,

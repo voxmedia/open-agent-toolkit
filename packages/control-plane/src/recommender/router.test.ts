@@ -2498,4 +2498,124 @@ describe('recommendSkill goal milestones (real readers)', () => {
       );
     });
   });
+
+  describe('active-milestone review cycle with a registered delivery', () => {
+    const ORIGINAL = 'reviews/archived/review-m01.md';
+    const NEWER = 'reviews/archived/review-m01-r2.md';
+
+    /** m01 active with d01 registered; the exit carrier stays allowed and fresh. */
+    function cycle(
+      status: string,
+      registryDisposition: string,
+      rows: string[],
+      journal: Record<string, string> = {},
+    ): GoalFixture {
+      return {
+        journal: { p01: 'completed', p02: 'completed', ...journal },
+        reviewRows: rows,
+        state: {
+          oat_milestone: 'm01',
+          oat_milestone_status: status,
+          oat_goal_status: 'active',
+          oat_deliveries: [
+            delivery({
+              status: 'registering',
+              integrated_review: {
+                artifact: ORIGINAL,
+                scope: ['p01', 'p02'],
+                bound_revisions: [],
+                disposition: registryDisposition,
+              },
+            }),
+          ],
+          oat_milestone_gates: {
+            m01: {
+              plan: planCarrier(['p01', 'p02']),
+              exit: exitCarrier(['p01', 'p02']),
+            },
+          },
+        },
+      };
+    }
+    const row = (status: string, artifact: string, scope = 'm01') =>
+      `| ${scope} | code | ${status} | 2026-10-11 | ${artifact} |`;
+
+    it.each(['stale', 'passed'])(
+      'lets the newest passed review win over a %s registry entry for the original artifact',
+      async (registryDisposition) => {
+        const steps: [string, string[], Record<string, string>][] = [
+          // A delivery-time review queued fixes on the original artifact.
+          ['delivering', [row('fixes_added', ORIGINAL)], {}],
+          [
+            'implementing',
+            [row('fixes_added', ORIGINAL)],
+            { p02: 'in_progress' },
+          ],
+          ['reviewing', [row('fixes_completed', ORIGINAL)], {}],
+          [
+            'reviewing',
+            [row('fixes_completed', ORIGINAL), row('received', NEWER)],
+            {},
+          ],
+          [
+            'reviewing',
+            [row('fixes_completed', ORIGINAL), row('passed', NEWER)],
+            {},
+          ],
+          [
+            'delivering',
+            [row('fixes_completed', ORIGINAL), row('passed', NEWER)],
+            {},
+          ],
+        ];
+        const routes: string[] = [];
+        for (const [status, rows, journal] of steps) {
+          const recommendation = await route(
+            cycle(status, registryDisposition, rows, journal),
+          );
+          routes.push(
+            `${status} → ${recommendation.skill} ${recommendation.context ?? ''}`,
+          );
+        }
+        expect(routes).toEqual([
+          'delivering → oat-project-implement scope m01: p01, p02',
+          'implementing → oat-project-implement scope m01: p01, p02',
+          'reviewing → oat-project-review-provide code m01: p01, p02',
+          `reviewing → oat-project-review-receive receive ${NEWER}`,
+          `reviewing → oat-project-review-receive receive ${NEWER}`,
+          'delivering → oat-project-pr-progress deliver m01',
+        ]);
+      },
+    );
+
+    it('keeps the registry disposition governing its own artifact', async () => {
+      // No newer row: the stale registry entry still blocks delivery.
+      expect(
+        await route(cycle('delivering', 'stale', [row('passed', ORIGINAL)])),
+      ).toMatchObject({
+        skill: 'oat-project-review-provide',
+        reason: 'The integrated delivery review is stale',
+      });
+    });
+
+    it('accepts a Scope cell that names the milestone with its phase list', async () => {
+      const rows = [
+        row('fixes_completed', ORIGINAL),
+        row('passed', NEWER, 'm01: p01, p02'),
+      ];
+      expect(await route(cycle('delivering', 'stale', rows))).toMatchObject({
+        skill: 'oat-project-pr-progress',
+        context: 'deliver m01',
+      });
+      // A different milestone whose id shares the prefix is not a match.
+      expect(
+        await route(
+          cycle('delivering', 'stale', [
+            row('fixes_completed', ORIGINAL),
+            row('passed', NEWER, 'm010: p01'),
+          ]),
+        ),
+      ).toMatchObject({ skill: 'oat-project-review-provide' });
+    });
+  });
 });

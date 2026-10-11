@@ -694,11 +694,17 @@ type IntegratedReviewStatus =
 
 /**
  * Integrated review evidence for a milestone or delivery, read from the
- * registry's persisted disposition and the `## Reviews` rows. A recovery that
- * names its review artifact is satisfied only by that exact artifact; the
- * registry's recorded review counts only for its own artifact and only when
- * its frozen scope covers every target phase, so a review that predates an
- * appended correction phase is never reused.
+ * `## Reviews` rows and the registry's persisted disposition.
+ *
+ * A recovery that names its review artifact is satisfied only by that exact
+ * artifact. Otherwise the newest `code` row whose Scope cell names the
+ * milestone or delivery (the bare id, or `<id>: …`) is the evidence; the
+ * registry's recorded review falls back only when no such row exists. The
+ * registry disposition governs only the artifact it records, so a superseded
+ * entry (stale, failed or an older artifact) never vetoes a newer passed
+ * review, and the registry's review counts only when its frozen scope covers
+ * every target phase, so a review that predates an appended correction phase
+ * is never reused.
  */
 function readIntegratedReview(
   state: RouterState,
@@ -711,28 +717,31 @@ function readIntegratedReview(
           (entry) => entry.delivery_id === target.deliveryId,
         );
   const recorded = delivery?.integrated_review ?? null;
+  const newest = [...state.reviews].reverse();
+  const labelRow = newest.find(
+    (review) => review.type === 'code' && scopeCellNames(review.scope, target),
+  );
+  const row =
+    target.artifact !== null
+      ? newest.find((review) => review.artifact === target.artifact)
+      : (labelRow ??
+        (recorded?.artifact
+          ? newest.find((review) => review.artifact === recorded.artifact)
+          : undefined));
+  const artifact =
+    target.artifact ?? row?.artifact ?? recorded?.artifact ?? null;
   const registered =
-    recorded !== null &&
-    (target.artifact === null || target.artifact === recorded.artifact)
-      ? recorded
-      : null;
+    recorded !== null && recorded.artifact === artifact ? recorded : null;
   const registeredCovers =
     registered !== null &&
     target.phaseIds.every((phaseId) => registered.scope.includes(phaseId));
-  const artifact = target.artifact ?? registered?.artifact ?? null;
-  const labels = new Set(
-    [target.milestoneId, target.deliveryId]
-      .filter((value): value is string => value !== null)
-      .map((value) => value.toLowerCase()),
-  );
-  const row = [...state.reviews]
-    .reverse()
-    .find((review) =>
-      artifact !== null
-        ? review.artifact === artifact
-        : review.type === 'code' && labels.has(review.scope.toLowerCase()),
-    );
 
+  const rowStatus = row?.status.toLowerCase() ?? null;
+  const rowArtifact = row?.artifact ?? artifact;
+  // Queued fixes route to implementation whatever the registry says.
+  if (rowStatus === 'fixes_added') {
+    return { status: 'fixes_queued', artifact: rowArtifact };
+  }
   if (
     registered?.disposition === 'stale' ||
     registered?.disposition === 'failed'
@@ -740,12 +749,7 @@ function readIntegratedReview(
     return { status: 'stale', artifact };
   }
 
-  const rowStatus = row?.status.toLowerCase() ?? null;
-  const rowArtifact = row?.artifact ?? artifact;
-  const uncoveredRegistryReview =
-    registered !== null &&
-    rowArtifact === registered.artifact &&
-    !registeredCovers;
+  const uncoveredRegistryReview = registered !== null && !registeredCovers;
   switch (rowStatus) {
     case 'passed':
       return uncoveredRegistryReview
@@ -753,8 +757,6 @@ function readIntegratedReview(
         : { status: 'passed', artifact: rowArtifact };
     case 'received':
       return { status: 'received', artifact: rowArtifact };
-    case 'fixes_added':
-      return { status: 'fixes_queued', artifact: rowArtifact };
     case null:
       return registered?.disposition === 'passed' && registeredCovers
         ? { status: 'passed', artifact: registered.artifact }
@@ -762,6 +764,21 @@ function readIntegratedReview(
     default:
       return { status: 'missing', artifact: rowArtifact };
   }
+}
+
+/**
+ * True when a Reviews Scope cell names the target milestone or delivery: the
+ * bare id, or the id followed by `:` and its phase list.
+ */
+function scopeCellNames(
+  scopeCell: string,
+  target: DeliveryEvidenceTarget,
+): boolean {
+  const cell = scopeCell.trim().toLowerCase();
+  return [target.milestoneId, target.deliveryId]
+    .filter((value): value is string => value !== null)
+    .map((value) => value.toLowerCase())
+    .some((id) => cell === id || cell.startsWith(`${id}:`));
 }
 
 /**
