@@ -92,12 +92,12 @@ oat_quick_start_gate:
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/361' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T00:09:32.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-11T19:20:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-11T19:41:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
