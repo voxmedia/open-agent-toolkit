@@ -743,6 +743,11 @@ oat_generated: false
 - **Verification:** implementer: 16 files / 353 tests, CLI lint and type-check 0, both builds 0; M1 repro with the built CLI from `/` with `--cwd`: before `goal-phase-without-milestone` exit 1, after `{ valid: true }` exit 0, in-directory control valid both times; prove-it-can-fail for M2 (escape restored → 1 of 3 fails), L3 (leaf-only rule restored → 1 fails) and L6 (old condition → 1 fails). Root re-ran the same 16 files (353/353, isolated HOME), CLI type-check and lint: exit 0; tree clean.
 - **Unresolved by design:** the closeout boundary uses its own `DeliveryEvidenceFact` type, so `source: 'delivery-binding'` has nowhere to land in p10's files; the sentence "`check` judges the working carrier, closeout the persisted binding" and the empty-registry refusal wording for `goal-delivery-unsettled` go to p11-t01/p11-t02 (brief-contract section 11).
 
+### Task p10-t06: (review) Order-insensitive review identity in the delivery exit-gate unlock
+
+**Status:** pending
+**Commit:** -
+
 ### Review Received: p10
 
 **Date:** 2026-10-11
@@ -761,6 +766,8 @@ oat_generated: false
 - L6 `delivered` goal with an empty registry promotes vacuously → converted: p10-t05 (`goal-delivery-unsettled`).
 
 **New tasks added:** p10-t05 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p10-fix-1`); round-2 re-review on the fix range follows because Mediums were converted.
+
+**Round 2 (2026-10-11):** artifact reviews/archived/p10-review-2026-10-11T140916Z.md; reviewer `oat-reviewer-claude-claude-fable-5-1-high` (request `rev-p10-8eee09f4`, auto, reviewed head 7a18e197e68831359e977fba46fcf0600466057a, range ccc57371d..7a18e197e, reconnaissance not-attempted). Findings 0/0/0/1 → phase review passes. M1, M2, L1, L2, L3, L6 verified resolved with file:line evidence; the reviewer re-ran both builds, 16 files / 353 tests (isolated HOME), type-check, lint, the M1 built-CLI repro from `/` with `--cwd`, and the prove-it-can-fail for M1 and M2 by swapping in the ccc57371d sources. Residual L1: `recordsNewReview` (`evidence.ts:562-567`) compares review identity fields order-sensitively, so a commit that reorders `integrated_review.scope` (same set) and swaps `exit_gate` is still judged a bookkeeping successor (probe P1; the swap alone is refused, P3) → converted: p10-t06 (same handle, fix mode, continuation `cont-brief-goal-workflow-modes-p10-fix-2`; no re-review for a Low-only finding on a passing review; root verifies).
 
 ---
 
@@ -956,7 +963,7 @@ _- Outstanding Items_
 - Dispatch stamp: `Dispatch: scope=p10 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base f3fcae68c, the goal branch after merging the v1 fix commits from `feat/brief-workflow-mode-v1`; the dispatch-plan commit sits between base and the first task commit; p10-t02..t04 in the root checkout; p10-t02 starts from `references/p10-t02-recovered.patch`; disk 8.1 GB free with a 1 GB stop rule in the brief)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are the two implementer-chosen formats carried to p11 and the two carrier consumers noted in p10-t03) at 7d4fbe12b; p10 review follows
-- Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` → b290081e2 (first commit attempt refused by commitlint for a 105-char header; 100-char message authorized); round 2 on the fix range follows
+- Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` → b290081e2 (first commit attempt refused by commitlint for a 105-char header; 100-char message authorized); round 2 (rev-p10-8eee09f4, head 7a18e197e): 0/0/0/1 → passed; L1 → p10-t06 via `cont-brief-goal-workflow-modes-p10-fix-2`
 
 <!-- orchestration-runs-end -->
 

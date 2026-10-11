@@ -1275,6 +1275,16 @@ git commit -m "fix(p09-t03): newest passed review wins, tolerant scope labels, n
 
 ---
 
+### Task p10-t06: (review) Order-insensitive review identity in the delivery exit-gate unlock
+
+**Source:** p10 review round 2 (reviews/archived/p10-review-2026-10-11T140916Z.md) L1.
+
+**Files:** `delivery/evidence.ts` (+test): `recordsNewReview` compares the review identity fields order-insensitively (or unlocks only on an `artifact` change), so a commit that reorders `integrated_review.scope` with the same set and swaps `exit_gate` is `substantive-change`; the accepted case (new artifact plus replacement binding in one commit) still passes.
+
+**Verify:** scoped vitest for `delivery/`; prove-it-can-fail by restoring the order-sensitive comparison. **Commit:** `fix(p10-t06): order-insensitive review identity in the exit-gate unlock`
+
+---
+
 ## Phase 11: Goal skills and roles (v1.5)
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
@@ -1380,6 +1390,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | p09    | code     | passed          | 2026-10-11 | reviews/archived/p09-review-2026-10-11T090259Z.md                                                                                                                                                                   | 29a4b914f311343c4f51e6431874d72e56814cb5 | auto       | fixes at 611596345                                                                                                  |
 | p09    | code     | passed          | 2026-10-11 | reviews/archived/p09-review-2026-10-11T091238Z.md                                                                                                                                                                   | 8113ced43022a83572d635b22db9ecd7ee287862 | auto       | round 2 (0/0/0/0)                                                                                                   |
 | p10    | code     | fixes_added     | 2026-10-11 | reviews/archived/p10-review-2026-10-11T135002Z.md                                                                                                                                                                   | bb69bb0650dc1cc076b5d432b8a53702bd6190c1 | auto       | 0/0/2/6; M1, M2, L1, L2, L3, L6 → p10-t05; L4 carried to p11-t01 contract text; L5 design edit in root bookkeeping  |
+| p10    | code     | passed          | 2026-10-11 | reviews/archived/p10-review-2026-10-11T140916Z.md                                                                                                                                                                   | 7a18e197e68831359e977fba46fcf0600466057a | auto       | round 2 (0/0/0/1); fixes b290081e2; L1 → p10-t06 (no re-review, Low-only on a passing review)                       |
 | p11    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | p12    | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
 | final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -                                        | -          | -                                                                                                                   |
@@ -1407,11 +1418,11 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
 - Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
 - Phase 9: 3 tasks - Goal registration and routing (v1.5); one review fix
-- Phase 10: 5 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); one review fix
+- Phase 10: 6 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5); two review fixes
 - Phase 11: 3 tasks - Goal skills, registration and review-loop ownership, planning surfaces (v1.5)
 - Phase 12: 5 tasks - Goal contract tests, probe, docs, records, bumps and the final PR (v1.5)
 
-**Total: 56 tasks**
+**Total: 57 tasks**
 
 Ready for code review and merge.
 
