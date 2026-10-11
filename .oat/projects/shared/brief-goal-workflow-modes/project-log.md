@@ -92,6 +92,10 @@ Phase p06 review round 1 (0/0/1/4) converted the Medium and two Lows into p06-t0
 
 Phase p07 review round 1 passed (0/0/0/4 Low); all four Lows fixed as p07-t04 on the same handle at b65dbad79. Group 2 [p05,p06,p07] closed sequentially in the root checkout; cross-phase wording items and a pre-existing commit-grep bug carried to p08. Key p07-review-pass-b65dbad79.
 
+### 2026-10-11 · general · friction · isolated-HOME temp growth fills the volume
+
+Each HOME=$(mktemp -d) vitest run leaves about 48 MB of cache under $TMPDIR; 87 such dirs (3.3 GB) brought the volume to 370 MiB free mid-group-2. Swept 71 stale ones; later briefs mandate one fake HOME per run. Candidate guidance for the implement skill and AGENTS.md. Key friction-isolated-home-tmp-growth.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

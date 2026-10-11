@@ -545,8 +545,12 @@ oat_generated: false
 
 ## Phase 8: Contracts, integration, docs, records and the v1 progress PR
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** f5481541727e021804b19595bbb732b2ecd448f1
+**Head:** -
+**Executor:** phase-implementer:impl-p08-057027cb (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (fan-in after group 2)
 
 ### Task p08-t01: Skill contract tests and autonomy coverage for brief
 
@@ -756,6 +760,12 @@ _- Outstanding Items_
 - Integration verification deferred to p08-t06's full gate run (the group's edits are prose and tests; validate-skills, format:root and the pin suites were green at every closeout with exactly the three expected reds).
 - Carried to p08: p08-t01 expected reds plus the new named-skill-load sentences from p05–p07; p08-t02 the manifest and `oat-project-brief` link, `implementation-brief.md` Outcomes-audit slot and Head wording, brief-contract :72, :224 and §10 wording, phase-execution.md:136-144 wording; p08-t05 backlog item for the pre-existing review-provide/pr-progress commit-grep regex bug.
 - Disk: 71 stale isolated-HOME temp dirs (3.3 GB) removed between p06 and p07; later phases use one fake HOME per run.
+
+#### Phase p08 implementation dispatch (fan-in, root checkout)
+
+- Request ID: `impl-p08-057027cb` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base f5481541727e021804b19595bbb732b2ecd448f1, p07 closeout plus the friction log; the dispatch-plan commit sits between base and the first task commit; p08-t01..t06 in the root checkout)
 
 <!-- orchestration-runs-end -->
 
