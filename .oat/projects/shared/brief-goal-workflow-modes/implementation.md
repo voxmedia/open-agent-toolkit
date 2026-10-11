@@ -638,18 +638,24 @@ oat_generated: false
 **Started:** 2026-10-11
 
 **Base:** 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5
-**Head:** -
+**Head:** 17a996a2e35235a2fd4f2e4bf61eba763723a6a8
 **Executor:** phase-implementer:impl-p09-16dc82a3 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p09-t01: Register `goal`, extraction parsing and goal state fields
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ab17cbd35
+
+- **Files changed:** control-plane `types.ts` (goal in `WORKFLOW_MODES`/`BRIEF_MODES`; `extracted`; goal state fields incl. audit shape with per-phase `{disposition, reason, scope_decision_ref}`, `goalRecovery`, deliveries with reciprocal links and endpoint-attainment history, `milestoneGates` with nullable `reviewed_head`, subject binding, `exit.freshness`/`freshness_reason`), `state/parser.ts` (+test), new `state/milestones.ts` (+test; header `| Milestone | Phases |`, comma lists, backticks allowed, IDs normalized, exported `MILESTONES_TABLE_HEADER`), new `state/goal-audit.ts` (+test; `validateGoalOutcomeAudit` over the full phase inventory), `state/tasks.ts` (+test; `selectPhaseUnits` contract kept; extracted units goal-only via `extractedUnits`, brief still reads `extracted` as pending), `project.ts` (+test; both readers expose membership with errors, recovery, audit result), `index.ts` barrel, `README.md`; CLI `new/scaffold.ts` (`oat_plan_source: goal`, Milestones header substituted), `new/index.test.ts`, `new/scaffold.test.ts` (real-template read-back; widened), `help-snapshots.test.ts`; widened: `recommender/router.ts` one line (brief family routed through `BRIEF_ROUTES` so goal no longer fell through to the spec-driven table; `router.test.ts:1190` loops every mode)
+- **Verification:** control-plane check/type-check/build + full vitest; CLI type-check + scoped vitest (new/, help snapshots, generate, status, validate-plan: 303); temp CLI import of every new barrel export type-checks; guard `goal-membership-reader` triple through `getProjectState` (malformed row / unknown `p09` / two-milestone `p02` silently vanish with the reader neutralized; restored → `milestones-malformed`, `phase-without-milestone`, `milestone-unknown-phase`, `phase-in-multiple-milestones`; well-formed two-milestone control exact in both runs)
 
 ### Task p09-t02: Goal routing priority and transition table
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 17a996a2e
+
+- **Files changed:** control-plane `recommender/router.ts` (+test; goal block after `getHillOverride`, before `getBriefUnitGuard`; `GOAL_ROUTES`; four-step priority, status table, recovery routes by missing evidence, explicit `mNN/dNN: ordered phases` contexts, `delivered` vs `at_endpoint`; approval = `plan.md` `oat_status: complete`; exit carriers must read `freshness: fresh`, null fails; registry integrated review counts only for its own artifact when its frozen scope covers every target phase), CLI `state/generate.ts` (+test); widened: `types.ts`, `project.ts`, `README.md` (goal-only `planParallelGroups` so the router can see the next dispatched group for the next-group-member-concrete check)
+- **Verification:** full control-plane vitest 270/270 (root re-ran: 270/270; CLI scoped 219/219); guard triples recorded by the implementer — `goal-activation-prerequisites` (6 refusals + pending carrier + activation after declaration all flip when neutralized; valid control `ready to activate`), `goal-recovery-evidence` (five sub-guards: exit-carrier, `fixes_completed`, exact artifact, registry scope coverage, recovery routing; clean receive → `pr-progress deliver m01/d01` with m02 untouched), A1, A3 (audit repair reasons `audit-phase-omitted`/`audit-outcome-omitted`/`audit-missing`; counts unchanged), B4 (merged endpoint blocks activation, `open` permits), placement (block moved after the brief guard misroutes both controls to implement; brief-guard tests unchanged), stage walk (each owner once; disabling implement's stage write repeats the route)
 
 ---
 
@@ -856,6 +862,7 @@ _- Outstanding Items_
 - Request ID: `impl-p09-16dc82a3` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
 - Dispatch stamp: `Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 - Launch status: planned (base 3eaa3b16afd9c18646413278f9a8a8150cbcd6e5, the plan-gate closeout; the dispatch-plan commit sits between base and the first task commit; p09-t01..t02 in the root checkout against design rev 4.0 / plan rev 5)
+- Launch status: accepted → child outcome: completed (DONE_WITH_CONCERNS); head 17a996a2e; commits ab17cbd35, 17a996a2e; concerns: two widened edits (router.ts one line in t01; `planParallelGroups` in t02), four design-gap decisions (table grammar, extracted goal-only, approval = plan complete, freshness null fails) flagged for review; parser drops a delivery without `delivery_id` and reads an unparseable recovery as null (p10 validation)
 
 <!-- orchestration-runs-end -->
 
