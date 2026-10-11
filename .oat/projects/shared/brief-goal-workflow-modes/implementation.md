@@ -391,6 +391,30 @@ _- Outstanding Items_
 - Launch status: accepted → first turn terminated by a transient gateway HTTP 503 (auth_unavailable) before any artifact; continued through the same accepted handle (no replacement launch) → child outcome: completed; artifact reviews/archived/p01-review-2026-10-11T030140Z.md; 0 critical, 0 high, 0 medium, 1 low; reconnaissance not-attempted
 - Phase outcome: pass; fix iterations: 1; optional nested dispatches: none; worktrees: root; outstanding items: none
 
+#### Phase p02 implementation dispatch (parallel group 1)
+
+- Request ID: `impl-p02-a7c1a9c0` · Worktree: `.worktrees/brief-goal-workflow-modes-p02` (branch `brief-goal-workflow-modes/p02`, base 212e1bdc0718d5f5dba02898826abb2201368afc) · Parallel group: [p02, p03, p04]
+- Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
+- Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+
+#### Phase p03 implementation dispatch (parallel group 1)
+
+- Request ID: `impl-p03-735f410f` · Worktree: `.worktrees/brief-goal-workflow-modes-p03` (branch `brief-goal-workflow-modes/p03`, base 212e1bdc0718d5f5dba02898826abb2201368afc) · Parallel group: [p02, p03, p04]
+- Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
+- Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+
+#### Phase p04 implementation dispatch (parallel group 1)
+
+- Request ID: `impl-p04-a8c76fdd` · Worktree: `.worktrees/brief-goal-workflow-modes-p04` (branch `brief-goal-workflow-modes/p04`, base 212e1bdc0718d5f5dba02898826abb2201368afc) · Parallel group: [p02, p03, p04]
+- Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high`
+- Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (bootstrap via oat-worktree-bootstrap-auto contract, strict policy, repository init as baseline)
+
 <!-- orchestration-runs-end -->
 
 ---
