@@ -353,6 +353,21 @@ recommendation.
 - **`oat_phase_review_gate` and implement exit gate** behave as today for
   brief modes; milestone-scoped gates are goal-only. Confirm.
 
+### Resolved 2026-10-10 (Thomas, before stepping away)
+
+Every open question above resolves to its recommendation. Operating
+decisions for the autonomous run: brief modes default to no HiLL phase
+checkpoints; this project runs with no HiLL checkpoints; Claude approves the
+plan after Astra alignment, artifact review and the configured gate (gate
+reruns capped at three); at a review cap Claude runs the complexity review,
+applies its recommendation, logs it and continues; the progress PR opens
+after the brief phases and goal phases continue on the same branch; no PR is
+merged by the agent; decision records are authored during the work and
+confirmed at PR review; dispatch ceiling is frontier; delegated implementers
+and reviewers run Claude Opus 5.5 at high effort; Astra reviews run as fresh
+high-effort delegated tasks, bounded to three rounds on the design and two on
+the plan.
+
 ## Assumptions
 
 - The plan parser grammar (`## Phase pNN:` / `### Task pNN-tNN:`) is kept;
