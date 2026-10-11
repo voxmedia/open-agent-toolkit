@@ -11,9 +11,10 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:40.256Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-10-11T00:17:45Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-10-10-ignore-escaped-emphasis-in-script-references.md
 ---
 
 ## Description
