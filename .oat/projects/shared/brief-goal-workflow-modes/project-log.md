@@ -128,6 +128,10 @@ Configured plan gate on revision 5: attempt 1 0/2/2/0 (applied at 1de4aac68), at
 
 Phase p09 review round 1 (0/1/2/3) converted the High, a Medium's code side and a Low into p09-t03; round 2 (0/0/0/0) passed. Contract sentences (Scope cell, approval evidence, exit-carrier freshness) recorded in design.md; Milestones grammar and code mapping carried to p11-t01/p10-t01. Phase p09 closed at 611596345. Key p09-review-pass-611596345.
 
+### 2026-10-11 · general · friction · disk space pause
+
+p10 paused after p10-t01 (97f2f1a32): free space fell to 558 MB against the 650 MB stop rule. The p10-t02 working tree is parked as references/p10-t02-recovered.patch. Growth sources are outside the pre-authorized cleanup set (~/.t3/userdata/statev2.sqlite 3.5 GB, ~/.t3/worktrees 8.8 GB, ~/.codex/sessions 6.4 GB, ~/.cache/codex-runtimes 1.5 GB). Resume p10 from p10-t02 once about 1.5 GB is free. Key p10-paused-disk.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
