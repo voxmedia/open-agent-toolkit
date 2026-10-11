@@ -29,7 +29,7 @@ Use when:
 Don't use when:
 
 - A project already exists for the current branch — use `oat-project-reconcile` instead
-- You haven't started any work yet — use `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work
+- You haven't started any work yet — use `oat-project-lite` for single-sitting work, `oat-project-brief` for one delivery planned as a Project Brief, `oat-project-goal` for an outcome delivered over several milestones, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work
 - You only need to map new commits to an existing plan — use `oat-project-reconcile`
 
 ## Prerequisites

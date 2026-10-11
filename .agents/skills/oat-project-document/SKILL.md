@@ -217,15 +217,21 @@ shipped results. A lite project accepts `discovery.md`, `spec.md`, and
 `design.md` as absent; do not read or require them. Build the documentation
 delta from what actually shipped and continue with code verification.
 
-For `oat_workflow_mode: brief`, use the brief artifact set instead of the
-numbered list below. Read `plan.md` (the Project Brief: Goal, Outcomes,
+For `oat_workflow_mode: brief` or `goal`, use the brief artifact set instead
+of the numbered list below. Read `plan.md` (the Project Brief: Goal, Outcomes,
 Approach and any `### Design` subsection, Constraints and Out of Scope,
 Decisions, and the phases' Intent and Exit evidence), then `implementation.md`
 phase sections, execution records, `Brief deltas`, and `Final Summary (for
 PR/docs)` as the shipped results, plus `summary.md` and `references/research/`
-when present. A brief project accepts `discovery.md`, `spec.md`, and
-`design.md` as absent; do not read or require them. Build the documentation
-delta from what actually shipped and continue with code verification.
+when present. A goal project adds two shipped-result sources from `state.md`:
+the outcome audit (`oat_goal_outcome_audit`, the per-outcome disposition once
+the goal is declared met) and the delivery registry (`oat_deliveries`, each
+delivery's scope, pull requests and endpoint observation); document only what
+those deliveries shipped, and name audited deferrals rather than documenting
+them as delivered. A brief or goal project accepts `discovery.md`, `spec.md`,
+and `design.md` as absent; do not read or require them. Build the
+documentation delta from what actually shipped and continue with code
+verification.
 
 For every other workflow mode, read the numbered artifact list below.
 

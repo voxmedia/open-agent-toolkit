@@ -87,8 +87,8 @@ then continue without formatting.
 ## Managed Dispatch Readiness and Review Contract
 
 All plan-producing workflows and their artifact reviews use this contract:
-spec-driven planning, quick-start, lite planning, brief authoring, imported
-plans, and provider-plan-via-import.
+spec-driven planning, quick-start, lite planning, brief and goal authoring,
+imported plans, and provider-plan-via-import.
 The contract runs before a plan becomes implementation-ready and immediately
 before each artifact review dispatch.
 
@@ -564,7 +564,7 @@ Every `plan.md` produced or edited by any OAT skill **must** satisfy these invar
 
 ```yaml
 ---
-oat_plan_source: spec-driven | quick | imported | lite | brief # origin workflow mode
+oat_plan_source: spec-driven | quick | imported | lite | brief | goal # origin workflow mode
 oat_status: in_progress | complete # plan lifecycle status
 oat_ready_for: null | oat-project-implement # downstream consumer
 # Optional after implementation confirmation:
@@ -670,12 +670,14 @@ Required inputs vary by workflow mode. The calling skill reads `oat_workflow_mod
 | `import`      | Preserved external source + normalized `plan.md` | No          |
 | `lite`        | `plan.md` only                                   | No          |
 | `brief`       | `plan.md` (Project Brief) from the interview     | No          |
+| `goal`        | `plan.md` (Project Brief with Milestones)        | No          |
 
 - **`spec-driven`**: Plan is derived from a complete design document. All design components must be covered by tasks.
 - **`quick`**: Plan is generated directly from discovery decisions and repo knowledge. No design artifact is required.
 - **`import`**: External plan is preserved in `references/imported-plan.md` and normalized into canonical format. Subsequent edits follow this contract.
 - **`lite`**: `plan.md` is the sole requirements and implementation contract. It carries Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria before one sequential phase; no discovery, spec, or design artifact is required.
 - **`brief`**: `plan.md` is the Project Brief authored by `oat-project-brief`: Goal, Outcomes with intended evidence, Approach, Decisions, Known Unknowns, and `## Phase pNN:` blocks with Intent and Exit evidence instead of tasks. `oat project validate-plan` applies the brief profile. Stable Task IDs, task totals, and the task grammar in this contract do not apply to the brief; execution records live in `implementation.md`, and the Reviews preservation rules apply unchanged.
+- **`goal`**: `plan.md` is a Project Brief authored and amended by `oat-project-goal`, with the brief rules above plus a canonical `## Milestones` table (`oat-project-brief/references/brief-contract.md` section 12.1). `oat project validate-plan` applies the goal profile on top of the brief profile. Each milestone's approval is evidenced by its `oat_milestone_gates[mNN].plan` carrier after the first approval (section 12.4).
 
 ## Resume and Edit Guardrails
 

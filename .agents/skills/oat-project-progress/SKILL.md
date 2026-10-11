@@ -163,6 +163,7 @@ Start a new project:
   oat-project-quick-start - Start a quick workflow project
   oat-project-lite - Start a lite workflow (interview -> plan -> implement)
   oat-project-brief - Start a brief workflow (interview -> brief -> implement)
+  oat-project-goal - Start a goal workflow (interview -> brief and milestones -> deliver each milestone)
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
 
@@ -174,7 +175,7 @@ Read `{project}/state.md` frontmatter:
 
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - spec-driven | quick | import | lite | brief
+- `oat_workflow_mode` - spec-driven | quick | import | lite | brief | goal
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -183,6 +184,10 @@ Read `{project}/state.md` frontmatter:
 - `oat_implement_exit_gate` - The implementation exit gate record
 - `oat_quick_start_gate` - The quick-start plan gate record
 - `oat_brief_gate` - The brief artifact gate record (brief mode)
+- `oat_milestone`, `oat_milestone_status`, `oat_goal_status`, `oat_goal_recovery`,
+  `oat_milestone_gates`, and `oat_deliveries` - The active milestone, its
+  status, the declaration, any pending recovery, the per-milestone `plan` and
+  `exit` gate carriers, and the delivery registry (goal mode)
 
 Blockers may be legacy reason strings or structured `{task_id, reason, since}`
 records. Display strings as their reason; display records as
@@ -209,6 +214,9 @@ state or routing merely to render blockers.
    Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
    Quick-Start Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None"
    Brief Gate: {status}/{disposition}, decided {decided_at}, fingerprint {config_fingerprint} (as recorded), or "None" (brief mode only)
+   Milestone: {oat_milestone} ({oat_milestone_status}), {accepted}/{total} phases accepted in its scope (goal mode only)
+   Milestone Gates: {mNN} plan {status}/{disposition}, exit {status}/{disposition} {freshness} per milestone, as recorded (goal mode only)
+   Deliveries: {dNN} {status} ({endpoint} endpoint) per registry entry, or "None" (goal mode only)
    Exit Gate: {status}/{disposition} as recorded, or "None"
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
@@ -232,6 +240,13 @@ implementation workflow and is not re-derived here. Each record adds no route
 and no warning: quick plan readiness stays the single routing rule for quick
 plans, and the brief record is provenance only, read back by no route. Show "None" for an absent record, and never write or repair one here.
 
+Goal milestone carriers (`oat_milestone_gates[mNN].plan` and `.exit`) share
+the same core plus `resolution`, `subject` and `freshness`
+(`oat-project-brief/references/brief-contract.md` section 12.4). Report them as
+recorded, including `freshness` and `freshness_reason`; unlike the brief
+record, the router reads these carriers, so never recompute or repair them
+here.
+
 ### Step 5: Determine Next Skill
 
 Based on project state, recommend next action.
@@ -243,6 +258,7 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `import`
 - `lite`
 - `brief`
+- `goal`
 
 **HiLL override (apply before phase routing):**
 
@@ -283,8 +299,9 @@ fi
 
 If drift is detected, recommend `oat-project-reconcile` alongside the normal implementation skill.
 
-In brief mode `plan.md` carries no tasks, so skip the `PLAN_TASKS` comparison;
-compare `(pNN-tNN)` commits against the journal's execution records instead.
+In brief and goal modes `plan.md` carries no tasks, so skip the `PLAN_TASKS`
+comparison; compare `(pNN-tNN)` commits against the journal's execution
+records instead.
 
 Routing matrix by mode:
 
@@ -359,6 +376,21 @@ Brief progress counts phase-units: report `{accepted}/{total} phases accepted`
 from `oat project status`, never task counts. A provisional phase is never
 accepted, and execution records never change the totals.
 
+**Goal mode (`oat_workflow_mode: goal`):** before milestone state exists, the
+`plan` / `in_progress` row continues `oat-project-goal`. After it exists, the
+next skill is the control plane's recommendation (`oat project status --json`,
+`recommendation.skill` with its `context`), which follows the goal priority
+that `oat-project-next` tabulates: terminal recovery after a declaration,
+review feedback, a pending `oat_goal_recovery`, invalid membership, then the
+milestone status (`aligning` → `oat-project-goal`; `implementing` →
+`oat-project-implement`; `reviewing` → scoped closeout or the review owners by
+missing evidence; `delivering` → `oat-project-pr-progress`; `delivered` →
+`oat-project-goal` to re-align). Count phase-units per active milestone: report
+`{accepted}/{total} phases accepted in {mNN}` over the milestone's ordered
+phase set from `oat project status --json` (`milestoneMembership`), plus the
+whole-brief total. A pending recovery reports its own scope beside the active
+milestone; it never replaces it.
+
 **If blockers exist:**
 
 ```
@@ -383,9 +415,10 @@ Knowledge:
 Workflow:
   oat-project-lite              - Start a lite workflow (interview -> plan -> implement)
   oat-project-brief             - Start a brief workflow (interview -> brief -> implement)
+  oat-project-goal              - Start a goal workflow (interview -> brief and milestones -> deliver each milestone)
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
-  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite and brief promote via quick)
+  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite, brief, and goal promote via quick)
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-design            - Confirm requirements + create technical design (folds spec authoring inline)
   oat-project-spec              - Optional standalone specification (most projects skip this — design handles it)
