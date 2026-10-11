@@ -577,6 +577,16 @@ _- Outstanding Items_
 - Worktrees: all three removed after merge (artifacts copied to reviews/archived first); lane branches deleted after this bookkeeping.
 - Outstanding items: none for group 1. Carried to p08: docs for the promote `missing-phase-head` reason and optional `phases` field; backlog item for standalone `## Out of Scope` routing; mode-list prose pins (expected-red list) belong to group 2 and p08.
 
+#### Group 2 bootstrap preflight (strict) — degraded to sequential
+
+- `oat-worktree-bootstrap-auto` preflight for [p05, p06, p07]: the volume had 3.3 GB free after group-1 cleanup; three lanes with the repository init (install + build) need about 5 GB (group 1 reclaimed 3.5 GB real when its three worktrees were removed). Pre-authorized reclaim (inactive worktrees' node_modules, brew, pnpm store) yields about 1 GB. Reason: `insufficient-disk` (strict policy, fail fast before creating any worktree). Per the Parallel Group Execution contract the group degrades to sequential, target-preserving execution in the root checkout: p05 → review → p06 → review → p07 → review, one implementer per phase at the unchanged target. Recorded as a deviation; the operator was asked to free space for later groups.
+
+#### Phase p05 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p05-50ae8921` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -617,6 +627,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p04-t04       | p04 lane write set (validate-plan, promote)                                                                         | -                    | Lane widened by the root to control-plane `quick-plan-readiness.ts`, its test and the barrel to share one index-preserving fence reader (no sibling lane touches them) | -      | implementation  | none                                                                                            |
 | group 1       | merge commits `merge(pNN): …`                                                                                       | -                    | commitlint rejects the `merge` type; fan-in merges use `chore(pNN): merge parallel-group phase …`                                                                      | -      | implementation  | none                                                                                            |
 | group 1       | three concurrent lane worktrees each with a full install and build                                                  | -                    | Filled the volume (118 MiB free) and broke the first integration run; merged worktrees removed before rerun                                                            | -      | implementation  | group 2 needs ~6 GB free before bootstrap; see root judgment log                                |
+| group 2       | plan declares `['p05','p06','p07']` as a parallel worktree group                                                    | -                    | Degraded to sequential root execution after a strict bootstrap preflight failure (`insufficient-disk`); targets, reviews and gates unchanged                           | -      | implementation  | restore parallel groups once the volume has headroom (operator asked)                           |
 
 ## Test Results
 

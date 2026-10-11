@@ -76,6 +76,10 @@ Parallel group 1 fan-in: merged p02 (cf5cae32a), p03 (44523a3ae), p04 (97d8f986f
 
 Three concurrent lane worktrees with full installs and builds filled the volume (118 MiB free) and the first integration build died with disk I/O error. Removing the merged worktrees and pruning the pnpm store recovered 3.6 GB; group 2 needs more headroom before bootstrapping three lanes. Key group1-disk-full-97d8f986f0f13c7334746b4bd0ec871057c7848d.
 
+### 2026-10-11 · general · friction · parallel group degraded to sequential: insufficient disk
+
+Group 2 [p05,p06,p07] bootstrap preflight failed closed on free space (3.3 GB free, ~5 GB needed for three lanes). Degraded to sequential target-preserving execution in the root checkout; no worktree was created. Key group2-degrade-insufficient-disk.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
