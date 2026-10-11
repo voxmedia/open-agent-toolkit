@@ -355,7 +355,7 @@ If review type is `artifact`:
 
 If review type is `code`, use the scope resolution below.
 
-**Step 3.0: Brief-Mode Anchor Resolution (`brief` only)**
+**Step 3.0: Brief-Family Anchor Resolution (`brief` and goal phase-unit reviews)**
 
 When `WORKFLOW_MODE` is `brief` and the review type is `code`, the review range
 comes from the phase anchors recorded in the journal, not from commit-message

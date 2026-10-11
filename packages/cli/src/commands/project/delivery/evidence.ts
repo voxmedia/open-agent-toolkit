@@ -585,36 +585,39 @@ function judgeDeliveries(
       isRecord(nextReview) &&
       typeof nextReview['artifact'] === 'string' &&
       evidence.has(projectRelative(scope.projectDir, nextReview['artifact']));
-    if (isRecord(review)) {
-      if (!isRecord(nextReview)) {
-        return refuse(`delivery ${id} lost its integrated review evidence`);
-      }
-      for (const field of REVIEW_IDENTITY_FIELDS) {
-        if (!recordsEvidence && !setOnce(review[field], nextReview[field])) {
-          return refuse(
-            `delivery ${id} changed its integrated review ${field} without recording this evidence`,
-          );
-        }
-      }
-    }
     // The review record this commit writes is new evidence only when it names
     // a new artifact: a re-review always records a new timestamped artifact,
     // and scope or bound_revisions changes ride on that artifact change.
     // Moving the same artifact to its archived counterpart is not new.
-    const recordsNewReview =
-      recordsEvidence &&
-      !(
-        isRecord(review) &&
-        typeof review['artifact'] === 'string' &&
-        artifactVariants(
-          projectRelative(scope.projectDir, review['artifact']),
-        ).includes(
-          projectRelative(
-            scope.projectDir,
-            (nextReview as Record<string, unknown>)['artifact'] as string,
-          ),
-        )
-      );
+    const sameArtifact =
+      isRecord(review) &&
+      isRecord(nextReview) &&
+      typeof review['artifact'] === 'string' &&
+      typeof nextReview['artifact'] === 'string' &&
+      artifactVariants(
+        projectRelative(scope.projectDir, review['artifact']),
+      ).includes(projectRelative(scope.projectDir, nextReview['artifact']));
+    const recordsNewReview = recordsEvidence && !sameArtifact;
+    if (isRecord(review)) {
+      if (!isRecord(nextReview)) {
+        return refuse(`delivery ${id} lost its integrated review evidence`);
+      }
+      // Review identity (artifact, scope, bound revisions) is set once: a first
+      // write from unset is registration, and only a commit recording a new
+      // review artifact may replace it, together with that artifact. Under the
+      // same artifact, scope and bound revisions never move (contract 12.8).
+      for (const field of REVIEW_IDENTITY_FIELDS) {
+        if (recordsNewReview || setOnce(review[field], nextReview[field])) {
+          continue;
+        }
+        if (field === 'artifact' && sameArtifact) {
+          continue;
+        }
+        return refuse(
+          `delivery ${id} changed its integrated review ${field} without recording a new review artifact`,
+        );
+      }
+    }
 
     // The delivery's exit-gate binding is persisted evidence (A2): set once,
     // replaced only together with the new integrated review it accompanies.
@@ -1109,7 +1112,23 @@ export async function evaluateDeliveryReview(
     const bound = review.bound_revisions.find(
       (revision) => revision.member === index,
     );
-    const reviewedHead = bound?.head ?? member.reviewed_head;
+    // The member's reviewed_head is set once at registration and is
+    // authoritative: a bound revision that disagrees with it never relocates
+    // the inspected range.
+    if (
+      bound?.head !== undefined &&
+      bound.head !== null &&
+      member.reviewed_head !== null &&
+      bound.head !== member.reviewed_head
+    ) {
+      members.push({
+        member: index,
+        fresh: false,
+        reason: `bound-revision-mismatch: bound revision ${bound.head} differs from the member's reviewed_head ${member.reviewed_head}`,
+      });
+      continue;
+    }
+    const reviewedHead = member.reviewed_head ?? bound?.head ?? null;
     const reviewedBase = bound?.base ?? member.base;
     let verdict: { fresh: boolean; reason: string | null };
     if (member.observed_base === null || member.observed_head === null) {

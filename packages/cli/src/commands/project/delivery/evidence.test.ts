@@ -701,6 +701,146 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
     });
   });
 
+  describe('set-once review identity and authoritative member revisions (final review H1)', () => {
+    const boundHead =
+      (chain: { reviewed: string }, head: string) => (state: string) =>
+        state.replace(
+          `bound_revisions: [{ member: 0, base: '${repo!.baseSha}', head: '${chain.reviewed}' }]`,
+          `bound_revisions: [{ member: 0, base: '${repo!.baseSha}', head: '${head}' }]`,
+        );
+
+    it('rejects a same-artifact bound_revisions head rewrite', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      const registered = await repo.read('state.md');
+      const rewritten = boundHead(chain, chain.received)(registered);
+      expect(rewritten).not.toBe(registered);
+      await repo.write('state.md', rewritten);
+      const published = repo.commitAll('chore(oat): rebind d01');
+
+      const result = await evaluateSuccessor(
+        git,
+        scopeFor(repo),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        commit: published,
+      });
+      expect(result.reason).toContain(
+        'changed its integrated review bound_revisions',
+      );
+    });
+
+    it('rejects a same-artifact integrated review scope widening', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      const registered = await repo.read('state.md');
+      const widened = registered.replace(
+        `artifact: ${ARCHIVED_REVIEW_ARTIFACT}\n      scope: [p01, p02]`,
+        `artifact: ${ARCHIVED_REVIEW_ARTIFACT}\n      scope: [p01, p02, p03]`,
+      );
+      expect(widened).not.toBe(registered);
+      await repo.write('state.md', widened);
+      const published = repo.commitAll('chore(oat): widen d01 review scope');
+
+      const result = await evaluateSuccessor(
+        git,
+        scopeFor(repo),
+        chain.reviewed,
+        published,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+      });
+      expect(result.reason).toContain('changed its integrated review scope');
+    });
+
+    it('accepts a new review artifact with new bound revisions in one commit', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      const second = 'reviews/archived/m01-code-review-2.md';
+      await repo.write(second, '# m01 re-review\n\nNo findings.\n');
+      await repo.write(
+        'state.md',
+        boundHead(
+          chain,
+          chain.headRecording,
+        )(await repo.read('state.md'))
+          .replace(
+            `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+            `artifact: ${second}`,
+          )
+          .replace(
+            `artifact: ${second}\n      scope: [p01, p02]`,
+            `artifact: ${second}\n      scope: [p01, p02, p03]`,
+          ),
+      );
+      const published = repo.commitAll('chore(oat): record the m01 re-review');
+
+      await expect(
+        evaluateSuccessor(
+          git,
+          {
+            ...scopeFor(repo),
+            evidenceArtifacts: [ARCHIVED_REVIEW_ARTIFACT, second],
+          },
+          chain.reviewed,
+          published,
+        ),
+      ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+
+    it('refuses the relocated-range attack: R0 review, R1 record, C code, X same-artifact rebind to C', async () => {
+      repo = await createGoalRepo();
+      const chain = await bookkeepingChain(repo);
+      await repo.writeRepo('src/a.ts', 'export const a = 1;\n');
+      const changed = repo.commitAll('feat: unreviewed change');
+      await repo.write(
+        'state.md',
+        boundHead(chain, changed)(await repo.read('state.md')),
+      );
+      const rebound = repo.commitAll('chore(oat): rebind d01 to C');
+
+      // The rebinding commit itself is not bookkeeping.
+      await expect(
+        evaluateSuccessor(git, scopeFor(repo), changed, rebound),
+      ).resolves.toMatchObject({ fresh: false, code: 'substantive-change' });
+
+      const observed = {
+        base: repo.baseSha,
+        reviewed_head: chain.reviewed,
+        observed_head: rebound,
+        observed_base: repo.baseSha,
+      };
+      const attack = delivery(observed);
+      attack.integrated_review!.bound_revisions = [
+        { member: 0, base: repo.baseSha, head: changed },
+      ];
+      const attacked = await evaluateDeliveryReview(
+        git,
+        scopeFor(repo),
+        attack,
+        ['p01', 'p02'],
+      );
+      expect(attacked).toMatchObject({ fresh: false });
+      expect(attacked.reason).toContain('bound-revision-mismatch');
+
+      const honest = await evaluateDeliveryReview(
+        git,
+        scopeFor(repo),
+        delivery(observed),
+        ['p01', 'p02'],
+      );
+      expect(honest).toMatchObject({ fresh: false });
+      expect(honest.reason).not.toContain('bound-revision-mismatch');
+      expect(honest.reason).toMatch(/disallowed-path|substantive-change/);
+    });
+  });
+
   describe('set-once delivery exit-gate binding (M2)', () => {
     const binding = (
       decidedAt: string,
@@ -801,7 +941,9 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
         code: 'substantive-change',
         commit: published,
       });
-      expect(result.reason).toContain('d01 exit gate binding changed');
+      // The same-artifact reorder is refused at the review identity check
+      // before the exit-gate binding is reached (final review H1).
+      expect(result.reason).toContain('changed its integrated review scope');
     });
 
     it('accepts a replacement binding that accompanies new integrated-review evidence', async () => {
