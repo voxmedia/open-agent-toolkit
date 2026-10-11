@@ -670,7 +670,7 @@ actionable `oat pjm init` stop instead of scaffolding implicitly. See
 
 When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and one of four modes: `lite`, `brief`, `quick`, or `spec-driven`. For Quick and Spec-Driven projects, it runs `oat project new <slug> --mode <mode>` and writes `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, and Open Questions. It writes only `discovery.md` (never a partial `design.md`), then points to `oat-project-quick-start` or `oat-project-design` without auto-chaining. For Lite projects, it instead seeds the five sections in `plan.md`, leaves `discovery.md` and `design.md` absent, and points to `oat-project-lite`. For Brief projects, it writes the payload to a research note under `references/research/`, leaves the scaffolded `plan.md` for the brief interview, and points to `oat-project-brief`.
 
-This is a parallel entry path into all four lanes, not a new lane. Quick and Spec-Driven users arrive at `oat-project-quick-start` or `oat-project-design` with discovery already populated; Lite users arrive at `oat-project-lite` with the single-phase plan already seeded.
+This is a parallel entry path into all four lanes, not a new lane. Quick and Spec-Driven users arrive at `oat-project-quick-start` or `oat-project-design` with discovery already populated; Lite users arrive at `oat-project-lite` with the single-phase plan already seeded; Brief users arrive at `oat-project-brief` with the brainstorm payload saved as a research note under `references/research/` and the scaffolded `plan.md` left for the interview.
 
 ### Folding back into an active project
 
