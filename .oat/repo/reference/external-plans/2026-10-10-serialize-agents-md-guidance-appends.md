@@ -164,12 +164,15 @@ The project-log tmpdir lock is comparison context, not this target's owner.
 Release only this invocation's owned lock, with identity/token checking,
 in `finally` on all outcomes. Never remove another writer's lock.
 
-Keep any pre-lock inspection advisory: a content-only change before lock acquisition
-must trigger the locked re-read, not leak the old `assertPlanUnchanged` content
-error instead of the required no-change result. Identity changes remain blocked.
-The first inspection may remain optimistic to avoid lock writes for previews,
-no-change results, and manual-only cases. Before any actual mutation, acquire
-the target lock, validate the original target identity, re-read current content,
+For an existing target, perform the initial unlocked inspection before acquiring
+the append lock. This ordering is required by the first-read barrier above; do not
+move that first read inside the lock. Treat its content classification as advisory:
+a content-only change before lock acquisition must trigger the locked re-read,
+not leak the old `assertPlanUnchanged` content error instead of the required
+no-change result. Identity changes remain blocked. The initial inspection keeps
+previews, no-change results, and manual-only cases free of lock writes. Before
+appending to an existing target, acquire the target lock, validate the original
+target identity, re-read current content,
 and classify markers again. Preserve the existing missing-file exclusive `wx` creation and single
 appeared-file replan instead of redesigning it around a lock. If that replan
 finds an existing file still requiring an append, enter the locked existing-file
