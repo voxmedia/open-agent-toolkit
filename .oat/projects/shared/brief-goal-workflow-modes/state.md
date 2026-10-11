@@ -1,7 +1,8 @@
 ---
-oat_current_task: p10-t01
-oat_last_commit: 611596345662fd52ec275494c5d86bef3af33853
-oat_blockers: []
+oat_current_task: p10-t02
+oat_last_commit: 97f2f1a32100a2174e5414f32040e9b0e97d22b7
+oat_blockers:
+  - 'disk: root volume under 600 MB free (T3 statev2.sqlite, ~/.t3/worktrees of other projects and ~/.codex/sessions hold ~18 GB); p10 paused after p10-t01, p10-t02 patch parked under references/'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug

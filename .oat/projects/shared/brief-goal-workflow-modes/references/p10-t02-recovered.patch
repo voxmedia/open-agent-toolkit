@@ -1,0 +1,2244 @@
+diff --git a/packages/cli/src/commands/help-snapshots.test.ts b/packages/cli/src/commands/help-snapshots.test.ts
+index e92c6b5e6..ac2aed8a7 100644
+--- a/packages/cli/src/commands/help-snapshots.test.ts
++++ b/packages/cli/src/commands/help-snapshots.test.ts
+@@ -1306,6 +1306,91 @@ describe('help output snapshots', () => {
+     `);
+   });
+ 
++  it('project delivery --help matches snapshot', () => {
++    const program = createRegisteredProgram();
++    const help = getCommandByPath(program, [
++      'project',
++      'delivery',
++    ]).helpInformation();
++    expect(help).toMatchInlineSnapshot(`
++      "Usage: oat project delivery [options] [command]
++
++      Observe goal delivery registry members and check delivery evidence freshness
++
++      Options:
++        -h, --help         display help for command
++
++      Global Options:
++        -V, --version      output the version number
++        --json             Output a single JSON document
++        --verbose          Enable verbose debug output
++        --cwd <path>       Override working directory
++
++      Commands:
++        refresh [options]  Observe registered goal delivery members with gh and
++                           persist observations, endpoint attainment and derived
++                           staleness in state.md
++        check [options]    Report integrated-review and exit-carrier freshness for a
++                           goal milestone or delivery under the bookkeeping-successor
++                           contract (read-only)
++        help [command]     display help for command
++      "
++    `);
++  });
++
++  it('project delivery refresh --help matches snapshot', () => {
++    const program = createRegisteredProgram();
++    const help = getCommandByPath(program, [
++      'project',
++      'delivery',
++      'refresh',
++    ]).helpInformation();
++    expect(help).toMatchInlineSnapshot(`
++      "Usage: oat project delivery refresh [options]
++
++      Observe registered goal delivery members with gh and persist observations,
++      endpoint attainment and derived staleness in state.md
++
++      Options:
++        --project <path>  Goal project path
++        -h, --help        display help for command
++
++      Global Options:
++        -V, --version     output the version number
++        --json            Output a single JSON document
++        --verbose         Enable verbose debug output
++        --cwd <path>      Override working directory
++      "
++    `);
++  });
++
++  it('project delivery check --help matches snapshot', () => {
++    const program = createRegisteredProgram();
++    const help = getCommandByPath(program, [
++      'project',
++      'delivery',
++      'check',
++    ]).helpInformation();
++    expect(help).toMatchInlineSnapshot(`
++      "Usage: oat project delivery check [options]
++
++      Report integrated-review and exit-carrier freshness for a goal milestone or
++      delivery under the bookkeeping-successor contract (read-only)
++
++      Options:
++        --project <path>  Goal project path
++        --subject <id>    Milestone (mNN) or registered delivery (dNN) to evaluate
++        -h, --help        display help for command
++
++      Global Options:
++        -V, --version     output the version number
++        --json            Output a single JSON document
++        --verbose         Enable verbose debug output
++        --cwd <path>      Override working directory
++      "
++    `);
++  });
++
+   it('project complete-state --help matches snapshot', () => {
+     const program = createRegisteredProgram();
+     const help = getCommandByPath(program, [
+diff --git a/packages/cli/src/commands/project/delivery/check.ts b/packages/cli/src/commands/project/delivery/check.ts
+new file mode 100644
+index 000000000..d43bb7602
+--- /dev/null
++++ b/packages/cli/src/commands/project/delivery/check.ts
+@@ -0,0 +1,377 @@
++import { readFile } from 'node:fs/promises';
++import { isAbsolute, join, relative, sep } from 'node:path';
++
++import {
++  buildCommandContext,
++  type CommandContext,
++  type GlobalOptions,
++} from '@app/command-context';
++import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
++import {
++  getFrontmatterBlock,
++  parseSkillGateOverrides,
++  SKILL_GATE_OVERRIDE_DISABLED,
++} from '@commands/shared/frontmatter';
++import { readGlobalOptions } from '@commands/shared/shared.utils';
++import { CliError } from '@errors/cli-error';
++import { resolveProjectRoot } from '@fs/paths';
++import {
++  getProjectState,
++  milestonePhaseScope,
++  normalizeMilestoneId,
++  type GoalDelivery,
++  type ProjectState,
++  type ReviewStatus,
++} from '@open-agent-toolkit/control-plane';
++import { Command } from 'commander';
++
++import {
++  deliveryEvidenceArtifacts,
++  evaluateDeliveryReview,
++  evaluateGateCarrier,
++  evaluateSuccessor,
++  type CarrierEvaluation,
++  type EvidenceScope,
++  type ReviewEvaluation,
++} from './evidence';
++
++/** The skill whose gate the milestone exit carrier records. */
++const EXIT_GATE_SKILL = 'oat-project-implement';
++
++export interface GoalDeliveryProject {
++  repoRoot: string;
++  projectPath: string;
++  projectDir: string;
++  statePath: string;
++  stateContent: string;
++  state: ProjectState;
++  /** Whether the project override currently disables the exit gate. */
++  exitGateDisabled: boolean;
++}
++
++export interface DeliveryProjectDependencies {
++  resolveProjectRoot: (cwd: string) => Promise<string>;
++  readFile: (path: string, encoding: 'utf8') => Promise<string>;
++  getProjectState: (projectPath: string) => Promise<ProjectState>;
++}
++
++export const DEFAULT_DELIVERY_PROJECT_DEPENDENCIES: DeliveryProjectDependencies =
++  {
++    resolveProjectRoot,
++    readFile: (path, encoding) => readFile(path, encoding),
++    getProjectState,
++  };
++
++/**
++ * Load a goal project for the delivery commands through the control-plane
++ * reader, so the registry, carriers, membership and Reviews rows are read
++ * exactly as the router reads them. Fails closed for any other mode.
++ */
++export async function loadGoalDeliveryProject(
++  project: string,
++  cwd: string,
++  dependencies: DeliveryProjectDependencies,
++): Promise<GoalDeliveryProject> {
++  const repoRoot = await dependencies.resolveProjectRoot(cwd);
++  const projectPath = isAbsolute(project) ? project : join(repoRoot, project);
++  const statePath = join(projectPath, 'state.md');
++  let stateContent: string;
++  try {
++    stateContent = await dependencies.readFile(statePath, 'utf8');
++  } catch {
++    throw new CliError(`Project state.md not found: ${statePath}`, 1);
++  }
++  const state = await dependencies.getProjectState(projectPath);
++  if (state.workflowMode !== 'goal') {
++    throw new CliError(
++      `Delivery evidence applies to goal projects; ${project} is in ${state.workflowMode} mode.`,
++      1,
++    );
++  }
++  const overrides = parseSkillGateOverrides(
++    getFrontmatterBlock(stateContent) ?? '',
++    statePath,
++  );
++  return {
++    repoRoot,
++    projectPath,
++    projectDir: relative(repoRoot, projectPath).split(sep).join('/'),
++    statePath,
++    stateContent,
++    state,
++    exitGateDisabled:
++      overrides.overrides[EXIT_GATE_SKILL] === SKILL_GATE_OVERRIDE_DISABLED,
++  };
++}
++
++/**
++ * A delivery's effective scope: its frozen scope plus every predecessor it
++ * replaces through `covers_scope_of`. A cycle or missing link stops the
++ * walk; the closeout coverage predicate reports those.
++ */
++export function deliveryEffectiveScope(
++  deliveries: readonly GoalDelivery[],
++  delivery: GoalDelivery,
++): string[] {
++  const scope: string[] = [];
++  const seen = new Set<string>();
++  let current: GoalDelivery | undefined = delivery;
++  while (current !== undefined && !seen.has(current.delivery_id)) {
++    seen.add(current.delivery_id);
++    for (const phaseId of current.scope) {
++      if (!scope.includes(phaseId)) scope.push(phaseId);
++    }
++    const predecessor: string | null = current.covers_scope_of;
++    current =
++      predecessor === null
++        ? undefined
++        : deliveries.find((entry) => entry.delivery_id === predecessor);
++  }
++  return scope;
++}
++
++/** Code review rows whose Scope cell names a label (the bare id or `<id>: …`). */
++export function reviewRowsFor(
++  reviews: readonly ReviewStatus[],
++  labels: readonly string[],
++): ReviewStatus[] {
++  const ids = labels.map((label) => label.toLowerCase());
++  return reviews.filter((review) => {
++    const cell = review.scope.trim().toLowerCase();
++    return (
++      review.type === 'code' &&
++      ids.some((id) => cell === id || cell.startsWith(`${id}:`))
++    );
++  });
++}
++
++export interface SubjectEvidenceReport {
++  subject: string;
++  kind: 'milestone' | 'delivery';
++  milestone: string | null;
++  scope: string[];
++  publishedHeads: (string | null)[];
++  review: ReviewEvaluation;
++  exit: CarrierEvaluation;
++  /** Passed, fresh integrated review and an allowed, fresh exit carrier. */
++  deliverable: boolean;
++}
++
++/**
++ * Evaluate the delivery evidence for one subject. A registered delivery is
++ * judged against its persisted member observations; a milestone (before
++ * registration) against the project branch head.
++ */
++export async function evaluateSubjectEvidence(
++  project: GoalDeliveryProject,
++  subject: string,
++  git: GitRunner,
++): Promise<SubjectEvidenceReport> {
++  const deliveries = project.state.deliveries ?? [];
++  const delivery = deliveries.find((entry) => entry.delivery_id === subject);
++
++  if (delivery) {
++    const milestoneId = delivery.milestone;
++    const scope = deliveryEffectiveScope(deliveries, delivery);
++    const rows = reviewRowsFor(project.state.reviews, [delivery.delivery_id]);
++    const evidence: EvidenceScope = {
++      repoRoot: project.repoRoot,
++      projectDir: project.projectDir,
++      evidenceArtifacts: deliveryEvidenceArtifacts(
++        delivery,
++        rows.map((row) => row.artifact),
++      ),
++    };
++    const publishedHeads = delivery.members.map(
++      (member) => member.observed_head,
++    );
++    const review = await evaluateDeliveryReview(git, evidence, delivery, scope);
++    const exit = await evaluateGateCarrier(
++      milestoneId === null
++        ? null
++        : (project.state.milestoneGates?.[milestoneId]?.exit ?? null),
++      {
++        kind: 'code',
++        scope,
++        match: 'covers',
++        overrideDisabled: project.exitGateDisabled,
++      },
++      { git, scope: evidence, publishedHeads },
++    );
++    return {
++      subject,
++      kind: 'delivery',
++      milestone: milestoneId,
++      scope,
++      publishedHeads,
++      review,
++      exit,
++      deliverable:
++        review.fresh &&
++        review.disposition === 'passed' &&
++        exit.outcome === 'allowed' &&
++        exit.freshness === 'fresh',
++    };
++  }
++
++  const milestoneId = normalizeMilestoneId(subject);
++  if (milestoneId === null) {
++    throw new CliError(
++      `Unknown delivery subject "${subject}": name a milestone (mNN) or a registered delivery (dNN).`,
++      1,
++    );
++  }
++  const membership = project.state.milestoneMembership;
++  const scope = membership
++    ? milestonePhaseScope(membership, milestoneId)
++    : null;
++  if (scope === null) {
++    const [firstError] = membership?.errors ?? [];
++    throw new CliError(
++      firstError
++        ? `Milestone membership is invalid (${firstError.code}: ${firstError.message}); repair it with oat-project-goal.`
++        : `No ## Milestones row for ${milestoneId}.`,
++      1,
++    );
++  }
++
++  const head = await git.run(['rev-parse', '--verify', 'HEAD'], {
++    cwd: project.repoRoot,
++    allowFailure: true,
++  });
++  const publishedHead = head.code === 0 ? head.stdout.trim() : null;
++  const rows = reviewRowsFor(project.state.reviews, [milestoneId]);
++  const row = rows.at(-1) ?? null;
++  const evidence: EvidenceScope = {
++    repoRoot: project.repoRoot,
++    projectDir: project.projectDir,
++    evidenceArtifacts: rows
++      .map((entry) => entry.artifact)
++      .filter((artifact) => artifact !== '' && artifact !== '-'),
++  };
++
++  let review: ReviewEvaluation;
++  if (row === null || row.artifact === '' || row.artifact === '-') {
++    review = {
++      artifact: null,
++      disposition: row?.status ?? null,
++      fresh: false,
++      reason: `review-missing: no ${milestoneId} code review row names an artifact`,
++      members: [],
++    };
++  } else {
++    const successor = await evaluateSuccessor(
++      git,
++      evidence,
++      row.reviewedHead ?? null,
++      publishedHead,
++    );
++    review = {
++      artifact: row.artifact,
++      disposition: row.status,
++      fresh: successor.fresh,
++      reason: successor.fresh ? null : `${successor.code}: ${successor.reason}`,
++      members: [],
++    };
++  }
++
++  const exit = await evaluateGateCarrier(
++    project.state.milestoneGates?.[milestoneId]?.exit ?? null,
++    { kind: 'code', scope, overrideDisabled: project.exitGateDisabled },
++    { git, scope: evidence, publishedHeads: [publishedHead] },
++  );
++  return {
++    subject,
++    kind: 'milestone',
++    milestone: milestoneId,
++    scope,
++    publishedHeads: [publishedHead],
++    review,
++    exit,
++    deliverable:
++      review.fresh &&
++      review.disposition?.toLowerCase() === 'passed' &&
++      exit.outcome === 'allowed' &&
++      exit.freshness === 'fresh',
++  };
++}
++
++export interface DeliveryCheckDependencies extends DeliveryProjectDependencies {
++  buildCommandContext: (options: GlobalOptions) => CommandContext;
++  git: GitRunner;
++}
++
++const DEFAULT_CHECK_DEPENDENCIES: DeliveryCheckDependencies = {
++  ...DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
++  buildCommandContext,
++  git: defaultGitRunner,
++};
++
++function formatEvidenceReport(report: SubjectEvidenceReport): string {
++  const review = report.review.fresh
++    ? `fresh (${report.review.disposition ?? 'no disposition'})`
++    : `stale: ${report.review.reason ?? 'unknown'}`;
++  const exit =
++    report.exit.freshness === 'fresh'
++      ? `${report.exit.outcome}, fresh`
++      : `${report.exit.outcome}, stale: ${report.exit.reason ?? 'unknown'}`;
++  return [
++    `Delivery evidence for ${report.subject} (${report.kind}; scope ${report.scope.join(', ')}):`,
++    `  integrated review: ${review}`,
++    `  exit carrier: ${exit}`,
++    `  deliverable: ${report.deliverable ? 'yes' : 'no'}`,
++  ].join('\n');
++}
++
++export function createProjectDeliveryCheckCommand(
++  overrides: Partial<DeliveryCheckDependencies> = {},
++): Command {
++  const dependencies = { ...DEFAULT_CHECK_DEPENDENCIES, ...overrides };
++  return new Command('check')
++    .description(
++      'Report integrated-review and exit-carrier freshness for a goal milestone or delivery under the bookkeeping-successor contract (read-only)',
++    )
++    .requiredOption('--project <path>', 'Goal project path')
++    .requiredOption(
++      '--subject <id>',
++      'Milestone (mNN) or registered delivery (dNN) to evaluate',
++    )
++    .action(
++      async (
++        options: { project: string; subject: string },
++        command: Command,
++      ) => {
++        const context = dependencies.buildCommandContext(
++          readGlobalOptions(command),
++        );
++        try {
++          const project = await loadGoalDeliveryProject(
++            options.project,
++            context.cwd,
++            dependencies,
++          );
++          const report = await evaluateSubjectEvidence(
++            project,
++            options.subject,
++            dependencies.git,
++          );
++          if (context.json) {
++            context.logger.json({ status: 'ok', ...report });
++          } else {
++            context.logger.info(formatEvidenceReport(report));
++          }
++          // Fail closed: a caller that ignores the report still stops.
++          process.exitCode = report.deliverable ? 0 : 1;
++        } catch (error) {
++          const message =
++            error instanceof Error ? error.message : String(error);
++          if (context.json) {
++            context.logger.json({ status: 'error', message });
++          } else {
++            context.logger.error(message);
++          }
++          process.exitCode = error instanceof CliError ? error.exitCode : 1;
++        }
++      },
++    );
++}
+diff --git a/packages/cli/src/commands/project/delivery/evidence.ts b/packages/cli/src/commands/project/delivery/evidence.ts
+new file mode 100644
+index 000000000..e93dd9b29
+--- /dev/null
++++ b/packages/cli/src/commands/project/delivery/evidence.ts
+@@ -0,0 +1,1094 @@
++import { posix } from 'node:path';
++
++import type { GitRunner } from '@commands/project/sync/git';
++import {
++  recordLineMask,
++  type GoalDelivery,
++  type MilestoneGateCarrier,
++} from '@open-agent-toolkit/control-plane';
++import YAML from 'yaml';
++
++/**
++ * The shared delivery-evidence evaluator (design "Delivery registry and
++ * closeout boundary", bookkeeping-successor freshness, A2). `delivery
++ * refresh`, `delivery check` and the closeout boundary all derive freshness
++ * here; nothing else compares revisions.
++ *
++ * Evidence keeps the revision actually reviewed. Evidence reviewed at R covers
++ * a published head H when R = H, or when R is an ancestor of H and every
++ * intervening commit — merge-introduced changes included — changes only
++ * permitted bookkeeping. Each commit is inspected on its own, so a substantive
++ * change followed by its revert is never a bookkeeping successor. Missing
++ * objects, failed inspection, unknown paths and disallowed edits fail closed.
++ */
++
++/** Where the evidence lives: the project and the review artifacts it records. */
++export interface EvidenceScope {
++  /** Absolute repository root; every Git command runs here. */
++  repoRoot: string;
++  /** Repository-relative POSIX path of the project directory. */
++  projectDir: string;
++  /**
++   * Project-relative review artifacts belonging to the evidence being
++   * recorded or archived (`reviews/…`). Each also permits its archived
++   * counterpart (`reviews/archived/<name>`), so receive's archival move is
++   * bookkeeping.
++   */
++  evidenceArtifacts: readonly string[];
++}
++
++export type FreshnessFailureCode =
++  | 'missing-revision'
++  | 'missing-object'
++  | 'not-ancestor'
++  | 'inspection-failed'
++  | 'disallowed-path'
++  | 'substantive-change'
++  | 'base-changed';
++
++export type SuccessorResult =
++  | {
++      fresh: true;
++      code: 'identical' | 'bookkeeping-successor';
++      reason: string;
++      /** Every commit inspected between the reviewed and published heads. */
++      inspected: string[];
++    }
++  | {
++      fresh: false;
++      code: FreshnessFailureCode;
++      reason: string;
++      commit?: string;
++      path?: string;
++    };
++
++type Verdict = { ok: true } | { ok: false; reason: string };
++
++const OK: Verdict = { ok: true };
++
++function refuse(reason: string): Verdict {
++  return { ok: false, reason };
++}
++
++// ---------------------------------------------------------------------------
++// Git inspection
++// ---------------------------------------------------------------------------
++
++async function resolveCommit(
++  git: GitRunner,
++  repoRoot: string,
++  revision: string,
++): Promise<string | null> {
++  const result = await git.run(
++    ['rev-parse', '--verify', '--quiet', `${revision}^{commit}`],
++    { cwd: repoRoot, allowFailure: true },
++  );
++  const sha = result.stdout.trim();
++  return result.code === 0 && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
++}
++
++async function readBlob(
++  git: GitRunner,
++  repoRoot: string,
++  commit: string,
++  path: string,
++): Promise<string | null> {
++  const result = await git.run(['show', `${commit}:${path}`], {
++    cwd: repoRoot,
++    allowFailure: true,
++  });
++  return result.code === 0 ? result.stdout : null;
++}
++
++/**
++ * Whether `published` covers evidence reviewed at `reviewed` under the
++ * bookkeeping-successor contract.
++ */
++export async function evaluateSuccessor(
++  git: GitRunner,
++  scope: EvidenceScope,
++  reviewed: string | null | undefined,
++  published: string | null | undefined,
++): Promise<SuccessorResult> {
++  if (!reviewed || !published) {
++    return {
++      fresh: false,
++      code: 'missing-revision',
++      reason: !reviewed
++        ? 'no reviewed revision is recorded'
++        : 'no published head is observed',
++    };
++  }
++
++  let reviewedSha: string | null;
++  let publishedSha: string | null;
++  try {
++    reviewedSha = await resolveCommit(git, scope.repoRoot, reviewed);
++    publishedSha = await resolveCommit(git, scope.repoRoot, published);
++  } catch (error) {
++    return inspectionFailed(error);
++  }
++  if (reviewedSha === null || publishedSha === null) {
++    return {
++      fresh: false,
++      code: 'missing-object',
++      reason: `commit ${reviewedSha === null ? reviewed : published} is not available locally`,
++    };
++  }
++  if (reviewedSha === publishedSha) {
++    return {
++      fresh: true,
++      code: 'identical',
++      reason: 'the published head is the reviewed revision',
++      inspected: [],
++    };
++  }
++
++  try {
++    const ancestry = await git.run(
++      ['merge-base', '--is-ancestor', reviewedSha, publishedSha],
++      { cwd: scope.repoRoot, allowFailure: true },
++    );
++    if (ancestry.code === 1) {
++      return {
++        fresh: false,
++        code: 'not-ancestor',
++        reason: `reviewed revision ${reviewedSha} is not an ancestor of ${publishedSha}`,
++      };
++    }
++    if (ancestry.code !== 0) {
++      return {
++        fresh: false,
++        code: 'inspection-failed',
++        reason: `ancestry inspection failed: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
++      };
++    }
++
++    const listed = await git.run(
++      [
++        'rev-list',
++        '--reverse',
++        '--topo-order',
++        '--parents',
++        `${reviewedSha}..${publishedSha}`,
++      ],
++      { cwd: scope.repoRoot, allowFailure: true },
++    );
++    if (listed.code !== 0) {
++      return {
++        fresh: false,
++        code: 'inspection-failed',
++        reason: `commit listing failed: ${listed.stderr || `git exited ${listed.code}`}`,
++      };
++    }
++
++    const inspected: string[] = [];
++    for (const line of listed.stdout.split('\n')) {
++      const [commit, firstParent] = line.trim().split(/\s+/);
++      if (!commit) continue;
++      if (!firstParent) {
++        return {
++          fresh: false,
++          code: 'inspection-failed',
++          reason: `commit ${commit} has no parent to compare against`,
++          commit,
++        };
++      }
++      const failure = await inspectCommit(git, scope, firstParent, commit);
++      if (failure !== null) {
++        return failure;
++      }
++      inspected.push(commit);
++    }
++
++    return {
++      fresh: true,
++      code: 'bookkeeping-successor',
++      reason: `every commit after the reviewed revision is permitted bookkeeping (${inspected.length} inspected)`,
++      inspected,
++    };
++  } catch (error) {
++    return inspectionFailed(error);
++  }
++}
++
++function inspectionFailed(error: unknown): SuccessorResult {
++  return {
++    fresh: false,
++    code: 'inspection-failed',
++    reason: `inspection failed: ${error instanceof Error ? error.message : String(error)}`,
++  };
++}
++
++/**
++ * Inspect one commit against its first parent. For a merge commit this is
++ * the change the merge introduces into the line being published, which
++ * covers both the merged side and any change made in the merge itself.
++ */
++async function inspectCommit(
++  git: GitRunner,
++  scope: EvidenceScope,
++  parent: string,
++  commit: string,
++): Promise<SuccessorResult | null> {
++  const diff = await git.run(
++    ['diff', '--no-renames', '--name-status', '-z', parent, commit],
++    { cwd: scope.repoRoot, allowFailure: true },
++  );
++  if (diff.code !== 0) {
++    return {
++      fresh: false,
++      code: 'inspection-failed',
++      reason: `diff inspection of ${commit} failed: ${diff.stderr || `git exited ${diff.code}`}`,
++      commit,
++    };
++  }
++
++  const tokens = diff.stdout.split('\0').filter((token) => token !== '');
++  for (let index = 0; index + 1 < tokens.length; index += 2) {
++    const status = tokens[index]!.charAt(0);
++    const path = tokens[index + 1]!;
++    const kind = classifyPath(scope, path);
++    if (kind === null) {
++      return {
++        fresh: false,
++        code: 'disallowed-path',
++        reason: `${commit} changes ${path}, which is not permitted bookkeeping`,
++        commit,
++        path,
++      };
++    }
++
++    const before =
++      status === 'A' ? null : await readBlob(git, scope.repoRoot, parent, path);
++    const after =
++      status === 'D' ? null : await readBlob(git, scope.repoRoot, commit, path);
++    if (
++      (status !== 'A' && before === null) ||
++      (status !== 'D' && after === null)
++    ) {
++      return {
++        fresh: false,
++        code: 'inspection-failed',
++        reason: `could not read ${path} at ${status === 'A' ? commit : parent}`,
++        commit,
++        path,
++      };
++    }
++
++    const verdict = judgeBookkeepingChange(kind, status, before, after, scope);
++    if (!verdict.ok) {
++      return {
++        fresh: false,
++        code: 'substantive-change',
++        reason: `${commit} makes a substantive change to ${path}: ${verdict.reason}`,
++        commit,
++        path,
++      };
++    }
++  }
++  return null;
++}
++
++// ---------------------------------------------------------------------------
++// Path allowlist and content rules
++// ---------------------------------------------------------------------------
++
++export type BookkeepingPathKind =
++  | 'state'
++  | 'plan'
++  | 'implementation'
++  | 'project-log'
++  | 'review-artifact';
++
++function projectRelative(projectDir: string, artifact: string): string {
++  const trimmed = artifact.replace(/^\.\//, '');
++  const prefix = `${projectDir.replace(/\/$/, '')}/`;
++  return trimmed.startsWith(prefix) ? trimmed.slice(prefix.length) : trimmed;
++}
++
++function artifactVariants(artifact: string): string[] {
++  const name = posix.basename(artifact);
++  if (artifact.startsWith('reviews/archived/')) {
++    return [artifact, `reviews/${name}`];
++  }
++  if (artifact.startsWith('reviews/')) {
++    return [artifact, `reviews/archived/${name}`];
++  }
++  return [artifact];
++}
++
++/**
++ * The bookkeeping kind of a repository-relative path, or `null` when the
++ * path is outside the allowlist: this project's `state.md`, `plan.md`,
++ * `implementation.md`, `project-log.md`, and the exact review artifacts of
++ * the evidence being recorded or archived.
++ */
++export function classifyPath(
++  scope: EvidenceScope,
++  repoPath: string,
++): BookkeepingPathKind | null {
++  const projectDir = scope.projectDir.replace(/\/$/, '');
++  if (!repoPath.startsWith(`${projectDir}/`)) {
++    return null;
++  }
++  const relative = repoPath.slice(projectDir.length + 1);
++  switch (relative) {
++    case 'state.md':
++      return 'state';
++    case 'plan.md':
++      return 'plan';
++    case 'implementation.md':
++      return 'implementation';
++    case 'project-log.md':
++      return 'project-log';
++  }
++  const permitted = scope.evidenceArtifacts.flatMap((artifact) =>
++    artifactVariants(projectRelative(projectDir, artifact)),
++  );
++  return permitted.includes(relative) ? 'review-artifact' : null;
++}
++
++function judgeBookkeepingChange(
++  kind: BookkeepingPathKind,
++  status: string,
++  before: string | null,
++  after: string | null,
++  scope: EvidenceScope,
++): Verdict {
++  if (kind === 'review-artifact') {
++    return status === 'A' || status === 'M' || status === 'D'
++      ? OK
++      : refuse(`unsupported change type ${status}`);
++  }
++  if (kind === 'project-log') {
++    if (status === 'A') return OK;
++    if (status !== 'M') return refuse('the project log may only grow');
++    return after!.startsWith(before!.trimEnd())
++      ? OK
++      : refuse('the project log was rewritten, not appended');
++  }
++  if (kind === 'implementation' && status === 'A') {
++    return OK;
++  }
++  if (status !== 'M') {
++    return refuse(
++      status === 'D' ? 'the file was deleted' : `change type ${status}`,
++    );
++  }
++  switch (kind) {
++    case 'state':
++      return judgeStateChange(before!, after!, scope);
++    case 'plan':
++      return judgePlanChange(before!, after!);
++    case 'implementation':
++      return judgeJournalChange(before!, after!);
++  }
++}
++
++// --- shared helpers --------------------------------------------------------
++
++const FRONTMATTER_PATTERN = /^---\n([\s\S]*?)\n---(?:\n|$)/;
++
++function splitFrontmatter(
++  content: string,
++): { data: Record<string, unknown>; body: string } | null {
++  const match = content.match(FRONTMATTER_PATTERN);
++  if (!match) {
++    return { data: {}, body: content };
++  }
++  try {
++    const parsed: unknown = YAML.parse(match[1] ?? '');
++    const data =
++      parsed === null || parsed === undefined
++        ? {}
++        : isRecord(parsed)
++          ? parsed
++          : null;
++    return data === null
++      ? null
++      : { data, body: content.slice(match[0].length) };
++  } catch {
++    return null;
++  }
++}
++
++function isRecord(value: unknown): value is Record<string, unknown> {
++  return typeof value === 'object' && value !== null && !Array.isArray(value);
++}
++
++function stable(value: unknown): string {
++  if (Array.isArray(value)) {
++    return `[${value.map(stable).join(',')}]`;
++  }
++  if (isRecord(value)) {
++    return `{${Object.keys(value)
++      .sort()
++      .map((key) => `${JSON.stringify(key)}:${stable(value[key])}`)
++      .join(',')}}`;
++  }
++  return JSON.stringify(value ?? null);
++}
++
++function isUnset(value: unknown): boolean {
++  return (
++    value === undefined ||
++    value === null ||
++    value === '' ||
++    (Array.isArray(value) && value.length === 0)
++  );
++}
++
++/** A set-once field may go from unset to a value; any later change is not bookkeeping. */
++function setOnce(before: unknown, after: unknown): boolean {
++  return isUnset(before) || stable(before) === stable(after);
++}
++
++// --- state.md --------------------------------------------------------------
++
++/** State keys whose change requires reevaluation, never bookkeeping. */
++const PROTECTED_STATE_KEYS = ['oat_workflow_mode', 'oat_skill_gate_overrides'];
++
++const DELIVERY_SET_ONCE_FIELDS = [
++  'milestone',
++  'scope',
++  'endpoint',
++  'kind',
++  'covers_scope_of',
++  'corrects_delivery_id',
++  'lookup',
++  'endpoint_attainment',
++];
++
++function judgeStateChange(
++  before: string,
++  after: string,
++  scope: EvidenceScope,
++): Verdict {
++  const previous = splitFrontmatter(before);
++  const next = splitFrontmatter(after);
++  if (previous === null || next === null) {
++    return refuse('state.md frontmatter could not be parsed');
++  }
++
++  for (const key of PROTECTED_STATE_KEYS) {
++    if (stable(previous.data[key]) !== stable(next.data[key])) {
++      return refuse(`${key} changed`);
++    }
++  }
++
++  const deliveries = judgeDeliveries(
++    previous.data['oat_deliveries'],
++    next.data['oat_deliveries'],
++    scope,
++  );
++  if (!deliveries.ok) return deliveries;
++  return judgeMilestoneGates(
++    previous.data['oat_milestone_gates'],
++    next.data['oat_milestone_gates'],
++  );
++}
++
++function deliveryMap(value: unknown): Map<string, Record<string, unknown>> {
++  const entries = new Map<string, Record<string, unknown>>();
++  for (const entry of Array.isArray(value) ? value : []) {
++    if (isRecord(entry) && typeof entry['delivery_id'] === 'string') {
++      entries.set(entry['delivery_id'], entry);
++    }
++  }
++  return entries;
++}
++
++function judgeDeliveries(
++  beforeValue: unknown,
++  afterValue: unknown,
++  scope: EvidenceScope,
++): Verdict {
++  const after = deliveryMap(afterValue);
++  const evidence = new Set(
++    scope.evidenceArtifacts.flatMap((artifact) =>
++      artifactVariants(projectRelative(scope.projectDir, artifact)),
++    ),
++  );
++
++  for (const [id, previous] of deliveryMap(beforeValue)) {
++    const next = after.get(id);
++    if (next === undefined) {
++      return refuse(`delivery ${id} was removed from the registry`);
++    }
++    for (const field of DELIVERY_SET_ONCE_FIELDS) {
++      if (!setOnce(previous[field], next[field])) {
++        return refuse(`delivery ${id} changed its recorded ${field}`);
++      }
++    }
++
++    const previousMembers = Array.isArray(previous['members'])
++      ? previous['members']
++      : [];
++    const nextMembers = Array.isArray(next['members']) ? next['members'] : [];
++    for (const [index, member] of previousMembers.entries()) {
++      const successor: unknown = nextMembers[index];
++      if (!isRecord(member)) continue;
++      if (!isRecord(successor)) {
++        return refuse(`delivery ${id} lost member ${index}`);
++      }
++      for (const field of ['url', 'base', 'reviewed_head']) {
++        if (!setOnce(member[field], successor[field])) {
++          return refuse(`delivery ${id} member ${index} changed its ${field}`);
++        }
++      }
++    }
++
++    const review = previous['integrated_review'];
++    const nextReview = next['integrated_review'];
++    if (isRecord(review)) {
++      if (!isRecord(nextReview)) {
++        return refuse(`delivery ${id} lost its integrated review evidence`);
++      }
++      const recordsEvidence =
++        typeof nextReview['artifact'] === 'string' &&
++        evidence.has(projectRelative(scope.projectDir, nextReview['artifact']));
++      for (const field of ['artifact', 'scope', 'bound_revisions']) {
++        if (!recordsEvidence && !setOnce(review[field], nextReview[field])) {
++          return refuse(
++            `delivery ${id} changed its integrated review ${field} without recording this evidence`,
++          );
++        }
++      }
++    }
++
++    const carrier = judgeCarrierChange(
++      previous['exit_gate'],
++      next['exit_gate'],
++      `delivery ${id} exit gate binding`,
++    );
++    if (!carrier.ok) return carrier;
++  }
++  return OK;
++}
++
++function judgeCarrierChange(
++  before: unknown,
++  after: unknown,
++  label: string,
++): Verdict {
++  if (!isRecord(before)) return OK;
++  if (!isRecord(after)) {
++    return refuse(`${label} was removed`);
++  }
++  // A rerun replaces the record with a new decision; otherwise the reviewed
++  // revision and the subject it binds are evidence identities.
++  if (stable(before['decided_at']) !== stable(after['decided_at'])) {
++    return OK;
++  }
++  for (const field of ['reviewed_head', 'subject']) {
++    if (!setOnce(before[field], after[field])) {
++      return refuse(`${label} changed its ${field} without a new decision`);
++    }
++  }
++  return OK;
++}
++
++function judgeMilestoneGates(
++  beforeValue: unknown,
++  afterValue: unknown,
++): Verdict {
++  if (!isRecord(beforeValue)) return OK;
++  const after = isRecord(afterValue) ? afterValue : {};
++  for (const [milestone, carriers] of Object.entries(beforeValue)) {
++    if (!isRecord(carriers)) continue;
++    const next = isRecord(after[milestone]) ? after[milestone] : {};
++    for (const kind of ['plan', 'exit']) {
++      const verdict = judgeCarrierChange(
++        carriers[kind],
++        next[kind],
++        `${milestone} ${kind} carrier`,
++      );
++      if (!verdict.ok) return verdict;
++    }
++  }
++  return OK;
++}
++
++// --- plan.md ---------------------------------------------------------------
++
++/** Plan frontmatter keys that carry routing and progress, never approved content. */
++const PLAN_ROUTING_KEYS = new Set([
++  'oat_status',
++  'oat_ready_for',
++  'oat_blockers',
++  'oat_last_updated',
++  'oat_phase',
++  'oat_phase_status',
++  'oat_generated',
++]);
++
++/** Plan sections that record evidence; every other section is approved content. */
++const PLAN_EVIDENCE_SECTIONS = new Set(['Reviews', 'Implementation Complete']);
++
++function judgePlanChange(before: string, after: string): Verdict {
++  const previous = splitFrontmatter(before);
++  const next = splitFrontmatter(after);
++  if (previous === null || next === null) {
++    return refuse('plan.md frontmatter could not be parsed');
++  }
++  const keys = new Set([
++    ...Object.keys(previous.data),
++    ...Object.keys(next.data),
++  ]);
++  for (const key of keys) {
++    if (
++      !PLAN_ROUTING_KEYS.has(key) &&
++      stable(previous.data[key]) !== stable(next.data[key])
++    ) {
++      return refuse(`frontmatter ${key} changed`);
++    }
++  }
++
++  const previousSections = planSections(previous.body);
++  const nextSections = planSections(next.body);
++  const approved = (sections: PlanSection[]) =>
++    sections
++      .filter((section) => !PLAN_EVIDENCE_SECTIONS.has(section.title))
++      .map((section) => `${section.heading}\n${normalizeBody(section.lines)}`);
++  const previousApproved = approved(previousSections);
++  const nextApproved = approved(nextSections);
++  if (previousApproved.length !== nextApproved.length) {
++    return refuse('a section was added or removed');
++  }
++  for (const [index, section] of previousApproved.entries()) {
++    if (section !== nextApproved[index]) {
++      const heading = section.split('\n')[0] || '(preamble)';
++      return refuse(`approved content changed under "${heading}"`);
++    }
++  }
++
++  const reviews = (sections: PlanSection[]) =>
++    sections.find((section) => section.title === 'Reviews')?.lines ?? [];
++  return judgeReviewRows(reviews(previousSections), reviews(nextSections));
++}
++
++interface PlanSection {
++  heading: string;
++  title: string;
++  lines: string[];
++}
++
++function planSections(body: string): PlanSection[] {
++  const lines = body.split('\n');
++  const mask = recordLineMask(lines);
++  const sections: PlanSection[] = [{ heading: '', title: '', lines: [] }];
++  for (const [index, line] of lines.entries()) {
++    const heading = mask[index] ? line.match(/^##[ \t]+(.+?)[ \t]*$/) : null;
++    if (heading) {
++      sections.push({ heading: line.trimEnd(), title: heading[1]!, lines: [] });
++      continue;
++    }
++    sections[sections.length - 1]!.lines.push(line);
++  }
++  return sections;
++}
++
++function normalizeBody(lines: string[]): string {
++  return lines
++    .map((line) => line.trimEnd())
++    .join('\n')
++    .trim();
++}
++
++interface ReviewRow {
++  scope: string;
++  type: string;
++  artifact: string;
++  reviewedHead: string;
++}
++
++function readReviewRows(lines: string[]): ReviewRow[] {
++  const rows = lines
++    .map((line) => line.trim())
++    .filter((line) => line.startsWith('|'))
++    .map((line) =>
++      line
++        .replace(/^\|/, '')
++        .replace(/\|$/, '')
++        .split('|')
++        .map((cell) => cell.trim()),
++    );
++  const [header, , ...body] = rows;
++  if (!header) return [];
++  const column = (name: string) =>
++    header.findIndex((cell) => cell.toLowerCase() === name);
++  const scope = column('scope');
++  const type = column('type');
++  const artifact = column('artifact');
++  const reviewedHead = column('reviewed head');
++  return body.map((cells) => ({
++    scope: cells[scope] ?? '',
++    type: cells[type] ?? '',
++    artifact: artifact < 0 ? '' : (cells[artifact] ?? ''),
++    reviewedHead: reviewedHead < 0 ? '' : (cells[reviewedHead] ?? ''),
++  }));
++}
++
++function placeholder(cell: string): boolean {
++  return cell === '' || cell === '-' || cell === '—';
++}
++
++/**
++ * Review rows record evidence: rows may be added and their status, date and
++ * lineage cells updated, but no row disappears and an existing row's
++ * identity (scope, type, artifact) and reviewed revision never change, except
++ * that an artifact may be set once or moved to its archived counterpart.
++ */
++function judgeReviewRows(beforeLines: string[], afterLines: string[]): Verdict {
++  const remaining = readReviewRows(afterLines);
++  for (const row of readReviewRows(beforeLines)) {
++    const index = remaining.findIndex(
++      (candidate) =>
++        candidate.scope === row.scope &&
++        candidate.type === row.type &&
++        (placeholder(row.reviewedHead) ||
++          candidate.reviewedHead === row.reviewedHead) &&
++        (placeholder(row.artifact) ||
++          artifactVariants(row.artifact).includes(candidate.artifact)),
++    );
++    if (index < 0) {
++      return refuse(
++        `the ${row.scope} ${row.type} review row lost or changed its identity or reviewed head`,
++      );
++    }
++    remaining.splice(index, 1);
++  }
++  return OK;
++}
++
++// --- implementation.md -----------------------------------------------------
++
++const PROGRESS_FIELD =
++  /^(?:-[ \t]+)?\*\*(Status|Head|Completed|Updated|Last Updated|Started):\*\*\s*(.*)$/;
++const PLACEHOLDER_FIELD =
++  /^(?:-[ \t]+)?\*\*[^*\n]+:\*\*\s*(?:-|—|pending|tbd|null)?\s*$/i;
++const EXTRACTION_MARKER = /^\*\*(?:Status:\*\*\s+extracted|Extracted to:\*\*)/;
++
++/**
++ * The journal is append-mostly: progress fields and placeholders may be
++ * rewritten and tables re-rendered, but no recorded observation is removed
++ * or rewritten, and marking a phase extracted changes scope.
++ */
++function judgeJournalChange(before: string, after: string): Verdict {
++  const previous = splitFrontmatter(before);
++  const next = splitFrontmatter(after);
++  if (previous === null || next === null) {
++    return refuse('implementation.md frontmatter could not be parsed');
++  }
++  const remaining = new Map<string, number>();
++  for (const line of next.body.split('\n')) {
++    const key = line.trimEnd();
++    remaining.set(key, (remaining.get(key) ?? 0) + 1);
++  }
++  const previousLines = new Set<string>();
++  for (const line of previous.body.split('\n')) {
++    const key = line.trimEnd();
++    previousLines.add(key.trim());
++    const count = remaining.get(key) ?? 0;
++    if (count > 0) {
++      remaining.set(key, count - 1);
++      continue;
++    }
++    const trimmed = key.trim();
++    const progress = trimmed.match(PROGRESS_FIELD);
++    const mutable =
++      trimmed === '' ||
++      trimmed.startsWith('|') ||
++      PLACEHOLDER_FIELD.test(trimmed) ||
++      (progress !== null &&
++        !(progress[1] === 'Status' && /^extracted\b/.test(progress[2] ?? '')));
++    if (!mutable) {
++      return refuse(
++        `recorded journal line "${trimmed}" was removed or rewritten`,
++      );
++    }
++  }
++  for (const line of next.body.split('\n')) {
++    const trimmed = line.trim();
++    if (EXTRACTION_MARKER.test(trimmed) && !previousLines.has(trimmed)) {
++      return refuse(`"${trimmed}" marks a phase extracted`);
++    }
++  }
++  return OK;
++}
++
++// ---------------------------------------------------------------------------
++// Gate carriers: outcome and freshness are separate
++// ---------------------------------------------------------------------------
++
++export interface CarrierExpectation {
++  /** The subject kind the carrier must bind. */
++  kind: 'plan' | 'code';
++  /** The ordered phase set the carrier's resolution must apply to. */
++  scope: readonly string[];
++  /**
++   * `exact` (default): the carrier binds exactly `scope`, as a milestone's
++   * scoped closeout records it. `covers`: the carrier binds at least every
++   * phase of `scope`, as a delivery's milestone carrier does after a later
++   * correction phase joined its milestone.
++   */
++  match?: 'exact' | 'covers';
++  /** Whether the project override currently disables the carrier's gate. */
++  overrideDisabled?: boolean | null;
++  /** The current resolution, when the caller resolved configuration. */
++  resolution?: string | null;
++  /** The current configuration fingerprint, when the caller computed one. */
++  configFingerprint?: string | null;
++}
++
++export interface CarrierEvaluation {
++  /** The recorded gate outcome, independent of freshness. */
++  outcome: 'allowed' | 'blocked' | 'missing' | 'invalid';
++  freshness: 'fresh' | 'stale';
++  reason: string | null;
++}
++
++const UNREVIEWED_RESOLUTIONS = new Set(['no_gate', 'project_disabled']);
++
++function isUnreviewedResolution(carrier: MilestoneGateCarrier): boolean {
++  return (
++    UNREVIEWED_RESOLUTIONS.has(carrier.resolution ?? '') ||
++    UNREVIEWED_RESOLUTIONS.has(carrier.disposition ?? '')
++  );
++}
++
++function sameScope(left: readonly string[], right: readonly string[]): boolean {
++  return (
++    left.length === right.length &&
++    [...left].sort().join(',') === [...right].sort().join(',')
++  );
++}
++
++/**
++ * Evaluate one gate carrier (A2). The outcome is the recorded status; the
++ * freshness asks whether that resolution still applies: a `no_gate` or
++ * `project_disabled` carrier has no reviewed revision and is bound by its
++ * subject, so a changed configuration, override or subject makes it stale and
++ * a fabricated `reviewed_head` makes it invalid. A configured code carrier
++ * keeps its actual reviewed revision and must cover every published head as
++ * a bookkeeping successor. A plan carrier binds the approved brief and
++ * membership at activation, so implementation commits never stale it.
++ */
++export async function evaluateGateCarrier(
++  carrier: MilestoneGateCarrier | null,
++  expected: CarrierExpectation,
++  successor?: {
++    git: GitRunner;
++    scope: EvidenceScope;
++    publishedHeads: readonly (string | null)[];
++  },
++): Promise<CarrierEvaluation> {
++  if (carrier === null) {
++    return {
++      outcome: 'missing',
++      freshness: 'stale',
++      reason: 'no carrier is recorded',
++    };
++  }
++  const outcome = carrier.status === 'allowed' ? 'allowed' : 'blocked';
++  const stale = (reason: string): CarrierEvaluation => ({
++    outcome,
++    freshness: 'stale',
++    reason,
++  });
++  const unreviewed = isUnreviewedResolution(carrier);
++
++  if (unreviewed && carrier.reviewed_head !== null) {
++    return {
++      outcome: 'invalid',
++      freshness: 'stale',
++      reason: `a ${carrier.resolution ?? carrier.disposition} carrier records reviewed_head ${carrier.reviewed_head}, but no review occurred`,
++    };
++  }
++  if (carrier.subject === null) {
++    return stale('subject-missing: the carrier binds no subject');
++  }
++  const bound = carrier.subject.scope;
++  const scopeMatches =
++    expected.match === 'covers'
++      ? expected.scope.every((phaseId) => bound.includes(phaseId))
++      : sameScope(bound, expected.scope);
++  if (carrier.subject.kind !== expected.kind || !scopeMatches) {
++    return stale(
++      `subject-changed: the carrier binds ${carrier.subject.kind} [${carrier.subject.scope.join(', ')}], not ${expected.kind} [${expected.scope.join(', ')}]`,
++    );
++  }
++  const projectDisabled =
++    carrier.resolution === 'project_disabled' ||
++    carrier.disposition === 'project_disabled';
++  if (
++    expected.overrideDisabled !== undefined &&
++    expected.overrideDisabled !== null &&
++    expected.overrideDisabled !== projectDisabled
++  ) {
++    return stale(
++      `override-changed: the project override ${expected.overrideDisabled ? 'now disables' : 'no longer disables'} this gate`,
++    );
++  }
++  if (
++    expected.resolution !== undefined &&
++    expected.resolution !== null &&
++    expected.resolution !== carrier.resolution
++  ) {
++    return stale(
++      `configuration-changed: the gate now resolves as ${expected.resolution}, not ${carrier.resolution ?? 'unrecorded'}`,
++    );
++  }
++  if (
++    expected.configFingerprint !== undefined &&
++    expected.configFingerprint !== carrier.config_fingerprint
++  ) {
++    return stale(
++      'configuration-changed: the gate configuration fingerprint changed',
++    );
++  }
++
++  if (unreviewed || expected.kind === 'plan') {
++    return { outcome, freshness: 'fresh', reason: null };
++  }
++  if (carrier.reviewed_head === null) {
++    return stale(
++      'reviewed-head-missing: a configured gate records no reviewed revision',
++    );
++  }
++  if (successor === undefined) {
++    return stale('unobserved: no published head was supplied');
++  }
++  for (const head of successor.publishedHeads) {
++    const result = await evaluateSuccessor(
++      successor.git,
++      successor.scope,
++      carrier.reviewed_head,
++      head,
++    );
++    if (!result.fresh) {
++      return stale(`${result.code}: ${result.reason}`);
++    }
++  }
++  return { outcome, freshness: 'fresh', reason: null };
++}
++
++// ---------------------------------------------------------------------------
++// Integrated review evidence
++// ---------------------------------------------------------------------------
++
++export interface ReviewEvaluation {
++  artifact: string | null;
++  /** The recorded disposition or Reviews-row status, as stored. */
++  disposition: string | null;
++  fresh: boolean;
++  reason: string | null;
++  /** Every published head is covered by the reviewed revision. */
++  members: { member: number; fresh: boolean; reason: string | null }[];
++}
++
++/**
++ * Evaluate a registered delivery's integrated review against its observed
++ * members (A2): each member's reviewed revision must cover its observed head
++ * as a bookkeeping successor, and a member base change invalidates the
++ * evidence independently. The review must bind every phase of
++ * `requiredScope`. Historical deliveries are judged against their own
++ * observed revisions, never the branch's latest head.
++ */
++export async function evaluateDeliveryReview(
++  git: GitRunner,
++  scope: EvidenceScope,
++  delivery: GoalDelivery,
++  requiredScope: readonly string[],
++): Promise<ReviewEvaluation> {
++  const review = delivery.integrated_review;
++  if (review === null || review.artifact === null) {
++    return {
++      artifact: null,
++      disposition: review?.disposition ?? null,
++      fresh: false,
++      reason: 'review-missing: no integrated review is recorded',
++      members: [],
++    };
++  }
++  const result = (
++    fresh: boolean,
++    reason: string | null,
++    members: ReviewEvaluation['members'] = [],
++  ): ReviewEvaluation => ({
++    artifact: review.artifact,
++    disposition: review.disposition,
++    fresh,
++    reason,
++    members,
++  });
++
++  const unbound = requiredScope.filter(
++    (phaseId) => !review.scope.includes(phaseId),
++  );
++  if (unbound.length > 0) {
++    return result(
++      false,
++      `review-scope-narrow: the integrated review does not bind ${unbound.join(', ')}`,
++    );
++  }
++  if (delivery.members.length === 0) {
++    return result(false, 'member-missing: the delivery has no members');
++  }
++
++  const members: ReviewEvaluation['members'] = [];
++  for (const [index, member] of delivery.members.entries()) {
++    const bound = review.bound_revisions.find(
++      (revision) => revision.member === index,
++    );
++    const reviewedHead = bound?.head ?? member.reviewed_head;
++    const reviewedBase = bound?.base ?? member.base;
++    let verdict: { fresh: boolean; reason: string | null };
++    if (member.observed_base === null || member.observed_head === null) {
++      verdict = {
++        fresh: false,
++        reason: 'member-unobserved: run delivery refresh',
++      };
++    } else if (
++      member.base === null ||
++      member.observed_base !== member.base ||
++      (reviewedBase !== null && reviewedBase !== member.base)
++    ) {
++      verdict = {
++        fresh: false,
++        reason: `base-changed: member base ${member.base ?? 'unrecorded'} is now ${member.observed_base}`,
++      };
++    } else {
++      const successor = await evaluateSuccessor(
++        git,
++        scope,
++        reviewedHead,
++        member.observed_head,
++      );
++      verdict = successor.fresh
++        ? { fresh: true, reason: null }
++        : { fresh: false, reason: `${successor.code}: ${successor.reason}` };
++    }
++    members.push({ member: index, ...verdict });
++  }
++
++  const failed = members.find((member) => !member.fresh);
++  return failed
++    ? result(false, `member ${failed.member}: ${failed.reason}`, members)
++    : result(true, null, members);
++}
++
++/** Review artifacts a delivery's evidence records, for the bookkeeping allowlist. */
++export function deliveryEvidenceArtifacts(
++  delivery: GoalDelivery,
++  reviewRowArtifacts: readonly string[] = [],
++): string[] {
++  const artifacts = new Set<string>(
++    reviewRowArtifacts.filter((artifact) => !placeholder(artifact)),
++  );
++  if (delivery.integrated_review?.artifact) {
++    artifacts.add(delivery.integrated_review.artifact);
++  }
++  return [...artifacts];
++}
+diff --git a/packages/cli/src/commands/project/delivery/index.ts b/packages/cli/src/commands/project/delivery/index.ts
+new file mode 100644
+index 000000000..4e024752a
+--- /dev/null
++++ b/packages/cli/src/commands/project/delivery/index.ts
+@@ -0,0 +1,38 @@
++import { Command } from 'commander';
++
++import { createProjectDeliveryCheckCommand } from './check';
++import { createProjectDeliveryRefreshCommand } from './refresh';
++
++export {
++  createProjectDeliveryCheckCommand,
++  deliveryEffectiveScope,
++  evaluateSubjectEvidence,
++  loadGoalDeliveryProject,
++} from './check';
++export {
++  applyObservationWrites,
++  createProjectDeliveryRefreshCommand,
++  endpointSatisfied,
++  planDeliveryRefresh,
++} from './refresh';
++export {
++  classifyPath,
++  evaluateDeliveryReview,
++  evaluateGateCarrier,
++  evaluateSuccessor,
++  type CarrierEvaluation,
++  type CarrierExpectation,
++  type EvidenceScope,
++  type ReviewEvaluation,
++  type SuccessorResult,
++} from './evidence';
++
++/** `oat project delivery`: the goal delivery registry's observation surface. */
++export function createProjectDeliveryCommand(): Command {
++  return new Command('delivery')
++    .description(
++      'Observe goal delivery registry members and check delivery evidence freshness',
++    )
++    .addCommand(createProjectDeliveryRefreshCommand())
++    .addCommand(createProjectDeliveryCheckCommand());
++}
+diff --git a/packages/cli/src/commands/project/delivery/refresh.ts b/packages/cli/src/commands/project/delivery/refresh.ts
+new file mode 100644
+index 000000000..6702083e1
+--- /dev/null
++++ b/packages/cli/src/commands/project/delivery/refresh.ts
+@@ -0,0 +1,595 @@
++import { writeFile } from 'node:fs/promises';
++
++import {
++  buildCommandContext,
++  type CommandContext,
++  type GlobalOptions,
++} from '@app/command-context';
++import {
++  defaultGhRunner,
++  type GhRunner,
++} from '@commands/project/links/refresh';
++import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
++import { getFrontmatterBlock } from '@commands/shared/frontmatter';
++import { replaceFrontmatter } from '@commands/shared/frontmatter-write';
++import { readGlobalOptions } from '@commands/shared/shared.utils';
++import { CliError } from '@errors/cli-error';
++import {
++  normalizeMilestoneId,
++  type DeliveryMember,
++  type DeliveryMemberStatus,
++  type GoalDelivery,
++} from '@open-agent-toolkit/control-plane';
++import { Command } from 'commander';
++import YAML, { isMap, isScalar, isSeq } from 'yaml';
++
++import {
++  DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
++  deliveryEffectiveScope,
++  loadGoalDeliveryProject,
++  reviewRowsFor,
++  type DeliveryProjectDependencies,
++  type GoalDeliveryProject,
++} from './check';
++import {
++  deliveryEvidenceArtifacts,
++  evaluateDeliveryReview,
++  evaluateGateCarrier,
++  type CarrierEvaluation,
++  type EvidenceScope,
++  type ReviewEvaluation,
++} from './evidence';
++
++/**
++ * `oat project delivery refresh` (design "Endpoint observation and
++ * refresh"). It observes every registered delivery member through `gh pr
++ * view <url> --json state,headRefOid,baseRefOid` and persists observations
++ * and derived freshness only:
++ *
++ * - member `observed_head`, `observed_base` and `status`;
++ * - delivery `status: at_endpoint` once the agreed endpoint is observed, and
++ *   the first observed attainment in `endpoint_attainment`;
++ * - `integrated_review.disposition: stale` and the milestone exit carrier's
++ *   `freshness: stale` with `freshness_reason` when the shared evaluator
++ *   finds the evidence no longer covers the observation.
++ *
++ * It never writes `oat_milestone_status` or `oat_goal_recovery`, never
++ * rewrites a reviewed revision, a member base or the first endpoint
++ * attainment, and never manufactures a passed review or a fresh carrier.
++ * Observation is atomic: if any member cannot be observed nothing is written.
++ */
++
++export interface MemberObservation {
++  head: string;
++  base: string;
++  status: DeliveryMemberStatus;
++}
++
++export type ObservationWriteMode = 'observe' | 'once';
++
++/**
++ * One state write. `observe` writes replace the stored value; `once` writes
++ * apply only while the stored value is unset — the never-overwrite rule for
++ * historical evidence.
++ */
++/**
++ * A path segment: a literal key or index, or a symbolic delivery/milestone
++ * reference resolved against the raw YAML when the write is applied.
++ */
++export type ObservationPathSegment =
++  | string
++  | number
++  | { deliveryId: string }
++  | { milestone: string };
++
++export interface ObservationWrite {
++  path: ObservationPathSegment[];
++  value: unknown;
++  mode: ObservationWriteMode;
++}
++
++export interface DeliveryRefreshResult {
++  deliveryId: string;
++  milestone: string | null;
++  status: GoalDelivery['status'];
++  endpointSatisfied: boolean;
++  members: {
++    url: string | null;
++    observed_head: string | null;
++    observed_base: string | null;
++    status: DeliveryMemberStatus | null;
++  }[];
++  review: ReviewEvaluation;
++}
++
++export interface RefreshReport {
++  deliveries: DeliveryRefreshResult[];
++  exitCarriers: {
++    milestone: string;
++    delivery: string;
++    evaluation: CarrierEvaluation;
++  }[];
++  writes: ObservationWrite[];
++  changed: boolean;
++}
++
++const PR_STATES: Record<string, DeliveryMemberStatus> = {
++  OPEN: 'open',
++  MERGED: 'merged',
++  CLOSED: 'closed',
++};
++
++const SHA_PATTERN = /^[0-9a-f]{40}$/;
++
++export async function observeMember(
++  gh: GhRunner,
++  url: string,
++): Promise<MemberObservation | string> {
++  const viewed = await gh.run([
++    'pr',
++    'view',
++    url,
++    '--json',
++    'state,headRefOid,baseRefOid',
++  ]);
++  if (viewed.code !== 0) {
++    return viewed.missing
++      ? 'the GitHub CLI is unavailable'
++      : `gh pr view failed: ${viewed.stderr || viewed.stdout || `exit ${viewed.code}`}`;
++  }
++  try {
++    const parsed = JSON.parse(viewed.stdout) as Record<string, unknown>;
++    const status = PR_STATES[String(parsed['state'] ?? '')];
++    const head = parsed['headRefOid'];
++    const base = parsed['baseRefOid'];
++    if (
++      status === undefined ||
++      typeof head !== 'string' ||
++      typeof base !== 'string' ||
++      !SHA_PATTERN.test(head) ||
++      !SHA_PATTERN.test(base)
++    ) {
++      return 'gh returned an incomplete observation';
++    }
++    return { head, base, status };
++  } catch {
++    return 'gh returned output that is not JSON';
++  }
++}
++
++/** Endpoint satisfaction on observed member state (design "Endpoint satisfaction"). */
++export function endpointSatisfied(
++  endpoint: GoalDelivery['endpoint'],
++  members: readonly Pick<DeliveryMember, 'status'>[],
++): boolean {
++  if (members.length === 0 || endpoint === null) return false;
++  return endpoint === 'merged'
++    ? members.every((member) => member.status === 'merged')
++    : members.every(
++        (member) => member.status === 'open' || member.status === 'merged',
++      );
++}
++
++/** Deliveries a refresh observes: registered and not replaced. */
++function isObservable(delivery: GoalDelivery): boolean {
++  return delivery.status === 'open' || delivery.status === 'at_endpoint';
++}
++
++/**
++ * Compute the refresh for a loaded goal project: observe members, derive
++ * endpoint and freshness, and return the state writes. Pure apart from the
++ * injected `gh` and `git` runners.
++ */
++export async function planDeliveryRefresh(
++  project: GoalDeliveryProject,
++  runners: { gh: GhRunner; git: GitRunner; now: () => Date },
++): Promise<RefreshReport | { failures: string[] }> {
++  const deliveries = project.state.deliveries ?? [];
++  const observations = new Map<string, (MemberObservation | null)[]>();
++  const failures: string[] = [];
++
++  for (const delivery of deliveries.filter(isObservable)) {
++    const observed: (MemberObservation | null)[] = [];
++    for (const member of delivery.members) {
++      if (member.url === null) {
++        failures.push(
++          `${delivery.delivery_id}: a member has no URL to observe`,
++        );
++        observed.push(null);
++        continue;
++      }
++      const result = await observeMember(runners.gh, member.url);
++      if (typeof result === 'string') {
++        failures.push(`${delivery.delivery_id} ${member.url}: ${result}`);
++        observed.push(null);
++      } else {
++        observed.push(result);
++      }
++    }
++    observations.set(delivery.delivery_id, observed);
++  }
++  if (failures.length > 0) {
++    // Failure to observe a required member is never endpoint success, and a
++    // partial refresh would mix observations from different moments.
++    return { failures };
++  }
++
++  const writes: ObservationWrite[] = [];
++  const results: DeliveryRefreshResult[] = [];
++  const observedById = new Map<string, GoalDelivery>();
++  const deliveryPath = (delivery: GoalDelivery): ObservationPathSegment[] => [
++    'oat_deliveries',
++    { deliveryId: delivery.delivery_id },
++  ];
++
++  for (const delivery of deliveries.filter(isObservable)) {
++    const observed = observations.get(delivery.delivery_id) ?? [];
++    const members: DeliveryMember[] = delivery.members.map((member, index) => {
++      const observation = observed[index];
++      return observation
++        ? {
++            ...member,
++            observed_head: observation.head,
++            observed_base: observation.base,
++            status: observation.status,
++          }
++        : member;
++    });
++    for (const [index, observation] of observed.entries()) {
++      if (!observation) continue;
++      const memberPath = [...deliveryPath(delivery), 'members', index];
++      writes.push(
++        {
++          path: [...memberPath, 'observed_head'],
++          value: observation.head,
++          mode: 'observe',
++        },
++        {
++          path: [...memberPath, 'observed_base'],
++          value: observation.base,
++          mode: 'observe',
++        },
++        {
++          path: [...memberPath, 'status'],
++          value: observation.status,
++          mode: 'observe',
++        },
++      );
++    }
++
++    const satisfied = endpointSatisfied(delivery.endpoint, members);
++    let status = delivery.status;
++    if (satisfied) {
++      if (status === 'open') {
++        status = 'at_endpoint';
++        writes.push({
++          path: [...deliveryPath(delivery), 'status'],
++          value: 'at_endpoint',
++          mode: 'observe',
++        });
++      }
++      writes.push({
++        path: [...deliveryPath(delivery), 'endpoint_attainment'],
++        value: {
++          observed_at: runners.now().toISOString(),
++          members: members.map((member) => ({
++            url: member.url,
++            head: member.observed_head,
++            base: member.observed_base,
++            status: member.status,
++          })),
++        },
++        mode: 'once',
++      });
++    }
++
++    const observedDelivery: GoalDelivery = { ...delivery, members, status };
++    observedById.set(delivery.delivery_id, observedDelivery);
++    const review = await evaluateDeliveryReview(
++      runners.git,
++      evidenceScope(project, observedDelivery),
++      observedDelivery,
++      deliveryEffectiveScope(deliveries, observedDelivery),
++    );
++    if (
++      delivery.integrated_review !== null &&
++      !review.fresh &&
++      delivery.integrated_review.disposition === 'passed'
++    ) {
++      writes.push({
++        path: [...deliveryPath(delivery), 'integrated_review', 'disposition'],
++        value: 'stale',
++        mode: 'observe',
++      });
++    }
++    results.push({
++      deliveryId: delivery.delivery_id,
++      milestone: delivery.milestone,
++      status,
++      endpointSatisfied: satisfied,
++      members: members.map((member) => ({
++        url: member.url,
++        observed_head: member.observed_head,
++        observed_base: member.observed_base,
++        status: member.status,
++      })),
++      review,
++    });
++  }
++
++  // The milestone exit carrier is judged for each milestone's latest
++  // registered delivery. Refresh records only staleness: it never upgrades a
++  // carrier to fresh, which only implement's scoped closeout writes.
++  const exitCarriers: RefreshReport['exitCarriers'] = [];
++  const latestByMilestone = new Map<string, GoalDelivery>();
++  for (const delivery of deliveries) {
++    const observed = observedById.get(delivery.delivery_id);
++    if (observed && observed.milestone !== null) {
++      latestByMilestone.set(observed.milestone, observed);
++    }
++  }
++  for (const [milestone, delivery] of latestByMilestone) {
++    const carrier = project.state.milestoneGates?.[milestone]?.exit ?? null;
++    if (carrier === null) continue;
++    const scope = evidenceScope(project, delivery);
++    const evaluation = await evaluateGateCarrier(
++      carrier,
++      {
++        kind: 'code',
++        scope: deliveryEffectiveScope(deliveries, delivery),
++        match: 'covers',
++        overrideDisabled: project.exitGateDisabled,
++      },
++      {
++        git: runners.git,
++        scope,
++        publishedHeads: delivery.members.map((member) => member.observed_head),
++      },
++    );
++    exitCarriers.push({
++      milestone,
++      delivery: delivery.delivery_id,
++      evaluation,
++    });
++    if (evaluation.freshness === 'stale') {
++      const carrierPath: ObservationPathSegment[] = [
++        'oat_milestone_gates',
++        { milestone },
++        'exit',
++      ];
++      writes.push(
++        {
++          path: [...carrierPath, 'freshness'],
++          value: 'stale',
++          mode: 'observe',
++        },
++        {
++          path: [...carrierPath, 'freshness_reason'],
++          value: `delivery refresh (${delivery.delivery_id}): ${evaluation.reason ?? 'stale'}`,
++          mode: 'observe',
++        },
++      );
++    }
++  }
++
++  return { deliveries: results, exitCarriers, writes, changed: false };
++}
++
++function evidenceScope(
++  project: GoalDeliveryProject,
++  delivery: GoalDelivery,
++): EvidenceScope {
++  return {
++    repoRoot: project.repoRoot,
++    projectDir: project.projectDir,
++    evidenceArtifacts: deliveryEvidenceArtifacts(
++      delivery,
++      reviewRowsFor(project.state.reviews, [
++        delivery.delivery_id,
++        ...(delivery.milestone === null ? [] : [delivery.milestone]),
++      ]).map((row) => row.artifact),
++    ),
++  };
++}
++
++// ---------------------------------------------------------------------------
++// Applying writes to state.md frontmatter
++// ---------------------------------------------------------------------------
++
++function isUnsetNode(value: unknown): boolean {
++  return (
++    value === undefined ||
++    value === null ||
++    (isScalar(value) && (value.value === null || value.value === ''))
++  );
++}
++
++/**
++ * Resolve the symbolic path segments (`{ deliveryId }`, `{ milestone }`) to
++ * the raw YAML indices and keys, so a write lands on the entry the reader
++ * parsed even when the raw list holds unparseable entries or `m1` spelling.
++ */
++function resolvePath(
++  document: YAML.Document,
++  path: readonly ObservationPathSegment[],
++): (string | number)[] | null {
++  const resolved: (string | number)[] = [];
++  for (const segment of path) {
++    if (typeof segment !== 'object') {
++      resolved.push(segment);
++      continue;
++    }
++    const parent = document.getIn(resolved, true);
++    if ('deliveryId' in segment) {
++      if (!isSeq(parent)) return null;
++      const index = parent.items.findIndex(
++        (item) =>
++          isMap(item) && String(item.get('delivery_id')) === segment.deliveryId,
++      );
++      if (index < 0) return null;
++      resolved.push(index);
++    } else {
++      if (!isMap(parent)) return null;
++      const key = parent.items
++        .map((pair) => (isScalar(pair.key) ? String(pair.key.value) : null))
++        .find(
++          (raw) =>
++            raw !== null && normalizeMilestoneId(raw) === segment.milestone,
++        );
++      if (key === undefined || key === null) return null;
++      resolved.push(key);
++    }
++  }
++  return resolved;
++}
++
++/**
++ * Apply refresh writes to `state.md`. `once` writes never replace a stored
++ * value (the never-overwrite rule for the first endpoint attainment).
++ * Returns the new content, or the original when nothing changed.
++ */
++export function applyObservationWrites(
++  stateContent: string,
++  writes: readonly ObservationWrite[],
++): { content: string; changed: boolean; applied: ObservationWrite[] } {
++  const block = getFrontmatterBlock(stateContent);
++  if (block === null) {
++    throw new CliError('state.md has no frontmatter to refresh', 1);
++  }
++  const document = YAML.parseDocument(block, { uniqueKeys: true });
++  if (document.errors.length > 0) {
++    throw new CliError(
++      `state.md frontmatter is malformed: ${document.errors[0]?.message ?? 'YAML error'}`,
++      1,
++    );
++  }
++
++  const applied: ObservationWrite[] = [];
++  for (const write of writes) {
++    const path = resolvePath(document, write.path);
++    if (path === null) continue;
++    const current = document.getIn(path, true);
++    if (write.mode === 'once' && !isUnsetNode(current)) {
++      continue;
++    }
++    const previous = document.getIn(path);
++    if (JSON.stringify(previous) === JSON.stringify(write.value)) continue;
++    document.setIn(path, document.createNode(write.value, { flow: false }));
++    applied.push({ ...write, path });
++  }
++
++  if (applied.length === 0) {
++    return { content: stateContent, changed: false, applied };
++  }
++  const nextBlock = document.toString({ lineWidth: 0 }).replace(/\n$/, '');
++  return {
++    content: replaceFrontmatter(stateContent, nextBlock),
++    changed: true,
++    applied,
++  };
++}
++
++// ---------------------------------------------------------------------------
++// Command
++// ---------------------------------------------------------------------------
++
++export interface DeliveryRefreshDependencies extends DeliveryProjectDependencies {
++  buildCommandContext: (options: GlobalOptions) => CommandContext;
++  gh: GhRunner;
++  git: GitRunner;
++  writeFile: (path: string, content: string) => Promise<void>;
++  now: () => Date;
++}
++
++const DEFAULT_REFRESH_DEPENDENCIES: DeliveryRefreshDependencies = {
++  ...DEFAULT_DELIVERY_PROJECT_DEPENDENCIES,
++  buildCommandContext,
++  gh: defaultGhRunner,
++  git: defaultGitRunner,
++  writeFile: (path, content) => writeFile(path, content, 'utf8'),
++  now: () => new Date(),
++};
++
++export async function refreshDeliveries(
++  projectArgument: string,
++  cwd: string,
++  dependencies: DeliveryRefreshDependencies,
++): Promise<RefreshReport | { failures: string[] }> {
++  const project = await loadGoalDeliveryProject(
++    projectArgument,
++    cwd,
++    dependencies,
++  );
++  const planned = await planDeliveryRefresh(project, dependencies);
++  if ('failures' in planned) {
++    return planned;
++  }
++  const result = applyObservationWrites(project.stateContent, planned.writes);
++  if (result.changed) {
++    await dependencies.writeFile(project.statePath, result.content);
++  }
++  return { ...planned, writes: result.applied, changed: result.changed };
++}
++
++export function createProjectDeliveryRefreshCommand(
++  overrides: Partial<DeliveryRefreshDependencies> = {},
++): Command {
++  const dependencies = { ...DEFAULT_REFRESH_DEPENDENCIES, ...overrides };
++  return new Command('refresh')
++    .description(
++      'Observe registered goal delivery members with gh and persist observations, endpoint attainment and derived staleness in state.md',
++    )
++    .requiredOption('--project <path>', 'Goal project path')
++    .action(async (options: { project: string }, command: Command) => {
++      const context = dependencies.buildCommandContext(
++        readGlobalOptions(command),
++      );
++      try {
++        const report = await refreshDeliveries(
++          options.project,
++          context.cwd,
++          dependencies,
++        );
++        if ('failures' in report) {
++          const message = `Delivery refresh observed nothing: ${report.failures.join('; ')}`;
++          if (context.json) {
++            context.logger.json({
++              status: 'failed',
++              failures: report.failures,
++              message,
++            });
++          } else {
++            context.logger.error(message);
++          }
++          process.exitCode = 1;
++          return;
++        }
++        if (context.json) {
++          context.logger.json({ status: 'ok', ...report });
++        } else {
++          context.logger.info(
++            [
++              `Refreshed ${report.deliveries.length} delivery(ies)${report.changed ? '' : '; state.md unchanged'}.`,
++              ...report.deliveries.map(
++                (delivery) =>
++                  `  ${delivery.deliveryId}: ${delivery.status ?? 'unknown'}${delivery.endpointSatisfied ? ' (endpoint observed)' : ''}; review ${delivery.review.fresh ? 'fresh' : `stale: ${delivery.review.reason ?? 'unknown'}`}`,
++              ),
++              ...report.exitCarriers.map(
++                (carrier) =>
++                  `  ${carrier.milestone} exit carrier: ${carrier.evaluation.freshness}${carrier.evaluation.reason ? ` (${carrier.evaluation.reason})` : ''}`,
++              ),
++            ].join('\n'),
++          );
++        }
++        process.exitCode = 0;
++      } catch (error) {
++        const message = error instanceof Error ? error.message : String(error);
++        if (context.json) {
++          context.logger.json({ status: 'error', message });
++        } else {
++          context.logger.error(message);
++        }
++        process.exitCode = error instanceof CliError ? error.exitCode : 1;
++      }
++    });
++}
+diff --git a/packages/cli/src/commands/project/index.ts b/packages/cli/src/commands/project/index.ts
+index cb6b5fd21..1451eec5b 100644
+--- a/packages/cli/src/commands/project/index.ts
++++ b/packages/cli/src/commands/project/index.ts
+@@ -4,6 +4,7 @@ import { createProjectArchiveCommand } from './archive';
+ import { createProjectCloseoutCheckCommand } from './closeout-check';
+ import { createProjectCompleteDiscoveryCommand } from './complete-discovery';
+ import { createProjectCompleteStateCommand } from './complete-state';
++import { createProjectDeliveryCommand } from './delivery';
+ import { createProjectDispatchCommand } from './dispatch';
+ import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
+ import { createProjectLinksCommand } from './links';
+@@ -30,6 +31,7 @@ export function createProjectCommand(): Command {
+     .addCommand(createProjectCloseoutCheckCommand())
+     .addCommand(createProjectCompleteDiscoveryCommand())
+     .addCommand(createProjectCompleteStateCommand())
++    .addCommand(createProjectDeliveryCommand())
+     .addCommand(createProjectDispatchCommand())
+     .addCommand(createProjectDispatchCeilingCommand())
+     .addCommand(createProjectListCommand())
