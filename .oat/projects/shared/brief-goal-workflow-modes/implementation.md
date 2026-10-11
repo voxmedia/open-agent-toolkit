@@ -931,8 +931,11 @@ oat_generated: false
 
 ### Task p12-t06: (review) Shared-member and summary bookkeeping in the contract, one evidence-scope helper, tests and ledger evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4c4a7c09a
+
+- **Files changed:** `brief-contract.md:593-602` 12.8 Paths (shared-member review artifacts count as bookkeeping, each delivery judged on its own scope, reviewed revisions and `exit_gate`; `summary.md` listed as bookkeeping) (H1, M1); `evidence.ts:349/:368` `classifyPath` admits `summary.md` as kind `summary` with no content rules (M1); `deliveryEvidenceScope(project, deliveries, delivery)` at `evidence.ts:1201` with `reviewRowsFor` moved into `evidence.ts` (re-exported by `check.ts`), consumed by `check.ts:171`, `refresh.ts:441`, `closeout-check/index.ts:284` with labels `[delivery_id, milestone, ...sharing]` (M2, L1); `isProjectLogAppend` skips the byte-prefix shortcut once a synthesis section exists (`evidence.ts:408-418`) (L2); tests `check.test.ts:179` (ok → summary.md commit ok → plan Outcomes edit undeliverable), `refresh.test.ts:432`, `goal-boundary.test.ts:596/:604` (row-22 `sharedMemberScenario` fixture in `delivery/__tests__/goal-repo.ts`), `evidence.test.ts:233`; `references/p12-probe-driver.md` (gh stub, state snippets, per-row commands for all 22 rows; the p12-t02 results line points at it) (L3); `DR-261011-bookkeeping-successors-keep`, `cli-reference.md:205`, `project-artifacts.md:117-121` name `summary.md`. No version bump (already above both bases).
+- **Verification:** fix continuation `cont-brief-goal-workflow-modes-p12-fix-1`; implementer: delivery + closeout-check 7 files / 136 tests, validation + init/tools/shared 25 files / 1064 tests, CLI type-check, lint (one shadowed-name fix before commit), validate-skills, format:root, docs check all exit 0; prove-it-can-fail M1 (summary case removed → `disallowed-path … summary.md`), L2 (shortcut restored → tail-append test fails), shared members (sibling list forced empty → three acceptance tests fail). Root re-ran delivery + closeout-check + complete-state (isolated HOME), CLI type-check, validate-skills, format:root: exit 0; tree clean.
 
 ### Review Received: p12
 
@@ -1109,7 +1112,7 @@ _- Outstanding Items_
 - Launch status: planned (base 5ac181153, p11 closeout; the dispatch-plan commit sits between base and the first task commit; p12-t01..t05 in the root checkout; origin/main unchanged since the branch base at 417a34c57; lockstep target 0.3.20; the planning-only `artifact-cleanup` project shares this branch and is out of scope)
 - Launch status: accepted → child lost: the T3 server restarted mid-phase after p12-t01 committed (d2ec5a784); p12-t02..t05 not started; tree clean. Resumed as `impl-p12-a7422750` (continuation of `impl-p12-f2b82399`) from base f214626dc (artifact-cleanup planning commits in between are out of scope)
 - Resume outcome: DONE_WITH_CONCERNS at 644f23e1e (p12-t01 verified with a fresh prove-it-can-fail; p12-t02 22-row probe with three fixes 96e6d24df/3ba63e2e5/b0f7cfacd; t03–t05 landed; full gate table green at lockstep 0.3.20; concerns: the goal declaration now recorded in the journal Final Summary instead of the brief's endpoint/authority (fix 3, p11 implementer's choice reversed), the bump base, the design row (added by the root), doc prose to be checked against source); p12 review follows
-- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` then round 2 on the fix range
+- Review round 1 (rev-p12-4f942fb8, Fable 5.1 high, head 9a645c1d8): 0/1/2/4 → p12-t06 (H1, M1 decision (a), M2, L1–L3); L4 ledger line; fix continuation `cont-brief-goal-workflow-modes-p12-fix-1` → 4c4a7c09a; round 2 on the fix range follows
 
 <!-- orchestration-runs-end -->
 
