@@ -28,9 +28,9 @@ oat_template: false
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): register brief workflow mode`
 
-**Plan revision 4 (2026-10-10):** applies the final structured review residuals (M1 order-independent mode-list check; L1 `VENDORING_SKILLS` lives in `gate-approval-record-contracts.test.ts:25`; L2 version-pin sweep covers the object-form block; L3 coverage row for the vendored gate record). **Plan revision 3 (2026-10-10):** applies the second structured review (H1–H4, M1–M2, L1–L3: pinned versions and text, catalog regeneration, named-skill-load scan, gate-record vendoring). **Plan revision 2 (2026-10-10):** applies the structured plan artifact review (Opus 5.5, findings H1–H4, M1–M7, L1–L3) and Astra's plan round 1 (ALIGNED WITH CHANGES, findings 1–6). Group 1 is now write-disjoint; cross-phase end-to-end tests, sync output, the autonomy coverage table and the docs mapping have single owners; every CLI-scoped test that depends on control-plane changes rebuilds the control plane first.
+**Plan revision 5 (2026-10-11):** applies Astra's v1.5 round 1 (`references/astra-v15-round-1.md`, verdict ALIGNED with A+B) to p09–p12: recovery and audit state, Milestones membership contract, explicit goal review scopes, the shared delivery-evidence evaluator with bookkeeping-successor freshness, transitive supersession coverage, terminal declaration at the boundary, `delivered` versus `at_endpoint`, and the new task p10-t04 (goal → quick promotion). Every goal-only guard carries a named negative control. **Plan revision 4 (2026-10-10):** applies the final structured review residuals (M1 order-independent mode-list check; L1 `VENDORING_SKILLS` lives in `gate-approval-record-contracts.test.ts:25`; L2 version-pin sweep covers the object-form block; L3 coverage row for the vendored gate record). **Plan revision 3 (2026-10-10):** applies the second structured review (H1–H4, M1–M2, L1–L3: pinned versions and text, catalog regeneration, named-skill-load scan, gate-record vendoring). **Plan revision 2 (2026-10-10):** applies the structured plan artifact review (Opus 5.5, findings H1–H4, M1–M7, L1–L3) and Astra's plan round 1 (ALIGNED WITH CHANGES, findings 1–6). Group 1 is now write-disjoint; cross-phase end-to-end tests, sync output, the autonomy coverage table and the docs mapping have single owners; every CLI-scoped test that depends on control-plane changes rebuilds the control plane first.
 
-**Staged delivery:** phases p01–p08 are v1 (brief) and end with `oat-project-pr-progress`; phases p09–p12 are v1.5 (goal). Before p09 starts, the design section "Carried to the v1.5 review" is resolved with Astra (gpt-6-astra, high) in a plan-revision round and p09–p12 are revised accordingly; they are planned here at the resolution available today.
+**Staged delivery:** phases p01–p08 are v1 (brief) and end with `oat-project-pr-progress`; phases p09–p12 are v1.5 (goal). Before p09 starts, the design section "Carried to the v1.5 review" was resolved with Astra (gpt-6-astra, high) in plan-revision round 1 (2026-10-11) and p09–p12 were revised accordingly (plan revision 5).
 
 **Operating rules for this run (from discovery, 2026-10-10):** no HiLL checkpoints beyond the final-phase default; dispatch ceiling frontier with delegated implementers and reviewers on Claude Opus 5.5 at high effort; at a review cap run the complexity review, apply its recommendation, log it and continue; open PRs, never merge; decision records authored during the work; fetch `origin/main` and reconcile planned paths at every phase start and before every parallel dispatch.
 
@@ -1160,9 +1160,9 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p09-t01: Register `goal`, extraction parsing and goal state fields
 
-**Files:** `packages/control-plane/src/types.ts` (`goal` in `WORKFLOW_MODES` and `BRIEF_MODES`; `extracted?: { to }` on `PhaseProgress`; goal state fields on `ProjectState`: `milestone`, `milestoneStatus`, `goalStatus`, `deliveries`, `milestoneGates`), `parser.ts` (+test), `tasks.ts` (+test: `extracted` precedence, exclusion from totals and `selectPhaseUnits`), `scaffold.ts` goal map entries, `index.test.ts`, `help-snapshots.test.ts`.
+**Files:** `packages/control-plane/src/types.ts` (`goal` in `WORKFLOW_MODES` and `BRIEF_MODES`; `extracted?: { to }` on `PhaseProgress`; goal state fields on `ProjectState`: `milestone`, `milestoneStatus`, `goalStatus`, `goalOutcomeAudit` with the A3 shape and its validation result, `goalRecovery` (A1), `deliveries` with reciprocal replacement links and durable evidence incl. endpoint-attainment history (A4), `milestoneGates` with nullable `reviewed_head` and a subject binding (A2)), `parser.ts` (+test), `state/milestones.ts` (+test; B1: canonical fence-aware `## Milestones` table grammar and one shared reader returning membership plus errors), `project.ts` (both `ProjectState` constructors at `:51-82` and `:129-157` expose parsed membership, recovery and audit; reader tests), `tasks.ts` (+test: `extracted` precedence, exclusion from totals and `selectPhaseUnits`; every executable goal phase incl. `p-revN` belongs to exactly one milestone and unknown/duplicate membership is rejected before units are selected — `selectPhaseUnits` must not silently drop IDs), `scaffold.ts` goal map entries and `oat_plan_source: goal` rendered (B1; the shared template hardcodes `brief` at `plan-brief.md:10`), `index.test.ts`, `help-snapshots.test.ts`.
 
-**Verify:** scoped vitest for parser, tasks, scaffold and help snapshots after a control-plane build; `pnpm type-check`.
+**Verify:** scoped vitest for parser, milestones, project readers, tasks, scaffold and help snapshots after a control-plane build; `pnpm type-check`. Negative controls through the real readers: a malformed Milestones table, an unknown phase ID and a phase in two milestones each surface an error instead of vanishing from progress; a goal scaffold reads back `oat_plan_source: goal`.
 
 **Commit:** `feat(p09-t01): register goal mode, extraction parsing and goal state fields`
 
@@ -1170,9 +1170,11 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p09-t02: Goal routing priority and transition table
 
-**Files:** `router.ts` (+test): `declared_met` checked first; empty-milestone rejection; status table recommendations and contexts; brief-unit guard scoped to the active milestone; transition rows from `design.md` revised per the carried items (review-receive owns `reviewing → delivering`; stale carriers route to implement's scoped milestone closeout); `generate.ts` (+test) goal routes and help.
+**Files:** `router.ts` (+test), `generate.ts` (+test) goal routes and help.
 
-**Verify:** behavioral router tests for every status and transition, including fixes after the integrated review, declared-met with `delivered` status, and recovery of an older delivery without moving the milestone pointer.
+**Steps:** implement the design's goal router priority as an explicit block: (1) `declared_met` → terminal recovery with the A3 audit validated first (undeclared or non-exhaustive audit refuses with the owner named; audited deferrals/retirements leave terminal execution scope without changing ordinary phase-unit counts); (2) actionable review artifacts → review-receive, then a pending `oat_goal_recovery` → its stage owner; (3) invalid membership (B1) → `oat-project-goal`; (4) the status table, with `reviewing` routed by the missing evidence (A1: missing/blocked/stale exit carrier → implement scoped closeout; missing/stale integrated review → review-provide; unreceived → review-receive) and review contexts carrying the explicit milestone identity and ordered phase set (B2), never a `first-last` range; `delivered` means registered, open and review-ready while activation of m(N+1) waits for the agreed endpoint (B4); brief-unit guard scoped to the active milestone.
+
+**Verify:** behavioral router tests driven through the real project readers and `recommendSkill` (not hand-built router objects) for every status and transition. Negative controls: (A1) with m02 active and d01 needing recovery, a `received` review is not delivery-ready and review-provide is not recommended while the exit carrier is missing; the corrected route rejects both and leaves m02 and its pointer untouched, and a clean receive of the exact fresh review advances only d01; (A3) declared-met with a completed snapshot but an omitted phase or outcome disposition routes to goal for audit repair; (B4) a merged-endpoint fixture proves "open permits planning, not activation" and an `open` endpoint permits activation. For each guard: neutralize it, show the bad state accepted, restore, show rejection, and keep a valid control passing.
 
 **Commit:** `feat(p09-t02): goal milestone routing and transitions`
 
@@ -1182,27 +1184,39 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p10-t01: Goal validation profile
 
-**Files:** `validate-plan/profiles.ts` (+test): `goal` rules (`goal-milestones-missing`, `goal-duplicate-milestone`, `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`, `goal-shipped-milestone-changed`, `goal-group-crosses-milestone`).
+**Files:** `validate-plan/profiles.ts` (+test): `goal` rules (`goal-milestones-missing`, `goal-duplicate-milestone`, `goal-milestone-unknown-phase`, `goal-phase-in-multiple-milestones`, `goal-phase-without-milestone` (B1; every executable phase incl. `p-revN`), `goal-shipped-milestone-changed`, `goal-delivered-scope-changed` (B2; a frozen delivery scope lost or reassigned a phase — appending a correction phase to its recovery milestone is permitted), `goal-group-crosses-milestone`, `goal-plan-source` (B1; `oat_plan_source: goal`)); the profile consumes the shared Milestones reader from p09-t01.
 
-**Verify:** scoped vitest. **Commit:** `feat(p10-t01): goal plan profile rules`
+**Verify:** scoped vitest with one accepted fixture per rule and the matching rejection; the B2 pair (append permitted, removal/reassignment refused). **Commit:** `feat(p10-t01): goal plan profile rules`
 
 ---
 
 ### Task p10-t02: Delivery registry types and `oat project delivery refresh`
 
-**Files:** `packages/cli/src/commands/project/delivery/{index,refresh}.ts` (+tests) reading and writing `oat_deliveries` per `design.md` "Delivery registry", calling `gh pr view … --json state,headRefOid,baseRefOid` through an injectable dependency; staleness marking of the integrated review and the milestone `exit` carrier under the bookkeeping-successor contract decided in the v1.5 review; `packages/cli/src/commands/project/index.ts` registration; help snapshot.
+**Files:** `packages/cli/src/commands/project/delivery/{index,refresh,evidence}.ts` (+tests): `refresh` reads and writes `oat_deliveries` per `design.md` "Delivery registry", calling `gh pr view … --json state,headRefOid,baseRefOid` through an injectable dependency, records observations and derived freshness only, and never overwrites reviewed revisions or the first observed endpoint attainment (A4); `evidence.ts` is the shared delivery-evidence evaluator (A2): keeps actual reviewed revisions, inspects every successor commit (incl. merge-introduced changes) against the bookkeeping path allowlist and the substantive-change rules, distinguishes carrier outcome from freshness, validates member base independently, fails closed on missing objects or unknown paths; `packages/cli/src/commands/project/index.ts` registration; help snapshot.
 
-**Verify:** scoped vitest with a stubbed `gh`; help snapshot. **Commit:** `feat(p10-t02): delivery registry refresh command`
+**Verify:** scoped vitest with a stubbed `gh` and a scratch git repo for the evaluator; help snapshot. Negative controls (A2): a paths-only evaluator accepts an Outcome or authority change inside allowed `plan.md` — the corrected evaluator rejects it; also reject a substantive-then-reverted commit, a non-ancestor head and a changed base. Valid control: head-recording → receive/archive → registration commits pass with the reviewed SHA unchanged; positive regression: the exact-head comparison rejects that chain and the successor evaluator accepts it. **Commit:** `feat(p10-t02): delivery registry refresh command and the delivery-evidence evaluator`
 
 ---
 
 ### Task p10-t03: Closeout boundary inputs, coverage predicate and gate carriers
 
-**Files:** `closeout-check/closeout-invariant.ts` (`EvaluateCloseoutOptions` gains `planContent`, `implementationContent`, `childLifecycles`; coverage predicate with supersession chains resolved to the terminal delivery; terminal boundary requires `declared_met`, a valid outcome audit and a disposition for every remaining phase), `closeout-check/index.ts` and `complete-state/index.ts` (load inputs through `checkProjectCloseout`; enforce before both success returns), `oat_milestone_gates` carrier validation; tests including identical state with different journal or child facts.
+**Files:** `closeout-check/closeout-invariant.ts` (`EvaluateCloseoutOptions` gains `planContent`, `implementationContent`, declaration/audit, extracted-child facts sufficient to validate `oat_extracted_from` backlinks (not `childLifecycles` alone), and current delivery observations as data; the pure evaluator stays separate from I/O; coverage predicate per design (A4): reciprocal replacement links validated, chains resolved transitively to the terminal delivery, effective scope = union of frozen scopes, inherited obligations counted once, disjoint terminal scopes, evidence bound to the entire effective scope via the p10-t02 evaluator and immutable subject bindings (A2); terminal boundary requires `declared_met`, an exhaustive A3 audit and a disposition for every phase and outcome before either success return), `closeout-check/index.ts` and `complete-state/index.ts` (load inputs through `checkProjectCloseout`; read-only host observation without writes; `complete-state` writes nothing on refusal; diagnostics name the next owner), `oat_milestone_gates` carrier validation with nullable `reviewed_head` and subject binding; tests including identical state with different journal or child facts.
 
-**Verify:** scoped vitest; one end-to-end goal fixture combining extraction, changed member revision, stale milestone gate, correction supersession and terminal coverage without a duplicate PR.
+**Verify:** scoped vitest; one end-to-end goal fixture combining extraction, changed member revision, stale milestone gate, correction supersession and terminal coverage without a duplicate PR. Negative controls: (A3) valid coverage plus a completed snapshot with the declaration omitted, then independently one pending/provisional phase and one outcome omitted from the audit — the old boundary accepts, the corrected boundary refuses each for its reason and `complete-state` writes nothing; the omitted-declaration case repeated through the `not_required` path; a wrong child backlink fails and the matching completed child passes; (A4) against a one-hop predicate a terminal replacement whose review lists only its new revision phase is accepted despite inherited phases — corrected coverage rejects it; a cycle, a missing link, a mismatched reciprocal link and overlapping terminal scopes each refuse; valid control `d01 → d02 → d03` with full effective-scope evidence on d03 passes and counts every inherited phase once.
 
 **Commit:** `feat(p10-t03): goal closeout coverage predicate and milestone gate carriers`
+
+---
+
+### Task p10-t04: Goal → quick promotion at a settled delivery boundary (B3)
+
+**Files:** `packages/cli/src/commands/project/promote/promote.ts` (+command and migration tests; `help-snapshots.test.ts` description), `.agents/skills/oat-project-quick-start/SKILL.md` (promotion resume generalized to `oat_promoted_from: brief | goal`), `.agents/skills/oat-project-brief/references/brief-contract.md` (goal promotion rule).
+
+**Steps:** accept `goal` only when `oat_milestone_status: delivered`, no delivery is open or unsettled, `oat_goal_recovery` is null and no phase is extracted (keep the landed refusal for any extracted phase, matching the migration table); preserve the registry, delivery history and milestone gates under the archived brief; write `oat_promoted_from: goal`; keep historical `## Reviews` cells and name the actual source mode in the provenance line; reuse the existing `oat_promotion_pending_phases` readiness clause — no second readiness predicate.
+
+**Verify:** scoped vitest: a settled goal promotes and resumes through quick-start; an active milestone, an open delivery, a pending recovery and an extracted phase each refuse without writes (assert the tree is unchanged); the brief → quick path is unchanged (`promote.brief.test.ts` green).
+
+**Commit:** `feat(p10-t04): promote settled goal projects to quick`
 
 ---
 
@@ -1210,7 +1224,7 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
 
-**Files:** `.agents/skills/oat-project-goal/SKILL.md` (gateable; brief steps plus Milestones table, milestone state, `plan` carrier, re-alignment entry at `delivered`, terminal declaration entry with outcome audit and deferrals), `oat-project-brief/references/brief-contract.md` goal sections, `frontmatter.ts` `GATE_AWARE_SKILLS`, pack manifest and bundle inputs, `.agents/docs/autonomy-contract.md` GOAL rows and the 18th root, `apps/oat-docs/skill-docs.json` mapping and a minimal docs section.
+**Files:** `.agents/skills/oat-project-goal/SKILL.md` (gateable; brief steps plus the canonical Milestones table, milestone state, `plan` carrier bound to the approved brief/amendment and membership at activation (A2), re-alignment entry at `delivered` that may draft and review the next milestone but activates it only at the agreed endpoint (B4), terminal declaration entry that alone writes `declared_met` and authors the exhaustive outcome audit with phase and outcome dispositions (A3); implement consumes the declaration and never declares the goal met), `oat-project-brief/references/brief-contract.md` goal sections (membership grammar, plan versus code gate subjects with nullable `reviewed_head`, the bounded bookkeeping-successor rule, explicit goal review scopes, the goal exception to the shared ladder), `frontmatter.ts` `GATE_AWARE_SKILLS`, pack manifest and bundle inputs, `.agents/docs/autonomy-contract.md` GOAL rows and the 18th root, `apps/oat-docs/skill-docs.json` mapping and a minimal docs section.
 
 **Verify:** `pnpm oat:validate-skills`; gate resolve on a scratch goal project after a CLI build. **Commit:** `feat(p11-t01): oat-project-goal skill and goal brief contract`
 
@@ -1218,9 +1232,9 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p11-t02: Delivery registration, terminal delivery and review-loop owners
 
-**Files:** `oat-project-pr-progress/SKILL.md` (goal: idempotent registration with persisted lookup keys, delivery prerequisites, refresh before registration), `oat-project-pr-final/SKILL.md` (goal: terminal delivery registration for uncovered accepted phases), `oat-project-review-receive/SKILL.md` and `oat-project-review-provide/SKILL.md` (goal milestone status writes per carried item 1; bookkeeping-successor freshness per item 2), `oat-project-implement/references/*` (milestone closeout: scope-limited exit gate carrier, `reviewing` transition, outcome audit at terminal closeout, snapshot `pr` step satisfied at its position), `oat-brainstorm` goal fold-back routing, `oat-project-autonomous` (goal excluded), agent roles goal branches, regenerated projections and sync manifest.
+**Files:** `oat-project-pr-progress/SKILL.md` (goal: idempotent registration with persisted lookup keys, delivery prerequisites, refresh before registration, reciprocal `covers_scope_of`/`superseded_by` links and the exit-gate result captured with the delivery evidence (A4)), `oat-project-pr-final/SKILL.md` (goal: terminal delivery registration for uncovered accepted phases after the A3 audit is valid), `oat-project-review-provide/SKILL.md` (goal: records `received`, never `delivering`; accepts only an explicit milestone/delivery identity with its ordered phase set and preserves it in provenance while disclosing a wider Git range (B2)), `oat-project-review-receive/SKILL.md` (goal: owns `reviewing → delivering` on a clean receive after writing `passed` and re-validating scope, revisions and exit carrier; queued fixes invalidate review and exit-gate evidence; persists the authoritative scope, revision and disposition evidence in tracked records before local archival (A1, A4); late corrections assigned to their recovery milestone without moving the active one), `oat-project-reconcile/SKILL.md` (goal recovery record and older-delivery recovery), `oat-project-implement/references/*` (milestone closeout: scope-limited exit gate carrier that precedes the integrated review, `reviewing` transition, scoped closeout as the A1 recovery owner for a missing or stale carrier, snapshot `pr` step satisfied at its position; the bounded successor rule applied to carrier freshness (A2)), `oat-brainstorm` goal fold-back routing, `oat-project-autonomous` (goal excluded), agent roles goal branches, regenerated projections and sync manifest.
 
-**Verify:** `pnpm oat:validate-skills`; read-through against the revised design. **Commit:** `feat(p11-t02): goal delivery registration, terminal delivery and review-loop ownership`
+**Verify:** `pnpm oat:validate-skills`; read-through against the revised design with file:line for each A/B item; the goal ladder exception and the bookkeeping-successor rule are stated in `brief-contract.md` (the winning artifact) and only referenced from the skills. **Commit:** `feat(p11-t02): goal delivery registration, terminal delivery and review-loop ownership`
 
 ---
 
@@ -1228,7 +1242,7 @@ git commit -m "fix(p08-t07): brief arrival point in the brainstorm docs and the 
 
 ### Task p12-t01: Contract tests, probe, docs, records and bumps for goal
 
-**Files:** `skills.test.ts` and sibling contract tests for goal; autonomy coverage for re-keyed sites; a real-artifact goal probe (two milestones, one delivery registered against a stubbed `gh`, re-alignment, terminal closeout) recorded in `implementation.md`; docs pages and a goal lane diagram; `AGENTS.md` option text; decision records (`goal-milestone-loop`, `delivery-registry-and-coverage`, `milestone-extraction`) after `pjm doctor`; skill and lockstep version bumps; the full gate run as explicit lines with captured exit codes.
+**Files:** `skills.test.ts` and sibling contract tests for goal; autonomy coverage for re-keyed sites; a real-artifact goal probe (two milestones, one delivery registered against a stubbed `gh`, a bookkeeping-successor chain accepted and a substantive successor rejected, an older-delivery recovery that leaves the active milestone untouched, re-alignment while awaiting a merged endpoint, a settled goal → quick promotion, terminal closeout refused without a declaration and accepted with an exhaustive audit) recorded in `implementation.md`; docs pages and a goal lane diagram incl. the promotion path; `AGENTS.md` option text; decision records (`goal-milestone-loop`, `delivery-registry-and-coverage`, `milestone-extraction`, `bookkeeping-successor-freshness`, `terminal-declaration-audit`) after `pjm doctor`; skill and lockstep version bumps; the full gate run as explicit lines with captured exit codes.
 
 **Verify:** every gate exit 0 with a forced test run. **Commit:** `chore(p12-t01): goal mode contracts, docs, records and version bumps`
 
@@ -1280,11 +1294,11 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 - Phase 7: 4 tasks - Review-provide anchors, review-receive and reconcile, record and closeout skills; one review fix
 - Phase 8: 7 tasks - Contract tests, sync and integration, real-artifact probe, docs, decision records, version bumps and gates (v1 progress PR); one review fix
 - Phase 9: 2 tasks - Goal registration and routing (v1.5)
-- Phase 10: 3 tasks - Goal validation, delivery refresh, closeout coverage (v1.5)
+- Phase 10: 4 tasks - Goal validation, delivery refresh and evidence evaluator, closeout coverage, goal → quick promotion (v1.5)
 - Phase 11: 2 tasks - Goal skills, registration and review-loop ownership (v1.5)
 - Phase 12: 1 task - Goal contracts, docs, records, bumps and the final PR (v1.5)
 
-**Total: 48 tasks**
+**Total: 49 tasks**
 
 Ready for code review and merge.
 

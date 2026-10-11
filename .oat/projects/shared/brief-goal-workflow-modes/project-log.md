@@ -100,6 +100,10 @@ Each HOME=$(mktemp -d) vitest run leaves about 48 MB of cache under $TMPDIR; 87 
 
 Phase p08 review round 1 passed (0/0/0/2 Low); both Lows fixed as p08-t07 on the same handle at 5b334a4e7. All gates green at 0.3.19 (origin/main 0.3.18 merged at bf6c60c49). v1 brief seam complete; progress PR for p01–p08 awaits the user-invoked oat-project-pr-progress; Astra v1.5 round 1 dispatched. Key p08-review-pass-5b334a4e7.
 
+### 2026-10-11 · structural · oat-project-implement · plan-revision-5
+
+Astra v1.5 round 1 (gpt-6-astra high, read-only delegate) resolved carried objections A1–A4 and surfaced B1–B4; applied as design revision 4.0 and plan revision 5 (p09–p12 re-planned, p10-t04 added). Report kept at references/astra-v15-round-1.md. Key astra-v15-round-1-applied.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -669,6 +669,11 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+### Task p10-t04: Goal → quick promotion at a settled delivery boundary (B3)
+
+**Status:** pending
+**Commit:** -
+
 ---
 
 ## Phase 11: Goal skills and roles (v1.5)
@@ -859,6 +864,8 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | group 1       | merge commits `merge(pNN): …`                                                                                       | -                    | commitlint rejects the `merge` type; fan-in merges use `chore(pNN): merge parallel-group phase …`                                                                      | -      | implementation  | none                                                                                            |
 | group 1       | three concurrent lane worktrees each with a full install and build                                                  | -                    | Filled the volume (118 MiB free) and broke the first integration run; merged worktrees removed before rerun                                                            | -      | implementation  | group 2 needs ~6 GB free before bootstrap; see root judgment log                                |
 | group 2       | plan declares `['p05','p06','p07']` as a parallel worktree group                                                    | -                    | Degraded to sequential root execution after a strict bootstrap preflight failure (`insufficient-disk`); targets, reviews and gates unchanged                           | -      | implementation  | restore parallel groups once the volume has headroom (operator asked)                           |
+
+**Plan revision 5 / design revision 4.0 (2026-10-11):** after p08 closed, Astra v1.5 round 1 (`references/astra-v15-round-1.md`) resolved the four carried objections (A1–A4) and surfaced four contradictions with the landed v1 (B1–B4); design.md "Goal transition contract", "Review scope from anchors", "Promote brief → quick", "Delivery registry and closeout boundary", "Error Handling" and "Carried to the v1.5 review" were revised and p09–p12 re-planned with named negative controls plus the new task p10-t04. The first delegate (approval-required runtime mode) blocked on its first command and was cancelled; the retry ran in auto mode. The revision goes through one artifact review and an Astra confirmation round before p09 launches.
 
 ## Test Results
 
