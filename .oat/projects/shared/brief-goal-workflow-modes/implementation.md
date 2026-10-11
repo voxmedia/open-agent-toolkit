@@ -780,8 +780,12 @@ oat_generated: false
 
 ## Phase 11: Goal skills and roles (v1.5)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-11
+
+**Base:** c2865c3dc88d32c100173eeb507214d82e5cee87
+**Head:** (pending)
+**Executor:** phase-implementer:impl-p11-2535b029 (oat-phase-implementer-claude-claude-opus-5-5-high), root checkout (v1.5 sequential)
 
 ### Task p11-t01: `oat-project-goal` skill and goal sections of the brief contract
 
@@ -971,6 +975,12 @@ _- Outstanding Items_
 - Launch status: planned (base f3fcae68c, the goal branch after merging the v1 fix commits from `feat/brief-workflow-mode-v1`; the dispatch-plan commit sits between base and the first task commit; p10-t02..t04 in the root checkout; p10-t02 starts from `references/p10-t02-recovered.patch`; disk 8.1 GB free with a 1 GB stop rule in the brief)
 - Launch status: accepted → child outcome: DONE_WITH_CONCERNS (3/3 tasks, recovery 0/10; concerns are the two implementer-chosen formats carried to p11 and the two carrier consumers noted in p10-t03) at 7d4fbe12b; p10 review follows
 - Review round 1 (rev-p10-1867dcf3, Fable 5.1 high at the frontier cap, head bb69bb065): 0/0/2/6 → p10-t05 (M1, M2, L1, L2, L3, L6), L4 carried to p11-t01, L5 design edit; fix continuation `cont-brief-goal-workflow-modes-p10-fix-1` → b290081e2 (first commit attempt refused by commitlint for a 105-char header; 100-char message authorized); round 2 (rev-p10-8eee09f4, head 7a18e197e): 0/0/0/1 → passed; L1 → p10-t06 via `cont-brief-goal-workflow-modes-p10-fix-2` → 675d5bd27; phase p10 closed at 675d5bd27
+
+#### Phase p11 implementation dispatch (sequential, root checkout)
+
+- Request ID: `impl-p11-2535b029` · Dispatch target: `oat-phase-implementer-claude-claude-opus-5-5-high` · Model axis: `selected:claude-opus-5-5` · Effort axis: `selected:high` · Selection mode: candidate · Route level: 0 · Selection reason: native-catalog · Candidates: `claude-opus-5-5/high` · Task class: default-implementation (phase scope analysis) · Managed Claude record: validated-only
+- Dispatch stamp: `Dispatch: scope=p11 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+- Launch status: planned (base c2865c3dc, p10 closeout with plan amendment 5.1; the dispatch-plan commit sits between base and the first task commit; p11-t01..t03 in the root checkout; origin/main unchanged since the branch base at 417a34c57, no reconcile needed)
 
 <!-- orchestration-runs-end -->
 
