@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   extractPhaseIds,
+  GOAL_MEMBERSHIP_RULE_CODES,
   resolvePlanProfile,
   validateLitePlan,
   validatePlanForProfile,
@@ -296,7 +297,7 @@ describe('validatePlanForProfile: brief', () => {
   });
 
   it('validates the goal profile with the brief rules', () => {
-    expect(codes(briefPlan([]), 'goal')).toEqual(['brief-no-phases']);
+    expect(codes(briefPlan([]), 'goal')).toContain('brief-no-phases');
   });
 });
 
@@ -364,5 +365,263 @@ describe('validatePlanForProfile: lite', () => {
     expect(
       validatePlanForProfile(litePlan({ phases: 2 }), ctx('task')),
     ).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// goal profile
+// ---------------------------------------------------------------------------
+
+function goalPlan(
+  options: {
+    source?: string;
+    groups?: string;
+    phases?: string[];
+    milestones?: string[] | null;
+  } = {},
+): string {
+  const phases = options.phases ?? ['p01', 'p02', 'p03', 'p04'];
+  const milestones =
+    options.milestones === undefined
+      ? ['| m01 | p01, p02 |', '| m02 | p03, p04 |']
+      : options.milestones;
+  return [
+    '---',
+    `oat_plan_source: ${options.source ?? 'goal'}`,
+    `oat_plan_parallel_groups: ${options.groups ?? '[]'}`,
+    '---',
+    '',
+    '# Project Brief',
+    '',
+    ...(milestones === null
+      ? []
+      : [
+          '## Milestones',
+          '',
+          '| Milestone | Phases |',
+          '| --------- | ------ |',
+          ...milestones,
+          '',
+        ]),
+    '## Phases',
+    '',
+    ...phases.map((id) => phaseBlock(id)).flat(),
+  ].join('\n');
+}
+
+function goalCtx(
+  state: Record<string, unknown> | null = null,
+  implementationContent: string | null = null,
+): ValidationContext {
+  return {
+    profile: 'goal',
+    workflowMode: 'goal',
+    stateFrontmatter: state,
+    implementationContent,
+  };
+}
+
+function goalCodes(
+  content: string,
+  state: Record<string, unknown> | null = null,
+  implementationContent: string | null = null,
+): string[] {
+  return validatePlanForProfile(
+    content,
+    goalCtx(state, implementationContent),
+  ).map((issue) => issue.code);
+}
+
+const DELIVERED_M01 = {
+  oat_deliveries: [
+    { delivery_id: 'd01', milestone: 'm01', scope: ['p01', 'p02'] },
+  ],
+};
+
+describe('validatePlanForProfile: goal', () => {
+  it('resolves the goal profile from goal mode', () => {
+    expect(resolvePlanProfile('goal')).toBe('goal');
+  });
+
+  it('accepts the shared valid goal fixture under every rule', () => {
+    expect(
+      validatePlanForProfile(
+        goalPlan({ groups: '[[p03, p04]]' }),
+        goalCtx({
+          ...DELIVERED_M01,
+          oat_goal_recovery: {
+            milestone: 'm01',
+            phase_ids: ['p01'],
+            stage: 'implementing',
+          },
+          oat_milestone_gates: {
+            m01: {
+              exit: { subject: { kind: 'code', scope: ['p01', 'p02'] } },
+            },
+          },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('maps every Milestones reader error code onto one goal rule code', () => {
+    expect(GOAL_MEMBERSHIP_RULE_CODES).toEqual({
+      'milestones-missing': 'goal-milestones-missing',
+      'milestones-malformed': 'goal-milestones-malformed',
+      'milestone-duplicate': 'goal-duplicate-milestone',
+      'milestone-empty': 'goal-milestone-empty',
+      'milestone-unknown-phase': 'goal-milestone-unknown-phase',
+      'phase-in-multiple-milestones': 'goal-phase-in-multiple-milestones',
+      'phase-without-milestone': 'goal-phase-without-milestone',
+    });
+  });
+
+  it.each([
+    ['goal-milestones-missing', goalPlan({ milestones: null })],
+    [
+      'goal-milestones-malformed',
+      goalPlan({ milestones: ['| first | p01, p02, p03, p04 |'] }),
+    ],
+    [
+      'goal-duplicate-milestone',
+      goalPlan({
+        milestones: ['| m01 | p01, p02 |', '| m01 | p03, p04 |'],
+      }),
+    ],
+    [
+      'goal-milestone-empty',
+      goalPlan({
+        milestones: ['| m01 | p01, p02, p03, p04 |', '| m02 | |'],
+      }),
+    ],
+    [
+      'goal-milestone-unknown-phase',
+      goalPlan({
+        milestones: ['| m01 | p01, p02 |', '| m02 | p03, p04, p09 |'],
+      }),
+    ],
+    [
+      'goal-phase-in-multiple-milestones',
+      goalPlan({
+        milestones: ['| m01 | p01, p02 |', '| m02 | p02, p03, p04 |'],
+      }),
+    ],
+    [
+      'goal-phase-without-milestone',
+      goalPlan({
+        phases: ['p01', 'p02', 'p03', 'p04', 'p-rev1'],
+      }),
+    ],
+    ['goal-plan-source', goalPlan({ source: 'brief' })],
+    ['goal-group-crosses-milestone', goalPlan({ groups: '[[p02, p03]]' })],
+  ])('reports %s', (code, plan) => {
+    expect(goalCodes(plan)).toContain(code);
+  });
+
+  it('requires a revision phase to belong to a milestone and accepts it once listed', () => {
+    const phases = ['p01', 'p02', 'p03', 'p04', 'p-rev1'];
+    expect(goalCodes(goalPlan({ phases }))).toEqual([
+      'goal-phase-without-milestone',
+    ]);
+    expect(
+      goalCodes(
+        goalPlan({
+          phases,
+          milestones: ['| m01 | p01, p02, p-rev1 |', '| m02 | p03, p04 |'],
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('exempts a phase the journal marks extracted from milestone membership', () => {
+    const journal = [
+      '## Phase p04: Phase p04',
+      '',
+      '**Status:** extracted',
+      '**Extracted to:** child-project',
+      '',
+    ].join('\n');
+    const plan = goalPlan({
+      milestones: ['| m01 | p01, p02 |', '| m02 | p03 |'],
+    });
+    expect(goalCodes(plan)).toEqual(['goal-phase-without-milestone']);
+    expect(goalCodes(plan, null, journal)).toEqual([]);
+  });
+
+  describe('frozen delivery scopes (B2)', () => {
+    it('permits appending a correction phase to the recovery milestone', () => {
+      expect(
+        goalCodes(
+          goalPlan({
+            phases: ['p01', 'p02', 'p03', 'p04', 'p-rev1'],
+            milestones: ['| m01 | p01, p02, p-rev1 |', '| m02 | p03, p04 |'],
+          }),
+          DELIVERED_M01,
+        ),
+      ).toEqual([]);
+    });
+
+    it('refuses a delivered phase reassigned to another milestone', () => {
+      expect(
+        goalCodes(
+          goalPlan({
+            milestones: ['| m01 | p01 |', '| m02 | p02, p03, p04 |'],
+          }),
+          DELIVERED_M01,
+        ),
+      ).toEqual(['goal-delivered-scope-changed']);
+    });
+
+    it('refuses a delivered phase removed from the brief', () => {
+      expect(
+        goalCodes(
+          goalPlan({
+            phases: ['p01', 'p03', 'p04'],
+            milestones: ['| m01 | p01 |', '| m02 | p03, p04 |'],
+          }),
+          DELIVERED_M01,
+        ),
+      ).toEqual(['goal-delivered-scope-changed']);
+    });
+
+    it('refuses a shipped milestone the table no longer declares', () => {
+      expect(
+        goalCodes(
+          goalPlan({ milestones: ['| m02 | p01, p02, p03, p04 |'] }),
+          DELIVERED_M01,
+        ),
+      ).toEqual(['goal-shipped-milestone-changed']);
+    });
+  });
+
+  it('reports non-canonical phase ids in every persisted registry list', () => {
+    const issues = validatePlanForProfile(
+      goalPlan(),
+      goalCtx({
+        oat_goal_recovery: {
+          milestone: 'm01',
+          phase_ids: ['p1'],
+          stage: 'implementing',
+        },
+        oat_deliveries: [
+          {
+            delivery_id: 'd01',
+            milestone: 'm01',
+            scope: ['p01', 'p2'],
+            integrated_review: { scope: ['phase-one'] },
+            exit_gate: { subject: { kind: 'code', scope: ['p-rev01'] } },
+          },
+        ],
+        oat_milestone_gates: {
+          m02: { plan: { subject: { kind: 'plan', scope: ['P03'] } } },
+        },
+      }),
+    );
+    expect(issues.map((issue) => issue.code)).toEqual(
+      Array(5).fill('goal-noncanonical-phase-id'),
+    );
+    expect(issues.map((issue) => issue.message).join('\n')).toMatch(
+      /oat_goal_recovery\.phase_ids holds "p1"[\s\S]*oat_deliveries\[0\]\.scope holds "p2"[\s\S]*integrated_review\.scope holds "phase-one"[\s\S]*exit_gate\.subject\.scope holds "p-rev01"[\s\S]*oat_milestone_gates\.m02\.plan\.subject\.scope holds "P03"/,
+    );
   });
 });
