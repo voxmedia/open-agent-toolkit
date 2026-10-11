@@ -42,7 +42,9 @@ const PROJECT_TEMPLATE_NAMES = [
   'design.md',
   'plan.md',
   'plan-lite.md',
+  'plan-brief.md',
   'implementation.md',
+  'implementation-brief.md',
   'project-log.md',
 ] as const;
 const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
@@ -1345,6 +1347,37 @@ describe('scaffoldProject', () => {
     );
     expect(plan).toContain('## Validation Criteria');
     expectSingleLiteCodeReviewPhase(plan);
+  });
+
+  it('uses the bundled brief templates when neither installed tier exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await rm(join(repoRoot, '.oat', 'templates'), {
+      recursive: true,
+      force: true,
+    });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'bundled-brief-floor',
+      mode: 'brief',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+
+    const projectRoot = join(repoRoot, result.projectPath);
+    const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
+    expect(plan).toContain('# Project Brief: bundled-brief-floor');
+    expect(plan).toContain('**Exit evidence:**');
+    const implementation = await readFile(
+      join(projectRoot, 'implementation.md'),
+      'utf8',
+    );
+    expect(implementation).toContain('# Implementation: bundled-brief-floor');
+    expect(implementation).toContain('<!-- orchestration-runs-start -->');
   });
 
   it('resolves partial template tiers independently for every file', async () => {
