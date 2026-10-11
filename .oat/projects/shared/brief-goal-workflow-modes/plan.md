@@ -799,6 +799,7 @@ After p12 is accepted, the final integrated review, summary, document and `pr-fi
 | final  | code     | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
 | design | artifact | pending         | -          | -                                                                                                                                                                                                                   | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-10-10 | structured in-memory (oat-reviewer, Claude Opus 5.5 high, initial + 2 re-dispatches; retry bound exhausted; residual M1/L1–L3 applied in revision 4; Astra plan round 1 ALIGNED WITH CHANGES applied in revision 2) | -             | auto       | -           |
+| plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T014430Z.md                                                                                                                                                                  | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
