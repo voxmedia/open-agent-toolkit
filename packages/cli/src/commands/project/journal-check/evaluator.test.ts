@@ -10,12 +10,16 @@ import {
   journal,
   overviewCountingFencedExample,
   PLAN,
+  PLAN_WITH_DUPLICATE_TASK,
   PLAN_WITH_FENCED_EXAMPLE,
+  PLAN_WITH_MISPLACED_TASK,
   realRunLine,
   STATE,
+  withOverview,
   withRunLineRequest,
 } from './__tests__/fixtures';
 import { evaluateJournal } from './evaluator';
+import { OVERRIDE_ELIGIBILITY } from './rules';
 import type { JournalCheckBoundary } from './types';
 
 let VALID = '';
@@ -777,5 +781,78 @@ describe('a fenced plan example is not a plan task', () => {
       'overview-total-mismatch',
       'overview-total-mismatch',
     ]);
+  });
+});
+
+describe('plan record integrity before journal evidence', () => {
+  it('refuses a duplicate plan task identity and a plan task outside its phase at plan.md', () => {
+    // The valid plan and journal stay accepted.
+    expect(check(VALID)).toMatchObject({ status: 'ok', reasons: [] });
+
+    // Each journal's overview agrees with the progress its plan produces, so
+    // the plan record is the only defect.
+    const duplicate = check(
+      withOverview(VALID, '| Phase 1 | complete | 3     | 3/3       |', '4/4'),
+      { plan: PLAN_WITH_DUPLICATE_TASK },
+    );
+    expect(duplicate.reasons.map((reason) => reason.code)).toEqual([
+      'plan-task-duplicate',
+    ]);
+    const duplicateLine =
+      PLAN_WITH_DUPLICATE_TASK.split('\n').indexOf(
+        '### Task p1-t1: Add reader again',
+      ) + 1;
+    expect(
+      duplicate.reasons.filter(
+        (reason) => reason.code === 'plan-task-duplicate',
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        path: 'plan.md',
+        line: duplicateLine,
+        owner: 'oat-project-plan',
+      }),
+    ]);
+    // Without the refusal, progress would read the duplicate as a completed task.
+    expect(parseTaskProgress(PLAN_WITH_DUPLICATE_TASK, VALID).total).toBe(4);
+
+    const misplaced = check(
+      withOverview(VALID, '| Phase 1 | complete | 1     | 1/1       |', '2/2'),
+      { plan: PLAN_WITH_MISPLACED_TASK },
+    );
+    expect(misplaced.reasons.map((reason) => reason.code)).toEqual([
+      'plan-task-misplaced',
+    ]);
+    const misplacedLine =
+      PLAN_WITH_MISPLACED_TASK.split('\n').indexOf(
+        '### Task p01-t02: Add command',
+      ) + 1;
+    expect(
+      misplaced.reasons.filter(
+        (reason) => reason.code === 'plan-task-misplaced',
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        path: 'plan.md',
+        line: misplacedLine,
+        owner: 'oat-project-plan',
+      }),
+    ]);
+    // Progress drops the misplaced plan task, so the checker must refuse it.
+    expect(
+      parseTaskProgress(PLAN_WITH_MISPLACED_TASK, VALID).phases.find(
+        (phase) => phase.phaseId === 'p01',
+      ),
+    ).toMatchObject({ total: 1 });
+
+    // Authoring defects are never override-eligible evidence gaps.
+    for (const eligible of Object.values(OVERRIDE_ELIGIBILITY)) {
+      expect(eligible.has('plan-task-duplicate')).toBe(false);
+      expect(eligible.has('plan-task-misplaced')).toBe(false);
+    }
+    // The missing-commit neighbour still refuses for its own reason.
+    expect(codes(replaceOnce(VALID, '**Commit:** 1111111', ''))).toContain(
+      'task-commit-missing',
+    );
   });
 });

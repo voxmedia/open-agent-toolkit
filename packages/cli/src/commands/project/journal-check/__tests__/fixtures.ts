@@ -57,6 +57,18 @@ export const PLAN_WITH_FENCED_EXAMPLE = PLAN.replace(
   '**Files:** `docs/reader.md`\n\nA task heading looks like this:\n\n```markdown\n### Task p02-t02: Example\n```\n',
 );
 
+/** `PLAN` declaring p01-t01 a second time under another spelling. */
+export const PLAN_WITH_DUPLICATE_TASK = PLAN.replace(
+  '### Task p01-t02: Add command',
+  '### Task p1-t1: Add reader again\n\n### Task p01-t02: Add command',
+);
+
+/** `PLAN` with p01-t02 declared under Phase 2 instead of Phase 1. */
+export const PLAN_WITH_MISPLACED_TASK = PLAN.replace(
+  '### Task p01-t02: Add command\n\n**Files:** `src/command.ts`\n\n## Phase 2: Docs\n',
+  '## Phase 2: Docs\n\n### Task p01-t02: Add command\n\n**Files:** `src/command.ts`\n',
+);
+
 /** A journal whose overview counts the fenced example as a plan task. */
 export function overviewCountingFencedExample(valid: string): string {
   return replaceOnce(
@@ -444,6 +456,8 @@ export const NEGATIVE_VARIANTS: ReadonlyArray<{
   name: string;
   code: string;
   apply: (valid: string, runningLine: string) => string;
+  /** The plan the variant runs against; `PLAN` when omitted. */
+  plan?: string;
 }> = [
   {
     name: 'fenced fake task heading',
@@ -545,6 +559,22 @@ export const NEGATIVE_VARIANTS: ReadonlyArray<{
       ),
   },
   {
+    name: 'duplicate plan task identity',
+    code: 'plan-task-duplicate',
+    // The overview agrees with the progress the duplicate produces, so
+    // nothing but the plan record itself is wrong.
+    apply: (valid) =>
+      withOverview(valid, '| Phase 1 | complete | 3     | 3/3       |', '4/4'),
+    plan: PLAN_WITH_DUPLICATE_TASK,
+  },
+  {
+    name: 'plan task outside its phase',
+    code: 'plan-task-misplaced',
+    apply: (valid) =>
+      withOverview(valid, '| Phase 1 | complete | 1     | 1/1       |', '2/2'),
+    plan: PLAN_WITH_MISPLACED_TASK,
+  },
+  {
     name: '{Task Name} residue',
     code: 'template-residue',
     apply: (valid) =>
@@ -555,6 +585,23 @@ export const NEGATIVE_VARIANTS: ReadonlyArray<{
       ),
   },
 ];
+
+/** Rewrites the Phase 1 overview row and the overview total. */
+export function withOverview(
+  valid: string,
+  phaseOneRow: string,
+  total: string,
+): string {
+  return replaceOnce(
+    replaceOnce(
+      valid,
+      '| Phase 1 | complete | 2     | 2/2       |',
+      phaseOneRow,
+    ),
+    '**Total:** 3/3 tasks completed',
+    `**Total:** ${total} tasks completed`,
+  );
+}
 
 /** The one eligible gap the override controls use. */
 export function commitGap(valid: string): string {

@@ -188,7 +188,11 @@ describe('complete-state evaluates the final journal before its write', () => {
 
   for (const variant of NEGATIVE_VARIANTS) {
     it(`baseline accepts and complete-state refuses: ${variant.name}`, async () => {
-      const fixture = await project(variant.apply(VALID, RUNNING_LINE));
+      const fixture = await project(
+        variant.apply(VALID, RUNNING_LINE),
+        buildState(),
+        variant.plan ?? PLAN,
+      );
       const baseline = await closeoutCheck(fixture);
       expect(baseline.exitCode).toBe(0);
       expect(baseline.payload).toMatchObject({ status: 'not_required' });

@@ -57,6 +57,7 @@ const IMPLEMENT = 'oat-project-implement';
 const RECEIVE = 'oat-project-review-receive';
 const COMPLETE = 'oat-project-complete';
 const RECONCILE = 'oat-project-reconcile';
+const PLAN = 'oat-project-plan';
 
 const SHA_PATTERN = /^[0-9a-f]{7,64}$/;
 /** Skills a completed journal may still point at through `oat_ready_for`. */
@@ -348,6 +349,39 @@ function checkPlacement(context: RuleContext, block: JournalTaskRecord): void {
   });
 }
 
+/**
+ * Plan record integrity, checked before any journal evidence is matched: every
+ * normalized plan task id is declared once, and under its own phase. Both are
+ * plan authoring defects owned by the plan, never override-eligible gaps.
+ */
+function checkPlanRecords(
+  context: RuleContext,
+  taskId: string,
+  planBlocks: readonly JournalTaskRecord[],
+): void {
+  const [first, ...duplicates] = planBlocks;
+  for (const duplicate of duplicates) {
+    push(context, {
+      code: 'plan-task-duplicate',
+      path: 'plan.md',
+      line: duplicate.line,
+      owner: PLAN,
+      message: `Plan task ${duplicate.rawTaskId} repeats ${taskId}, already declared at plan.md line ${first?.line ?? '?'}; each plan task id is declared once.`,
+    });
+  }
+  for (const block of planBlocks) {
+    if (!block.inOwningPhase) {
+      push(context, {
+        code: 'plan-task-misplaced',
+        path: 'plan.md',
+        line: block.line,
+        owner: PLAN,
+        message: `Plan task ${block.rawTaskId} sits under "${block.section?.text ?? 'no section'}", not its phase ${block.phaseId}.`,
+      });
+    }
+  }
+}
+
 export function checkTaskModeRecords(context: RuleContext): void {
   const planTasks = groupTasks(context.plan.tasks);
   const journalTasks = groupTasks(context.journal.tasks);
@@ -357,6 +391,7 @@ export function checkTaskModeRecords(context: RuleContext): void {
     if (planTask === undefined || !inScope(context, planTask.phaseId)) {
       continue;
     }
+    checkPlanRecords(context, taskId, planBlocks);
     const blocks = journalTasks.get(taskId) ?? [];
     if (blocks.length === 0) {
       push(context, {

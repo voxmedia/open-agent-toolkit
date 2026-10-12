@@ -39,6 +39,8 @@ export type JournalReasonCode =
   | 'task-not-completed'
   | 'task-commit-missing'
   | 'task-misplaced'
+  | 'plan-task-duplicate'
+  | 'plan-task-misplaced'
   | 'execution-record-open'
   // phases
   | 'phase-status-disagrees'
