@@ -40,6 +40,12 @@ oat_generated: false
 **Status:** in_progress
 **Started:** 2026-10-12
 
+**Expected-red list (frozen 2026-10-12 before dispatch, plan "Expected-red policy"):**
+
+- `pnpm run check:skill-bumps` — phase-crossing red until p04-t04 bumps the touched skills; owner p04-t04.
+- In-phase re-pins, green again at the task that moves them: `rollup.test.ts` and `lifecycle.integration.test.ts` (`## Workflow Observations` output, p01-t03); `template-heading-literals.test.ts`, `skills-bundled-docs-contract.test.ts`, `project/new` scaffold tests (p01-t04); `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts` (summary/retro text, p01-t05).
+- Nothing else may be red at the p01 review.
+
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
