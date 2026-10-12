@@ -6744,7 +6744,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(readDeclaredVersion(engine)).toBe('1.2.12');
+    expect(readDeclaredVersion(engine)).toBe('1.2.13');
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(readDeclaredVersion(adapter)).toBe('1.1.8');
