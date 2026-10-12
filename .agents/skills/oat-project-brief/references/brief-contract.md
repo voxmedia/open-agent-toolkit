@@ -631,12 +631,12 @@ the head the new `bound_revisions` binds for that member. A bound revision
 that disagrees with its member's `reviewed_head` is not fresh
 (`bound-revision-mismatch`).
 
-Every input that decides whether a commit may replace trust-bearing evidence
-(the delivery's own artifact set, bound revisions, member reviewed heads and
-the exit gate) is read from append-only records, the delivery's Reviews rows
-and journal anchors, never from a registry or brief field the judged commit
-itself can rewrite. Negative controls for this rule run through the production
-scope builder and the built CLI, not a hand-assembled scope.
+The unlock for those set-once fields, the delivery's own review-artifact set,
+is read only from the delivery's append-only Reviews rows, never from
+`integrated_review.artifact` or any other registry or brief field the judged
+commit can rewrite; bound revisions, member reviewed heads and the exit gate
+move only with that unlock. Negative controls for this rule run through the
+production scope builder and the built CLI, not a hand-assembled scope.
 
 The shared evaluator (`delivery/evidence.ts`) implements this rule for
 `delivery check`, `delivery refresh` and the closeout boundary. It accepts two

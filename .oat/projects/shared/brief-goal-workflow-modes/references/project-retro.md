@@ -44,7 +44,7 @@ Reviewed: `project-log.md` (33 entries: 25 structural dispatch and review receip
 ## Current State
 
 - **Promotions:** complete — RP-03 applied at `f32d91413` (brief contract §12.8); RP-01 and RP-02 rejected by the owner (stale gh-stack extension; no harness- or machine-specific preconditions in skills).
-- **Filing:** complete — RP-04 and RP-05 filed to the repository backlog (`BL-261011-validate-skill-bumps-against`, `BL-261011-clean-up-the-isolated-home`, receipt `de57fb4b8`, unpushed); UP-01 settled by a direct doc edit in this repository (`f32d91413`, unpushed).
+- **Filing:** complete — RP-04 and RP-05 filed to the repository backlog (`BL-261011-validate-skill-bumps-against`, `BL-261011-clean-up-the-isolated-home`, receipt `de57fb4b8`, pushed); UP-01 filing rejected because the fix was made directly in this repository (`f32d91413`).
 - **Unsettled items:** none.
 
 ## What Went Well
@@ -96,7 +96,7 @@ Eleven records exist (`DR-261011-brief-mode-family`, `-phase-unit-progress-contr
 
 ## Gotchas for Autonomous Agents
 
-- Never build a trust set from the state a commit is allowed to rewrite; read it from an append-only record (Reviews rows, journal anchors) and test through the production builder, not a hand-built map.
+- Never build a trust set from the state a commit is allowed to rewrite; read the unlock (the delivery's own review-artifact set) from its append-only Reviews rows, never from `integrated_review.artifact`, and test through the production scope builder, not a hand-built map.
 - After a server restart, check `git log` and `git status` for what landed before relaunching; re-prove any orphaned task's can-fail evidence.
 - Use one fake HOME per phase and sweep `$TMPDIR/tmp.*` directories whose only entry is `Library`; check `df` before every build.
 - Slice Markdown by line-anchored heading regexes, never by substring; the hook re-pads tables, so replace rows by normalized prefix after any commit.
@@ -133,7 +133,7 @@ Three disk stalls and one restart cost most of a working day. Add to the dispatc
 - **Disposition:** apply
 - **Status:** applied
 - **Target:** .agents/skills/oat-project-brief/references/brief-contract.md
-- **Applied-ref:** `f32d9141326f73ed07ee7a438fabea9d8127d6d3` :: .agents/skills/oat-project-brief/references/brief-contract.md §12.8 (oat-project-brief 1.0.2, lockstep 0.3.21)
+- **Applied-ref:** `f32d9141326f73ed07ee7a438fabea9d8127d6d3` :: .agents/skills/oat-project-brief/references/brief-contract.md §12.8 (oat-project-brief 1.0.2, lockstep 0.3.21); wording narrowed in the PR #364 review so the unlock is the delivery's own Reviews-row artifact set only
 - **Disposition-note:** —
 
 Four evaluator fixes shared one cause. Add one sentence to §12.8: any input that decides whether a commit may replace trust-bearing evidence is read from append-only records (Reviews rows, journal anchors), never from a field the judged commit can rewrite; negative controls run through the production scope builder. This generalizes the rule the final review settled on and would have prevented p12-t09 through p12-t11.
@@ -145,7 +145,7 @@ Four evaluator fixes shared one cause. Add one sentence to §12.8: any input tha
 - **Status:** filed
 - **Destination:** .oat/repo/pjm/backlog/items/BL-261011-validate-skill-bumps-against.md
 - **Destination-receipt:** de57fb4b81fb0dd506898afb6bcbe76476922ac5
-- **Remote-visibility:** unpushed
+- **Remote-visibility:** pushed
 - **Sanitized:** no
 - **Disposition-note:** Filed to the repository backlog by the owner's instruction; no duplicate found in items, archived, or completed.
 
@@ -158,7 +158,7 @@ Four evaluator fixes shared one cause. Add one sentence to §12.8: any input tha
 - **Status:** filed
 - **Destination:** .oat/repo/pjm/backlog/items/BL-261011-clean-up-the-isolated-home.md
 - **Destination-receipt:** de57fb4b81fb0dd506898afb6bcbe76476922ac5
-- **Remote-visibility:** unpushed
+- **Remote-visibility:** pushed
 - **Sanitized:** no
 - **Disposition-note:** Filed to the repository backlog by the owner's instruction; no duplicate found in items, archived, or completed.
 
@@ -168,12 +168,12 @@ Each `HOME=$(mktemp -d)` vitest run leaves ~48 MB of `Library/` under `$TMPDIR` 
 
 ### UP-01: Dispatch-record example should include a reviewer resolved at a capped policy
 
-- **Status:** filed
-- **Destination:** .agents/skills/oat-dispatch-subagents/references/record-schema.md
-- **Destination-receipt:** f32d9141326f73ed07ee7a438fabea9d8127d6d3
-- **Remote-visibility:** unpushed
+- **Status:** rejected
+- **Destination:** —
+- **Destination-receipt:** —
+- **Remote-visibility:** —
 - **Sanitized:** no
-- **Disposition-note:** The host repository is the upstream, so the owner directed the doc fix to be made directly rather than filed: record-schema.md now states that the reviewer targets the policy's cap cell and that `payload.variant` must come from the live resolution (oat-dispatch-subagents 1.2.13). The resolver already prints the selected variant in `dispatchArgs.variant`, so no CLI change was needed.
+- **Disposition-note:** Filing rejected: the host repository is the upstream, so the owner directed the doc fix to be made directly instead of filed. record-schema.md now states that under a capped managed policy the reviewer targets the policy's cap cell and that `payload.variant` must come from the live resolution (`f32d9141326f73ed07ee7a438fabea9d8127d6d3`, oat-dispatch-subagents 1.2.13). The resolver already prints the selected variant in `dispatchArgs.variant`, so no CLI change was needed.
 
 `managed-claude-example.json` shows an Opus 5.5 reviewer, but under a capped managed policy the resolver always selects the cap variant (Fable 5.1 high here) and `dispatch record` rejects any other `payload.variant`. Every reviewer dispatch in this run was first rejected and reassembled. Add a second reviewer example resolved at a capped policy, and have `dispatch-ceiling resolve` print the selected variant name so the caller can assemble the record directly.
 
@@ -181,7 +181,7 @@ Each `HOME=$(mktemp -d)` vitest run leaves ~48 MB of `Library/` under `$TMPDIR` 
 
 - `oat-project-complete` has not run: archive, S3 sync and the summary export are pending (Thomas asked for the retro first).
 - `artifact-cleanup` is approved and inactive; it starts in this thread after completion.
-- Six `BL-261011-*` backlog items remain open (see `summary.md` Follow-up Items).
+- Eight `BL-261011-*` backlog items remain open: the six in `summary.md` Follow-up Items plus RP-04 and RP-05 below.
 - Project artifacts cite pre-rebase commit SHAs from p09 onward; the mapping is by commit message and the old history is at local branch `pre-stack-rebase-local`.
 
 ## Reflections

@@ -283,8 +283,8 @@ so the loaded root is that home's `.agents`: expect `tier: loaded`,
 `canonicalPath: <user>/agents/<role>.md`. Another layout yields different but
 equally valid tier labels.
 
-The reviewer always targets the policy's cap cell (here `high`, so the
-Opus 5.5 high variant). In a repository whose policy caps at another tier the
+Under a capped managed policy the reviewer targets the policy's cap cell
+(here `high`, so the Opus 5.5 high variant). In a repository whose policy caps at another tier the
 selected variant differs, and `dispatch record` rejects a `payload.variant`
 that is not the resolver's. Take `payload.variant` from the live resolution's
 `providers.claude.dispatchArgs.variant`, never from this example.
