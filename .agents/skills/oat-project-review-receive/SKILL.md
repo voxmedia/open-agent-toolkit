@@ -664,9 +664,13 @@ moves to `passed`, citing the revision review in the implementation note.
 
 Write one receipt per received review. Placement is fixed:
 
-- a phase-scoped review (`pNN`, or the phase a `p-revN` corrects): inside that
-  phase's section of `implementation.md`, after its task blocks and before the
-  next `##` heading;
+- a phase-scoped review (`pNN`): inside that phase's section of
+  `implementation.md`, after its task blocks and before the next `##` heading;
+- a revision-phase review (`p-revN`): inside the `## Phase p-revN` section that
+  `oat-project-revise` creates (never in the phase it corrects), or under
+  `## Reviews and Gates`;
+- a task-scoped review (`pNN-tNN`, `prevN-tNN`): inside that task's phase
+  section, after its task blocks;
 - a final, multi-phase (`pNN-pMM`), milestone or spec/design/plan review: under
   `## Reviews and Gates`;
 - never after `## References`, which stays the journal's last section.

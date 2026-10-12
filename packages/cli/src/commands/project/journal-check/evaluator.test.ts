@@ -293,6 +293,56 @@ ${blocks}
 `;
     expect(codes(appended)).toContain('receipt-misplaced');
   });
+
+  it('task-scoped receipt in its task phase is accepted', () => {
+    const taskScoped = replaceOnce(
+      VALID,
+      '### Review Received: p01',
+      '### Review Received: p01-t02',
+    );
+    expect(check(taskScoped).status).toBe('ok');
+    // The same task-scoped receipt under another phase is refused.
+    const elsewhere = replaceOnce(
+      VALID,
+      '### Review Received: p01',
+      '### Review Received: p02-t01',
+    );
+    expect(codes(elsewhere)).toEqual(['receipt-misplaced']);
+  });
+
+  it('p-revN receipt in its own revision phase is accepted, in the corrected phase refused', () => {
+    const plan = `${PLAN}
+## Phase p-rev1: Review fixes
+
+### Task prev1-t01: Fix it
+`;
+    const revision = (receiptInRevision: boolean) =>
+      replaceOnce(
+        replaceOnce(
+          replaceOnce(VALID, '**Total:** 3/3', '**Total:** 4/4'),
+          '### Review Received: p01',
+          receiptInRevision
+            ? '### Review Received: p01 (round 1)'
+            : '### Review Received: p-rev1',
+        ),
+        '## Orchestration Runs',
+        `## Phase p-rev1: Review fixes
+
+**Status:** complete
+
+### Task prev1-t01: Fix it
+
+**Status:** completed
+**Commit:** 5555555
+${receiptInRevision ? '\n### Review Received: p-rev1\n\n- Round 1: 0/0/0/0.\n' : ''}
+## Orchestration Runs`,
+      );
+    expect(check(revision(true), { plan })).toMatchObject({
+      status: 'ok',
+      reasons: [],
+    });
+    expect(codes(revision(false), { plan })).toEqual(['receipt-misplaced']);
+  });
 });
 
 describe('override controls (one eligible gap: completed task without commit evidence)', () => {

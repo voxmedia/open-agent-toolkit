@@ -663,7 +663,12 @@ export function checkReceiptsAndDeferrals(context: RuleContext): void {
     const receipt = heading.text.match(RECEIPT_HEADING_PATTERN);
     if (receipt !== null) {
       const scopeToken = (receipt[1] ?? '').trim().split(/\s+/)[0] ?? '';
-      const phaseId = normalizePhaseId(scopeToken);
+      // A phase scope owns its receipt; a task scope (`pNN-tNN`,
+      // `prevN-tNN`) belongs to the task's phase.
+      const phaseId =
+        normalizePhaseId(scopeToken) ??
+        normalizeTaskId(scopeToken)?.phaseId ??
+        null;
       const inSlot = section?.text === 'Reviews and Gates';
       const inOwningPhase =
         phaseId !== null && section?.phase?.declaredPhaseId === phaseId;
