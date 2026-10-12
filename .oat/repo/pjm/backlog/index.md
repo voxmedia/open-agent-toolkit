@@ -509,6 +509,8 @@
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                               | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                               | open   | medium   | feature    | L        |
 | BL-261002-wire-the-complexity-review     | Wire the complexity review into the sibling gate-capable skills                                          | open   | medium   | task       | M        |
+| BL-261012-commit-paths-should-accept     | commit-paths should accept tracked files under ignored directories                                       | open   | medium   | task       | S        |
+| BL-261012-oat-wave-execute-writes-into   | oat-wave-execute writes into the roll-up-owned Workflow Observations section                             | open   | medium   | task       | S        |
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                         | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                   | open   | low      | task       | S        |
 | BL-261011-add-brief-to-the-legacy        | Add brief to the legacy generate-oat-state.sh mode table                                                 | open   | low      | task       | S        |
@@ -521,6 +523,7 @@
 | BL-261011-clean-up-the-isolated-home     | Clean up the isolated HOME directories that evidence-grade test runs leave under TMPDIR                  | open   | low      | task       | S        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                        | open   | low      | task       | S        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                    | open   | low      | task       | M        |
+| BL-261012-convert-legacy-journals        | Convert legacy journals on a working copy                                                                | open   | low      | task       | M        |
 | BL-261002-correct-misleading-init-status | Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync | open   | low      | task       | S        |
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                                   | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                          | open   | low      | idea       | L        |
@@ -538,7 +541,9 @@
 | BL-261002-publish-an-owner-statement     | Publish an owner statement on project stability, support, and non-goals                                  | open   | low      | task       | XS       |
 | BL-261011-re-project-oat-pr-status-from  | Re-project oat_pr_status from goal delivery observations at terminal closeout                            | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs                | open   | low      | task       | S        |
+| BL-261012-read-only-journal-lint         | Read-only journal lint for in-flight projects                                                            | open   | low      | task       | M        |
 | BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                          | open   | low      | feature    | M        |
+| BL-261012-rename-the-project-retro       | Rename the project retro to retro.md                                                                     | open   | low      | task       | S        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                              | open   | low      | task       | S        |
 | BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation              | open   | low      | feature    | M        |
@@ -549,6 +554,7 @@
 | BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
 | BL-260909-use-handle-bound-traversal     | Use handle-bound traversal in the managed-copy and manifest filesystem readers                           | open   | low      | task       | M        |
 | BL-260909-wave-7-review-polish-leftovers | Wave-7 review polish leftovers                                                                           | open   | low      | task       | S        |
+| BL-261012-complete-state-json-refusals   | complete-state --json refusals carry structured reason codes                                             | open   | low      | task       | S        |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                      | open   | low      | task       | S        |
 
 <!-- END OAT BACKLOG-INDEX -->
