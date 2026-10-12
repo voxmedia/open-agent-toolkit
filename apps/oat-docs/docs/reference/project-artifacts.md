@@ -252,8 +252,9 @@ reason code, and `--json` reports the same code as `code` in the error object:
 | `archive-synced-recordless-ambiguous`      | a synced project without a record has several archives matching its completed ref                                                                                             |
 
 When `--new-generation` content is identical to an existing archive, the
-command resolves to that generation and warns that the reason was not
-recorded.
+command resolves to that generation and warns that no new generation was
+allocated, naming the persisted reason when that archive was itself an
+explicit generation (otherwise the warning says the reason was not recorded).
 
 The exported summary finalizes source locators: each
 `oat-project:<project>#<entry-id>` token becomes
