@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 22    | 20/22     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 12    | 12/12     |
+| Phase 3 | complete | 13    | 13/13     |
+| Phase 4 | complete | 22    | 22/22     |
 
-**Total:** 52/54 tasks completed
+**Total:** 54/54 tasks completed
 
 ---
 
@@ -881,8 +881,9 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1312,15 +1313,39 @@ oat_generated: false
 
 ### Task p04-t21: (review) Carry the PR body across the archive in oat-project-complete
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1be0c67cb
+
+**Outcome:**
+
+- `oat-project-complete` Step 7 copies the regenerated, frontmatter-stripped PR body to `PR_BODY_FILE` before Step 8 archives (refuses a body without a `# ` heading); Steps 8, 8.6, 11 and 11.5 read that file and nothing reads `pr/` from the archive; a resumed archive run with no carried body skips the body sync with a report line; non-archive synced completion unchanged.
+
+**Files changed:**
+
+- `oat-project-complete/SKILL.md`, `review-skill-contracts.test.ts`, `closeout-skills.md`
+
+**Verification:**
+
+- validation + init + tools 2015/2015; docs, format:root, validate-skills 0; control: old `{ARCHIVE_PATH}/pr/` sentence restored fails the new contract test
 
 ---
 
 ### Task p04-t22: (review) Different-day control for the scope-qualified successor clause
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c0b261839
+
+**Outcome:**
+
+- W4 `.each` rows gain later-day collisions so `pathHeldByOtherScope` alone decides; the W1 round-trip test now fails pre-fix on its retry assertion, with the retention pin split out.
+
+**Files changed:**
+
+- `archive-retry-identity.test.ts`
+
+**Verification:**
+
+- archive 247/247; controls: clause replaced by `false` fails only the later-day rows (`archive-generation-path-occupied`); pre-fix retention set fails the retry assertion
 
 ---
 
@@ -1362,21 +1387,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Deviations from Plan / Design
 
-| Date       | Phase/Task  | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                      | Source of truth now                                                               | Follow-up                                                                                                     |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 2026-10-12 | p02-t02     | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp                                                                                                                                                                                       | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted      | Code and `cli-reference.md`                                                       | p02-t06 writers pass the stamp; docs updated in p02-t07                                                       |
-| 2026-10-12 | p02-t04     | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                                                                                                                                                                                                           | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                          | Code (`complete-state/index.ts`)                                                  | None                                                                                                          |
-| 2026-10-12 | p02-t04     | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                                                                                                                                                                                                      | Existing completion tests depend on journal-less projects                                                                   | Code                                                                              | p04-t01 probes exercise journal-bearing projects only                                                         |
-| 2026-10-12 | p02-t05     | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                                                                                                                                                                                                         | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran            | Commit 29ba174eb                                                                  | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories             |
-| 2026-10-12 | p03-t03     | Snapshot metadata key is `generationRequest` (camelCase) rather than the plan's `generation_request`                                                                                                                                                                                                          | Matches the other metadata keys                                                                                             | Code and `project-artifacts.md`                                                   | None                                                                                                          |
-| 2026-10-12 | p03-t02     | Same-day archives of one slug from two scopes get a scope-qualified dated identity; a non-empty metadata-less occupant at the archive path refuses instead of creating a twin; `.git` excluded from shared/local copies; `--new-generation` with unchanged content resolves to the existing latest generation | Retry identity must be unambiguous (D11); re-pins two #254 tests                                                            | Code and `project-artifacts.md#archive-identity`                                  | Reviewer to confirm; p04-t01 probes                                                                           |
-| 2026-10-12 | p03-t05/t06 | Scope qualification applies to the local path and export name whenever another archive holds the base path (not only same-day); a tenth reason code `archive-generation-source-absent`                                                                                                                        | Local names must match what `repo archive sync` restores; the missing-directory refusal needed a code                       | Code and `project-artifacts.md#archive-identity`                                  | None                                                                                                          |
-| 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                                | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                                          |
-| 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                       | Commit 8fbda566e                                                                  | None                                                                                                          |
-| 2026-10-12 | p04-t13     | `S3_ARCHIVE_SYNC_EXCLUDES` derived from the whole retention set also excludes `.git/*`; summary finalizer exports `pr/…` links as provenance                                                                                                                                                                  | One list defines the retained archive; `.git` was already excluded from the local copy                                      | Code and `project-artifacts.md`                                                   | `BL-261012-wrap-up-pr-cross-reference`: wrap-up Step 7 sibling `pr/` scan finds nothing for archived projects |
-| 2026-10-12 | p04-t15     | Damaged-archive hint names the exact snapshot with `--force` instead of a by-name sync                                                                                                                                                                                                                        | By-name sync now restores the latest generation, not the damaged one; without `--force` sync skips a matching local archive | Code and `project-artifacts.md`                                                   | None                                                                                                          |
-| 2026-10-12 | p04-t19     | `quoted-evidence` opt-out applies only to the inline-code slot rule; slot detection ignores other code spans on the line                                                                                                                                                                                      | Keeps the p02 prose heuristics and this journal's L531 accepted                                                             | Code (`rules.ts`)                                                                 | None                                                                                                          |
-| 2026-10-12 | p04-t20     | Prose fix extended to `brief-contract.md` and three docs pages; pins live in `learning-producer-contracts.test.ts`; a branch-CLI test covers the existing-log write                                                                                                                                           | Same claim appeared there; those skills are already bumped in this PR                                                       | Skills, docs, tests                                                               | None                                                                                                          |
+| Date       | Phase/Task  | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                      | Source of truth now                                                               | Follow-up                                                                                                         |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 2026-10-12 | p02-t02     | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp                                                                                                                                                                                       | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted      | Code and `cli-reference.md`                                                       | p02-t06 writers pass the stamp; docs updated in p02-t07                                                           |
+| 2026-10-12 | p02-t04     | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                                                                                                                                                                                                           | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                          | Code (`complete-state/index.ts`)                                                  | None                                                                                                              |
+| 2026-10-12 | p02-t04     | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                                                                                                                                                                                                      | Existing completion tests depend on journal-less projects                                                                   | Code                                                                              | p04-t01 probes exercise journal-bearing projects only                                                             |
+| 2026-10-12 | p02-t05     | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                                                                                                                                                                                                         | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran            | Commit 29ba174eb                                                                  | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories                 |
+| 2026-10-12 | p03-t03     | Snapshot metadata key is `generationRequest` (camelCase) rather than the plan's `generation_request`                                                                                                                                                                                                          | Matches the other metadata keys                                                                                             | Code and `project-artifacts.md`                                                   | None                                                                                                              |
+| 2026-10-12 | p03-t02     | Same-day archives of one slug from two scopes get a scope-qualified dated identity; a non-empty metadata-less occupant at the archive path refuses instead of creating a twin; `.git` excluded from shared/local copies; `--new-generation` with unchanged content resolves to the existing latest generation | Retry identity must be unambiguous (D11); re-pins two #254 tests                                                            | Code and `project-artifacts.md#archive-identity`                                  | Reviewer to confirm; p04-t01 probes                                                                               |
+| 2026-10-12 | p03-t05/t06 | Scope qualification applies to the local path and export name whenever another archive holds the base path (not only same-day); a tenth reason code `archive-generation-source-absent`                                                                                                                        | Local names must match what `repo archive sync` restores; the missing-directory refusal needed a code                       | Code and `project-artifacts.md#archive-identity`                                  | None                                                                                                              |
+| 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                                | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                                              |
+| 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                       | Commit 8fbda566e                                                                  | None                                                                                                              |
+| 2026-10-12 | p04-t13     | `S3_ARCHIVE_SYNC_EXCLUDES` derived from the whole retention set also excludes `.git/*`; summary finalizer exports `pr/…` links as provenance                                                                                                                                                                  | One list defines the retained archive; `.git` was already excluded from the local copy                                      | Code and `project-artifacts.md`                                                   | `BL-261012-wrap-up-pr-cross-reference`: wrap-up Step 7 sibling `pr/` scan finds nothing for archived projects     |
+| 2026-10-12 | p04-t15     | Damaged-archive hint names the exact snapshot with `--force` instead of a by-name sync                                                                                                                                                                                                                        | By-name sync now restores the latest generation, not the damaged one; without `--force` sync skips a matching local archive | Code and `project-artifacts.md`                                                   | None                                                                                                              |
+| 2026-10-12 | p04-t19     | `quoted-evidence` opt-out applies only to the inline-code slot rule; slot detection ignores other code spans on the line                                                                                                                                                                                      | Keeps the p02 prose heuristics and this journal's L531 accepted                                                             | Code (`rules.ts`)                                                                 | None                                                                                                              |
+| 2026-10-12 | p04-t20     | Prose fix extended to `brief-contract.md` and three docs pages; pins live in `learning-producer-contracts.test.ts`; a branch-CLI test covers the existing-log write                                                                                                                                           | Same claim appeared there; those skills are already bumped in this PR                                                       | Skills, docs, tests                                                               | None                                                                                                              |
+| 2026-10-12 | p04-t21     | PR body is carried across the archive in a temp file; a resumed synced archive run that carries no body skips the PR body sync with a report line instead of stopping                                                                                                                                         | Archives retain no `pr/` (p04-t13); the body exists only in the active project before Step 8                                | Skill prose (`oat-project-complete` Step 7, 11, 11.5) and `closeout-skills.md`    | None; if the resume sync must stay mandatory, source the body from `PROJECT_LINKS_PIN_COMMIT` on the retained ref |
 
 ## Reviews and Gates
 
@@ -1468,7 +1494,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - L1: this journal's Progress Overview total lagged the reopened phase (44/44 against 52 recorded tasks); fixed by the root in the receive commit and kept current with the new tasks.
 - W1–W8 verified closed with every titled test able to fail.
 
-**Next:** p04-t21 and p04-t22 via continuation `cont-ac-ext-fix-1`; final round 5 narrowed to that delta; exit gate generation 2.
+**Next:** p04-t21 (1be0c67cb) and p04-t22 (c0b261839) landed via `cont-ac-ext-fix-1`, root-verified; final round 5 narrowed to `fd5b5351c..c0b261839`, then exit gate generation 2.
 
 ## Deferred Findings
 
