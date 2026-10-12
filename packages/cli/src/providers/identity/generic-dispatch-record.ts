@@ -21,10 +21,17 @@ const identifier = () => z.string().min(1).max(MAX_IDENTIFIER_LENGTH);
 const reasonText = () => z.string().min(1).max(MAX_REASON_LENGTH);
 const proseText = () => z.string().min(1).max(MAX_PROSE_LENGTH);
 
+/**
+ * The producer contract for a dispatch request identity. Consumers that read
+ * a projected identity back (journal run lines) validate against this same
+ * pattern instead of a copy.
+ */
+export const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
+
 const requestIdSchema = z
   .string()
   .regex(
-    /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/,
+    REQUEST_ID_PATTERN,
     'request_id must be a stable contained identifier: expected [a-zA-Z0-9] followed by up to 127 of [a-zA-Z0-9._-]',
   );
 

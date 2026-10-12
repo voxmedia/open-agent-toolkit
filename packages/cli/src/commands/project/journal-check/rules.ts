@@ -8,7 +8,10 @@ import {
   type JournalTaskRecord,
   type TaskProgress,
 } from '@open-agent-toolkit/control-plane';
-import { classifyDispatchOutcome } from '@providers/identity/generic-dispatch-record';
+import {
+  classifyDispatchOutcome,
+  REQUEST_ID_PATTERN,
+} from '@providers/identity/generic-dispatch-record';
 
 import {
   JOURNAL_OVERRIDE_CODES,
@@ -878,7 +881,20 @@ export function checkRunLines(context: RuleContext): void {
       return;
     }
     const { fields } = parsed;
-    const request = fields.request ?? '';
+    // The request identity keys deduplication and names the run, so it must
+    // satisfy the producer contract; `~` (null) or any other value the
+    // producer would reject is malformed, never an empty dedup key.
+    const request = fields.request;
+    if (request == null || !REQUEST_ID_PATTERN.test(request)) {
+      push(context, {
+        code: 'run-line-malformed',
+        path: 'implementation.md',
+        line: lineNumber,
+        owner: IMPLEMENT,
+        message: `Run line has no valid request identity (request=${request ?? '~'}); the producer requires [a-zA-Z0-9] followed by up to 127 of [a-zA-Z0-9._-].`,
+      });
+      return;
+    }
     const first = requests.get(request);
     if (first !== undefined) {
       push(context, {

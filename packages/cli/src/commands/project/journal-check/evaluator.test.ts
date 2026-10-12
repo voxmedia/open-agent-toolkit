@@ -13,6 +13,7 @@ import {
   PLAN_WITH_FENCED_EXAMPLE,
   realRunLine,
   STATE,
+  withRunLineRequest,
 } from './__tests__/fixtures';
 import { evaluateJournal } from './evaluator';
 import type { JournalCheckBoundary } from './types';
@@ -312,6 +313,35 @@ ${body}`,
     expect(review.warnings.map((warning) => warning.code)).toContain(
       'run-line-unresolved',
     );
+  });
+
+  it('run line without a valid request identity, at review and completion', async () => {
+    expect(VALID).toMatch(/ request=demo-p01-implementation /);
+    const nullRequest = withRunLineRequest(VALID, '~');
+    expect(nullRequest).toMatch(/ request=~ /);
+    for (const options of [
+      {},
+      { boundary: 'review' as const, scope: ['p01'] },
+    ]) {
+      const result = check(nullRequest, options);
+      expect(result.status).toBe('refused');
+      expect(result.reasons.map((reason) => reason.code)).toEqual([
+        'run-line-malformed',
+      ]);
+    }
+    // A value the producer rejects is refused the same way.
+    expect(codes(withRunLineRequest(VALID, '.hidden'))).toEqual([
+      'run-line-malformed',
+    ]);
+
+    // Two identity-less lines never fold into one empty dedup key.
+    const runLine = nullRequest.match(/^- run\/v1[^\n]*$/m)![0];
+    const twice = replaceOnce(
+      nullRequest,
+      '<!-- orchestration-runs-end -->',
+      `${runLine}\n\n<!-- orchestration-runs-end -->`,
+    );
+    expect(codes(twice)).toEqual(['run-line-malformed', 'run-line-malformed']);
   });
 
   it('{Task Name} residue', () => {

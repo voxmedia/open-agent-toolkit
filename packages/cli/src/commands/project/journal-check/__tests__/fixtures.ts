@@ -424,6 +424,18 @@ function replaceOnce(source: string, from: string, to: string): string {
 }
 
 /**
+ * Replaces the request identity of the first real run line in `source`
+ * (`request=<id>` → `request=<value>`); `~` is the projection's null.
+ */
+export function withRunLineRequest(source: string, value: string): string {
+  const pattern = /^(- run\/v1[^\n]*?[ \t]request=)[^ \t\n]*/m;
+  if (!pattern.test(source)) {
+    throw new Error('fixture anchor missing: run line request field');
+  }
+  return source.replace(pattern, (_match, head: string) => `${head}${value}`);
+}
+
+/**
  * The p02-t03 negative controls as journal transforms over the valid journal,
  * each with the reason code the evaluator must refuse it for. Shared by the
  * public `complete-state` boundary suite.
@@ -516,6 +528,11 @@ export const NEGATIVE_VARIANTS: ReadonlyArray<{
         '<!-- orchestration-runs-end -->',
         `- ${runningLine}\n\n<!-- orchestration-runs-end -->`,
       ),
+  },
+  {
+    name: 'run line without a request identity',
+    code: 'run-line-malformed',
+    apply: (valid) => withRunLineRequest(valid, '~'),
   },
   {
     name: '{Task Name} residue',
