@@ -5,6 +5,7 @@ import { promisify } from 'node:util';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import type { ProjectScope } from '@commands/shared/project-scope';
 import { type OatConfig, readOatConfig } from '@config/oat-config';
 import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
@@ -146,6 +147,10 @@ export interface ArchiveSnapshotEntry {
   projectName: string;
   /** Full local archive name the snapshot hydrates to (`<project>-gN`). */
   localName: string;
+  /** Generation family: the base name plus its scope qualifier, if any. */
+  familyName: string;
+  /** Scope qualifier carried by the snapshot name, or null. */
+  scope: ProjectScope | null;
   /** Archive generation; 1 when the snapshot name carries no suffix. */
   generation: number;
   snapshotName: string;
@@ -245,10 +250,13 @@ export function selectLatestSnapshots(
 }
 
 /**
- * Snapshots a by-name sync may choose from, in precedence order: an exact
- * snapshot name; else a full generation name such as `demo-g2` (which also
- * keeps a project literally named `demo-g2` reachable); else every snapshot of
- * the base project name, so `demo` reaches its latest generation.
+ * The snapshots a by-name sync restores, in precedence order: an exact
+ * snapshot name; else a full generation name such as `demo-g2` or
+ * `demo-g2-local` (which also keeps a project literally named `demo-g2`
+ * reachable); else every generation family the name identifies, either as a
+ * family (`demo-local`: the local-scope `demo` archives) or as the base
+ * project (`demo`: `demo` and its scope-qualified families). Each family
+ * restores its latest generation, then its latest date.
  */
 export function selectNamedSnapshotCandidates(
   snapshots: ArchiveSnapshotEntry[],
@@ -257,18 +265,26 @@ export function selectNamedSnapshotCandidates(
   const exactSnapshot = snapshots.filter(
     (snapshot) => snapshot.snapshotName === name,
   );
-  if (exactSnapshot.length > 0) {
-    return exactSnapshot;
-  }
   const fullName = snapshots.filter(
-    (snapshot) =>
-      snapshot.localName === name &&
-      snapshot.localName !== snapshot.projectName,
+    (snapshot) => snapshot.localName === name && snapshot.generation > 1,
   );
-  if (fullName.length > 0) {
-    return fullName;
+  const pool =
+    exactSnapshot.length > 0
+      ? exactSnapshot
+      : fullName.length > 0
+        ? fullName
+        : snapshots.filter(
+            (snapshot) =>
+              snapshot.familyName === name || snapshot.projectName === name,
+          );
+  const latestByFamily = new Map<string, ArchiveSnapshotEntry>();
+  for (const snapshot of pool) {
+    const current = latestByFamily.get(snapshot.familyName);
+    if (!current || compareSnapshotEntries(snapshot, current) > 0) {
+      latestByFamily.set(snapshot.familyName, snapshot);
+    }
   }
-  return snapshots.filter((snapshot) => snapshot.projectName === name);
+  return [...latestByFamily.values()];
 }
 
 export async function readLocalSnapshotName(
@@ -384,21 +400,7 @@ export async function runArchiveSyncCommand(
       );
     }
 
-    const latestTarget = projectName
-      ? targets.reduce<ArchiveSnapshotEntry | null>((latest, snapshot) => {
-          if (!latest) {
-            return snapshot;
-          }
-          return compareSnapshotEntries(snapshot, latest) > 0
-            ? snapshot
-            : latest;
-        }, null)
-      : null;
-    const snapshotsToSync = projectName
-      ? latestTarget
-        ? [latestTarget]
-        : []
-      : targets;
+    const snapshotsToSync = targets;
 
     const appliedTargets: string[] = [];
     const appliedSources: string[] = [];

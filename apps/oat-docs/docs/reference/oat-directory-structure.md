@@ -269,7 +269,7 @@ Completion and archive sync behavior:
   commits the tracked record as complete.
 - If `archive.s3SyncOnComplete=true` and `archive.s3Uri` is configured, completion must successfully upload a dated snapshot such as `<archive.s3Uri>/<repo-slug>/projects/20260401-<project>/` before it retires the active record and checkout.
 - `oat repo archive sync` syncs all repo archived projects down from S3 into `.oat/projects/archived/`.
-- `oat repo archive sync <project-name>` syncs the latest generation, then the latest dated remote snapshot, of a single project into its full local name: `.oat/projects/archived/<project-name>/` for generation 1, `.oat/projects/archived/<project-name>-gN/` for generation N. An exact snapshot name or a full `<project-name>-gN` name selects that archive instead.
+- `oat repo archive sync <project-name>` syncs every generation family of a single project (the unqualified one and each scope-qualified `<project-name>-<scope>` one) at its latest generation, then latest dated remote snapshot, into its full local name: `.oat/projects/archived/<project-name>/` for generation 1, `.oat/projects/archived/<project-name>-gN/` for generation N, `.oat/projects/archived/<project-name>-gN-<scope>/` for a scope-qualified one. `<project-name>-<scope>` selects only that family; an exact snapshot name or a full `<project-name>-gN[-<scope>]` name selects that archive instead.
 - Default archive sync is non-destructive toward unrelated local-only archive data, but it does replace a local project archive when a newer dated remote snapshot is selected for that same project.
 - `oat project prune` is separate and destructive: for a terminal project it
   removes the completed ref and any matching active alias, while leaving local

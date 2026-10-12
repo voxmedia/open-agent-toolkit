@@ -225,7 +225,10 @@ its predecessor and refuses otherwise. The new generation lives at
 `<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`; when the same
 project's archive from another scope already holds that path or identity, both
 carry the scope, as for a first archive: `<project>-gN-<scope>` and
-`<YYYYMMDD>-<project>-gN-<scope>`. Anything else at the path refuses. Its
+`<YYYYMMDD>-<project>-gN-<scope>`. Anything else at the path refuses. `oat repo
+archive sync` reads the same `<project>[-gN][-<scope>]` contract: by name,
+`<project>-<scope>` restores that scope's latest generation and `<project>`
+restores every family of the project at its latest generation. Its
 metadata records `predecessor`, `generationReason` and `generationRequest`, the
 `sha256` of the project, scope, predecessor snapshot and manifest. That
 metadata is written with `allocation: pending` before any export, copy or S3

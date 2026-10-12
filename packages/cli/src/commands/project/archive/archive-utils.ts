@@ -443,20 +443,52 @@ export function buildArchiveSnapshotName(
 }
 
 /**
- * Parses an S3 snapshot name `<YYYYMMDD>-<local-name>`. The local name is the
- * archive directory the snapshot hydrates to and is never shortened, so a
- * generation snapshot `<YYYYMMDD>-<project>-gN` (N >= 2) restores to
- * `<project>-gN`, never over generation 1. `projectName` is the base project
- * name with that generation suffix removed, and `generation` is N (1 when the
- * name carries no suffix). An undated name is its own local and project name.
+ * The one archive naming contract, shared by the writer and every reader:
+ * local name `<slug>[-gN][-<scope>]` and snapshot (export identity)
+ * `<YYYYMMDD>-<local-name>`. `-gN` (N >= 2) names a successor generation;
+ * `-<scope>` qualifies an identity whose unqualified name another scope's
+ * archive already holds.
  */
-export function parseArchiveSnapshotName(snapshotName: string): {
+export function formatArchiveLocalName(
+  projectName: string,
+  generation: number,
+  scope: ProjectScope | null,
+): string {
+  return `${projectName}${generation > 1 ? `-g${generation}` : ''}${
+    scope ? `-${scope}` : ''
+  }`;
+}
+
+const ARCHIVE_LOCAL_NAME_PATTERN =
+  /^(.+?)(?:-g([2-9]|[1-9]\d+))?(?:-(shared|local|synced))?$/;
+
+export interface ParsedArchiveSnapshotName {
+  /** Base project slug, without generation or scope qualifier. */
   projectName: string;
+  /** Full local archive name the snapshot hydrates to; never shortened. */
   localName: string;
+  /** Generation family: the slug plus its scope qualifier, if any. */
+  familyName: string;
+  /** Scope qualifier carried by the name, or null when unqualified. */
+  scope: ProjectScope | null;
   snapshotName: string;
   dateStamp: string | null;
+  /** Archive generation; 1 when the name carries no `-gN`. */
   generation: number;
-} {
+}
+
+/**
+ * Parses an S3 snapshot name under the naming contract of
+ * `formatArchiveLocalName`. The local name is the archive directory the
+ * snapshot hydrates to, so generation 2 of `<project>` restores to
+ * `<project>-g2` (or `<project>-g2-<scope>`), never over generation 1. An
+ * undated name is its own local, family and project name. A project whose own
+ * slug ends in `-gN` or `-<scope>` reads as that generation or qualifier: the
+ * residual ambiguity the by-name sync precedence documents.
+ */
+export function parseArchiveSnapshotName(
+  snapshotName: string,
+): ParsedArchiveSnapshotName {
   const trimmedSnapshot = snapshotName.replace(/\/+$/, '');
   const match = trimmedSnapshot.match(/^(\d{8})-(.+)$/);
   const dateStamp = match?.[1];
@@ -466,19 +498,26 @@ export function parseArchiveSnapshotName(snapshotName: string): {
     return {
       projectName: trimmedSnapshot,
       localName: trimmedSnapshot,
+      familyName: trimmedSnapshot,
+      scope: null,
       snapshotName: trimmedSnapshot,
       dateStamp: null,
       generation: 1,
     };
   }
 
-  const generationMatch = localName.match(/^(.+)-g([2-9]|[1-9]\d+)$/);
+  const parts = localName.match(ARCHIVE_LOCAL_NAME_PATTERN);
+  const projectName = parts?.[1] ?? localName;
+  const generation = parts?.[2] ? Number(parts[2]) : 1;
+  const scope = (parts?.[3] as ProjectScope | undefined) ?? null;
   return {
-    projectName: generationMatch?.[1] ?? localName,
+    projectName,
     localName,
+    familyName: formatArchiveLocalName(projectName, 1, scope),
+    scope,
     snapshotName: trimmedSnapshot,
     dateStamp,
-    generation: generationMatch ? Number(generationMatch[2]) : 1,
+    generation,
   };
 }
 
@@ -1363,11 +1402,14 @@ export async function evaluateArchiveRetryIdentity(
     candidates.some(
       (candidate) => candidate.metadata?.snapshotName === datedIdentity,
     );
-  const snapshotName = scopeQualified
-    ? `${datedIdentity}-${options.scope}`
-    : datedIdentity;
+  const localName = formatArchiveLocalName(
+    options.projectName,
+    1,
+    scopeQualified ? options.scope : null,
+  );
+  const snapshotName = buildArchiveSnapshotName(localName, options.timestamp);
   const archivePath = scopeQualified
-    ? join(dirname(archiveBasePath), `${options.projectName}-${options.scope}`)
+    ? join(dirname(archiveBasePath), localName)
     : archiveBasePath;
   // One rule for empty directories at both paths: an empty one is free.
   if (
@@ -1452,13 +1494,13 @@ async function allocateArchiveGeneration(
     );
   }
   const generation = latest + 1;
-  const datedIdentity = `${buildArchiveSnapshotName(
-    options.projectName,
+  const datedIdentity = buildArchiveSnapshotName(
+    formatArchiveLocalName(options.projectName, generation, null),
     options.timestamp,
-  )}-g${generation}`;
+  );
   const generationPath = join(
     dirname(archiveBasePath),
-    `${options.projectName}-g${generation}`,
+    formatArchiveLocalName(options.projectName, generation, null),
   );
   // The generation-1 rule, applied to successors: when the same project's
   // archive from another scope already holds `<project>-gN` or the dated
@@ -1477,12 +1519,13 @@ async function allocateArchiveGeneration(
     candidates.some(
       (candidate) => candidate.metadata?.snapshotName === datedIdentity,
     );
-  const snapshotName = scopeQualified
-    ? `${datedIdentity}-${options.scope}`
-    : datedIdentity;
-  const archivePath = scopeQualified
-    ? `${generationPath}-${options.scope}`
-    : generationPath;
+  const localName = formatArchiveLocalName(
+    options.projectName,
+    generation,
+    scopeQualified ? options.scope : null,
+  );
+  const snapshotName = buildArchiveSnapshotName(localName, options.timestamp);
+  const archivePath = join(dirname(archiveBasePath), localName);
   // Same rule as the base and scope-qualified paths: an empty directory is free.
   if (
     (await pathExists(archivePath)) &&

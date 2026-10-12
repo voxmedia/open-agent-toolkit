@@ -295,6 +295,70 @@ describe('archive sync runner', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('resolves scope-qualified generation families by name', async () => {
+    const listOutput = [
+      '                           PRE 20261011-demo/',
+      '                           PRE 20261011-demo-local/',
+      '                           PRE 20261012-demo-g2/',
+      '                           PRE 20261013-demo-g2-local/',
+      '                           PRE 20261014-my-g2-project/',
+    ].join('\n');
+    const prefix =
+      's3://example-bucket/oat-archive/open-agent-toolkit/projects';
+    const syncCalls = (harness: ReturnType<typeof createHarness>) =>
+      harness.execFile.mock.calls
+        .map(([, args]) => args as string[])
+        .filter((args) => args[1] === 'sync')
+        .map((args) => [args[2], args[3]]);
+    const run = async (projectName?: string) => {
+      const harness = createHarness({ listOutput });
+      await runSync(harness, projectName ? { projectName } : {});
+      return syncCalls(harness);
+    };
+
+    // A scope family restores its latest generation.
+    expect(await run('demo-local')).toEqual([
+      [
+        `${prefix}/20261013-demo-g2-local`,
+        '.oat/projects/archived/demo-g2-local',
+      ],
+    ]);
+    // The base project restores every family at its latest generation.
+    expect(await run('demo')).toEqual([
+      [`${prefix}/20261012-demo-g2`, '.oat/projects/archived/demo-g2'],
+      [
+        `${prefix}/20261013-demo-g2-local`,
+        '.oat/projects/archived/demo-g2-local',
+      ],
+    ]);
+    // Exact snapshot and full generation names keep precedence.
+    expect(await run('20261011-demo-local')).toEqual([
+      [`${prefix}/20261011-demo-local`, '.oat/projects/archived/demo-local'],
+    ]);
+    expect(await run('demo-g2-local')).toEqual([
+      [
+        `${prefix}/20261013-demo-g2-local`,
+        '.oat/projects/archived/demo-g2-local',
+      ],
+    ]);
+    // A literal project name containing `-gN` stays its own project.
+    expect(await run('my-g2-project')).toEqual([
+      [
+        `${prefix}/20261014-my-g2-project`,
+        '.oat/projects/archived/my-g2-project',
+      ],
+    ]);
+    // Unnamed sync is unchanged: every local archive name, latest date.
+    expect((await run()).map(([, target]) => target)).toEqual([
+      '.oat/projects/archived/demo',
+      '.oat/projects/archived/demo-local',
+      '.oat/projects/archived/demo-g2',
+      '.oat/projects/archived/demo-g2-local',
+      '.oat/projects/archived/my-g2-project',
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('passes through dry-run mode without removing local archive directories', async () => {
     const harness = createHarness();
 

@@ -1713,6 +1713,76 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     },
   );
 
+  it('restores a writer-produced scope-qualified successor by its family and project name', async () => {
+    const fixture = await createFixture();
+    const mirror = fakeS3Mirror(await scratch('oat-fake-s3-mirror-'));
+    const localPath = join(
+      fixture.repoRoot,
+      '.oat',
+      'projects',
+      'local',
+      PROJECT,
+    );
+    const writeLocal = async (state: string): Promise<void> => {
+      await mkdir(localPath, { recursive: true });
+      await writeFile(join(localPath, 'state.md'), state);
+    };
+    const archive = (
+      projectPath: string,
+      timestamp: string,
+      newGenerationReason?: string,
+    ) =>
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, {
+          projectPath,
+          ...(newGenerationReason ? { newGenerationReason } : {}),
+        }),
+        { ...mirror, timestamp: () => timestamp },
+      );
+
+    await archive(fixture.projectPath, '2026-09-01T09:00:00Z');
+    await writeLocal('# local state\n');
+    const localFirst = await archive(localPath, '2026-09-01T10:00:00Z');
+    expect(localFirst.s3Path).toMatch(/\/projects\/20260901-demo-local$/);
+    await reopen(fixture, '# shared reopened\n');
+    await writeLocal('# local reopened\n');
+    const sharedSecond = await archive(
+      fixture.projectPath,
+      '2026-09-05T09:00:00Z',
+      REASON,
+    );
+    // The later-date successor: only the path rule qualifies it.
+    const localSecond = await archive(
+      localPath,
+      '2026-09-06T09:00:00Z',
+      REASON,
+    );
+    expect(localSecond.s3Path).toMatch(/\/projects\/20260906-demo-g2-local$/);
+
+    await rm(fixture.archiveRoot, { recursive: true, force: true });
+    expect(await hydrate(fixture, mirror.execFile, 'demo-local')).toMatchObject(
+      {
+        status: 'ok',
+        sources: [localSecond.s3Path],
+        targets: ['.oat/projects/archived/demo-g2-local'],
+      },
+    );
+    await expect(
+      readFile(join(localSecond.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# local reopened\n');
+
+    await rm(fixture.archiveRoot, { recursive: true, force: true });
+    const byProject = await hydrate(fixture, mirror.execFile, PROJECT);
+    expect(byProject).toMatchObject({ status: 'ok' });
+    expect([...(byProject.sources as string[])].sort()).toEqual(
+      [sharedSecond.s3Path, localSecond.s3Path].sort(),
+    );
+    expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+      'demo-g2',
+      'demo-g2-local',
+    ]);
+  });
+
   it('still refuses a generation path held by something that is not an archive', async () => {
     const fixture = await createFixture();
     await archiveProjectOnCompletion(archiveOptions(fixture), {
