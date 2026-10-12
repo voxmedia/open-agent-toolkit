@@ -1494,10 +1494,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - L1: this journal's Progress Overview total lagged the reopened phase (44/44 against 52 recorded tasks); fixed by the root in the receive commit and kept current with the new tasks.
 - W1–W8 verified closed with every titled test able to fail.
 
-**Next:** p04-t21 (1be0c67cb) and p04-t22 (c0b261839) landed via `cont-ac-ext-fix-1`, root-verified; final round 5 narrowed to `fd5b5351c..c0b261839`, then exit gate generation 2.
+**Next:** p04-t21 (1be0c67cb) and p04-t22 (c0b261839) landed via `cont-ac-ext-fix-1`, root-verified; final round 5 (`reviews/archived/final-review-2026-10-12T142835Z.md`, reviewed head `5fe8ac058`) returned 0/0/0/1 and the final event is `passed`; the Low (Step 11.5 failure-handling wording in `oat-project-complete`) was fixed by the root in the receive commit; the reviewer judged the resumed-archive manual-update trade-off acceptable and it is tracked as `BL-261012-regenerate-the-archive-aware`. Exit gate generation 2 follows.
 
 ## Deferred Findings
 
+- Low (final round 5 trade-off): a synced archive run resumed recordlessly after Step 8 reports a manual PR body update instead of syncing it; tracked as `BL-261012-regenerate-the-archive-aware`.
 - Low (implementer concern after p04-t13): `oat-wrap-up` Step 7 cross-references PRs through a sibling `pr/` directory that archived projects no longer keep; tracked as `BL-261012-wrap-up-pr-cross-reference` (the summary export already names the PR).
 
 ## Final Summary (for PR/docs)

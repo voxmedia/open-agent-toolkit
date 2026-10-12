@@ -549,6 +549,7 @@
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs                | open   | low      | task       | S        |
 | BL-261012-read-only-journal-lint         | Read-only journal lint for in-flight projects                                                            | open   | low      | task       | M        |
 | BL-261001-record-mixed-native-and-cli    | Record mixed native and CLI recon continuations in the manifest                                          | open   | low      | feature    | M        |
+| BL-261012-regenerate-the-archive-aware   | Regenerate the archive-aware PR body on a synced archive resume                                          | open   | low      | task       | S        |
 | BL-261012-rename-the-project-retro       | Rename the project retro to retro.md                                                                     | open   | low      | task       | S        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                              | open   | low      | task       | S        |
 | BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |

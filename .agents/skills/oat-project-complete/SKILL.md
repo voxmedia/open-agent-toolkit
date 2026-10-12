@@ -1707,10 +1707,12 @@ Steps:
 Failure handling:
 
 - If `gh` is missing or `gh pr edit` fails, always print the manual-update path.
-  For a synced archive completion this tracked-PR update is required: stop
-  before Step 12, retain the active pointer, and let the next invocation resume
-  recordlessly. Other completion shapes retain their existing warning-only
-  behavior and Step 12 summary guidance.
+  For a synced archive completion, stop before Step 12 and retain the active
+  pointer; the failed run keeps `PR_BODY_FILE` and prints its path. The next
+  invocation resumes recordlessly without a carried body, so it reports the
+  skipped sync (Step 12) rather than retrying the update: apply the retained
+  body to the tracked PR by hand. Other completion shapes retain their existing
+  warning-only behavior and Step 12 summary guidance.
 - A shared archive completion also reaches this step with the pointer still
   retained, but its sync failure stays warning-only. Its shared-scope resume
   goes straight to the Step 12 clear and would not retry this PR update, so

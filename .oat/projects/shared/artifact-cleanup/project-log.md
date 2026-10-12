@@ -84,6 +84,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:3,low:
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T062754Z.md run=43b2fd6a-ad0d-45d4-ae25-fa669f86c2ec
 
+### 2026-10-12 · structural · oat-project-implement · final-outcome-2
+
+External PR review (Warp 0/8/0/0, Bugbot 2 Medium) verified and fixed as p04-t13..t20; final round 4 (0/1/1/2) → p04-t21..t22; final round 5 passed 0/0/0/1 at 5fe8ac058. Exit gate generation 2 follows. Key ac-final-outcome-2.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
