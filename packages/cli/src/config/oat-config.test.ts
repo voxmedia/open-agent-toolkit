@@ -3818,6 +3818,48 @@ describe('oat-config', () => {
       },
     );
 
+    it('accepts positive-integer workflow.projectLogDigest bounds beside projectLog false', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            projectLog: false,
+            projectLogDigest: { maxEntries: 3, maxLines: 25 },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        workflow: {
+          projectLog: false,
+          projectLogDigest: { maxEntries: 3, maxLines: 25 },
+        },
+      });
+    });
+
+    it.each([1.5, 0, -2, '12', null, true])(
+      'drops an invalid workflow.projectLogDigest bound %#',
+      async (bound) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              projectLogDigest: { maxEntries: bound, maxLines: 30 },
+            },
+          }),
+          'utf8',
+        );
+
+        const config = await readOatConfig(repoRoot);
+        expect(config.workflow?.projectLogDigest).toEqual({ maxLines: 30 });
+      },
+    );
+
     it.each(['yes', 1, null, {}, []])(
       'rejects invalid workflow.projectLog value %#',
       async (projectLog) => {

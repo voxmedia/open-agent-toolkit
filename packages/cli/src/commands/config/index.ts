@@ -37,6 +37,7 @@ import {
   MAX_GATE_TIMEOUT_MS,
   MIN_GATE_TIMEOUT_MS,
   isValidGateTimeoutMs,
+  isValidProjectLogDigestBound,
   type InstructionSyncStrategy,
   type OatConfig,
   type OatConfigRead,
@@ -172,6 +173,8 @@ type ConfigKey =
   | 'workflow.designMode'
   | 'workflow.projectLog'
   | 'workflow.projectLogLedgerPath'
+  | 'workflow.projectLogDigest.maxEntries'
+  | 'workflow.projectLogDigest.maxLines'
   | 'workflow.dispatchPolicy.mode'
   | 'workflow.dispatchPolicy.policy'
   | 'workflow.dispatchCeiling'
@@ -359,6 +362,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.autoArtifactReview.analysis',
   'workflow.projectLog',
   'workflow.projectLogLedgerPath',
+  'workflow.projectLogDigest.maxEntries',
+  'workflow.projectLogDigest.maxLines',
   'workflow.designMode',
   'workflow.dispatchPolicy.mode',
   'workflow.dispatchPolicy.policy',
@@ -1063,6 +1068,32 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Repo-relative ledger path used by project-log rollup. Resolution: local > shared > user > default.',
   },
   {
+    key: 'workflow.projectLogDigest.maxEntries',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'positive integer',
+    defaultValue: '12',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.projectLogDigest.maxEntries <positive-integer>',
+    description:
+      'Maximum judgment entries project-log rollup renders in the summary Workflow Observations digest; omitted entries are counted. Independent of workflow.projectLog. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.projectLogDigest.maxLines',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'positive integer',
+    defaultValue: '60',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.projectLogDigest.maxLines <positive-integer>',
+    description:
+      'Maximum rendered lines of the summary Workflow Observations digest written by project-log rollup. Independent of workflow.projectLog. Resolution: local > shared > user > default.',
+  },
+  {
     key: 'workflow.designMode',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
@@ -1715,6 +1746,20 @@ function parseWorkflowValue(
   }
 
   if (
+    key === 'workflow.projectLogDigest.maxEntries' ||
+    key === 'workflow.projectLogDigest.maxLines'
+  ) {
+    const normalized = rawValue.trim();
+    const value = /^\d+$/.test(normalized) ? Number(normalized) : Number.NaN;
+    if (!isValidProjectLogDigestBound(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected a positive integer, got '${rawValue}'`,
+      );
+    }
+    return value;
+  }
+
+  if (
     key === 'workflow.gateTimeouts.code' ||
     key === 'workflow.gateTimeouts.artifact'
   ) {
@@ -1913,6 +1958,19 @@ function applyWorkflowValue(
     return {
       ...workflow,
       postImplementSequence: value as WorkflowPostImplementSequence,
+    };
+  }
+
+  if (subKey.startsWith('projectLogDigest.')) {
+    const digestKey = subKey.slice('projectLogDigest.'.length) as
+      | 'maxEntries'
+      | 'maxLines';
+    return {
+      ...workflow,
+      projectLogDigest: {
+        ...workflow.projectLogDigest,
+        [digestKey]: value as number,
+      },
     };
   }
 

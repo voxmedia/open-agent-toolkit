@@ -731,6 +731,8 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.autoArtifactReview.analysis` — boolean, default `true`. Automatically run the bounded accuracy-review loop for generated docs and agent-instructions analysis artifacts before the matching apply workflow consumes them.
 - `workflow.projectLog` — `auto`, `true`, or `false`; default `auto`. `auto` creates the append-only `project-log.md` on the first lifecycle append, `true` also enables scaffold-time creation, and `false` skips appends when no log exists. An existing artifact remains enabled regardless of the current setting.
 - `workflow.projectLogLedgerPath` — repository-relative string; default `.oat/repo/reference/project-observations.md`. Sets the durable ledger target for `general` judgments written by `oat project log rollup`.
+- `workflow.projectLogDigest.maxEntries` — positive integer; default `12`. The most judgment entries `oat project log rollup` renders in the `## Workflow Observations` digest it writes into `summary.md`; entries beyond the bound are counted, not copied, and every `general` judgment still graduates to the ledger.
+- `workflow.projectLogDigest.maxLines` — positive integer; default `60`. The most rendered lines in that digest. Both bounds sit beside `workflow.projectLog` rather than inside it and resolve independently of it (local > shared > user > default); a value that is not a positive integer is refused by `oat config set` and ignored when read from a config file, so the default applies.
 - `workflow.dispatchPolicy.mode` — `managed` or `inherit`. `managed` means OAT selects model/effort controls from `workflow.dispatchPolicy.policy`; `inherit` means OAT leaves controls to host/provider defaults.
 - `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps. It is distinct from `workflow.dispatchPolicy.mode=inherit`, which leaves controls to the host/provider.
 - `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
@@ -836,6 +838,7 @@ oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --sha
 oat config set workflow.autoArtifactReview.plan false --shared
 oat config set workflow.projectLog auto --shared
 oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observations.md --shared
+oat config set workflow.projectLogDigest.maxEntries 12 --shared
 
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every

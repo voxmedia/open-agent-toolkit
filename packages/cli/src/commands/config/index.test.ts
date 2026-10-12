@@ -1913,6 +1913,73 @@ describe('oat config', () => {
       );
     });
 
+    it('sets, gets and lists the project-log digest bounds and refuses a non-integer', async () => {
+      const root = await createRepoRoot();
+      const defaultGet = createHarness({ cwd: root });
+      await runCommand(
+        defaultGet.command,
+        ['get', 'workflow.projectLogDigest.maxEntries'],
+        ['--json'],
+      );
+      expect(defaultGet.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.projectLogDigest.maxEntries',
+        source: 'default',
+      });
+      expect(String(defaultGet.capture.jsonPayloads[0]?.value)).toBe('12');
+
+      for (const [key, value] of [
+        ['workflow.projectLogDigest.maxEntries', '4'],
+        ['workflow.projectLogDigest.maxLines', '30'],
+        ['workflow.projectLog', 'false'],
+      ] as const) {
+        const setHarness = createHarness({ cwd: root });
+        await runCommand(setHarness.command, ['set', key, value, '--shared']);
+        expect(process.exitCode).toBe(0);
+      }
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(raw.workflow).toMatchObject({
+        projectLog: false,
+        projectLogDigest: { maxEntries: 4, maxLines: 30 },
+      });
+
+      const sharedGet = createHarness({ cwd: root });
+      await runCommand(
+        sharedGet.command,
+        ['get', 'workflow.projectLogDigest.maxEntries'],
+        ['--json'],
+      );
+      expect(sharedGet.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        source: 'shared',
+      });
+      expect(String(sharedGet.capture.jsonPayloads[0]?.value)).toBe('4');
+
+      for (const invalid of ['2.5', '0', 'twelve', '1e3']) {
+        const bad = createHarness({ cwd: root });
+        await runCommand(
+          bad.command,
+          ['set', 'workflow.projectLogDigest.maxLines', invalid, '--shared'],
+          ['--json'],
+        );
+        expect(process.exitCode).toBe(1);
+        expect(JSON.stringify(bad.capture.jsonPayloads[0])).toContain(
+          'expected a positive integer',
+        );
+      }
+
+      const listHarness = createHarness({ cwd: root });
+      await runCommand(listHarness.command, ['list']);
+      expect(listHarness.capture.info[0]).toContain(
+        'workflow.projectLogDigest.maxEntries',
+      );
+      expect(listHarness.capture.info[0]).toContain(
+        'workflow.projectLogDigest.maxLines',
+      );
+    });
+
     it('sets, gets, lists, and describes every workflow.retro key', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
