@@ -1188,6 +1188,87 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 
 ---
 
+### Task p04-t23: (gate) Claim a generation exclusively before writing or clearing its allocation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (~L2961-2975 allocation write, cleanup ~L3003-3004 and ~L3314-3318: the pending allocation is claimed atomically — exclusive create (`wx`) of `.oat-archive-source.json` in the generation path, or an equivalent exclusive claim — and the identity is re-evaluated under that claim; an existing completed archive at the path is never overwritten (reuse or refuse without writes); a pending marker held by another caller refuses with a stable code, e.g. `archive-generation-claim-held`; the allocation carries an owner token and `clearPendingGeneration` removes only the allocation this operation wrote (token match), never another caller's completed files; the empty-directory reuse case (p03-t13, p04-t07) stays supported)
+- Modify: `archive-retry-identity.test.ts` (deterministic overlapping-call regression: call B pauses after evaluating the vacant g2 path via an injected barrier, call A completes g2 and removes the source, B resumes → A's completed g2 is preserved byte-identical (state.md present, manifest hash unchanged) and B either reuses it or refuses without writes; control: pre-fix allocation overwrites A's metadata and cleanup deletes A's files)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (code table) if a new reason code ships
+
+**Step 1: Understand the issue**
+
+Exit gate generation 2 attempt 1 H1 (`reviews/archived/final-review-2026-10-12T144139Z.md`, codex-6-sol-xhigh): the vacancy decision from `evaluateArchiveRetryIdentity` is consumed later with a recursive mkdir and an overwriting metadata write; two overlapping archive calls both see an unused g2, A completes it and removes the source, B resumes, replaces A's completed metadata with a pending allocation and `clearPendingGeneration` deletes A's retained files (D11 immutability). The gate's probe (artifact section "Archive producer/consumer and overlapping-call probe") adds one scheduling barrier before `const archivePath = identity.archivePath;` in the compiled module.
+
+**Step 2: Implement fix**
+
+Exclusive claim, re-evaluation under the claim, owner-scoped cleanup.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`; the overlapping-call regression fails with the claim neutralized and passes restored.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t23): claim an archive generation exclusively before writing its allocation`
+
+---
+
+### Task p04-t24: (gate) Parse scope-qualified generation names end to end
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`parseArchiveSnapshotName` ~L469-475: one producer/consumer naming contract `<date>-<slug>[-gN][-<scope>]` matching what `allocateArchiveGeneration` ~L1470-1475 emits (`20261012-demo-g2-local`): `generation` 2, family key `demo-local` (slug plus scope qualifier), project `demo`, scope `local`, local hydration name unchanged `demo-g2-local`)
+- Modify: `packages/cli/src/commands/project/archive/sync-runner.ts` (~L253-271: by-name `sync demo-local` selects the latest generation of that family (`demo-g2-local` over `20261011-demo-local`); by-name `sync demo` covers every family of project `demo` including scope-qualified ones at their latest generation; exact snapshot name and full local name keep precedence; unnamed sync unchanged)
+- Modify: `archive-utils.test.ts`, `sync-runner.test.ts`, `archive-retry-identity.test.ts` (an actual scope-qualified generation produced by the writer, listed and selected by name, including the later-date successor case and a literal project name containing `-gN`), docs sentences in `lifecycle.md`, `oat-directory-structure.md`, `project-artifacts.md` describing by-name restore
+
+**Step 1: Understand the issue**
+
+Exit gate generation 2 attempt 1 M1 (`reviews/archived/final-review-2026-10-12T144139Z.md`): p04-t16's writer emits `…-demo-g2-local` but p04-t15's parser recognizes a generation only when `-gN` ends the name, so the scope-qualified successor parses as `demo-g2-local` generation 1 and by-name sync (`demo-local`, and `demo`) selects the older snapshot; exact-name and unnamed sync still reach it.
+
+**Step 2: Implement fix**
+
+One naming contract shared by the writer, the parser and the selector.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive` and `pnpm --filter oat-docs check`; the composition regression fails with the parser's scope-aware branch neutralized and passes restored.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t24): parse scope-qualified generation names end to end`
+
+---
+
+### Task p04-t25: (gate) Refuse duplicate or misplaced plan task records before accepting journal evidence
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (`checkTaskModeRecords` ~L351-377: duplicate normalized plan identities (`p01-t01` and `p1-t1`) refuse with a stable reason, e.g. `plan-task-duplicate`, and a plan task whose `inOwningPhase` is false refuses with e.g. `plan-task-misplaced`, both reporting the plan.md locations and routing correction to the plan owner; these are authoring defects, never override-eligible evidence gaps)
+- Modify: `evaluator.test.ts`, `complete-state/journal.test.ts` (both variants through `complete-state`: refused, `state.md` bytes unchanged; the valid 1/1 neighbour completes; the missing-commit neighbour still refuses), `journal-check/__tests__/fixtures.ts` `NEGATIVE_VARIANTS`; check `packages/control-plane/src/state/tasks.ts` ~L142-155 reports the same contract (progress must not read 2/2 or 0/0 for these plans without the checker refusing first)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` reason-code table and the journal-check reference if codes are listed there
+
+**Step 1: Understand the issue**
+
+Exit gate generation 2 attempt 1 M2 (`reviews/archived/final-review-2026-10-12T144139Z.md`): `checkTaskModeRecords` groups plan tasks by normalized id but uses only `planBlocks[0]` and never rejects duplicate plan identities or a plan task outside its owning phase; a plan with `p01-t01` and `p1-t1` passes completion at 2/2, and `p01-t01` moved under Phase 2 passes while progress reads 0/0 (D5 raw-record checks).
+
+**Step 2: Implement fix**
+
+Plan record uniqueness and phase ownership validated before journal matching.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state` plus control-plane `src/state`; the two new refusals fail with the checks neutralized and pass restored.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t25): refuse duplicate or misplaced plan task records`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |
@@ -1217,6 +1298,7 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 | final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T141023Z.md         | 731a5d78165e49c4dae9cf4c9ec9128066aebbbd | auto       | round 4 (narrowed to fca8060e0..5bbc20b10): 0/1/1/2; W1–W8 verified closed; H1 → p04-t21, M1 + L2 → p04-t22, L1 (overview total) fixed by the root                                                                                                        |
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T142835Z.md         | 5fe8ac058a35db697d5cc40077d4c38f90967b74 | auto       | round 5 (narrowed to fd5b5351c..c0b261839): 0/0/0/1; H1, M1, L1, L2 verified closed; the Low (Step 11.5 failure wording) fixed by the root                                                                                                                |
 | final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T144139Z.md                  | b70b067ea74a1d98359ccc2c5612edaf0843a807 | gate       | codex-6-sol-xhigh                                                                                                                                                                                                                                         |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T144139Z.md         | b70b067ea74a1d98359ccc2c5612edaf0843a807 | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 1 blocked 0/1/2/0; H1→p04-t23, M1→p04-t24, M2→p04-t25                                                                                                                                                   |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 

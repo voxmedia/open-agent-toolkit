@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 22    | 22/22     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 25    | 22/25     |
 
-**Total:** 54/54 tasks completed
+**Total:** 54/57 tasks completed
 
 ---
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1349,6 +1348,27 @@ oat_generated: false
 
 ---
 
+### Task p04-t23: (gate) Claim a generation exclusively before writing or clearing its allocation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t24: (gate) Parse scope-qualified generation names end to end
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t25: (gate) Refuse duplicate or misplaced plan task records before accepting journal evidence
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1495,6 +1515,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - W1–W8 verified closed with every titled test able to fail.
 
 **Next:** p04-t21 (1be0c67cb) and p04-t22 (c0b261839) landed via `cont-ac-ext-fix-1`, root-verified; final round 5 (`reviews/archived/final-review-2026-10-12T142835Z.md`, reviewed head `5fe8ac058`) returned 0/0/0/1 and the final event is `passed`; the Low (Step 11.5 failure-handling wording in `oat-project-complete`) was fixed by the root in the receive commit; the reviewer judged the resumed-archive manual-update trade-off acceptable and it is tracked as `BL-261012-regenerate-the-archive-aware`. Exit gate generation 2 follows.
+
+### Review Received: final (exit gate, generation 2)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T144139Z.md (configured implementation exit gate, generation 2 attempt 1, `codex-6-sol-xhigh`, run `fd67d667-727f-4e6c-a0d2-69d8fd947220`, reviewed head `b70b067ea`)
+
+**Gate:** generation 2 (generation 1 went `stale` at the external-review fix round: runs `91b4bf42` blocked / `43b2fd6a` passed on reviewed head `a59ad47cd`); attempt 1 of 2 blocked at threshold high (0 critical, 1 high, 2 medium, 0 low); `on_failure: block` → remediate and rerun.
+
+**Findings:**
+
+- Critical: 0
+- High: 1
+- Medium: 2
+- Low: 0
+
+**New tasks added:** p04-t23 (H1), p04-t24 (M1), p04-t25 (M2)
+
+**Design drift / artifact alignment notes:**
+
+- H1 is a D11 immutability gap under overlapping archive calls (the vacancy decision is not an exclusive claim); the fix adds an owner-scoped claim.
+- M1 is a composition gap between p04-t15 (parser) and p04-t16 (writer) for `…-gN-<scope>` names.
+- M2 restores D5's raw plan-record checks (duplicate identities, misplaced tasks).
+
+**Next:** p04-t23..p04-t25 via continuation `cont-ac-ext-fix-2`; narrowed final round 6; gate attempt 2 of generation 2.
 
 ## Deferred Findings
 
