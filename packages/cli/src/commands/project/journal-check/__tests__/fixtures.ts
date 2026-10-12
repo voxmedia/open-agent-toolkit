@@ -48,6 +48,28 @@ oat_plan_source: quick
 | p01   | code | passed | 2026-10-12 | reviews/archived/p01.md |
 `;
 
+/**
+ * `PLAN` with a fenced example task heading under Phase 2. The example is
+ * not a plan record, so the plan still declares three tasks (p02: 1).
+ */
+export const PLAN_WITH_FENCED_EXAMPLE = PLAN.replace(
+  '**Files:** `docs/reader.md`\n',
+  '**Files:** `docs/reader.md`\n\nA task heading looks like this:\n\n```markdown\n### Task p02-t02: Example\n```\n',
+);
+
+/** A journal whose overview counts the fenced example as a plan task. */
+export function overviewCountingFencedExample(valid: string): string {
+  return replaceOnce(
+    replaceOnce(
+      valid,
+      '| Phase 2 | complete | 1     | 1/1       |',
+      '| Phase 2 | complete | 2     | 1/2       |',
+    ),
+    '**Total:** 3/3 tasks completed',
+    '**Total:** 3/4 tasks completed',
+  );
+}
+
 export const STATE = `---
 oat_phase: implement
 oat_phase_status: complete

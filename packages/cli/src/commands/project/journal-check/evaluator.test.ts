@@ -8,7 +8,9 @@ import {
   GOAL_PLAN,
   GOAL_STATE,
   journal,
+  overviewCountingFencedExample,
   PLAN,
+  PLAN_WITH_FENCED_EXAMPLE,
   realRunLine,
   STATE,
 } from './__tests__/fixtures';
@@ -693,6 +695,24 @@ oat_current_task_id: null
       ['task-duplicate-block', 40],
       // The fenced p02-t01 is not a record: its plan task has no block.
       ['task-block-missing', null],
+    ]);
+  });
+});
+
+describe('a fenced plan example is not a plan task', () => {
+  it('accepts the truthful overview and refuses the one counting the example', () => {
+    const plan = PLAN_WITH_FENCED_EXAMPLE;
+    expect(plan).toContain('### Task p02-t02: Example');
+    expect(parseTaskProgress(plan, VALID)).toMatchObject({
+      total: 3,
+      completed: 3,
+    });
+    expect(check(VALID, { plan })).toMatchObject({ status: 'ok', reasons: [] });
+
+    const counted = overviewCountingFencedExample(VALID);
+    expect(codes(counted, { plan })).toEqual([
+      'overview-total-mismatch',
+      'overview-total-mismatch',
     ]);
   });
 });

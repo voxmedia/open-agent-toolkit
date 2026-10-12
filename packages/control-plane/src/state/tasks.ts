@@ -94,15 +94,24 @@ export function parseTaskProgress(
   };
 }
 
+/**
+ * Plan phases and task totals, read through the same record mask as every
+ * journal rule: a heading inside frontmatter, a fenced example or indented
+ * code is not a record, so it neither opens a phase nor counts as a task. The
+ * heading grammar (every spelling in the table above) is unchanged.
+ */
 function parsePhaseProgress(
   planContent: string,
   completedTasks: Set<string>,
 ): MutablePhaseProgress[] {
   const phases: MutablePhaseProgress[] = [];
-  const lines = planContent.split('\n');
+  const { lines, recordMask } = readJournalRecords(planContent);
   let currentPhase: MutablePhaseProgress | null = null;
 
-  for (const line of lines) {
+  for (const [index, line] of lines.entries()) {
+    if (!recordMask[index]) {
+      continue;
+    }
     const phaseHeading = parsePhaseHeading(line);
     if (phaseHeading) {
       currentPhase = {

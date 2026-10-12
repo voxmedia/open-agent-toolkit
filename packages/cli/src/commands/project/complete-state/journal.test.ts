@@ -16,7 +16,9 @@ import {
   commitGap,
   journal,
   NEGATIVE_VARIANTS,
+  overviewCountingFencedExample,
   PLAN,
+  PLAN_WITH_FENCED_EXAMPLE,
   realRunLine,
   withDeviation,
 } from '@commands/project/journal-check/__tests__/fixtures';
@@ -68,9 +70,10 @@ describe('complete-state evaluates the final journal before its write', () => {
   async function project(
     journalContent: string,
     state = buildState(),
+    plan = PLAN,
   ): Promise<ProjectFixture> {
     const fixture = await createProjectFixture(tempDirs, { state });
-    await writeFile(join(fixture.projectPath, 'plan.md'), PLAN, 'utf8');
+    await writeFile(join(fixture.projectPath, 'plan.md'), plan, 'utf8');
     await writeFile(
       join(fixture.projectPath, 'implementation.md'),
       journalContent,
@@ -140,6 +143,27 @@ describe('complete-state evaluates the final journal before its write', () => {
     expect(await readFile(fixture.statePath, 'utf8')).toContain(
       'oat_lifecycle: complete',
     );
+  });
+
+  it('completes a truthful journal whose plan holds a fenced example task heading', async () => {
+    const fixture = await project(
+      VALID,
+      buildState(),
+      PLAN_WITH_FENCED_EXAMPLE,
+    );
+    expect(await completeState(fixture)).toMatchObject({
+      exitCode: 0,
+      payload: { status: 'ok' },
+    });
+  });
+
+  it('refuses an overview that counts the fenced example, state byte-identical', async () => {
+    const fixture = await project(
+      overviewCountingFencedExample(VALID),
+      buildState(),
+      PLAN_WITH_FENCED_EXAMPLE,
+    );
+    await expectRefusedWithoutWrite(fixture, 'overview-total-mismatch');
   });
 
   for (const variant of NEGATIVE_VARIANTS) {
