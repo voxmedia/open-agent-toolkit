@@ -920,7 +920,14 @@ export function checkRunLines(context: RuleContext): void {
   });
 }
 
-const BRACE_PLACEHOLDER = /\{[A-Za-z][^{}\n]{0,80}\}/;
+/**
+ * Brace residue is the templates' own placeholder vocabulary anywhere, or any
+ * brace token that starts a list item or follows a `**Label:**` marker (the
+ * slots the templates fill). Ordinary prose such as `returns {status,
+ * reasons}` is not residue.
+ */
+const BRACE_PLACEHOLDER =
+  /\{(?:Project Name|Phase Name|Task Name|N|path|why|purpose|bullet|sha|time|capability \d+|command\(s\)[^{}\n]*|2-5 bullets[^{}\n]*|gotchas[^{}\n]*|trade-offs[^{}\n]*|tests\/lint[^{}\n]*|what (?:changed|materially)[^{}\n]*|pass\/fail[^{}\n]*|Notes will be added[^{}\n]*|Continue log[^{}\n]*)\}|^\s*(?:[-*]|\d+\.)\s+\{[^{}\n]+\}|\*\*[^*\n]+:\*\*\s*\{[^{}\n]+\}/;
 const DATE_PLACEHOLDER = /\bYYYY-MM-DD\b/;
 const BRACKET_PLACEHOLDER =
   /\[(?:Phase Name|Project Name|Execution record name|N|capability \d+|bullet|path|purpose|time|full (?:base |head |commit )?SHA[^\]]*|Summary prose[^\]]*|root \| phase-implementer[^\]]*|tests\/lint[^\]]*|observed evidence[^\]]*|what changed vs[^\]]*|short bullets[^\]]*|Decision made[^\]]*|anything discovered[^\]]*|Blocker description[^\]]*)\]/;

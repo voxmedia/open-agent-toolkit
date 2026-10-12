@@ -285,6 +285,25 @@ ${blocks}
     expect(codes(residue)).toEqual(['template-residue']);
   });
 
+  it('ordinary brace prose is not template residue', () => {
+    const prose = replaceOnce(
+      VALID,
+      '- Reader reads records.',
+      '- Reader reads records and returns {status, reasons} to the caller.',
+    );
+    expect(check(prose)).toMatchObject({ status: 'ok', reasons: [] });
+    // Placeholder vocabulary and slot-shaped braces stay residue.
+    for (const residue of [
+      '- Reader reads records for {Task Name}.',
+      '- {anything the template asked for}',
+      '**Verification:** {command(s) and result}',
+    ]) {
+      expect(
+        codes(replaceOnce(VALID, '- Reader reads records.', residue)),
+      ).toEqual(['template-residue']);
+    }
+  });
+
   it('receipt appended after References', () => {
     const appended = `${VALID}
 ### Review Received: p02
