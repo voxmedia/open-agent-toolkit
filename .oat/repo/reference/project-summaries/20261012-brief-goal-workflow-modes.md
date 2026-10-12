@@ -198,3 +198,11 @@ The final integrated review reached three rounds; each fix to the delivery-evide
 ### 2026-10-11 · structural · oat-project-implement · final
 
 Final integrated review passed at 9881971ba after four rounds (0/1/0/2, 0/1/0/1, 0/1/0/0, 0/0/0/0); fixes p12-t09..t11 to the delivery-evidence evaluator; implementation complete. Key final-review-passed-9881971ba.
+
+### 2026-10-11 · structural · oat-project-pr-final · https://github.com/voxmedia/open-agent-toolkit/pull/362
+
+Stack #363 landed: #361 (v1 brief) merged at 3352af96e with a merge commit, #362 (goal) merged at 573d5b820; both via the asynchronous stack merge endpoint. Key pr-final-362-merged.
+
+### 2026-10-11 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/brief-goal-workflow-modes/references/project-retro.md evidence_used=archived-review-markdown,astra-alignment-reports,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings promotions=5 upstream=1 apply=performed filing=performed
