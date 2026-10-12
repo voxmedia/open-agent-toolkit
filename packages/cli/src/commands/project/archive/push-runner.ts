@@ -18,6 +18,7 @@ import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 
 import {
+  ArchiveIdentityError,
   archiveProjectOnCompletion,
   assertExactArchiveProjectRoot,
   assertDurableArchiveProjectTarget,
@@ -405,7 +406,11 @@ export async function runArchivePushCommand(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
-      context.logger.json({ status: 'error', message });
+      context.logger.json({
+        status: 'error',
+        ...(error instanceof ArchiveIdentityError ? { code: error.code } : {}),
+        message,
+      });
     } else {
       context.logger.error(message);
     }

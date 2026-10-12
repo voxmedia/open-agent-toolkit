@@ -233,6 +233,26 @@ apply would use, so a retry previews the persisted snapshot rather than
 today's date. The synced protections (recordless retry by completed ref,
 stale-source refusal, exact project-root checks) are unchanged.
 
+Every refusal fails closed before any write. Its message starts with a stable
+reason code, and `--json` reports the same code as `code` in the error object:
+
+| Code                                       | Refused when                                                                                                                                                                  |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `archive-retry-ambiguous`                  | more than one same-scope archive matches the retry                                                                                                                            |
+| `archive-retry-conflict`                   | the retained artifacts differ from the project's archive                                                                                                                      |
+| `archive-occupant-unverifiable`            | a non-empty directory at the archive path does not identify itself as this project; if it is a partial copy left by an interrupted archive, inspect and remove it, then retry |
+| `archive-generation-synced`                | `--new-generation` was given for a synced project                                                                                                                             |
+| `archive-generation-reason`                | the `--new-generation` reason is empty, multi-line or longer than 200 characters                                                                                              |
+| `archive-generation-source-absent`         | `--new-generation` was given but the project directory is absent                                                                                                              |
+| `archive-generation-no-predecessor`        | `--new-generation` found no archive of the project and scope                                                                                                                  |
+| `archive-generation-ambiguous-predecessor` | more than one archive holds the latest generation                                                                                                                             |
+| `archive-generation-pending`               | the latest generation is still allocated but not copied                                                                                                                       |
+| `archive-generation-path-occupied`         | the `<project>-gN` path is held by something else                                                                                                                             |
+
+When `--new-generation` content is identical to an existing archive, the
+command resolves to that generation and warns that the reason was not
+recorded.
+
 The exported summary finalizes source locators: each
 `oat-project:<project>#<entry-id>` token becomes
 `oat-archive:<YYYYMMDD>-<project>#<entry-id>`, and a relative link to the

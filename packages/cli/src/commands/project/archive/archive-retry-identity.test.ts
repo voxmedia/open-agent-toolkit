@@ -1060,3 +1060,138 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     expect(existsSync(fixture.archiveRoot)).toBe(false);
   });
 });
+
+describe('archive identity refusal codes', () => {
+  function evaluate(
+    fixture: Fixture,
+    overrides: {
+      scope?: 'shared' | 'synced';
+      projectPath?: string;
+      reason?: string;
+    } = {},
+  ) {
+    return evaluateArchiveRetryIdentity({
+      repoRoot: fixture.repoRoot,
+      projectsRoot: '.oat/projects/shared',
+      projectName: PROJECT,
+      projectPath: overrides.projectPath ?? fixture.projectPath,
+      scope: overrides.scope ?? 'shared',
+      timestamp: '2026-09-05T09:00:00Z',
+      ...(overrides.reason !== undefined
+        ? { newGeneration: { reason: overrides.reason } }
+        : {}),
+    });
+  }
+
+  async function expectCode(
+    promise: Promise<unknown>,
+    code: string,
+  ): Promise<void> {
+    await expect(promise).rejects.toMatchObject({
+      code,
+      message: expect.stringMatching(new RegExp(`^${code}: `)),
+    });
+  }
+
+  async function archived(): Promise<Fixture> {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    return fixture;
+  }
+
+  async function reopenChanged(fixture: Fixture): Promise<void> {
+    await restoreSource(fixture);
+    await writeFile(join(fixture.projectPath, 'state.md'), '# reopened\n');
+  }
+
+  it('prefixes every refusal with its stable code', async () => {
+    const twins = await archived();
+    await cp(
+      join(twins.archiveRoot, PROJECT),
+      join(twins.archiveRoot, `${PROJECT}-20260901093000`),
+      { recursive: true },
+    );
+    await restoreSource(twins);
+    await expectCode(evaluate(twins), 'archive-retry-ambiguous');
+    await reopenChanged(twins);
+    await expectCode(
+      evaluate(twins, { reason: 'x' }),
+      'archive-generation-ambiguous-predecessor',
+    );
+
+    const conflict = await archived();
+    await reopenChanged(conflict);
+    await expectCode(evaluate(conflict), 'archive-retry-conflict');
+    await expectCode(
+      evaluate(conflict, { reason: '  ' }),
+      'archive-generation-reason',
+    );
+    await expectCode(
+      evaluate(conflict, { scope: 'synced', reason: 'x' }),
+      'archive-generation-synced',
+    );
+    await expectCode(
+      evaluate(conflict, {
+        projectPath: join(conflict.repoRoot, 'missing', PROJECT),
+        reason: 'x',
+      }),
+      'archive-generation-source-absent',
+    );
+    const occupiedGeneration = join(conflict.archiveRoot, `${PROJECT}-g2`);
+    await mkdir(occupiedGeneration);
+    await writeFile(join(occupiedGeneration, 'notes.md'), '# unrelated\n');
+    await expectCode(
+      evaluate(conflict, { reason: 'x' }),
+      'archive-generation-path-occupied',
+    );
+    await rm(occupiedGeneration, { recursive: true });
+    await mkdir(occupiedGeneration);
+    await writeFile(
+      join(occupiedGeneration, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: PROJECT,
+        snapshotName: '20260903-demo-g2',
+        scope: 'shared',
+        manifestHash: `sha256:${'0'.repeat(64)}`,
+        generation: 2,
+        predecessor: '20260901-demo',
+        allocation: 'pending',
+      })}\n`,
+    );
+    await expectCode(
+      evaluate(conflict, { reason: 'x' }),
+      'archive-generation-pending',
+    );
+
+    const fresh = await createFixture();
+    await expectCode(
+      evaluate(fresh, { reason: 'x' }),
+      'archive-generation-no-predecessor',
+    );
+    const occupant = join(fresh.archiveRoot, PROJECT);
+    await mkdir(occupant, { recursive: true });
+    await writeFile(join(occupant, 'state.md'), '# partial copy\n');
+    await expectCode(evaluate(fresh), 'archive-occupant-unverifiable');
+    await expect(evaluate(fresh)).rejects.toThrow(
+      'If this directory is a partial copy left by an interrupted archive, inspect and remove it, then retry; otherwise record reopened work in a follow-up project',
+    );
+  });
+
+  it('reports the code in the archive JSON error', async () => {
+    const fixture = await archived();
+    await reopenChanged(fixture);
+    const report = await previewArchive(
+      fixture,
+      fixture.projectPath,
+      '2026-09-05T09:00:00Z',
+    );
+    expect(report).toMatchObject({
+      status: 'error',
+      code: 'archive-retry-conflict',
+      message: expect.stringMatching(/^archive-retry-conflict: Project `demo`/),
+    });
+  });
+});

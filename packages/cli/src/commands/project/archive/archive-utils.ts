@@ -972,7 +972,8 @@ export function newGenerationReplayWarning(
 export function validateNewGenerationReason(reason: string): string {
   const trimmed = reason.trim();
   if (trimmed === '' || /[\r\n]/.test(trimmed) || trimmed.length > 200) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-reason',
       '--new-generation requires a non-empty, single-line reason of at most 200 characters.',
       2,
     );
@@ -1028,6 +1029,46 @@ async function readArchiveIdentityCandidates(
   return candidates;
 }
 
+/** Stable reason codes of the archive identity refusals. */
+export const ARCHIVE_IDENTITY_REFUSAL_CODES = [
+  'archive-retry-ambiguous',
+  'archive-retry-conflict',
+  'archive-occupant-unverifiable',
+  'archive-generation-synced',
+  'archive-generation-reason',
+  'archive-generation-source-absent',
+  'archive-generation-no-predecessor',
+  'archive-generation-ambiguous-predecessor',
+  'archive-generation-pending',
+  'archive-generation-path-occupied',
+] as const;
+
+export type ArchiveIdentityRefusalCode =
+  (typeof ARCHIVE_IDENTITY_REFUSAL_CODES)[number];
+
+/**
+ * An archive identity refusal: fails closed before any write, with a stable
+ * reason code that prefixes the message and that `--json` reports as `code`.
+ */
+export class ArchiveIdentityError extends CliError {
+  constructor(
+    public readonly code: ArchiveIdentityRefusalCode,
+    message: string,
+    exitCode: 1 | 2 = 1,
+  ) {
+    super(`${code}: ${message}`, exitCode);
+    this.name = 'ArchiveIdentityError';
+  }
+}
+
+/**
+ * Recovery for a directory that does not identify itself: most often a partial
+ * copy an interrupted archive left behind (metadata is written after the copy).
+ */
+function occupantGuidance(projectName: string): string {
+  return `If this directory is a partial copy left by an interrupted archive, inspect and remove it, then retry; otherwise record reopened work in a follow-up project (for example \`oat project new ${projectName}-followup\`).`;
+}
+
 function followUpGuidance(projectName: string): string {
   return `Record reopened work in a follow-up project (for example \`oat project new ${projectName}-followup\`) and archive that project instead.`;
 }
@@ -1063,7 +1104,8 @@ export async function evaluateArchiveRetryIdentity(
     generationReason !== null &&
     (options.scope === 'synced' || options.persistedSnapshot)
   ) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-synced',
       `--new-generation applies to shared and local projects; synced project \`${options.projectName}\` is terminal at its completed ref. ${followUpGuidance(options.projectName)}`,
       1,
     );
@@ -1124,7 +1166,8 @@ export async function evaluateArchiveRetryIdentity(
     };
   }
   if (generationReason !== null && !sourcePresent) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-source-absent',
       `--new-generation needs the reopened project at \`${options.projectPath}\`; it is absent. Retry without --new-generation to resume an existing archive.`,
       1,
     );
@@ -1167,7 +1210,8 @@ export async function evaluateArchiveRetryIdentity(
   }
 
   if (matches.length > 1) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-retry-ambiguous',
       `Project \`${options.projectName}\` (${options.scope}) matches ${matches.length} existing archives (${matches
         .map((match) => `\`${match.archivePath}\``)
         .join(
@@ -1208,12 +1252,15 @@ export async function evaluateArchiveRetryIdentity(
       sameIdentity[0] ??
       candidates.find((candidate) => candidate.metadata === null);
     if (conflict) {
-      throw new CliError(
-        conflict.metadata
-          ? `Project \`${options.projectName}\` (${options.scope}) was already archived as \`${conflict.metadata.snapshotName}\` at \`${conflict.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`
-          : `\`${conflict.archivePath}\` already exists without readable archive metadata, so it cannot be verified as an earlier archive of \`${options.projectName}\`; refusing to overwrite it or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`,
-        1,
-      );
+      throw conflict.metadata
+        ? new ArchiveIdentityError(
+            'archive-retry-conflict',
+            `Project \`${options.projectName}\` (${options.scope}) was already archived as \`${conflict.metadata.snapshotName}\` at \`${conflict.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`,
+          )
+        : new ArchiveIdentityError(
+            'archive-occupant-unverifiable',
+            `\`${conflict.archivePath}\` already exists without readable archive metadata, so it cannot be verified as an earlier archive of \`${options.projectName}\`; refusing to overwrite it or create a second copy before any export, copy or S3 mutation. ${occupantGuidance(options.projectName)}`,
+          );
     }
   }
 
@@ -1241,9 +1288,9 @@ export async function evaluateArchiveRetryIdentity(
     ? join(dirname(archiveBasePath), `${options.projectName}-${options.scope}`)
     : archiveBasePath;
   if (scopeQualified && (await pathExists(archivePath))) {
-    throw new CliError(
-      `\`${archivePath}\` already exists and is not an archive of \`${options.projectName}\` (${options.scope}); refusing to overwrite it or create a second copy before any export, copy or S3 mutation.`,
-      1,
+    throw new ArchiveIdentityError(
+      'archive-occupant-unverifiable',
+      `\`${archivePath}\` already exists and is not an archive of \`${options.projectName}\` (${options.scope}); refusing to overwrite it or create a second copy before any export, copy or S3 mutation. ${occupantGuidance(options.projectName)}`,
     );
   }
   return {
@@ -1282,13 +1329,14 @@ async function allocateArchiveGeneration(
     (candidate) => candidate.metadata === null,
   );
   if (unverifiable) {
-    throw new CliError(
-      `\`${unverifiable.archivePath}\` already exists without readable archive metadata, so it cannot be a verified predecessor of \`${options.projectName}\`; refusing to allocate a generation. ${followUpGuidance(options.projectName)}`,
-      1,
+    throw new ArchiveIdentityError(
+      'archive-occupant-unverifiable',
+      `\`${unverifiable.archivePath}\` already exists without readable archive metadata, so it cannot be a verified predecessor of \`${options.projectName}\`; refusing to allocate a generation. ${occupantGuidance(options.projectName)}`,
     );
   }
   if (sameIdentity.length === 0) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-no-predecessor',
       `--new-generation needs an archived predecessor of \`${options.projectName}\` (${options.scope}), and none exists; archive the project without --new-generation.`,
       1,
     );
@@ -1298,7 +1346,8 @@ async function allocateArchiveGeneration(
     (candidate) => generationOf(candidate) === latest,
   );
   if (heads.length !== 1) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-ambiguous-predecessor',
       `--new-generation for \`${options.projectName}\` (${options.scope}) needs exactly one predecessor, but ${heads.length} archives hold generation ${latest} (${heads
         .map((head) => `\`${head.archivePath}\``)
         .join(
@@ -1309,7 +1358,8 @@ async function allocateArchiveGeneration(
   }
   const predecessor = heads[0]!.metadata!;
   if (predecessor.allocation === 'pending') {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-pending',
       `Generation ${latest} of \`${options.projectName}\` (\`${predecessor.snapshotName}\`) is still being archived; finish it by retrying with its original content before requesting another generation.`,
       1,
     );
@@ -1329,7 +1379,8 @@ async function allocateArchiveGeneration(
     `${options.projectName}-g${generation}`,
   );
   if (await pathExists(archivePath)) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-generation-path-occupied',
       `\`${archivePath}\` already exists and is not generation ${generation} of \`${options.projectName}\`; refusing to overwrite it.`,
       1,
     );
