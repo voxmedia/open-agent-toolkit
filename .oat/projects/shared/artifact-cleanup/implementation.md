@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: null
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -17,7 +17,7 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
+> - When all plan tasks are complete, set `oat_current_task_id: p04-t05`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
 | Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 4     | 4/4       |
+| Phase 4 | in_progress | 5     | 4/5       |
 
-**Total:** 36/36 tasks completed
+**Total:** 36/37 tasks completed
 
 ---
 
@@ -982,6 +982,33 @@ oat_generated: false
 
 ---
 
+### Review Received: p04
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/p04-review-2026-10-12T051738Z.md (round 1, Fable 5.1 high, auto)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 1
+- Low: 1
+
+**New tasks added:** p04-t05 (M1)
+
+**Design drift / artifact alignment notes:**
+
+- L1: this project's own journal carried the pre-change template's `## Implementation Log` and `## Test Results` sections and a placeholder `## Final Summary`, which the shipped validator refuses as `template-residue`. Fixed by the root in the receive commit: both dropped sections removed, `## Final Summary` written from observed facts. The remaining `journal check --at completion` reasons (journal status, phase status, state status) are the expected in-progress disagreements that Step 16 settles.
+
+**Next:** execute p04-t05 as a bounded fix continuation of the p04 implementer; root-verify the delta (evidence pointer and `out/guards.txt`) and let the final integrated review cover it.
+
+### Task p04-t05: (review) Correct the p04-t01 guard evidence and make the guard runs real
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1016,45 +1043,6 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
-## Implementation Log
-
-Chronological log of implementation progress.
-
-### 2026-10-11
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-10-11
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
 ## Deviations from Plan / Design
 
 | Date       | Phase/Task  | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                 | Source of truth now                                                               | Follow-up                                                                                         |
@@ -1069,37 +1057,34 @@ Chronological log of implementation progress.
 | 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                           | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                              |
 | 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                  | Commit 8fbda566e                                                                  | None                                                                                              |
 
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Project-log judgment entries carry category, source, origin and recorded-head fields; roll-up writes a bounded observations digest with non-link locators and omits the section when empty; `workflow.projectLogDigest` config; slimmer project-log and summary templates.
+- Summary and retro read the unified log first and `oat-execution-learnings.md` second with proven-twin deduplication; the summary gains the staged invocation contract and learning-driven freshness; the autonomous, cloud and goal producers write learnings to the project log and never create the legacy file (D14: a disabled log warns and continues).
+- A shared journal record reader, `dispatch record --format line` run records, the journal evaluator and `oat project journal check` at three lifecycle boundaries, `complete-state` refusing on an invalid journal (writing nothing), journal templates with `## Reviews and Gates` and `## Deferred Findings` slots, and sixteen writer skills targeting them; the complete skill runs summary staged, validates, then resumes roll-up, and writes `oat_pr_status_observed_at`.
+- Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, thirteen `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
+- Documentation audit, ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, full gate run green.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `log append --category/--source/--origin`; `log check` reports `learnings: legacy`; `log rollup` emits a bounded digest and `summarySection: omitted`; `journal check --at implement-preflight|review|completion`; `complete-state` refuses `journal-missing` and journal defects with reason codes; archive refusals carry `archive-*` codes; `archive --new-generation <reason>`; completion no longer accepts `in_progress`.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/{log,journal-check,complete-state,dispatch,archive}/**`, `packages/control-plane/src/state/journal-records.ts`
+- `.oat/templates/{project-log,summary,project-retro,implementation,implementation-brief}.md`; 21 skills under `.agents/skills/`; `.agents/docs/autonomy-contract.md`
+- `apps/oat-docs/docs/{reference,workflows}/**`; `.oat/repo/reference/decisions/DR-261012-*`; `.oat/repo/pjm/backlog/items/BL-261012-*`
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Per-phase scoped vitest under an isolated HOME; eleven named guards proven by implementers and re-proven by reviewers; real-artifact probes on scratch repos with stubbed S3 and gh across quick, lite, brief and goal (229 assertions); p04-t04 gate run: check, type-check, forced uncached tests (8807 + 287 + 61), build, check:skill-bumps (21), release:check-versions, release:validate, build:docs, smoke (163), skills (700), scripts, lint, format, all exit 0.
+- Reviews: p01 (2 rounds), p02 (2), p03 (2), p04 (1 so far), Fable 5.1 high; final integrated review and the configured exit gate follow.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- See the Deviations table: `--dispatch-stamp` flag, evaluator scope (closeout-check keeps delivery coverage), `generationRequest` camelCase recorded as the request witness, scope-qualified archive identity whenever another archive holds the base path, occupant refusal with an inspect/remove/retry hint, `.git` excluded from every scope's copy, unchanged-content generation resolves to the latest with a warning.
 
 ## References
 

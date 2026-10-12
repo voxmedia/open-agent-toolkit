@@ -704,6 +704,33 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 
 ---
 
+### Task p04-t05: (review) Correct the p04-t01 guard evidence and make the guard runs real
+
+**Files:**
+
+- Modify: `.oat/projects/shared/artifact-cleanup/implementation.md` (only the `### Task p04-t01` block: replace the `guards.txt` pointer with the real location and cite how each guard was run)
+- Add: `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/scripts/guards.sh` (gitignored evidence; runs the eleven named guards by their real vitest titles under a fake HOME and writes `out/guards.txt` with per-guard exit codes and counts)
+
+**Step 1: Understand the issue**
+
+Review finding M1 (`p04-review-2026-10-12T051738Z.md`): the p04-t01 entry cites `guards.txt`, which does not exist (results live at `out/results.txt`), and says the eleven guards were "run by name"; three guard names (`learning-category-validation`, `digest-bounded-projection`, `digest-ledger-graduation-intact`) exist only as comments in their test files, so `vitest -t <guard>` matches zero tests and exits 0 with everything skipped. All eleven pass when run by their real titles; this is an evidence-record defect.
+Location: `implementation.md:916`, `:921`
+
+**Step 2: Implement fix**
+
+Write `scripts/guards.sh` that runs each guard by its real test file and title (`vitest run <file> -t '<exact title>'`), fails if a filter matches zero tests, and records per-guard results to `out/guards.txt`; run it once under `HOME=$FH`; rewrite the p04-t01 evidence sentence to cite `out/results.txt` and `out/guards.txt` with the exact invocations.
+
+**Step 3: Verify**
+
+Run: `bash .oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/scripts/guards.sh` (under `HOME=$FH`)
+Expected: eleven guards, each with a non-zero matched-test count and exit 0; `out/guards.txt` written; `grep -c 'guards.txt' implementation.md` resolves to a real path.
+
+**Step 4: Commit**
+
+`chore(p04-t05): correct the p04-t01 guard evidence pointer and record real guard runs`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                               |
@@ -714,7 +741,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 | p02    | code     | passed          | 2026-10-12 | reviews/archived/p02-review-2026-10-12T030234Z.md           | b9f2f8050e2246c1d6a92e2b5aacf70e0b2f053e | auto       | round 2 (narrowed to 736be8cfc..3607948f4): 0/0/0/0; all five round-1 findings closed                                                                     |
 | p03    | code     | fixes_completed | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10); fixes landed 60d10eb8b..a6a9950a5                                        |
 | p03    | code     | passed          | 2026-10-12 | reviews/archived/p03-review-2026-10-12T042217Z.md           | 1f5601c3f080ac4ca284ab634ef92039437a48be | auto       | round 2 (narrowed to 53340c9ec..a6a9950a5): 0/0/0/3; three new Lows converted (p03-t11..t13), root-verified, covered by the final review                  |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p04    | code     | fixes_added     | 2026-10-12 | reviews/archived/p04-review-2026-10-12T051738Z.md           | aec70adab4381d0e713a2c199a03990828824e68 | auto       | round 1: 0/0/1/1; M1 → p04-t05; L1 fixed by the root in the receive commit                                                                                |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                               |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                                                                             |
@@ -739,9 +766,9 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
 - Phase 3: 13 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity; round-2 polish: replay reason wording, two more refusal codes, empty scope-qualified directory)
-- Phase 4: 4 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates
+- Phase 4: 5 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates, one review fix task (guard evidence pointer)
 
-**Total: 36 tasks**
+**Total: 37 tasks**
 
 Ready for code review and merge.
 
