@@ -2291,7 +2291,7 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       'Book["Review-outcome bookkeeping',
     ]);
     expect(docs).toContain(
-      'Review-outcome bookkeeping — the Reviews row and its disposition, the Orchestration Run, and the deferred project-log entries — is out of scope at the reviewed head',
+      'Review-outcome bookkeeping — the Reviews row and its disposition, the run-line update, and the deferred project-log entries — is out of scope at the reviewed head',
     );
   });
 });

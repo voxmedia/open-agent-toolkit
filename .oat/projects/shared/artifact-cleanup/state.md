@@ -38,6 +38,20 @@ oat_dispatch_policy:
   mode: managed
   policy: frontier
   source: project-state
+oat_phase_recovery_policy:
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: ac-p02-recovery-1
+        original_request_id: ac-p02-implementation
+        original_task_id: p02-t07
+        original_commit: bd16db569474ad13f0bbd7300d710a2f55e25891
+        discovered_by: 'HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project src/providers/identity src/commands/help-snapshots.test.ts src/validation src/commands/init/tools/shared src/commands/state'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: bd16db569474ad13f0bbd7300d710a2f55e25891
+        status: completed
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
