@@ -383,9 +383,202 @@ Expected: green; the named negative control fails with the guard neutralized and
 
 ### Task p03-t03: Explicit archive generations
 
-**Files:** `packages/cli/src/commands/project/archive/{index,push-runner,archive-utils}.ts`, archive option/result types (+tests), help snapshots, docs: `--new-generation <reason>` requires a non-empty reason and exactly one unambiguously resolved predecessor for the same project and originating scope; never overwrites the predecessor or bypasses synced source/ref guards; allocates and persists the new generation identity and predecessor binding before any export, copy or S3 side effect so an in-flight retry reuses that identity and receipt; an explicit subsequent generation is distinguished from a replay by a persisted `generation_request` id in the snapshot metadata; dry-run uses the same read-only evaluator and reports the proposed identity without persisting it. If the replay distinction cannot be specified during this task, the option is omitted, the task records why, and follow-up-project guidance stays (design, D11).
+**Files:** `packages/cli/src/commands/project/archive/{index,push-runner,archive-utils}.ts`, archive option/result types (+tests), help snapshots, docs: `--new-generation <reason>` requires a non-empty reason and exactly one unambiguously resolved predecessor for the same project and originating scope; never overwrites the predecessor or bypasses synced source/ref guards; allocates and persists the new generation identity and predecessor binding before any export, copy or S3 side effect so an in-flight retry reuses that identity and receipt; a replay is distinguished from a new generation by the manifest-hash match against same-scope candidates, with the persisted `generationRequest` id recorded as the request witness (p03 review L1 alignment); dry-run uses the same read-only evaluator and reports the proposed identity without persisting it. If the replay distinction cannot be specified during this task, the option is omitted, the task records why, and follow-up-project guidance stays (design, D11).
 
 **Verify:** If the option ships: guard `archive-generation-authorization`: predecessor resolution neutralized → a generation is allocated with two candidates; restored → refused; a valid generation with one predecessor succeeds, its retry reuses the identity, a second explicit request allocates a new generation with the first as predecessor; dry-run persists nothing (tree and scratch S3 unchanged). If the option is omitted: record the bounded reason and a follow-up backlog item; verify no generation option or behavior is advertised (help snapshot, docs), conflicting reopened content still refuses with follow-up-project guidance, and every mandatory p03-t02 retry/preview control passes; record `archive-generation-authorization: not applicable — option omitted` rather than a fabricated pass (p04-t01 accepts this documented branch and still requires every mandatory guard result). Runner: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts`. Phase-3 documentation gate, whether or not generations ship: `pnpm --filter oat-docs check` after all phase-3 docs and mapping updates, exit code captured and required zero. **Commit:** `feat(p03-t03): explicit archive generations with predecessor binding`
+
+---
+
+### Task p03-t04: (review) Warn when --new-generation resolves to an existing generation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`archiveProjectOnCompletion`: when `options.newGenerationReason != null` and the identity disposition is `retry`, push a warning naming the existing generation and snapshot and stating that the reason was not recorded)
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts` (`buildDryRunReport` emits the same warning line)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (one test asserting the warning text in apply and dry-run)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): M1: content identical to an existing archive plus `--new-generation` exits 0 with `warnings: []` and no text signal; the validated reason is discarded.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:1152`, `push-runner.ts:193`
+
+**Step 2: Implement fix**
+
+Keep deviation (d) (unchanged content resolves to the latest generation) but make it audible in both modes.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t04): warn when --new-generation resolves to an existing generation`
+
+---
+
+### Task p03-t05: (review) Deterministic local archive path for scope-qualified and empty-base identities
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`new` disposition: when `snapshotName` is scope-qualified, `archivePath = <archived root>/<project>-<scope>` and refuse if it exists, mirroring `allocateArchiveGeneration`; when the base path exists but is empty, use the base path; never a clock-derived suffix)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (extend `same slug from a different scope` to assert the local path and dry-run/apply `archivePath` parity; one empty-base-path case)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): M2: the `new` branch returns `resolveUniqueArchivePath`'s timestamp-suffixed path whenever the base directory exists, so a different-scope archive and an empty base directory land at `demo5-2026…` names that differ between dry-run and apply and from `repo archive sync`'s hydrated name.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:1206` (and `resolveUniqueArchivePath` 624–636)
+
+**Step 2: Implement fix**
+
+Derive the local path from the identity, not the clock.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t05): deterministic archive path for scope-qualified and empty-base identities`
+
+---
+
+### Task p03-t06: (review) Reason codes on archive refusals and the occupant recovery hint
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (stable codes `archive-retry-ambiguous`, `archive-retry-conflict`, `archive-occupant-unverifiable`, `archive-generation-synced`, `archive-generation-reason`, `archive-generation-no-predecessor`, `archive-generation-ambiguous-predecessor`, `archive-generation-pending`, `archive-generation-path-occupied`; the occupant refusal says to inspect and remove a partial copy left by an interrupted archive and retry, otherwise record reopened work in a follow-up project)
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts` (JSON error carries `code`)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (pin each code)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (`#archive-identity` lists the codes)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): M3: the eight new refusals are prose-only and the JSON error has no `code`; the unverifiable-occupant message points a crash leftover at a follow-up project.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:1183` (and 957, 1048, 1134, 1179–1187, 1245–1297), `push-runner.ts:392`
+
+**Step 2: Implement fix**
+
+Design "Error Handling": archive guard fails closed with a reason code; fix the hint.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts; pnpm --filter oat-docs check`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t06): reason codes on archive refusals and the occupant recovery hint`
+
+---
+
+### Task p03-t07: (review) Content-conflict refusal names the latest generation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (choose the candidate with the highest generation, mention `allocation: pending` when set)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (one case with generations 1–5 present)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): L2: `sameIdentity[0]` is the alphabetically first candidate, so the refusal points the operator at the oldest snapshot.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:1178`
+
+**Step 2: Implement fix**
+
+Name the latest generation in the message.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t07): content-conflict refusal names the latest generation`
+
+---
+
+### Task p03-t08: (review) Recordless synced dry-run resolves identity through the completed ref
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (export `resolveRecordlessSyncedArchiveIdentity`)
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts` (when `projectScope === 'synced'` and there is no record, call it to supply `persistedSnapshot`/`sourceRefSha` to the evaluator in both modes)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (recordless synced project with several candidates: dry-run and apply report the same identity, or both refuse)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): L3: with several synced candidates and no record, the preview reports today's date while the apply binds via the completed ref or refuses.
+Location: `packages/cli/src/commands/project/archive/push-runner.ts:290`, `archive-utils.ts:1118–1121, 1391`
+
+**Step 2: Implement fix**
+
+Close the known parity gap the implementer and reviewer both flagged.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/help-snapshots.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t08): recordless synced dry-run resolves identity through the completed ref`
+
+---
+
+### Task p03-t09: (review) Test the .git exclusion for shared-scope archives
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (one shared-scope case with a nested `.git/HEAD`: absent from the archive, source and archive manifest hashes equal)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): L4: `ARCHIVE_RETENTION_EXCLUSIONS` now excludes `.git` for every scope, but only synced cases are tested.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:268`
+
+**Step 2: Implement fix**
+
+Add the control; no behaviour change.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`test(p03-t09): shared-scope archives exclude .git`
+
+---
+
+### Task p03-t10: (review) Autonomous learning commit identity uses the written source id
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (show the call as `LEARNING_SOURCE="autonomous-$RUN_ID-NN"; oat_record_learning <category> "$LEARNING_SOURCE" …` so the commit block's `--identity` suffix is the id just written; `oat_record_learning` itself stays byte-identical across the three producers)
+- Modify: `.agents/skills/oat-cursor-cloud-projects/SKILL.md` and `oat-project-goal/SKILL.md` if their commit blocks have the same gap
+- Modify: `packages/cli/src/commands/init/tools/shared/learning-producer-contracts.test.ts` (pin the assignment)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T035735Z.md`): L5: the persist block uses `$LEARNING_SOURCE`, which nothing assigns, so every learning commits under an empty identity suffix.
+Location: `.agents/skills/oat-project-autonomous/SKILL.md:464`
+
+**Step 2: Implement fix**
+
+Assign the variable at the call site; run `oat sync --scope project`.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills; HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/learning-producer-contracts.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t10): autonomous learning commits carry the written source id`
 
 ---
 
@@ -437,7 +630,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 | p01    | code     | passed          | 2026-10-12 | reviews/archived/p01-review-2026-10-12T013544Z.md           | a359c4524044ac4a8b74ad1739dc7fce1d25d730 | auto       | round 2 (narrowed to 5c7e60601..d905d0110): 0/0/0/0; M1/L3 plan alignments and L1/L2 fixes verified                                                       |
 | p02    | code     | fixes_completed | 2026-10-12 | reviews/archived/p02-review-2026-10-12T024507Z.md           | a9ee702f55d3ce000927edf4c50ce73f5adc3af2 | auto       | round 1: 0/0/2/3; all five converted (p02-t08..p02-t12); fixes landed cbaaefbcb..3607948f4                                                                |
 | p02    | code     | passed          | 2026-10-12 | reviews/archived/p02-review-2026-10-12T030234Z.md           | b9f2f8050e2246c1d6a92e2b5aacf70e0b2f053e | auto       | round 2 (narrowed to 736be8cfc..3607948f4): 0/0/0/0; all five round-1 findings closed                                                                     |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p03    | code     | fixes_added     | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10)                                                                           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                               |
@@ -462,10 +655,10 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
-- Phase 3: 3 tasks - Unified learning producers (D14), archive retry identity, explicit generations
+- Phase 3: 10 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity)
 - Phase 4: 4 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates
 
-**Total: 26 tasks**
+**Total: 33 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | in_progress | 3     | 3/3       |
+| Phase 3 | in_progress | 10    | 3/10      |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 22/26 tasks completed
+**Total:** 22/33 tasks completed
 
 ---
 
@@ -657,6 +657,76 @@ oat_generated: false
 **Verification:**
 
 - archive + help-snapshots vitest 291/291 exit 0; phase-3 docs gate `oat-docs check` 0
+
+---
+
+### Review Received: p03
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/p03-review-2026-10-12T035735Z.md (round 1, Fable 5.1 high, auto)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 3
+- Low: 5
+
+**New tasks added:** p03-t04 (M1), p03-t05 (M2), p03-t06 (M3), p03-t07 (L2), p03-t08 (L3), p03-t09 (L4), p03-t10 (L5)
+
+**Design drift / artifact alignment notes:**
+
+- L1: the plan and design said a replay is distinguished by a persisted `generation_request` id; the shipped mechanism is the manifest-hash match, with `generationRequest` recorded as the request witness. Implementation accepted (deterministic witness of the same facts; docs already describe it). Plan p03-t03 wording and design.md aligned now; source of truth: code and `project-artifacts.md`.
+- Deliberate changes (a)–(d) from p03-t02/t03 judged design intent or defensible narrowing by the reviewer; (d) stays with the warning p03-t04 adds; (b) keeps the refusal with the corrected hint from p03-t06.
+
+**Next:** execute p03-t04..p03-t10 as a bounded fix continuation of the p03 implementer, then a re-review of the fix delta to reach `passed`.
+
+### Task p03-t04: (review) Warn when --new-generation resolves to an existing generation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t05: (review) Deterministic local archive path for scope-qualified and empty-base identities
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t06: (review) Reason codes on archive refusals and the occupant recovery hint
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t07: (review) Content-conflict refusal names the latest generation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t08: (review) Recordless synced dry-run resolves identity through the completed ref
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t09: (review) Test the .git exclusion for shared-scope archives
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t10: (review) Autonomous learning commit identity uses the written source id
+
+**Status:** pending
+**Commit:** -
 
 ---
 
