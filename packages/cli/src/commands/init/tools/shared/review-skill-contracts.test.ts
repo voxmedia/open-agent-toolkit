@@ -3492,11 +3492,15 @@ printf 'artifact-read\\n'`,
       'If `gh` is missing or `gh pr edit` fails, always print the manual-update path.',
     );
     expect(content).toContain(
-      'For a synced archive completion this tracked-PR update is required: stop',
+      'For a synced archive completion, stop before Step 12 and retain the active',
     );
     expect(content).toContain(
-      'before Step 12, retain the active pointer, and let the next invocation resume',
+      'pointer; the failed run keeps `PR_BODY_FILE` and prints its path. The next',
     );
+    expect(content).toContain(
+      'skipped sync (Step 12) rather than retrying the update: apply the retained',
+    );
+    expect(content).not.toContain('this tracked-PR update is required');
   });
 
   it('carries the archive-completion PR body across the archive instead of reading pr/ from it', () => {
