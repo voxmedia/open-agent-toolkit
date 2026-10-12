@@ -112,6 +112,61 @@ Every new refusal is proven at its public boundary: an otherwise valid case, bas
 
 ---
 
+### Task p01-t06: (review) Add the learnings-fingerprint placeholder to the summary template
+
+**Files:**
+
+- Modify: `.oat/templates/summary.md` (placeholder frontmatter gains `oat_summary_learnings_fingerprint: none` beside the three existing tracking fields)
+- Modify: any template contract test that enumerates the summary frontmatter keys
+
+**Step 1: Understand the issue**
+
+Review finding L1 (`p01-review-2026-10-12T012710Z.md`): the template's placeholder frontmatter lists `oat_summary_last_task`, `oat_summary_revision_count` and `oat_summary_includes_revisions` but not `oat_summary_learnings_fingerprint`, which the summary skill now writes in every workflow mode (Step 5). No CLI reader uses a strict key set, so this is a preview gap only.
+Location: `.oat/templates/summary.md:9-11`
+
+**Step 2: Implement fix**
+
+Add `oat_summary_learnings_fingerprint: none` to the placeholder block; re-pin whichever contract test enumerates those keys.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli build; HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new src/commands/init/tools/shared/template-heading-literals.test.ts src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: green; a scaffolded summary carries the placeholder.
+
+**Step 4: Commit**
+
+`fix(p01-t06): summary template previews the learnings fingerprint field`
+
+---
+
+### Task p01-t07: (review) Document the minimum useful projectLogDigest.maxLines
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/configuration.md` (state the minimum useful `maxLines`, about 6: the first item plus the reserved trailer and cross-reference lines)
+- Modify: `packages/cli/src/commands/config/index.ts` (the `workflow.projectLogDigest.maxLines` catalog description states the same minimum)
+- Modify: `packages/cli/src/commands/project/log/rollup.test.ts` (one test pinning the edge: a `maxLines` below the first item plus the reserve yields `rendered: 0`, the trailer and the cross-reference only, and the bound still holds)
+
+**Step 1: Understand the issue**
+
+Review finding L2: the fit check reserves the trailer and cross-reference blocks before the first item, so a `maxLines` below the first item's lines plus that reserve writes a section with `rendered: 0` and only the trailer. The bound holds and the default (60) is unaffected; this is a configuration edge.
+Location: `packages/cli/src/commands/project/log/rollup.ts:342-350`
+
+**Step 2: Implement fix**
+
+Document the minimum beside the key in the docs and the config catalog; pin the edge with one test. Do not change the bound semantics.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log src/commands/config; pnpm --filter oat-docs check`
+Expected: green.
+
+**Step 4: Commit**
+
+`fix(p01-t07): document the minimum useful projectLogDigest.maxLines`
+
+---
+
 ## Phase 2: Journal and lifecycle enforcement
 
 ### Task p02-t01: Shared journal record reader
@@ -156,7 +211,7 @@ Every new refusal is proven at its public boundary: an otherwise valid case, bas
 
 ### Task p02-t06: Writer skills and agent roles target the slots
 
-**Files:** `.agents/skills/oat-project-implement/references/{phase-execution,completion-and-closeout,dispatch-and-dry-run,plan-and-resume}.md` (run line via `dispatch record --format line` under `## Orchestration Runs` updated in place; receipts, fix tasks and deferrals to their slots; `journal check --at implement-preflight` before Step 16 with the closeout invariant; `state.md` owns gate transitions, one terminal line per gate run in the journal; `phase-execution.md` excluded-phase reporting (currently the Outstanding Items table) → `## Deferred Findings` lines), `.agents/skills/oat-project-dispatch-subagents/SKILL.md` (the caller's run-record instruction points at `dispatch record --format line` and the in-place update rule), `oat-project-complete-auto/SKILL.md` (exception block → `## Deviations from Plan / Design`, never end-of-file), `oat-project-reconcile/SKILL.md` (session entry → the owning phase section, or `## Deviations from Plan / Design` when no phase owns it), `oat-worktree-bootstrap-auto/SKILL.md` (baseline warning → `## Deviations from Plan / Design`), `oat-project-review-receive/SKILL.md` and `oat-project-review-receive-remote/SKILL.md` (receipt fields: finding identity and substance, disposition and rationale, fix-record or approved-deferral linkage, final outcome; review paths local-only; placement), `oat-project-revise/SKILL.md` (revision blocks in their phase), `oat-project-review-provide/SKILL.md` (`journal check --at review --scope`; refresh-only findings are not tasks), `oat-project-complete/SKILL.md` (existing no-write preflight; Step 3.5 runs the summary skill staged (`staged: true`), then `journal check --at completion`, then Step 3.7 resumes roll-up (`resume: roll-up`); the inline fallback honors the same suspension point; writes the override line exactly as p02-t03 defines it, idempotent on code + scope + decision id; terminal prose rewrite of Final Summary and summary from observed facts; writes `oat_pr_status_observed_at` (UTC) beside `oat_pr_status` before archive — D12's writer), `oat-project-pr-progress`/`oat-project-pr-final` (receipt lines to the slot), agent roles if their journal instructions change, regenerated project-scope projections (`sync --scope project`), contract tests re-pinned (`skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts`).
+**Files:** `.agents/skills/oat-project-implement/references/{phase-execution,completion-and-closeout,dispatch-and-dry-run,plan-and-resume}.md` (run line via `dispatch record --format line` under `## Orchestration Runs` updated in place; receipts, fix tasks and deferrals to their slots; `journal check --at implement-preflight` before Step 16 with the closeout invariant; `state.md` owns gate transitions, one terminal line per gate run in the journal; `phase-execution.md` excluded-phase reporting (currently the Outstanding Items table) → `## Deferred Findings` lines), `.agents/skills/oat-project-dispatch-subagents/SKILL.md` (the caller's run-record instruction points at `dispatch record --format line` and the in-place update rule), `oat-project-complete-auto/SKILL.md` (exception block → `## Deviations from Plan / Design`, never end-of-file), `oat-project-reconcile/SKILL.md` (session entry → the owning phase section, or `## Deviations from Plan / Design` when no phase owns it), `oat-worktree-bootstrap-auto/SKILL.md` (baseline warning → `## Deviations from Plan / Design`), `oat-project-review-receive/SKILL.md` and `oat-project-review-receive-remote/SKILL.md` (receipt fields: finding identity and substance, disposition and rationale, fix-record or approved-deferral linkage, final outcome; review paths local-only; placement), `oat-project-revise/SKILL.md` (revision blocks in their phase), `oat-project-review-provide/SKILL.md` (`journal check --at review --scope`; refresh-only findings are not tasks), `oat-project-complete/SKILL.md` (existing no-write preflight; the summary-status preflight (lines ~396–406) also compares `oat_summary_learnings_fingerprint` with `summary_learnings_fingerprint` from the summary skill in every mode and treats a mismatch or missing field as `stale` (p01 review M1); Step 3.5 runs the summary skill staged (`staged: true`), then `journal check --at completion`, then Step 3.7 resumes roll-up (`resume: roll-up`); the inline fallback honors the same suspension point; writes the override line exactly as p02-t03 defines it, idempotent on code + scope + decision id; terminal prose rewrite of Final Summary and summary from observed facts; writes `oat_pr_status_observed_at` (UTC) beside `oat_pr_status` before archive — D12's writer), `oat-project-pr-progress`/`oat-project-pr-final` (receipt lines to the slot), agent roles if their journal instructions change, regenerated project-scope projections (`sync --scope project`), contract tests re-pinned (`skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts`).
 
 **Verify:** `pnpm oat:validate-skills`; `pnpm format:root`; `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init/tools/shared` green; `rg -n '## Implementation Log|## Test Results|end of the file' .agents/skills .agents/agents .oat/templates` returns zero hits (each surviving hit justified in the commit body). **Commit:** `feat(p02-t06): journal writers target fixed slots; closeout validates before roll-up`
 
@@ -204,7 +259,7 @@ Every new refusal is proven at its public boundary: an otherwise valid case, bas
 
 **Steps:** `pnpm build`; for each of quick, lite, brief and goal: scaffold, implement one phase with a dispatched (stubbed) run and the `--format line` record, one review round with a fix and a deferral through receive, an autonomous-style learning write (cloud and goal variants where applicable), summary refresh, retro evidence inventory, complete, archive twice (same day and with a changed date). Assert every discovery success criterion: no fenced payloads and one terminal run line per launch; receipts and deferrals in their slots and `## References` last; no template residue; the summary's observations section bounded with no structural entries and no live paths, the general ledger graduated; completion refusals for the injected failure shapes (each by name) with `complete-state` writing nothing; gate transitions once in `state.md`; learnings in the log with categories, legacy file absent, disabled-log warning case; archive retry reuses the snapshot; log header two lines. Reference every guard from the supplement with its probe outcome. Protected non-mutation surfaces, separated from probe-owned outputs: before the run, record content hashes of the pre-existing protected fixtures (a copy of three real archived projects placed under the scratch archive root, and the stubbed S3 bucket's pre-seeded objects) and of every sealed `project-log.md` that existed before the probe; after the run those hashes must match and only the named fresh outputs (the probe projects' archives, exports and objects) may be new; after the first archive of each probe project take a second baseline and prove the identical retry adds no snapshot, export or object.
 
-**Verify:** every probed command returns its expected categorical result; failures are fixed in the owning phase's files and re-probed. **Commit:** `chore(p04-t01): record lifecycle probes for artifact cleanup`
+**Verify:** every probed command returns its expected categorical result; failures are fixed in the owning phase's files and re-probed. Two named legacy-learning rows (p01 review L3): on a scratch project whose legacy `oat-execution-learnings.md` holds one proven twin of a categorized log entry and one same-title distinct lesson, (a) the summary skill emits one recommendation for the twin under its `oat-project:` token and keeps the distinct lesson, and (b) the retro evidence inventory lists the legacy file second and consumes it; both rows are agent-run, not prose pins. **Commit:** `chore(p04-t01): record lifecycle probes for artifact cleanup`
 
 ---
 
@@ -240,7 +295,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                               |
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p01    | code     | fixes_added | 2026-10-12 | reviews/archived/p01-review-2026-10-12T012710Z.md           | c6b98bcac0408788ba03303f81c50123bf962c44 | auto       | round 1: 0/0/1/3; M1 and L3 aligned in plan; L1→p01-t06, L2→p01-t07                                                                                       |
 | p02    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | p03    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
@@ -265,12 +320,12 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 
 **Summary:**
 
-- Phase 1: 5 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation
+- Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 7 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough
 - Phase 3: 3 tasks - Unified learning producers (D14), archive retry identity, explicit generations
 - Phase 4: 4 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates
 
-**Total: 19 tasks**
+**Total: 21 tasks**
 
 Ready for code review and merge.
 

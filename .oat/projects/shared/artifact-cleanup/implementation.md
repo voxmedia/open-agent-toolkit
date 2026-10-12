@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 5/19 tasks completed
+**Total:** 5/21 tasks completed
 
 ---
 
@@ -163,6 +163,41 @@ oat_generated: false
 **Verification:**
 
 - `oat:validate-skills` 0; `format:root` 0; `oat-docs check` 0; vitest `src/validation src/commands/init/tools/shared` 1070/1070 exit 0
+
+---
+
+### Review Received: p01
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/p01-review-2026-10-12T012710Z.md (round 1, Fable 5.1 high, auto)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 1
+- Low: 3
+
+**New tasks added:** p01-t06 (L1), p01-t07 (L2)
+
+**Design drift / artifact alignment notes:**
+
+- M1: plan drift, not a code defect. The complete skill's summary-status preflight must also honor `oat_summary_learnings_fingerprint` (design "Closeout prose and refresh"); p01-t05's summary-side rule is accepted as implemented and the plan is the artifact that was stale. Aligned now: one clause added to p02-t06's `oat-project-complete/SKILL.md` description. Source of truth: plan revision 5 as amended.
+- L3: two p01-t05 reader controls (legacy-only consumption, proven twin emitted once) are prose-pinned; executable proof is agent-run and belongs to p04-t01. Aligned now: two named rows added to p04-t01's Verify.
+
+**Next:** execute p01-t06 and p01-t07 as a bounded fix continuation of the p01 implementer, then a narrow re-review of the fix delta to reach `passed`.
+
+### Task p01-t06: (review) Add the learnings-fingerprint placeholder to the summary template
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t07: (review) Document the minimum useful projectLogDigest.maxLines
+
+**Status:** pending
+**Commit:** -
 
 ---
 
