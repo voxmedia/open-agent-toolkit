@@ -123,6 +123,22 @@ describe('learning producers write the project log (p03-t01)', () => {
     },
   );
 
+  it('commits each autonomous learning under the source id just written', () => {
+    const content = readRepoFile(PRODUCERS[0].path);
+    const assign = content.indexOf('LEARNING_SOURCE="autonomous-$RUN_ID-NN"');
+    const call = content.indexOf(
+      'oat_record_learning <category> "$LEARNING_SOURCE" "<title>" "<body>"',
+    );
+    const commit = content.indexOf(
+      ':oat-project-autonomous:learning:${LEARNING_SOURCE:?set to the source id just written}"',
+    );
+    expect(assign, 'the source id is assigned').toBeGreaterThan(-1);
+    expect(call, 'the write receives the assigned id').toBeGreaterThan(assign);
+    expect(commit, 'the commit identity requires that id').toBeGreaterThan(
+      call,
+    );
+  });
+
   it('keeps one byte-identical learning write across the three producers', () => {
     const blocks = PRODUCERS.map(({ path }) =>
       learningWriteBlock(readRepoFile(path)),

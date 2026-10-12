@@ -450,6 +450,15 @@ project log is disabled the append no-ops: the write prints its one warning
 line, records nothing, and the run continues. Disabling the log is the
 operator's choice; do not persist the learning anywhere else.
 
+Assign the source id before each write and pass that variable, so the commit
+below carries the id just written (`$RUN_ID` is this run's id; `NN` numbers the
+observation and is retained for retries):
+
+```bash
+LEARNING_SOURCE="autonomous-$RUN_ID-NN"
+oat_record_learning <category> "$LEARNING_SOURCE" "<title>" "<body>"
+```
+
 After every write, persist the log before continuing:
 
 ```bash
@@ -462,13 +471,14 @@ if [ -f "$PROJECT_PATH/project-log.md" ]; then
     oat project push "$PROJECT_PATH" --message "chore(oat): record autonomous execution learning" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
   else
     OWNED_COMMIT_PATHS=("$PROJECT_PATH/project-log.md")
-    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:learning:$LEARNING_SOURCE" --message "chore(oat): record autonomous execution learning" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:learning:${LEARNING_SOURCE:?set to the source id just written}" --message "chore(oat): record autonomous execution learning" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
   fi
 fi
 ```
 
 `LEARNING_SOURCE` is the source id just written, so each learning commits
-under its own operation identity.
+under its own operation identity; an unset id stops the commit rather than
+sharing one identity across learnings.
 
 ### Step 5: Invoke Lifecycle Skills and Reviews
 
