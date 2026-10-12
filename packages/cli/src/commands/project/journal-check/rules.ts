@@ -56,6 +56,16 @@ const COMPLETE = 'oat-project-complete';
 const RECONCILE = 'oat-project-reconcile';
 
 const SHA_PATTERN = /^[0-9a-f]{7,64}$/;
+/** Skills a completed journal may still point at through `oat_ready_for`. */
+const CLOSEOUT_SKILLS: ReadonlySet<string> = new Set([
+  'oat-project-summary',
+  'oat-project-document',
+  'oat-project-pr-progress',
+  'oat-project-pr-final',
+  'oat-project-retro',
+  'oat-project-complete',
+  'oat-project-complete-auto',
+]);
 const TERMINAL_PHASE_STATUSES = new Set(['complete', 'completed']);
 const EXECUTION_RECORD_STATUSES = new Set([
   'completed',
@@ -181,6 +191,21 @@ export function checkMetadata(
         line: frontmatterKeyLine(lines, 'oat_status'),
         owner: IMPLEMENT,
         message: `Journal oat_status is ${String(journalMeta.record.oat_status ?? 'missing')}; completion requires complete.`,
+      });
+    }
+    const readyFor = journalMeta.record.oat_ready_for;
+    if (
+      readyFor !== null &&
+      readyFor !== undefined &&
+      readyFor !== 'null' &&
+      !CLOSEOUT_SKILLS.has(String(readyFor))
+    ) {
+      push(context, {
+        code: 'state-status-disagrees',
+        path: 'implementation.md',
+        line: frontmatterKeyLine(lines, 'oat_ready_for'),
+        owner: IMPLEMENT,
+        message: `Journal oat_ready_for is ${String(readyFor)}; with oat_status: complete it must be null or a closeout skill.`,
       });
     }
     const pointer = journalMeta.record.oat_current_task_id;

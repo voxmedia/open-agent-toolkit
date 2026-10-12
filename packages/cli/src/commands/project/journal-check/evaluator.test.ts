@@ -496,6 +496,33 @@ describe('caller boundaries', () => {
     );
   });
 
+  it('refuses a stale oat_ready_for under oat_status: complete and accepts null or a closeout skill', () => {
+    const stale = VALID.replace(
+      'oat_ready_for: null',
+      'oat_ready_for: oat-project-implement',
+    );
+    const result = check(stale);
+    expect(result.reasons).toEqual([
+      expect.objectContaining({
+        code: 'state-status-disagrees',
+        path: 'implementation.md',
+        line: 3,
+      }),
+    ]);
+    expect(result.reasons[0]?.message).toContain('oat_ready_for');
+    expect(check(VALID).status).toBe('ok');
+    expect(
+      check(
+        VALID.replace(
+          'oat_ready_for: null',
+          'oat_ready_for: oat-project-complete',
+        ),
+      ).status,
+    ).toBe('ok');
+    // Implement's pre-Step-16 boundary does not own this header.
+    expect(check(stale, { boundary: 'implement-preflight' }).status).toBe('ok');
+  });
+
   it('accepts pr_open as a completion posture', () => {
     expect(
       check(VALID, {
