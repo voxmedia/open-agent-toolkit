@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 20    | 20/20     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 22    | 20/22     |
 
-**Total:** 44/44 tasks completed
+**Total:** 52/54 tasks completed
 
 ---
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1311,6 +1310,20 @@ oat_generated: false
 
 ---
 
+### Task p04-t21: (review) Carry the PR body across the archive in oat-project-complete
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t22: (review) Different-day control for the scope-qualified successor clause
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1434,6 +1447,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - The exit gate generation (`allowed/passed`, reviewed head `a59ad47cd`) goes `stale` once the first fix commit lands; a narrowed final review and a new gate generation follow the fixes.
 
 **Next:** p04-t13..p04-t20 landed `94628aa15..5bbc20b10` via `ac-ext-fix-implementation` (DONE_WITH_CONCERNS: the wrap-up `pr/` scan, deferred above), root-verified; the exit gate generation is marked `stale`; final round 4 (narrowed to `fca8060e0..5bbc20b10`) and exit gate generation 2 follow, then the deferred final HiLL approval.
+
+### Review Received: final (round 4)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T141023Z.md (round 4, Fable 5.1 high, auto; narrowed to fca8060e0..5bbc20b10, reviewed head `731a5d781`)
+
+**Findings:**
+
+- Critical: 0
+- High: 1
+- Medium: 1
+- Low: 2
+
+**New tasks added:** p04-t21 (H1), p04-t22 (M1 + L2)
+
+**Design drift / artifact alignment notes:**
+
+- H1 is a consumer regression of the W1 decision: `oat-project-complete` read the regenerated PR body from the archived `pr/` directory, which archives no longer retain (and S3-hydrated archives never did). The skill now carries the body across the archive; the retention decision stands.
+- L1: this journal's Progress Overview total lagged the reopened phase (44/44 against 52 recorded tasks); fixed by the root in the receive commit and kept current with the new tasks.
+- W1–W8 verified closed with every titled test able to fail.
+
+**Next:** p04-t21 and p04-t22 via continuation `cont-ac-ext-fix-1`; final round 5 narrowed to that delta; exit gate generation 2.
 
 ## Deferred Findings
 

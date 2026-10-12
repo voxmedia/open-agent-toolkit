@@ -1137,6 +1137,57 @@ Expected: green with explicit exit codes; the named control fails with the fix n
 
 ---
 
+### Task p04-t21: (review) Carry the PR body across the archive in oat-project-complete
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (already bumped to 1.7.18 in this PR; no further bump): after Step 5 regenerates the archive-aware artifact and before Step 8 archives, copy its frontmatter-stripped body to a temp file recorded as `PR_BODY_FILE` (verify it starts with the markdown heading); Step 10's expected-changes list keeps the active artifact only; Steps 11 and 11.5 read `$PR_BODY_FILE` instead of `{PROJECT_PATH}/pr/project-pr-*.md` / `{ARCHIVE_PATH}/pr/project-pr-*.md` (~L1508, ~L1589, ~L1623-1624) and clean it up at the end; the discovered-archive route (~L166-177, no active project) has no artifact: Step 11.5 skips the body sync with an explicit report line instead of failing; the non-archive synced branch keeps `PR_DESCRIPTION_PATH`
+- Modify: every test pinning the replaced sentences (`packages/cli/src/validation/skills.test.ts`, `named-skill-load-contract.test.ts`, `closeout-skills` contract tests; grep `project-pr-\*` and `ARCHIVE_PATH}/pr`) and the docs page that describes the complete flow if it names the archived `pr/` path (`apps/oat-docs/docs/**`; grep `pr/project-pr`)
+
+**Step 1: Understand the issue**
+
+Final review round 4 H1 (`reviews/archived/final-review-2026-10-12T141023Z.md`): Steps 10/11/11.5 read the regenerated PR body from `{PROJECT_PATH}/pr/` after Step 8 set `PROJECT_PATH="$ARCHIVE_PATH"`; p04-t13 dropped `pr/` from the local archive and `oat project archive` deletes the active project, so the body exists nowhere when the PR is created or synced (`.oat/**/pr/` is gitignored here). S3-hydrated archives never carried `pr/`, so the discovered-archive route was already broken.
+
+**Step 2: Implement fix**
+
+The skill carries the body it needs across the archive; archives keep one retention set.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation src/commands/init src/commands/tools` plus `pnpm check` exit 0; the re-pinned contract test fails with the old `{ARCHIVE_PATH}/pr/` sentence restored and passes with the new one.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t21): carry the PR body across the archive in oat-project-complete`
+
+---
+
+### Task p04-t22: (review) Different-day control for the scope-qualified successor clause
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (the W4 `.each` test gains a row where the other scope's generation-1 archive carries a different date, so `pathHeldByOtherScope` alone decides and the test fails with that clause neutralized; L2: reorder the W1 round-trip test so the hydrate-then-retry assertion runs before the `existsSync(pr)` pin, or split the pin into its own `it`)
+
+**Step 1: Understand the issue**
+
+Final review round 4 M1: the W4 `.each` rows use the same date for both scopes, so with the `pathHeldByOtherScope` clause removed all 244 archive tests still pass although the dist behaviour depends on it. L2: the W1 test fails in the pre-fix state on its `existsSync` pin before reaching the assertion that proves the finding.
+
+**Step 2: Implement fix**
+
+Make each guard fail for the reason it exists.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`; the new row fails with the clause neutralized and passes restored; the W1 test fails pre-fix on the retry assertion.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`test(p04-t22): different-day control for the scope-qualified successor`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |
@@ -1163,6 +1214,7 @@ Expected: green with explicit exit codes; the named control fails with the fix n
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T061438Z.md         | 2c2594f424bff2892e40b1e0567a474ab95226f4 | auto       | round 3 (narrowed to 0ff8c0aec..7e32ece6e): 0/0/0/1; H1 rehash and the four other gate findings verified closed; the Low (journal count) fixed by the root                                                                                                |
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T062754Z.md         | b348f3e4c9fa40cda1b1ef767b8dcbab2a83f585 | gate       | codex-6-sol-xhigh: exit gate attempt 2 ok 0/0/0/0 (judgment sweep: nothing to disposition)                                                                                                                                                                |
 | final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/external-pr-review-2026-10-12T065140Z.md   | bbc3616a959e97f422aec9209c24f0695763c6f0 | external   | Warp Quaker Factory changes requested 0/8/0/0 + Cursor Bugbot 2 Medium; root verification lanes confirmed W1–W8; W1→p04-t13, W2→p04-t14, W3→p04-t15, W4→p04-t16, W5→p04-t17, W6→p04-t18, W7→p04-t19, W8/B2→p04-t20; B1 (awsProfile) no change by decision |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T141023Z.md         | 731a5d78165e49c4dae9cf4c9ec9128066aebbbd | auto       | round 4 (narrowed to fca8060e0..5bbc20b10): 0/1/1/2; W1–W8 verified closed; H1 → p04-t21, M1 + L2 → p04-t22, L1 (overview total) fixed by the root                                                                                                        |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
