@@ -73,26 +73,26 @@ oat_implement_exit_gate:
   freshness_head: cdce9002f0021ef556a3e2ffad8e1cd51169cefc
   freshness_fingerprint: 'sha256:effective-delta-v2:e83deb123fdda666afad9ac50fe3e3f683155e893a8a57dbf78a6fbb6af55b45'
   waivers: []
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: exit-gate-20261012T153005Z
   launch_started_at: '2026-10-12T15:30:05Z'
   launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T153005Z.receipt.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T//oat-gate-runs/1a234bff-2713-4f6d-9fbd-ee952a153b4a.json
+  gate_run_id: 1a234bff-2713-4f6d-9fbd-ee952a153b4a
+  envelope_status: blocked
+  artifact: reviews/final-review-2026-10-12T153824Z.md
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T153824Z.md before treating this gate review as consumed.'
+  receive_state: pending
   receive_correlation: null
   receive_source_artifact: null
   receive_archived_artifact: null
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-12T15:30:05Z'
+  updated_at: '2026-10-12T15:46:53Z'
   decided_at: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -157,7 +157,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T15:30:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T15:46:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
