@@ -69,11 +69,16 @@ Pull from implementation.md task notes flagged as issues/blockers.}
 
 ## Autonomous Execution Learnings
 
-<!-- CONDITIONAL: Include this entire section only when the project contains
-     oat-execution-learnings.md with actionable entries. Otherwise remove the
-     heading, category subheadings, and placeholders. Omit empty categories.
+<!-- CONDITIONAL: Include this entire section only when the project log has
+     actionable category-bearing judgment entries (a **Category:** head written
+     by `oat project log append --category`) or a legacy
+     oat-execution-learnings.md has actionable entries; read the log first and
+     the legacy file second. Otherwise remove the heading, category
+     subheadings, and placeholders. Omit empty categories.
      Each recommendation needs a one-line rationale and a relative pointer to
-     every supporting source entry (timestamp, category, and title). -->
+     every supporting source entry (timestamp, category, and title).
+     The Workflow Observations section is owned by `oat project log rollup`,
+     which appends or omits it; never add it here or by hand. -->
 
 ### Agent-instruction updates
 

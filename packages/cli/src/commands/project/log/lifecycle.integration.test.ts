@@ -295,7 +295,19 @@ describe('project-log lifecycle integration', () => {
     const createdLog = await readFile(fixture.logPath, 'utf8');
     expect(createdLog).toContain('purpose: project-observations');
     expect(createdLog).toContain(`# Project Log: ${PROJECT_NAME}`);
-    expect(createdLog).toContain('## Logging contract');
+    // The header is two lines and a docs link; the contract lives in the docs
+    // and in `append --help`, not in every log.
+    const header = createdLog
+      .slice(createdLog.indexOf(`# Project Log: ${PROJECT_NAME}`))
+      .split('\n## Entries')[0]!
+      .split('\n')
+      .slice(1)
+      .filter((line) => line.trim() !== '');
+    expect(header).toHaveLength(2);
+    expect(header[1]).toContain(
+      'https://voxmedia.github.io/open-agent-toolkit/workflows/projects/execution/project-log',
+    );
+    expect(createdLog).not.toContain('## Logging contract');
     expect(createdLog).not.toContain('oat_template: true');
 
     await runLogCommand(fixture.root, 'append', [
