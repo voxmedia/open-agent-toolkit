@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 26    | 25/26     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 12    | 12/12     |
+| Phase 3 | complete | 13    | 13/13     |
+| Phase 4 | complete | 26    | 26/26     |
 
-**Total:** 57/58 tasks completed
+**Total:** 58/58 tasks completed
 
 ---
 
@@ -881,8 +881,9 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1407,8 +1408,20 @@ oat_generated: false
 
 ### Task p04-t26: (gate follow-up) Owner-scoped claim and cleanup for first archives
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 589f056d5
+
+**Outcome:**
+
+- Every new archive, first archives included, creates its pending `.oat-archive-source.json` exclusively with an owner token before the copy (synced pending metadata carries `sourceRefSha`); a path written by another call refuses `archive-generation-claim-held` with nothing written; a failed first archive removes only its own attempt while it still holds the claim; a run killed mid-copy leaves a pending first-archive allocation that the next identical archive resumes; docs describe first-archive claims and resume.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `archive-utils.test.ts`, `project-artifacts.md`
+
+**Verification:**
+
+- archive + repo/archive + complete-state 300/300; docs, lint 0; guards 0; controls: pre-fix code deletes A's completed first archive after B's ENOENT; interrupted-resume and appearing-archive tests fail pre-fix
 
 ---
 
@@ -1467,6 +1480,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | 2026-10-12 | p04-t20     | Prose fix extended to `brief-contract.md` and three docs pages; pins live in `learning-producer-contracts.test.ts`; a branch-CLI test covers the existing-log write                                                                                                                                           | Same claim appeared there; those skills are already bumped in this PR                                                       | Skills, docs, tests                                                               | None                                                                                                              |
 | 2026-10-12 | p04-t21     | PR body is carried across the archive in a temp file; a resumed synced archive run that carries no body skips the PR body sync with a report line instead of stopping                                                                                                                                         | Archives retain no `pr/` (p04-t13); the body exists only in the active project before Step 8                                | Skill prose (`oat-project-complete` Step 7, 11, 11.5) and `closeout-skills.md`    | None; if the resume sync must stay mandatory, source the body from `PROJECT_LINKS_PIN_COMMIT` on the retained ref |
 | 2026-10-12 | p04-t23     | A completed archive found where this call expected a vacant successor path refuses `archive-generation-claim-held` rather than being reused; an identical retry afterwards reuses it through the normal retry path                                                                                            | Refusing writes nothing                                                                                                     | Code and `project-artifacts.md`                                                   | p04-t26 extends the claim to first archives (implementer concern)                                                 |
+| 2026-10-12 | p04-t26     | The `archive-utils.test.ts` "wrong scope" case now writes a real foreign archive during `ensureDir` and expects `archive-generation-claim-held` instead of the old unverifiable-occupant error                                                                                                                | The exclusive claim is what stops the overwrite; the old `dirExists` mock modelled nothing once claims exist                | Code and `project-artifacts.md`                                                   | None                                                                                                              |
+| 2026-10-12 | root        | The Step 11.5 failure-wording fix (round 5 Low) broke a contract pin that CI caught on 20fc9c76d; re-pinned by the root after p04-t26 landed                                                                                                                                                                  | Root ran only the journal probe, not the contract suite, after editing the skill                                            | `review-skill-contracts.test.ts`                                                  | None; CI on the next push must be green                                                                           |
 
 ## Reviews and Gates
 
@@ -1582,7 +1597,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - M1 is a composition gap between p04-t15 (parser) and p04-t16 (writer) for `…-gN-<scope>` names.
 - M2 restores D5's raw plan-record checks (duplicate identities, misplaced tasks).
 
-**Next:** p04-t23 (6c05e7699), p04-t24 (43f979f29), p04-t25 (753f046b9) landed via `cont-ac-ext-fix-2`, root-verified; the gate's two probes no longer reproduce against the rebuilt dist. The implementer's concern (first archives still cleanup-unsafe under overlap) is p04-t26 via `cont-ac-ext-fix-3`; then narrowed final round 6 and gate attempt 2 of generation 2.
+**Next:** p04-t23 (6c05e7699), p04-t24 (43f979f29), p04-t25 (753f046b9) landed via `cont-ac-ext-fix-2`, root-verified; the gate's two probes no longer reproduce against the rebuilt dist. p04-t26 (589f056d5) landed via `cont-ac-ext-fix-3`, root-verified; the root re-pinned the Step 11.5 wording contract test (CI failure on 20fc9c76d). Narrowed final round 6 over `bc9ac35ae..HEAD`, then gate attempt 2 of generation 2.
 
 ## Deferred Findings
 
