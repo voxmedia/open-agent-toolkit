@@ -32,6 +32,7 @@ import {
   type GateProjectLogReceipt,
   type ProjectLogAppendCommandDependencies,
 } from './append';
+import { parseProjectLogEntries } from './check';
 import { createProjectLogCommand } from './index';
 
 const CANONICAL_ASSETS_ROOT = resolve(
@@ -2027,6 +2028,263 @@ describe('oat project log append', () => {
       expect(process.exitCode).toBe(1);
       await expect(readFile(logPath, 'utf8')).rejects.toThrow();
       expect(projectPath).toContain('Notes');
+    });
+  });
+
+  describe('learning body head (category, source, origin)', () => {
+    const learningArgs = (
+      extra: string[],
+      body = 'Observation: the cloud runner lost its cache. Impact: rebuilds doubled.',
+    ): string[] => [
+      '--type',
+      'friction',
+      '--scope',
+      'project',
+      '--area',
+      'cloud cache',
+      '--body',
+      body,
+      ...extra,
+    ];
+
+    it('writes the head above the body and the parser exposes every field', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(
+        command,
+        learningArgs([
+          '--category',
+          'environment-limited',
+          '--source',
+          'obs-2026-07-17-a1',
+          '--origin',
+          'oat-project-autonomous',
+        ]),
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      const content = await readFile(logPath, 'utf8');
+      expect(content).toContain(
+        [
+          '### 2026-07-17 · project · friction · cloud cache',
+          '',
+          '**Category:** environment-limited',
+          '**Source:** obs-2026-07-17-a1',
+          '**Origin:** oat-project-autonomous',
+          '**Recorded:** 2026-07-17T12:00:00Z',
+          '',
+          'Observation: the cloud runner lost its cache. Impact: rebuilds doubled.',
+        ].join('\n'),
+      );
+      const [entry] = parseProjectLogEntries(content).entries;
+      expect(entry).toMatchObject({
+        class: 'judgment',
+        type: 'friction',
+        category: 'environment-limited',
+        source: 'obs-2026-07-17-a1',
+        origin: 'oat-project-autonomous',
+        recorded: '2026-07-17T12:00:00Z',
+      });
+    });
+
+    // Named guard `learning-category-validation`: neutralizing
+    // `validateCategory` makes this assertion fail because `bogus` is appended.
+    it('refuses a category outside the six and writes nothing', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const before = await readFile(logPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(
+        command,
+        learningArgs(['--category', 'bogus', '--source', 'obs-1']),
+      );
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        status: 'error',
+        message:
+          "Invalid --category 'bogus'; accepted values: gotcha | efficiency | documentation-gap | candidate-skill-content | decision | environment-limited.",
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it('refuses --category without --source', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const before = await readFile(logPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, learningArgs(['--category', 'gotcha']));
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('--category requires --source'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it('accepts each of the six categories with a source', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      for (const category of [
+        'gotcha',
+        'efficiency',
+        'documentation-gap',
+        'candidate-skill-content',
+        'decision',
+        'environment-limited',
+      ]) {
+        const { command, capture } = createHarness(root);
+        await runCommand(
+          command,
+          learningArgs(
+            ['--category', category, '--source', `obs-${category}`],
+            `Observed ${category}.`,
+          ),
+        );
+        expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      }
+      const categories = parseProjectLogEntries(
+        await readFile(logPath, 'utf8'),
+      ).entries.map((entry) =>
+        entry.class === 'judgment' ? entry.category : undefined,
+      );
+      expect(categories).toEqual([
+        'gotcha',
+        'efficiency',
+        'documentation-gap',
+        'candidate-skill-content',
+        'decision',
+        'environment-limited',
+      ]);
+    });
+
+    it('refuses a source containing whitespace', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(
+        command,
+        learningArgs(['--category', 'gotcha', '--source', 'two words']),
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: '--source must be one word without whitespace.',
+      });
+    });
+
+    it('refuses the learning flags on a structural entry', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--structural',
+        '--producer',
+        'oat-project-implement',
+        '--ref',
+        'p01',
+        '--body',
+        'phase complete',
+        '--category',
+        'decision',
+        '--source',
+        'obs-1',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message:
+          '--structural cannot be combined with judgment flags --category, --source, or --origin.',
+      });
+    });
+
+    // Compatibility (accepted before and after): an entry without the new flags
+    // keeps exactly the bytes it always had.
+    it('leaves an uncategorized judgment entry byte-identical', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, judgmentArgs);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(
+        '# Project Log: demo\n\n## Entries\n\n### 2026-07-17 · project · bug · gate review\n\nThe gate returned the wrong exit code.\n',
+      );
+      const [entry] = parseProjectLogEntries(
+        await readFile(logPath, 'utf8'),
+      ).entries;
+      expect(Object.keys(entry!).sort()).toEqual(
+        ['area', 'body', 'class', 'date', 'heading', 'scope', 'type'].sort(),
+      );
+    });
+
+    // Compatibility (accepted before and after): a retry carrying the same
+    // --idempotency-key appends nothing. The producer passes its source id as
+    // the key; the body itself never mentions it, the **Source:** head does.
+    it('appends a categorized learning once when retried with its source id as the key', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const args = learningArgs([
+        '--category',
+        'gotcha',
+        '--source',
+        'obs-retry-1',
+        '--origin',
+        'oat-project-goal',
+        '--idempotency-key',
+        'obs-retry-1',
+      ]);
+      const first = createHarness(root);
+      await runCommand(first.command, args);
+      const afterFirst = await readFile(logPath, 'utf8');
+
+      const second = createHarness(root, '', {
+        now: () => new Date('2026-07-18T08:30:00.000Z'),
+      });
+      await runCommand(second.command, args);
+
+      expect(first.capture.jsonPayloads[0]).toMatchObject({
+        status: 'appended',
+      });
+      expect(second.capture.jsonPayloads[0]).toMatchObject({
+        status: 'already-appended',
+        heading: '### 2026-07-17 · project · friction · cloud cache',
+      });
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(afterFirst);
+    });
+
+    it('commits a categorized learning whose key appears only in the head', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      initGitRepo(root);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(
+        command,
+        learningArgs([
+          '--category',
+          'decision',
+          '--source',
+          'obs-commit-1',
+          '--idempotency-key',
+          'obs-commit-1',
+          '--commit',
+        ]),
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'appended',
+        commit: { outcome: 'committed', committed: true },
+      });
+      expect(process.exitCode).toBe(0);
     });
   });
 
