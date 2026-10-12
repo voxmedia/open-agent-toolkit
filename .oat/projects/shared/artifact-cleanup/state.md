@@ -56,32 +56,32 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: fca56bd2fa8a4851c3c50776e117dd76cecfad6c
+  reviewed_head: a59ad47cd793a2bb806024bfde6ece239ef00c04
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v2:4bd592663b5b90ab16d81a42743c479738301f4b846d6f17af24948b99220511'
-  freshness_head: fca56bd2fa8a4851c3c50776e117dd76cecfad6c
-  freshness_fingerprint: 'sha256:effective-delta-v2:4bd592663b5b90ab16d81a42743c479738301f4b846d6f17af24948b99220511'
+  implementation_fingerprint: 'sha256:effective-delta-v2:a6aa9ed1d254bf4fc4e44679645cda2b29431e5bfa0c5eb19554fe2f037ff210'
+  freshness_head: a59ad47cd793a2bb806024bfde6ece239ef00c04
+  freshness_fingerprint: 'sha256:effective-delta-v2:a6aa9ed1d254bf4fc4e44679645cda2b29431e5bfa0c5eb19554fe2f037ff210'
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: exit-gate-20261012T054902Z
-  launch_started_at: '2026-10-12T05:49:02Z'
-  launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T054902Z.receipt.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/91b4bf42-6074-4a2d-8545-7ac7451bb7ae.json
-  gate_run_id: 91b4bf42-6074-4a2d-8545-7ac7451bb7ae
-  envelope_status: blocked
-  artifact: reviews/final-review-2026-10-12T055711Z.md
-  handoff: 'Run oat-project-review-receive for reviews/final-review-2026-10-12T055711Z.md'
-  receive_state: completed
-  receive_correlation: '{"run_id": "91b4bf42-6074-4a2d-8545-7ac7451bb7ae", "handoff": "review-receive", "source_artifact": "reviews/final-review-2026-10-12T055711Z.md", "scope": "final", "type": "code", "source_filename": "final-review-2026-10-12T055711Z.md"}'
-  receive_source_artifact: reviews/final-review-2026-10-12T055711Z.md
-  receive_archived_artifact: reviews/archived/final-review-2026-10-12T055711Z.md
-  receive_event_identity: 'final|code|final-review-2026-10-12T055711Z.md'
-  receive_pre_head: a9809ac8aca3100ab99d25b4bb303f59e66c2f0e
-  receive_commit: 27f662540c8f36b3e8ecb243dafa4b97b3656c01
-  receive_eligible: true
-  receive_completed: true
-  failure: 'attempt 1 blocked at threshold high (0/1/3/2); remediation p04-t08..p04-t12 in progress'
-  updated_at: '2026-10-12T06:04:59Z'
+  launch_state: intent_persisted
+  launch_attempt_id: exit-gate-20261012T062051Z
+  launch_started_at: '2026-10-12T06:20:51Z'
+  launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T062051Z.receipt.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: 'attempt 1 blocked 0/1/3/2; remediated by p04-t08..p04-t12, final round 3 passed; attempt 2 launched'
+  updated_at: '2026-10-12T06:20:51Z'
   decided_at: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -146,7 +146,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T06:13:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T06:20:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
