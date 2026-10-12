@@ -46,7 +46,7 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  status: awaiting_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # configured | autonomous-default
   final_phase: p04
   pre_approval: [summary, document, pr]
@@ -157,7 +157,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T06:38:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T06:39:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
