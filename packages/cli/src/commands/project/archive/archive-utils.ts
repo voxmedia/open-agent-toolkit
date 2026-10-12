@@ -700,7 +700,8 @@ async function resolvePersistedArchivePath(
     }
   }
   if (matches.length > 1) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-retry-ambiguous',
       `Persisted archive snapshot \`${snapshotName}\` resolves to multiple local archives; refusing an ambiguous retry.`,
     );
   }
@@ -1045,6 +1046,8 @@ export const ARCHIVE_IDENTITY_REFUSAL_CODES = [
   'archive-generation-ambiguous-predecessor',
   'archive-generation-pending',
   'archive-generation-path-occupied',
+  'archive-synced-recordless-unbound',
+  'archive-synced-recordless-ambiguous',
 ] as const;
 
 export type ArchiveIdentityRefusalCode =
@@ -1546,7 +1549,8 @@ export async function resolveRecordlessSyncedArchiveIdentity(
     }
   }
   if (candidates.length === 0) {
-    throw new CliError(
+    throw new ArchiveIdentityError(
+      'archive-synced-recordless-unbound',
       `Synced project ${options.projectName} has no active record and no persisted synced archive identity; refusing to create a replacement active record or a new snapshot.`,
       2,
     );
@@ -1564,12 +1568,17 @@ export async function resolveRecordlessSyncedArchiveIdentity(
     }
   }
   if (matches.length !== 1) {
-    throw new CliError(
-      matches.length === 0
-        ? `Synced project ${options.projectName} has no active record, but no persisted archive identity matches its authoritative completed ref; refusing terminal retry before export or S3 mutation.`
-        : `Synced project ${options.projectName} has no active record and multiple persisted archives match its authoritative completed ref; refusing an ambiguous terminal retry.`,
-      2,
-    );
+    throw matches.length === 0
+      ? new ArchiveIdentityError(
+          'archive-synced-recordless-unbound',
+          `Synced project ${options.projectName} has no active record, but no persisted archive identity matches its authoritative completed ref; refusing terminal retry before export or S3 mutation.`,
+          2,
+        )
+      : new ArchiveIdentityError(
+          'archive-synced-recordless-ambiguous',
+          `Synced project ${options.projectName} has no active record and multiple persisted archives match its authoritative completed ref; refusing an ambiguous terminal retry.`,
+          2,
+        );
   }
   return matches[0]!;
 }

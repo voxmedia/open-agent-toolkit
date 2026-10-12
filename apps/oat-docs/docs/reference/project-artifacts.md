@@ -238,7 +238,7 @@ reason code, and `--json` reports the same code as `code` in the error object:
 
 | Code                                       | Refused when                                                                                                                                                                  |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `archive-retry-ambiguous`                  | more than one same-scope archive matches the retry                                                                                                                            |
+| `archive-retry-ambiguous`                  | more than one same-scope archive matches the retry, or a persisted snapshot resolves to several local archives                                                                |
 | `archive-retry-conflict`                   | the retained artifacts differ from the project's archive                                                                                                                      |
 | `archive-occupant-unverifiable`            | a non-empty directory at the archive path does not identify itself as this project; if it is a partial copy left by an interrupted archive, inspect and remove it, then retry |
 | `archive-generation-synced`                | `--new-generation` was given for a synced project                                                                                                                             |
@@ -248,6 +248,8 @@ reason code, and `--json` reports the same code as `code` in the error object:
 | `archive-generation-ambiguous-predecessor` | more than one archive holds the latest generation                                                                                                                             |
 | `archive-generation-pending`               | the latest generation is still allocated but not copied                                                                                                                       |
 | `archive-generation-path-occupied`         | the `<project>-gN` path is held by something else                                                                                                                             |
+| `archive-synced-recordless-unbound`        | a synced project without a record has no archive whose identity matches its authoritative completed ref                                                                       |
+| `archive-synced-recordless-ambiguous`      | a synced project without a record has several archives matching its completed ref                                                                                             |
 
 When `--new-generation` content is identical to an existing archive, the
 command resolves to that generation and warns that the reason was not

@@ -1399,6 +1399,55 @@ describe('recordless synced dry-run binds through the completed ref', () => {
     expect(applied.archivePath).toBe(report.archivePath);
   });
 
+  it('reports the unbound and persisted-path codes in both modes', async () => {
+    const unmatched = await syncedFixture([SHA_A]);
+    const probe = probeCompleted(SHA_B);
+    const report = await preview(unmatched, probe);
+    expect(report).toMatchObject({
+      status: 'error',
+      code: 'archive-synced-recordless-unbound',
+    });
+    await expect(apply(unmatched, probe, stubS3())).rejects.toMatchObject({
+      code: 'archive-synced-recordless-unbound',
+      message: expect.stringMatching(/^archive-synced-recordless-unbound: /),
+    });
+
+    const none = await syncedFixture([]);
+    expect(await preview(none, probe)).toMatchObject({
+      status: 'error',
+      code: 'archive-synced-recordless-unbound',
+    });
+
+    // Two archives carry the persisted snapshot a synced record binds.
+    const twins = await syncedFixture([SHA_A, SHA_A]);
+    for (const name of [SLUG, `${SLUG}-20260830120000`]) {
+      const metadataPath = join(
+        twins.archiveRoot,
+        name,
+        ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+      );
+      const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+      await writeFile(
+        metadataPath,
+        `${JSON.stringify({ ...metadata, snapshotName: `20260830-${SLUG}` })}\n`,
+      );
+    }
+    await expect(
+      evaluateArchiveRetryIdentity({
+        repoRoot: twins.repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: SLUG,
+        projectPath: twins.syncedPath,
+        scope: 'synced',
+        timestamp: '2026-10-01T09:00:00Z',
+        persistedSnapshot: `20260830-${SLUG}`,
+      }),
+    ).rejects.toMatchObject({
+      code: 'archive-retry-ambiguous',
+      message: expect.stringMatching(/^archive-retry-ambiguous: Persisted/),
+    });
+  });
+
   it('refuses in both modes when several archives match the completed ref', async () => {
     const fixture = await syncedFixture([SHA_B, SHA_B]);
     const probe = probeCompleted(SHA_B);
@@ -1408,11 +1457,15 @@ describe('recordless synced dry-run binds through the completed ref', () => {
 
     expect(report).toMatchObject({
       status: 'error',
-      message: expect.stringMatching(/multiple persisted archives match/),
+      code: 'archive-synced-recordless-ambiguous',
+      message: expect.stringMatching(
+        /^archive-synced-recordless-ambiguous: .*multiple persisted archives match/,
+      ),
     });
-    await expect(apply(fixture, probe, s3)).rejects.toThrow(
-      /multiple persisted archives match/,
-    );
+    await expect(apply(fixture, probe, s3)).rejects.toMatchObject({
+      code: 'archive-synced-recordless-ambiguous',
+      exitCode: 2,
+    });
     expect(s3.calls).toEqual([]);
     expect(await treeHash(fixture.archiveRoot)).toBe(before);
   });
