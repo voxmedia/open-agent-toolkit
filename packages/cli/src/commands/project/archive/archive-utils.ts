@@ -436,37 +436,43 @@ export function buildArchiveSnapshotName(
   return `${normalizeArchiveDateStamp(timestamp)}-${projectName}`;
 }
 
+/**
+ * Parses an S3 snapshot name `<YYYYMMDD>-<local-name>`. The local name is the
+ * archive directory the snapshot hydrates to and is never shortened, so a
+ * generation snapshot `<YYYYMMDD>-<project>-gN` (N >= 2) restores to
+ * `<project>-gN`, never over generation 1. `projectName` is the base project
+ * name with that generation suffix removed, and `generation` is N (1 when the
+ * name carries no suffix). An undated name is its own local and project name.
+ */
 export function parseArchiveSnapshotName(snapshotName: string): {
   projectName: string;
+  localName: string;
   snapshotName: string;
   dateStamp: string | null;
+  generation: number;
 } {
   const trimmedSnapshot = snapshotName.replace(/\/+$/, '');
   const match = trimmedSnapshot.match(/^(\d{8})-(.+)$/);
+  const dateStamp = match?.[1];
+  const localName = match?.[2];
 
-  if (!match) {
+  if (!dateStamp || !localName) {
     return {
       projectName: trimmedSnapshot,
+      localName: trimmedSnapshot,
       snapshotName: trimmedSnapshot,
       dateStamp: null,
+      generation: 1,
     };
   }
 
-  const dateStamp = match[1];
-  const projectName = match[2];
-
-  if (!dateStamp || !projectName) {
-    return {
-      projectName: trimmedSnapshot,
-      snapshotName: trimmedSnapshot,
-      dateStamp: null,
-    };
-  }
-
+  const generationMatch = localName.match(/^(.+)-g([2-9]|[1-9]\d+)$/);
   return {
-    projectName,
+    projectName: generationMatch?.[1] ?? localName,
+    localName,
     snapshotName: trimmedSnapshot,
     dateStamp,
+    generation: generationMatch ? Number(generationMatch[2]) : 1,
   };
 }
 
@@ -1110,7 +1116,7 @@ async function assertRetryCandidateIntact(
         recordedMismatch
           ? 'the manifest recorded when it was written'
           : 'the project it would replace'
-      } (current ${actual}); refusing to adopt it as a retry before any export, copy, removal or S3 mutation. Restore the archive from its S3 snapshot (\`oat repo archive sync ${projectName}\`) or from backup, then retry; the project directory is left in place.`,
+      } (current ${actual}); refusing to adopt it as a retry before any export, copy, removal or S3 mutation. Restore the archive from its S3 snapshot (\`oat repo archive sync ${metadata?.snapshotName ?? projectName} --force\`) or from backup, then retry; the project directory is left in place.`,
     );
   }
 }

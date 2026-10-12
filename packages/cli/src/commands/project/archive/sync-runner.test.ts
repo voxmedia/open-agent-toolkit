@@ -241,6 +241,60 @@ describe('archive sync runner', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('resolves archive generations when syncing by project name', async () => {
+    const listOutput = [
+      '                           PRE 20261011-demo/',
+      '                           PRE 20261012-demo-g2/',
+    ].join('\n');
+    const prefix =
+      's3://example-bucket/oat-archive/open-agent-toolkit/projects';
+    const syncCalls = (harness: ReturnType<typeof createHarness>) =>
+      harness.execFile.mock.calls
+        .map(([, args]) => args as string[])
+        .filter((args) => args[1] === 'sync')
+        .map((args) => [args[2], args[3]]);
+
+    // By base name: the latest generation, into its own directory.
+    const byName = createHarness({ listOutput });
+    await runSync(byName, { projectName: 'demo' });
+    expect(syncCalls(byName)).toEqual([
+      [`${prefix}/20261012-demo-g2`, '.oat/projects/archived/demo-g2'],
+    ]);
+
+    // A full generation name and an exact snapshot name still match exactly.
+    const byFullName = createHarness({ listOutput });
+    await runSync(byFullName, { projectName: 'demo-g2' });
+    expect(syncCalls(byFullName)).toEqual([
+      [`${prefix}/20261012-demo-g2`, '.oat/projects/archived/demo-g2'],
+    ]);
+    const bySnapshot = createHarness({ listOutput });
+    await runSync(bySnapshot, { projectName: '20261011-demo' });
+    expect(syncCalls(bySnapshot)).toEqual([
+      [`${prefix}/20261011-demo`, '.oat/projects/archived/demo'],
+    ]);
+
+    // An unnamed sync hydrates every generation into its own directory.
+    const unnamed = createHarness({ listOutput });
+    await runSync(unnamed);
+    expect(syncCalls(unnamed)).toEqual([
+      [`${prefix}/20261011-demo`, '.oat/projects/archived/demo'],
+      [`${prefix}/20261012-demo-g2`, '.oat/projects/archived/demo-g2'],
+    ]);
+
+    // A later generation outranks a later-dated earlier generation.
+    const reordered = createHarness({
+      listOutput: [
+        '                           PRE 20261012-demo-g2/',
+        '                           PRE 20261020-demo/',
+      ].join('\n'),
+    });
+    await runSync(reordered, { projectName: 'demo' });
+    expect(syncCalls(reordered)).toEqual([
+      [`${prefix}/20261012-demo-g2`, '.oat/projects/archived/demo-g2'],
+    ]);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('passes through dry-run mode without removing local archive directories', async () => {
     const harness = createHarness();
 

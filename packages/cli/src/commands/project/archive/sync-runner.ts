@@ -142,7 +142,12 @@ export async function runArchiveSync(
 
 export interface ArchiveSnapshotEntry {
   dateStamp: string | null;
+  /** Base project name, without a `-gN` generation suffix. */
   projectName: string;
+  /** Full local archive name the snapshot hydrates to (`<project>-gN`). */
+  localName: string;
+  /** Archive generation; 1 when the snapshot name carries no suffix. */
+  generation: number;
   snapshotName: string;
   source: string;
   target: string;
@@ -187,16 +192,24 @@ export async function listArchiveSnapshots(
         ),
         target: dependencies.resolveLocalArchiveProjectPath(
           projectsRoot,
-          parsed.projectName,
+          parsed.localName,
         ),
       };
     });
 }
 
+/**
+ * Orders snapshots oldest to latest: a later generation is later regardless
+ * of date, then a later date, then the snapshot name.
+ */
 export function compareSnapshotEntries(
   left: ArchiveSnapshotEntry,
   right: ArchiveSnapshotEntry,
 ): number {
+  if (left.generation !== right.generation) {
+    return left.generation - right.generation;
+  }
+
   if (left.dateStamp && right.dateStamp && left.dateStamp !== right.dateStamp) {
     return left.dateStamp.localeCompare(right.dateStamp);
   }
@@ -212,19 +225,50 @@ export function compareSnapshotEntries(
   return left.snapshotName.localeCompare(right.snapshotName);
 }
 
+/**
+ * The latest snapshot for each local archive: every generation keeps its own
+ * local directory, so each one is hydrated from its own latest snapshot.
+ */
 export function selectLatestSnapshots(
   snapshots: ArchiveSnapshotEntry[],
 ): ArchiveSnapshotEntry[] {
-  const latestByProject = new Map<string, ArchiveSnapshotEntry>();
+  const latestByLocalName = new Map<string, ArchiveSnapshotEntry>();
 
   for (const snapshot of snapshots) {
-    const current = latestByProject.get(snapshot.projectName);
+    const current = latestByLocalName.get(snapshot.localName);
     if (!current || compareSnapshotEntries(snapshot, current) > 0) {
-      latestByProject.set(snapshot.projectName, snapshot);
+      latestByLocalName.set(snapshot.localName, snapshot);
     }
   }
 
-  return [...latestByProject.values()];
+  return [...latestByLocalName.values()];
+}
+
+/**
+ * Snapshots a by-name sync may choose from, in precedence order: an exact
+ * snapshot name; else a full generation name such as `demo-g2` (which also
+ * keeps a project literally named `demo-g2` reachable); else every snapshot of
+ * the base project name, so `demo` reaches its latest generation.
+ */
+export function selectNamedSnapshotCandidates(
+  snapshots: ArchiveSnapshotEntry[],
+  name: string,
+): ArchiveSnapshotEntry[] {
+  const exactSnapshot = snapshots.filter(
+    (snapshot) => snapshot.snapshotName === name,
+  );
+  if (exactSnapshot.length > 0) {
+    return exactSnapshot;
+  }
+  const fullName = snapshots.filter(
+    (snapshot) =>
+      snapshot.localName === name &&
+      snapshot.localName !== snapshot.projectName,
+  );
+  if (fullName.length > 0) {
+    return fullName;
+  }
+  return snapshots.filter((snapshot) => snapshot.projectName === name);
 }
 
 export async function readLocalSnapshotName(
@@ -331,11 +375,7 @@ export async function runArchiveSyncCommand(
     );
 
     const targets = projectName
-      ? snapshots.filter(
-          (snapshot) =>
-            snapshot.projectName === projectName ||
-            snapshot.snapshotName === projectName,
-        )
+      ? selectNamedSnapshotCandidates(snapshots, projectName)
       : selectLatestSnapshots(snapshots);
 
     if (projectName && targets.length === 0) {

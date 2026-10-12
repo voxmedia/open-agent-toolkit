@@ -159,7 +159,10 @@ function stubS3(options: { failSync?: boolean } = {}) {
  * Directories whose contents an exclude covers are not created, as S3 holds
  * no directories.
  */
-function fakeS3Mirror(s3Root: string): { execFile: ExecFileLike } {
+function fakeS3Mirror(s3Root: string): {
+  execFile: ExecFileLike;
+  ensureS3ArchiveAccess: () => Promise<{ ok: true; warnings: string[] }>;
+} {
   const toLocal = (uri: string, cwd: string): string =>
     uri.startsWith('s3://')
       ? join(s3Root, uri.slice('s3://'.length))
@@ -207,7 +210,49 @@ function fakeS3Mirror(s3Root: string): { execFile: ExecFileLike } {
     }
     throw new Error(`fake aws: unsupported ${args.join(' ')}`);
   };
-  return { execFile };
+  return {
+    execFile,
+    ensureS3ArchiveAccess: async () => ({ ok: true, warnings: [] }),
+  };
+}
+
+/** Runs the public `oat repo archive sync` in process; returns its JSON. */
+async function hydrate(
+  fixture: Fixture,
+  execFile: ExecFileLike,
+  projectName: string | undefined,
+  options: { force?: boolean } = {},
+): Promise<Record<string, unknown>> {
+  const capture = createLoggerCapture();
+  const exitCode = process.exitCode;
+  await runArchiveSyncCommand(
+    {
+      ...defaultProjectArchiveCommandDependencies(),
+      resolveProjectRoot: async () => fixture.repoRoot,
+      readOatConfig: async () => ({
+        version: 1,
+        archive: { s3Uri: S3_URI, s3SyncOnComplete: true },
+      }),
+      resolveProjectsRoot: async () => '.oat/projects/shared',
+      ensureS3ArchiveAccess: async () => ({ ok: true, warnings: [] }),
+      execFile,
+      processEnv: {},
+    },
+    projectName,
+    options,
+    {
+      scope: 'project',
+      dryRun: false,
+      verbose: false,
+      json: true,
+      cwd: fixture.repoRoot,
+      home: fixture.repoRoot,
+      interactive: false,
+      logger: capture.logger,
+    } satisfies CommandContext,
+  );
+  process.exitCode = exitCode;
+  return capture.jsonPayloads[0] as Record<string, unknown>;
 }
 
 function archiveOptions(
@@ -544,36 +589,7 @@ describe('archive retry identity (archive-retry-identity)', () => {
     // Lose the local archive, then hydrate it from S3 through the public
     // sync runner.
     await rm(first.archivePath, { recursive: true, force: true });
-    const capture = createLoggerCapture();
-    const exitCode = process.exitCode;
-    await runArchiveSyncCommand(
-      {
-        ...defaultProjectArchiveCommandDependencies(),
-        resolveProjectRoot: async () => fixture.repoRoot,
-        readOatConfig: async () => ({
-          version: 1,
-          archive: { s3Uri: S3_URI, s3SyncOnComplete: true },
-        }),
-        resolveProjectsRoot: async () => '.oat/projects/shared',
-        ensureS3ArchiveAccess,
-        execFile: mirror.execFile,
-        processEnv: {},
-      },
-      PROJECT,
-      {},
-      {
-        scope: 'project',
-        dryRun: false,
-        verbose: false,
-        json: true,
-        cwd: fixture.repoRoot,
-        home: fixture.repoRoot,
-        interactive: false,
-        logger: capture.logger,
-      } satisfies CommandContext,
-    );
-    process.exitCode = exitCode;
-    expect(capture.jsonPayloads[0]).toMatchObject({
+    expect(await hydrate(fixture, mirror.execFile, PROJECT)).toMatchObject({
       status: 'ok',
       targets: ['.oat/projects/archived/demo'],
     });
@@ -1333,6 +1349,84 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     expect(await readMetadata(first.archivePath)).toEqual(
       expect.objectContaining({ snapshotName: '20260901-demo', generation: 1 }),
     );
+  });
+
+  it('restores the latest generation by project name and follows the damaged-archive hint to its exact snapshot', async () => {
+    const fixture = await createFixture();
+    const mirror = fakeS3Mirror(await scratch('oat-fake-s3-mirror-'));
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...mirror,
+      timestamp: () => '2026-10-11T09:00:00Z',
+    });
+    await reopen(fixture, '# reopened\n');
+    const second = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...mirror, timestamp: () => '2026-10-12T09:00:00Z' },
+    );
+    expect(second.s3Path).toMatch(/\/projects\/20261012-demo-g2$/);
+
+    // Both local archives are lost; sync by the project name restores the
+    // latest generation to its own directory, never over generation 1.
+    await rm(fixture.archiveRoot, { recursive: true, force: true });
+    expect(await hydrate(fixture, mirror.execFile, PROJECT)).toMatchObject({
+      status: 'ok',
+      sources: [second.s3Path],
+      targets: ['.oat/projects/archived/demo-g2'],
+    });
+    expect(existsSync(first.archivePath)).toBe(false);
+    expect(await readMetadata(second.archivePath)).toEqual(
+      expect.objectContaining({
+        snapshotName: '20261012-demo-g2',
+        generation: 2,
+      }),
+    );
+    // The full generation name and an unnamed sync reach their own targets.
+    expect(await hydrate(fixture, mirror.execFile, 'demo-g2')).toMatchObject({
+      status: 'ok',
+      targets: [],
+      skipped: true,
+    });
+    expect(await hydrate(fixture, mirror.execFile, undefined)).toMatchObject({
+      status: 'ok',
+      targets: ['.oat/projects/archived/demo'],
+    });
+    expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+      'demo',
+      'demo-g2',
+    ]);
+
+    // A damaged generation-1 archive names the command that restores it,
+    // which a by-name sync (now the latest generation) would not.
+    await writeFile(join(first.archivePath, 'state.md'), '# damaged\n');
+    await restoreSource(fixture);
+    const evaluate = () =>
+      evaluateArchiveRetryIdentity({
+        repoRoot: fixture.repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: PROJECT,
+        projectPath: fixture.projectPath,
+        scope: 'shared',
+        timestamp: '2026-10-13T09:00:00Z',
+      });
+    const refusal = await evaluate().catch((error: unknown) => error as Error);
+    expect(String(refusal)).toContain('archive-retry-candidate-damaged');
+    const hinted = String(refusal).match(
+      /`oat repo archive sync (\S+) --force`/,
+    );
+    expect(hinted?.[1]).toBe('20261011-demo');
+    expect(
+      await hydrate(fixture, mirror.execFile, hinted![1], { force: true }),
+    ).toMatchObject({
+      status: 'ok',
+      targets: ['.oat/projects/archived/demo'],
+    });
+    await expect(
+      readFile(join(first.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# state\n');
+    await expect(evaluate()).resolves.toMatchObject({
+      disposition: 'retry',
+      archivePath: first.archivePath,
+    });
   });
 
   it('treats a replayed request as the same generation and a later changed request as the next', async () => {

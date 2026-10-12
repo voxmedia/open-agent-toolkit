@@ -42,6 +42,7 @@ import {
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
   ensureS3ArchiveAccess,
+  parseArchiveSnapshotName,
   resolveArchiveProjectTarget,
   resolveLocalArchiveProjectPath,
   resolvePrimaryRepoRoot,
@@ -4189,6 +4190,40 @@ describe('archive utils', () => {
         '2026-04-01T12:34:56Z',
       ),
     ).toBe('20260401-documentation-improvement');
+  });
+
+  it('parses the generation of a snapshot name and keeps its full local name', () => {
+    expect(parseArchiveSnapshotName('20261012-demo-g2')).toEqual({
+      projectName: 'demo',
+      localName: 'demo-g2',
+      snapshotName: '20261012-demo-g2',
+      dateStamp: '20261012',
+      generation: 2,
+    });
+    expect(parseArchiveSnapshotName('20261012-demo-g12/')).toMatchObject({
+      projectName: 'demo',
+      localName: 'demo-g12',
+      generation: 12,
+    });
+    expect(parseArchiveSnapshotName('20261011-demo')).toEqual({
+      projectName: 'demo',
+      localName: 'demo',
+      snapshotName: '20261011-demo',
+      dateStamp: '20261011',
+      generation: 1,
+    });
+    // `-g1`/`-g0` are never generation suffixes, and an undated name is its
+    // own project.
+    expect(parseArchiveSnapshotName('20261011-demo-g1')).toMatchObject({
+      projectName: 'demo-g1',
+      generation: 1,
+    });
+    expect(parseArchiveSnapshotName('demo-g2')).toMatchObject({
+      projectName: 'demo-g2',
+      localName: 'demo-g2',
+      dateStamp: null,
+      generation: 1,
+    });
   });
 
   it('fails for explicit sync when aws credentials are unusable', async () => {
