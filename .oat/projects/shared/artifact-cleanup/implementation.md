@@ -1252,6 +1252,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Next:** p04-t08..p04-t12 landed 80a8a724e..7e32ece6e via `cont-ac-p03-fix-4`; final round 3 (`reviews/archived/final-review-2026-10-12T061438Z.md`, reviewed head `2c2594f42`) returned 0/0/0/1 (journal count wording, fixed by the root); exit gate attempt 2 follows.
 
+**Attempt 2:** `reviews/archived/final-review-2026-10-12T062754Z.md` (run `43b2fd6a-ad0d-45d4-ae25-fa669f86c2ec`, `codex-6-sol-xhigh`, reviewed head `b348f3e4c`) returned `ok` 0/0/0/0; judgment sweep found nothing to disposition; gate `allowed/passed` (state commit d30a57545).
+
 ## Deferred Findings
 
 - None.
