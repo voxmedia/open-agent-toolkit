@@ -582,6 +582,88 @@ Expected: green; the named negative control fails with the guard neutralized and
 
 ---
 
+### Task p03-t11: (review) Replay warning states the persisted generation reason
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`newGenerationReplayWarning` picks `generationReason`; when persisted, say the archive was allocated for that reason and no new generation was allocated)
+- Modify: `archive-retry-identity.test.ts` (extend the explicit-generation replay test to assert the wording)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T042217Z.md`, round 2): L1: the warning says "the reason was not recorded" even when replaying an explicit generation whose reason is persisted.
+Location: `archive-utils.ts:968`
+
+**Step 2: Implement fix**
+
+Correct the clause on the replay path; keep the warning audible.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t11): replay warning states the persisted generation reason`
+
+---
+
+### Task p03-t12: (review) Reason codes on the recordless synced and persisted-path refusals
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`ArchiveIdentityError` with `archive-synced-recordless-unbound`, `archive-synced-recordless-ambiguous`, and `archive-retry-ambiguous` for `resolvePersistedArchivePath`; add the two new codes to `ARCHIVE_IDENTITY_REFUSAL_CODES`)
+- Modify: `archive-retry-identity.test.ts` (pin the codes in the recordless synced describe)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (codes table)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T042217Z.md`, round 2): L2: the recordless synced refusals now surface in dry-run as plain `CliError`s with `code: undefined`, contradicting the docs table's promise.
+Location: `archive-utils.ts:1546, 1566, 704`
+
+**Step 2: Implement fix**
+
+Make every refusal carry a code, as the table promises.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive; pnpm --filter oat-docs check`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t12): reason codes on the recordless synced and persisted-path refusals`
+
+---
+
+### Task p03-t13: (review) Treat an empty scope-qualified directory as free
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (scope-qualified occupancy check uses `pathExists && !isEmptyDirectory`, mirroring the base-path rule)
+- Modify: `archive-retry-identity.test.ts` (empty `<project>-<scope>` directory reused; non-empty metadata-less one refused)
+
+**Step 1: Understand the issue**
+
+Review finding (`p03-review-2026-10-12T042217Z.md`, round 2): L3: an empty `<project>-<scope>` directory is refused while an empty base directory is reused.
+Location: `archive-utils.ts:1293`
+
+**Step 2: Implement fix**
+
+One rule for empty directories at both paths.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p03-t13): treat an empty scope-qualified archive directory as free`
+
+---
+
 ## Phase 4: Acceptance, documentation audit, records and release
 
 ### Task p04-t01: Fresh lifecycle probes per mode
@@ -631,6 +713,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 | p02    | code     | fixes_completed | 2026-10-12 | reviews/archived/p02-review-2026-10-12T024507Z.md           | a9ee702f55d3ce000927edf4c50ce73f5adc3af2 | auto       | round 1: 0/0/2/3; all five converted (p02-t08..p02-t12); fixes landed cbaaefbcb..3607948f4                                                                |
 | p02    | code     | passed          | 2026-10-12 | reviews/archived/p02-review-2026-10-12T030234Z.md           | b9f2f8050e2246c1d6a92e2b5aacf70e0b2f053e | auto       | round 2 (narrowed to 736be8cfc..3607948f4): 0/0/0/0; all five round-1 findings closed                                                                     |
 | p03    | code     | fixes_completed | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10); fixes landed 60d10eb8b..a6a9950a5                                        |
+| p03    | code     | passed          | 2026-10-12 | reviews/archived/p03-review-2026-10-12T042217Z.md           | 1f5601c3f080ac4ca284ab634ef92039437a48be | auto       | round 2 (narrowed to 53340c9ec..a6a9950a5): 0/0/0/3; three new Lows converted (p03-t11..t13), root-verified, covered by the final review                  |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                               |
@@ -655,10 +738,10 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
-- Phase 3: 10 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity)
+- Phase 3: 13 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity; round-2 polish: replay reason wording, two more refusal codes, empty scope-qualified directory)
 - Phase 4: 4 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates
 
-**Total: 33 tasks**
+**Total: 36 tasks**
 
 Ready for code review and merge.
 

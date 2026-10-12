@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t11
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | in_progress | 10    | 10/10     |
+| Phase 3 | in_progress | 13    | 10/13     |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 29/33 tasks completed
+**Total:** 29/36 tasks completed
 
 ---
 
@@ -679,7 +679,7 @@ oat_generated: false
 - L1: the plan and design said a replay is distinguished by a persisted `generation_request` id; the shipped mechanism is the manifest-hash match, with `generationRequest` recorded as the request witness. Implementation accepted (deterministic witness of the same facts; docs already describe it). Plan p03-t03 wording and design.md aligned now; source of truth: code and `project-artifacts.md`.
 - Deliberate changes (a)–(d) from p03-t02/t03 judged design intent or defensible narrowing by the reviewer; (d) stays with the warning p03-t04 adds; (b) keeps the refusal with the corrected hint from p03-t06.
 
-**Next:** fix continuation `cont-ac-p03-fix-1` landed 60d10eb8b..a6a9950a5 (seven commits); round 2 on `53340c9ec..a6a9950a5` pending to reach `passed`.
+**Next:** fix continuation `cont-ac-p03-fix-1` landed 60d10eb8b..a6a9950a5; round 2 (`reviews/archived/p03-review-2026-10-12T042217Z.md`, reviewed head `1f5601c3f`) returned 0/0/0/3 and the p03 event is `passed`. The three round-2 Lows are converted to p03-t11..p03-t13 (replay-reason wording, two more refusal codes, empty scope-qualified directory); their fix delta is root-verified and covered by the final integrated review instead of a third p03 round (review cycle 2 of 3). Review artifacts are local-only.
 
 ### Task p03-t04: (review) Warn when --new-generation resolves to an existing generation
 
@@ -811,6 +811,27 @@ oat_generated: false
 **Verification:**
 
 - validate-skills 0; vitest 435/435; control: assignment removed → "the source id is assigned" fails
+
+---
+
+### Task p03-t11: (review) Replay warning states the persisted generation reason
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t12: (review) Reason codes on the recordless synced and persisted-path refusals
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t13: (review) Treat an empty scope-qualified directory as free
+
+**Status:** pending
+**Commit:** -
 
 ---
 
