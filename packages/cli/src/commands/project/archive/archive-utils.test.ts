@@ -1477,8 +1477,11 @@ describe('archive utils', () => {
         },
       ),
     ).rejects.toEqual(
+      // The local-scope archive already holds the dated identity
+      // `20260827-demo`, so the shared project's new identity is
+      // scope-qualified; the occupied path is still never overwritten.
       new CliError(
-        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo\`; refusing to overwrite it.`,
+        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo-shared\`; refusing to overwrite it.`,
       ),
     );
   });
@@ -1829,7 +1832,10 @@ describe('archive utils', () => {
         timestamp: () => '2026-08-28T12:00:00Z',
       });
       expect(retried.archivePath).toBe(syncedArchive.archivePath);
-      expect(retried.snapshotId).toBe('20260827-same-scope-retry');
+      // The shared archive already holds the dated identity (its summary
+      // export stem and S3 key), so the synced project's is scope-qualified
+      // and the retry reuses it across dates.
+      expect(retried.snapshotId).toBe('20260827-same-scope-retry-synced');
       await expect(
         readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
       ).resolves.toBe('# synced summary\n');

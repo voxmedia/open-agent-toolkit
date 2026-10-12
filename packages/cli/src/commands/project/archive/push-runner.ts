@@ -21,12 +21,12 @@ import {
   archiveProjectOnCompletion,
   assertExactArchiveProjectRoot,
   assertDurableArchiveProjectTarget,
-  buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
+  evaluateArchiveRetryIdentity,
   resolveArchiveProjectTarget,
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
-  type ArchiveProjectTarget,
+  type ArchiveRetryIdentity,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
   type ArchiveProjectRecapExportV1,
@@ -166,10 +166,13 @@ async function buildDryRunReport(
   repoRoot: string,
   config: OatConfig,
   target: ResolvedArchiveTarget,
-  archiveTarget: ArchiveProjectTarget,
-  snapshotName: string,
+  identity: ArchiveRetryIdentity,
   projectScope: ProjectScope | null,
 ): Promise<ArchivePushReport> {
+  // Every reported destination comes from the shared retry-identity
+  // evaluator, so an identical retry previews the persisted snapshot it would
+  // reuse rather than a new identity derived from today's date.
+  const snapshotName = identity.snapshotName;
   const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot);
   const s3Path =
     config.archive?.s3Uri && config.archive.s3SyncOnComplete === true
@@ -188,16 +191,14 @@ async function buildDryRunReport(
     mode: 'dry-run',
     projectName: target.projectName,
     projectPath: target.projectPath,
-    archivePath: archiveTarget.archivePath,
+    archivePath: identity.archivePath,
     s3Path,
     summaryExportFile,
     warnings: [],
     lifecycleCommit: null,
     recapExportPaths: [],
     snapshotId:
-      projectScope === 'synced'
-        ? snapshotName
-        : basename(archiveTarget.archivePath),
+      projectScope === 'synced' ? snapshotName : basename(identity.archivePath),
     completedRef: null,
     verifiedSourceSha: null,
     activeAliasDisposition: null,
@@ -283,10 +284,6 @@ export async function runArchivePushCommand(
       projectName: target.projectName,
       projectsRoot,
     });
-    const defaultSnapshotName = buildArchiveSnapshotName(
-      target.projectName,
-      dependencies.timestamp(),
-    );
     const syncedRecord =
       projectScope === 'synced'
         ? await dependencies.readSyncedRecord(
@@ -296,25 +293,28 @@ export async function runArchivePushCommand(
             ),
           )
         : null;
-    const snapshotName = syncedRecord?.archiveSnapshot ?? defaultSnapshotName;
-    const archiveTarget = await dependencies.resolveArchiveProjectTarget(
+    const identity = await evaluateArchiveRetryIdentity(
       {
         repoRoot,
         projectsRoot,
         projectName: target.projectName,
+        projectPath: target.projectPath,
+        scope: projectScope,
+        timestamp: dependencies.timestamp(),
         ...(syncedRecord?.archiveSnapshot
-          ? {
-              archiveSnapshot: syncedRecord.archiveSnapshot,
-              archiveScope: projectScope ?? undefined,
-            }
+          ? { persistedSnapshot: syncedRecord.archiveSnapshot }
+          : {}),
+        ...(syncedRecord?.archiveSourceRefSha
+          ? { sourceRefSha: syncedRecord.archiveSourceRefSha }
           : {}),
       },
       {
+        resolveArchiveProjectTarget: dependencies.resolveArchiveProjectTarget,
         env: dependencies.processEnv,
         timestamp: dependencies.timestamp,
       },
     );
-    assertDurableArchiveProjectTarget(archiveTarget);
+    assertDurableArchiveProjectTarget(identity.target);
     const dryRun = options.dryRun === true || context.dryRun;
     const recordlessSyncedApply =
       projectScope === 'synced' && syncedRecord === null && !dryRun;
@@ -331,8 +331,7 @@ export async function runArchivePushCommand(
         repoRoot,
         config,
         target,
-        archiveTarget,
-        snapshotName,
+        identity,
         projectScope,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);

@@ -184,6 +184,45 @@ scope, and at completion; see the [CLI reference](cli-reference.md).
 `oat_pr_status` before archive: in an archived `state.md`, `oat_pr_status` and
 `oat_pr_url` are observations at that time, not live PR state.
 
+## Archive identity
+
+`oat project archive` (and completion's archive step) records each archive's
+identity in `.oat-archive-source.json` inside the local snapshot: the project
+name, its originating scope, the dated export identity `<YYYYMMDD>-<project>`
+(the summary export file stem and the S3 key), the synced source-ref SHA where
+one applies, the generation (`1` for the first archive), and `manifestHash`.
+The manifest hash covers every retained file of the project as sorted
+`<sha256>  <path>` lines; it excludes the top-level `reviews/` directory (reviews
+are never archived), a synced checkout's `.git`, and the archive-owned
+`.oat-archive-source.json` itself, so a project and its archive hash equal.
+
+A retry resolves to that identity before anything is written:
+
+- an identical retry (the source's manifest matches exactly one archive of the
+  same project and scope) reuses its local snapshot, dated export identity, S3
+  destination and receipt, on a later date too;
+- a retry whose source is gone resumes the single archive of that project and
+  scope;
+- changed content, more than one matching archive, or a non-empty directory at
+  the project's archive path that does not identify itself refuses before any
+  export, copy, overwrite or S3 upload, and points reopened work at a
+  follow-up project;
+- the same slug from a different scope is a separate identity; when the other
+  archive already holds the dated export identity, the new one is qualified
+  with the scope (`<YYYYMMDD>-<project>-<scope>`).
+
+`--dry-run` runs the same read-only evaluation and reports the identity an
+apply would use, so a retry previews the persisted snapshot rather than
+today's date. The synced protections (recordless retry by completed ref,
+stale-source refusal, exact project-root checks) are unchanged.
+
+The exported summary finalizes source locators: each
+`oat-project:<project>#<entry-id>` token becomes
+`oat-archive:<YYYYMMDD>-<project>#<entry-id>`, and a relative link to the
+archived-only `project-log.md` or legacy `oat-execution-learnings.md` becomes
+plain text naming the archive identity. The summary inside the archive keeps
+its original bytes.
+
 ## Blockers in state.md
 
 `oat_blockers` accepts legacy reason strings and structured workflow records:

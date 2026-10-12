@@ -24,6 +24,7 @@ import {
 } from 'node:path';
 import { promisify } from 'node:util';
 
+import { PROJECT_LOG_LOCATOR_PREFIX } from '@commands/project/log/rollup';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import {
   readSyncedRecord,
@@ -226,7 +227,40 @@ export interface ArchiveSnapshotMetadata {
   snapshotName: string;
   scope: ProjectScope;
   sourceRefSha?: string;
+  /**
+   * `sha256:` hash of the canonical retained-artifact manifest (see
+   * `computeArchiveManifestHash`). Absent on archives written before retry
+   * identity was persisted; readers then hash the archive's own files.
+   */
+  manifestHash?: string;
+  /** Archive generation of this project and scope; 1 for the first archive. */
+  generation?: number;
 }
+
+/**
+ * Top-level project entries an archive never retains: review evidence is not
+ * archived (D2) and a synced checkout's `.git` link is not project content. The
+ * copy and the retained-artifact manifest both read this one list.
+ */
+export const ARCHIVE_RETENTION_EXCLUSIONS: readonly string[] = [
+  'reviews',
+  '.git',
+];
+
+/**
+ * Top-level entries the archive itself owns. They are derived at archive time,
+ * so the manifest that identifies the retained project content excludes them.
+ */
+export const ARCHIVE_OWNED_ENTRIES: readonly string[] = [
+  ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+];
+
+/**
+ * The prefix an exported summary's finalized source locator carries:
+ * `oat-archive:<snapshot>#<entry-id>`, where `<snapshot>` is the persisted
+ * dated export identity (also the summary export file stem and the S3 key).
+ */
+export const ARCHIVE_LOCATOR_PREFIX = 'oat-archive:';
 
 interface RecordlessSyncedArchiveIdentity {
   archivePath: string;
@@ -749,6 +783,359 @@ export function assertDurableArchiveProjectTarget(
   }
 }
 
+/**
+ * Hashes the canonical retained-artifact manifest of a project or archive
+ * directory: every regular file below `root`, except the top-level
+ * `ARCHIVE_RETENTION_EXCLUSIONS` and `ARCHIVE_OWNED_ENTRIES`, as sorted
+ * `<sha256>  <posix path>` lines. A source project and the archive copied from
+ * it therefore hash equal, so an identical retry is recognized from either
+ * side. Symlinks and empty directories are not retained by the copy and are
+ * not hashed. Read-only.
+ */
+export async function computeArchiveManifestHash(
+  root: string,
+): Promise<string> {
+  const excluded = new Set([
+    ...ARCHIVE_RETENTION_EXCLUSIONS,
+    ...ARCHIVE_OWNED_ENTRIES,
+  ]);
+  const lines: string[] = [];
+  const walk = async (directory: string, prefix: string): Promise<void> => {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries) {
+      if (prefix === '' && excluded.has(entry.name)) continue;
+      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+      const absolutePath = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        await walk(absolutePath, relativePath);
+      } else if (entry.isFile()) {
+        lines.push(`${sha256(await readFile(absolutePath))}  ${relativePath}`);
+      }
+    }
+  };
+  await walk(root, '');
+  lines.sort();
+  return sha256(lines.join('\n'));
+}
+
+export interface EvaluateArchiveRetryIdentityOptions {
+  repoRoot: string;
+  projectsRoot: string;
+  projectName: string;
+  projectPath: string;
+  scope: ProjectScope;
+  /** Clock reading used only when a new dated export identity is allocated. */
+  timestamp: string;
+  /** Snapshot already bound by a synced record or a recordless synced retry. */
+  persistedSnapshot?: string;
+  /** Verified synced source ref; a candidate must carry the same SHA. */
+  sourceRefSha?: string;
+}
+
+export interface EvaluateArchiveRetryIdentityDependencies extends ResolveArchiveProjectTargetDependencies {
+  resolveArchiveProjectTarget?: typeof resolveArchiveProjectTarget;
+}
+
+/**
+ * The archive identity an apply would use: a `retry` reuses an existing
+ * snapshot's local path, dated export identity (summary export file stem and
+ * S3 key) and generation; `new` allocates them.
+ */
+export interface ArchiveRetryIdentity {
+  disposition: 'new' | 'retry';
+  projectName: string;
+  scope: ProjectScope;
+  snapshotName: string;
+  archivePath: string;
+  archiveExists: boolean;
+  generation: number;
+  /** Retained-artifact manifest hash of the present source, else null. */
+  manifestHash: string | null;
+  sourcePresent: boolean;
+  target: ArchiveProjectTarget;
+}
+
+interface ArchiveIdentityCandidate {
+  archivePath: string;
+  metadata: ArchiveSnapshotMetadata | null;
+}
+
+function readCandidateMetadata(value: unknown): ArchiveSnapshotMetadata | null {
+  if (
+    !isRecord(value) ||
+    typeof value.projectName !== 'string' ||
+    typeof value.snapshotName !== 'string' ||
+    (value.scope !== 'shared' &&
+      value.scope !== 'local' &&
+      value.scope !== 'synced')
+  ) {
+    return null;
+  }
+  return {
+    projectName: value.projectName,
+    snapshotName: value.snapshotName,
+    scope: value.scope,
+    ...(typeof value.sourceRefSha === 'string'
+      ? { sourceRefSha: value.sourceRefSha }
+      : {}),
+    ...(isSha256(value.manifestHash)
+      ? { manifestHash: value.manifestHash }
+      : {}),
+    ...(typeof value.generation === 'number' &&
+    Number.isInteger(value.generation) &&
+    value.generation > 0
+      ? { generation: value.generation }
+      : {}),
+  };
+}
+
+/**
+ * Every local archive that could hold this project: each directory whose
+ * metadata names the project (in any scope), plus any non-empty directory at
+ * the project's base archive path whose metadata does not.
+ */
+async function readArchiveIdentityCandidates(
+  archiveBasePath: string,
+  projectName: string,
+): Promise<ArchiveIdentityCandidate[]> {
+  const archiveRoot = dirname(archiveBasePath);
+  let entries: import('node:fs').Dirent[];
+  try {
+    entries = await readdir(archiveRoot, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const candidates: ArchiveIdentityCandidate[] = [];
+  for (const entry of entries
+    .filter((candidate) => candidate.isDirectory())
+    .sort((left, right) => left.name.localeCompare(right.name))) {
+    const archivePath = join(archiveRoot, entry.name);
+    let metadata: ArchiveSnapshotMetadata | null = null;
+    try {
+      metadata = readCandidateMetadata(
+        JSON.parse(
+          await readFile(
+            join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+            'utf8',
+          ),
+        ),
+      );
+    } catch {
+      metadata = null;
+    }
+    if (metadata?.projectName === projectName) {
+      candidates.push({ archivePath, metadata });
+    } else if (
+      archivePath === archiveBasePath &&
+      (await readdir(archivePath)).length > 0
+    ) {
+      // An empty directory holds no archive; anything else at the base path
+      // that does not identify itself as this project cannot be verified.
+      candidates.push({ archivePath, metadata: null });
+    }
+  }
+  return candidates;
+}
+
+function followUpGuidance(projectName: string): string {
+  return `Record reopened work in a follow-up project (for example \`oat project new ${projectName}-followup\`) and archive that project instead.`;
+}
+
+/**
+ * The one read-only evaluator of archive retry identity, shared by the archive
+ * apply and its dry-run. Persisted identity is the project, its originating
+ * scope and the snapshot/generation recorded in `.oat-archive-source.json`,
+ * bound to the canonical retained-artifact manifest (and, for synced projects,
+ * the source ref SHA):
+ *
+ * - a persisted synced snapshot keeps its recorded identity;
+ * - a present source whose manifest matches exactly one same-scope archive is
+ *   an identical retry and reuses that archive's snapshot, dated export
+ *   identity and generation, across dates;
+ * - an absent source resumes the single same-scope archive;
+ * - any other same-scope archive, an unverifiable archive at the project's
+ *   base path, or more than one match refuses before any export, copy,
+ *   overwrite or S3 mutation, with follow-up-project guidance;
+ * - otherwise a new identity is allocated, its dated export identity
+ *   qualified by scope when a different project's archive already holds it.
+ *
+ * It writes nothing: no file, metadata, ref or remote object.
+ */
+export async function evaluateArchiveRetryIdentity(
+  options: EvaluateArchiveRetryIdentityOptions,
+  dependencies: EvaluateArchiveRetryIdentityDependencies = {},
+): Promise<ArchiveRetryIdentity> {
+  const resolveTarget =
+    dependencies.resolveArchiveProjectTarget ?? resolveArchiveProjectTarget;
+  const { resolveArchiveProjectTarget: _resolver, ...targetDependencies } =
+    dependencies;
+  const target = await resolveTarget(
+    {
+      repoRoot: options.repoRoot,
+      projectsRoot: options.projectsRoot,
+      projectName: options.projectName,
+      ...(options.persistedSnapshot
+        ? {
+            archiveSnapshot: options.persistedSnapshot,
+            archiveScope: options.scope,
+          }
+        : {}),
+    },
+    targetDependencies,
+  );
+  const sourcePresent = await pathExists(options.projectPath);
+  const manifestHash = sourcePresent
+    ? await computeArchiveManifestHash(options.projectPath)
+    : null;
+  const base = {
+    projectName: options.projectName,
+    scope: options.scope,
+    manifestHash,
+    sourcePresent,
+    target,
+  };
+
+  if (options.persistedSnapshot) {
+    let existing: ArchiveSnapshotMetadata | null = null;
+    try {
+      existing = readCandidateMetadata(
+        JSON.parse(
+          await readFile(
+            join(target.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+            'utf8',
+          ),
+        ),
+      );
+    } catch {
+      existing = null;
+    }
+    const archiveExists = await pathExists(target.archivePath);
+    return {
+      ...base,
+      disposition: archiveExists ? 'retry' : 'new',
+      snapshotName: options.persistedSnapshot,
+      archivePath: target.archivePath,
+      archiveExists,
+      generation: existing?.generation ?? 1,
+    };
+  }
+
+  const archiveBasePath = resolveCompletionArchivePath(
+    target.archiveRepoRoot,
+    target.archiveProjectPath,
+  );
+  const candidates = await readArchiveIdentityCandidates(
+    archiveBasePath,
+    options.projectName,
+  );
+  const sameIdentity = candidates.filter(
+    (candidate) => candidate.metadata?.scope === options.scope,
+  );
+  const matches: ArchiveIdentityCandidate[] = [];
+  if (sourcePresent) {
+    for (const candidate of sameIdentity) {
+      const candidateHash =
+        candidate.metadata?.manifestHash ??
+        (await computeArchiveManifestHash(candidate.archivePath));
+      const refMatches =
+        options.sourceRefSha === undefined ||
+        candidate.metadata?.sourceRefSha === undefined ||
+        candidate.metadata.sourceRefSha === options.sourceRefSha;
+      if (candidateHash === manifestHash && refMatches) {
+        matches.push(candidate);
+      }
+    }
+  } else if (options.scope !== 'synced' || sameIdentity.length === 1) {
+    // An absent source resumes its archive. A recordless synced apply binds
+    // its snapshot through the completed ref before this evaluator runs, so
+    // an unbound synced preview with several candidates stays unresolved.
+    matches.push(...sameIdentity);
+  }
+
+  if (matches.length > 1) {
+    throw new CliError(
+      `Project \`${options.projectName}\` (${options.scope}) matches ${matches.length} existing archives (${matches
+        .map((match) => `\`${match.archivePath}\``)
+        .join(
+          ', ',
+        )}); refusing an ambiguous archive retry before any export, copy or S3 mutation. Keep exactly one archive of this project before retrying. ${followUpGuidance(options.projectName)}`,
+      1,
+    );
+  }
+  if (matches.length === 1) {
+    const match = matches[0]!;
+    return {
+      ...base,
+      disposition: 'retry',
+      snapshotName: match.metadata!.snapshotName,
+      archivePath: match.archivePath,
+      archiveExists: true,
+      generation: match.metadata!.generation ?? 1,
+    };
+  }
+
+  if (sourcePresent) {
+    const conflict =
+      sameIdentity[0] ??
+      candidates.find((candidate) => candidate.metadata === null);
+    if (conflict) {
+      throw new CliError(
+        conflict.metadata
+          ? `Project \`${options.projectName}\` (${options.scope}) was already archived as \`${conflict.metadata.snapshotName}\` at \`${conflict.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`
+          : `\`${conflict.archivePath}\` already exists without readable archive metadata, so it cannot be verified as an earlier archive of \`${options.projectName}\`; refusing to overwrite it or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`,
+        1,
+      );
+    }
+  }
+
+  const datedIdentity = buildArchiveSnapshotName(
+    options.projectName,
+    options.timestamp,
+  );
+  const snapshotName = candidates.some(
+    (candidate) => candidate.metadata?.snapshotName === datedIdentity,
+  )
+    ? `${datedIdentity}-${options.scope}`
+    : datedIdentity;
+  return {
+    ...base,
+    disposition: 'new',
+    snapshotName,
+    archivePath: target.archivePath,
+    archiveExists: false,
+    generation: 1,
+  };
+}
+
+/**
+ * Finalizes the export-safe source locators of a summary bound for the tracked
+ * export: `oat-project:<slug>#<entry-id>` tokens of this project become
+ * `oat-archive:<snapshot>#<entry-id>`, and a relative Markdown link to the
+ * archived-only project log or legacy learnings file becomes plain text naming
+ * the archive identity. Every other byte is unchanged.
+ */
+export function finalizeSummaryArchiveLocators(
+  text: string,
+  projectName: string,
+  snapshotName: string,
+): string {
+  const slug = projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text
+    .replace(
+      new RegExp(
+        `${PROJECT_LOG_LOCATOR_PREFIX}${slug}#([a-z0-9][a-z0-9-]*)`,
+        'g',
+      ),
+      (_token, entryId: string) =>
+        `${ARCHIVE_LOCATOR_PREFIX}${snapshotName}#${entryId}`,
+    )
+    .replace(
+      /\[([^\]\n]+)\]\((?:\.\/)?(project-log\.md|oat-execution-learnings\.md)(?:#[^)\s]*)?\)/g,
+      (_link, label: string, file: string) =>
+        `${label} (${ARCHIVE_LOCATOR_PREFIX}${snapshotName}/${file})`,
+    );
+}
+
 async function writeArchiveSnapshotMetadata(
   archivePath: string,
   metadata: ArchiveSnapshotMetadata,
@@ -876,6 +1263,7 @@ async function resolveRecordlessSyncedArchiveIdentity(
 
 async function exportProjectSummary(
   archivePath: string,
+  projectName: string,
   snapshotName: string,
   summaryExportPath: string,
   repoRoot: string,
@@ -891,13 +1279,21 @@ async function exportProjectSummary(
   const summaryTarget = join(repoRoot, summaryExportPath, `${snapshotName}.md`);
   const copySummary = dependencies.copySingleFile ?? copySingleFile;
   const sourceContents = await readFile(summarySource);
-  let expectedContents = sourceContents;
+  const sourceText = sourceContents.toString('utf8');
+  const finalizedText = finalizeSummaryArchiveLocators(
+    sourceText,
+    projectName,
+    snapshotName,
+  );
+  // Untouched bytes are exported as copied; only a finalized locator rewrites.
+  let expectedContents =
+    finalizedText === sourceText ? sourceContents : Buffer.from(finalizedText);
   if (recapExport) {
     const pageLink = relative(dirname(summaryTarget), recapExport.exportRoot)
       .split(sep)
       .join('/');
     const receipt = `Recap: [View the recap](${pageLink})\n\nRun: \`${recapExport.runId}\`  \nOriginal page SHA-256: \`${recapExport.page.originalSha256}\`  \nExported page SHA-256: \`${recapExport.page.exportedSha256}\`\n`;
-    const text = sourceContents.toString('utf8');
+    const text = finalizedText;
     const outcome =
       /(^## Explainer Outcome[^\n]*\n)([\s\S]*?)(?=^## |$(?![\s\S]))/m;
     const rewriteLinks = (body: string) =>
@@ -928,7 +1324,9 @@ async function exportProjectSummary(
     return summaryTarget;
   }
   await copySummary(summarySource, summaryTarget);
-  if (recapExport) await writeFile(summaryTarget, expectedContents);
+  if (!expectedContents.equals(sourceContents)) {
+    await writeFile(summaryTarget, expectedContents);
+  }
   if (!expectedContents.equals(await readFile(summaryTarget))) {
     throw new CliError(
       `Summary export \`${summaryTarget}\` failed byte verification.`,
@@ -1977,7 +2375,6 @@ export async function archiveProjectOnCompletion(
     dependencies.ensureS3ArchiveAccess ?? ensureS3ArchiveAccess;
   const execFile = dependencies.execFile ?? execFileAsync;
   const timestamp = dependencies.timestamp?.() ?? new Date().toISOString();
-  const snapshotName = buildArchiveSnapshotName(options.projectName, timestamp);
   const syncedRoot = resolveScopeRoot(
     options.repoRoot,
     options.projectsRoot,
@@ -2066,23 +2463,25 @@ export async function archiveProjectOnCompletion(
     }
   }
 
-  const archiveTarget = await resolveArchiveProjectTarget(
+  const persistedSnapshot =
+    activeRecord?.archiveSnapshot ?? recordlessIdentity?.metadata.snapshotName;
+  // The shared read-only evaluator owns retry identity for apply and dry-run:
+  // an identical retry reuses its snapshot, a conflicting or ambiguous one
+  // refuses here, before any export, copy, overwrite or S3 mutation.
+  const identity = await evaluateArchiveRetryIdentity(
     {
       repoRoot: options.repoRoot,
       projectsRoot: options.projectsRoot,
       projectName: options.projectName,
-      ...((activeRecord?.archiveSnapshot ??
-      recordlessIdentity?.metadata.snapshotName)
-        ? {
-            archiveSnapshot:
-              activeRecord?.archiveSnapshot ??
-              recordlessIdentity?.metadata.snapshotName,
-            archiveScope: projectScope,
-          }
-        : {}),
+      projectPath: options.projectPath,
+      scope: projectScope,
+      timestamp,
+      ...(persistedSnapshot ? { persistedSnapshot } : {}),
+      ...(sourceRefSha ? { sourceRefSha } : {}),
     },
     dependencies,
   );
+  const archiveTarget = identity.target;
   assertDurableArchiveProjectTarget(archiveTarget);
   // Reassert the identity immediately before the first durable mutation. The
   // archive transaction must never bind a descendant source to a sibling
@@ -2105,12 +2504,8 @@ export async function archiveProjectOnCompletion(
       1,
     );
   }
-  const archivePath = archiveTarget.archivePath;
-  const exportIdentity = syncTarget
-    ? (activeRecord?.archiveSnapshot ??
-      recordlessIdentity?.metadata.snapshotName ??
-      snapshotName)
-    : snapshotName;
+  const archivePath = identity.archivePath;
+  const exportIdentity = identity.snapshotName;
   const snapshotId = syncTarget ? exportIdentity : basename(archivePath);
 
   const shouldPersistArchiveSnapshot = Boolean(
@@ -2155,14 +2550,15 @@ export async function archiveProjectOnCompletion(
         options.projectPath,
         archivePath,
         (_sourcePath, relativePath) =>
-          relativePath !== 'reviews' &&
-          (!syncTarget || relativePath !== '.git'),
+          !ARCHIVE_RETENTION_EXCLUSIONS.includes(relativePath),
       );
       await writeArchiveSnapshotMetadata(archivePath, {
         projectName: options.projectName,
         snapshotName: exportIdentity,
         scope: projectScope,
         ...(sourceRefSha ? { sourceRefSha } : {}),
+        manifestHash: await computeArchiveManifestHash(archivePath),
+        generation: identity.generation,
       });
     } catch (error) {
       await removePath(archivePath, { recursive: true, force: true });
@@ -2212,6 +2608,7 @@ export async function archiveProjectOnCompletion(
     try {
       summaryExportFile = await exportProjectSummary(
         archivePath,
+        options.projectName,
         exportIdentity,
         options.summaryExportPath,
         options.repoRoot,
