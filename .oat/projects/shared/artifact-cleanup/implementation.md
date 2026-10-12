@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-11
+oat_last_updated: 2026-10-12
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: artifact-cleanup
 
-**Started:** 2026-10-11
-**Last Updated:** 2026-10-11
+**Started:** 2026-10-12
+**Last Updated:** 2026-10-12
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,85 +26,313 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 5     | 0/5       |
+| Phase 2 | pending     | 7     | 0/7       |
+| Phase 3 | pending     | 3     | 0/3       |
+| Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/19 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Log and summary contract
 
 **Status:** in_progress
-**Started:** 2026-10-11
+**Started:** 2026-10-12
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- (pending)
 
 **Key files touched:**
 
-- `{path}` - {why}
+- (pending)
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- (pending)
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- (pending)
 
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Project-log judgment categories and source identity
 
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- (pending)
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t02: Digest configuration
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p01-t03: Bounded observations digest in roll-up
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p01-t04: Summary and project-log templates
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p01-t05: Summary and retro readers, staged closeout invocation, phase-1 docs
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+## Phase 2: Journal and lifecycle enforcement
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- (pending)
+
+**Key files touched:**
+
+- (pending)
+
+**Verification:**
+
+- (pending)
+
+**Notes / Decisions:**
+
+- (pending)
+
+### Task p02-t01: Shared journal record reader
 
 **Status:** pending
 **Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t02: One-line dispatch record projection
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t03: Journal evaluator and rules
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t04: `oat project journal check` and lifecycle integration
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t05: Journal templates with fixed slots
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t06: Writer skills and agent roles target the slots
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p02-t07: Phase-2 docs, autonomy re-keys and the scripted walkthrough
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+## Phase 3: Learning producers and archive identity
+
+**Status:** pending
+**Started:** -
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- (pending)
+
+**Key files touched:**
+
+- (pending)
+
+**Verification:**
+
+- (pending)
+
+**Notes / Decisions:**
+
+- (pending)
+
+### Task p03-t01: Unified learning producers and the disabled-log rule (D14)
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p03-t02: Archive retry identity and locator finalization
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p03-t03: Explicit archive generations
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+## Phase 4: Acceptance, documentation audit, records and release
+
+**Status:** pending
+**Started:** -
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- (pending)
+
+**Key files touched:**
+
+- (pending)
+
+**Verification:**
+
+- (pending)
+
+**Notes / Decisions:**
+
+- (pending)
+
+### Task p04-t01: Fresh lifecycle probes per mode
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p04-t02: Documentation audit and root AGENTS.md
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p04-t03: Decision records and backlog
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
+
+---
+
+### Task p04-t04: Version bumps and the full gate run
+
+**Status:** pending
+**Commit:** -
+
+**Notes:**
+
+- (pending)
 
 ---
 
