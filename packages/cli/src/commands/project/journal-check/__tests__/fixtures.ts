@@ -393,3 +393,133 @@ oat_goal_outcome_audit:
 
 # Project State
 `;
+
+function replaceOnce(source: string, from: string, to: string): string {
+  if (!source.includes(from)) {
+    throw new Error(`fixture anchor missing: ${from}`);
+  }
+  return source.replace(from, to);
+}
+
+/**
+ * The p02-t03 negative controls as journal transforms over the valid journal,
+ * each with the reason code the evaluator must refuse it for. Shared by the
+ * public `complete-state` boundary suite.
+ */
+export const NEGATIVE_VARIANTS: ReadonlyArray<{
+  name: string;
+  code: string;
+  apply: (valid: string, runningLine: string) => string;
+}> = [
+  {
+    name: 'fenced fake task heading',
+    code: 'task-block-missing',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '### Task p02-t01: Document it\n\n**Status:** completed\n**Commit:** 3333333',
+        '```markdown\n### Task p02-t01: Document it\n\n**Status:** completed\n**Commit:** 3333333\n```',
+      ),
+  },
+  {
+    name: 'leaked status and SHA',
+    code: 'task-status-missing',
+    apply: (valid) =>
+      replaceOnce(
+        replaceOnce(
+          valid,
+          '**Status:** completed\n**Commit:** 3333333',
+          '- Docs written.',
+        ),
+        '## Orchestration Runs\n',
+        '## Orchestration Runs\n\n**Status:** completed\n**Commit:** 3333333\n',
+      ),
+  },
+  {
+    name: 'duplicate normalized ids',
+    code: 'task-duplicate-block',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '### Review Received: p01',
+        '### Task p1-t2: Add command again\n\n**Status:** completed\n**Commit:** 4444444\n\n### Review Received: p01',
+      ),
+  },
+  {
+    name: 'blocked header under a completed overview',
+    code: 'phase-status-disagrees',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '## Phase 1: Foundation\n\n**Status:** complete',
+        '## Phase 1: Foundation\n\n**Status:** blocked',
+      ),
+  },
+  {
+    name: 'plan task without a block',
+    code: 'task-block-missing',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '### Task p02-t01: Document it\n\n**Status:** completed\n**Commit:** 3333333\n',
+        '',
+      ),
+  },
+  {
+    name: 'checklist instead of blocks',
+    code: 'task-block-missing',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '### Task p02-t01: Document it\n\n**Status:** completed\n**Commit:** 3333333\n',
+        '- [x] p02-t01: Document it - 3333333\n',
+      ),
+  },
+  {
+    name: 'payload under Deferred Findings with the run slot empty',
+    code: 'dispatch-payload',
+    apply: (valid) =>
+      replaceOnce(
+        valid.replace(/^- run\/v1[^\n]*\n/m, ''),
+        '## Deferred Findings\n\n- None.',
+        '## Deferred Findings\n\n```json\n{ "request_id": "demo-p01", "caller": "oat-project-implement", "role_name": "oat-phase-implementer" }\n```',
+      ),
+  },
+  {
+    name: 'unresolved run line',
+    code: 'run-line-unresolved',
+    apply: (valid, runningLine) =>
+      replaceOnce(
+        valid,
+        '<!-- orchestration-runs-end -->',
+        `- ${runningLine}\n\n<!-- orchestration-runs-end -->`,
+      ),
+  },
+  {
+    name: '{Task Name} residue',
+    code: 'template-residue',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '**Commit:** 3333333',
+        '**Commit:** 3333333\n\n- {Task Name}',
+      ),
+  },
+];
+
+/** The one eligible gap the override controls use. */
+export function commitGap(valid: string): string {
+  return replaceOnce(
+    valid,
+    '**Status:** completed\n**Commit:** 1111111',
+    '**Status:** completed',
+  );
+}
+
+export function withDeviation(source: string, line: string): string {
+  return replaceOnce(
+    source,
+    '## Deviations from Plan / Design\n\n- None.',
+    `## Deviations from Plan / Design\n\n${line}`,
+  );
+}
