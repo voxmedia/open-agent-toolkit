@@ -19,7 +19,7 @@ import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { defaultGitRunner } from '@commands/project/sync/git';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
-import { copyDirectory, ensureDir } from '@fs/io';
+import { copyDirectory } from '@fs/io';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -743,70 +743,60 @@ describe('archive retry identity (archive-retry-identity)', () => {
     ).resolves.toBe('# Summary\n\nDone.\n');
   });
 
-  it('never overwrites or removes a first archive that an overlapping call completed', async () => {
-    const fixture = await createFixture();
-    const archivePath = join(fixture.archiveRoot, PROJECT);
-    let release!: () => void;
-    const barrier = new Promise<void>((resolveBarrier) => {
-      release = resolveBarrier;
-    });
-    let reached!: () => void;
-    const paused = new Promise<void>((resolvePaused) => {
-      reached = resolvePaused;
-    });
+  it.each(['created by this run', 'resumed from an interrupted run'] as const)(
+    'leaves an archive completed during a failed copy byte-identical (allocation %s)',
+    async (allocation) => {
+      const fixture = await createFixture();
+      const archivePath = join(fixture.archiveRoot, PROJECT);
+      if (allocation === 'resumed from an interrupted run') {
+        // An earlier run died mid-copy, leaving a pending allocation.
+        await expect(
+          archiveProjectOnCompletion(archiveOptions(fixture), {
+            ...stubS3(),
+            timestamp: () => '2026-09-01T09:00:00Z',
+            copyDirectory: vi.fn(async () => {
+              throw new Error('injected copy interruption');
+            }),
+            removePath: vi.fn(async () => {
+              throw new Error('process killed before cleanup');
+            }),
+          }),
+        ).rejects.toThrow('process killed before cleanup');
+      }
+      let completedTree = '';
 
-    // Call B evaluates the vacant first-archive path, then pauses at its
-    // first directory write there (the claim; before the claim existed, the
-    // copy).
-    let pausedOnce = false;
-    const delayed = archiveProjectOnCompletion(archiveOptions(fixture), {
-      ...stubS3(),
-      timestamp: () => '2026-09-01T09:00:00Z',
-      ensureDir: async (directory: string) => {
-        if (
-          !pausedOnce &&
-          (directory === archivePath || directory === fixture.archiveRoot)
-        ) {
-          pausedOnce = true;
-          reached();
-          await barrier;
-        }
-        await ensureDir(directory);
-      },
-    }).then(
-      (value) => ({ value, error: null }),
-      (error: unknown) => ({ value: null, error }),
-    );
-    await paused;
+      // The copy fails after a completed archive (final metadata) is in
+      // place at the path.
+      await expect(
+        archiveProjectOnCompletion(archiveOptions(fixture), {
+          ...stubS3(),
+          timestamp: () => '2026-09-01T09:00:00Z',
+          copyDirectory: vi.fn(async () => {
+            await writeFile(join(archivePath, 'state.md'), '# completed\n');
+            await writeFile(
+              join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+              `${JSON.stringify({
+                projectName: PROJECT,
+                snapshotName: '20260901-demo',
+                scope: 'shared',
+                manifestHash: await computeArchiveManifestHash(archivePath),
+                generation: 1,
+              })}\n`,
+            );
+            completedTree = await treeHash(archivePath);
+            throw new Error('injected copy failure');
+          }),
+        }),
+      ).rejects.toThrow('injected copy failure');
 
-    // Call A completes generation 1 and removes the source meanwhile.
-    const completed = await archiveProjectOnCompletion(
-      archiveOptions(fixture),
-      {
-        ...stubS3(),
-        timestamp: () => '2026-09-01T09:00:00Z',
-      },
-    );
-    expect(completed.archivePath).toBe(archivePath);
-    expect(existsSync(fixture.projectPath)).toBe(false);
-    const completedTree = await treeHash(archivePath);
-    const repoBefore = await treeHash(fixture.repoRoot);
-
-    release();
-    const outcome = await delayed;
-
-    // B refuses without writing anything; A's archive stays byte-identical.
-    expect(outcome.value).toBeNull();
-    expect(outcome.error).toMatchObject({
-      code: 'archive-generation-claim-held',
-      message: expect.stringMatching(/^archive-generation-claim-held: /),
-    });
-    expect(await treeHash(archivePath)).toBe(completedTree);
-    await expect(readFile(join(archivePath, 'state.md'), 'utf8')).resolves.toBe(
-      '# state\n',
-    );
-    expect(await treeHash(fixture.repoRoot)).toBe(repoBefore);
-  });
+      expect(completedTree).not.toBe('');
+      expect(await treeHash(archivePath)).toBe(completedTree);
+      await expect(
+        readFile(join(archivePath, 'state.md'), 'utf8'),
+      ).resolves.toBe('# completed\n');
+      expect(existsSync(fixture.projectPath)).toBe(true);
+    },
+  );
 
   it('resumes an interrupted first archive from its pending allocation', async () => {
     const fixture = await createFixture();
@@ -1428,75 +1418,6 @@ describe('explicit archive generations (archive-generation-authorization)', () =
       'demo',
       'demo-g2',
     ]);
-  });
-
-  it('never overwrites or clears a generation that an overlapping call completed', async () => {
-    const fixture = await createFixture();
-    await archiveProjectOnCompletion(archiveOptions(fixture), {
-      ...stubS3(),
-      timestamp: () => '2026-09-01T09:00:00Z',
-    });
-    await reopen(fixture, '# reopened\n');
-    const generationPath = join(fixture.archiveRoot, 'demo-g2');
-    let release!: () => void;
-    const barrier = new Promise<void>((resolveBarrier) => {
-      release = resolveBarrier;
-    });
-    let reached!: () => void;
-    const paused = new Promise<void>((resolvePaused) => {
-      reached = resolvePaused;
-    });
-
-    // Call B evaluates the vacant g2 path, then pauses just before it would
-    // write the allocation.
-    const delayed = archiveProjectOnCompletion(
-      archiveOptions(fixture, { newGenerationReason: REASON }),
-      {
-        ...stubS3(),
-        timestamp: () => '2026-09-05T09:00:00Z',
-        ensureDir: async (directory: string) => {
-          if (directory === generationPath) {
-            reached();
-            await barrier;
-          }
-          await ensureDir(directory);
-        },
-      },
-    ).then(
-      (value) => ({ value, error: null }),
-      (error: unknown) => ({ value: null, error }),
-    );
-    await paused;
-
-    // Call A completes g2 and removes the source meanwhile.
-    const completed = await archiveProjectOnCompletion(
-      archiveOptions(fixture, { newGenerationReason: REASON }),
-      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
-    );
-    expect(completed.archivePath).toBe(generationPath);
-    expect(existsSync(fixture.projectPath)).toBe(false);
-    const completedTree = await treeHash(generationPath);
-    const completedManifest = await computeArchiveManifestHash(generationPath);
-    const repoBefore = await treeHash(fixture.repoRoot);
-
-    release();
-    const outcome = await delayed;
-
-    // B refuses without writing anything; A's g2 stays byte-identical.
-    expect(outcome.value).toBeNull();
-    expect(outcome.error).toMatchObject({
-      code: 'archive-generation-claim-held',
-      message: expect.stringMatching(/^archive-generation-claim-held: /),
-    });
-    expect(await treeHash(generationPath)).toBe(completedTree);
-    expect(await computeArchiveManifestHash(generationPath)).toBe(
-      completedManifest,
-    );
-    await expect(
-      readFile(join(generationPath, 'state.md'), 'utf8'),
-    ).resolves.toBe('# reopened\n');
-    expect(await readMetadata(generationPath)).not.toHaveProperty('allocation');
-    expect(await treeHash(fixture.repoRoot)).toBe(repoBefore);
   });
 
   it('never copies the predecessor metadata of a source reopened from its archive over the pending allocation', async () => {

@@ -252,12 +252,6 @@ export interface ArchiveSnapshotMetadata {
    * reuses it.
    */
   allocation?: 'pending';
-  /**
-   * Random token of the archive operation that holds a pending allocation.
-   * Only that operation may clear or complete the allocation; it is dropped
-   * when the archive completes.
-   */
-  allocationOwner?: string;
 }
 
 /**
@@ -987,9 +981,6 @@ function readCandidateMetadata(value: unknown): ArchiveSnapshotMetadata | null {
     ...(value.allocation === 'pending'
       ? { allocation: 'pending' as const }
       : {}),
-    ...(typeof value.allocationOwner === 'string'
-      ? { allocationOwner: value.allocationOwner }
-      : {}),
   };
 }
 
@@ -1109,7 +1100,6 @@ export const ARCHIVE_IDENTITY_REFUSAL_CODES = [
   'archive-synced-recordless-unbound',
   'archive-synced-recordless-ambiguous',
   'archive-retry-candidate-damaged',
-  'archive-generation-claim-held',
 ] as const;
 
 export type ArchiveIdentityRefusalCode =
@@ -1132,8 +1122,8 @@ export class ArchiveIdentityError extends CliError {
 
 /**
  * Recovery for a directory that does not identify itself: most often a partial
- * copy an interrupted archive left behind before allocations were claimed
- * (current archives write pending metadata before the copy, so their
+ * copy an interrupted archive left behind before pending allocations were
+ * written (current archives write pending metadata before the copy, so their
  * interrupted runs resume instead).
  */
 function occupantGuidance(projectName: string): string {
@@ -3013,56 +3003,30 @@ export async function archiveProjectOnCompletion(
       }
     : {};
   let allocationPending = identity.allocationPending;
-  // This operation's claim on a pending generation allocation. Only the
-  // holder of the token clears or completes the allocation, so an
-  // overlapping archive call can never delete or overwrite a generation
-  // another call completed.
-  const allocationOwner = randomUUID();
-  let claimedNew = false;
+  // What this in-process call created, so a failed copy removes nothing else.
+  // OAT does not serialize concurrent archive runs of one project.
+  let createdAllocation = false;
+  let createdDirectory = false;
   if (identity.disposition === 'new') {
     // Persist the new archive (a first archive or a successor generation, with
     // its predecessor binding) before any export, copy or S3 side effect, so
     // an interrupted run resumes this identity instead of allocating from the
-    // current date. The metadata is created exclusively: the evaluation above
-    // may be stale, so anything written at the path since then wins and
-    // nothing is written.
+    // current date. A stray occupant at the path refuses and is not touched.
+    createdDirectory = !(await pathExists(archivePath));
     await makeDir(archivePath);
-    await claimGenerationAllocation(
-      archivePath,
-      {
-        projectName: options.projectName,
-        snapshotName: exportIdentity,
-        scope: projectScope,
-        ...(sourceRefSha ? { sourceRefSha } : {}),
-        ...(identity.manifestHash
-          ? { manifestHash: identity.manifestHash }
-          : {}),
-        generation: identity.generation,
-        ...generationMetadata,
-        allocation: 'pending',
-        allocationOwner,
-      },
-      identity.generation,
-    );
-    // A brand-new claim owns nothing at the path but its own metadata.
-    // Anything else appeared after the evaluation (an older CLI mid-copy, a
-    // person or a tool): release the claim and refuse, never clear it.
-    await refuseForeignOccupant(
-      archivePath,
-      removePath,
-      allocationOwner,
-      options.projectName,
-      projectScope,
-    );
+    await refuseForeignOccupant(archivePath, options.projectName, projectScope);
+    await writeArchiveSnapshotMetadata(archivePath, {
+      projectName: options.projectName,
+      snapshotName: exportIdentity,
+      scope: projectScope,
+      ...(sourceRefSha ? { sourceRefSha } : {}),
+      ...(identity.manifestHash ? { manifestHash: identity.manifestHash } : {}),
+      generation: identity.generation,
+      ...generationMetadata,
+      allocation: 'pending',
+    });
     allocationPending = true;
-    claimedNew = true;
-  } else if (allocationPending) {
-    // Resume an interrupted allocation only while it is still pending.
-    await takeOverPendingGeneration(
-      archivePath,
-      allocationOwner,
-      identity.generation,
-    );
+    createdAllocation = true;
   }
   // An empty directory at the identity's path holds no archive; the copy
   // fills it in place.
@@ -3090,10 +3054,17 @@ export async function archiveProjectOnCompletion(
   if (!archiveExists || allocationPending) {
     try {
       await makeDir(dirname(archivePath));
-      // Only a resumed allocation holds a partial copy of its own to clear;
-      // a new claim was verified to hold nothing but its metadata.
-      if (allocationPending && !claimedNew) {
-        await clearPendingGeneration(archivePath, removePath, allocationOwner);
+      // A resumed pending allocation (an interrupted earlier run) holds a
+      // partial copy of this identity: clear it, never a completed archive.
+      if (
+        allocationPending &&
+        !createdAllocation &&
+        !(await clearPendingGeneration(archivePath, removePath))
+      ) {
+        throw new ArchiveIdentityError(
+          'archive-retry-conflict',
+          `Archive \`${archivePath}\` of \`${options.projectName}\` is no longer a pending allocation; refusing to clear or overwrite it before any copy or S3 mutation. Retry: an identical retry reuses the completed archive.`,
+        );
       }
       await copyProjectDirectory(
         options.projectPath,
@@ -3105,13 +3076,6 @@ export async function archiveProjectOnCompletion(
           !ARCHIVE_RETENTION_EXCLUSIONS.includes(relativePath) &&
           !ARCHIVE_OWNED_ENTRIES.includes(relativePath),
       );
-      if (allocationPending) {
-        await assertAllocationOwned(
-          archivePath,
-          allocationOwner,
-          identity.generation,
-        );
-      }
       await writeArchiveSnapshotMetadata(archivePath, {
         projectName: options.projectName,
         snapshotName: exportIdentity,
@@ -3122,20 +3086,27 @@ export async function archiveProjectOnCompletion(
         ...generationMetadata,
       });
     } catch (error) {
-      if (allocationPending) {
-        // Only while this operation still holds the allocation: a successor
-        // keeps its persisted allocation and drops the partial copy; a first
-        // archive removes its whole attempt, so a retry starts from one clean
-        // target. Never another call's allocation or completed archive.
-        await (
-          identity.generation > 1
-            ? clearPendingGeneration(archivePath, removePath, allocationOwner)
-            : removeOwnedAllocation(archivePath, removePath, allocationOwner)
-        ).catch((cleanupError: unknown) => {
-          if (!isClaimHeld(cleanupError)) throw cleanupError;
-        });
-      } else {
-        await removePath(archivePath, { recursive: true, force: true });
+      // Only a still-pending allocation is cleaned up; an archive whose
+      // metadata is final is never removed or cleared.
+      const stillPending =
+        (await readArchiveMetadataAt(archivePath))?.allocation === 'pending';
+      if (stillPending && createdAllocation && identity.generation === 1) {
+        // A first archive this call created is removed whole, so a retry
+        // starts from one clean target.
+        if (createdDirectory) {
+          await removePath(archivePath, { recursive: true, force: true });
+        } else {
+          for (const entry of await readdir(archivePath)) {
+            await removePath(join(archivePath, entry), {
+              recursive: true,
+              force: true,
+            });
+          }
+        }
+      } else if (stillPending) {
+        // A successor, or any resumed allocation, keeps its pending metadata
+        // and drops the partial copy, so the retry resumes it.
+        await clearPendingGeneration(archivePath, removePath);
       }
       await removeAttemptRecapExport(
         attemptedProjectRecapExport,
@@ -3428,122 +3399,23 @@ async function readArchiveMetadataAt(
   }
 }
 
-function isClaimHeld(error: unknown): boolean {
-  return (
-    error instanceof ArchiveIdentityError &&
-    error.code === 'archive-generation-claim-held'
-  );
-}
-
-function claimHeldError(
-  archivePath: string,
-  generation: number,
-  occupant: ArchiveSnapshotMetadata | null,
-): ArchiveIdentityError {
-  const held =
-    occupant?.allocation === 'pending'
-      ? `is held by another in-flight archive of \`${occupant.snapshotName}\` (allocation: pending)`
-      : occupant
-        ? `was completed as \`${occupant.snapshotName}\` by another archive run after this run evaluated it`
-        : 'changed after this run evaluated it';
-  return new ArchiveIdentityError(
-    'archive-generation-claim-held',
-    `Generation ${generation} at \`${archivePath}\` ${held}; this run wrote nothing there. Let the other run finish, then retry: an identical retry reuses its archive.`,
-    1,
-  );
-}
-
 /**
- * Creates a generation's pending allocation metadata exclusively (`wx`). The
- * path's vacancy was decided by an earlier read-only evaluation; when another
- * call wrote metadata there since, this call refuses without writing.
- */
-async function claimGenerationAllocation(
-  archivePath: string,
-  metadata: ArchiveSnapshotMetadata,
-  generation: number,
-): Promise<void> {
-  try {
-    await writeFile(
-      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
-      `${JSON.stringify(metadata, null, 2)}\n`,
-      { encoding: 'utf8', flag: 'wx' },
-    );
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-      throw claimHeldError(
-        archivePath,
-        generation,
-        await readArchiveMetadataAt(archivePath),
-      );
-    }
-    throw error;
-  }
-}
-
-/**
- * Resumes an interrupted pending allocation by recording this operation as
- * its owner, then confirms the claim. A generation that was completed (or
- * claimed by another resuming call) meanwhile refuses without further writes.
- */
-async function takeOverPendingGeneration(
-  archivePath: string,
-  owner: string,
-  generation: number,
-): Promise<void> {
-  const current = await readArchiveMetadataAt(archivePath);
-  if (current?.allocation !== 'pending') {
-    throw claimHeldError(archivePath, generation, current);
-  }
-  await writeArchiveSnapshotMetadata(archivePath, {
-    ...current,
-    allocationOwner: owner,
-  });
-  await assertAllocationOwned(archivePath, owner, generation);
-}
-
-async function assertAllocationOwned(
-  archivePath: string,
-  owner: string,
-  generation: number,
-): Promise<void> {
-  const current = await readArchiveMetadataAt(archivePath);
-  if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
-    throw claimHeldError(archivePath, generation, current);
-  }
-}
-
-/**
- * After a new exclusive claim: when anything but this call's own metadata is
- * at the path, remove only that metadata (while this call still owns it) and
- * refuse the occupant as unverifiable, leaving the occupant untouched.
+ * Before a new archive's metadata is written: anything already at the path
+ * (an older CLI mid-copy, a person or a tool) does not identify itself as this
+ * archive, so the run refuses and leaves it untouched.
  */
 async function refuseForeignOccupant(
   archivePath: string,
-  removePath: (
-    target: string,
-    options: { recursive: true; force: true },
-  ) => Promise<void>,
-  owner: string,
   projectName: string,
   scope: ProjectScope,
 ): Promise<void> {
-  const foreign = (await readdir(archivePath)).filter(
-    (entry) => entry !== ARCHIVE_SNAPSHOT_METADATA_FILENAME,
-  );
-  if (foreign.length === 0) {
+  const occupants = await readdir(archivePath);
+  if (occupants.length === 0) {
     return;
-  }
-  const current = await readArchiveMetadataAt(archivePath);
-  if (current?.allocation === 'pending' && current.allocationOwner === owner) {
-    await removePath(join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME), {
-      recursive: true,
-      force: true,
-    });
   }
   throw new ArchiveIdentityError(
     'archive-occupant-unverifiable',
-    `\`${archivePath}\` gained content that does not identify itself as an archive of \`${projectName}\` (${scope}) after this run evaluated it (${foreign
+    `\`${archivePath}\` gained content that does not identify itself as an archive of \`${projectName}\` (${scope}) after this run evaluated it (${occupants
       .sort()
       .map((entry) => `\`${entry}\``)
       .join(
@@ -3553,28 +3425,9 @@ async function refuseForeignOccupant(
 }
 
 /**
- * Removes a whole pending allocation, metadata included, only while `owner`
- * still holds it.
- */
-async function removeOwnedAllocation(
-  archivePath: string,
-  removePath: (
-    target: string,
-    options: { recursive: true; force: true },
-  ) => Promise<void>,
-  owner: string,
-): Promise<void> {
-  const current = await readArchiveMetadataAt(archivePath);
-  if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
-    throw claimHeldError(archivePath, current?.generation ?? 1, current);
-  }
-  await removePath(archivePath, { recursive: true, force: true });
-}
-
-/**
- * Removes everything but the allocation metadata from a pending generation,
- * only while `owner` still holds the allocation: never another call's
- * allocation or a generation another call completed.
+ * Removes everything but the allocation metadata from a generation that is
+ * still a pending allocation, and reports whether it did. An archive whose
+ * metadata is final is never cleared.
  */
 async function clearPendingGeneration(
   archivePath: string,
@@ -3582,11 +3435,9 @@ async function clearPendingGeneration(
     target: string,
     options: { recursive: true; force: true },
   ) => Promise<void>,
-  owner: string,
-): Promise<void> {
-  const current = await readArchiveMetadataAt(archivePath);
-  if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
-    throw claimHeldError(archivePath, current?.generation ?? 1, current);
+): Promise<boolean> {
+  if ((await readArchiveMetadataAt(archivePath))?.allocation !== 'pending') {
+    return false;
   }
   for (const entry of await readdir(archivePath)) {
     if (entry === ARCHIVE_SNAPSHOT_METADATA_FILENAME) continue;
@@ -3595,6 +3446,7 @@ async function clearPendingGeneration(
       force: true,
     });
   }
+  return true;
 }
 
 async function recoverSyncedLifecycleCommit(

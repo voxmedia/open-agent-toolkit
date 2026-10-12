@@ -1478,7 +1478,7 @@ describe('archive utils', () => {
         },
         {
           // Another archive lands at the evaluated path between evaluation and
-          // this call's exclusive claim.
+          // this call's pending-allocation write.
           ensureDir: async (directory: string) => {
             if (directory === qualifiedPath) {
               await mkdir(qualifiedPath, { recursive: true });
@@ -1498,9 +1498,9 @@ describe('archive utils', () => {
       // The local-scope archive holds the base path and the dated identity,
       // so the shared project's identity is scope-qualified in both
       // (`demo-shared`, `20260827-demo-shared`). An archive appearing at that
-      // path between evaluation and copy is never overwritten: the exclusive
-      // claim refuses without writing.
-      code: 'archive-generation-claim-held',
+      // path between evaluation and copy is never overwritten: the copy-time
+      // re-check refuses it as unverifiable and writes nothing.
+      code: 'archive-occupant-unverifiable',
     });
     await expect(
       readFile(join(qualifiedPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME), 'utf8'),
@@ -1554,8 +1554,7 @@ describe('archive utils', () => {
       code: 'archive-occupant-unverifiable',
       message: expect.stringContaining('`notes.md`'),
     });
-    // The stray content and the source stay; only this call's own claim is
-    // released.
+    // The stray content and the source stay; this run wrote nothing there.
     await expect(readdir(qualifiedPath)).resolves.toEqual(['notes.md']);
     await expect(
       readFile(join(qualifiedPath, 'notes.md'), 'utf8'),
