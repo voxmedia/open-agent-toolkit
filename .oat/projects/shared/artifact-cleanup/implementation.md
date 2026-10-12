@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | in_progress | 28 | 27/28 |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 28    | 27/28     |
 
 **Total:** 59/60 tasks completed
 
@@ -1443,7 +1443,7 @@ oat_generated: false
 
 ---
 
-### Task p04-t28: (gate) Exclusive recovery ownership before taking over a pending allocation
+### Task p04-t29: (disposition: simplify) Remove the concurrent-archive ownership protocol
 
 **Status:** pending
 **Commit:** -
@@ -1659,13 +1659,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Medium: 0
 - Low: 0
 
-**New tasks added:** p04-t28 (H1)
+**New tasks added:** p04-t28 (H1), dissolved without being implemented by the operator's `simplify` disposition and replaced by p04-t29
 
 **Design drift / artifact alignment notes:**
 
 - H1 is the pending-resume variant of the overlap race the gate flagged on attempt 1: the takeover of an interrupted allocation is not an atomic recovery claim. The attempt-1 fixes closed the vacant-path race (verified by the gate) but not this one.
 
-**Next:** complexity review at gate exhaustion, then the operator's disposition recorded below.
+**Next:** the complexity review at gate exhaustion ran and the operator chose `simplify`; see the disposition line below. p04-t29 removes the machinery, then a narrowed final round 8 and exit gate generation 3.
+
+- **Complexity review at exit-gate exhaustion (final scope, 2026-10-12).** Exhaustion point: configured implementation exit gate, generation 2, `block` at `maxAttempts` 2. Verdict: **Partially compliant** (identity, rehash, pending marker, reason codes, scope-qualified naming and generations Keep; the per-write owner-token ownership protocol Simplify). Chosen disposition: **simplify**, selected by Thomas on 2026-10-12, answering the review's R1 "OAT should not protect simultaneous archive runs at all" and directing deletion rather than the recommended lock; R2 keeps `--new-generation` as shipped on cost grounds. Report: `reviews/archived/complexity-final-2026-10-12T155559Z.md`. Gate attempt-2 H1 (`p04-t28`) is dissolved by that disposition rather than fixed, because the `takeOverPendingGeneration` protocol it raced is removed; p04-t29 carries the removal and the docs retraction.
 
 ## Deferred Findings
 

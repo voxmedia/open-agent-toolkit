@@ -1322,30 +1322,34 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 
 ---
 
-### Task p04-t28: (gate) Exclusive recovery ownership before taking over a pending allocation
+### Task p04-t29: (disposition: simplify) Remove the concurrent-archive ownership protocol
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`takeOverPendingGeneration` ~L3494-3498 and the retry cleanup at ~L3095, ~L3130: hold an exclusive recovery lock (e.g. an exclusively created lock file under the archive root or the generation path, released on completion or failure) across identity revalidation, takeover, copy, completion and cleanup; refuse a pending allocation whose owner is still live (owner liveness recorded in the pending metadata, e.g. pid plus start time, or a lock the owner holds for its whole run) with `archive-generation-claim-held`; recover an interrupted allocation only after acquiring the lock and re-reading that the allocation is still pending; keep clearing and finalization inside that ownership boundary so a completed archive is never flipped back to pending)
-- Modify: `archive-retry-identity.test.ts` (deterministic pending-resume race for both a first archive and a successor: A pauses before copying under its pending claim, B reads the pending metadata and pauses just before its takeover write, A completes and removes the source, B resumes → A's archive byte-identical and B reuses it or refuses without writes; control: pre-fix B flips A's metadata to pending and the cleanup removes A's files)
-- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` if the refusal wording or recovery guidance changes
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` — delete the cross-process ownership protocol: the `allocationOwner` metadata field (`:260`) and its parse (`:988-992`), `claimGenerationAllocation` (`:3461`), `takeOverPendingGeneration` (`:3489`), `assertAllocationOwned` (`:3505`), `removeOwnedAllocation` (`:3559`), the owner parameter and check in `clearPendingGeneration` (`:3579`) and the owner gate in `refuseForeignOccupant` (`:3521`), the `archive-generation-claim-held` reason code (`:1112`) and its mapping (`:3434`, `:3450`), and the `allocationOwner` wiring in `archiveProjectOnCompletion` (`:3020-3135`)
+- Keep, because the contract requires them: the pending allocation metadata written before any export, copy or S3 upload; a retry that resumes a pending allocation of the same identity, now unconditionally (it is pending, therefore resumable — no token, no liveness, no claim refusal); the stray-occupant refusal reduced to the plain copy-time re-check `origin/main` had (anything at the path besides this run's own metadata refuses `archive-occupant-unverifiable` and removes nothing); the identity evaluator, rehash-before-adopt, scope-qualified naming, generations and every other reason code
+- Hard constraint: introduce no deletion path `origin/main` lacked. Cleanup after a failed copy may remove only an allocation or directory this same in-process call created, tracked by a local in-memory flag, never by on-disk identity; an archive whose metadata is final is never removed or overwritten
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` — rewrite the paragraph at ~L236-243 (from "The allocation is created exclusively and carries a token…" through "…resumes under the same identity") to the real, narrower guarantee: the pending marker exists so an interrupted run resumes the same identity, OAT does not serialize concurrent archive runs of one project and does not attempt to, and a stray non-archive occupant refuses without being touched; drop the `archive-generation-claim-held` row from the code table
+- Modify: `archive-retry-identity.test.ts` — delete the two overlap barrier tests (`:746` "never overwrites or removes a first archive that an overlapping call completed", `:1433` "never overwrites or clears a generation that an overlapping call completed"); keep the interrupted-resume cases for both a first archive and a successor, the empty-directory reuse, and the damaged-candidate refusal
+- Modify: `archive-utils.test.ts` — drop the `archive-generation-claim-held` expectations (~`:1459-1560`) and restore the wrong-scope and metadata-less-occupant cases to expect `archive-occupant-unverifiable` with the occupant and the source byte-identical
+- Add: one regression that a failed copy against an existing completed archive leaves that archive byte-identical, so the net-new deletion path the exit gate found cannot return
 
 **Step 1: Understand the issue**
 
-Exit gate generation 2 attempt 2 H1 (`reviews/archived/final-review-2026-10-12T153824Z.md`, codex-6-sol-xhigh): `takeOverPendingGeneration` reads a pending allocation, unconditionally overwrites its metadata with a new owner token and then verifies the token it just wrote; the pending owner can complete between that read and write, so the write turns a completed archive back to pending and the delayed retry clears it (first archive: the whole completed archive is removed by error cleanup; successor: only pending metadata remains). The p04-t23/t26 tests pause B before its initial exclusive create and never exercise this pending-resume race.
+The configured exit gate's generation 2 blocked on both attempts; its attempt-2 High asked for an exclusive recovery lock plus owner liveness on top of the owner tokens. The complexity review at exhaustion (`reviews/archived/complexity-final-2026-10-12T155559Z.md`, verdict **Partially compliant**) graded the whole overlap family `new-hardening` with speculative evidence: no contract source names concurrent archive runs of one project, every caller is sequential (`oat-project-complete` on one active project, `oat-wave-execute` serialized, `oat-project-complete-auto` in the order given over different projects), and the gate's reproductions required injecting a barrier into the compiled module. The family also made the scenario worse than `origin/main`, where an overlap produced a twin rather than a deletion. Thomas answered the review's R1 on 2026-10-12: OAT should not protect simultaneous archive runs at all, and the machinery is to be deleted.
 
 **Step 2: Implement fix**
 
-Atomic recovery ownership: no takeover without an exclusive lock and a re-read under it.
+Delete the protocol rather than extend it; keep only what the contract asks for.
 
 **Step 3: Verify**
 
-Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive src/commands/project/complete-state`; both pending-resume race cases fail with the lock neutralized and pass restored; the p04-t23/t26/t27 cases stay green.
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive src/commands/project/complete-state` and `pnpm --filter oat-docs check`; the retained stray-occupant refusal and the new failed-copy regression each fail with their check neutralized and pass restored; no test asserts `archive-generation-claim-held` anywhere.
 Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
 
 **Step 4: Commit**
 
-`fix(p04-t28): exclusive recovery ownership before taking over a pending allocation`
+`refactor(p04-t29): remove the concurrent-archive ownership protocol`
 
 ---
 
@@ -1382,7 +1386,7 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 | final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T151935Z.md         | 9bf9b667298bc8d61fd53c3e74856962ecf034fc | auto       | round 6 (narrowed to bc9ac35ae..76c931e7a): 0/0/1/0; gate H1, M1, M2 and the p04-t26 follow-up verified closed; M1 (new claim clears foreign content) → p04-t27                                                                                           |
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T152842Z.md         | 4acebec12f4606127cbad09bf1b589cf0bf47164 | auto       | round 7 (narrowed to d94bff8d6..089a65a98): 0/0/0/0; round 6 M1 verified closed                                                                                                                                                                           |
 | final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T153824Z.md                  | 6c152f8d617ae3f1b08eed172b5c952c0bd522dc | gate       | codex-6-sol-xhigh                                                                                                                                                                                                                                         |
-| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T153824Z.md         | 6c152f8d617ae3f1b08eed172b5c952c0bd522dc | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 2 blocked 0/1/0/0 (maxAttempts exhausted); H1→p04-t28; complexity review and operator decision pending |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T153824Z.md         | 6c152f8d617ae3f1b08eed172b5c952c0bd522dc | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 2 blocked 0/1/0/0 (maxAttempts exhausted); H1→p04-t28, dissolved by the operator's `simplify` disposition (2026-10-12) and replaced by p04-t29                                                          |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
