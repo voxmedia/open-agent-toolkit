@@ -23,6 +23,7 @@ import {
   assertDurableArchiveProjectTarget,
   buildProjectArchiveS3Uri,
   evaluateArchiveRetryIdentity,
+  newGenerationReplayWarning,
   resolveArchiveProjectTarget,
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
@@ -175,6 +176,7 @@ async function buildDryRunReport(
   target: ResolvedArchiveTarget,
   identity: ArchiveRetryIdentity,
   projectScope: ProjectScope | null,
+  newGenerationReason?: string,
 ): Promise<ArchivePushReport> {
   // Every reported destination comes from the shared retry-identity
   // evaluator, so an identical retry previews the persisted snapshot it would
@@ -201,7 +203,9 @@ async function buildDryRunReport(
     archivePath: identity.archivePath,
     s3Path,
     summaryExportFile,
-    warnings: [],
+    warnings: [
+      newGenerationReplayWarning(identity, newGenerationReason),
+    ].filter((warning): warning is string => warning !== null),
     lifecycleCommit: null,
     recapExportPaths: [],
     snapshotId:
@@ -355,6 +359,7 @@ export async function runArchivePushCommand(
         target,
         identity,
         projectScope,
+        options.newGeneration,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);
       process.exitCode = 0;

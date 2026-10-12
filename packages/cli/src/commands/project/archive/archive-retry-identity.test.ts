@@ -15,6 +15,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
+import type { CommandContext } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -24,6 +26,10 @@ import {
   evaluateArchiveRetryIdentity,
   type ExecFileLike,
 } from './archive-utils';
+import {
+  defaultProjectArchivePushCommandDependencies,
+  runArchivePushCommand,
+} from './push-runner';
 
 /**
  * Archive retry identity (artifact-cleanup p03-t02, D11).
@@ -877,6 +883,54 @@ describe('explicit archive generations (archive-generation-authorization)', () =
         timestamp: () => '2026-09-10T09:00:00Z',
       }),
     ).rejects.toThrow(/retained artifacts differ.*follow-up project/);
+  });
+
+  it('warns in apply and dry-run when --new-generation resolves to an existing generation', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await restoreSource(fixture);
+    const expected =
+      '`--new-generation` resolved to existing generation 1 (`20260901-demo`): retained artifacts are identical to that archive; the reason was not recorded.';
+
+    const capture = createLoggerCapture();
+    const context: CommandContext = {
+      scope: 'project',
+      dryRun: false,
+      verbose: false,
+      json: true,
+      cwd: fixture.repoRoot,
+      home: fixture.repoRoot,
+      interactive: false,
+      logger: capture.logger,
+    };
+    const exitCode = process.exitCode;
+    await runArchivePushCommand(
+      {
+        ...defaultProjectArchivePushCommandDependencies(),
+        resolveProjectRoot: async () => fixture.repoRoot,
+        timestamp: () => '2026-09-05T09:00:00Z',
+      },
+      fixture.projectPath,
+      { dryRun: true, newGeneration: REASON },
+      context,
+    );
+    process.exitCode = exitCode;
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      mode: 'dry-run',
+      generation: 1,
+      warnings: [expected],
+    });
+
+    const applied = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+    expect(applied.generation).toBe(1);
+    expect(applied.warnings).toEqual([expected]);
+    expect(await readdir(fixture.archiveRoot)).toEqual([PROJECT]);
   });
 
   it('refuses a generation when two archives hold the latest generation', async () => {

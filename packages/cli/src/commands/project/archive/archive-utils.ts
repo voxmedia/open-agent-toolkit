@@ -950,6 +950,24 @@ function identityFromMetadata(
   };
 }
 
+/**
+ * The warning both apply and dry-run report when `--new-generation` resolved to
+ * an existing generation: the retained artifacts are identical to it, so no
+ * generation is allocated and the reason is not recorded.
+ */
+export function newGenerationReplayWarning(
+  identity: Pick<
+    ArchiveRetryIdentity,
+    'disposition' | 'generation' | 'snapshotName'
+  >,
+  newGenerationReason: string | null | undefined,
+): string | null {
+  if (newGenerationReason == null || identity.disposition !== 'retry') {
+    return null;
+  }
+  return `\`--new-generation\` resolved to existing generation ${identity.generation} (\`${identity.snapshotName}\`): retained artifacts are identical to that archive; the reason was not recorded.`;
+}
+
 /** Validates `--new-generation <reason>`: one non-empty line. */
 export function validateNewGenerationReason(reason: string): string {
   const trimmed = reason.trim();
@@ -2853,6 +2871,11 @@ export async function archiveProjectOnCompletion(
   }
 
   const warnings: string[] = [];
+  const replayWarning = newGenerationReplayWarning(
+    identity,
+    options.newGenerationReason,
+  );
+  if (replayWarning) warnings.push(replayWarning);
 
   let summaryExportFile: string | null = null;
   if (options.summaryExportPath) {
