@@ -222,7 +222,10 @@ Reopened work can instead be archived as a new generation with
 `oat project archive --new-generation <reason>` (shared and local projects).
 The option needs exactly one latest generation of the same project and scope as
 its predecessor and refuses otherwise. The new generation lives at
-`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`, and its
+`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`; when the same
+project's archive from another scope already holds that path or identity, both
+carry the scope, as for a first archive: `<project>-gN-<scope>` and
+`<YYYYMMDD>-<project>-gN-<scope>`. Anything else at the path refuses. Its
 metadata records `predecessor`, `generationReason` and `generationRequest`, the
 `sha256` of the project, scope, predecessor snapshot and manifest. That
 metadata is written with `allocation: pending` before any export, copy or S3
@@ -251,7 +254,7 @@ reason code, and `--json` reports the same code as `code` in the error object:
 | `archive-generation-no-predecessor`        | `--new-generation` found no archive of the project and scope                                                                                                                                                                                                |
 | `archive-generation-ambiguous-predecessor` | more than one archive holds the latest generation                                                                                                                                                                                                           |
 | `archive-generation-pending`               | the latest generation is still allocated but not copied                                                                                                                                                                                                     |
-| `archive-generation-path-occupied`         | the `<project>-gN` path is held by something else                                                                                                                                                                                                           |
+| `archive-generation-path-occupied`         | the `<project>-gN` path is held by something other than another scope's archive of the project (or its scope-qualified path is occupied)                                                                                                                    |
 | `archive-synced-recordless-unbound`        | a synced project without a record has no archive whose identity matches its authoritative completed ref                                                                                                                                                     |
 | `archive-synced-recordless-ambiguous`      | a synced project without a record has several archives matching its completed ref                                                                                                                                                                           |
 | `archive-retry-candidate-damaged`          | the matched archive's current bytes no longer match the manifest recorded when it was written (or the project it would replace); restore it from S3 (`oat repo archive sync <snapshot> --force`, naming the archive's exact snapshot) or backup, then retry |

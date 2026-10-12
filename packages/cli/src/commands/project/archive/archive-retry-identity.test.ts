@@ -1527,6 +1527,120 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     expect(await readdir(fixture.archiveRoot)).toEqual([PROJECT]);
   });
 
+  it.each([
+    ['shared', 'local'],
+    ['local', 'shared'],
+  ] as const)(
+    'scope-qualifies the successor path and identity of the second scope to reach generation 2 (%s first)',
+    async (firstScope, secondScope) => {
+      const fixture = await createFixture();
+      const localPath = join(
+        fixture.repoRoot,
+        '.oat',
+        'projects',
+        'local',
+        PROJECT,
+      );
+      const writeLocal = async (state: string): Promise<void> => {
+        await mkdir(localPath, { recursive: true });
+        await writeFile(join(localPath, 'state.md'), state);
+        await writeFile(join(localPath, 'summary.md'), '# Local summary\n');
+      };
+      const pathOf = { shared: fixture.projectPath, local: localPath };
+      const archiveScope = (
+        scope: 'shared' | 'local',
+        timestamp: string,
+        newGenerationReason?: string,
+      ) =>
+        archiveProjectOnCompletion(
+          archiveOptions(fixture, {
+            projectPath: pathOf[scope],
+            ...(newGenerationReason ? { newGenerationReason } : {}),
+          }),
+          { ...stubS3(), timestamp: () => timestamp },
+        );
+
+      await archiveScope('shared', '2026-09-01T09:00:00Z');
+      await writeLocal('# local state\n');
+      const localFirst = await archiveScope('local', '2026-09-01T10:00:00Z');
+      expect(localFirst.archivePath).toBe(
+        join(fixture.archiveRoot, `${PROJECT}-local`),
+      );
+
+      // Both scopes reopen and request generation 2 on the same day.
+      await reopen(fixture, '# shared reopened\n');
+      await writeLocal('# local reopened\n');
+      const first = await archiveScope(
+        firstScope,
+        '2026-09-05T09:00:00Z',
+        REASON,
+      );
+      const second = await archiveScope(
+        secondScope,
+        '2026-09-05T10:00:00Z',
+        REASON,
+      );
+
+      expect(first.archivePath).toBe(join(fixture.archiveRoot, 'demo-g2'));
+      expect(first.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
+      expect(second.archivePath).toBe(
+        join(fixture.archiveRoot, `demo-g2-${secondScope}`),
+      );
+      expect(second.s3Path).toMatch(
+        new RegExp(`/projects/20260905-demo-g2-${secondScope}$`),
+      );
+      expect(second.summaryExportFile).toMatch(
+        new RegExp(`20260905-demo-g2-${secondScope}\\.md$`),
+      );
+      expect(await readMetadata(first.archivePath)).toMatchObject({
+        snapshotName: '20260905-demo-g2',
+        scope: firstScope,
+        generation: 2,
+      });
+      expect(await readMetadata(second.archivePath)).toMatchObject({
+        snapshotName: `20260905-demo-g2-${secondScope}`,
+        scope: secondScope,
+        generation: 2,
+      });
+
+      // Each source-absent retry resumes its own generation.
+      for (const [scope, archived] of [
+        [firstScope, first],
+        [secondScope, second],
+      ] as const) {
+        expect(existsSync(pathOf[scope])).toBe(false);
+        const resumed = await archiveScope(scope, '2026-09-08T09:00:00Z');
+        expect(resumed.archivePath).toBe(archived.archivePath);
+        expect(resumed.s3Path).toBe(archived.s3Path);
+      }
+      expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+        'demo',
+        'demo-g2',
+        `demo-g2-${secondScope}`,
+        'demo-local',
+      ]);
+    },
+  );
+
+  it('still refuses a generation path held by something that is not an archive', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await reopen(fixture, '# reopened\n');
+    await mkdir(join(fixture.archiveRoot, 'demo-g2'));
+    await writeFile(join(fixture.archiveRoot, 'demo-g2', 'notes.md'), 'x\n');
+
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: REASON }),
+        { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+      ),
+    ).rejects.toThrow(/^archive-generation-path-occupied: /);
+    expect(existsSync(join(fixture.archiveRoot, 'demo-g2-shared'))).toBe(false);
+  });
+
   it('reuses an empty generation directory', async () => {
     const fixture = await createFixture();
     await archiveProjectOnCompletion(archiveOptions(fixture), {

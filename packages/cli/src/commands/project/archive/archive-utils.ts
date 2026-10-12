@@ -1446,15 +1446,33 @@ async function allocateArchiveGeneration(
     options.projectName,
     options.timestamp,
   )}-g${generation}`;
-  const snapshotName = candidates.some(
-    (candidate) => candidate.metadata?.snapshotName === datedIdentity,
-  )
-    ? `${datedIdentity}-${options.scope}`
-    : datedIdentity;
-  const archivePath = join(
+  const generationPath = join(
     dirname(archiveBasePath),
     `${options.projectName}-g${generation}`,
   );
+  // The generation-1 rule, applied to successors: when the same project's
+  // archive from another scope already holds `<project>-gN` or the dated
+  // identity, both the local path and the export identity carry the scope
+  // (`<project>-gN-<scope>`, `<YYYYMMDD>-<project>-gN-<scope>`), the name
+  // `oat repo archive sync` hydrates the snapshot to. Anything else at the
+  // path still refuses.
+  const pathHeldByOtherScope = candidates.some(
+    (candidate) =>
+      candidate.archivePath === generationPath &&
+      candidate.metadata !== null &&
+      candidate.metadata.scope !== options.scope,
+  );
+  const scopeQualified =
+    pathHeldByOtherScope ||
+    candidates.some(
+      (candidate) => candidate.metadata?.snapshotName === datedIdentity,
+    );
+  const snapshotName = scopeQualified
+    ? `${datedIdentity}-${options.scope}`
+    : datedIdentity;
+  const archivePath = scopeQualified
+    ? `${generationPath}-${options.scope}`
+    : generationPath;
   // Same rule as the base and scope-qualified paths: an empty directory is free.
   if (
     (await pathExists(archivePath)) &&
@@ -1462,7 +1480,7 @@ async function allocateArchiveGeneration(
   ) {
     throw new ArchiveIdentityError(
       'archive-generation-path-occupied',
-      `\`${archivePath}\` already exists and is not generation ${generation} of \`${options.projectName}\`; refusing to overwrite it.`,
+      `\`${archivePath}\` already exists and is not generation ${generation} of \`${options.projectName}\` (${options.scope}); refusing to overwrite it.`,
       1,
     );
   }
