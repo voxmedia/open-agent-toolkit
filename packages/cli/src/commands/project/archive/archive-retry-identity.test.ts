@@ -1006,6 +1006,9 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     );
     expect(replay.archivePath).toBe(second.archivePath);
     expect(replay.generation).toBe(2);
+    expect(replay.warnings).toEqual([
+      `\`--new-generation\` resolved to existing generation 2 (\`20260905-demo-g2\`): retained artifacts are identical to that archive, allocated for reason \`${REASON}\`; no new generation was allocated.`,
+    ]);
     expect((await readMetadata(second.archivePath)).generationRequest).toBe(
       requestId(
         '20260901-demo',

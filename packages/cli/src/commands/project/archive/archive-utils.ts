@@ -958,14 +958,18 @@ function identityFromMetadata(
 export function newGenerationReplayWarning(
   identity: Pick<
     ArchiveRetryIdentity,
-    'disposition' | 'generation' | 'snapshotName'
+    'disposition' | 'generation' | 'snapshotName' | 'generationReason'
   >,
   newGenerationReason: string | null | undefined,
 ): string | null {
   if (newGenerationReason == null || identity.disposition !== 'retry') {
     return null;
   }
-  return `\`--new-generation\` resolved to existing generation ${identity.generation} (\`${identity.snapshotName}\`): retained artifacts are identical to that archive; the reason was not recorded.`;
+  const resolved = `\`--new-generation\` resolved to existing generation ${identity.generation} (\`${identity.snapshotName}\`): retained artifacts are identical to that archive`;
+  // Replaying an explicit generation: its reason is already persisted.
+  return identity.generationReason
+    ? `${resolved}, allocated for reason \`${identity.generationReason}\`; no new generation was allocated.`
+    : `${resolved}; the reason was not recorded.`;
 }
 
 /** Validates `--new-generation <reason>`: one non-empty line. */
