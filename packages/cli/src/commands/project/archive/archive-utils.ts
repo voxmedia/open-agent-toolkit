@@ -1393,7 +1393,11 @@ async function allocateArchiveGeneration(
     dirname(archiveBasePath),
     `${options.projectName}-g${generation}`,
   );
-  if (await pathExists(archivePath)) {
+  // Same rule as the base and scope-qualified paths: an empty directory is free.
+  if (
+    (await pathExists(archivePath)) &&
+    !(await isEmptyDirectory(archivePath))
+  ) {
     throw new ArchiveIdentityError(
       'archive-generation-path-occupied',
       `\`${archivePath}\` already exists and is not generation ${generation} of \`${options.projectName}\`; refusing to overwrite it.`,

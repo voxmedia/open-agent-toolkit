@@ -1128,6 +1128,33 @@ describe('explicit archive generations (archive-generation-authorization)', () =
     expect(await readdir(fixture.archiveRoot)).toEqual([PROJECT]);
   });
 
+  it('reuses an empty generation directory', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await restoreSource(fixture);
+    await writeFile(join(fixture.projectPath, 'state.md'), '# reopened\n');
+    const generationPath = join(fixture.archiveRoot, `${PROJECT}-g2`);
+    await mkdir(generationPath);
+
+    const second = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+    expect(second.archivePath).toBe(generationPath);
+    expect(second.generation).toBe(2);
+    expect(second.predecessorSnapshot).toBe('20260901-demo');
+    await expect(
+      readFile(join(generationPath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# reopened\n');
+    expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+      PROJECT,
+      `${PROJECT}-g2`,
+    ]);
+  });
+
   it('refuses a generation when two archives hold the latest generation', async () => {
     const fixture = await createFixture();
     const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
