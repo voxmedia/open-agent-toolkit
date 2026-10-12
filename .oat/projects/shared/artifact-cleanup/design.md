@@ -205,6 +205,13 @@ environment-limited>`, `**Source:** <stable per-observation source id>`,
   brief-contract §12 clause are rewritten to this rule in phase 3. The
   disabled case is exercised as its own acceptance result (warning emitted,
   no file created, summary and retro report "no learnings recorded").
+  _Alignment note (2026-10-12, external PR review W8/B2):_ "no-ops because
+  logging is disabled" means the log-absent skip (`status: skipped`,
+  `reason: projectLog=false`). The shipped CLI contract
+  (`DR-260718-automatic-create-on-first`) keeps an existing `project-log.md`
+  writable regardless of a later `workflow.projectLog: false`, so a disabled
+  flag stops creation only; the producers' prose (p04-t20) states that rule
+  and the warning fires exactly when the append skips.
 - Readers: summary and retro read the unified log first and legacy files
   second, deriving legacy identity from timestamp, category and title and
   deduplicating only proven identical sources; retro's evidence order and

@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 12    | 12/12     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 20    | 12/20     |
 
 **Total:** 44/44 tasks completed
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1158,6 +1157,62 @@ oat_generated: false
 
 ---
 
+### Task p04-t13: (review) One retention set: `pr/` excluded from local copy, manifest, S3 and hydration
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t14: (review) Never copy archive-owned entries from the source
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t15: (review) Resolve archive generations when syncing by project name
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t16: (review) Scope-qualify successor archive paths on other-scope collisions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t17: (review) Read plan progress through the masked record reader
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t18: (review) Refuse run lines without a valid request identity
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t19: (review) Catch template placeholders inside inline-code slots
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t20: (review) State the real disabled-log contract for learning writes
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1254,6 +1309,29 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Next:** p04-t08..p04-t12 landed 80a8a724e..7e32ece6e via `cont-ac-p03-fix-4`; final round 3 (`reviews/archived/final-review-2026-10-12T061438Z.md`, reviewed head `2c2594f42`) returned 0/0/0/1 (journal count wording, fixed by the root); exit gate attempt 2 follows.
 
 **Attempt 2:** `reviews/archived/final-review-2026-10-12T062754Z.md` (run `43b2fd6a-ad0d-45d4-ae25-fa669f86c2ec`, `codex-6-sol-xhigh`, reviewed head `b348f3e4c`) returned `ok` 0/0/0/0; judgment sweep found nothing to disposition; gate `allowed/passed` (state commit d30a57545).
+
+### Review Received: final (external PR review)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/external-pr-review-2026-10-12T065140Z.md (Warp "Quaker Factory" changes requested and Cursor Bugbot on PR #365, reviewed head `bbc3616a9`; every finding re-verified by two root-dispatched Fable 5.1 high lanes before disposition)
+
+**Findings:**
+
+- Critical: 0
+- High: 3 (verified: W1, W5, W8 as artifact alignment)
+- Medium: 6 (W2, W3, W4, W6, W7, B1)
+- Low: 0
+
+**New tasks added:** p04-t13 (W1), p04-t14 (W2), p04-t15 (W3), p04-t16 (W4), p04-t17 (W5), p04-t18 (W6), p04-t19 (W7), p04-t20 (W8 + B2)
+
+**Design drift / artifact alignment notes:**
+
+- W1: the manifest, the local copy and S3 disagreed on whether `pr/` is retained; the root chose one retention set that keeps the intentional PR exclusion (`pr/` joins `reviews/`), recorded in the review artifact.
+- W8/B2: D14 promised a no-op plus warning for a disabled log, but the shipped CLI contract (`DR-260718`) keeps an existing log writable; the root aligns D14 in `design.md` and p04-t20 aligns the three skill mirrors.
+- B1 (`archive.awsProfile` pin): Thomas's instruction for this repository; no change.
+- The exit gate generation (`allowed/passed`, reviewed head `a59ad47cd`) goes `stale` once the first fix commit lands; a narrowed final review and a new gate generation follow the fixes.
+
+**Next:** p04-t13..p04-t20 via a fresh implementer dispatch (`ac-ext-fix-implementation`), then final round 4 (narrowed), exit gate generation 2, and the deferred final HiLL approval.
 
 ## Deferred Findings
 

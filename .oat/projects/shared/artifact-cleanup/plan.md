@@ -921,31 +921,248 @@ Expected: green; the named control fails with the fix neutralized and passes res
 
 ---
 
+### Task p04-t13: (review) One retention set: `pr/` excluded from local copy, manifest, S3 and hydration
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`ARCHIVE_RETENTION_EXCLUSIONS` gains `pr`; derive `S3_ARCHIVE_SYNC_EXCLUDES` from that set so one list defines the retained archive; copy filter at ~L2974, manifest at ~L822, upload at ~L3133 all read the same set; the damaged-archive hint at ~L1108 stays true)
+- Modify: `packages/cli/src/commands/repo/archive/sync-runner.ts` (~L114: hydration excludes come from the same exported set)
+- Modify: `archive-retry-identity.test.ts` (beside "accepts a retry whose only difference is review evidence": archive a project with `pr/final.md`, hydrate through `runArchiveSyncCommand` with a fake `aws` that honors `--exclude`, retry with the source absent → disposition `retry`, never `archive-retry-candidate-damaged`; control: with `pr` removed from the manifest exclusions the same case is refused), `archive-utils.test.ts` and `index.test.ts` pins of the exclude list, `sync-runner.test.ts`
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (~L195, ~L226-228, ~L253: `pr/` is process evidence like `reviews/`, not retained in archives or S3) and any other docs sentence listing the retained set; check `finalizeSummaryArchiveLocators` treats `pr/…` links like `reviews/…` links (p04-t12) and extend it if the exported summary can link to `pr/`
+
+**Step 1: Understand the issue**
+
+External PR review W1 (`reviews/archived/external-pr-review-2026-10-12T065140Z.md`, verified High): the identity manifest hashes `pr/` while S3 upload and hydration exclude `pr/*`, so an intact S3 restore of any project with a `pr/` dir reads as `archive-retry-candidate-damaged` on the source-absent retry; the refusal's own recovery hint reproduces the damaged state.
+
+**Step 2: Implement fix**
+
+One retention set, applied identically to the local copy, the manifest, the upload and the hydration; the reviewer's intentional PR exclusion is preserved (root decision in the review artifact).
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive` and `pnpm --filter oat-docs check`; the new round-trip test fails with the manifest exclusion neutralized and passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t13): exclude pr/ from the archive retention set everywhere`
+
+---
+
+### Task p04-t14: (review) Never copy archive-owned entries from the source
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (~L2977: the source copy filter also rejects `ARCHIVE_OWNED_ENTRIES`, so a source reopened by copying its archive never overwrites the pending allocation written at ~L2941-2950)
+- Modify: `archive-retry-identity.test.ts` (under "explicit archive generations" beside "persists the allocation before any side effect": reopen by copying the g1 archive including `.oat-archive-source.json`, request g2 with a `copyDirectory` that runs the production filter and throws after the dotfile would be admitted → `demo-g2/.oat-archive-source.json` still says `generation: 2, allocation: pending`, and the next request resumes `…-demo-g2` instead of `archive-generation-ambiguous-predecessor`; control: pre-fix filter copies the g1 metadata)
+
+**Step 1: Understand the issue**
+
+External PR review W2 (verified Medium): the copy filter consults only `ARCHIVE_RETENTION_EXCLUSIONS`, so a predecessor's `.oat-archive-source.json` is copied over the g2 pending marker; `clearPendingGeneration` then preserves the g1 metadata and the project has two generation-1 archives.
+
+**Step 2: Implement fix**
+
+Exclude archive-owned entries from the source copy.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`; the interrupted-copy regression fails neutralized, passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t14): never copy archive-owned entries from the source`
+
+---
+
+### Task p04-t15: (review) Resolve archive generations when syncing by project name
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`parseArchiveSnapshotName` ~L433-465 captures an optional trailing `-g(\d+)` as `generation` and exposes the base `projectName` plus the full local name; the local hydration target keeps the full name so `demo-g2` never lands on `demo`)
+- Modify: `packages/cli/src/commands/repo/archive/sync-runner.ts` (~L333-355: by-name selection matches the base name, an exact snapshot or full-name match takes precedence, and the latest pick orders by generation before date)
+- Modify: `sync-runner.test.ts` (beside "selects the latest snapshot for each project": listing `20261011-demo/` + `20261012-demo-g2/`, `runSync({ projectName: 'demo' })` targets `.oat/projects/archived/demo-g2` from the g2 source; `sync demo-g2` still exact-matches; unnamed sync still hydrates both), `archive-utils.test.ts` unit for `parseArchiveSnapshotName('20261012-demo-g2')`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md` (~L160: by-name restore selects the latest generation of the latest dated snapshot) and the `project-artifacts.md` recovery sentence; a project literally named `…-g2` keeps exact-name precedence (note the residual ambiguity in the docs)
+
+**Step 1: Understand the issue**
+
+External PR review W3 (verified Medium): the `-gN` suffix is part of the slug to the parser, so `oat repo archive sync demo` hydrates generation 1 and the documented latest-snapshot restore and the damaged-archive recovery hint cannot reach the latest generation by name.
+
+**Step 2: Implement fix**
+
+Generation-aware snapshot identity in the parser and the sync selector; targets unchanged.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive` and `pnpm --filter oat-docs check`; the producer-to-sync regression fails neutralized, passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t15): resolve archive generations when syncing by project name`
+
+---
+
+### Task p04-t16: (review) Scope-qualify successor archive paths on other-scope collisions
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`allocateArchiveGeneration` ~L1436-1457: when the dated identity collides or `<project>-gN` is held by a valid archive of another scope, both the local path and the export identity take the `-<scope>` qualifier, mirroring the generation-1 rule at ~L1339-1350; a non-empty path without matching metadata still refuses `archive-generation-path-occupied`; candidate enumeration must find the qualified successor on retry)
+- Modify: `archive-retry-identity.test.ts` (under "explicit archive generations": shared `demo` and local `demo` archived, both reopened, g2 for both in either order → `demo-g2` and `demo-g2-<scope>` with matching export identities, each source-absent retry resumes its own; the empty-directory reuse case stays green)
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md` (~L207) and `project-artifacts.md` (~L219): successor path grammar includes the qualified form
+
+**Step 1: Understand the issue**
+
+External PR review W4 (verified Medium): generation 1 qualifies path and identity together, but successors qualify only the export identity, so the second scope to request g2 is refused with a message calling a valid archive junk.
+
+**Step 2: Implement fix**
+
+Apply the recorded scope-qualification deviation consistently to successor paths and identities.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive` and `pnpm --filter oat-docs check`; the shared/local g2 regression fails neutralized, passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t16): scope-qualify successor archive paths on collisions`
+
+---
+
+### Task p04-t17: (review) Read plan progress through the masked record reader
+
+**Files:**
+
+- Modify: `packages/control-plane/src/state/tasks.ts` (`parsePhaseProgress` ~L97-144 derives plan task headings from `readJournalRecords(planContent)` or applies the same `recordMask` before `parseTaskHeadingLine`; confirm the masked grammar accepts every legacy heading spelling at ~L28-30 — `p1-t01`, `prev1-t01`, `p-rev1-t01` — before swapping)
+- Modify: `packages/control-plane/src/state/tasks.test.ts` (`parseTaskProgress` over a plan whose only fence holds `### Task p01-t02: Example` totals 1) and `packages/cli/src/commands/project/journal-check/evaluator.test.ts` (truthful 1/1 journal with that plan → `ok`; the false 1/2 overview → `overview-total-mismatch`; run both through `complete-state` as the public boundary)
+
+**Step 1: Understand the issue**
+
+External PR review W5 (verified High): task matching masks fenced examples through `readJournalRecords` while `checkOverviewTotals` reads `context.progress` from a raw-line plan scan; a fenced `### Task` example makes a truthful journal refuse and only a false overview completes. Nine non-test consumers share `parseTaskProgress`, so counts for such plans shift everywhere in the intended direction.
+
+**Step 2: Implement fix**
+
+One masked plan reading for progress and validation.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state src/commands/project/promote` plus `HOME=$FH pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state`; the fenced-example regression fails neutralized, passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t17): read plan progress through the masked record reader`
+
+---
+
+### Task p04-t18: (review) Refuse run lines without a valid request identity
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (`checkRunLines` ~L880: `request` null or failing the producer's identifier pattern → `run-line-malformed`; import the pattern from `packages/cli/src/providers/identity/generic-dispatch-record.ts` ~L24-29 rather than duplicating it; other nullable selectors unchanged)
+- Modify: `evaluator.test.ts` (a `realRunLine()` with `request=~` is refused at review and completion; two such lines never report `run-line-duplicate` with an empty label); extend `NEGATIVE_VARIANTS` in `journal-check/__tests__/fixtures.ts` so `complete-state/journal.test.ts` covers it at the public boundary
+
+**Step 1: Understand the issue**
+
+External PR review W6 (verified Medium): `~` parses to null and folds to an empty dedup key, so a hand-edited run line with no request identity passes validation and completion while the producer rejects the same input.
+
+**Step 2: Implement fix**
+
+Validate the required projected identity against the producer contract.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state`; the null-request regression fails neutralized, passes restored.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t18): refuse run lines without a valid request identity`
+
+---
+
+### Task p04-t19: (review) Catch template placeholders inside inline-code slots
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (~L936-970: stop blanking inline code wholesale; inside a backtick span match only when the whole span is a template vocabulary token — `{path}`, `{why}`, `{purpose}`, `{Task Name}`, `{Phase Name}`, `{Project Name}`, `{N}`, `{sha}`, `{time}`, `{command(s)…}` — and only in a slot position (list-item start or after a `**Label:**` marker); the existing `quoted-evidence` marker (~L815, ~L830) opts a line out; prose heuristics outside spans unchanged)
+- Modify: `evaluator.test.ts` (`- \`{path}\` - Reader module.`refused`template-residue`and refused by`complete-state`; `\`{ sourceId, locator }\``, `\`packages/{cli,control-plane}/package.json\``, `\`returns {status, reasons}\``accepted; a`<!-- quoted-evidence -->`line with`\`{Task Name}\``accepted; the real template path from`.oat/templates/implementation.md:43` as the negative control at the completion boundary)
+- Verify, read-only: `node packages/cli/dist/index.js project journal check --project .oat/projects/shared/artifact-cleanup --at completion --json` reports no `template-residue` (its L531 quotes `{Task Name}` mid-line as evidence); report rather than edit if it does
+
+**Step 1: Understand the issue**
+
+External PR review W7 (verified Medium): `stripInlineCode` hides the template's own backticked `{path}` slots, so an unfilled key-files line passes completion. The p02 L3 prose false positive (`returns {status, reasons}`) must stay accepted.
+
+**Step 2: Implement fix**
+
+Vocabulary-and-slot matching inside inline code instead of blanket stripping.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state`; the inline-slot regression fails neutralized, passes restored; this project's journal still has no residue reason.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t19): catch template placeholders inside inline-code slots`
+
+---
+
+### Task p04-t20: (review) State the real disabled-log contract for learning writes
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (~L414-451 `oat_record_learning` and its D14 sentences), `.agents/skills/oat-cursor-cloud-projects/references/cursor-cloud-mechanics.md` (~L111-148), `.agents/skills/oat-project-goal/SKILL.md` (~L160-161, ~L179-204, ~L646-648): a disabled project log (`workflow.projectLog: false`) stops creation, so the append skips with `status: skipped` and the helper's one warning line; an existing `project-log.md` keeps accepting categorized learnings regardless of the flag (`DR-260718-automatic-create-on-first`); drop every "never pre-check / disabled means no-op" claim that contradicts this; keep the helper's `skipped` grep as the warning trigger (all three skills are already bumped in this PR; no further bump)
+- Modify: `packages/cli/src/commands/project/log/append.ts` only if the prose needs a clearer `skipped.reason`; otherwise none
+- Modify: `packages/cli/src/commands/project/log/append.test.ts` (~L445: an existing log + `projectLog: false` + a categorized learning append → `appended`, asserted on the policy outcome, not only the heading; absent log + `false` → `skipped` with `reason: projectLog=false`)
+- Re-pin `packages/cli/src/validation/skills.test.ts` lines that quote the changed prose, if any
+
+**Step 1: Understand the issue**
+
+External PR review W8 and Bugbot B2 (verified: artifact/prose mismatch; the CLI behavior is decision-backed): D14 and three skill mirrors promise that a disabled log makes the append no-op with a warning, but `append.ts:1741-1750` consults the flag only when the log is absent, pinned by `append.test.ts:445` and DR-260718. Root decision: align the prose with the recorded contract; the root records the D14 alignment note in `design.md`.
+
+**Step 2: Implement fix**
+
+Prose states the real rule; the test asserts both branches explicitly.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log src/validation/skills.test.ts`; `pnpm check` and `pnpm run check:skill-bumps` exit 0.
+Expected: green with explicit exit codes; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`docs(p04-t20): state the real disabled-log contract for learning writes`
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                 |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01    | code     | fixes_completed | 2026-10-12 | reviews/archived/p01-review-2026-10-12T012710Z.md           | c6b98bcac0408788ba03303f81c50123bf962c44 | auto       | round 1: 0/0/1/3; M1 and L3 aligned in plan; L1→p01-t06, L2→p01-t07; fixes landed 0bce1f045, d905d0110                                                                      |
-| p01    | code     | passed          | 2026-10-12 | reviews/archived/p01-review-2026-10-12T013544Z.md           | a359c4524044ac4a8b74ad1739dc7fce1d25d730 | auto       | round 2 (narrowed to 5c7e60601..d905d0110): 0/0/0/0; M1/L3 plan alignments and L1/L2 fixes verified                                                                         |
-| p02    | code     | fixes_completed | 2026-10-12 | reviews/archived/p02-review-2026-10-12T024507Z.md           | a9ee702f55d3ce000927edf4c50ce73f5adc3af2 | auto       | round 1: 0/0/2/3; all five converted (p02-t08..p02-t12); fixes landed cbaaefbcb..3607948f4                                                                                  |
-| p02    | code     | passed          | 2026-10-12 | reviews/archived/p02-review-2026-10-12T030234Z.md           | b9f2f8050e2246c1d6a92e2b5aacf70e0b2f053e | auto       | round 2 (narrowed to 736be8cfc..3607948f4): 0/0/0/0; all five round-1 findings closed                                                                                       |
-| p03    | code     | fixes_completed | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10); fixes landed 60d10eb8b..a6a9950a5                                                          |
-| p03    | code     | passed          | 2026-10-12 | reviews/archived/p03-review-2026-10-12T042217Z.md           | 1f5601c3f080ac4ca284ab634ef92039437a48be | auto       | round 2 (narrowed to 53340c9ec..a6a9950a5): 0/0/0/3; three new Lows converted (p03-t11..t13), root-verified, covered by the final review                                    |
-| p04    | code     | passed          | 2026-10-12 | reviews/archived/p04-review-2026-10-12T051738Z.md           | aec70adab4381d0e713a2c199a03990828824e68 | auto       | round 1: 0/0/1/1; M1 → p04-t05; L1 fixed by the root in the receive commit; p04-t05 landed b7c2eeb29, root-verified; final review covers the fix delta                      |
-| final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T052402Z.md         | b38441a265f3b76757225863ac09a8b4aef32de1 | auto       | round 1: 0/0/0/3 over 87433267b..b38441a26 (61 commits, 135 files); L1 fixed by the root; L2 → p04-t06, L3 → p04-t07; fixes landed b0e788e8a, 046efcd22                     |
-| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T054613Z.md         | 22b2b7d881069f4da33423d2fc1117e002550580 | auto       | round 2 (narrowed to e435a3317..046efcd22): 0/0/0/0; all round-1 Lows closed                                                                                                |
-| design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                                                 |
-| design | artifact | received        | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                                                                                               |
-| design | artifact | passed          | 2026-10-11 | references/astra-design-round-3.md                          | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced                                                                                                               |
-| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md           | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2                                                                                                             |
-| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md           | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3                                                                                                   |
-| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | 91b3727bf48912d91f735d946ff7133a474ac777 | gate       | codex-6-sol-xhigh: 0/0/7/1, passed at threshold high; applied in revision 4                                                                                                 |
-| plan   | artifact | fixes_added     | 2026-10-11 | references/astra-plan-round-1.md                            | 6a5a7986bcab5880f240961c43306ec1150d6c1a | manual     | Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, 5 important / 2 minor; applied in revision 5                                                                  |
-| plan   | artifact | passed          | 2026-10-11 | references/astra-plan-round-2.md                            | 6ddc7476114babe72d7307d2c41f2ac45fcc3709 | manual     | Astra plan round 2: ALIGNED; plan revision 5 approved by the orchestrator per the autonomous-run rules (D13); ready for oat-project-implement, not active                   |
-| plan   | artifact | received        | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | -                                        | -          | -                                                                                                                                                                           |
-| final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T055711Z.md         | ca2db88fa5345ec9dba8d2e06bb04ef1d44287b9 | gate       | codex-6-sol-xhigh: exit gate attempt 1 blocked 0/1/3/2; H1→p04-t08, M1→p04-t09, M2→p04-t10, L1→p04-t11, L2→p04-t12; M3 fixed by the root; fixes landed 80a8a724e..7e32ece6e |
-| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T061438Z.md         | 2c2594f424bff2892e40b1e0567a474ab95226f4 | auto       | round 3 (narrowed to 0ff8c0aec..7e32ece6e): 0/0/0/1; H1 rehash and the four other gate findings verified closed; the Low (journal count) fixed by the root                  |
-| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T062754Z.md         | b348f3e4c9fa40cda1b1ef767b8dcbab2a83f585 | gate       | codex-6-sol-xhigh: exit gate attempt 2 ok 0/0/0/0 (judgment sweep: nothing to disposition)                                                                                  |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-10-12 | reviews/archived/p01-review-2026-10-12T012710Z.md           | c6b98bcac0408788ba03303f81c50123bf962c44 | auto       | round 1: 0/0/1/3; M1 and L3 aligned in plan; L1→p01-t06, L2→p01-t07; fixes landed 0bce1f045, d905d0110                                                                                                                                                    |
+| p01    | code     | passed          | 2026-10-12 | reviews/archived/p01-review-2026-10-12T013544Z.md           | a359c4524044ac4a8b74ad1739dc7fce1d25d730 | auto       | round 2 (narrowed to 5c7e60601..d905d0110): 0/0/0/0; M1/L3 plan alignments and L1/L2 fixes verified                                                                                                                                                       |
+| p02    | code     | fixes_completed | 2026-10-12 | reviews/archived/p02-review-2026-10-12T024507Z.md           | a9ee702f55d3ce000927edf4c50ce73f5adc3af2 | auto       | round 1: 0/0/2/3; all five converted (p02-t08..p02-t12); fixes landed cbaaefbcb..3607948f4                                                                                                                                                                |
+| p02    | code     | passed          | 2026-10-12 | reviews/archived/p02-review-2026-10-12T030234Z.md           | b9f2f8050e2246c1d6a92e2b5aacf70e0b2f053e | auto       | round 2 (narrowed to 736be8cfc..3607948f4): 0/0/0/0; all five round-1 findings closed                                                                                                                                                                     |
+| p03    | code     | fixes_completed | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10); fixes landed 60d10eb8b..a6a9950a5                                                                                                                                        |
+| p03    | code     | passed          | 2026-10-12 | reviews/archived/p03-review-2026-10-12T042217Z.md           | 1f5601c3f080ac4ca284ab634ef92039437a48be | auto       | round 2 (narrowed to 53340c9ec..a6a9950a5): 0/0/0/3; three new Lows converted (p03-t11..t13), root-verified, covered by the final review                                                                                                                  |
+| p04    | code     | passed          | 2026-10-12 | reviews/archived/p04-review-2026-10-12T051738Z.md           | aec70adab4381d0e713a2c199a03990828824e68 | auto       | round 1: 0/0/1/1; M1 → p04-t05; L1 fixed by the root in the receive commit; p04-t05 landed b7c2eeb29, root-verified; final review covers the fix delta                                                                                                    |
+| final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T052402Z.md         | b38441a265f3b76757225863ac09a8b4aef32de1 | auto       | round 1: 0/0/0/3 over 87433267b..b38441a26 (61 commits, 135 files); L1 fixed by the root; L2 → p04-t06, L3 → p04-t07; fixes landed b0e788e8a, 046efcd22                                                                                                   |
+| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T054613Z.md         | 22b2b7d881069f4da33423d2fc1117e002550580 | auto       | round 2 (narrowed to e435a3317..046efcd22): 0/0/0/0; all round-1 Lows closed                                                                                                                                                                              |
+| design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                                                                                                                               |
+| design | artifact | received        | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                                                                                                                                                                             |
+| design | artifact | passed          | 2026-10-11 | references/astra-design-round-3.md                          | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced                                                                                                                                                                                             |
+| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round1.md           | 3117624163e79ffbd04418af5f5c94af264f0335 | manual     | Fable 5.1 high round 1: 0/3/9/5; all applied in plan revision 2                                                                                                                                                                                           |
+| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/plan-review-2026-10-11-round2.md           | 91b3727bf48912d91f735d946ff7133a474ac777 | manual     | round 2: 0/0/1/2, all 17 round-1 findings resolved; applied in revision 3                                                                                                                                                                                 |
+| plan   | artifact | fixes_added     | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | 91b3727bf48912d91f735d946ff7133a474ac777 | gate       | codex-6-sol-xhigh: 0/0/7/1, passed at threshold high; applied in revision 4                                                                                                                                                                               |
+| plan   | artifact | fixes_added     | 2026-10-11 | references/astra-plan-round-1.md                            | 6a5a7986bcab5880f240961c43306ec1150d6c1a | manual     | Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, 5 important / 2 minor; applied in revision 5                                                                                                                                                |
+| plan   | artifact | passed          | 2026-10-11 | references/astra-plan-round-2.md                            | 6ddc7476114babe72d7307d2c41f2ac45fcc3709 | manual     | Astra plan round 2: ALIGNED; plan revision 5 approved by the orchestrator per the autonomous-run rules (D13); ready for oat-project-implement, not active                                                                                                 |
+| plan   | artifact | received        | 2026-10-11 | reviews/archived/artifact-plan-review-2026-10-11T162428Z.md | -                                        | -          | -                                                                                                                                                                                                                                                         |
+| final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T055711Z.md         | ca2db88fa5345ec9dba8d2e06bb04ef1d44287b9 | gate       | codex-6-sol-xhigh: exit gate attempt 1 blocked 0/1/3/2; H1→p04-t08, M1→p04-t09, M2→p04-t10, L1→p04-t11, L2→p04-t12; M3 fixed by the root; fixes landed 80a8a724e..7e32ece6e                                                                               |
+| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T061438Z.md         | 2c2594f424bff2892e40b1e0567a474ab95226f4 | auto       | round 3 (narrowed to 0ff8c0aec..7e32ece6e): 0/0/0/1; H1 rehash and the four other gate findings verified closed; the Low (journal count) fixed by the root                                                                                                |
+| final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T062754Z.md         | b348f3e4c9fa40cda1b1ef767b8dcbab2a83f585 | gate       | codex-6-sol-xhigh: exit gate attempt 2 ok 0/0/0/0 (judgment sweep: nothing to disposition)                                                                                                                                                                |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/external-pr-review-2026-10-12T065140Z.md   | bbc3616a959e97f422aec9209c24f0695763c6f0 | external   | Warp Quaker Factory changes requested 0/8/0/0 + Cursor Bugbot 2 Medium; root verification lanes confirmed W1–W8; W1→p04-t13, W2→p04-t14, W3→p04-t15, W4→p04-t16, W5→p04-t17, W6→p04-t18, W7→p04-t19, W8/B2→p04-t20; B1 (awsProfile) no change by decision |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
