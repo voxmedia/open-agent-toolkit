@@ -753,6 +753,56 @@ Done.
       );
     });
 
+    it.each([1, 2, 3, 5, 60])(
+      'never exceeds maxLines %i for one categorized entry, trailer and cross-reference included',
+      async (maxLines) => {
+        const { root, logPath, summaryPath, ledgerPath } = await createRepo({
+          digest: { maxLines },
+        });
+        await writeFile(
+          logPath,
+          `# Project Log: demo
+
+## Entries
+
+### 2026-07-11 · general · friction · cache misses
+
+**Category:** gotcha
+**Source:** obs-1
+**Origin:** oat-project-autonomous
+**Recorded:** 2026-07-11T10:00:00Z
+
+Observation: The cache missed on every run.
+Recommendation: Warm the cache first.
+`,
+          'utf8',
+        );
+
+        const result = await rollupProjectLog({
+          repoRoot: root,
+          home: join(root, 'home'),
+        });
+
+        const section = workflowObservations(
+          await readFile(summaryPath, 'utf8'),
+        );
+        assertBoundedDigest(section, { maxEntries: 12, maxLines });
+        expect(result).toMatchObject({
+          status: 'ok',
+          digest: { maxLines, rendered: maxLines >= 5 ? 1 : 0 },
+        });
+        if (maxLines >= 3) {
+          expect(section).toContain(
+            'Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.',
+          );
+        }
+        // Ledger graduation reads the full set regardless of what renders.
+        await expect(readFile(ledgerPath, 'utf8')).resolves.toContain(
+          'cache misses',
+        );
+      },
+    );
+
     it('is within bounds on a small log in both versions (accepted neighbor)', async () => {
       const { root, summaryPath } = await createRepo();
 

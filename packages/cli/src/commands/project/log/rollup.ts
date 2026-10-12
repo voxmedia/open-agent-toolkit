@@ -383,15 +383,27 @@ export function renderProjectLogDigest(
   if (judgments.length === 0) {
     return { body: undefined, report };
   }
+  // The trailer and cross-reference count against `maxLines` like every
+  // item: each block after the first costs its lines plus a blank separator,
+  // and a block that would exceed the limit is left out (the trailer before
+  // the cross-reference). The JSON report keeps every count either way.
   const blocks = rendered.length > 0 ? [rendered.join('\n')] : [];
+  let usedLines = rendered.length;
+  const appendWithinLimit = (block: string): void => {
+    const cost = block.split('\n').length + (blocks.length > 0 ? 1 : 0);
+    if (usedLines + cost <= bounds.maxLines) {
+      blocks.push(block);
+      usedLines += cost;
+    }
+  };
   if (omittedEntries.length > 0) {
-    blocks.push(
+    appendWithinLimit(
       `_${omittedEntries.length} more judgment ${
         omittedEntries.length === 1 ? 'entry is' : 'entries are'
       } omitted by the digest bound (${bounds.maxEntries} entries, ${bounds.maxLines} lines); the archived project log keeps every entry._`,
     );
   }
-  if (hasCategorized) blocks.push(crossReference);
+  if (hasCategorized) appendWithinLimit(crossReference);
   return { body: blocks.join('\n\n'), report };
 }
 
