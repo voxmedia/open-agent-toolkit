@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p04-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,7 +17,7 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: p04-t06`.
+> - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
 | Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 7     | 5/7       |
+| Phase 4 | in_progress | 7     | 7/7       |
 
-**Total:** 37/39 tasks completed
+**Total:** 39/39 tasks completed
 
 ---
 
@@ -1043,19 +1043,43 @@ oat_generated: false
 - L1: the phase-3 summary and the Final Summary said thirteen `archive-*` reason codes; twelve exist. Fixed by the root in the receive commit (journal text only).
 - Deferred Findings ledger: none to disposition; every prior finding was converted and landed.
 
-**Next:** execute p04-t06 and p04-t07 as bounded fix continuations, then a narrowed final round 2 on the fix delta to reach `passed`; then the configured implementation exit gate and the closeout sequence.
+**Next:** p04-t06 (b0e788e8a) and p04-t07 (046efcd22) landed via `cont-ac-p03-fix-3`; narrowed final round 2 on `e435a3317..046efcd22` pending to reach `passed`; then the configured implementation exit gate and the closeout sequence.
 
 ### Task p04-t06: (review) Replay-warning docs sentence matches both messages
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b0e788e8a
+
+**Outcome:**
+
+- Docs sentence covers both replay messages (persisted reason named when the matched archive was an explicit generation).
+
+**Files changed:**
+
+- `apps/oat-docs/docs/reference/project-artifacts.md`
+
+**Verification:**
+
+- oat-docs check 0
 
 ---
 
 ### Task p04-t07: (review) Empty generation directory is reusable like the other archive paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 046efcd22
+
+**Outcome:**
+
+- `allocateArchiveGeneration` refuses a `<project>-gN` path only when it exists and is non-empty; empty `demo-g2` reused as generation 2; non-empty still refused.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`
+
+**Verification:**
+
+- archive vitest 235/235 under a fake HOME; control: bare `pathExists` → new case fails; restored byte-identical; check 0, type-check 0
 
 ---
 
