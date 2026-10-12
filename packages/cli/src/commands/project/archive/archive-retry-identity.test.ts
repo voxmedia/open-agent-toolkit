@@ -704,6 +704,7 @@ describe('summary locator finalization at export', () => {
 - **friction · cache misses** — The cache missed on resume. oat-project:demo#2026-10-11-friction-cache-misses-1
 - **friction · cache misses** — The cache missed again. oat-project:demo#2026-10-11-friction-cache-misses-2
 - See [the log](project-log.md#entries) and [legacy notes](./oat-execution-learnings.md); related oat-project:other#2026-10-01-bug-x-1.
+- **feedback · review** — Raised in [the review](reviews/final.md#f2) and [the p01 review](./reviews/archived/p01-review.md); see [the docs](https://example.com/reviews/final.md).
 `;
 
   it('finalizes both sections to the persisted archive identity, verified from a non-default destination', async () => {
@@ -743,6 +744,14 @@ describe('summary locator finalization at export', () => {
       'See the log (oat-archive:20261011-demo/project-log.md) and legacy notes (oat-archive:20261011-demo/oat-execution-learnings.md)',
     );
     expect(exported).toContain('oat-project:other#2026-10-01-bug-x-1');
+    // Review links become plain provenance; an external link is kept.
+    expect(exported).toContain(
+      'Raised in the review (review `reviews/final.md`, local to the project; not archived) and the p01 review (review `reviews/archived/p01-review.md`, local to the project; not archived)',
+    );
+    expect(exported).not.toMatch(/\]\((?:\.\/)?reviews\//);
+    expect(exported).toContain(
+      '[the docs](https://example.com/reviews/final.md)',
+    );
     // The archive keeps the summary exactly as authored.
     await expect(
       readFile(join(first.archivePath, 'summary.md'), 'utf8'),

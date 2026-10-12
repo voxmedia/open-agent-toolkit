@@ -261,8 +261,10 @@ The exported summary finalizes source locators: each
 `oat-project:<project>#<entry-id>` token becomes
 `oat-archive:<YYYYMMDD>-<project>#<entry-id>`, and a relative link to the
 archived-only `project-log.md` or legacy `oat-execution-learnings.md` becomes
-plain text naming the archive identity. The summary inside the archive keeps
-its original bytes.
+plain text naming the archive identity. A relative link into `reviews/`
+becomes its label plus the review file name, marked local to the project and
+not archived, since reviews are never archived; external links are kept. The
+summary inside the archive keeps its original bytes.
 
 ## Blockers in state.md
 

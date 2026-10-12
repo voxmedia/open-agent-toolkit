@@ -1502,6 +1502,14 @@ export function finalizeSummaryArchiveLocators(
       /\[([^\]\n]+)\]\((?:\.\/)?(project-log\.md|oat-execution-learnings\.md)(?:#[^)\s]*)?\)/g,
       (_link, label: string, file: string) =>
         `${label} (${ARCHIVE_LOCATOR_PREFIX}${snapshotName}/${file})`,
+    )
+    .replace(
+      // Reviews are never archived (D2), so a local review link cannot
+      // resolve from the export: keep its label and file name as plain
+      // provenance. Absolute and external URLs do not match.
+      /\[([^\]\n]+)\]\((?:\.\/)?(reviews\/[^)\s#]+)(?:#[^)\s]*)?\)/g,
+      (_link, label: string, file: string) =>
+        `${label} (review \`${file}\`, local to the project; not archived)`,
     );
 }
 
