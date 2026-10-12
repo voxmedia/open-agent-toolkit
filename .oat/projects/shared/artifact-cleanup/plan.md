@@ -1322,6 +1322,33 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 
 ---
 
+### Task p04-t28: (gate) Exclusive recovery ownership before taking over a pending allocation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`takeOverPendingGeneration` ~L3494-3498 and the retry cleanup at ~L3095, ~L3130: hold an exclusive recovery lock (e.g. an exclusively created lock file under the archive root or the generation path, released on completion or failure) across identity revalidation, takeover, copy, completion and cleanup; refuse a pending allocation whose owner is still live (owner liveness recorded in the pending metadata, e.g. pid plus start time, or a lock the owner holds for its whole run) with `archive-generation-claim-held`; recover an interrupted allocation only after acquiring the lock and re-reading that the allocation is still pending; keep clearing and finalization inside that ownership boundary so a completed archive is never flipped back to pending)
+- Modify: `archive-retry-identity.test.ts` (deterministic pending-resume race for both a first archive and a successor: A pauses before copying under its pending claim, B reads the pending metadata and pauses just before its takeover write, A completes and removes the source, B resumes → A's archive byte-identical and B reuses it or refuses without writes; control: pre-fix B flips A's metadata to pending and the cleanup removes A's files)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` if the refusal wording or recovery guidance changes
+
+**Step 1: Understand the issue**
+
+Exit gate generation 2 attempt 2 H1 (`reviews/archived/final-review-2026-10-12T153824Z.md`, codex-6-sol-xhigh): `takeOverPendingGeneration` reads a pending allocation, unconditionally overwrites its metadata with a new owner token and then verifies the token it just wrote; the pending owner can complete between that read and write, so the write turns a completed archive back to pending and the delayed retry clears it (first archive: the whole completed archive is removed by error cleanup; successor: only pending metadata remains). The p04-t23/t26 tests pause B before its initial exclusive create and never exercise this pending-resume race.
+
+**Step 2: Implement fix**
+
+Atomic recovery ownership: no takeover without an exclusive lock and a re-read under it.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive src/commands/project/complete-state`; both pending-resume race cases fail with the lock neutralized and pass restored; the p04-t23/t26/t27 cases stay green.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t28): exclusive recovery ownership before taking over a pending allocation`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |
@@ -1355,6 +1382,7 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 | final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T151935Z.md         | 9bf9b667298bc8d61fd53c3e74856962ecf034fc | auto       | round 6 (narrowed to bc9ac35ae..76c931e7a): 0/0/1/0; gate H1, M1, M2 and the p04-t26 follow-up verified closed; M1 (new claim clears foreign content) → p04-t27                                                                                           |
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T152842Z.md         | 4acebec12f4606127cbad09bf1b589cf0bf47164 | auto       | round 7 (narrowed to d94bff8d6..089a65a98): 0/0/0/0; round 6 M1 verified closed                                                                                                                                                                           |
 | final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T153824Z.md                  | 6c152f8d617ae3f1b08eed172b5c952c0bd522dc | gate       | codex-6-sol-xhigh                                                                                                                                                                                                                                         |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T153824Z.md         | 6c152f8d617ae3f1b08eed172b5c952c0bd522dc | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 2 blocked 0/1/0/0 (maxAttempts exhausted); H1→p04-t28; complexity review and operator decision pending |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 

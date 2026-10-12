@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete | 7     | 7/7       |
 | Phase 2 | complete | 12    | 12/12     |
 | Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 27    | 27/27     |
+| Phase 4 | in_progress | 28 | 27/28 |
 
-**Total:** 59/59 tasks completed
+**Total:** 59/60 tasks completed
 
 ---
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1444,6 +1443,13 @@ oat_generated: false
 
 ---
 
+### Task p04-t28: (gate) Exclusive recovery ownership before taking over a pending allocation
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1638,6 +1644,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Review cycles for this post-gate final loop: 1 of 3 (round 6); the post-external loop closed at 2 of 3 (rounds 4–5).
 
 **Next:** p04-t27 (089a65a98) landed via `cont-ac-ext-fix-4`, root-verified; final round 7 (`reviews/archived/final-review-2026-10-12T152842Z.md`, reviewed head `4acebec12`) returned 0/0/0/0 and the final event is `passed` (post-gate loop closed at 2 of 3 cycles). Exit gate generation 2 attempt 2 follows.
+
+### Review Received: final (exit gate, generation 2, attempt 2)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T153824Z.md (configured implementation exit gate, generation 2 attempt 2, `codex-6-sol-xhigh`, run `1a234bff-2713-4f6d-9fbd-ee952a153b4a`, reviewed head `6c152f8d6`)
+
+**Gate:** attempt 2 of 2 blocked at threshold high (0 critical, 1 high, 0 medium, 0 low); `maxAttempts` exhausted under `on_failure: block` → complexity review (`references/docs/complexity-review-fallback.md`) and operator decision.
+
+**Findings:**
+
+- Critical: 0
+- High: 1
+- Medium: 0
+- Low: 0
+
+**New tasks added:** p04-t28 (H1)
+
+**Design drift / artifact alignment notes:**
+
+- H1 is the pending-resume variant of the overlap race the gate flagged on attempt 1: the takeover of an interrupted allocation is not an atomic recovery claim. The attempt-1 fixes closed the vacant-path race (verified by the gate) but not this one.
+
+**Next:** complexity review at gate exhaustion, then the operator's disposition recorded below.
 
 ## Deferred Findings
 
