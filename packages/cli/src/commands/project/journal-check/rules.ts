@@ -766,28 +766,34 @@ function frontmatterEndIndex(lines: readonly string[]): number {
 }
 
 /**
- * Fenced code blocks of the journal body. A block opens on a non-record fence
- * line that starts a non-record run (the shared mask already decided fence
- * structure) and spans every following non-record line.
+ * Fenced code blocks of the journal body, parsed fence by fence: each block
+ * has its own opener (up to three spaces of indent, three or more backticks or
+ * tildes), info string, and closer (the same character, at least as long, with
+ * nothing else on the line); an unclosed fence runs to the end of the
+ * document. `preceding` is the nearest non-blank line above the opener, so a
+ * marker or a neighbouring fence never decides another block's status, and a
+ * line that merely sits next to a fence (an indented code line, another block)
+ * never hides it.
  */
 function fencedBlocks(records: JournalRecords): FencedBlock[] {
   const blocks: FencedBlock[] = [];
-  const { lines, recordMask } = records;
+  const { lines } = records;
   const bodyStart = frontmatterEndIndex(lines);
   let index = bodyStart;
   while (index < lines.length) {
-    const startsRun = index === bodyStart || recordMask[index - 1] === true;
-    const open =
-      recordMask[index] === false && startsRun
-        ? (lines[index] ?? '').match(FENCE_OPEN_PATTERN)
-        : null;
-    if (open === null) {
+    const open = (lines[index] ?? '').match(FENCE_OPEN_PATTERN);
+    const fence = open?.[1] ?? '';
+    const info = (open?.[2] ?? '').trim();
+    if (open === null || (fence.startsWith('`') && info.includes('`'))) {
       index += 1;
       continue;
     }
+    const closer = new RegExp(
+      `^ {0,3}${fence[0] === '`' ? '`' : '~'}{${fence.length},}[ \\t]*$`,
+    );
     const content: string[] = [];
     let cursor = index + 1;
-    while (cursor < lines.length && recordMask[cursor] === false) {
+    while (cursor < lines.length && !closer.test(lines[cursor] ?? '')) {
       content.push(lines[cursor] ?? '');
       cursor += 1;
     }
@@ -799,13 +805,8 @@ function fencedBlocks(records: JournalRecords): FencedBlock[] {
         break;
       }
     }
-    blocks.push({
-      line: index + 1,
-      info: (open[2] ?? '').trim(),
-      content,
-      preceding,
-    });
-    index = cursor;
+    blocks.push({ line: index + 1, info, content, preceding });
+    index = cursor + 1;
   }
   return blocks;
 }

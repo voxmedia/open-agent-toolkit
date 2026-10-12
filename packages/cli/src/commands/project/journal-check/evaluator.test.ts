@@ -257,6 +257,44 @@ ${blocks}
     expect(codes(quoted)).not.toContain('dispatch-payload');
   });
 
+  it('detects each fenced payload independently of its neighbours', () => {
+    const withoutRun = replaceOnce(
+      VALID,
+      `- ${VALID.match(/run\/v1[^\n]*/)?.[0] ?? ''}\n`,
+      '',
+    );
+    const PAYLOAD =
+      '```json\n{ "request_id": "demo-p01", "caller": "oat-project-implement", "role_name": "oat-phase-implementer" }\n```';
+    const deferred = (body: string): string =>
+      replaceOnce(
+        withoutRun,
+        `## Deferred Findings
+
+- None.`,
+        `## Deferred Findings
+
+${body}`,
+      );
+
+    // Accepted neighbour: one isolated, marked evidence fence.
+    const marked = deferred(`<!-- quoted-evidence -->\n${PAYLOAD}`);
+    expect(codes(marked)).not.toContain('dispatch-payload');
+
+    // A marked evidence fence immediately followed by an unmarked payload.
+    const evidenceThenPayload = deferred(
+      `<!-- quoted-evidence -->\n${PAYLOAD}\n${PAYLOAD}`,
+    );
+    expect(
+      check(evidenceThenPayload).reasons.filter(
+        (reason) => reason.code === 'dispatch-payload',
+      ),
+    ).toHaveLength(1);
+
+    // A four-space indented line immediately before a payload fence.
+    const indentedThenPayload = deferred(`    indented note\n${PAYLOAD}`);
+    expect(codes(indentedThenPayload)).toContain('dispatch-payload');
+  });
+
   it('unresolved run line at completion, from real --format line output (guard: journal-check-terminal-shape)', () => {
     const unresolved = replaceOnce(
       VALID,
