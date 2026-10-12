@@ -381,6 +381,41 @@ describe('archive retry identity (archive-retry-identity)', () => {
     expect(retried.s3Path).toBe(first.s3Path);
   });
 
+  it("excludes a shared project's .git from the archive and its manifest", async () => {
+    const fixture = await createFixture({
+      files: {
+        'state.md': '# state\n',
+        'summary.md': '# Summary\n',
+        '.git/HEAD': 'ref: refs/heads/main\n',
+      },
+    });
+    const sourceManifest = await computeArchiveManifestHash(
+      fixture.projectPath,
+    );
+    const archived = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+
+    expect(existsSync(join(archived.archivePath, '.git'))).toBe(false);
+    expect((await readdir(archived.archivePath)).sort()).toEqual([
+      ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+      'state.md',
+      'summary.md',
+    ]);
+    expect(await computeArchiveManifestHash(archived.archivePath)).toBe(
+      sourceManifest,
+    );
+    expect(
+      JSON.parse(
+        await readFile(
+          join(archived.archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+          'utf8',
+        ),
+      ),
+    ).toMatchObject({ manifestHash: sourceManifest });
+  });
+
   it('refuses an unverifiable non-empty directory at the base archive path', async () => {
     const fixture = await createFixture();
     const occupant = join(fixture.archiveRoot, PROJECT);
