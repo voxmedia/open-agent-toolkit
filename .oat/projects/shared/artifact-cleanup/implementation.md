@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 7/21 tasks completed
+**Total:** 14/21 tasks completed
 
 ---
 
@@ -239,8 +239,8 @@ oat_generated: false
 
 ## Phase 2: Journal and lifecycle enforcement
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -268,80 +268,162 @@ oat_generated: false
 
 ### Task p02-t01: Shared journal record reader
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b99c55550
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Shared heading-only journal record reader in the control plane (`journal-records.ts`): explicit heading ownership, fenced/indented code excluded, phase/task identity normalization, raw duplicates retained, exactly-one-owned `**Status:**`/`**Commit:**` extraction; task-mode progress consumes it with unchanged results on the existing fixtures; barrel export. Guard `record-reader-ownership` proven (three neutralizations).
+
+**Files changed:**
+
+- `packages/control-plane/src/state/journal-records.ts` (+test)
+- `packages/control-plane/src/state/tasks.ts`
+- `packages/control-plane/src/index.ts`
+
+**Verification:**
+
+- control-plane vitest 287/287 exit 0; tsc 0; check 0
 
 ---
 
 ### Task p02-t02: One-line dispatch record projection
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c79aa675a
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- `dispatch record --format line` additive v1 projection (`·`-delimited, escaped, explicit nulls, terminal classification from the exported producer-to-outcome mapping); `--json` keeps `validated-only` and adds the projection; `--dispatch-stamp <line>` flag carries the resolver's stamp verbatim (deviation, see below). Guard `run-line-terminality` proven.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/dispatch/{record,index}.ts`, `run-line.test.ts`
+- `packages/cli/src/providers/identity/generic-dispatch-record.ts` (+test)
+- `help-snapshots.test.ts`, `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:**
+
+- dispatch, identity, help-snapshot vitest 693/693 exit 0; cli check 0; type-check 0; oat-docs check 0
 
 ---
 
 ### Task p02-t03: Journal evaluator and rules
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bd6840307
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Pure journal evaluator with mode-aware rules at `implement-preflight|review|completion`, placement rules across the whole journal, run-line terminality at completion, override line grammar (code · decision id · scope · reason), `{status, reasons:[{code,path,line,owner}]}` output. Guards `journal-check-terminal-shape`, `journal-check-placement`, `journal-check-override-scope` proven; same-bytes comparison against real control-plane progress with hand-written expectations.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/{types,rules,evaluator}.ts`, `evaluator.test.ts`, `__tests__/fixtures.ts`
+
+**Verification:**
+
+- journal-check vitest 24/24 exit 0; check 0; tsc 0
 
 ---
 
 ### Task p02-t04: `oat project journal check` and lifecycle integration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d4e376ed5
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- `oat project journal check` (`--project`, `--at`, `--scope`, `--json`, read-only) registered with help snapshots; `complete-state` rechecks the closeout invariant and the final evaluator immediately before its write and writes nothing on refusal; override line idempotent on code + scope + decision id. Delivery coverage and the goal sequence stay with `closeout-check` (deviation, see below); a project with no journal skips the evaluator (deviation).
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts` (+`index.test.ts`)
+- `packages/cli/src/commands/project/{index,complete-state/index}.ts`, `complete-state/journal.test.ts`
+- `closeout-check/goal-boundary.test.ts` (mechanical: goal fixture gains `oat_status` and `**Head:**` lines)
+- `help-snapshots.test.ts`, `cli-reference.md`
+
+**Verification:**
+
+- journal-check, complete-state, closeout-check, help vitest 217/217 exit 0; `journal check --help` renders
 
 ---
 
 ### Task p02-t05: Journal templates with fixed slots
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 29ba174eb
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Journal templates gain `## Reviews and Gates` and `## Deferred Findings` before `## Final Summary`, drop `## Implementation Log`, the per-phase test table and the Conventions blockquote; orchestration-runs markers kept; brief-contract §9 names the slots; tracked `implementation-brief` asset copy regenerated. Committed with `git add -f` by exact path because `commit-paths` refuses a tracked file under the ignored `packages/cli/assets/*` (deviation, see below).
+
+**Files changed:**
+
+- `.oat/templates/{implementation,implementation-brief}.md`
+- `packages/cli/assets/templates/implementation-brief.md`
+- `.agents/skills/oat-project-brief/references/brief-contract.md` §9
+- `packages/cli/src/commands/project/new/scaffold.test.ts` (mechanical: slot scaffold test)
+
+**Verification:**
+
+- CLI build 0; declared runner 567/567 exit 0; validate-skills 0; format:root 0
 
 ---
 
 ### Task p02-t06: Writer skills and agent roles target the slots
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b578602e2
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Sixteen writer skills and roles target the fixed slots: run line via `dispatch record --format line` updated in place, receipts/fix tasks/deferrals to their slots, `journal check --at implement-preflight` before Step 16, `state.md` owns gate transitions, the complete skill runs summary staged → `journal check --at completion` → `resume: roll-up`, honors `oat_summary_learnings_fingerprint` staleness, writes the override line and `oat_pr_status_observed_at`; project-scope projections unchanged (`sync --scope project --dry-run` clean); `rg` for retired headings finds nothing.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-{implement,complete,complete-auto,dispatch-subagents,pr-final,pr-progress,reconcile,review-provide,review-receive,review-receive-remote,revise}/**`, `oat-worktree-bootstrap-auto/SKILL.md`
+- `complexity-review-contracts.test.ts`, `post-implement-sequence-contracts.test.ts`, `review-skill-contracts.test.ts`, `named-skill-load-contract.test.ts` (re-pins; one new non-executing row)
+
+**Verification:**
+
+- `src/validation src/commands/init/tools/shared` 1070/1070 exit 0; validate-skills 0; format:root 0
 
 ---
 
 ### Task p02-t07: Phase-2 docs, autonomy re-keys and the scripted walkthrough
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bd16db569
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Eight docs pages describe the slots, run lines, override line, local-only review paths and `oat_pr_status_observed_at`; no autonomy re-key needed (the one moved prompt site is byte-identical). Scripted walkthrough on a scratch quick project passed `journal check --at completion`; the failing staged-closeout probe (payload under Deferred Findings) refused at `journal check` and `complete-state` with the ledger, log tail, archive directory and `state.md` lifecycle fields byte-identical, while the accepted neighbor and a standalone summary ran through. Recovery `ac-p02-recovery-1` re-pinned one docs-wording string in `post-implement-sequence-contracts.test.ts` (7f95e2e3c).
+
+**Files changed:**
+
+- `apps/oat-docs/docs/{reference/project-artifacts,reference/project-state-machine,workflows/advanced/workflow-gates,workflows/projects/closeout/closeout-skills,workflows/projects/execution/implementation-execution,workflows/projects/execution/index,workflows/projects/lifecycle,workflows/projects/reviews/index}.md`
+
+**Verification:**
+
+- oat-docs check 0; docs:skills:check 0; autonomy-gate-inventory 5/5; phase suite 3188/3188 and control-plane 287/287 on the recovered head
 
 ---
+
+### Recovery Event ac-p02-recovery-1
+
+- Phase/task: p02 / p02-t07
+- Original request: ac-p02-implementation
+- Original commit: bd16db569474ad13f0bbd7300d710a2f55e25891 (immutable)
+- Defect class: test (docs wording pinned by `post-implement-sequence-contracts.test.ts`)
+- Discovered by: phase-suite vitest under `HOME=$FH` (`src/commands/project src/providers/identity src/commands/help-snapshots.test.ts src/validation src/commands/init/tools/shared src/commands/state`)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10 (`used_attempts: 1` preserved; `pending_attempt` cleared by the root after validation)
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high (exact target, no route change)
+- Recovery commit: 7f95e2e3c95e1c2c2f391396ca29ce6f4e8b4125 (append-only; ledger reservation plus one re-pinned string)
+- Verification: focused 66/66 and phase suite 3188/3188 before the commit and on the committed head; control-plane 287/287
+- Root validation: marker status `completed`, event id, original request/task/commit, target and reservation head all match the report; original history unchanged.
 
 ## Phase 3: Learning producers and archive identity
 
@@ -539,11 +621,12 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Date       | Phase/Task | Deviation                                                                                                               | Reason                                                                                                                 | Source of truth now              | Follow-up                                                                                         |
+| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 2026-10-12 | p02-t02    | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted | Code and `cli-reference.md`      | p02-t06 writers pass the stamp; docs updated in p02-t07                                           |
+| 2026-10-12 | p02-t04    | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                     | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                     | Code (`complete-state/index.ts`) | None                                                                                              |
+| 2026-10-12 | p02-t04    | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                | Existing completion tests depend on journal-less projects                                                              | Code                             | p04-t01 probes exercise journal-bearing projects only                                             |
+| 2026-10-12 | p02-t05    | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                   | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran       | Commit 29ba174eb                 | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories |
 
 ## Test Results
 
