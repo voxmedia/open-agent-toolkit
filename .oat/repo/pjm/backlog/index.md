@@ -4,6 +4,12 @@
 
 ## Curated Overview
 
+- 2026-10-12: the `artifact-cleanup` project (lockstep 0.3.22) shipped the
+  readable-artifact contracts and filed six follow-ups:
+  `BL-261012-read-only-journal-lint`, `BL-261012-convert-legacy-journals`,
+  `BL-261012-rename-the-project-retro`, `BL-261012-commit-paths-should-accept`,
+  `BL-261012-oat-wave-execute-writes-into` and
+  `BL-261012-complete-state-json-refusals`.
 - 2026-10-11: the `brief-goal-workflow-modes` project (lockstep 0.3.20; v1 as
   [PR #361](https://github.com/voxmedia/open-agent-toolkit/pull/361), goal seam
   stacked on it) closed

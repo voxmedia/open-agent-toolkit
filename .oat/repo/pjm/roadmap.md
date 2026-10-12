@@ -11,6 +11,8 @@ and title so this map remains readable without a board lookup.
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
+- **`artifact-cleanup` (quick project, implementation complete, final PR pending):** lifecycle artifacts readable for newly archived projects — bounded observations digest, canonical journal format with `oat project journal check` at three boundaries, fixed journal slots, learnings in `project-log.md`, archive retry identity and explicit generations. Shipped at lockstep 0.3.22 with ten decision records (`DR-261012-*`); follow-ups `BL-261012-read-only-journal-lint`, `-convert-legacy-journals`, `-rename-the-project-retro`, `-commit-paths-should-accept`, `-oat-wave-execute-writes-into`, `-complete-state-json-refusals`. Project: artifact-cleanup.
+
 - **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door for existing docs and support the docs-directory convention** — Markdown slice complete: fourteen tasks, main #338 integration, verification, final review/gate and user approval. Broader package-drift, approval-class, pntr automation and external-repository acceptance work remains open. Project record: [Markdown docs bootstrap](../reference/project-summaries/20261002-markdown-docs-bootstrap.md).
 
 - **2026-08-31 execution program (31 external plans, W1–W7)** — W1 merged as PR #262 (CLI 0.2.56); W2 merged as PR #267 (CLI 0.2.57); W3 (workflow durability and containment) merged as PR #269 (CLI 0.2.58); W4 (delivered-project follow-ups) merged as PR #271 (CLI 0.2.59); the Lite workflow merged as PR #264 (CLI 0.2.62); W5 (program-intake follow-ups, ten of eleven lanes; p09 parked) merged as PR #275 (CLI 0.2.63); W6 (truthfulness residue and skill versioning, five lanes) merged as PR #278 (CLI 0.2.64); the bulk `metadata.version` migration (`BL-260904-migrate-bundled-skills-from`) merged as PR #280 (CLI 0.2.65); and W7 (post-program corrective lanes, nineteen of twenty lanes; p16 parked) merged as PR #286 (CLI 0.2.67). The program's composed waves are complete, and `agent-authored-recap` generated its validated program recap at `.oat/repo/reference/explainers/2026-08-31-execution-program-recap/`. Program: `.oat/repo/reference/external-plans/2026-08-31-execution-program.md`.
@@ -26,16 +28,6 @@ and title so this map remains readable without a board lookup.
 <!-- Add planned work here. Format:
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
-
-- **`artifact-cleanup` (planned quick project, not active):** make lifecycle
-  artifacts readable for newly archived projects — a bounded observations
-  digest instead of the verbatim log roll-up in `summary.md`, one canonical
-  journal format with a mode-aware `oat project journal check` at three
-  boundaries, a one-line dispatch run record, fixed journal slots and slimmer
-  templates moved with every writer, `oat-execution-learnings.md` folded into
-  `project-log.md`, and archive retries that cannot create twins. Starts after
-  the `brief-goal-workflow-modes` goal PR lands. Project:
-  `.oat/projects/shared/artifact-cleanup` (design and plan approved 2026-10-11).
 
 - **BL-260724-support-provider-directory: Support provider directory symlinks as full collection sync** — Prefer collection-level links until real divergence, then fall back safely to per-entry sync. Project: tool-pack-scope-provider-truthfulness.
 - **BL-260828-add-project-level-oat-guidance: Add project-level OAT guidance prompt during init and workflow installation** — Add the explicit project-adoption prompt and managed AGENTS.md section without coupling it to user-scope pack placement. Project: tool-pack-scope-provider-truthfulness.
