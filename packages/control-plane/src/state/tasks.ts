@@ -1,6 +1,13 @@
 import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { PhaseProgress, TaskProgress } from '../types';
+import {
+  parsePhaseHeadingLine,
+  parseTaskHeadingLine,
+  readJournalRecords,
+} from './journal-records';
 import { readRecordLines } from './quick-plan-readiness';
+
+export { normalizePhaseId } from './journal-records';
 
 /**
  * Phase and task headings are authored in several spellings across real OAT
@@ -32,16 +39,6 @@ import { readRecordLines } from './quick-plan-readiness';
  * but a consumer keying `progress.phases` by `phaseId` would see a duplicate.
  * Rejecting that authoring shape belongs to plan validation, not here.
  */
-const ORDINARY_PHASE_HEADING_PATTERN = /^## Phase p?(\d+): (.+)$/;
-const CANONICAL_REVISION_PHASE_HEADING_PATTERN = /^## Phase p-rev(\d+): (.+)$/;
-const LEGACY_REVISION_PHASE_HEADING_PATTERN =
-  /^## Revision Phase (?:p-rev)?(\d+): (.+)$/;
-const ORDINARY_TASK_HEADING_PATTERN = /^### Task (p(\d+)-t\d+): (.+)$/;
-const CANONICAL_REVISION_TASK_HEADING_PATTERN =
-  /^### Task (prev(\d+)-t\d+): (.+)$/;
-const LEGACY_REVISION_TASK_HEADING_PATTERN =
-  /^### Task (p-rev(\d+)-t\d+): (.+)$/;
-
 interface MutablePhaseProgress {
   phaseId: string | null;
   declaredPhaseId: string | null;
@@ -49,51 +46,6 @@ interface MutablePhaseProgress {
   total: number;
   completed: number;
   isRevision: boolean;
-}
-
-interface ParsedTaskHeading {
-  taskId: string;
-  phaseId: string;
-  isRevision: boolean;
-}
-
-/**
- * Collapse an authored ordinal to its canonical form: leading zeros are
- * stripped, then the value is padded to `width`. Ordinary phase ids use
- * width 2 (`1` and `01` both become `01`); revision phase ids use width 1
- * (`1` and `01` both become `1`).
- *
- * The normalization is string-only on purpose. Routing the digits through
- * `Number.parseInt` would collapse ordinals past `Number.MAX_SAFE_INTEGER`
- * onto the same value, so two genuinely different phases could normalize to
- * one id and a task could be attributed to the wrong phase.
- */
-function normalizeOrdinal(digits: string, width: number): string {
-  return digits.replace(/^0+(?=\d)/, '').padStart(width, '0');
-}
-
-function ordinaryPhaseId(digits: string): string {
-  return `p${normalizeOrdinal(digits, 2)}`;
-}
-
-function revisionPhaseId(digits: string): string {
-  return `p-rev${normalizeOrdinal(digits, 1)}`;
-}
-
-const ORDINARY_PHASE_ID_PATTERN = /^p(\d+)$/;
-const REVISION_PHASE_ID_PATTERN = /^p-rev(\d+)$/;
-
-/**
- * Normalize one authored phase id (`p1`, `p01`, `p-rev1`, `p-rev01`) to the
- * same canonical id the heading parser produces; anything else is `null`.
- */
-export function normalizePhaseId(token: string): string | null {
-  const revision = token.match(REVISION_PHASE_ID_PATTERN)?.[1];
-  if (revision !== undefined) {
-    return revisionPhaseId(revision);
-  }
-  const ordinary = token.match(ORDINARY_PHASE_ID_PATTERN)?.[1];
-  return ordinary === undefined ? null : ordinaryPhaseId(ordinary);
 }
 
 export interface TaskProgressOptions {
@@ -190,22 +142,20 @@ function parsePhaseProgress(
   return phases.filter((phase) => phase.phaseId !== null);
 }
 
+/**
+ * Completed task ids (normalized) from the shared journal record reader: a
+ * task counts only when its own `### Task` block owns exactly one
+ * `**Status:**` line and that line reads `completed`. A fenced example heading
+ * opens no block, and a status under the next heading of equal or higher
+ * level is never owned by the previous task.
+ */
 function parseCompletedTaskIds(implementationContent: string): Set<string> {
   const completedTasks = new Set<string>();
-  let currentTaskId: string | null = null;
-
-  for (const line of implementationContent.split('\n')) {
-    const taskHeading = parseTaskHeading(line);
-    if (taskHeading) {
-      currentTaskId = taskHeading.taskId;
-      continue;
-    }
-
-    if (currentTaskId && /^\*\*Status:\*\*\s+completed$/.test(line.trim())) {
-      completedTasks.add(currentTaskId);
+  for (const task of readJournalRecords(implementationContent).tasks) {
+    if (task.status === 'completed') {
+      completedTasks.add(task.taskId);
     }
   }
-
   return completedTasks;
 }
 
@@ -217,75 +167,8 @@ function parseCurrentTaskId(implementationContent: string): string | null {
     : null;
 }
 
-function parsePhaseHeading(
-  line: string,
-): Pick<
-  MutablePhaseProgress,
-  'declaredPhaseId' | 'name' | 'isRevision'
-> | null {
-  // Revision spellings are matched first; `## Phase p-rev1:` cannot satisfy
-  // the ordinary pattern (`p?` must be followed by digits), so the order is
-  // defensive rather than load-bearing.
-  const canonicalRevisionMatch = line.match(
-    CANONICAL_REVISION_PHASE_HEADING_PATTERN,
-  );
-  if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
-    return {
-      declaredPhaseId: revisionPhaseId(canonicalRevisionMatch[1]),
-      name: canonicalRevisionMatch[2],
-      isRevision: true,
-    };
-  }
-
-  const legacyRevisionMatch = line.match(LEGACY_REVISION_PHASE_HEADING_PATTERN);
-  if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
-    return {
-      declaredPhaseId: revisionPhaseId(legacyRevisionMatch[1]),
-      name: legacyRevisionMatch[2],
-      isRevision: true,
-    };
-  }
-
-  const phaseMatch = line.match(ORDINARY_PHASE_HEADING_PATTERN);
-  return phaseMatch?.[1] && phaseMatch[2]
-    ? {
-        declaredPhaseId: ordinaryPhaseId(phaseMatch[1]),
-        name: phaseMatch[2],
-        isRevision: false,
-      }
-    : null;
-}
-
-function parseTaskHeading(line: string): ParsedTaskHeading | null {
-  const canonicalRevisionMatch = line.match(
-    CANONICAL_REVISION_TASK_HEADING_PATTERN,
-  );
-  if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
-    return {
-      taskId: canonicalRevisionMatch[1],
-      phaseId: revisionPhaseId(canonicalRevisionMatch[2]),
-      isRevision: true,
-    };
-  }
-
-  const legacyRevisionMatch = line.match(LEGACY_REVISION_TASK_HEADING_PATTERN);
-  if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
-    return {
-      taskId: legacyRevisionMatch[1],
-      phaseId: revisionPhaseId(legacyRevisionMatch[2]),
-      isRevision: true,
-    };
-  }
-
-  const ordinaryMatch = line.match(ORDINARY_TASK_HEADING_PATTERN);
-  return ordinaryMatch?.[1] && ordinaryMatch[2]
-    ? {
-        taskId: ordinaryMatch[1],
-        phaseId: ordinaryPhaseId(ordinaryMatch[2]),
-        isRevision: false,
-      }
-    : null;
-}
+const parsePhaseHeading = parsePhaseHeadingLine;
+const parseTaskHeading = parseTaskHeadingLine;
 
 /**
  * The phases inside an active scope, in plan document order. A `null` scope
