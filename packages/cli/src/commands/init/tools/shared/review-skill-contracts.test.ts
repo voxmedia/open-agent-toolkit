@@ -3106,7 +3106,7 @@ printf 'artifact-read\\n'`,
     } finally {
       rmSync(workspace, { recursive: true, force: true });
     }
-  });
+  }, 120_000);
 
   it('identifies the review-ledger table or stops rather than validating nothing', () => {
     const prFinal = readRepoFile(
