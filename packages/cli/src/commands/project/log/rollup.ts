@@ -325,10 +325,17 @@ export function renderProjectLogDigest(
   const judgments = parsed.entries
     .filter((entry): entry is JudgmentEntry => entry.class === 'judgment')
     .sort(compareDigestEntries(ids));
-  const byProducer: ProjectLogDigestReport['byProducer'] = {};
+  // A Map, not an object literal: an origin is caller-supplied text, and a
+  // name such as `__proto__` must count like any other, never reach
+  // `Object.prototype`.
+  const producerCounts = new Map<
+    string,
+    { rendered: number; omitted: number }
+  >();
   const tally = (producer: string, key: 'rendered' | 'omitted'): void => {
-    byProducer[producer] ??= { rendered: 0, omitted: 0 };
-    byProducer[producer][key] += 1;
+    const counts = producerCounts.get(producer) ?? { rendered: 0, omitted: 0 };
+    counts[key] += 1;
+    producerCounts.set(producer, counts);
   };
   let structural = 0;
   for (const entry of parsed.entries) {
@@ -378,7 +385,9 @@ export function renderProjectLogDigest(
       malformed: parsed.grammarViolations.length,
     },
     omittedEntries,
-    byProducer,
+    // `Object.fromEntries` defines own data properties, so every origin,
+    // `__proto__` included, serializes as an ordinary key.
+    byProducer: Object.fromEntries(producerCounts),
   };
   if (judgments.length === 0) {
     return { body: undefined, report };

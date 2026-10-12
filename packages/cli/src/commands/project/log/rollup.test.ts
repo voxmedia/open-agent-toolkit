@@ -803,6 +803,42 @@ Recommendation: Warm the cache first.
       },
     );
 
+    it('counts an origin named __proto__ as an ordinary producer', async () => {
+      const { root, logPath } = await createRepo();
+      const entry = (origin: string, source: string, area: string): string => `
+### 2026-07-11 · project · friction · ${area}
+
+**Category:** gotcha
+**Source:** ${source}
+**Origin:** ${origin}
+**Recorded:** 2026-07-11T10:00:00Z
+
+Observation: ${area} observed.
+`;
+      await writeFile(
+        logPath,
+        `# Project Log: demo\n\n## Entries\n${entry('__proto__', 'obs-1', 'reserved origin')}${entry('oat-project-autonomous', 'obs-2', 'ordinary origin')}`,
+        'utf8',
+      );
+
+      const result = await rollupProjectLog({
+        repoRoot: root,
+        home: join(root, 'home'),
+      });
+
+      expect(Object.prototype).not.toHaveProperty('rendered');
+      expect(Object.prototype).not.toHaveProperty('omitted');
+      const byProducer = (
+        result as { digest: { byProducer: Record<string, unknown> } }
+      ).digest.byProducer;
+      expect(Object.hasOwn(byProducer, '__proto__')).toBe(true);
+      expect(JSON.parse(JSON.stringify(byProducer))).toEqual(
+        JSON.parse(
+          '{"__proto__":{"rendered":1,"omitted":0},"oat-project-autonomous":{"rendered":1,"omitted":0}}',
+        ),
+      );
+    });
+
     it('is within bounds on a small log in both versions (accepted neighbor)', async () => {
       const { root, summaryPath } = await createRepo();
 
