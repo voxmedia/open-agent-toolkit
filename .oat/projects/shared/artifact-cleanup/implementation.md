@@ -28,7 +28,7 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | in_progress | 5     | 0/5       |
 | Phase 2 | pending     | 7     | 0/7       |
-| Phase 3 | pending     | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
 **Total:** 19/26 tasks completed
@@ -239,8 +239,9 @@ oat_generated: false
 
 ## Phase 2: Journal and lifecycle enforcement
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -248,23 +249,31 @@ oat_generated: false
 - In-phase re-pins, green again at the task that moves them: control-plane progress fixtures unchanged (p02-t01); `help-snapshots.test.ts` (p02-t02, p02-t04); `template-heading-literals.test.ts`, `skills-bundled-docs-contract.test.ts`, `project/new` scaffold tests, `promote.brief.test.ts`, `stamp.test.ts` (p02-t05); `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts` (p02-t06, and p02-t07 if it re-keys prompts).
 - Nothing else may be red at the p02 review.
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- Shared heading-only journal record reader in the control plane (ownership, fence exclusion, identity normalization, raw duplicates) adopted by task-mode progress.
+- `dispatch record --format line` one-line run records with terminal classification and a `--dispatch-stamp` flag.
+- Journal evaluator and `oat project journal check` at `implement-preflight|review|completion` (task and brief/goal rules, placement across the whole journal, run-line terminality, override line grammar, status and `oat_ready_for` agreement, placeholder residue); `complete-state` rechecks the closeout invariant and the evaluator before its write, refuses `journal-missing` for a planned project without a journal, and writes nothing on refusal.
+- Journal templates gain `## Reviews and Gates` and `## Deferred Findings`, drop the implementation log and test table; sixteen writer skills and roles target the slots; the complete skill runs summary staged → `journal check --at completion` → `resume: roll-up`, honors the learnings fingerprint, writes the override line and `oat_pr_status_observed_at`; completion posture docs agree with the evaluator.
+- Eight docs pages describe the slots, run lines, override line and local-only review paths.
 
 **Key files touched:**
 
-- (pending)
+- `packages/control-plane/src/state/{journal-records,tasks}.ts`; `packages/cli/src/commands/project/{dispatch,journal-check,complete-state}/**`; `packages/cli/src/providers/identity/generic-dispatch-record.ts`
+- `.oat/templates/{implementation,implementation-brief}.md`; `.agents/skills/oat-project-{implement,complete,complete-auto,dispatch-subagents,pr-final,pr-progress,reconcile,review-provide,review-receive,review-receive-remote,revise,brief}/**`; `.agents/docs/autonomy-contract.md`
+- `apps/oat-docs/docs/{reference/cli-reference,reference/project-artifacts,reference/project-state-machine,workflows/**}.md`
 
 **Verification:**
 
-- (pending)
+- Per-task scoped vitest under an isolated HOME (phase suite 3188/3188 at the recovered head; fix round 1225/1225, then 1324/1324 at review), `pnpm check` 0 (uncached), `pnpm type-check` 0, validate-skills 0, format:root 0, oat-docs check 0, `sync --scope project --dry-run` clean; five named guards plus the four fix guards proven by the implementer and re-proven by the reviewer; clean walkthrough and failing staged-closeout probe reproduced on the branch dist. Expected red only: `check:skill-bumps` (p04-t04).
+- Review: round 1 (0/0/2/3) and round 2 on the fix delta (0/0/0/0), Fable 5.1 high. Two recovery attempts (`ac-p02-recovery-1`, `-2`, both test re-pins), budget 2/10 used.
 
 **Notes / Decisions:**
 
-- (pending)
+- See the Deviations table (p02-t02 `--dispatch-stamp`, p02-t04 evaluator scope and the journal-less branch now narrowed by p02-t10, p02-t05 `git add -f`).
+- Backlog candidate for p04-t03: `oat internal commit-paths` should accept tracked files under ignored directories.
 
 ### Task p02-t01: Shared journal record reader
 
@@ -429,7 +438,7 @@ oat_generated: false
 - M2 is skill/docs drift against the design's status-agreement rule; the evaluator is right and the complete skill's Step 3.0 plus `lifecycle.md` are aligned by p02-t09. Source of truth: design revision 3 "Validator › Status agreement".
 - L1 converts the recorded p02-t04 deviation ("no journal, no evaluation") into a fail-closed refusal for planned projects; the Deviations row stays as history.
 
-**Next:** fix continuation `cont-ac-p02-fix-1` landed cbaaefbcb, cb94f4338, a81e58d09 (recovery), b1e44cfe6, f577f9ffd, 3607948f4; round 2 on `736be8cfc..3607948f4` pending to reach `passed`.
+**Next:** fix continuation `cont-ac-p02-fix-1` landed cbaaefbcb, cb94f4338, a81e58d09 (recovery), b1e44cfe6, f577f9ffd, 3607948f4; round 2 (`reviews/archived/p02-review-2026-10-12T030234Z.md`, reviewed head `b9f2f8050`) returned 0/0/0/0 and the p02 event is `passed`. Review artifacts are local-only.
 
 ### Task p02-t08: (review) Align receipt placement for task-scoped and revision reviews
 
@@ -563,8 +572,14 @@ oat_generated: false
 
 ## Phase 3: Learning producers and archive identity
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-12
+
+**Expected-red list (frozen 2026-10-12 before dispatch):**
+
+- `pnpm run check:skill-bumps` — phase-crossing red until p04-t04; owner p04-t04.
+- In-phase re-pins, green again at the task that moves them: `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts`, `scaffold.test.ts` (p03-t01); the `archive` suite and `help-snapshots.test.ts` (p03-t02, p03-t03).
+- Nothing else may be red at the p03 review.
 
 ### Phase Summary (fill when phase is complete)
 
@@ -702,13 +717,14 @@ _- Outstanding Items_
 
 **Phase Outcomes:**
 
-| Phase | Verdict | Task commits                                                                             | Review                                                                                                     | Fix rounds              | Reviewer dispatches                                                                                                                                                                                                                                                                                                                                                                 |
-| ----- | ------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110 | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`) | 1 (`cont-ac-p01-fix-1`) | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
+| Phase | Verdict | Task commits                                                                                                                                                                               | Review                                                                                                     | Fix rounds              | Reviewer dispatches                                                                                                                                                                                                                                                                                                                                                                 |
+| ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110                                                                                                   | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`) | 1 (`cont-ac-p01-fix-1`) | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
+| p02   | pass    | b99c55550, c79aa675a, bd6840307, d4e376ed5, 29ba174eb, b578602e2, bd16db569; recovery 7f95e2e3c; review fixes cbaaefbcb, cb94f4338 (+ recovery a81e58d09), b1e44cfe6, f577f9ffd, 3607948f4 | round 1 0/0/2/3 (`p02-review-2026-10-12T024507Z.md`), round 2 0/0/0/0 (`p02-review-2026-10-12T030234Z.md`) | 1 (`cont-ac-p02-fix-1`) | `ac-p02-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p02-review-1`, `ac-p02-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p02                                                                                                                                                                |
 
 **Parallel Groups:** none (sequential plan)
 
-**Outstanding Items:** none after p01.
+**Outstanding Items:** none after p02.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
