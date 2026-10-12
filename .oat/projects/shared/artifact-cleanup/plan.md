@@ -1269,6 +1269,33 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 
 ---
 
+### Task p04-t26: (gate follow-up) Owner-scoped claim and cleanup for first archives
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (first archives (generation 1) use the same exclusive claim as successors: the pending `.oat-archive-source.json` is created exclusively with the owner token before the copy; a failed copy's cleanup removes only what this call claimed (`removePath(archivePath)` never deletes another call's completed archive); a path completed by another call refuses `archive-generation-claim-held` without writes; an interrupted first archive leaves a pending allocation that the retry path resumes or takes over exactly as a successor does; the empty-directory reuse and damaged-candidate checks stay green)
+- Modify: `archive-retry-identity.test.ts` (overlapping first archives: B pauses before its allocation via the `ensureDir` barrier, A completes g1 and removes the source, B resumes → A's g1 byte-identical and B refuses without writes; interrupted-g1 resume still completes; control: pre-fix cleanup removes A's completed g1)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` only if the recovery wording for an interrupted first archive changes
+
+**Step 1: Understand the issue**
+
+Implementer concern after p04-t23: first archives still allocate without a claim, so two overlapping first archives of the same project can end with the failed copy's cleanup removing the archive the other call just completed (same D11 immutability class as gate H1, generation 1 case).
+
+**Step 2: Implement fix**
+
+Same claim mechanism for generation 1; cleanup owner-scoped everywhere.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`; the overlapping-first-archive regression fails with the claim neutralized and passes restored; interrupted-g1 resume and empty-directory reuse unchanged.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t26): owner-scoped claim and cleanup for first archives`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |

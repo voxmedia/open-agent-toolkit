@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
 | Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 25    | 22/25     |
+| Phase 4 | in_progress | 26    | 25/26     |
 
-**Total:** 54/57 tasks completed
+**Total:** 57/58 tasks completed
 
 ---
 
@@ -1350,19 +1350,62 @@ oat_generated: false
 
 ### Task p04-t23: (gate) Claim a generation exclusively before writing or clearing its allocation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6c05e7699
+
+**Outcome:**
+
+- Successor allocations are created exclusively with an owner token; anything written at the path after evaluation refuses `archive-generation-claim-held` with nothing written (pending by another call, or completed by another call); resume takes over only a still-pending allocation and re-reads ownership; clearing and finalizing require the token, so a call never deletes or overwrites another call's generation.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `project-artifacts.md`
+
+**Verification:**
+
+- archive 248/248; docs, lint, type-check 0; controls: pre-fix code and exclusive-create-removed both let B clear A's g2 (ENOENT instead of claim-held)
 
 ---
 
 ### Task p04-t24: (gate) Parse scope-qualified generation names end to end
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 43f979f29
+
+**Outcome:**
+
+- One naming contract `formatArchiveLocalName` (`<slug>[-gN][-<scope>]`) shared by the writer and `parseArchiveSnapshotName` (now also `familyName`, `scope`); by-name selection: exact snapshot, full generation name, then family or base project (latest generation, then date); `sync demo-local` → `demo-g2-local`, `sync demo` restores every family of `demo`; literal `my-g2-project` stays its own project; docs state the residual ambiguity.
+
+**Files changed:**
+
+- `archive-utils.ts`, `sync-runner.ts`, `archive-utils.test.ts`, `sync-runner.test.ts`, `archive-retry-identity.test.ts`, `lifecycle.md`, `oat-directory-structure.md`, `project-artifacts.md`
+
+**Verification:**
+
+- archive + repo/archive 254/254; docs 0; control: scope group removed from the pattern fails 3 tests
 
 ---
 
 ### Task p04-t25: (gate) Refuse duplicate or misplaced plan task records before accepting journal evidence
+
+**Status:** completed
+**Commit:** 753f046b9
+
+**Outcome:**
+
+- `checkPlanRecords` refuses `plan-task-duplicate` and `plan-task-misplaced` at the plan.md line, owned by `oat-project-plan`, before any journal evidence is matched and outside every override-eligibility set; `complete-state` refuses both variants with `state.md` unchanged; valid and missing-commit neighbours unchanged.
+
+**Files changed:**
+
+- `rules.ts`, `types.ts`, `journal-check/__tests__/fixtures.ts`, `evaluator.test.ts`, `complete-state/journal.test.ts`
+
+**Verification:**
+
+- journal-check + complete-state 82/82; all project commands 1712/1712; control: `checkPlanRecords` removed accepts both malformed plans
+
+---
+
+### Task p04-t26: (gate follow-up) Owner-scoped claim and cleanup for first archives
 
 **Status:** pending
 **Commit:** -
@@ -1423,6 +1466,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | 2026-10-12 | p04-t19     | `quoted-evidence` opt-out applies only to the inline-code slot rule; slot detection ignores other code spans on the line                                                                                                                                                                                      | Keeps the p02 prose heuristics and this journal's L531 accepted                                                             | Code (`rules.ts`)                                                                 | None                                                                                                              |
 | 2026-10-12 | p04-t20     | Prose fix extended to `brief-contract.md` and three docs pages; pins live in `learning-producer-contracts.test.ts`; a branch-CLI test covers the existing-log write                                                                                                                                           | Same claim appeared there; those skills are already bumped in this PR                                                       | Skills, docs, tests                                                               | None                                                                                                              |
 | 2026-10-12 | p04-t21     | PR body is carried across the archive in a temp file; a resumed synced archive run that carries no body skips the PR body sync with a report line instead of stopping                                                                                                                                         | Archives retain no `pr/` (p04-t13); the body exists only in the active project before Step 8                                | Skill prose (`oat-project-complete` Step 7, 11, 11.5) and `closeout-skills.md`    | None; if the resume sync must stay mandatory, source the body from `PROJECT_LINKS_PIN_COMMIT` on the retained ref |
+| 2026-10-12 | p04-t23     | A completed archive found where this call expected a vacant successor path refuses `archive-generation-claim-held` rather than being reused; an identical retry afterwards reuses it through the normal retry path                                                                                            | Refusing writes nothing                                                                                                     | Code and `project-artifacts.md`                                                   | p04-t26 extends the claim to first archives (implementer concern)                                                 |
 
 ## Reviews and Gates
 
@@ -1538,7 +1582,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - M1 is a composition gap between p04-t15 (parser) and p04-t16 (writer) for `…-gN-<scope>` names.
 - M2 restores D5's raw plan-record checks (duplicate identities, misplaced tasks).
 
-**Next:** p04-t23..p04-t25 via continuation `cont-ac-ext-fix-2`; narrowed final round 6; gate attempt 2 of generation 2.
+**Next:** p04-t23 (6c05e7699), p04-t24 (43f979f29), p04-t25 (753f046b9) landed via `cont-ac-ext-fix-2`, root-verified; the gate's two probes no longer reproduce against the rebuilt dist. The implementer's concern (first archives still cleanup-unsafe under overlap) is p04-t26 via `cont-ac-ext-fix-3`; then narrowed final round 6 and gate attempt 2 of generation 2.
 
 ## Deferred Findings
 
