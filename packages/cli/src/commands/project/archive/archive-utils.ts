@@ -2982,8 +2982,12 @@ export async function archiveProjectOnCompletion(
       await copyProjectDirectory(
         options.projectPath,
         archivePath,
+        // Archive-owned entries are never copied from the source: a source
+        // reopened by copying its archive back would otherwise overwrite this
+        // generation's pending allocation with its predecessor's identity.
         (_sourcePath, relativePath) =>
-          !ARCHIVE_RETENTION_EXCLUSIONS.includes(relativePath),
+          !ARCHIVE_RETENTION_EXCLUSIONS.includes(relativePath) &&
+          !ARCHIVE_OWNED_ENTRIES.includes(relativePath),
       );
       await writeArchiveSnapshotMetadata(archivePath, {
         projectName: options.projectName,

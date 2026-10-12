@@ -19,6 +19,7 @@ import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { defaultGitRunner } from '@commands/project/sync/git';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
+import { copyDirectory } from '@fs/io';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -1266,6 +1267,72 @@ describe('explicit archive generations (archive-generation-authorization)', () =
       'demo',
       'demo-g2',
     ]);
+  });
+
+  it('never copies the predecessor metadata of a source reopened from its archive over the pending allocation', async () => {
+    const fixture = await createFixture();
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    // Reopen by copying the generation-1 archive back, metadata included.
+    await cp(first.archivePath, fixture.projectPath, { recursive: true });
+    await writeFile(join(fixture.projectPath, 'state.md'), '# reopened\n');
+    expect(
+      existsSync(join(fixture.projectPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME)),
+    ).toBe(true);
+    const generationPath = join(fixture.archiveRoot, 'demo-g2');
+    const admitted: string[] = [];
+
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: REASON }),
+        {
+          ...stubS3(),
+          timestamp: () => '2026-09-05T09:00:00Z',
+          // The production copy with the production filter, interrupted
+          // only after every admitted entry has been written.
+          copyDirectory: vi.fn(async (source, destination, filter) => {
+            await copyDirectory(
+              source,
+              destination,
+              async (sourcePath, relativePath) => {
+                const keep = filter
+                  ? await filter(sourcePath, relativePath)
+                  : true;
+                if (keep) admitted.push(relativePath);
+                return keep;
+              },
+            );
+            throw new Error('injected copy interruption');
+          }),
+        },
+      ),
+    ).rejects.toThrow('injected copy interruption');
+    expect(admitted).toContain('state.md');
+    expect(admitted).not.toContain(ARCHIVE_SNAPSHOT_METADATA_FILENAME);
+    expect(await readMetadata(generationPath)).toEqual(
+      expect.objectContaining({
+        snapshotName: '20260905-demo-g2',
+        generation: 2,
+        predecessor: '20260901-demo',
+        allocation: 'pending',
+      }),
+    );
+
+    const retried = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-07T09:00:00Z' },
+    );
+    expect(retried.archivePath).toBe(generationPath);
+    expect(retried.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
+    expect(await readMetadata(generationPath)).toEqual(
+      expect.objectContaining({ generation: 2, predecessor: '20260901-demo' }),
+    );
+    expect(await readMetadata(generationPath)).not.toHaveProperty('allocation');
+    expect(await readMetadata(first.archivePath)).toEqual(
+      expect.objectContaining({ snapshotName: '20260901-demo', generation: 1 }),
+    );
   });
 
   it('treats a replayed request as the same generation and a later changed request as the next', async () => {
