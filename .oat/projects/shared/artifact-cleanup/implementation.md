@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p04-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,21 +17,21 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: p04-t05`.
+> - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 5     | 4/5       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 12    | 12/12     |
+| Phase 3 | complete | 13    | 13/13     |
+| Phase 4 | complete | 5     | 5/5       |
 
-**Total:** 36/37 tasks completed
+**Total:** 37/37 tasks completed
 
 ---
 
@@ -881,30 +881,34 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
 - `pnpm run check:skill-bumps` — red until p04-t04 lands inside this phase; nothing else may be red at any point, and p04-t04's full gate run must be entirely green before the phase closes.
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- Fresh lifecycle probes across quick, lite, brief and goal (229 assertions, protected surfaces byte-identical, eleven named guards run by real title) accept the phase-1 to phase-3 contracts; disabled-log and legacy-learning rows proven agent-run.
+- Documentation audit (root `AGENTS.md`, `project-artifacts.md`), ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, and the full Definition-of-Done gate run green with no expected red remaining.
 
 **Key files touched:**
 
-- (pending)
+- `AGENTS.md`, `apps/oat-docs/docs/reference/project-artifacts.md`; `.oat/repo/reference/decisions/DR-261012-*`; `.oat/repo/pjm/backlog/items/BL-261012-*`; 21 `.agents/skills/*/SKILL.md`; five `package.json` and `public-package-versions.json`; three pin tests
 
 **Verification:**
 
-- (pending)
+- Fifteen gates exit 0 on the committed head (forced uncached tests 8807 + 287 + 61, smoke 163, skills 700, scripts 1, lint, format, check:skill-bumps 21, release gates, build:docs); probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` (`out/results.txt`, `out/guards.txt`).
+- Review: round 1 (0/0/1/1), Fable 5.1 high; M1 fixed as p04-t05 and root-verified, L1 fixed by the root (legacy journal sections removed, Final Summary written); the final integrated review is the independent check of the fix delta.
 
 **Notes / Decisions:**
 
-- (pending)
+- Pre-existing conflict filed, not fixed: `oat-wave-execute` writes its synthesis into the summary's observations section that roll-up now owns (`BL-261012-oat-wave-execute-writes-into`).
+- This project's own journal passes the shipped validator once the Step 16 pointers and statuses settle.
 
 ### Task p04-t01: Fresh lifecycle probes per mode
 
@@ -1000,12 +1004,24 @@ oat_generated: false
 
 - L1: this project's own journal carried the pre-change template's `## Implementation Log` and `## Test Results` sections and a placeholder `## Final Summary`, which the shipped validator refuses as `template-residue`. Fixed by the root in the receive commit: both dropped sections removed, `## Final Summary` written from observed facts. The remaining `journal check --at completion` reasons (journal status, phase status, state status) are the expected in-progress disagreements that Step 16 settles.
 
-**Next:** execute p04-t05 as a bounded fix continuation of the p04 implementer; root-verify the delta (evidence pointer and `out/guards.txt`) and let the final integrated review cover it.
+**Next:** p04-t05 landed b7c2eeb29 (continuation `cont-ac-p04-fix-1`), root-verified; the p04 event is `passed` with the final integrated review as the independent check of the fix delta. Review artifacts are local-only.
 
 ### Task p04-t05: (review) Correct the p04-t01 guard evidence and make the guard runs real
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b7c2eeb29
+
+**Outcome:**
+
+- `scripts/guards.sh` (gitignored evidence) runs the eleven named guards by real file and exact title, fails on zero matches, and writes `out/guards.txt` (11/11 matched, all exit 0); the p04-t01 entry cites `out/results.txt` and `out/guards.txt` and states the invocation method. Root-verified: diff is two lines inside the p04-t01 block; both evidence files present.
+
+**Files changed:**
+
+- `.oat/projects/shared/artifact-cleanup/implementation.md` (p04-t01 block only)
+
+**Verification:**
+
+- `guards.sh` exit 0 under a fake HOME; `git status --short` clean
 
 ---
 
@@ -1032,10 +1048,11 @@ _- Outstanding Items_
 | p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110                                                                                                   | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`)                             | 1 (`cont-ac-p01-fix-1`)                      | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
 | p02   | pass    | b99c55550, c79aa675a, bd6840307, d4e376ed5, 29ba174eb, b578602e2, bd16db569; recovery 7f95e2e3c; review fixes cbaaefbcb, cb94f4338 (+ recovery a81e58d09), b1e44cfe6, f577f9ffd, 3607948f4 | round 1 0/0/2/3 (`p02-review-2026-10-12T024507Z.md`), round 2 0/0/0/0 (`p02-review-2026-10-12T030234Z.md`)                             | 1 (`cont-ac-p02-fix-1`)                      | `ac-p02-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p02-review-1`, `ac-p02-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p02                                                                                                                                                                |
 | p03   | pass    | f0334271a, ed330bbab, 587539d06; review fixes 60d10eb8b, 186ef8752, 8047d32a4, 4c138a9cc, 5a975c474, 03242c88b, a6a9950a5; polish a25740630, a9af1a3ce, c8fb502ee                          | round 1 0/0/3/5 (`p03-review-2026-10-12T035735Z.md`), round 2 0/0/0/3 (`p03-review-2026-10-12T042217Z.md`); round-2 Lows root-verified | 2 (`cont-ac-p03-fix-1`, `cont-ac-p03-fix-2`) | `ac-p03-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p03-review-1`, `ac-p03-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p03                                                                                                                                                                |
+| p04   | pass    | c5606d7eb, 8a8a75022, 2e07f84b1, 8fbda566e; review fix b7c2eeb29                                                                                                                           | round 1 0/0/1/1 (`p04-review-2026-10-12T051738Z.md`); fix root-verified                                                                | 1 (`cont-ac-p04-fix-1`)                      | `ac-p04-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p04-review-1`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p04                                                                                                                                                                                   |
 
 **Parallel Groups:** none (sequential plan)
 
-**Outstanding Items:** none after p03.
+**Outstanding Items:** none after p04; final integrated review, configured exit gate and the closeout sequence follow.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
