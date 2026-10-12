@@ -583,7 +583,11 @@ project (or keeps it until an archive succeeds), commits the completion
 bookkeeping, and pushes it. A yes to the PR question, or
 `workflow.createPrOnComplete: true` when no PR is tracked, creates a new PR
 against `main`. If a PR is already open, the skill updates its description
-with `gh pr edit` when archiving or for a synced project. A summary refresh
+with `gh pr edit` when archiving or for a synced project. Archives keep no
+`pr/` directory, so when archiving the skill carries the regenerated PR body in
+a temporary file until the PR is created or updated; a run that resumes an
+interrupted archive has no such body and reports that it skipped the
+description sync. A summary refresh
 runs `oat-project-summary`, with its own commit and decision promotion, and an
 archive runs `oat project archive`, including an S3 upload when
 `archive.s3SyncOnComplete` is enabled.

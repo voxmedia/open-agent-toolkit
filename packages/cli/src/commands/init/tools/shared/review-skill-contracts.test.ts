@@ -3499,6 +3499,82 @@ printf 'artifact-read\\n'`,
     );
   });
 
+  it('carries the archive-completion PR body across the archive instead of reading pr/ from it', () => {
+    const content = readFileSync(
+      repoFilePath('.agents/skills/oat-project-complete/SKILL.md'),
+      'utf8',
+    );
+    const stepEight = content.indexOf('### Step 8: Archive Project');
+    const afterArchive = content.slice(stepEight);
+    // The archive retains no pr/ (one retention set), so nothing after Step 8
+    // may locate the PR body under the archive or the archived PROJECT_PATH.
+    expect(afterArchive).not.toContain('`{ARCHIVE_PATH}/pr/project-pr-*.md`');
+    expect(afterArchive).not.toContain('`{PROJECT_PATH}/pr/project-pr-*.md`');
+    expect(afterArchive).not.toContain(
+      'Locate the PR-description artifact under the current `PROJECT_PATH`',
+    );
+    expect(afterArchive).not.toContain(
+      'Update the archived PR-description artifact',
+    );
+    expect(afterArchive.match(/TMP_BODY="\$PR_BODY_FILE"/g)).toHaveLength(2);
+    expect(afterArchive).toContain(
+      '`PR description not synced: this resumed archive run carries no archive-aware body; update the tracked PR description manually.`',
+    );
+
+    // The carry block runs in Step 7, before Step 8 archives.
+    const block = [...content.matchAll(/^```bash\n([\s\S]*?)\n```$/gm)]
+      .map((match) => match[1]!)
+      .find((candidate) => candidate.includes('PR_BODY_FILE=$(mktemp'));
+    expect(block).toBeDefined();
+    expect(content.indexOf(block!)).toBeGreaterThan(
+      content.indexOf('### Step 7: Generate PR Description'),
+    );
+    expect(content.indexOf(block!)).toBeLessThan(stepEight);
+
+    const scratch = mkdtempSync(join(tmpdir(), 'oat-pr-body-carry-'));
+    try {
+      const artifact = join(scratch, 'project-pr-2026-10-12.md');
+      const run = (shouldArchive: string, text: string) => {
+        writeFileSync(artifact, text, 'utf8');
+        return spawnSync(
+          '/bin/bash',
+          ['-c', `${block}\nprintf '%s' "$PR_BODY_FILE"`],
+          {
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              TMPDIR: scratch,
+              SHOULD_ARCHIVE: shouldArchive,
+              IS_DURABLE_PROJECT: 'true',
+              PR_DESCRIPTION_PATH: artifact,
+            },
+          },
+        );
+      };
+      const carried = run(
+        'true',
+        '---\noat_generated: true\n---\n\n# feat: ship it\n\nBody.\n',
+      );
+      expect(carried.status, carried.stderr).toBe(0);
+      expect(readFileSync(carried.stdout, 'utf8')).toBe(
+        '# feat: ship it\n\nBody.\n',
+      );
+      const refused = run(
+        'true',
+        '---\noat_generated: true\n---\nno heading\n',
+      );
+      expect(refused.status).toBe(1);
+      expect(refused.stderr).toContain(
+        'does not start with a markdown heading',
+      );
+      const declined = run('false', '# feat: kept\n');
+      expect(declined.status, declined.stderr).toBe(0);
+      expect(declined.stdout).toBe('');
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  });
+
   it('always publishes final synced links for new and existing completion PRs', () => {
     const content = readFileSync(
       repoFilePath('.agents/skills/oat-project-complete/SKILL.md'),

@@ -1190,6 +1190,36 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
+**Carry the PR body across the archive (archive completion only).** Step 8
+copies the project into an archive that never retains `pr/` (review and PR
+evidence are not archived) and then removes the active project, so after Step 8
+the PR-description artifact exists nowhere on disk. Once the artifact above is
+final and before Step 8 runs, copy its frontmatter-stripped body to a
+run-scoped temporary file recorded as `PR_BODY_FILE`:
+
+```bash
+PR_BODY_FILE=""
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
+  test -f "$PR_DESCRIPTION_PATH" || exit 1
+  PR_BODY_FILE=$(mktemp "${TMPDIR:-/tmp}/oat-pr-body.XXXXXX") || exit 1
+  awk 'NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+    in_frontmatter { if ($0 == "---") in_frontmatter = 0; next }
+    !started && /^[[:space:]]*$/ { next }
+    { started = 1; print }' "$PR_DESCRIPTION_PATH" > "$PR_BODY_FILE" || exit 1
+  head -n 1 "$PR_BODY_FILE" | grep -q '^# ' || {
+    echo "The PR body carried from $PR_DESCRIPTION_PATH does not start with a markdown heading; refusing to archive." >&2
+    exit 1
+  }
+fi
+```
+
+Every later read or edit of an archive completion's PR body uses
+`PR_BODY_FILE`: the Step 8 recap-link rewrite, the Step 8.6 links block, and
+Steps 11 and 11.5. Never read `pr/` from `ARCHIVE_PATH`. A resumed archive run
+(`SHARED_ARCHIVE_RESUME="true"` or `SYNCED_ARCHIVE_RESUME="true"`) skips this
+step, so it carries no body: treat an unset `PR_BODY_FILE` as empty
+(`${PR_BODY_FILE:-}`). Non-archive completion keeps `PR_DESCRIPTION_PATH`.
+
 #### Step 7.5: Publish Synced Project Pin Source
 
 For `synced`, publish only after Step 7 has finished every pre-archive project
@@ -1377,9 +1407,10 @@ Rewrite recap links in the tracked summary export and the PR description body fr
 Use a repository-relative path under
 `.oat/repo/reference/project-recaps/` and a blob URL on the current head branch
 while the PR is open. If `summaryExportFile` is non-null, update its concise
-`Explainer Outcome` recap link. Update the archived PR-description artifact
+`Explainer Outcome` recap link. Update the carried PR body (`PR_BODY_FILE`)
 used by Step 11 or 11.5 so its recap reference points to the same tracked HTML page.
-Omit either link when its containing artifact does not exist.
+Omit either link when its containing artifact does not exist (an empty
+`PR_BODY_FILE` on a resumed archive run).
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
@@ -1392,8 +1423,12 @@ Run this for every synced completion after the final project ref or archive SHA
 is known. It is required even when no project recap was selected and
 `summaryExportFile` is null.
 
-Locate the PR-description artifact under the current `PROJECT_PATH` (which is
-the archive path after Step 8). Render the canonical pinned block:
+Render into the PR body this run publishes. For archive completion that is the
+carried `PR_BODY_FILE` from Step 7 (the archive keeps no `pr/`, so never look
+under `ARCHIVE_PATH`); when `PR_BODY_FILE` is empty on a resumed archive run,
+skip the insertion and let Step 11.5 report the skipped sync. For non-archive
+synced completion it is the active PR-description artifact. Render the
+canonical pinned block:
 
 ```bash
 FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
@@ -1505,7 +1540,9 @@ Expected changes may include:
 - `{PROJECT_PATH}/state.md`
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
-- `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
+- `PR_DESCRIPTION_PATH` (the active PR description artifact, non-archive
+  completion only; an archive completion carries the body in `PR_BODY_FILE`
+  and the archive keeps no `pr/`)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions; synced archive record deletion is already sealed by
@@ -1586,8 +1623,10 @@ The local artifact file contains YAML frontmatter (`---` delimited block at the 
 
 Steps:
 
-1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`.
-2. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
+1. For archive completion, use the carried body: `TMP_BODY="$PR_BODY_FILE"`
+   (Step 7 already stripped and verified it). Otherwise locate the PR
+   description artifact at `PR_DESCRIPTION_PATH`.
+2. For the non-archive artifact, write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
 4. Create the PR from the branch already pushed in Step 10:
 
@@ -1595,7 +1634,9 @@ Steps:
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
 
-5. Clean up the temp file.
+5. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
+   When `gh` is missing or `gh pr create` fails, keep it and report its path
+   in Step 12.
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
@@ -1620,8 +1661,14 @@ Skip this step when:
 
 Steps:
 
-1. Locate the exact PR description artifact. After archive, use
-   `{ARCHIVE_PATH}/pr/project-pr-*.md`. For non-archive synced completion, use
+1. Locate the exact PR description body. After archive, use the carried body:
+   `TMP_BODY="$PR_BODY_FILE"` (Step 7 already stripped and verified it; skip
+   step 2). The archive keeps no `pr/`, so never read `{ARCHIVE_PATH}/pr/`.
+   When `${PR_BODY_FILE:-}` is empty after an archive, the run resumed an
+   archive whose regenerated body was not carried across the interruption: do
+   not fail; skip steps 2 through 5 and print
+   `PR description not synced: this resumed archive run carries no archive-aware body; update the tracked PR description manually.`
+   For non-archive synced completion, use
    `PR_DESCRIPTION_PATH`, require the retained remote ref to contain
    `PROJECT_REF_COMMIT`, and require
    `git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the
@@ -1654,7 +1701,8 @@ Steps:
    fi
    ```
 
-5. Clean up the temp file.
+5. Clean up the temp file, including `PR_BODY_FILE`, once the PR body is
+   updated. When the update failed, keep it for the manual update.
 
 Failure handling:
 
@@ -1716,4 +1764,4 @@ Show user:
   already sealed — and it stays a report, never a completion failure.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
-- If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.
+- If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`), that it was skipped because a resumed archive run carried no body, or warn that the sync failed and surface the retained body path (`PR_BODY_FILE` for archive completion) so the user can update it manually.
