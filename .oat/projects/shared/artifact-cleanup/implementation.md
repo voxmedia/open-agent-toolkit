@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 7     | 7/7       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 12    | 12/12     |
+| Phase 3 | complete | 13    | 13/13     |
+| Phase 4 | complete | 7     | 7/7       |
 
 **Total:** 39/39 tasks completed
 
@@ -881,8 +881,9 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -902,7 +903,7 @@ oat_generated: false
 **Verification:**
 
 - Fifteen gates exit 0 on the committed head (forced uncached tests 8807 + 287 + 61, smoke 163, skills 700, scripts 1, lint, format, check:skill-bumps 21, release gates, build:docs); probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` (`out/results.txt`, `out/guards.txt`).
-- Review: round 1 (0/0/1/1), Fable 5.1 high; M1 fixed as p04-t05 and root-verified, L1 fixed by the root (legacy journal sections removed, Final Summary written); the final integrated review is the independent check of the fix delta.
+- Review: round 1 (0/0/1/1), Fable 5.1 high; M1 fixed as p04-t05 and root-verified, L1 fixed by the root (legacy journal sections removed, Final Summary written). Final integrated review: round 1 (0/0/0/3) over the whole branch, its Lows fixed as p04-t06/p04-t07 plus a journal correction; round 2 on the fix delta 0/0/0/0, passed.
 
 **Notes / Decisions:**
 
@@ -1043,7 +1044,7 @@ oat_generated: false
 - L1: the phase-3 summary and the Final Summary said thirteen `archive-*` reason codes; twelve exist. Fixed by the root in the receive commit (journal text only).
 - Deferred Findings ledger: none to disposition; every prior finding was converted and landed.
 
-**Next:** p04-t06 (b0e788e8a) and p04-t07 (046efcd22) landed via `cont-ac-p03-fix-3`; narrowed final round 2 on `e435a3317..046efcd22` pending to reach `passed`; then the configured implementation exit gate and the closeout sequence.
+**Next:** p04-t06 (b0e788e8a) and p04-t07 (046efcd22) landed via `cont-ac-p03-fix-3`; final round 2 (`reviews/archived/final-review-2026-10-12T054613Z.md`, reviewed head `22b2b7d88`, narrowed to the fix delta) returned 0/0/0/0 and the final event is `passed`. Next: the configured implementation exit gate, then the closeout sequence (summary, document, pr) and final HiLL approval.
 
 ### Task p04-t06: (review) Replay-warning docs sentence matches both messages
 
@@ -1107,10 +1108,11 @@ _- Outstanding Items_
 | p02   | pass    | b99c55550, c79aa675a, bd6840307, d4e376ed5, 29ba174eb, b578602e2, bd16db569; recovery 7f95e2e3c; review fixes cbaaefbcb, cb94f4338 (+ recovery a81e58d09), b1e44cfe6, f577f9ffd, 3607948f4 | round 1 0/0/2/3 (`p02-review-2026-10-12T024507Z.md`), round 2 0/0/0/0 (`p02-review-2026-10-12T030234Z.md`)                             | 1 (`cont-ac-p02-fix-1`)                      | `ac-p02-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p02-review-1`, `ac-p02-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p02                                                                                                                                                                |
 | p03   | pass    | f0334271a, ed330bbab, 587539d06; review fixes 60d10eb8b, 186ef8752, 8047d32a4, 4c138a9cc, 5a975c474, 03242c88b, a6a9950a5; polish a25740630, a9af1a3ce, c8fb502ee                          | round 1 0/0/3/5 (`p03-review-2026-10-12T035735Z.md`), round 2 0/0/0/3 (`p03-review-2026-10-12T042217Z.md`); round-2 Lows root-verified | 2 (`cont-ac-p03-fix-1`, `cont-ac-p03-fix-2`) | `ac-p03-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p03-review-1`, `ac-p03-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p03                                                                                                                                                                |
 | p04   | pass    | c5606d7eb, 8a8a75022, 2e07f84b1, 8fbda566e; review fix b7c2eeb29                                                                                                                           | round 1 0/0/1/1 (`p04-review-2026-10-12T051738Z.md`); fix root-verified                                                                | 1 (`cont-ac-p04-fix-1`)                      | `ac-p04-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p04-review-1`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p04                                                                                                                                                                                   |
+| final | pass    | review fixes b0e788e8a, 046efcd22 (+ journal correction e435a3317)                                                                                                                         | round 1 0/0/0/3 (`final-review-2026-10-12T052402Z.md`), round 2 0/0/0/0 (`final-review-2026-10-12T054613Z.md`)                         | 1 (`cont-ac-p03-fix-3`)                      | `ac-final-review-1`, `ac-final-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamp `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high`          |
 
 **Parallel Groups:** none (sequential plan)
 
-**Outstanding Items:** none after p04; final integrated review, configured exit gate and the closeout sequence follow.
+**Outstanding Items:** none; the configured exit gate and the closeout sequence follow the passed final review.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
@@ -1155,7 +1157,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Verification performed:**
 
 - Per-phase scoped vitest under an isolated HOME; eleven named guards proven by implementers and re-proven by reviewers; real-artifact probes on scratch repos with stubbed S3 and gh across quick, lite, brief and goal (229 assertions); p04-t04 gate run: check, type-check, forced uncached tests (8807 + 287 + 61), build, check:skill-bumps (21), release:check-versions, release:validate, build:docs, smoke (163), skills (700), scripts, lint, format, all exit 0.
-- Reviews: p01 (2 rounds), p02 (2), p03 (2), p04 (1 so far), Fable 5.1 high; final integrated review and the configured exit gate follow.
+- Reviews: p01 (2 rounds), p02 (2), p03 (2), p04 (1), final (2), all Fable 5.1 high; the configured exit gate follows.
 
 **Design deltas (if any):**
 
