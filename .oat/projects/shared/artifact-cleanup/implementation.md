@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | in_progress | 3     | 0/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 19/26 tasks completed
+**Total:** 22/26 tasks completed
 
 ---
 
@@ -601,34 +601,62 @@ oat_generated: false
 
 ### Task p03-t01: Unified learning producers and the disabled-log rule (D14)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f0334271a
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- The autonomous, cloud and goal producers share one byte-identical shell function `oat_record_learning` that maps the category to the judgment type and calls `project log append --json` with `--category/--source/--origin` and the source id as `--idempotency-key`; a disabled log yields one warning line and the run continues (D14); no producer creates `oat-execution-learnings.md`; brief-contract §12.3 row and §12.10 replaced; docs updated. Guard `learning-source-identity` proven (category and source arguments removed in turn → contract and real-CLI tests fail; restored).
+
+**Files changed:**
+
+- `.agents/skills/oat-project-autonomous/SKILL.md`, `oat-cursor-cloud-projects/{SKILL.md,references/cursor-cloud-mechanics.md}`, `oat-project-goal/SKILL.md`, `oat-project-brief/references/brief-contract.md`
+- `apps/oat-docs/docs/workflows/advanced/{autonomy,cursor-cloud}.md`, `workflows/projects/closeout/closeout-skills.md`
+- `project/new/scaffold.test.ts`; mechanical: `init/tools/shared/learning-producer-contracts.test.ts` (guard surface), `validation/synced-bookkeeping-sites.json` (anchor moved)
+
+**Verification:**
+
+- validate-skills 0; format:root 0; oat-docs check 0; scoped vitest green; branch-CLI probes: categorized append head lines, replay byte-identical, unknown category exit 1, disabled log one warning / no file / fingerprint `none`
 
 ---
 
 ### Task p03-t02: Archive retry identity and locator finalization
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ed330bbab
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- One read-only `evaluateArchiveRetryIdentity` used by apply and dry-run; archives identified by a manifest hash over retained files (exclusions `reviews/`, `.git`, archive-owned metadata listed once); metadata gains `manifestHash` and `generation`; identical retries reuse snapshot, export identity, S3 destination and receipt across dates and after source removal; conflicting or ambiguous candidates refuse before any side effect; summary export rewrites `oat-project:` tokens to `oat-archive:<snapshot>#<id>` and neutralizes relative log/learning links. Guard `archive-retry-identity` proven (discovery neutralized → timestamp-suffixed twin); dry-run/apply parity proven with a negative control on the old date derivation.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/{archive-utils.ts,push-runner.ts,archive-utils.test.ts}`, new `archive-retry-identity.test.ts`
+- `apps/oat-docs/docs/reference/{cli-reference,project-artifacts}.md`
+
+**Verification:**
+
+- `src/commands/project/archive src/commands/project/log` vitest 487/487 exit 0; synced guards (49aeb5075 recordless retry, completed-ref, stale-source, exact-root) still green
 
 ---
 
 ### Task p03-t03: Explicit archive generations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 587539d06
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- `--new-generation <reason>` ships for shared and local projects: non-empty single-line reason, exactly one latest generation as predecessor, identity and predecessor binding persisted (`allocation: pending`) before any export/copy/S3 side effect so a retry reuses it; `generationRequest` (camelCase; deviation from the plan's `generation_request`) distinguishes a replay from a new generation; dry-run reports without persisting; synced refused. Guard `archive-generation-authorization` proven (predecessor check neutralized → allocation with two candidates).
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/archive/{archive-utils,push-runner,index}.ts`, `index.test.ts`, `archive-retry-identity.test.ts`
+- `apps/oat-docs/docs/reference/{cli-reference,project-artifacts}.md`
+
+**Verification:**
+
+- archive + help-snapshots vitest 291/291 exit 0; phase-3 docs gate `oat-docs check` 0
 
 ---
 
@@ -773,12 +801,14 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
-| Date       | Phase/Task | Deviation                                                                                                               | Reason                                                                                                                 | Source of truth now              | Follow-up                                                                                         |
-| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 2026-10-12 | p02-t02    | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted | Code and `cli-reference.md`      | p02-t06 writers pass the stamp; docs updated in p02-t07                                           |
-| 2026-10-12 | p02-t04    | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                     | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                     | Code (`complete-state/index.ts`) | None                                                                                              |
-| 2026-10-12 | p02-t04    | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                | Existing completion tests depend on journal-less projects                                                              | Code                             | p04-t01 probes exercise journal-bearing projects only                                             |
-| 2026-10-12 | p02-t05    | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                   | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran       | Commit 29ba174eb                 | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories |
+| Date       | Phase/Task | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                 | Source of truth now                              | Follow-up                                                                                         |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| 2026-10-12 | p02-t02    | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp                                                                                                                                                                                       | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted | Code and `cli-reference.md`                      | p02-t06 writers pass the stamp; docs updated in p02-t07                                           |
+| 2026-10-12 | p02-t04    | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                                                                                                                                                                                                           | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                     | Code (`complete-state/index.ts`)                 | None                                                                                              |
+| 2026-10-12 | p02-t04    | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                                                                                                                                                                                                      | Existing completion tests depend on journal-less projects                                                              | Code                                             | p04-t01 probes exercise journal-bearing projects only                                             |
+| 2026-10-12 | p02-t05    | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                                                                                                                                                                                                         | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran       | Commit 29ba174eb                                 | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories |
+| 2026-10-12 | p03-t03    | Snapshot metadata key is `generationRequest` (camelCase) rather than the plan's `generation_request`                                                                                                                                                                                                          | Matches the other metadata keys                                                                                        | Code and `project-artifacts.md`                  | None                                                                                              |
+| 2026-10-12 | p03-t02    | Same-day archives of one slug from two scopes get a scope-qualified dated identity; a non-empty metadata-less occupant at the archive path refuses instead of creating a twin; `.git` excluded from shared/local copies; `--new-generation` with unchanged content resolves to the existing latest generation | Retry identity must be unambiguous (D11); re-pins two #254 tests                                                       | Code and `project-artifacts.md#archive-identity` | Reviewer to confirm; p04-t01 probes                                                               |
 
 ## Test Results
 
