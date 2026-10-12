@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p02-t08
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 14/26 tasks completed
+**Total:** 19/26 tasks completed
 
 ---
 
@@ -429,40 +429,105 @@ oat_generated: false
 - M2 is skill/docs drift against the design's status-agreement rule; the evaluator is right and the complete skill's Step 3.0 plus `lifecycle.md` are aligned by p02-t09. Source of truth: design revision 3 "Validator › Status agreement".
 - L1 converts the recorded p02-t04 deviation ("no journal, no evaluation") into a fail-closed refusal for planned projects; the Deviations row stays as history.
 
-**Next:** execute p02-t08..p02-t12 as a bounded fix continuation of the p02 implementer, then a re-review of the fix delta to reach `passed`.
+**Next:** fix continuation `cont-ac-p02-fix-1` landed cbaaefbcb, cb94f4338, a81e58d09 (recovery), b1e44cfe6, f577f9ffd, 3607948f4; round 2 on `736be8cfc..3607948f4` pending to reach `passed`.
 
 ### Task p02-t08: (review) Align receipt placement for task-scoped and revision reviews
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cbaaefbcb
+
+**Outcome:**
+
+- Evaluator derives a receipt's owning phase from a task-id scope; review-receive Step 7 places `p-revN` receipts in `## Phase p-revN` or `## Reviews and Gates` and task-scoped receipts in the task's phase; two evaluator cases.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/{rules.ts,evaluator.test.ts}`
+- `.agents/skills/oat-project-review-receive/SKILL.md`
+
+**Verification:**
+
+- journal-check, validation, init/tools/shared vitest 1101/1101 exit 0; validate-skills 0; sync dry-run clean; guard neutralized → task-scoped case fails, restored byte-identical
 
 ---
 
 ### Task p02-t09: (review) Completion posture: in_progress is routed back, not accepted
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cb94f4338
+
+**Outcome:**
+
+- Complete skill Step 3.0 ("Phase Status at Completion"): `in_progress` routes back to implement and is not override-eligible; `lifecycle.md` says completion accepts `pr_open` or `complete`. Recovery `ac-p02-recovery-2` (a81e58d09) re-keyed the moved prompt site in `autonomy-contract.md` and added a non-executing call-site row.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md`
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- recovery: `.agents/docs/autonomy-contract.md`, `named-skill-load-contract.test.ts`
+
+**Verification:**
+
+- validate-skills 0; format:root 0; oat-docs check 0; focused 513/513 and phase suite 1222/1222 on the recovered head
 
 ---
 
 ### Task p02-t10: (review) Fail closed when a planned project has no journal at completion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b1e44cfe6
+
+**Outcome:**
+
+- `complete-state` refuses `journal-missing` and writes nothing when `plan.md` exists but `implementation.md` does not; plan-less projects keep the old behavior; reason code added to `types.ts`; one CLI-reference sentence.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/complete-state/{index.ts,journal.test.ts}`
+- `packages/cli/src/commands/project/journal-check/types.ts` (mechanical: reason code)
+- `apps/oat-docs/docs/reference/cli-reference.md` (mechanical: one sentence)
+
+**Verification:**
+
+- complete-state, closeout-check, journal-check, push vitest 192/192 exit 0; guard neutralized → refusal test fails, restored byte-identical
 
 ---
 
 ### Task p02-t11: (review) Evaluate oat_ready_for agreement at completion
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f577f9ffd
+
+**Outcome:**
+
+- At `completion`, journal `oat_ready_for` must be `null` or a closeout skill, else `state-status-disagrees` naming the field.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/{rules.ts,evaluator.test.ts}`
+
+**Verification:**
+
+- journal-check, complete-state vitest 69/69 exit 0; guard neutralized → stale-pointer case fails, restored byte-identical
 
 ---
 
 ### Task p02-t12: (review) Anchor the template-residue brace pattern to placeholder vocabulary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 3607948f4
+
+**Outcome:**
+
+- `BRACE_PLACEHOLDER` matches only the templates' placeholder words or a brace token that starts a list item or follows a `**Label:**` marker; `returns {status, reasons}` accepted, `{Task Name}` refused.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/{rules.ts,evaluator.test.ts}`
+
+**Verification:**
+
+- journal-check, complete-state, project/new vitest 169/169 exit 0; old pattern fails the prose case; disabled pattern fails 3 residue cases; restored byte-identical
 
 ---
 
@@ -480,6 +545,21 @@ oat_generated: false
 - Recovery commit: 7f95e2e3c95e1c2c2f391396ca29ce6f4e8b4125 (append-only; ledger reservation plus one re-pinned string)
 - Verification: focused 66/66 and phase suite 3188/3188 before the commit and on the committed head; control-plane 287/287
 - Root validation: marker status `completed`, event id, original request/task/commit, target and reservation head all match the report; original history unchanged.
+
+### Recovery Event ac-p02-recovery-2
+
+- Phase/task: p02 / p02-t09 (fix continuation `cont-ac-p02-fix-1`)
+- Original request: ac-p02-implementation
+- Original commit: cb94f433817c3affd411de75be008dc16f017db8 (immutable)
+- Defect class: test (stale autonomy prompt-site mapping after Step 3.0 was rewritten; new routing site needed a non-executing call-site row)
+- Discovered by: `review-skill-contracts.test.ts` and `src/validation` under `HOME=$FH`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10 (`used_attempts: 2` preserved; `pending_attempt` cleared by the root after validation)
+- Dispatch target: oat-phase-implementer-claude-claude-opus-5-5-high (exact target, no route change)
+- Recovery commit: a81e58d09ab38e4e419b13788eeedc8a2bb55af7 (append-only: `autonomy-contract.md`, `named-skill-load-contract.test.ts`, ledger reservation)
+- Verification: focused 513/513 and phase suite 1222/1222 before the commit and on the committed head
+- Root validation: marker status `completed`, ids, original commit, target and reservation head match the report; original history unchanged.
 
 ## Phase 3: Learning producers and archive identity
 
