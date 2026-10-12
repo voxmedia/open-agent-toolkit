@@ -297,6 +297,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -314,6 +316,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -350,6 +354,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/worktrees/sc-pinned-cryostat-af7a',
@@ -377,6 +383,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.any(Object),
     );
@@ -412,6 +420,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -438,6 +448,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
         '--dryrun',
       ],
       expect.any(Object),
@@ -534,6 +546,8 @@ describe('oat project archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );

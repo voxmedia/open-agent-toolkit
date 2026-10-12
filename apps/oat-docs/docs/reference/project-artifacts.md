@@ -192,9 +192,13 @@ name, its originating scope, the dated export identity `<YYYYMMDD>-<project>`
 (the summary export file stem and the S3 key), the synced source-ref SHA where
 one applies, the generation (`1` for the first archive), and `manifestHash`.
 The manifest hash covers every retained file of the project as sorted
-`<sha256>  <path>` lines; it excludes the top-level `reviews/` directory (reviews
-are never archived), a synced checkout's `.git`, and the archive-owned
+`<sha256>  <path>` lines; it excludes the top-level `reviews/` and `pr/`
+directories (review and PR evidence are process artifacts and are never
+archived), a synced checkout's `.git`, and the archive-owned
 `.oat-archive-source.json` itself, so a project and its archive hash equal.
+One retention set defines the archive: the local copy, the manifest, the S3
+upload and `oat repo archive sync` all leave out `reviews/`, `pr/` and `.git`,
+so an archive restored from S3 hashes equal to the one that was uploaded.
 
 A retry resolves to that identity before anything is written:
 
@@ -261,10 +265,10 @@ The exported summary finalizes source locators: each
 `oat-project:<project>#<entry-id>` token becomes
 `oat-archive:<YYYYMMDD>-<project>#<entry-id>`, and a relative link to the
 archived-only `project-log.md` or legacy `oat-execution-learnings.md` becomes
-plain text naming the archive identity. A relative link into `reviews/`
-becomes its label plus the review file name, marked local to the project and
-not archived, since reviews are never archived; external links are kept. The
-summary inside the archive keeps its original bytes.
+plain text naming the archive identity. A relative link into `reviews/` or
+`pr/` becomes its label plus the review or PR artifact file name, marked local
+to the project and not archived, since neither is ever archived; external
+links are kept. The summary inside the archive keeps its original bytes.
 
 ## Blockers in state.md
 

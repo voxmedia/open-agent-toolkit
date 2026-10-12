@@ -212,6 +212,8 @@ describe('archive sync runner', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -229,6 +231,8 @@ describe('archive sync runner', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({
         cwd: '/tmp/workspace/open-agent-toolkit',
@@ -255,6 +259,8 @@ describe('archive sync runner', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
         '--dryrun',
       ],
       expect.any(Object),

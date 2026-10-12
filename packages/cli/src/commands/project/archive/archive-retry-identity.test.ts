@@ -13,7 +13,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 
 import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -23,6 +23,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+  S3_ARCHIVE_SYNC_EXCLUDES,
   archiveProjectOnCompletion,
   computeArchiveManifestHash,
   evaluateArchiveRetryIdentity,
@@ -34,6 +35,10 @@ import {
   runArchivePushCommand,
   type ProjectArchivePushCommandDependencies,
 } from './push-runner';
+import {
+  defaultProjectArchiveCommandDependencies,
+  runArchiveSyncCommand,
+} from './sync-runner';
 
 /**
  * Archive retry identity (artifact-cleanup p03-t02, D11).
@@ -144,6 +149,64 @@ function stubS3(options: { failSync?: boolean } = {}) {
     warnings: [] as string[],
   }));
   return { calls, execFile, ensureS3ArchiveAccess };
+}
+
+/**
+ * An in-process `aws` that mirrors `s3 sync` between local directories and
+ * `s3Root` and honors every `--exclude` (aws glob: `*` crosses `/`, matched
+ * against the path relative to the sync source), plus `s3 ls` of a prefix.
+ * Directories whose contents an exclude covers are not created, as S3 holds
+ * no directories.
+ */
+function fakeS3Mirror(s3Root: string): { execFile: ExecFileLike } {
+  const toLocal = (uri: string, cwd: string): string =>
+    uri.startsWith('s3://')
+      ? join(s3Root, uri.slice('s3://'.length))
+      : resolve(cwd, uri);
+  const execFile: ExecFileLike = async (file, args, options) => {
+    const cwd = options?.cwd ?? process.cwd();
+    if (file !== 'aws' || args[0] !== 's3') return { stdout: '', stderr: '' };
+    if (args[1] === 'ls') {
+      const dir = toLocal(args[2]!, cwd);
+      const names = existsSync(dir)
+        ? (await readdir(dir, { withFileTypes: true }))
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => `                           PRE ${entry.name}/`)
+        : [];
+      return { stdout: `${names.join('\n')}\n`, stderr: '' };
+    }
+    if (args[1] === 'sync') {
+      const source = toLocal(args[2]!, cwd);
+      const target = toLocal(args[3]!, cwd);
+      const excludes = args
+        .flatMap((arg, index) => (args[index - 1] === '--exclude' ? [arg] : []))
+        .map(
+          (pattern) =>
+            new RegExp(
+              `^${pattern
+                .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                .replace(/\*/g, '.*')
+                .replace(/\?/g, '.')}$`,
+            ),
+        );
+      const excluded = (relativePath: string): boolean =>
+        excludes.some(
+          (pattern) =>
+            pattern.test(relativePath) || pattern.test(`${relativePath}/x`),
+        );
+      await mkdir(target, { recursive: true });
+      await cp(source, target, {
+        recursive: true,
+        filter: (entry) => {
+          const relativePath = relative(source, entry).split(sep).join('/');
+          return relativePath === '' || !excluded(relativePath);
+        },
+      });
+      return { stdout: '', stderr: '' };
+    }
+    throw new Error(`fake aws: unsupported ${args.join(' ')}`);
+  };
+  return { execFile };
 }
 
 function archiveOptions(
@@ -449,6 +512,97 @@ describe('archive retry identity (archive-retry-identity)', () => {
     expect(retried.s3Path).toBe(first.s3Path);
   });
 
+  it('restores an archive holding PR evidence from S3 and resumes it source-absent as a retry', async () => {
+    const fixture = await createFixture({
+      files: {
+        'state.md': '# state\n',
+        'summary.md': '# Summary\n\nDone.\n',
+        'pr/final.md': '# PR description (never archived)\n',
+        'reviews/review.md': '# review (never archived)\n',
+      },
+    });
+    const s3Root = await scratch('oat-fake-s3-mirror-');
+    const mirror = fakeS3Mirror(s3Root);
+    const ensureS3ArchiveAccess = vi.fn(async () => ({
+      ok: true,
+      warnings: [] as string[],
+    }));
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...mirror,
+      ensureS3ArchiveAccess,
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    expect(first.s3Path).toMatch(/\/projects\/20260901-demo$/);
+    expect(existsSync(fixture.projectPath)).toBe(false);
+    // One retention set: neither the local copy nor S3 holds PR or review
+    // evidence.
+    expect(existsSync(join(first.archivePath, 'pr'))).toBe(false);
+    expect(existsSync(join(first.archivePath, 'reviews'))).toBe(false);
+    expect(S3_ARCHIVE_SYNC_EXCLUDES).toEqual(['reviews/*', 'pr/*', '.git/*']);
+
+    // Lose the local archive, then hydrate it from S3 through the public
+    // sync runner.
+    await rm(first.archivePath, { recursive: true, force: true });
+    const capture = createLoggerCapture();
+    const exitCode = process.exitCode;
+    await runArchiveSyncCommand(
+      {
+        ...defaultProjectArchiveCommandDependencies(),
+        resolveProjectRoot: async () => fixture.repoRoot,
+        readOatConfig: async () => ({
+          version: 1,
+          archive: { s3Uri: S3_URI, s3SyncOnComplete: true },
+        }),
+        resolveProjectsRoot: async () => '.oat/projects/shared',
+        ensureS3ArchiveAccess,
+        execFile: mirror.execFile,
+        processEnv: {},
+      },
+      PROJECT,
+      {},
+      {
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json: true,
+        cwd: fixture.repoRoot,
+        home: fixture.repoRoot,
+        interactive: false,
+        logger: capture.logger,
+      } satisfies CommandContext,
+    );
+    process.exitCode = exitCode;
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      targets: ['.oat/projects/archived/demo'],
+    });
+    await expect(
+      readFile(join(first.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# state\n');
+
+    // The source-absent retry recognizes the restored archive as intact.
+    await expect(
+      evaluateArchiveRetryIdentity({
+        repoRoot: fixture.repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: PROJECT,
+        projectPath: fixture.projectPath,
+        scope: 'shared',
+        timestamp: '2026-09-04T09:00:00Z',
+      }),
+    ).resolves.toMatchObject({
+      disposition: 'retry',
+      archivePath: first.archivePath,
+    });
+    const resumed = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...mirror,
+      ensureS3ArchiveAccess,
+      timestamp: () => '2026-09-04T09:00:00Z',
+    });
+    expect(resumed.archivePath).toBe(first.archivePath);
+    expect(resumed.s3Path).toBe(first.s3Path);
+  });
+
   it("excludes a shared project's .git from the archive and its manifest", async () => {
     const fixture = await createFixture({
       files: {
@@ -705,6 +859,7 @@ describe('summary locator finalization at export', () => {
 - **friction · cache misses** — The cache missed again. oat-project:demo#2026-10-11-friction-cache-misses-2
 - See [the log](project-log.md#entries) and [legacy notes](./oat-execution-learnings.md); related oat-project:other#2026-10-01-bug-x-1.
 - **feedback · review** — Raised in [the review](reviews/final.md#f2) and [the p01 review](./reviews/archived/p01-review.md); see [the docs](https://example.com/reviews/final.md).
+- **feedback · pr** — Described in [the PR description](pr/project-pr.md); compare [the upstream PR](https://example.com/pr/1).
 `;
 
   it('finalizes both sections to the persisted archive identity, verified from a non-default destination', async () => {
@@ -749,6 +904,12 @@ describe('summary locator finalization at export', () => {
       'Raised in the review (review `reviews/final.md`, local to the project; not archived) and the p01 review (review `reviews/archived/p01-review.md`, local to the project; not archived)',
     );
     expect(exported).not.toMatch(/\]\((?:\.\/)?reviews\//);
+    // PR evidence is not archived either: the same plain provenance.
+    expect(exported).toContain(
+      'Described in the PR description (PR artifact `pr/project-pr.md`, local to the project; not archived)',
+    );
+    expect(exported).not.toMatch(/\]\((?:\.\/)?pr\//);
+    expect(exported).toContain('[the upstream PR](https://example.com/pr/1)');
     expect(exported).toContain(
       '[the docs](https://example.com/reviews/final.md)',
     );

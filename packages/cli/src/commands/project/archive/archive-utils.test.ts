@@ -3082,6 +3082,8 @@ describe('archive utils', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );
@@ -3906,6 +3908,8 @@ describe('archive utils', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({ cwd: worktreeRoot }),
     );

@@ -222,12 +222,6 @@ export interface ArchiveProjectOnCompletionResult {
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
 
-/**
- * Directories excluded from S3 archive sync. These contain process artifacts
- * (reviews, PR descriptions) rather than project deliverables.
- */
-export const S3_ARCHIVE_SYNC_EXCLUDES = ['reviews/*', 'pr/*'];
-
 export interface ArchiveSnapshotMetadata {
   projectName: string;
   snapshotName: string;
@@ -261,14 +255,26 @@ export interface ArchiveSnapshotMetadata {
 }
 
 /**
- * Top-level project entries an archive never retains: review evidence is not
- * archived (D2) and a synced checkout's `.git` link is not project content. The
- * copy and the retained-artifact manifest both read this one list.
+ * Top-level project entries an archive never retains: review and PR evidence
+ * are process artifacts, not project deliverables (D2), and a synced
+ * checkout's `.git` link is not project content. This one list defines the
+ * retained archive: the local copy, the retained-artifact manifest, the S3
+ * upload and the S3 hydration all read it, so an archive restored from S3
+ * hashes equal to the archive that was uploaded.
  */
 export const ARCHIVE_RETENTION_EXCLUSIONS: readonly string[] = [
   'reviews',
+  'pr',
   '.git',
 ];
+
+/**
+ * `aws s3 sync --exclude` patterns for the upload and the hydration, derived
+ * from `ARCHIVE_RETENTION_EXCLUSIONS` so S3 never holds or restores a
+ * top-level entry the manifest does not retain.
+ */
+export const S3_ARCHIVE_SYNC_EXCLUDES: readonly string[] =
+  ARCHIVE_RETENTION_EXCLUSIONS.map((entry) => `${entry}/*`);
 
 /**
  * Top-level entries the archive itself owns. They are derived at archive time,
@@ -1481,7 +1487,9 @@ async function allocateArchiveGeneration(
  * export: `oat-project:<slug>#<entry-id>` tokens of this project become
  * `oat-archive:<snapshot>#<entry-id>`, and a relative Markdown link to the
  * archived-only project log or legacy learnings file becomes plain text naming
- * the archive identity. Every other byte is unchanged.
+ * the archive identity; a relative link to unarchived review or PR evidence
+ * (`reviews/…`, `pr/…`) becomes plain provenance naming the file. Every other
+ * byte is unchanged.
  */
 export function finalizeSummaryArchiveLocators(
   text: string,
@@ -1504,12 +1512,12 @@ export function finalizeSummaryArchiveLocators(
         `${label} (${ARCHIVE_LOCATOR_PREFIX}${snapshotName}/${file})`,
     )
     .replace(
-      // Reviews are never archived (D2), so a local review link cannot
-      // resolve from the export: keep its label and file name as plain
-      // provenance. Absolute and external URLs do not match.
-      /\[([^\]\n]+)\]\((?:\.\/)?(reviews\/[^)\s#]+)(?:#[^)\s]*)?\)/g,
-      (_link, label: string, file: string) =>
-        `${label} (review \`${file}\`, local to the project; not archived)`,
+      // Review and PR evidence are never archived (D2), so a local link to
+      // either cannot resolve from the export: keep its label and file name as
+      // plain provenance. Absolute and external URLs do not match.
+      /\[([^\]\n]+)\]\((?:\.\/)?((reviews|pr)\/[^)\s#]+)(?:#[^)\s]*)?\)/g,
+      (_link, label: string, file: string, kind: string) =>
+        `${label} (${kind === 'pr' ? 'PR artifact' : 'review'} \`${file}\`, local to the project; not archived)`,
     );
 }
 
