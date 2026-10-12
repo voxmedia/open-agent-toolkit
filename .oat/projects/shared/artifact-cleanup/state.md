@@ -72,7 +72,13 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v2:0bd84637be4b972cbafae28f3f7d3917e8b18868d7c01c9e57b068182f290930'
   freshness_head: e86464e900f69179226c3f779f6517d9b7bd9cd0
   freshness_fingerprint: 'sha256:effective-delta-v2:0bd84637be4b972cbafae28f3f7d3917e8b18868d7c01c9e57b068182f290930'
-  waivers: []
+  waivers:
+    - waived_by: 'Thomas Stang'
+      reason: 'A contract test that spawns several CLI processes timed out in CI three times under load; do not let a test cause friction. Test-only change: an explicit 120s timeout for that one test.'
+      from_commit: '83a8486cde061c675745245dd85f1de77dffd298'
+      to_commit: 'cb61b448d9f498836dc7ba9b0c0f6f7336421560'
+      covered_fingerprint: 'sha256:effective-delta-v2:4b0326c201a69eed213c277da4e6770509f68e58e9b9084a88fa1a1e06898e9c'
+      waived_at: '2026-10-12T17:33:05Z'
   launch_state: result_persisted
   launch_attempt_id: exit-gate-20261012T170421Z
   launch_started_at: '2026-10-12T17:04:21Z'
@@ -157,7 +163,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T17:15:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T17:33:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
