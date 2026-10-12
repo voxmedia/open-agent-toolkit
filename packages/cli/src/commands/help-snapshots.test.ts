@@ -1212,6 +1212,9 @@ describe('help output snapshots', () => {
     expect(help).toContain('writes nothing');
     expect(help).toContain('--event-file <json-file-or-dash>');
     expect(help).toMatch(/or -\s+for standard input/);
+    expect(help).toContain('--format <format>');
+    expect(help).toMatch(/line \(one\s+journal run line, run\/v1\)/);
+    expect(help).toContain('--dispatch-stamp <line>');
     expect(help).not.toMatch(/launch/i);
   });
 
