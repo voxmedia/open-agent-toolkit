@@ -9,6 +9,7 @@ oat_template_name: summary
 oat_summary_last_task: null
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
+oat_summary_learnings_fingerprint: none
 ---
 
 # Summary: {Project Name}
