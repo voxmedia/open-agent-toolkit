@@ -211,6 +211,20 @@ A retry resolves to that identity before anything is written:
   archive already holds the dated export identity, the new one is qualified
   with the scope (`<YYYYMMDD>-<project>-<scope>`).
 
+Reopened work can instead be archived as a new generation with
+`oat project archive --new-generation <reason>` (shared and local projects).
+The option needs exactly one latest generation of the same project and scope as
+its predecessor and refuses otherwise. The new generation lives at
+`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`, and its
+metadata records `predecessor`, `generationReason` and `generationRequest`, the
+`sha256` of the project, scope, predecessor snapshot and manifest. That
+metadata is written with `allocation: pending` before any export, copy or S3
+upload, so an interrupted run resumes the same generation; the marker is
+removed once the copy completes. Running the request again with the same
+content resolves to the same generation, while changed content after it
+completes becomes the next generation. Without the option, changed content
+still refuses.
+
 `--dry-run` runs the same read-only evaluation and reports the identity an
 apply would use, so a retry previews the persisted snapshot rather than
 today's date. The synced protections (recordless retry by completed ref,

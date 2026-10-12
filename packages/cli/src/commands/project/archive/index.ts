@@ -50,6 +50,10 @@ export function createProjectArchiveCommand(
       '--project-recap-run <path>',
       'Export the selected project-relative recap run before archiving',
     )
+    .option(
+      '--new-generation <reason>',
+      'Archive reopened work as the next generation of an archived shared or local project (requires exactly one predecessor)',
+    )
     .addHelpText(
       'afterAll',
       '\nPull archived project data with `oat repo archive sync [project-name]`; `oat project archive sync` is deprecated.',

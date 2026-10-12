@@ -36,6 +36,8 @@ export interface ArchivePushOptions {
   dryRun?: boolean;
   projectRecapRun?: string;
   commit?: boolean;
+  /** `--new-generation <reason>`. */
+  newGeneration?: string;
 }
 
 export interface ProjectArchivePushCommandDependencies {
@@ -83,6 +85,8 @@ interface ArchivePushReport {
   verifiedSourceSha: string | null;
   activeAliasDisposition: 'retained' | 'removed' | null;
   recordRetired: boolean;
+  generation?: number;
+  predecessorSnapshot?: string | null;
 }
 
 export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePushCommandDependencies {
@@ -158,6 +162,9 @@ function buildArchiveOptions(
     awsProfile: config.archive?.awsProfile,
     awsRegion: config.archive?.awsRegion,
     ...(options.commit === false ? { commit: false } : {}),
+    ...(options.newGeneration !== undefined
+      ? { newGenerationReason: options.newGeneration }
+      : {}),
   };
 }
 
@@ -203,6 +210,8 @@ async function buildDryRunReport(
     verifiedSourceSha: null,
     activeAliasDisposition: null,
     recordRetired: false,
+    generation: identity.generation,
+    predecessorSnapshot: identity.predecessor,
   };
 }
 
@@ -219,6 +228,11 @@ function emitArchivePushText(
     logger.info(
       `Dry-run: would archive project \`${report.projectName}\` from \`${report.projectPath}\` to \`${report.archivePath}\`.`,
     );
+    if (report.predecessorSnapshot) {
+      logger.info(
+        `Generation ${report.generation} after \`${report.predecessorSnapshot}\`.`,
+      );
+    }
     if (report.s3Path) {
       logger.info(`S3 archive: ${report.s3Path}`);
     }
@@ -231,6 +245,11 @@ function emitArchivePushText(
   logger.info(
     `Archived project \`${report.projectName}\` to \`${report.archivePath}\`.`,
   );
+  if (report.predecessorSnapshot) {
+    logger.info(
+      `Generation ${report.generation} after \`${report.predecessorSnapshot}\`.`,
+    );
+  }
   if (report.s3Path) {
     logger.info(`S3 archive: ${report.s3Path}`);
   }
@@ -307,6 +326,9 @@ export async function runArchivePushCommand(
         ...(syncedRecord?.archiveSourceRefSha
           ? { sourceRefSha: syncedRecord.archiveSourceRefSha }
           : {}),
+        ...(options.newGeneration !== undefined
+          ? { newGeneration: { reason: options.newGeneration } }
+          : {}),
       },
       {
         resolveArchiveProjectTarget: dependencies.resolveArchiveProjectTarget,
@@ -365,6 +387,12 @@ export async function runArchivePushCommand(
           : 'removed'
         : null,
       recordRetired: result.recordRetired,
+      ...(result.generation !== undefined
+        ? {
+            generation: result.generation,
+            predecessorSnapshot: result.predecessorSnapshot ?? null,
+          }
+        : {}),
     };
 
     emitArchivePushReport(report, config.archive?.summaryExportPath, context);

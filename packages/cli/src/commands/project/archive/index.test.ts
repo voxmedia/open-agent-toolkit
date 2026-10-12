@@ -222,6 +222,21 @@ describe('oat project archive sync', () => {
     expect(help).toContain('--project-recap-run <path>');
   });
 
+  it('documents the explicit archive generation option', () => {
+    let help = '';
+    createProjectArchiveCommand()
+      .configureOutput({
+        writeOut: (value) => {
+          help += value;
+        },
+      })
+      .outputHelp();
+
+    expect(help.replace(/\s+/g, ' ')).toContain(
+      '--new-generation <reason> Archive reopened work as the next generation of an archived shared or local project (requires exactly one predecessor)',
+    );
+  });
+
   it('syncs all archived projects when no project name is provided', async () => {
     const { command, ensureS3ArchiveAccess, execFile, removeDirectory } =
       createHarness({

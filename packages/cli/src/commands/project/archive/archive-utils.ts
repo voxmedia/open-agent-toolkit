@@ -124,6 +124,8 @@ export interface ArchiveProjectOnCompletionOptions {
    */
   awsRegion?: string | null;
   commit?: boolean;
+  /** `--new-generation <reason>`: archive reopened work as the next generation. */
+  newGenerationReason?: string | null;
 }
 
 export interface ResolvePrimaryRepoRootDependencies {
@@ -212,6 +214,10 @@ export interface ArchiveProjectOnCompletionResult {
   snapshotId: string;
   terminalReceipt: SyncedRefRetirementReceipt | null;
   recordRetired: boolean;
+  /** Archive generation of the snapshot; 1 for a first archive. */
+  generation?: number;
+  /** Snapshot the generation succeeds, or null for generation 1. */
+  predecessorSnapshot?: string | null;
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
@@ -235,6 +241,23 @@ export interface ArchiveSnapshotMetadata {
   manifestHash?: string;
   /** Archive generation of this project and scope; 1 for the first archive. */
   generation?: number;
+  /** Snapshot of the generation this one succeeds (generation 2 and later). */
+  predecessor?: string;
+  /**
+   * Explicit generation request id: `sha256` of the project, scope,
+   * predecessor snapshot and retained-artifact manifest. Replaying the same
+   * request (same predecessor, same content) resolves to this generation; a
+   * later request with changed content resolves to a new one.
+   */
+  generationRequest?: string;
+  /** Operator reason given with `--new-generation`. */
+  generationReason?: string;
+  /**
+   * `pending` while an allocated generation's copy has not completed; the
+   * identity is persisted before any export, copy or S3 side effect so a retry
+   * reuses it.
+   */
+  allocation?: 'pending';
 }
 
 /**
@@ -830,6 +853,8 @@ export interface EvaluateArchiveRetryIdentityOptions {
   persistedSnapshot?: string;
   /** Verified synced source ref; a candidate must carry the same SHA. */
   sourceRefSha?: string;
+  /** `--new-generation <reason>`: authorize one successor generation. */
+  newGeneration?: { reason: string };
 }
 
 export interface EvaluateArchiveRetryIdentityDependencies extends ResolveArchiveProjectTargetDependencies {
@@ -853,6 +878,12 @@ export interface ArchiveRetryIdentity {
   manifestHash: string | null;
   sourcePresent: boolean;
   target: ArchiveProjectTarget;
+  /** Predecessor snapshot for generation 2 and later, else null. */
+  predecessor: string | null;
+  generationRequest: string | null;
+  generationReason: string | null;
+  /** True when the archive's generation is allocated but not yet copied. */
+  allocationPending: boolean;
 }
 
 interface ArchiveIdentityCandidate {
@@ -886,7 +917,49 @@ function readCandidateMetadata(value: unknown): ArchiveSnapshotMetadata | null {
     value.generation > 0
       ? { generation: value.generation }
       : {}),
+    ...(typeof value.predecessor === 'string'
+      ? { predecessor: value.predecessor }
+      : {}),
+    ...(isSha256(value.generationRequest)
+      ? { generationRequest: value.generationRequest }
+      : {}),
+    ...(typeof value.generationReason === 'string'
+      ? { generationReason: value.generationReason }
+      : {}),
+    ...(value.allocation === 'pending'
+      ? { allocation: 'pending' as const }
+      : {}),
   };
+}
+
+function generationOf(candidate: ArchiveIdentityCandidate): number {
+  return candidate.metadata?.generation ?? 1;
+}
+
+function identityFromMetadata(
+  metadata: ArchiveSnapshotMetadata | null,
+): Pick<
+  ArchiveRetryIdentity,
+  'predecessor' | 'generationRequest' | 'generationReason' | 'allocationPending'
+> {
+  return {
+    predecessor: metadata?.predecessor ?? null,
+    generationRequest: metadata?.generationRequest ?? null,
+    generationReason: metadata?.generationReason ?? null,
+    allocationPending: metadata?.allocation === 'pending',
+  };
+}
+
+/** Validates `--new-generation <reason>`: one non-empty line. */
+export function validateNewGenerationReason(reason: string): string {
+  const trimmed = reason.trim();
+  if (trimmed === '' || /[\r\n]/.test(trimmed) || trimmed.length > 200) {
+    throw new CliError(
+      '--new-generation requires a non-empty, single-line reason of at most 200 characters.',
+      2,
+    );
+  }
+  return trimmed;
 }
 
 /**
@@ -965,6 +1038,18 @@ export async function evaluateArchiveRetryIdentity(
   options: EvaluateArchiveRetryIdentityOptions,
   dependencies: EvaluateArchiveRetryIdentityDependencies = {},
 ): Promise<ArchiveRetryIdentity> {
+  const generationReason = options.newGeneration
+    ? validateNewGenerationReason(options.newGeneration.reason)
+    : null;
+  if (
+    generationReason !== null &&
+    (options.scope === 'synced' || options.persistedSnapshot)
+  ) {
+    throw new CliError(
+      `--new-generation applies to shared and local projects; synced project \`${options.projectName}\` is terminal at its completed ref. ${followUpGuidance(options.projectName)}`,
+      1,
+    );
+  }
   const resolveTarget =
     dependencies.resolveArchiveProjectTarget ?? resolveArchiveProjectTarget;
   const { resolveArchiveProjectTarget: _resolver, ...targetDependencies } =
@@ -1012,12 +1097,19 @@ export async function evaluateArchiveRetryIdentity(
     const archiveExists = await pathExists(target.archivePath);
     return {
       ...base,
+      ...identityFromMetadata(existing),
       disposition: archiveExists ? 'retry' : 'new',
       snapshotName: options.persistedSnapshot,
       archivePath: target.archivePath,
       archiveExists,
       generation: existing?.generation ?? 1,
     };
+  }
+  if (generationReason !== null && !sourcePresent) {
+    throw new CliError(
+      `--new-generation needs the reopened project at \`${options.projectPath}\`; it is absent. Retry without --new-generation to resume an existing archive.`,
+      1,
+    );
   }
 
   const archiveBasePath = resolveCompletionArchivePath(
@@ -1046,10 +1138,14 @@ export async function evaluateArchiveRetryIdentity(
       }
     }
   } else if (options.scope !== 'synced' || sameIdentity.length === 1) {
-    // An absent source resumes its archive. A recordless synced apply binds
-    // its snapshot through the completed ref before this evaluator runs, so
-    // an unbound synced preview with several candidates stays unresolved.
-    matches.push(...sameIdentity);
+    // An absent source resumes its latest generation. A recordless synced
+    // apply binds its snapshot through the completed ref before this
+    // evaluator runs, so an unbound synced preview with several candidates
+    // stays unresolved.
+    const latest = Math.max(0, ...sameIdentity.map(generationOf));
+    matches.push(
+      ...sameIdentity.filter((candidate) => generationOf(candidate) === latest),
+    );
   }
 
   if (matches.length > 1) {
@@ -1063,15 +1159,30 @@ export async function evaluateArchiveRetryIdentity(
     );
   }
   if (matches.length === 1) {
+    // An identical retry, a source-absent resume, or a replayed
+    // `--new-generation` request (same predecessor and content, so the same
+    // generation request id) all reuse the persisted identity.
     const match = matches[0]!;
     return {
       ...base,
+      ...identityFromMetadata(match.metadata),
       disposition: 'retry',
       snapshotName: match.metadata!.snapshotName,
       archivePath: match.archivePath,
       archiveExists: true,
       generation: match.metadata!.generation ?? 1,
     };
+  }
+
+  if (generationReason !== null) {
+    return allocateArchiveGeneration(
+      options,
+      base,
+      archiveBasePath,
+      candidates,
+      sameIdentity,
+      generationReason,
+    );
   }
 
   if (sourcePresent) {
@@ -1104,6 +1215,106 @@ export async function evaluateArchiveRetryIdentity(
     archivePath: target.archivePath,
     archiveExists: false,
     generation: 1,
+    predecessor: null,
+    generationRequest: null,
+    generationReason: null,
+    allocationPending: false,
+  };
+}
+
+/**
+ * Resolves `--new-generation`: exactly one verified latest generation of the
+ * same project and scope is the predecessor, and the successor gets the next
+ * generation number, its own local path, dated export identity and generation
+ * request id. Nothing is written here; the apply persists the allocation
+ * before any side effect.
+ */
+async function allocateArchiveGeneration(
+  options: EvaluateArchiveRetryIdentityOptions,
+  base: Pick<
+    ArchiveRetryIdentity,
+    'projectName' | 'scope' | 'manifestHash' | 'sourcePresent' | 'target'
+  >,
+  archiveBasePath: string,
+  candidates: ArchiveIdentityCandidate[],
+  sameIdentity: ArchiveIdentityCandidate[],
+  generationReason: string,
+): Promise<ArchiveRetryIdentity> {
+  const unverifiable = candidates.find(
+    (candidate) => candidate.metadata === null,
+  );
+  if (unverifiable) {
+    throw new CliError(
+      `\`${unverifiable.archivePath}\` already exists without readable archive metadata, so it cannot be a verified predecessor of \`${options.projectName}\`; refusing to allocate a generation. ${followUpGuidance(options.projectName)}`,
+      1,
+    );
+  }
+  if (sameIdentity.length === 0) {
+    throw new CliError(
+      `--new-generation needs an archived predecessor of \`${options.projectName}\` (${options.scope}), and none exists; archive the project without --new-generation.`,
+      1,
+    );
+  }
+  const latest = Math.max(...sameIdentity.map(generationOf));
+  const heads = sameIdentity.filter(
+    (candidate) => generationOf(candidate) === latest,
+  );
+  if (heads.length !== 1) {
+    throw new CliError(
+      `--new-generation for \`${options.projectName}\` (${options.scope}) needs exactly one predecessor, but ${heads.length} archives hold generation ${latest} (${heads
+        .map((head) => `\`${head.archivePath}\``)
+        .join(
+          ', ',
+        )}); refusing to allocate a generation. ${followUpGuidance(options.projectName)}`,
+      1,
+    );
+  }
+  const predecessor = heads[0]!.metadata!;
+  if (predecessor.allocation === 'pending') {
+    throw new CliError(
+      `Generation ${latest} of \`${options.projectName}\` (\`${predecessor.snapshotName}\`) is still being archived; finish it by retrying with its original content before requesting another generation.`,
+      1,
+    );
+  }
+  const generation = latest + 1;
+  const datedIdentity = `${buildArchiveSnapshotName(
+    options.projectName,
+    options.timestamp,
+  )}-g${generation}`;
+  const snapshotName = candidates.some(
+    (candidate) => candidate.metadata?.snapshotName === datedIdentity,
+  )
+    ? `${datedIdentity}-${options.scope}`
+    : datedIdentity;
+  const archivePath = join(
+    dirname(archiveBasePath),
+    `${options.projectName}-g${generation}`,
+  );
+  if (await pathExists(archivePath)) {
+    throw new CliError(
+      `\`${archivePath}\` already exists and is not generation ${generation} of \`${options.projectName}\`; refusing to overwrite it.`,
+      1,
+    );
+  }
+  return {
+    ...base,
+    disposition: 'new',
+    snapshotName,
+    archivePath,
+    archiveExists: false,
+    generation,
+    predecessor: predecessor.snapshotName,
+    generationRequest: sha256(
+      JSON.stringify([
+        'oat-archive-generation/1',
+        options.projectName,
+        options.scope,
+        predecessor.snapshotName,
+        base.manifestHash,
+      ]),
+    ),
+    generationReason,
+    allocationPending: false,
   };
 }
 
@@ -2478,6 +2689,9 @@ export async function archiveProjectOnCompletion(
       timestamp,
       ...(persistedSnapshot ? { persistedSnapshot } : {}),
       ...(sourceRefSha ? { sourceRefSha } : {}),
+      ...(options.newGenerationReason != null
+        ? { newGeneration: { reason: options.newGenerationReason } }
+        : {}),
     },
     dependencies,
   );
@@ -2522,6 +2736,34 @@ export async function archiveProjectOnCompletion(
     await writeRecord(recordPath, activeRecord);
   }
 
+  const generationMetadata = identity.predecessor
+    ? {
+        predecessor: identity.predecessor,
+        ...(identity.generationRequest
+          ? { generationRequest: identity.generationRequest }
+          : {}),
+        ...(identity.generationReason
+          ? { generationReason: identity.generationReason }
+          : {}),
+      }
+    : {};
+  let allocationPending = identity.allocationPending;
+  if (identity.disposition === 'new' && identity.generation > 1) {
+    // Persist the new generation and its predecessor binding before any
+    // export, copy or S3 side effect, so a retry of this in-flight request
+    // reuses this identity instead of allocating from the current date.
+    await makeDir(archivePath);
+    await writeArchiveSnapshotMetadata(archivePath, {
+      projectName: options.projectName,
+      snapshotName: exportIdentity,
+      scope: projectScope,
+      ...(identity.manifestHash ? { manifestHash: identity.manifestHash } : {}),
+      generation: identity.generation,
+      ...generationMetadata,
+      allocation: 'pending',
+    });
+    allocationPending = true;
+  }
   const archiveExists = await (dependencies.dirExists ?? dirExists)(
     archivePath,
   );
@@ -2543,9 +2785,12 @@ export async function archiveProjectOnCompletion(
   );
   let projectRecapExport = attemptedProjectRecapExport?.export ?? null;
 
-  if (!archiveExists) {
+  if (!archiveExists || allocationPending) {
     try {
       await makeDir(dirname(archivePath));
+      if (allocationPending) {
+        await clearPendingGeneration(archivePath, removePath);
+      }
       await copyProjectDirectory(
         options.projectPath,
         archivePath,
@@ -2559,9 +2804,15 @@ export async function archiveProjectOnCompletion(
         ...(sourceRefSha ? { sourceRefSha } : {}),
         manifestHash: await computeArchiveManifestHash(archivePath),
         generation: identity.generation,
+        ...generationMetadata,
       });
     } catch (error) {
-      await removePath(archivePath, { recursive: true, force: true });
+      if (allocationPending) {
+        // Keep the persisted allocation; drop only the partial copy.
+        await clearPendingGeneration(archivePath, removePath);
+      } else {
+        await removePath(archivePath, { recursive: true, force: true });
+      }
       await removeAttemptRecapExport(
         attemptedProjectRecapExport,
         removePath,
@@ -2818,7 +3069,26 @@ export async function archiveProjectOnCompletion(
     snapshotId,
     terminalReceipt,
     recordRetired,
+    generation: identity.generation,
+    predecessorSnapshot: identity.predecessor,
   };
+}
+
+/** Removes everything but the allocation metadata from a pending generation. */
+async function clearPendingGeneration(
+  archivePath: string,
+  removePath: (
+    target: string,
+    options: { recursive: true; force: true },
+  ) => Promise<void>,
+): Promise<void> {
+  for (const entry of await readdir(archivePath)) {
+    if (entry === ARCHIVE_SNAPSHOT_METADATA_FILENAME) continue;
+    await removePath(join(archivePath, entry), {
+      recursive: true,
+      force: true,
+    });
+  }
 }
 
 async function recoverSyncedLifecycleCommit(

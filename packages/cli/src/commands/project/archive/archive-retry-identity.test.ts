@@ -21,6 +21,7 @@ import {
   ARCHIVE_SNAPSHOT_METADATA_FILENAME,
   archiveProjectOnCompletion,
   computeArchiveManifestHash,
+  evaluateArchiveRetryIdentity,
   type ExecFileLike,
 } from './archive-utils';
 
@@ -137,9 +138,16 @@ function stubS3(options: { failSync?: boolean } = {}) {
 
 function archiveOptions(
   fixture: Fixture,
-  overrides: { summaryExportPath?: string; projectPath?: string } = {},
+  overrides: {
+    summaryExportPath?: string;
+    projectPath?: string;
+    newGenerationReason?: string;
+  } = {},
 ) {
   return {
+    ...(overrides.newGenerationReason !== undefined
+      ? { newGenerationReason: overrides.newGenerationReason }
+      : {}),
     repoRoot: fixture.repoRoot,
     projectPath: overrides.projectPath ?? fixture.projectPath,
     projectName: PROJECT,
@@ -557,6 +565,8 @@ describe('public archive dry-run and apply share one retry identity', () => {
   type Report = {
     status: string;
     mode: string;
+    generation?: number;
+    predecessorSnapshot?: string | null;
     snapshotId: string;
     archivePath: string;
     summaryExportFile: string | null;
@@ -566,6 +576,7 @@ describe('public archive dry-run and apply share one retry identity', () => {
   function runArchive(
     fixture: Awaited<ReturnType<typeof cliFixture>>,
     dryRun: boolean,
+    extraArgs: readonly string[] = [],
   ): Report {
     const result = spawnSync(
       process.execPath,
@@ -576,6 +587,7 @@ describe('public archive dry-run and apply share one retry identity', () => {
         'archive',
         '.oat/projects/shared/demo',
         ...(dryRun ? ['--dry-run'] : []),
+        ...extraArgs,
       ],
       {
         cwd: fixture.repoRoot,
@@ -672,5 +684,260 @@ describe('public archive dry-run and apply share one retry identity', () => {
         ),
       ),
     ).toBe(true);
+  });
+  it('previews a new generation without persisting it, then applies the same identity', async () => {
+    const fixture = await cliFixture();
+    const first = runArchive(fixture, false);
+    await restoreSource(fixture);
+    await writeFile(join(fixture.projectPath, 'state.md'), '# reopened\n');
+    const repoBefore = await treeHash(fixture.repoRoot);
+    const s3Before = await treeHash(fixture.aws.s3);
+    const args = ['--new-generation', 'reopened for follow-up fixes'];
+
+    const preview = runArchive(fixture, true, args);
+    expect(await treeHash(fixture.repoRoot)).toBe(repoBefore);
+    expect(await treeHash(fixture.aws.s3)).toBe(s3Before);
+    expect(preview.generation).toBe(2);
+    expect(preview.predecessorSnapshot).toBe(first.s3Path!.split('/').at(-1));
+    expect(preview.archivePath).toBe(join(fixture.archiveRoot, 'demo-g2'));
+
+    const applied = runArchive(fixture, false, args);
+    expect(identityOf(applied)).toEqual(identityOf(preview));
+    expect(applied.generation).toBe(2);
+    expect(applied.predecessorSnapshot).toBe(preview.predecessorSnapshot);
+    expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+      'demo',
+      'demo-g2',
+    ]);
+  });
+});
+
+describe('explicit archive generations (archive-generation-authorization)', () => {
+  const REASON = 'reopened for follow-up fixes';
+
+  async function reopen(fixture: Fixture, state: string): Promise<void> {
+    await restoreSource(fixture);
+    await writeFile(join(fixture.projectPath, 'state.md'), state);
+  }
+
+  async function readMetadata(archivePath: string) {
+    return JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ) as Record<string, unknown>;
+  }
+
+  function requestId(predecessor: string, manifestHash: string): string {
+    return `sha256:${createHash('sha256')
+      .update(
+        JSON.stringify([
+          'oat-archive-generation/1',
+          PROJECT,
+          'shared',
+          predecessor,
+          manifestHash,
+        ]),
+      )
+      .digest('hex')}`;
+  }
+
+  it('archives reopened work as generation 2 bound to its single predecessor', async () => {
+    const fixture = await createFixture();
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    const firstBefore = await treeHash(first.archivePath);
+    await reopen(fixture, '# reopened\n');
+    const manifest = await computeArchiveManifestHash(fixture.projectPath);
+    const s3 = stubS3();
+
+    const second = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...s3, timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+
+    expect(second.archivePath).toBe(join(fixture.archiveRoot, 'demo-g2'));
+    expect(second.generation).toBe(2);
+    expect(second.predecessorSnapshot).toBe('20260901-demo');
+    expect(second.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
+    expect(second.summaryExportFile).toMatch(/20260905-demo-g2\.md$/);
+    expect(await readMetadata(second.archivePath)).toEqual({
+      projectName: PROJECT,
+      snapshotName: '20260905-demo-g2',
+      scope: 'shared',
+      manifestHash: manifest,
+      generation: 2,
+      predecessor: '20260901-demo',
+      generationRequest: requestId('20260901-demo', manifest),
+      generationReason: REASON,
+    });
+    expect(await treeHash(first.archivePath)).toBe(firstBefore);
+    expect(existsSync(fixture.projectPath)).toBe(false);
+  });
+
+  it('persists the allocation before any side effect and reuses it on an in-flight retry', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await reopen(fixture, '# reopened\n');
+    const generationPath = join(fixture.archiveRoot, 'demo-g2');
+    const seenAtCopy: Array<Record<string, unknown>> = [];
+    const failingS3 = stubS3();
+
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: REASON }),
+        {
+          ...failingS3,
+          timestamp: () => '2026-09-05T09:00:00Z',
+          copyDirectory: vi.fn(async () => {
+            seenAtCopy.push(await readMetadata(generationPath));
+            throw new Error('injected copy interruption');
+          }),
+        },
+      ),
+    ).rejects.toThrow('injected copy interruption');
+    expect(seenAtCopy).toEqual([
+      expect.objectContaining({
+        snapshotName: '20260905-demo-g2',
+        generation: 2,
+        predecessor: '20260901-demo',
+        allocation: 'pending',
+      }),
+    ]);
+    expect(failingS3.calls).toEqual([]);
+    expect(await readdir(generationPath)).toEqual([
+      ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+    ]);
+    expect(existsSync(fixture.projectPath)).toBe(true);
+
+    const retried = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-07T09:00:00Z' },
+    );
+    expect(retried.archivePath).toBe(generationPath);
+    expect(retried.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
+    expect(await readMetadata(generationPath)).not.toHaveProperty('allocation');
+    await expect(
+      readFile(join(generationPath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# reopened\n');
+    expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
+      'demo',
+      'demo-g2',
+    ]);
+  });
+
+  it('treats a replayed request as the same generation and a later changed request as the next', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await reopen(fixture, '# reopened\n');
+    const second = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+
+    // Replay: same predecessor and content, so the same request id.
+    await reopen(fixture, '# reopened\n');
+    const replay = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-06T09:00:00Z' },
+    );
+    expect(replay.archivePath).toBe(second.archivePath);
+    expect(replay.generation).toBe(2);
+    expect((await readMetadata(second.archivePath)).generationRequest).toBe(
+      requestId(
+        '20260901-demo',
+        (await readMetadata(second.archivePath)).manifestHash as string,
+      ),
+    );
+
+    // A subsequent explicit request with changed content: generation 3.
+    await reopen(fixture, '# reopened again\n');
+    const third = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: 'second follow-up' }),
+      { ...stubS3(), timestamp: () => '2026-09-09T09:00:00Z' },
+    );
+    expect(third.archivePath).toBe(join(fixture.archiveRoot, 'demo-g3'));
+    expect(third.generation).toBe(3);
+    expect(third.predecessorSnapshot).toBe('20260905-demo-g2');
+
+    // Without the option, changed content still refuses with guidance.
+    await reopen(fixture, '# reopened a third time\n');
+    await expect(
+      archiveProjectOnCompletion(archiveOptions(fixture), {
+        ...stubS3(),
+        timestamp: () => '2026-09-10T09:00:00Z',
+      }),
+    ).rejects.toThrow(/retained artifacts differ.*follow-up project/);
+  });
+
+  it('refuses a generation when two archives hold the latest generation', async () => {
+    const fixture = await createFixture();
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await cp(first.archivePath, `${first.archivePath}-20260901093000`, {
+      recursive: true,
+    });
+    await reopen(fixture, '# reopened\n');
+    const before = await treeHash(fixture.archiveRoot);
+    const s3 = stubS3();
+
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: REASON }),
+        { ...s3, timestamp: () => '2026-09-05T09:00:00Z' },
+      ),
+    ).rejects.toThrow(
+      /needs exactly one predecessor, but 2 archives hold generation 1.*refusing to allocate a generation/,
+    );
+    expect(s3.calls).toEqual([]);
+    expect(await treeHash(fixture.archiveRoot)).toBe(before);
+    expect(existsSync(fixture.projectPath)).toBe(true);
+  });
+
+  it('refuses a generation without a predecessor, without a reason, or for a synced project', async () => {
+    const fixture = await createFixture();
+    const s3 = stubS3();
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: REASON }),
+        { ...s3, timestamp: () => '2026-09-05T09:00:00Z' },
+      ),
+    ).rejects.toThrow(/needs an archived predecessor.*none exists/);
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, { newGenerationReason: '   ' }),
+        { ...s3, timestamp: () => '2026-09-05T09:00:00Z' },
+      ),
+    ).rejects.toThrow(/requires a non-empty, single-line reason/);
+    await expect(
+      evaluateArchiveRetryIdentity({
+        repoRoot: fixture.repoRoot,
+        projectsRoot: '.oat/projects/shared',
+        projectName: PROJECT,
+        projectPath: join(
+          fixture.repoRoot,
+          '.oat',
+          'projects',
+          'synced',
+          PROJECT,
+        ),
+        scope: 'synced',
+        timestamp: '2026-09-05T09:00:00Z',
+        newGeneration: { reason: REASON },
+      }),
+    ).rejects.toThrow(/applies to shared and local projects/);
+    expect(s3.calls).toEqual([]);
+    expect(existsSync(fixture.archiveRoot)).toBe(false);
   });
 });
