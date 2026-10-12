@@ -580,11 +580,6 @@ describe('archive retry identity (archive-retry-identity)', () => {
     });
     expect(first.s3Path).toMatch(/\/projects\/20260901-demo$/);
     expect(existsSync(fixture.projectPath)).toBe(false);
-    // One retention set: neither the local copy nor S3 holds PR or review
-    // evidence.
-    expect(existsSync(join(first.archivePath, 'pr'))).toBe(false);
-    expect(existsSync(join(first.archivePath, 'reviews'))).toBe(false);
-    expect(S3_ARCHIVE_SYNC_EXCLUDES).toEqual(['reviews/*', 'pr/*', '.git/*']);
 
     // Lose the local archive, then hydrate it from S3 through the public
     // sync runner.
@@ -618,6 +613,32 @@ describe('archive retry identity (archive-retry-identity)', () => {
     });
     expect(resumed.archivePath).toBe(first.archivePath);
     expect(resumed.s3Path).toBe(first.s3Path);
+  });
+
+  it('retains neither PR nor review evidence in the local copy or in S3', async () => {
+    const fixture = await createFixture({
+      files: {
+        'state.md': '# state\n',
+        'pr/final.md': '# PR description (never archived)\n',
+        'reviews/review.md': '# review (never archived)\n',
+      },
+    });
+    const s3Root = await scratch('oat-fake-s3-mirror-');
+    const mirror = fakeS3Mirror(s3Root);
+    const archived = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...mirror,
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    expect(S3_ARCHIVE_SYNC_EXCLUDES).toEqual(['reviews/*', 'pr/*', '.git/*']);
+    expect((await readdir(archived.archivePath)).sort()).toEqual([
+      ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+      'state.md',
+    ]);
+    const uploaded = join(s3Root, archived.s3Path!.slice('s3://'.length));
+    expect((await readdir(uploaded)).sort()).toEqual([
+      ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+      'state.md',
+    ]);
   });
 
   it("excludes a shared project's .git from the archive and its manifest", async () => {
@@ -1528,11 +1549,16 @@ describe('explicit archive generations (archive-generation-authorization)', () =
   });
 
   it.each([
-    ['shared', 'local'],
-    ['local', 'shared'],
+    // Same day: the second request's dated identity also collides.
+    ['shared', 'local', '2026-09-05T10:00:00Z', '20260905'],
+    ['local', 'shared', '2026-09-05T10:00:00Z', '20260905'],
+    // A later day: only the other scope's archive at `demo-g2` qualifies the
+    // path, so the path-held-by-another-scope rule alone decides.
+    ['shared', 'local', '2026-09-06T10:00:00Z', '20260906'],
+    ['local', 'shared', '2026-09-06T10:00:00Z', '20260906'],
   ] as const)(
-    'scope-qualifies the successor path and identity of the second scope to reach generation 2 (%s first)',
-    async (firstScope, secondScope) => {
+    'scope-qualifies the successor path and identity of the second scope to reach generation 2 (%s first, then %s at %s)',
+    async (firstScope, secondScope, secondTimestamp, secondDate) => {
       const fixture = await createFixture();
       const localPath = join(
         fixture.repoRoot,
@@ -1575,11 +1601,7 @@ describe('explicit archive generations (archive-generation-authorization)', () =
         '2026-09-05T09:00:00Z',
         REASON,
       );
-      const second = await archiveScope(
-        secondScope,
-        '2026-09-05T10:00:00Z',
-        REASON,
-      );
+      const second = await archiveScope(secondScope, secondTimestamp, REASON);
 
       expect(first.archivePath).toBe(join(fixture.archiveRoot, 'demo-g2'));
       expect(first.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
@@ -1587,10 +1609,10 @@ describe('explicit archive generations (archive-generation-authorization)', () =
         join(fixture.archiveRoot, `demo-g2-${secondScope}`),
       );
       expect(second.s3Path).toMatch(
-        new RegExp(`/projects/20260905-demo-g2-${secondScope}$`),
+        new RegExp(`/projects/${secondDate}-demo-g2-${secondScope}$`),
       );
       expect(second.summaryExportFile).toMatch(
-        new RegExp(`20260905-demo-g2-${secondScope}\\.md$`),
+        new RegExp(`${secondDate}-demo-g2-${secondScope}\\.md$`),
       );
       expect(await readMetadata(first.archivePath)).toMatchObject({
         snapshotName: '20260905-demo-g2',
@@ -1598,7 +1620,7 @@ describe('explicit archive generations (archive-generation-authorization)', () =
         generation: 2,
       });
       expect(await readMetadata(second.archivePath)).toMatchObject({
-        snapshotName: `20260905-demo-g2-${secondScope}`,
+        snapshotName: `${secondDate}-demo-g2-${secondScope}`,
         scope: secondScope,
         generation: 2,
       });
