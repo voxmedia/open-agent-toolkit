@@ -10,7 +10,8 @@
   "archive": {
     "s3Uri": "s3://vox-media-open-agent-toolkit/repositories",
     "s3SyncOnComplete": true,
-    "summaryExportPath": ".oat/repo/reference/project-summaries"
+    "summaryExportPath": ".oat/repo/reference/project-summaries",
+    "awsProfile": "voxmedia"
   },
   "tools": {
     "core": true,
