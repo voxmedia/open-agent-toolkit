@@ -88,7 +88,7 @@ oat_implement_exit_gate:
   receive_archived_artifact: reviews/archived/final-review-2026-10-12T144139Z.md
   receive_event_identity: 'final|code|final-review-2026-10-12T144139Z.md'
   receive_pre_head: 5388a27bee835ff16a271fb165742fbc6d157f42
-  receive_commit: null
+  receive_commit: c0b8e024d041d488b0f5b8845bc2c57442ab988f
   receive_eligible: true
   receive_completed: true
   failure: null
