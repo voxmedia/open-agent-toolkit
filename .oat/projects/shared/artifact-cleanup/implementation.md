@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 0/19 tasks completed
+**Total:** 5/19 tasks completed
 
 ---
 
@@ -66,56 +66,103 @@ oat_generated: false
 
 ### Task p01-t01: Project-log judgment categories and source identity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1619b49f6
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Judgment entries carry `**Category:**`/`**Source:**`/`**Origin:**`/`**Recorded:**` head fields with the six categories validated; `log append --category/--source/--origin`, `--category` without `--source` refused, `--idempotency-key` honored for judgment retries; `log check` exposes the fields and reports `learnings: legacy` when `oat-execution-learnings.md` exists. Guard `learning-category-validation` proven (neutralized → `--category bogus` appended; restored → refused).
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/log/{grammar,append,check}.ts` + tests
+- `log/__tests__/fixtures/lite-workflow-mode-project-log.md` (provenance: archived lite-workflow-mode log, byte-identical excerpt)
+- `.oxfmtrc.jsonc` (mechanical: fixture directory ignored so the hook cannot rewrite captured bytes)
+
+**Verification:**
+
+- control-plane build 0; `HOME=$FH` vitest `src/commands/project/log` + help-snapshots 325/325 exit 0; type-check 0
 
 ---
 
 ### Task p01-t02: Digest configuration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 90db795fc
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- `workflow.projectLogDigest.maxEntries` (12) and `.maxLines` (60) as a sibling object with local/shared/user/default precedence; non-integer refused by the reader; `config set … 2.5` exits 1; coexists with `workflow.projectLog: false`.
+
+**Files changed:**
+
+- `packages/cli/src/config/{oat-config,resolve}.ts`, `commands/config/index.ts` + tests
+- `apps/oat-docs/docs/reference/configuration.md`
+
+**Verification:**
+
+- vitest `src/config src/commands/config` 633/633 exit 0; scratch probe with the branch dist: default 12, shared override 5
 
 ---
 
 ### Task p01-t03: Bounded observations digest in roll-up
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 93eb25e76
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Roll-up renders a bounded observations digest (judgment entries only, newest first then category priority, capped by `maxEntries`/`maxLines` with an omitted-count trailer, `oat-project:<slug>#<entry-id>` locator tokens, no links); `summarySection: 'omitted'` removes the section when the digest is empty; `--json` reports `digest.{rendered,omitted,omittedEntries,byProducer}`; ledger graduation untouched. Guards `digest-bounded-projection` and `digest-ledger-graduation-intact` proven.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/log/rollup.ts`, `rollup.test.ts`, `lifecycle.integration.test.ts` (re-pinned)
+
+**Verification:**
+
+- vitest `src/commands/project/log` 269/269 exit 0
 
 ---
 
 ### Task p01-t04: Summary and project-log templates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a954972bf
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Project-log template header reduced to two lines plus a docs link, sample entry dropped; summary template no longer carries `## Workflow Observations` and its learnings comment states the category-bearing rule; no tracked `packages/cli/assets/templates` copy affected (only three unrelated copies are tracked).
+
+**Files changed:**
+
+- `.oat/templates/project-log.md`, `.oat/templates/summary.md`
+- `lifecycle.integration.test.ts` (mechanical: pinned the old template header)
+
+**Verification:**
+
+- CLI build 0; declared runner + log suite 1033/1033 exit 0; scratch probe (branch dist, `HOME=$FH`): 2-line header, empty-log roll-up `omitted`, no observations heading
 
 ---
 
 ### Task p01-t05: Summary and retro readers, staged closeout invocation, phase-1 docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 819c6fe44
 
-**Notes:**
+**Outcome:**
 
-- (pending)
+- Summary skill reads unified log entries first and `oat-execution-learnings.md` second, deduplicating by exact timestamp/category/title; staged invocation contract (`staged: true` … `resume: roll-up`) with the Step 2.5 promotion append deferred; export-safe non-link source identity; `oat_summary_learnings_fingerprint` frontmatter field; retro skill, `evidence-and-lanes.md` and retro template read unified first, legacy second; docs for categories, digest and `log` CLI bullets.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-summary/SKILL.md`, `.agents/skills/oat-project-retro/{SKILL.md,references/evidence-and-lanes.md}`
+- `.oat/templates/{summary,project-retro}.md`
+- `apps/oat-docs/docs/{reference/cli-reference,workflows/projects/execution/project-log,workflows/projects/closeout/retro}.md`
+- `retro-skill-contracts.test.ts`, `review-skill-contracts.test.ts`, `named-skill-load-contract.test.ts` (mechanical: non-executing row for the new `oat-project-complete` mention)
+
+**Verification:**
+
+- `oat:validate-skills` 0; `format:root` 0; `oat-docs check` 0; vitest `src/validation src/commands/init/tools/shared` 1070/1070 exit 0
 
 ---
 
@@ -351,6 +398,18 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — 2026-10-12 — branch `feat/artifact-cleanup` — Tier 1 (subagents) — dispatch policy frontier (claude, managed capped, pinned-variant) — implementers Opus 5.5 high via exact-candidate branch, reviewers at the cap (Fable 5.1 high)
+
+**Dispatch records:**
+
+- `ac-p01-implementation` — accepted 2026-10-12, native agent type `oat-phase-implementer-claude-claude-opus-5-5-high`; selection candidate-requested beneath frontier (operator run rule); managed record `validated-only`; canonical role resolved (tier loaded, role 1.1.7); base `df988e4315fb567c8a6890237237b169707c2b61`; outcome `DONE_WITH_CONCERNS`, range `df988e431..819c6fe44`, 5/5 tasks, 0 recovery attempts. Stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
+
+**Phase Outcomes:** (filled at Step 7b)
+
+**Parallel Groups:** none (sequential plan)
+
+**Outstanding Items:** (filled at Step 7b)
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
