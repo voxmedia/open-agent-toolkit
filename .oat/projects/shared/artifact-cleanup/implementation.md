@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p03-t11
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,10 +28,10 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | in_progress | 13    | 10/13     |
-| Phase 4 | pending     | 4     | 0/4       |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 4     | 0/4       |
 
-**Total:** 29/36 tasks completed
+**Total:** 32/36 tasks completed
 
 ---
 
@@ -572,8 +572,9 @@ oat_generated: false
 
 ## Phase 3: Learning producers and archive identity
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -581,23 +582,30 @@ oat_generated: false
 - In-phase re-pins, green again at the task that moves them: `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts`, `scaffold.test.ts` (p03-t01); the `archive` suite and `help-snapshots.test.ts` (p03-t02, p03-t03).
 - Nothing else may be red at the p03 review.
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- The autonomous, cloud and goal producers write learnings to the project log through one shared `oat_record_learning` function (category → judgment type, `--category/--source/--origin`, source id as idempotency key); a disabled log yields one warning and the run continues (D14); no producer creates `oat-execution-learnings.md`; the autonomous commit identity carries the written source id.
+- Archive retry identity: a read-only evaluator shared by apply and dry-run identifies archives by a manifest hash over retained files; identical retries reuse snapshot, export, S3 destination and receipt across dates and after source removal; local paths derive from the identity (scope-qualified when another archive holds the base path, empty directories reused); conflicting, ambiguous, occupant and recordless-synced cases refuse before any side effect with a stable reason code (`archive-*`, thirteen codes tabled in `project-artifacts.md`); summary exports rewrite `oat-project:` tokens to `oat-archive:<snapshot>#<id>`.
+- `--new-generation <reason>` ships with predecessor binding persisted before any side effect, replay detection by manifest match (`generationRequest` recorded as the witness), an audible warning when it resolves to an existing generation, and dry-run parity.
 
 **Key files touched:**
 
-- (pending)
+- `.agents/skills/oat-project-autonomous/SKILL.md`, `oat-cursor-cloud-projects/**`, `oat-project-goal/SKILL.md`, `oat-project-brief/references/brief-contract.md`
+- `packages/cli/src/commands/project/archive/{archive-utils,push-runner,index}.ts` and tests (`archive-retry-identity.test.ts` new)
+- `apps/oat-docs/docs/reference/{cli-reference,project-artifacts}.md`, `workflows/advanced/{autonomy,cursor-cloud}.md`, `workflows/projects/closeout/closeout-skills.md`
 
 **Verification:**
 
-- (pending)
+- Scoped vitest under an isolated HOME (phase 1750/1750; fix rounds 1384/1384 and 301/301), `pnpm check` 0 (uncached), `pnpm type-check` 0, validate-skills 0, format:root 0, `oat-docs check` 0, `pnpm lint` 0, `sync --scope project --dry-run` clean; three named guards proven by the implementer and re-proven by the reviewer; archive probes on scratch repos with a stubbed S3 only. Expected red only: `check:skill-bumps` (p04-t04).
+- Review: round 1 (0/0/3/5) and round 2 on the fix delta (0/0/0/3), Fable 5.1 high; the round-2 Lows were fixed as p03-t11..t13 and root-verified (diffs read, suite rerun) with the final integrated review as the independent check (cycle 2 of 3). No recovery attempts.
 
 **Notes / Decisions:**
 
-- (pending)
+- Deviations: `generationRequest` camelCase; scope-qualified identity whenever another archive holds the base path; occupant refusal with an inspect/remove/retry hint; `.git` excluded from every scope's copy; unchanged content under `--new-generation` resolves to the latest generation with a warning.
+- For p04-t01: the disabled-log case shows as fingerprint `none`, an omitted observations section and `unavailable` retro sources (no literal "no learnings recorded" phrase); brief and goal journals should go through `journal check`.
+- For p04-t04: bumps due for `oat-project-autonomous`, `oat-cursor-cloud-projects`, `oat-project-goal`, `oat-project-brief` plus the fifteen from p01/p02.
 
 ### Task p03-t01: Unified learning producers and the disabled-log rule (D14)
 
@@ -816,29 +824,69 @@ oat_generated: false
 
 ### Task p03-t11: (review) Replay warning states the persisted generation reason
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a25740630
+
+**Outcome:**
+
+- Replay warning reads the persisted `generationReason` and says the archive was allocated for that reason with no new generation allocated; generation-1 wording unchanged.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`
+
+**Verification:**
+
+- archive suite 232/232; control: old wording forced → replay test fails. Root-verified: diff read, suite 301/301 under an isolated HOME.
 
 ---
 
 ### Task p03-t12: (review) Reason codes on the recordless synced and persisted-path refusals
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a9af1a3ce
+
+**Outcome:**
+
+- `archive-synced-recordless-unbound`, `archive-synced-recordless-ambiguous` and `archive-retry-ambiguous` (persisted-path ambiguity) raised as `ArchiveIdentityError`; codes added to `ARCHIVE_IDENTITY_REFUSAL_CODES` and the docs table; pinned in dry-run and apply.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `apps/oat-docs/docs/reference/project-artifacts.md`
+
+**Verification:**
+
+- archive suite 233/233; oat-docs check 0; control: pre-fix module → 2 recordless tests fail on the missing code. Root-verified.
 
 ---
 
 ### Task p03-t13: (review) Treat an empty scope-qualified directory as free
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c8fb502ee
+
+**Outcome:**
+
+- Scope-qualified path refused only when it exists and is non-empty (same rule as the base path); empty `<project>-<scope>` reused, non-empty metadata-less refused with the tree unchanged.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`
+
+**Verification:**
+
+- archive suite 234/234; control: bare `pathExists` → empty directory refused. Root-verified.
 
 ---
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-12
+
+**Expected-red list (frozen 2026-10-12 before dispatch):**
+
+- `pnpm run check:skill-bumps` — red until p04-t04 lands inside this phase; nothing else may be red at any point, and p04-t04's full gate run must be entirely green before the phase closes.
 
 ### Phase Summary (fill when phase is complete)
 
@@ -920,14 +968,15 @@ _- Outstanding Items_
 
 **Phase Outcomes:**
 
-| Phase | Verdict | Task commits                                                                                                                                                                               | Review                                                                                                     | Fix rounds              | Reviewer dispatches                                                                                                                                                                                                                                                                                                                                                                 |
-| ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110                                                                                                   | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`) | 1 (`cont-ac-p01-fix-1`) | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
-| p02   | pass    | b99c55550, c79aa675a, bd6840307, d4e376ed5, 29ba174eb, b578602e2, bd16db569; recovery 7f95e2e3c; review fixes cbaaefbcb, cb94f4338 (+ recovery a81e58d09), b1e44cfe6, f577f9ffd, 3607948f4 | round 1 0/0/2/3 (`p02-review-2026-10-12T024507Z.md`), round 2 0/0/0/0 (`p02-review-2026-10-12T030234Z.md`) | 1 (`cont-ac-p02-fix-1`) | `ac-p02-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p02-review-1`, `ac-p02-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p02                                                                                                                                                                |
+| Phase | Verdict | Task commits                                                                                                                                                                               | Review                                                                                                                                 | Fix rounds                                   | Reviewer dispatches                                                                                                                                                                                                                                                                                                                                                                 |
+| ----- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110                                                                                                   | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`)                             | 1 (`cont-ac-p01-fix-1`)                      | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
+| p02   | pass    | b99c55550, c79aa675a, bd6840307, d4e376ed5, 29ba174eb, b578602e2, bd16db569; recovery 7f95e2e3c; review fixes cbaaefbcb, cb94f4338 (+ recovery a81e58d09), b1e44cfe6, f577f9ffd, 3607948f4 | round 1 0/0/2/3 (`p02-review-2026-10-12T024507Z.md`), round 2 0/0/0/0 (`p02-review-2026-10-12T030234Z.md`)                             | 1 (`cont-ac-p02-fix-1`)                      | `ac-p02-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p02-review-1`, `ac-p02-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p02                                                                                                                                                                |
+| p03   | pass    | f0334271a, ed330bbab, 587539d06; review fixes 60d10eb8b, 186ef8752, 8047d32a4, 4c138a9cc, 5a975c474, 03242c88b, a6a9950a5; polish a25740630, a9af1a3ce, c8fb502ee                          | round 1 0/0/3/5 (`p03-review-2026-10-12T035735Z.md`), round 2 0/0/0/3 (`p03-review-2026-10-12T042217Z.md`); round-2 Lows root-verified | 2 (`cont-ac-p03-fix-1`, `cont-ac-p03-fix-2`) | `ac-p03-implementation` (Opus 5.5 high, candidate-requested, validated-only); `ac-p03-review-1`, `ac-p03-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, validated-only; stamps as p01 with scope=p03                                                                                                                                                                |
 
 **Parallel Groups:** none (sequential plan)
 
-**Outstanding Items:** none after p02.
+**Outstanding Items:** none after p03.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
