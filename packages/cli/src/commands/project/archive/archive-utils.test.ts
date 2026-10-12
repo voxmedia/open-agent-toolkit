@@ -1511,6 +1511,60 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
+  it('refuses a metadata-less occupant that appears at the path after evaluation, without clearing it', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archivePath = join(repoRoot, '.oat', 'projects', 'archived', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await mkdir(archivePath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: 'demo',
+        snapshotName: '20260827-demo',
+        scope: 'local',
+      })}\n`,
+      'utf8',
+    );
+    const qualifiedPath = `${archivePath}-shared`;
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          // An older CLI mid-copy, a person or a tool writes into the
+          // evaluated path after the directory exists, without metadata.
+          ensureDir: async (directory: string) => {
+            await mkdir(directory, { recursive: true });
+            if (directory === qualifiedPath) {
+              await writeFile(join(qualifiedPath, 'notes.md'), '# stray\n');
+            }
+          },
+          timestamp: () => '2026-08-27T12:00:00Z',
+        },
+      ),
+    ).rejects.toMatchObject({
+      code: 'archive-occupant-unverifiable',
+      message: expect.stringContaining('`notes.md`'),
+    });
+    // The stray content and the source stay; only this call's own claim is
+    // released.
+    await expect(readdir(qualifiedPath)).resolves.toEqual(['notes.md']);
+    await expect(
+      readFile(join(qualifiedPath, 'notes.md'), 'utf8'),
+    ).resolves.toBe('# stray\n');
+    await expect(readFile(join(projectPath, 'state.md'), 'utf8')).resolves.toBe(
+      '# state\n',
+    );
+  });
+
   it.each([
     ['shared', 'valid'],
     ['shared', 'malformed'],

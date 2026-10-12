@@ -3018,6 +3018,7 @@ export async function archiveProjectOnCompletion(
   // overlapping archive call can never delete or overwrite a generation
   // another call completed.
   const allocationOwner = randomUUID();
+  let claimedNew = false;
   if (identity.disposition === 'new') {
     // Persist the new archive (a first archive or a successor generation, with
     // its predecessor binding) before any export, copy or S3 side effect, so
@@ -3043,7 +3044,18 @@ export async function archiveProjectOnCompletion(
       },
       identity.generation,
     );
+    // A brand-new claim owns nothing at the path but its own metadata.
+    // Anything else appeared after the evaluation (an older CLI mid-copy, a
+    // person or a tool): release the claim and refuse, never clear it.
+    await refuseForeignOccupant(
+      archivePath,
+      removePath,
+      allocationOwner,
+      options.projectName,
+      projectScope,
+    );
     allocationPending = true;
+    claimedNew = true;
   } else if (allocationPending) {
     // Resume an interrupted allocation only while it is still pending.
     await takeOverPendingGeneration(
@@ -3078,7 +3090,9 @@ export async function archiveProjectOnCompletion(
   if (!archiveExists || allocationPending) {
     try {
       await makeDir(dirname(archivePath));
-      if (allocationPending) {
+      // Only a resumed allocation holds a partial copy of its own to clear;
+      // a new claim was verified to hold nothing but its metadata.
+      if (allocationPending && !claimedNew) {
         await clearPendingGeneration(archivePath, removePath, allocationOwner);
       }
       await copyProjectDirectory(
@@ -3497,6 +3511,45 @@ async function assertAllocationOwned(
   if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
     throw claimHeldError(archivePath, generation, current);
   }
+}
+
+/**
+ * After a new exclusive claim: when anything but this call's own metadata is
+ * at the path, remove only that metadata (while this call still owns it) and
+ * refuse the occupant as unverifiable, leaving the occupant untouched.
+ */
+async function refuseForeignOccupant(
+  archivePath: string,
+  removePath: (
+    target: string,
+    options: { recursive: true; force: true },
+  ) => Promise<void>,
+  owner: string,
+  projectName: string,
+  scope: ProjectScope,
+): Promise<void> {
+  const foreign = (await readdir(archivePath)).filter(
+    (entry) => entry !== ARCHIVE_SNAPSHOT_METADATA_FILENAME,
+  );
+  if (foreign.length === 0) {
+    return;
+  }
+  const current = await readArchiveMetadataAt(archivePath);
+  if (current?.allocation === 'pending' && current.allocationOwner === owner) {
+    await removePath(join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME), {
+      recursive: true,
+      force: true,
+    });
+  }
+  throw new ArchiveIdentityError(
+    'archive-occupant-unverifiable',
+    `\`${archivePath}\` gained content that does not identify itself as an archive of \`${projectName}\` (${scope}) after this run evaluated it (${foreign
+      .sort()
+      .map((entry) => `\`${entry}\``)
+      .join(
+        ', ',
+      )}); refusing to overwrite or clear it before any export, copy or S3 mutation. ${occupantGuidance(projectName)}`,
+  );
 }
 
 /**
