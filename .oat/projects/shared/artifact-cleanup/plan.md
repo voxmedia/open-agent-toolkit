@@ -225,6 +225,144 @@ Expected: green.
 
 ---
 
+### Task p02-t08: (review) Align receipt placement for task-scoped and revision reviews
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (owning phase from a task-id scope via `normalizeTaskId(token)?.phaseId`)
+- Modify: `packages/cli/src/commands/project/journal-check/evaluator.test.ts` (two cases beside "receipt appended after References": task-scoped receipt in its phase accepted; `p-revN` receipt in `## Phase p-revN` accepted, in the corrected phase refused)
+- Modify: `.agents/skills/oat-project-review-receive/SKILL.md` (Step 7: a `p-revN` receipt lives in the `## Phase p-revN` section the revise skill creates, or under `## Reviews and Gates`; a task-scoped receipt lives in the task's phase)
+- Modify: any contract test pinning that Step 7 sentence
+
+**Step 1: Understand the issue**
+
+Review finding (`p02-review-2026-10-12T024507Z.md`): M1: review-receive Step 7 tells a `p-revN` receipt to live in the phase it corrects and never covers task-scoped receipts; the evaluator derives the owning phase from the first scope token and refuses both as `receipt-misplaced`.
+Location: `.agents/skills/oat-project-review-receive/SKILL.md:667`, `packages/cli/src/commands/project/journal-check/rules.ts:663-669`
+
+**Step 2: Implement fix**
+
+Derive the owning phase from a task-id scope in the evaluator; make the skill text match the evaluator for `p-revN`; add the two evaluator cases.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/validation src/commands/init/tools/shared; pnpm oat:validate-skills`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p02-t08): receipt placement agrees between review-receive and the journal evaluator`
+
+---
+
+### Task p02-t09: (review) Completion posture: in_progress is routed back, not accepted
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (Step 3.0: replace the `in_progress` bullet; journal and state must agree at completion, an `in_progress` project routes back to `oat-project-implement`; status disagreement is not an override-eligible gap)
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md` (line ~94: accepts `pr_open` or `complete`)
+- Modify: `review-skill-contracts.test.ts` if it pins the bullet
+
+**Step 1: Understand the issue**
+
+Review finding (`p02-review-2026-10-12T024507Z.md`): M2: Step 3.0 and lifecycle.md still promise that completion accepts `in_progress`; the completion evaluator and `complete-state` refuse `state-status-disagrees`.
+Location: `.agents/skills/oat-project-complete/SKILL.md:478`, `apps/oat-docs/docs/workflows/projects/lifecycle.md:94`
+
+**Step 2: Implement fix**
+
+One-paragraph skill and docs alignment; no code change.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills; pnpm format:root; pnpm --filter oat-docs check; HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p02-t09): completion posture docs match the status-agreement rule`
+
+---
+
+### Task p02-t10: (review) Fail closed when a planned project has no journal at completion
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/complete-state/index.ts` (when `plan.md` exists but `implementation.md` does not, refuse with a `journal-missing` reason and write nothing; a plan-less fixture keeps the old behavior)
+- Modify: `packages/cli/src/commands/project/complete-state/journal.test.ts` and the existing journal-less completion tests (plan-less fixtures where the old behavior is intended; one new refusal case)
+
+**Step 1: Understand the issue**
+
+Review finding (`p02-review-2026-10-12T024507Z.md`): L1: a project without `implementation.md` bypasses the final evaluator entirely; every scaffold writes a journal, so the only way to reach this branch is deleting it.
+Location: `packages/cli/src/commands/project/complete-state/index.ts:96`
+
+**Step 2: Implement fix**
+
+Fail closed for planned journal-less projects with a named reason code; keep plan-less fixtures green.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/complete-state src/commands/project/closeout-check src/commands/project/journal-check`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p02-t10): complete-state refuses a planned project with no journal`
+
+---
+
+### Task p02-t11: (review) Evaluate oat_ready_for agreement at completion
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (at `completion`, journal `oat_ready_for` must be `null` or a closeout skill name; otherwise `state-status-disagrees` with the field named)
+- Modify: `packages/cli/src/commands/project/journal-check/evaluator.test.ts` (stale `oat_ready_for: oat-project-implement` under `oat_status: complete` refused; `null` and `oat-project-complete` accepted)
+
+**Step 1: Understand the issue**
+
+Review finding (`p02-review-2026-10-12T024507Z.md`): L2: design "Status agreement" lists journal `oat_status`/`oat_ready_for`; the evaluator checks `oat_status` and the pointer only.
+Location: `packages/cli/src/commands/project/journal-check/rules.ts:175-196`
+
+**Step 2: Implement fix**
+
+Add the `oat_ready_for` check at the completion boundary with a test pair.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p02-t11): journal evaluator checks oat_ready_for agreement at completion`
+
+---
+
+### Task p02-t12: (review) Anchor the template-residue brace pattern to placeholder vocabulary
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (`BRACE_PLACEHOLDER`: match only the template's placeholder vocabulary or brace tokens that start a list item or follow a `**…:**` marker; `{Task Name}` control stays refused)
+- Modify: `packages/cli/src/commands/project/journal-check/evaluator.test.ts` (prose `returns {status, reasons}` outside inline code accepted; `{Task Name}` residue still refused)
+
+**Step 1: Understand the issue**
+
+Review finding (`p02-review-2026-10-12T024507Z.md`): L3: the brace pattern matches any `{word …}` outside inline code, so ordinary prose is refused as `template-residue`.
+Location: `packages/cli/src/commands/project/journal-check/rules.ts:893`
+
+**Step 2: Implement fix**
+
+Narrow the pattern; keep the residue guard green.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check`
+Expected: green; the named negative control fails with the guard neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p02-t12): template-residue check ignores ordinary brace prose`
+
+---
+
 ## Phase 3: Learning producers and archive identity
 
 ### Task p03-t01: Unified learning producers and the disabled-log rule (D14)
@@ -297,7 +435,7 @@ After p04 is accepted: final integrated review, summary, document and `pr-final`
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | p01    | code     | fixes_completed | 2026-10-12 | reviews/archived/p01-review-2026-10-12T012710Z.md           | c6b98bcac0408788ba03303f81c50123bf962c44 | auto       | round 1: 0/0/1/3; M1 and L3 aligned in plan; L1→p01-t06, L2→p01-t07; fixes landed 0bce1f045, d905d0110                                                    |
 | p01    | code     | passed          | 2026-10-12 | reviews/archived/p01-review-2026-10-12T013544Z.md           | a359c4524044ac4a8b74ad1739dc7fce1d25d730 | auto       | round 2 (narrowed to 5c7e60601..d905d0110): 0/0/0/0; M1/L3 plan alignments and L1/L2 fixes verified                                                       |
-| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
+| p02    | code     | fixes_added     | 2026-10-12 | reviews/archived/p02-review-2026-10-12T024507Z.md           | a9ee702f55d3ce000927edf4c50ce73f5adc3af2 | auto       | round 1: 0/0/2/3; all five converted (p02-t08..p02-t12)                                                                                                   |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                                                                                                                                                         |
@@ -322,11 +460,11 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 **Summary:**
 
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
-- Phase 2: 7 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough
+- Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
 - Phase 3: 3 tasks - Unified learning producers (D14), archive retry identity, explicit generations
 - Phase 4: 4 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates
 
-**Total: 21 tasks**
+**Total: 26 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t08
 oat_generated: false
 ---
 
@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 3 | pending     | 3     | 0/3       |
 | Phase 4 | pending     | 4     | 0/4       |
 
-**Total:** 14/21 tasks completed
+**Total:** 14/26 tasks completed
 
 ---
 
@@ -407,6 +407,62 @@ oat_generated: false
 **Verification:**
 
 - oat-docs check 0; docs:skills:check 0; autonomy-gate-inventory 5/5; phase suite 3188/3188 and control-plane 287/287 on the recovered head
+
+---
+
+### Review Received: p02
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/p02-review-2026-10-12T024507Z.md (round 1, Fable 5.1 high, auto)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 2
+- Low: 3
+
+**New tasks added:** p02-t08 (M1), p02-t09 (M2), p02-t10 (L1), p02-t11 (L2), p02-t12 (L3)
+
+**Design drift / artifact alignment notes:**
+
+- M2 is skill/docs drift against the design's status-agreement rule; the evaluator is right and the complete skill's Step 3.0 plus `lifecycle.md` are aligned by p02-t09. Source of truth: design revision 3 "Validator › Status agreement".
+- L1 converts the recorded p02-t04 deviation ("no journal, no evaluation") into a fail-closed refusal for planned projects; the Deviations row stays as history.
+
+**Next:** execute p02-t08..p02-t12 as a bounded fix continuation of the p02 implementer, then a re-review of the fix delta to reach `passed`.
+
+### Task p02-t08: (review) Align receipt placement for task-scoped and revision reviews
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t09: (review) Completion posture: in_progress is routed back, not accepted
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t10: (review) Fail closed when a planned project has no journal at completion
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t11: (review) Evaluate oat_ready_for agreement at completion
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t12: (review) Anchor the template-residue brace pattern to placeholder vocabulary
+
+**Status:** pending
+**Commit:** -
 
 ---
 
