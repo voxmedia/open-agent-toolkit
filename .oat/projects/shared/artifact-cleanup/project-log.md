@@ -88,6 +88,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 External PR review (Warp 0/8/0/0, Bugbot 2 Medium) verified and fixed as p04-t13..t20; final round 4 (0/1/1/2) → p04-t21..t22; final round 5 passed 0/0/0/1 at 5fe8ac058. Exit gate generation 2 follows. Key ac-final-outcome-2.
 
+### 2026-10-12 · structural · oat-project-review-provide · reviews/final-review-2026-10-12T144139Z.md
+
+Two synchronously awaited read-only reconnaissance lanes completed for reviews/final-review-2026-10-12T144139Z.md; root verified archive overlap, generation sync and plan-record findings. review-recon-fd67d667-727f-4e6c-a0d2-69d8fd947220
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
