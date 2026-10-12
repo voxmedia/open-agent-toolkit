@@ -157,8 +157,11 @@ writing lifecycle artifacts does not imply unrelated full test suites.
 
 ## Project Log
 
-Defer entry flags to `oat project log append --help`; never pre-check project
-log configuration: the helper no-ops when logging is disabled.
+Defer entry flags to `oat project log append --help`; do not read
+`workflow.projectLog` yourself. The append consults it only while
+`project-log.md` does not exist: a disabled, absent log is not created and the
+append reports `status: skipped`, while an existing log keeps accepting
+entries whatever the flag says (`DR-260718-automatic-create-on-first`).
 
 - At each milestone activation (Step 7), append exactly one structural entry:
   `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-goal --ref <activated mNN> --idempotency-key "<goal-slug>-activate-<mNN>" --body "Activated <mNN> (<ordered phase ids>); <goal-slug>-activate-<mNN>"`.
@@ -643,10 +646,11 @@ agreed endpoint (brief contract sections 12.3 and 12.10).
 3. **Capture learnings.** Call `oat_record_learning` (Project Log) at least
    once for what the delivered milestone taught. This write is the
    `delivered → aligning` prerequisite "learnings captured"; reflection without
-   the write does not satisfy it. Never pre-check log configuration: when the
-   project log is disabled the append no-ops, the write prints one warning
-   line, and the attempt satisfies the prerequisite. Nothing is written to any
-   other file.
+   the write does not satisfy it. Do not read `workflow.projectLog` yourself:
+   an existing `project-log.md` records the learning whatever the flag says,
+   and only when the log is disabled and absent does the append skip
+   (`status: skipped`); the write then prints one warning line, and the
+   attempt satisfies the prerequisite. Nothing is written to any other file.
 4. **Delta interview (`GOAL-12`).** Ask only what changed: what the delivered
    milestone taught, the next milestone's outcomes, phases and endpoint, and
    any material change, which gets a focused realignment.
@@ -734,7 +738,7 @@ Goal milestone m01 activated. Next: oat-project-implement
   each milestone's `plan` carrier was written `allowed` only after that
   milestone's review, gate and approval, bound to its ordered phase set.
 - No milestone was activated before the previous delivery was observed at its
-  agreed endpoint; learnings were written (or, with the project log disabled,
+  agreed endpoint; learnings were written (or, with the project log disabled and absent,
   attempted with its warning) before re-alignment advanced.
 - One structural log entry per activation and per re-alignment entry.
 - `declared_met` and the audit were written only after the user's explicit

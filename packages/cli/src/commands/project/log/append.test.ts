@@ -2047,6 +2047,70 @@ describe('oat project log append', () => {
       ...extra,
     ];
 
+    describe('workflow.projectLog: false (DR-260718-automatic-create-on-first)', () => {
+      async function disableProjectLog(root: string): Promise<void> {
+        await writeFile(
+          join(root, '.oat', 'config.local.json'),
+          `${JSON.stringify({
+            version: 1,
+            activeProject: '.oat/projects/shared/demo',
+            workflow: { projectLog: false },
+          })}\n`,
+          'utf8',
+        );
+      }
+      const disabledLearning = learningArgs([
+        '--category',
+        'gotcha',
+        '--source',
+        'obs-disabled-1',
+        '--origin',
+        'oat-project-autonomous',
+      ]);
+
+      it('appends a categorized learning to an existing log', async () => {
+        const { root, logPath } = await createRepo();
+        await seedLog(logPath);
+        await disableProjectLog(root);
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command, disabledLearning);
+
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'appended',
+          created: false,
+        });
+        expect(capture.jsonPayloads[0]).not.toHaveProperty('reason');
+        expect(
+          parseProjectLogEntries(await readFile(logPath, 'utf8')).entries,
+        ).toEqual([
+          expect.objectContaining({
+            category: 'gotcha',
+            source: 'obs-disabled-1',
+            origin: 'oat-project-autonomous',
+          }),
+        ]);
+        expect(process.exitCode).toBe(0);
+      });
+
+      it('skips a categorized learning when no log exists, creating nothing', async () => {
+        const { root, logPath } = await createRepo();
+        await disableProjectLog(root);
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command, disabledLearning);
+
+        expect(capture.jsonPayloads[0]).toEqual({
+          status: 'skipped',
+          reason: 'projectLog=false',
+        });
+        await expect(readFile(logPath, 'utf8')).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+        expect(process.exitCode).toBe(0);
+      });
+    });
+
     it('writes the head above the body and the parser exposes every field', async () => {
       const { root, logPath } = await createRepo();
       await seedLog(logPath);

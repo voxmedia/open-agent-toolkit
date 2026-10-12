@@ -172,21 +172,32 @@ describe('learning producers write the project log (p03-t01)', () => {
     }
   });
 
-  it('pins the D14 disabled-log rule in the goal skill and brief contract', () => {
+  it('pins the D14 disabled-log rule (DR-260718) in the goal skill and brief contract', () => {
     const goal = readRepoFile('.agents/skills/oat-project-goal/SKILL.md');
     expect(goal).not.toMatch(/write the learnings file instead/);
     expect(goal.replace(/\s+/g, ' ')).toContain(
-      'when the project log is disabled the append no-ops, the write prints one warning line, and the attempt satisfies the prerequisite',
+      'an existing `project-log.md` records the learning whatever the flag says, and only when the log is disabled and absent does the append skip (`status: skipped`); the write then prints one warning line, and the attempt satisfies the prerequisite.',
     );
     const contract = readRepoFile(
       '.agents/skills/oat-project-brief/references/brief-contract.md',
     ).replace(/\s+/g, ' ');
     expect(contract).toContain(
-      'When the project log is disabled the append no-ops; the producer prints one warning line and continues, and the attempt satisfies the prerequisite.',
+      'When the project log is disabled and absent the append skips (`status: skipped`); the producer prints one warning line and continues, and the attempt satisfies the prerequisite. An existing `project-log.md` keeps accepting the write whatever the flag says',
     );
     expect(contract).toMatch(
-      /\| delivered → aligning \| `oat-project-goal` \| learnings captured \(section 12\.10: the categorized project-log write, or its warned attempt when the log is disabled\)/,
+      /\| delivered → aligning \| `oat-project-goal` \| learnings captured \(section 12\.10: the categorized project-log write, or its warned attempt when the log is disabled and absent\)/,
     );
+    // No producer may promise that a disabled flag silences an existing log.
+    for (const producer of [
+      '.agents/skills/oat-project-goal/SKILL.md',
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+      '.agents/skills/oat-cursor-cloud-projects/references/cursor-cloud-mechanics.md',
+      '.agents/skills/oat-project-brief/references/brief-contract.md',
+    ]) {
+      const text = readRepoFile(producer).replace(/\s+/g, ' ');
+      expect(text, producer).not.toMatch(/append no-ops|helper no-ops/);
+      expect(text, producer).toContain('DR-260718-automatic-create-on-first');
+    }
   });
 });
 
@@ -210,7 +221,9 @@ describe('learning write against the branch-built CLI', () => {
 
   const PROJECT_PATH = '.oat/projects/shared/demo';
 
-  function scratchRepo(options: { projectLog?: false } = {}): {
+  function scratchRepo(
+    options: { projectLog?: false; existingLog?: boolean } = {},
+  ): {
     repo: string;
     home: string;
   } {
@@ -220,6 +233,13 @@ describe('learning write against the branch-built CLI', () => {
     spawnSync('git', ['init', '-q'], { cwd: repo });
     mkdirSync(join(repo, PROJECT_PATH), { recursive: true });
     writeFileSync(join(repo, PROJECT_PATH, 'state.md'), '# State\n', 'utf8');
+    if (options.existingLog === true) {
+      writeFileSync(
+        join(repo, PROJECT_PATH, 'project-log.md'),
+        '# Project Log: demo\n\n## Entries\n',
+        'utf8',
+      );
+    }
     if (options.projectLog === false) {
       writeFileSync(
         join(repo, '.oat', 'config.local.json'),
@@ -296,6 +316,20 @@ describe('learning write against the branch-built CLI', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("unknown learning category 'bogus'");
     expect(existsSync(join(repo, PROJECT_PATH, 'project-log.md'))).toBe(false);
+  });
+
+  it('records into an existing log without a warning while the project log is disabled (DR-260718)', () => {
+    const { repo, home } = scratchRepo({
+      projectLog: false,
+      existingLog: true,
+    });
+    const result = runLearningWrite(repo, home, LEARNING, 'echo "continued"');
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe('continued');
+    expect(result.stderr).toBe('');
+    expect(
+      readFileSync(join(repo, PROJECT_PATH, 'project-log.md'), 'utf8'),
+    ).toMatch(/\*\*Category:\*\* gotcha\n\*\*Source:\*\* autonomous-run1-01\n/);
   });
 
   it('warns once, creates no file and continues when the project log is disabled (D14)', () => {

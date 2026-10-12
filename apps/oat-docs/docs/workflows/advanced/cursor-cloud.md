@@ -165,9 +165,9 @@ The cloud skill records learnings with the same write as autonomous runs:
 `documentation-gap`, `candidate-skill-content`, `decision`,
 `environment-limited`), a stable per-observation `--source` id that is also
 the `--idempotency-key`, and `--origin oat-cursor-cloud-projects`. A retried
-write appends nothing. When the project log is disabled, the append does
+write appends nothing. When the project log is disabled and does not exist yet, the append creates
 nothing: the skill prints one warning line and continues, and the learning is
-not persisted. It never creates `oat-execution-learnings.md`. See
+not persisted. An existing `project-log.md` keeps accepting learnings. It never creates `oat-execution-learnings.md`. See
 [Autonomous Project Execution](autonomy.md#execution-learnings-loop) for the
 category-to-type mapping and how summary reads the entries.
 

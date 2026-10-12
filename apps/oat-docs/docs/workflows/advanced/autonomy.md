@@ -243,9 +243,11 @@ observation, impact, recommendation and, where it applies, uncertainty. A
 retried write with the same source id appends nothing. `oat-cursor-cloud-projects`
 and `oat-project-goal` use the same write with their own origin.
 
-When the project log is disabled (`workflow.projectLog: false`), the append
-does nothing: the producer prints one warning line and continues, and no
-learning is persisted anywhere. Disabling the log is the operator's choice. No
+When the project log is disabled (`workflow.projectLog: false`) and
+`project-log.md` does not exist yet, the append creates nothing: the producer
+prints one warning line and continues, and no learning is persisted anywhere.
+The flag only stops the log's creation; an existing `project-log.md` keeps
+accepting learnings. No
 producer creates `oat-execution-learnings.md` any more; summary and retro
 still read an existing legacy file after the log.
 

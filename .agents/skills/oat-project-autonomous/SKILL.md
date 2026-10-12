@@ -445,10 +445,14 @@ verbatim in the entry's `**Category:**` head and maps to the judgment type:
 `candidate-skill-content` → `worked-well`; `documentation-gap` and `decision`
 → `feedback`.
 
-Call the write unconditionally and never pre-check log configuration. When the
-project log is disabled the append no-ops: the write prints its one warning
-line, records nothing, and the run continues. Disabling the log is the
-operator's choice; do not persist the learning anywhere else.
+Call the write unconditionally; do not read `workflow.projectLog` yourself.
+The append consults that flag only while `project-log.md` does not exist: with
+the log disabled (`workflow.projectLog: false`) and absent, it creates nothing
+and reports `status: skipped` (`reason: projectLog=false`), the write prints
+its one warning line, records nothing, and the run continues. An existing
+`project-log.md` keeps accepting categorized learnings whatever the flag says
+(`DR-260718-automatic-create-on-first`). Disabling the log stops its creation;
+do not persist the learning anywhere else.
 
 Assign the source id before each write and pass that variable, so the commit
 below carries the id just written (`$RUN_ID` is this run's id; `NN` numbers the
@@ -665,4 +669,4 @@ reconciliation path. Do not guess or overwrite the tracker.
 - ✅ Phase-boundary commits and non-force pushes are recorded.
 - ✅ The run ended with a final PR report or a structured blocker report.
 - ✅ Learnings are reusable, secret-free, category-bearing project-log entries,
-  or the run reported that the disabled log recorded none.
+  or the run reported that the disabled, absent log recorded none.

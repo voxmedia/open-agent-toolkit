@@ -512,8 +512,8 @@ cannot read clearly is reported rather than treated as empty, and a sealed
 appears only when the project has actionable learnings: category-bearing
 project-log entries written by autonomous, cloud or goal runs, or a legacy
 `oat-execution-learnings.md` file from an older project, which is still read
-after the log. New runs never create that file; with the project log disabled
-they record no learnings, and the summary has no such section. Recorded exit-gate waivers stay explicit; the
+after the log. New runs never create that file; with the project log disabled and never created they record no learnings,
+and the summary has no such section. Recorded exit-gate waivers stay explicit; the
 skill does not infer them.
 
 **What it does without asking:** when the repository has adopted PJM, every

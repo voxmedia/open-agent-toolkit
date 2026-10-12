@@ -143,9 +143,12 @@ to the judgment type (`gotcha`, `environment-limited` → `friction`;
 `efficiency`, `candidate-skill-content` → `worked-well`; `documentation-gap`,
 `decision` → `feedback`).
 
-Call it unconditionally and never pre-check log configuration. With the
-project log disabled the append no-ops: the write prints one warning line,
-records nothing, and orientation continues. Commit `project-log.md`, when it
+Call it unconditionally; do not read `workflow.projectLog` yourself. The
+append consults that flag only while `project-log.md` does not exist: with the
+log disabled and absent it creates nothing and reports `status: skipped`, the
+write prints one warning line, records nothing, and orientation continues. An
+existing `project-log.md` keeps accepting categorized learnings whatever the
+flag says (`DR-260718-automatic-create-on-first`). Commit `project-log.md`, when it
 exists, with the next bookkeeping commit for the project (a synced project uses
 `oat project push`).
 
