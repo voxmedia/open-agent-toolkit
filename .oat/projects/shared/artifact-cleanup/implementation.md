@@ -1250,7 +1250,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - M3: this journal kept its final-review receipts inside Phase 4 and had no `## Reviews and Gates` slot; fixed by the root in the receive commit (receipts relocated here, slot created, `## Deferred Findings` slot added empty).
 
-**Next:** p04-t08..p04-t12 landed 80a8a724e..7e32ece6e via `cont-ac-p03-fix-4` (guards 11/11 green); final round 3 on the fix delta, then exit gate attempt 2.
+**Next:** p04-t08..p04-t12 landed 80a8a724e..7e32ece6e via `cont-ac-p03-fix-4`; final round 3 (`reviews/archived/final-review-2026-10-12T061438Z.md`, reviewed head `2c2594f42`) returned 0/0/0/1 (journal count wording, fixed by the root); exit gate attempt 2 follows.
 
 ## Deferred Findings
 
@@ -1263,7 +1263,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Project-log judgment entries carry category, source, origin and recorded-head fields; roll-up writes a bounded observations digest with non-link locators and omits the section when empty; `workflow.projectLogDigest` config; slimmer project-log and summary templates.
 - Summary and retro read the unified log first and `oat-execution-learnings.md` second with proven-twin deduplication; the summary gains the staged invocation contract and learning-driven freshness; the autonomous, cloud and goal producers write learnings to the project log and never create the legacy file (D14: a disabled log warns and continues).
 - A shared journal record reader, `dispatch record --format line` run records, the journal evaluator and `oat project journal check` at three lifecycle boundaries, `complete-state` refusing on an invalid journal (writing nothing), journal templates with `## Reviews and Gates` and `## Deferred Findings` slots, and sixteen writer skills targeting them; the complete skill runs summary staged, validates, then resumes roll-up, and writes `oat_pr_status_observed_at`.
-- Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, twelve `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
+- Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, thirteen `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
 - Documentation audit, ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, full gate run green.
 
 **Behavioral changes (user-facing):**
