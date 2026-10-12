@@ -99,7 +99,7 @@ If you catch yourself:
 **Recovery:**
 
 1. Persist only safe, owned bookkeeping.
-2. Record the deviation or inventory gap in the learnings log.
+2. Record the deviation or inventory gap as a learning (Step 4).
 3. Return to the earliest incomplete canonical lifecycle step, or stop with the
    structured blocker report.
 
@@ -117,7 +117,7 @@ Print each indicator only when its step begins:
 - `[2/9] Detecting persisted lifecycle state…`
 - `[3/9] Selecting workflow review density…`
 - `[4/9] Gathering external-integration evidence…`
-- `[5/9] Initializing execution learnings…`
+- `[5/9] Preparing the project-log learning write…`
 - `[6/9] Running lifecycle phases and independent reviews…`
 - `[7/9] Completing implementation closeout…`
 - `[8/9] Committing and pushing the phase boundary…`
@@ -388,18 +388,12 @@ continue with checked-out sources when that preserves integrity. Missing
 evidence that would force material product or safety assumptions is a boundary,
 not permission to guess.
 
-### Step 4: Create and Maintain the Learnings Log
+### Step 4: Record Learnings in the Project Log
 
-At run start, create `"$PROJECT_PATH/oat-execution-learnings.md"` when absent
-with `oat_generated: false` and append-only intent. Append UTC-dated entries:
-
-```markdown
-## {timestamp} - {category} - {title}
-
-**Observation:** ...
-**Impact:** ...
-**Recommendation:** ...
-```
+Learnings are category-bearing judgment entries in `project-log.md`, written
+only through `oat project log append`. Never create or append to
+`oat-execution-learnings.md`; summary and retro still read an existing legacy
+file second.
 
 Use only these categories: `gotcha`, `efficiency`, `documentation-gap`,
 `candidate-skill-content`, `decision`, and `environment-limited`. Record
@@ -407,21 +401,74 @@ degraded routes, inventory gaps, unavailable verification, and reusable
 improvements. Never record secrets, token values, signed URLs, or active
 autonomy signals.
 
-After creating the log and after every later append, persist that write before
-continuing:
+Give every observation a stable source id: one whitespace-free word that is
+unique to this run and observation, for example
+`autonomous-<run id>-<NN>`. Retain it for retries: the id is both `--source`
+and `--idempotency-key`, so a replayed write reports `already-appended` and
+appends nothing. Write the learning title as `--area`, and the body as
+`Observation:`, `Impact:`, `Recommendation:` and, when it applies,
+`Uncertainty:` lines. Define the write once and call it for every learning:
 
 ```bash
-PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
-  echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
-  exit 1
+# Learning write (shared by oat-project-autonomous, oat-cursor-cloud-projects
+# and oat-project-goal): oat_record_learning <category> <source-id> <title> <body>
+oat_record_learning() {
+  local category="$1" source="$2" title="$3" body="$4" type result
+  case "$category" in
+    gotcha | environment-limited) type=friction ;;
+    efficiency | candidate-skill-content) type=worked-well ;;
+    documentation-gap | decision) type=feedback ;;
+    *)
+      echo "oat: unknown learning category '$category'" >&2
+      return 1
+      ;;
+  esac
+  result=$(oat project log append --json --project "$PROJECT_PATH" \
+    --type "$type" --scope project --area "$title" \
+    --category "$category" \
+    --source "$source" \
+    --origin "${LEARNING_ORIGIN:?set to the producer skill name}" \
+    --idempotency-key "$source" \
+    --body "$body") || {
+    printf '%s\n' "$result" >&2
+    return 1
+  }
+  if printf '%s' "$result" | grep -Eq '"status": *"skipped"'; then
+    echo "oat: warning: project log disabled (workflow.projectLog=false); learning $source not recorded" >&2
+  fi
 }
-if [ "$PROJECT_SCOPE" = "synced" ]; then
-  oat project push "$PROJECT_PATH" --message "chore(oat): update autonomous execution learnings" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
-else
-  OWNED_COMMIT_PATHS=("$PROJECT_PATH/oat-execution-learnings.md")
-  oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:2" --message "chore(oat): update autonomous execution learnings" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
+```
+
+Set `LEARNING_ORIGIN=oat-project-autonomous`. The category is preserved
+verbatim in the entry's `**Category:**` head and maps to the judgment type:
+`gotcha` and `environment-limited` → `friction`; `efficiency` and
+`candidate-skill-content` → `worked-well`; `documentation-gap` and `decision`
+→ `feedback`.
+
+Call the write unconditionally and never pre-check log configuration. When the
+project log is disabled the append no-ops: the write prints its one warning
+line, records nothing, and the run continues. Disabling the log is the
+operator's choice; do not persist the learning anywhere else.
+
+After every write, persist the log before continuing:
+
+```bash
+if [ -f "$PROJECT_PATH/project-log.md" ]; then
+  PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value) || {
+    echo "oat: cannot resolve project scope for $PROJECT_PATH; refusing to commit artifacts" >&2
+    exit 1
+  }
+  if [ "$PROJECT_SCOPE" = "synced" ]; then
+    oat project push "$PROJECT_PATH" --message "chore(oat): record autonomous execution learning" || { echo "oat: project push failed; run oat project pull, resolve the reported state, and retry" >&2; exit 1; }
+  else
+    OWNED_COMMIT_PATHS=("$PROJECT_PATH/project-log.md")
+    oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-autonomous:learning:$LEARNING_SOURCE" --message "chore(oat): record autonomous execution learning" -- "${OWNED_COMMIT_PATHS[@]}" || exit 1
+  fi
 fi
 ```
+
+`LEARNING_SOURCE` is the source id just written, so each learning commits
+under its own operation identity.
 
 ### Step 5: Invoke Lifecycle Skills and Reviews
 
@@ -582,7 +629,7 @@ Take this goal from discovery to PR with OAT autonomy: add resumable exports.
 Do not create or normalize project artifacts by hand.
 
 **A lifecycle skill asks an unmapped question:** Treat it as an
-`inventory-gap` boundary, record the exact site in the learnings log, and stop
+`inventory-gap` boundary, record the exact site as a learning (Step 4), and stop
 resumably.
 
 **A review launch fails after acceptance:** Continue or retry only through the
@@ -607,4 +654,5 @@ reconciliation path. Do not guess or overwrite the tracker.
   resumable boundary.
 - ✅ Phase-boundary commits and non-force pushes are recorded.
 - ✅ The run ended with a final PR report or a structured blocker report.
-- ✅ The learnings log contains reusable, secret-free entries.
+- ✅ Learnings are reusable, secret-free, category-bearing project-log entries,
+  or the run reported that the disabled log recorded none.

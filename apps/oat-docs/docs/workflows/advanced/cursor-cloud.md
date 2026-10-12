@@ -121,8 +121,8 @@ For skills, compare frontmatter versions as a freshness check:
 
 - user version at or above the repository version is the expected state;
 - a higher repository version is an environment anomaly;
-- even in that anomaly, keep the user copy as the execution source, log the
-  mismatch in `oat-execution-learnings.md`, and refresh the user tier before
+- even in that anomaly, keep the user copy as the execution source, record the
+  mismatch as a project-log learning, and refresh the user tier before
   safety-critical work.
 
 Version comparison verifies provisioning. It never switches execution to the
@@ -150,12 +150,26 @@ For an explicitly autonomous cloud run:
 3. Invoke `oat-project-autonomous`; it activates the session-scoped autonomy
    signals.
 4. Use the same policy boundaries and review contract as local autonomy.
-5. Append cloud setup gaps, degraded checks, and freshness anomalies to the
-   project-local execution-learnings log.
+5. Record cloud setup gaps, degraded checks, and freshness anomalies as
+   category-bearing learnings in the project log (see
+   [learnings](#learnings)).
 
 Missing credentials, repository-policy approval, destructive changes,
 unresolved blocking reviews, and material product ambiguity remain boundaries.
 See [Autonomous Project Execution](autonomy.md).
+
+## Learnings
+
+The cloud skill records learnings with the same write as autonomous runs:
+`oat project log append` with `--category` (one of `gotcha`, `efficiency`,
+`documentation-gap`, `candidate-skill-content`, `decision`,
+`environment-limited`), a stable per-observation `--source` id that is also
+the `--idempotency-key`, and `--origin oat-cursor-cloud-projects`. A retried
+write appends nothing. When the project log is disabled, the append does
+nothing: the skill prints one warning line and continues, and the learning is
+not persisted. It never creates `oat-execution-learnings.md`. See
+[Autonomous Project Execution](autonomy.md#execution-learnings-loop) for the
+category-to-type mapping and how summary reads the entries.
 
 ## Related
 
@@ -196,8 +210,8 @@ stops.
 globally, and stops only if that install fails. If the active project is a
 synced project, it runs `oat project pull` to bring its artifacts into the
 checkout. When a repository skill is newer than the user-scope copy, or an
-expected skill, MCP server, CLI, or credential is missing, it appends an entry
-to the active project's `oat-execution-learnings.md`. It activates autonomy
+expected skill, MCP server, CLI, or credential is missing, it records a
+learning in the active project's `project-log.md`. It activates autonomy
 only by loading `oat-project-autonomous` when you explicitly asked for an
 autonomous end-to-end run.
 

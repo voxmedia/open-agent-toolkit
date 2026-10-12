@@ -230,22 +230,37 @@ sequences retain their documented meaning.
 
 ## Execution-learnings loop
 
-Autonomous runs keep an append-only project-local
-`oat-execution-learnings.md`. Dated entries record an observation, impact, and
-recommendation under the source taxonomy: `gotcha`, `efficiency`,
+Autonomous runs record learnings in the project log, not in a separate file.
+Each learning is a judgment entry written with `oat project log append`
+carrying `--category` (the source taxonomy: `gotcha`, `efficiency`,
 `documentation-gap`, `candidate-skill-content`, `decision`, or
-`environment-limited`.
+`environment-limited`), a stable per-observation `--source` id that is also
+the `--idempotency-key`, and `--origin oat-project-autonomous`. The category
+maps to the judgment type: `gotcha` and `environment-limited` become
+`friction`, `efficiency` and `candidate-skill-content` become `worked-well`,
+and `documentation-gap` and `decision` become `feedback`. The body records an
+observation, impact, recommendation and, where it applies, uncertainty. A
+retried write with the same source id appends nothing. `oat-cursor-cloud-projects`
+and `oat-project-goal` use the same write with their own origin.
 
-When the file exists, `oat-project-summary` synthesizes actionable
-recommendations into `## Autonomous Execution Learnings`, grouped as:
+When the project log is disabled (`workflow.projectLog: false`), the append
+does nothing: the producer prints one warning line and continues, and no
+learning is persisted anywhere. Disabling the log is the operator's choice. No
+producer creates `oat-execution-learnings.md` any more; summary and retro
+still read an existing legacy file after the log.
+
+When category-bearing entries (or a legacy file) exist, `oat-project-summary`
+synthesizes actionable recommendations into `## Autonomous Execution
+Learnings`, grouped as:
 
 - agent-instruction updates;
 - cloud-environment improvements;
-- code follow-ups;
+- code follow-ups; and
 - workflow issues.
 
-Each recommendation links back to its source entry. Projects without the
-learnings file render normal summaries with no autonomous-learnings section.
+Each recommendation names its source entry with a plain-text
+`oat-project:<slug>#<entry-id>` token rather than a link. Projects without
+learnings render normal summaries with no autonomous-learnings section.
 The summary export keeps the synthesized recommendations after project
 archival.
 
@@ -279,7 +294,7 @@ gates or creating another implementation coordinator.
 > [!WARNING]
 > **What it does without asking:** after every lifecycle phase, an autonomous
 > run commits its work and pushes the current branch to its remote (never with
-> force). It also commits its own state and learnings-log updates, dispatches
+> force). It also commits its own state and project-log learning updates, dispatches
 > worker and reviewer subagents under one authorization for the whole run,
 > generates a project recap, and opens the final pull request. None of these
 > steps asks for confirmation. It never merges the pull request.
@@ -352,7 +367,7 @@ a product-judgment boundary. A brief records no HiLL checkpoints unless it
 lists phases explicitly.
 
 **Expected output:** Session-only autonomy signals, persisted lifecycle
-progress, reviewed task commits, and project-local execution learnings. Existing
+progress, reviewed task commits, and category-bearing project-log learnings. Existing
 projects retain their mode. A successful run reports the actual final PR and
 review evidence. A blocked run names the boundary, durable completed work,
 operator action, and resumable project.

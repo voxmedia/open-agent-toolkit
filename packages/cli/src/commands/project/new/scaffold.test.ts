@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   access,
   copyFile,
@@ -1498,6 +1499,33 @@ describe('scaffoldProject', () => {
         );
         expect(rendered.match(SINGLE_BRACE_OAT_PLACEHOLDER)).toBeNull();
       }
+    },
+  );
+
+  it.each(['spec-driven', 'quick', 'import', 'lite', 'brief', 'goal'] as const)(
+    'creates no oat-execution-learnings.md when scaffolding a %s project',
+    async (mode) => {
+      // D14: learnings live in project-log.md; no producer, the scaffolder
+      // included, creates the legacy learnings file for a new project.
+      const repoRoot = await createRepoRootWithRealTemplates();
+      tempDirs.push(repoRoot);
+
+      const result = await scaffoldProject({
+        repoRoot,
+        projectName: `no-learnings-${mode}`,
+        mode,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+        nowUtc: '2026-02-16T12:00:00.000Z',
+      });
+
+      expect(result.createdFiles).not.toContain('oat-execution-learnings.md');
+      expect(
+        existsSync(
+          join(repoRoot, result.projectPath, 'oat-execution-learnings.md'),
+        ),
+      ).toBe(false);
     },
   );
 

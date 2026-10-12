@@ -509,8 +509,11 @@ changed is kept. The `oat project log` command, not the skill, rolls project-log
 entries up into the Workflow Observations section. A project log the skill
 cannot read clearly is reported rather than treated as empty, and a sealed
 (closed) log accepts no new entries. An Autonomous Execution Learnings section
-appears only when the project has an `oat-execution-learnings.md` file with
-actionable recommendations. Recorded exit-gate waivers stay explicit; the
+appears only when the project has actionable learnings: category-bearing
+project-log entries written by autonomous, cloud or goal runs, or a legacy
+`oat-execution-learnings.md` file from an older project, which is still read
+after the log. New runs never create that file; with the project log disabled
+they record no learnings, and the summary has no such section. Recorded exit-gate waivers stay explicit; the
 skill does not infer them.
 
 **What it does without asking:** when the repository has adopted PJM, every

@@ -143,8 +143,8 @@ Re-alignment and declaration entries print `[realign mNN]` and
 - Before each scoped commit, resolve the project scope. Scope resolution fails
   closed. A synced project uses `oat project push` with the same message;
   another scope uses `oat internal commit-paths --identity "${COMMIT_IDENTITY:?set once and retain for retries}:oat-project-goal:1" --message "$BOOKKEEPING_MESSAGE" -- "$PROJECT_PATH/plan.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/implementation.md"`
-  (adding `"$PROJECT_PATH/oat-execution-learnings.md"` only when this run
-  wrote it) and stops on a nonzero exit. Set the same bookkeeping message and a
+  (adding `"$PROJECT_PATH/project-log.md"` when it exists) and stops on a
+  nonzero exit. Set the same bookkeeping message and a
   distinct operation identity for each lifecycle write; retain both for
   retries. Never include unrelated paths.
 
@@ -164,8 +164,51 @@ log configuration: the helper no-ops when logging is disabled.
   `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-goal --ref <activated mNN> --idempotency-key "<goal-slug>-activate-<mNN>" --body "Activated <mNN> (<ordered phase ids>); <goal-slug>-activate-<mNN>"`.
 - At each re-alignment entry (Step 8), append exactly one structural entry with
   `--ref <delivered mNN>` and the key `<goal-slug>-realign-<mNN>`.
-- Learnings capture at re-alignment is a judgment entry (brief contract
-  section 12.10).
+- Learnings capture at re-alignment is a category-bearing judgment entry
+  written through the learning write below (brief contract section 12.10).
+
+Every learning this skill records uses one shared write. Give each observation
+a stable, whitespace-free source id unique to this goal and observation (for
+example `<goal-slug>-learning-<mNN>-<NN>`) and retain it for retries; it is
+both `--source` and `--idempotency-key`, so a resumed step appends nothing.
+Write the learning title as `--area` and the body as `Observation:`,
+`Impact:`, `Recommendation:` and, when it applies, `Uncertainty:` lines.
+
+```bash
+# Learning write (shared by oat-project-autonomous, oat-cursor-cloud-projects
+# and oat-project-goal): oat_record_learning <category> <source-id> <title> <body>
+oat_record_learning() {
+  local category="$1" source="$2" title="$3" body="$4" type result
+  case "$category" in
+    gotcha | environment-limited) type=friction ;;
+    efficiency | candidate-skill-content) type=worked-well ;;
+    documentation-gap | decision) type=feedback ;;
+    *)
+      echo "oat: unknown learning category '$category'" >&2
+      return 1
+      ;;
+  esac
+  result=$(oat project log append --json --project "$PROJECT_PATH" \
+    --type "$type" --scope project --area "$title" \
+    --category "$category" \
+    --source "$source" \
+    --origin "${LEARNING_ORIGIN:?set to the producer skill name}" \
+    --idempotency-key "$source" \
+    --body "$body") || {
+    printf '%s\n' "$result" >&2
+    return 1
+  }
+  if printf '%s' "$result" | grep -Eq '"status": *"skipped"'; then
+    echo "oat: warning: project log disabled (workflow.projectLog=false); learning $source not recorded" >&2
+  fi
+}
+```
+
+Set `LEARNING_ORIGIN=oat-project-goal`. Use the six categories verbatim; the
+write maps each to its judgment type (`gotcha`, `environment-limited` →
+`friction`; `efficiency`, `candidate-skill-content` → `worked-well`;
+`documentation-gap`, `decision` → `feedback`). Never create or append to
+`oat-execution-learnings.md`.
 
 The idempotency key makes a resumed step report `already-appended` instead of
 duplicating the entry. Commit each append with the bookkeeping commit of the
@@ -597,13 +640,13 @@ agreed endpoint (brief contract sections 12.3 and 12.10).
    milestone status or recovery; when it reports stale evidence for the
    delivered milestone, stop and report `oat-project-pr-progress` as the owner.
 2. **Log the entry.** Append the re-alignment structural entry (Project Log).
-3. **Capture learnings.** Write one judgment entry (`worked-well` or
-   `friction`) through `oat project log append` when the project log is
-   enabled; otherwise append a dated entry to
-   `"$PROJECT_PATH/oat-execution-learnings.md"` (create it when absent). This
-   write is the `delivered → aligning` prerequisite "learnings captured";
-   reflection without the write does not satisfy it. Never pre-check log
-   configuration: when the helper no-ops, write the learnings file instead.
+3. **Capture learnings.** Call `oat_record_learning` (Project Log) at least
+   once for what the delivered milestone taught. This write is the
+   `delivered → aligning` prerequisite "learnings captured"; reflection without
+   the write does not satisfy it. Never pre-check log configuration: when the
+   project log is disabled the append no-ops, the write prints one warning
+   line, and the attempt satisfies the prerequisite. Nothing is written to any
+   other file.
 4. **Delta interview (`GOAL-12`).** Ask only what changed: what the delivered
    milestone taught, the next milestone's outcomes, phases and endpoint, and
    any material change, which gets a focused realignment.
@@ -691,7 +734,8 @@ Goal milestone m01 activated. Next: oat-project-implement
   each milestone's `plan` carrier was written `allowed` only after that
   milestone's review, gate and approval, bound to its ordered phase set.
 - No milestone was activated before the previous delivery was observed at its
-  agreed endpoint; learnings were written before re-alignment advanced.
+  agreed endpoint; learnings were written (or, with the project log disabled,
+  attempted with its warning) before re-alignment advanced.
 - One structural log entry per activation and per re-alignment entry.
 - `declared_met` and the audit were written only after the user's explicit
   declaration, and the audit is exhaustive.
