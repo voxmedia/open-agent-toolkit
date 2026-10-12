@@ -14,15 +14,7 @@ oat_template_name: implementation
 **Started:** YYYY-MM-DD
 **Last Updated:** YYYY-MM-DD
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
+This journal resumes interrupted implementation sessions. Every plan task has one block in its phase; `oat project journal check` validates it.
 
 ## Progress Overview
 
@@ -31,7 +23,7 @@ oat_template_name: implementation
 | Phase 1 | in_progress | N     | 0/N       |
 | Phase 2 | pending     | N     | 0/N       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/N tasks completed
 
 ---
 
@@ -50,10 +42,7 @@ oat_template_name: implementation
 
 - `{path}` - {why}
 
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Verification:** {command(s) run for the phase and the result}
 
 **Notes / Decisions:**
 
@@ -61,8 +50,8 @@ oat_template_name: implementation
 
 ### Task p01-t01: {Task Name}
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -72,18 +61,11 @@ oat_template_name: implementation
 
 - `{path}` - {why}
 
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+**Verification:** {command(s) and result}
 
 **Notes / Decisions:**
 
 - {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
 
 ---
 
@@ -91,10 +73,6 @@ oat_template_name: implementation
 
 **Status:** pending
 **Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
 
 ---
 
@@ -112,58 +90,19 @@ oat_template_name: implementation
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
+<!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
-
 <!-- orchestration-runs-end -->
 
----
+## Reviews and Gates
 
-## Implementation Log
+<!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
-Chronological log of implementation progress.
+## Deferred Findings
 
-### YYYY-MM-DD
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### YYYY-MM-DD
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+<!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 ## Deviations from Plan / Design
 
@@ -172,15 +111,6 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
 | -             | -               | -                    | -                 | -      | -               | -         |
-
-## Test Results
-
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 

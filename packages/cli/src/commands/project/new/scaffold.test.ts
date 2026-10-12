@@ -16,6 +16,7 @@ import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { evaluateJournal } from '@commands/project/journal-check/index';
 import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { createProjectOpenCommand } from '@commands/project/open/index';
 import { defaultGitRunner } from '@commands/project/sync/git';
@@ -1497,6 +1498,112 @@ describe('scaffoldProject', () => {
         );
         expect(rendered.match(SINGLE_BRACE_OAT_PLACEHOLDER)).toBeNull();
       }
+    },
+  );
+
+  it.each([
+    {
+      mode: 'quick' as const,
+      plan: '# Plan\n\n## Phase 1: Foundation\n\n### Task p01-t01: Add reader\n',
+      filled: [
+        '## Progress Overview',
+        '',
+        '| Phase   | Status   | Tasks | Completed |',
+        '| ------- | -------- | ----- | --------- |',
+        '| Phase 1 | complete | 1     | 1/1       |',
+        '',
+        '**Total:** 1/1 tasks completed',
+        '',
+        '## Phase 1: Foundation',
+        '',
+        '**Status:** complete',
+        '',
+        '### Task p01-t01: Add reader',
+        '',
+        '**Status:** completed',
+        '**Commit:** 1111111',
+        '',
+      ].join('\n'),
+    },
+    {
+      mode: 'brief' as const,
+      plan: '# Project Brief\n\n## Phase p01: Foundation\n\n**Intent:** Build.\n',
+      filled: [
+        '## Progress Overview',
+        '',
+        '| Phase | Status    | Units | Accepted |',
+        '| ----- | --------- | ----- | -------- |',
+        '| p01   | completed | 1     | 1/1      |',
+        '',
+        '**Total:** 1/1 phases accepted',
+        '',
+        '## Phase p01: Foundation',
+        '',
+        '**Status:** completed',
+        `**Base:** ${'a'.repeat(40)}`,
+        `**Head:** ${'b'.repeat(40)}`,
+        '**Executor:** root',
+        '',
+        'Verified with the reader tests.',
+        '',
+      ].join('\n'),
+    },
+  ])(
+    'scaffolds a $mode journal with fixed slots that passes implement-preflight once filled',
+    async ({ mode, plan, filled }) => {
+      const repoRoot = await createRepoRootWithRealTemplates();
+      tempDirs.push(repoRoot);
+      const result = await scaffoldProject({
+        repoRoot,
+        projectName: `slots-${mode}`,
+        mode,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-10-12',
+        nowUtc: '2026-10-12T12:00:00.000Z',
+      });
+      const projectRoot = join(repoRoot, result.projectPath);
+      const scaffolded = await readFile(
+        join(projectRoot, 'implementation.md'),
+        'utf8',
+      );
+
+      const order = [
+        '## Orchestration Runs',
+        '<!-- orchestration-runs-start -->',
+        '<!-- orchestration-runs-end -->',
+        '## Reviews and Gates',
+        '## Deferred Findings',
+        '## Deviations from Plan / Design',
+        '## Final Summary (for PR/docs)',
+        '## References',
+      ].map((marker) => scaffolded.indexOf(marker));
+      expect(order.every((index) => index >= 0)).toBe(true);
+      expect([...order].sort((left, right) => left - right)).toEqual(order);
+      expect(scaffolded).not.toContain('## Implementation Log');
+      expect(scaffolded).not.toContain('## Test Results');
+      expect(scaffolded).not.toContain('Outstanding Items');
+
+      // Implement fills the phase sections (and Step 11 the Final Summary);
+      // nothing else in the template may survive as residue.
+      const journal = scaffolded
+        .replace(
+          /## Progress Overview[\s\S]*?(?=## Orchestration Runs)/,
+          `${filled}\n`,
+        )
+        .replace(
+          /## Final Summary \(for PR\/docs\)[\s\S]*?(?=## References)/,
+          '## Final Summary (for PR/docs)\n\n**What shipped:**\n\n- A reader.\n\n',
+        );
+      const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
+      const checked = evaluateJournal({
+        boundary: 'implement-preflight',
+        planContent: plan,
+        journalContent: journal,
+        stateContent: state,
+      });
+      expect(checked.reasons).toEqual([]);
+      expect(checked.status).toBe('ok');
     },
   );
 
