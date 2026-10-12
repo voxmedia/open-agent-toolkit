@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: null
+oat_current_task_id: p04-t08
 oat_generated: false
 ---
 
@@ -17,21 +17,21 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
+> - When all plan tasks are complete, set `oat_current_task_id: p04-t08`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 12    | 7/12      |
 
-**Total:** 39/39 tasks completed
+**Total:** 39/44 tasks completed
 
 ---
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1025,27 +1024,6 @@ oat_generated: false
 
 ---
 
-### Review Received: final
-
-**Date:** 2026-10-12
-**Review artifact:** reviews/archived/final-review-2026-10-12T052402Z.md (round 1, Fable 5.1 high, auto; 87433267b..b38441a26)
-
-**Findings:**
-
-- Critical: 0
-- High: 0
-- Medium: 0
-- Low: 3
-
-**New tasks added:** p04-t06 (L2), p04-t07 (L3)
-
-**Design drift / artifact alignment notes:**
-
-- L1: the phase-3 summary and the Final Summary said thirteen `archive-*` reason codes; twelve exist. Fixed by the root in the receive commit (journal text only).
-- Deferred Findings ledger: none to disposition; every prior finding was converted and landed.
-
-**Next:** p04-t06 (b0e788e8a) and p04-t07 (046efcd22) landed via `cont-ac-p03-fix-3`; final round 2 (`reviews/archived/final-review-2026-10-12T054613Z.md`, reviewed head `22b2b7d88`, narrowed to the fix delta) returned 0/0/0/0 and the final event is `passed`. Next: the configured implementation exit gate, then the closeout sequence (summary, document, pr) and final HiLL approval.
-
 ### Task p04-t06: (review) Replay-warning docs sentence matches both messages
 
 **Status:** completed
@@ -1081,6 +1059,41 @@ oat_generated: false
 **Verification:**
 
 - archive vitest 235/235 under a fake HOME; control: bare `pathExists` → new case fails; restored byte-identical; check 0, type-check 0
+
+---
+
+### Task p04-t08: (review) Rehash the existing archive before adopting a retry
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t09: (review) Detect each fenced payload independently in the journal evaluator
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t10: (review) Digest honors the whole-section line limit
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t11: (review) Count digest origins without inherited object properties
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t12: (review) Export selected review references as plain provenance
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -1133,6 +1146,55 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | 2026-10-12 | p03-t05/t06 | Scope qualification applies to the local path and export name whenever another archive holds the base path (not only same-day); a tenth reason code `archive-generation-source-absent`                                                                                                                        | Local names must match what `repo archive sync` restores; the missing-directory refusal needed a code                  | Code and `project-artifacts.md#archive-identity`                                  | None                                                                                              |
 | 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                           | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                              |
 | 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                  | Commit 8fbda566e                                                                  | None                                                                                              |
+
+## Reviews and Gates
+
+### Review Received: final
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T052402Z.md (round 1, Fable 5.1 high, auto; 87433267b..b38441a26)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 0
+- Low: 3
+
+**New tasks added:** p04-t06 (L2), p04-t07 (L3)
+
+**Design drift / artifact alignment notes:**
+
+- L1: the phase-3 summary and the Final Summary said thirteen `archive-*` reason codes; twelve exist. Fixed by the root in the receive commit (journal text only).
+- Deferred Findings ledger: none to disposition; every prior finding was converted and landed.
+
+**Next:** p04-t06 (b0e788e8a) and p04-t07 (046efcd22) landed via `cont-ac-p03-fix-3`; final round 2 (`reviews/archived/final-review-2026-10-12T054613Z.md`, reviewed head `22b2b7d88`, narrowed to the fix delta) returned 0/0/0/0 and the final event is `passed`. Next: the configured implementation exit gate, then the closeout sequence (summary, document, pr) and final HiLL approval.
+
+### Review Received: final (exit gate)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T055711Z.md (configured implementation exit gate, attempt 1, `codex-6-sol-xhigh`, run `91b4bf42-6074-4a2d-8545-7ac7451bb7ae`, reviewed head `ca2db88fa`)
+
+**Gate:** attempt 1 of 2 blocked at threshold high (0 critical, 1 high, 3 medium, 2 low); `on_failure: block` → remediate and rerun.
+
+**Findings:**
+
+- Critical: 0
+- High: 1
+- Medium: 3
+- Low: 2
+
+**New tasks added:** p04-t08 (H1), p04-t09 (M1), p04-t10 (M2), p04-t11 (L1), p04-t12 (L2)
+
+**Design drift / artifact alignment notes:**
+
+- M3: this journal kept its final-review receipts inside Phase 4 and had no `## Reviews and Gates` slot; fixed by the root in the receive commit (receipts relocated here, slot created, `## Deferred Findings` slot added empty).
+
+**Next:** execute p04-t08..p04-t12 as a bounded fix continuation; re-review the fix delta (final round 3); rerun the exit gate (attempt 2).
+
+## Deferred Findings
+
+- None.
 
 ## Final Summary (for PR/docs)
 

@@ -784,6 +784,143 @@ Expected: green; with the guard reverted to bare `pathExists`, the new case fail
 
 ---
 
+### Task p04-t08: (review) Rehash the existing archive before adopting a retry
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (before a `retry` disposition is acted on: compute the candidate archive's current manifest hash and require agreement with both its recorded `manifestHash` and the source manifest; a damaged candidate refuses with a stable code, e.g. `archive-retry-candidate-damaged`, without changing either copy; the same check guards the source-absent resume path)
+- Modify: `archive-retry-identity.test.ts` (damaged-archive refusal beside the unchanged-retry accepted control: archive, restore the intact source, damage one archived file leaving metadata unchanged → refused, source and archive untouched; unchanged retry still reuses)
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (code table)
+
+**Step 1: Understand the issue**
+
+Exit-gate finding (`final-review-2026-10-12T055711Z.md`, codex-6-sol-xhigh): H1: the evaluator trusts `candidate.metadata.manifestHash` without rehashing the candidate's retained bytes, so a retry against a damaged archive skips the copy and removes the intact source, leaving only the damaged copy (breaks D11's identical-snapshot contract).
+Location: `archive-utils.ts:1197` (and the source removal at ~2966)
+
+**Step 2: Implement fix**
+
+Verify the candidate's actual bytes before export, publication or deletion.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t08): rehash the existing archive before adopting a retry`
+
+---
+
+### Task p04-t09: (review) Detect each fenced payload independently in the journal evaluator
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/rules.ts` (`fencedBlocks`: parse each actual fence with its own opener, closer, info string and preceding marker instead of grouping consecutive excluded lines; keep individually marked `quoted-evidence` fences accepted)
+- Modify: `evaluator.test.ts` (two compositions: a marked quoted-evidence fence immediately followed by an unmarked dispatch payload → `dispatch-payload`; a four-space indented line immediately before a payload fence → `dispatch-payload`; the isolated marked evidence fence stays accepted)
+
+**Step 1: Understand the issue**
+
+Exit-gate finding (`final-review-2026-10-12T055711Z.md`, codex-6-sol-xhigh): M1: `fencedBlocks` groups consecutive non-record lines, so a marked evidence fence immediately followed by an unmarked payload exempts both, and an indented line before a payload hides it; both return `ok` while the isolated payload refuses (D6 refusal contract).
+Location: `packages/cli/src/commands/project/journal-check/rules.ts:779`
+
+**Step 2: Implement fix**
+
+Parse fences individually.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/complete-state`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t09): detect each fenced payload independently`
+
+---
+
+### Task p04-t10: (review) Digest honors the whole-section line limit
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/rollup.ts` (the omission trailer and the categorized-learning cross-reference count against `maxLines`; when they cannot fit, render the bounded subset the limit allows, never exceed it; full-set ledger graduation unchanged)
+- Modify: `rollup.test.ts` (one categorized entry with `maxLines: 1` and `2` renders at most that many lines; `3`, `5`, `60` controls unchanged)
+- Modify: `apps/oat-docs/docs/reference/configuration.md` only if the documented minimum changes
+
+**Step 1: Understand the issue**
+
+Exit-gate finding (`final-review-2026-10-12T055711Z.md`, codex-6-sol-xhigh): M2: the trailer and cross-reference are appended unconditionally after the fit check, so `maxLines: 1` or `2` renders three lines (D4 whole-section bound).
+Location: `packages/cli/src/commands/project/log/rollup.ts:386`
+
+**Step 2: Implement fix**
+
+Bound the final rendered blocks (or refuse unsupported values explicitly through configuration); keep graduation independent of rendering.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t10): digest honors the whole-section line limit`
+
+---
+
+### Task p04-t11: (review) Count digest origins without inherited object properties
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/rollup.ts` (`byProducer` as a null-prototype dictionary or `Map` with explicit serialization)
+- Modify: `rollup.test.ts` (an origin named `__proto__` counts as one rendered entry and `Object.prototype` is untouched; an ordinary origin control)
+
+**Step 1: Understand the issue**
+
+Exit-gate finding (`final-review-2026-10-12T055711Z.md`, codex-6-sol-xhigh): L1: `byProducer` is a plain object, so an origin named `__proto__` mutates `Object.prototype.rendered` and emits `byProducer: {}`.
+Location: `packages/cli/src/commands/project/log/rollup.ts:328`
+
+**Step 2: Implement fix**
+
+Null-prototype tally.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t11): count digest origins without inherited properties`
+
+---
+
+### Task p04-t12: (review) Export selected review references as plain provenance
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`finalizeSummaryArchiveLocators`: local review links such as `[text](reviews/…)` become a labelled filename or source identity; real external links intact)
+- Modify: `archive-retry-identity.test.ts` or the export tests (a judgment containing a review link exports as plain provenance; an external link survives)
+
+**Step 1: Understand the issue**
+
+Exit-gate finding (`final-review-2026-10-12T055711Z.md`, codex-6-sol-xhigh): L2: a judgment observation containing `[the review](reviews/final.md)` survives the digest and export unchanged, presenting an unreachable link (reviews are not archived, D2/D4).
+Location: `packages/cli/src/commands/project/log/rollup.ts:300` / archive finalizer
+
+**Step 2: Implement fix**
+
+Extend the finalizer to review links.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/project/log`
+Expected: green; the named control fails with the fix neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t12): export review references as plain provenance`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                               |
@@ -806,7 +943,7 @@ Expected: green; with the guard reverted to bare `pathExists`, the new case fail
 | plan   | artifact | fixes_added     | 2026-10-11 | references/astra-plan-round-1.md                            | 6a5a7986bcab5880f240961c43306ec1150d6c1a | manual     | Astra (gpt-6-astra, high) plan round 1: ALIGNED WITH CHANGES, 5 important / 2 minor; applied in revision 5                                                |
 | plan   | artifact | passed          | 2026-10-11 | references/astra-plan-round-2.md                            | 6ddc7476114babe72d7307d2c41f2ac45fcc3709 | manual     | Astra plan round 2: ALIGNED; plan revision 5 approved by the orchestrator per the autonomous-run rules (D13); ready for oat-project-implement, not active |
 | plan   | artifact | received        | 2026-10-11 | reviews/artifact-plan-review-2026-10-11T162428Z.md          | -                                        | -          | -                                                                                                                                                         |
-| final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T055711Z.md                  | ca2db88fa5345ec9dba8d2e06bb04ef1d44287b9 | gate       | codex-6-sol-xhigh                                                                                                                                         |
+| final  | code     | fixes_added     | 2026-10-12 | reviews/archived/final-review-2026-10-12T055711Z.md         | ca2db88fa5345ec9dba8d2e06bb04ef1d44287b9 | gate       | codex-6-sol-xhigh: exit gate attempt 1 blocked 0/1/3/2; H1→p04-t08, M1→p04-t09, M2→p04-t10, L1→p04-t11, L2→p04-t12; M3 fixed by the root                  |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 
@@ -821,9 +958,9 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
 - Phase 3: 13 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity; round-2 polish: replay reason wording, two more refusal codes, empty scope-qualified directory)
-- Phase 4: 7 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates, three review fix tasks (guard evidence pointer, replay-warning docs sentence, empty generation directory)
+- Phase 4: 12 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates, three review fix tasks (guard evidence pointer, replay-warning docs sentence, empty generation directory) and five exit-gate fix tasks (archive rehash on retry, per-fence payload detection, digest line limit, origin tally, review-link export)
 
-**Total: 39 tasks**
+**Total: 44 tasks**
 
 Ready for code review and merge.
 
