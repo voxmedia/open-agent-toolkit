@@ -1132,7 +1132,9 @@ export class ArchiveIdentityError extends CliError {
 
 /**
  * Recovery for a directory that does not identify itself: most often a partial
- * copy an interrupted archive left behind (metadata is written after the copy).
+ * copy an interrupted archive left behind before allocations were claimed
+ * (current archives write pending metadata before the copy, so their
+ * interrupted runs resume instead).
  */
 function occupantGuidance(projectName: string): string {
   return `If this directory is a partial copy left by an interrupted archive, inspect and remove it, then retry; otherwise record reopened work in a follow-up project (for example \`oat project new ${projectName}-followup\`).`;
@@ -3016,12 +3018,13 @@ export async function archiveProjectOnCompletion(
   // overlapping archive call can never delete or overwrite a generation
   // another call completed.
   const allocationOwner = randomUUID();
-  if (identity.disposition === 'new' && identity.generation > 1) {
-    // Persist the new generation and its predecessor binding before any
-    // export, copy or S3 side effect, so a retry of this in-flight request
-    // reuses this identity instead of allocating from the current date. The
-    // metadata is created exclusively: the evaluation above may be stale, so
-    // anything written at the path since then wins and nothing is written.
+  if (identity.disposition === 'new') {
+    // Persist the new archive (a first archive or a successor generation, with
+    // its predecessor binding) before any export, copy or S3 side effect, so
+    // an interrupted run resumes this identity instead of allocating from the
+    // current date. The metadata is created exclusively: the evaluation above
+    // may be stale, so anything written at the path since then wins and
+    // nothing is written.
     await makeDir(archivePath);
     await claimGenerationAllocation(
       archivePath,
@@ -3029,6 +3032,7 @@ export async function archiveProjectOnCompletion(
         projectName: options.projectName,
         snapshotName: exportIdentity,
         scope: projectScope,
+        ...(sourceRefSha ? { sourceRefSha } : {}),
         ...(identity.manifestHash
           ? { manifestHash: identity.manifestHash }
           : {}),
@@ -3105,12 +3109,14 @@ export async function archiveProjectOnCompletion(
       });
     } catch (error) {
       if (allocationPending) {
-        // Keep the persisted allocation; drop only the partial copy, and only
-        // while this operation still holds the allocation.
-        await clearPendingGeneration(
-          archivePath,
-          removePath,
-          allocationOwner,
+        // Only while this operation still holds the allocation: a successor
+        // keeps its persisted allocation and drops the partial copy; a first
+        // archive removes its whole attempt, so a retry starts from one clean
+        // target. Never another call's allocation or completed archive.
+        await (
+          identity.generation > 1
+            ? clearPendingGeneration(archivePath, removePath, allocationOwner)
+            : removeOwnedAllocation(archivePath, removePath, allocationOwner)
         ).catch((cleanupError: unknown) => {
           if (!isClaimHeld(cleanupError)) throw cleanupError;
         });
@@ -3491,6 +3497,25 @@ async function assertAllocationOwned(
   if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
     throw claimHeldError(archivePath, generation, current);
   }
+}
+
+/**
+ * Removes a whole pending allocation, metadata included, only while `owner`
+ * still holds it.
+ */
+async function removeOwnedAllocation(
+  archivePath: string,
+  removePath: (
+    target: string,
+    options: { recursive: true; force: true },
+  ) => Promise<void>,
+  owner: string,
+): Promise<void> {
+  const current = await readArchiveMetadataAt(archivePath);
+  if (current?.allocation !== 'pending' || current.allocationOwner !== owner) {
+    throw claimHeldError(archivePath, current?.generation ?? 1, current);
+  }
+  await removePath(archivePath, { recursive: true, force: true });
 }
 
 /**

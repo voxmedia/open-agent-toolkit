@@ -238,7 +238,10 @@ carries a token of the archive call that holds it: an overlapping call that
 finds the path written since its evaluation refuses with
 `archive-generation-claim-held` without writing, and only the holder clears or
 completes the allocation, so no call overwrites or deletes a generation
-another call completed. Running the request again with the same
+another call completed. A first archive is claimed the same way: a failed copy
+removes only the attempt this call claimed, and a run killed mid-copy leaves a
+pending allocation that the next identical archive resumes under the same
+identity. Running the request again with the same
 content resolves to the same generation, while changed content after it
 completes becomes the next generation. Without the option, changed content
 still refuses.
@@ -255,7 +258,7 @@ reason code, and `--json` reports the same code as `code` in the error object:
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `archive-retry-ambiguous`                  | more than one same-scope archive matches the retry, or a persisted snapshot resolves to several local archives                                                                                                                                                |
 | `archive-retry-conflict`                   | the retained artifacts differ from the project's archive                                                                                                                                                                                                      |
-| `archive-occupant-unverifiable`            | a non-empty directory at the archive path does not identify itself as this project; if it is a partial copy left by an interrupted archive, inspect and remove it, then retry                                                                                 |
+| `archive-occupant-unverifiable`            | a non-empty directory at the archive path does not identify itself as this project; if it is a partial copy left by an interrupted archive from before allocations were claimed, inspect and remove it, then retry                                            |
 | `archive-generation-synced`                | `--new-generation` was given for a synced project                                                                                                                                                                                                             |
 | `archive-generation-reason`                | the `--new-generation` reason is empty, multi-line or longer than 200 characters                                                                                                                                                                              |
 | `archive-generation-source-absent`         | `--new-generation` was given but the project directory is absent                                                                                                                                                                                              |

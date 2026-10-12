@@ -1459,10 +1459,13 @@ describe('archive utils', () => {
       })}\n`,
       'utf8',
     );
-    const targetExists = vi
-      .fn<() => Promise<boolean>>()
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(true);
+    const qualifiedPath = `${archivePath}-shared`;
+    const foreign = `${JSON.stringify({
+      projectName: 'demo',
+      snapshotName: '20260827-demo-shared',
+      scope: 'shared',
+      manifestHash: `sha256:${'f'.repeat(64)}`,
+    })}\n`;
 
     await expect(
       archiveProjectOnCompletion(
@@ -1474,19 +1477,38 @@ describe('archive utils', () => {
           s3SyncOnComplete: false,
         },
         {
-          dirExists: targetExists,
+          // Another archive lands at the evaluated path between evaluation and
+          // this call's exclusive claim.
+          ensureDir: async (directory: string) => {
+            if (directory === qualifiedPath) {
+              await mkdir(qualifiedPath, { recursive: true });
+              await writeFile(
+                join(qualifiedPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+                foreign,
+                'utf8',
+              );
+              await writeFile(join(qualifiedPath, 'state.md'), '# other\n');
+            }
+            await mkdir(directory, { recursive: true });
+          },
           timestamp: () => '2026-08-27T12:00:00Z',
         },
       ),
-    ).rejects.toEqual(
+    ).rejects.toMatchObject({
       // The local-scope archive holds the base path and the dated identity,
       // so the shared project's identity is scope-qualified in both
       // (`demo-shared`, `20260827-demo-shared`). An archive appearing at that
-      // path between evaluation and copy is still never overwritten.
-      new CliError(
-        `Existing archive \`${archivePath}-shared\` cannot be verified for retry; restore or remove it before retrying.`,
-      ),
-    );
+      // path between evaluation and copy is never overwritten: the exclusive
+      // claim refuses without writing.
+      code: 'archive-generation-claim-held',
+    });
+    await expect(
+      readFile(join(qualifiedPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME), 'utf8'),
+    ).resolves.toBe(foreign);
+    await expect(
+      readFile(join(qualifiedPath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# other\n');
+    await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
   it.each([

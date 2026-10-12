@@ -743,6 +743,130 @@ describe('archive retry identity (archive-retry-identity)', () => {
     ).resolves.toBe('# Summary\n\nDone.\n');
   });
 
+  it('never overwrites or removes a first archive that an overlapping call completed', async () => {
+    const fixture = await createFixture();
+    const archivePath = join(fixture.archiveRoot, PROJECT);
+    let release!: () => void;
+    const barrier = new Promise<void>((resolveBarrier) => {
+      release = resolveBarrier;
+    });
+    let reached!: () => void;
+    const paused = new Promise<void>((resolvePaused) => {
+      reached = resolvePaused;
+    });
+
+    // Call B evaluates the vacant first-archive path, then pauses at its
+    // first directory write there (the claim; before the claim existed, the
+    // copy).
+    let pausedOnce = false;
+    const delayed = archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+      ensureDir: async (directory: string) => {
+        if (
+          !pausedOnce &&
+          (directory === archivePath || directory === fixture.archiveRoot)
+        ) {
+          pausedOnce = true;
+          reached();
+          await barrier;
+        }
+        await ensureDir(directory);
+      },
+    }).then(
+      (value) => ({ value, error: null }),
+      (error: unknown) => ({ value: null, error }),
+    );
+    await paused;
+
+    // Call A completes generation 1 and removes the source meanwhile.
+    const completed = await archiveProjectOnCompletion(
+      archiveOptions(fixture),
+      {
+        ...stubS3(),
+        timestamp: () => '2026-09-01T09:00:00Z',
+      },
+    );
+    expect(completed.archivePath).toBe(archivePath);
+    expect(existsSync(fixture.projectPath)).toBe(false);
+    const completedTree = await treeHash(archivePath);
+    const repoBefore = await treeHash(fixture.repoRoot);
+
+    release();
+    const outcome = await delayed;
+
+    // B refuses without writing anything; A's archive stays byte-identical.
+    expect(outcome.value).toBeNull();
+    expect(outcome.error).toMatchObject({
+      code: 'archive-generation-claim-held',
+      message: expect.stringMatching(/^archive-generation-claim-held: /),
+    });
+    expect(await treeHash(archivePath)).toBe(completedTree);
+    await expect(readFile(join(archivePath, 'state.md'), 'utf8')).resolves.toBe(
+      '# state\n',
+    );
+    expect(await treeHash(fixture.repoRoot)).toBe(repoBefore);
+  });
+
+  it('resumes an interrupted first archive from its pending allocation', async () => {
+    const fixture = await createFixture();
+    const archivePath = join(fixture.archiveRoot, PROJECT);
+
+    // A run dies mid-copy before its cleanup: a partial copy under the
+    // pending first-archive allocation stays behind.
+    await expect(
+      archiveProjectOnCompletion(archiveOptions(fixture), {
+        ...stubS3(),
+        timestamp: () => '2026-09-01T09:00:00Z',
+        copyDirectory: vi.fn(async (_source, destination) => {
+          await writeFile(join(destination, 'partial.md'), 'partial\n');
+          throw new Error('injected copy interruption');
+        }),
+        removePath: vi.fn(async () => {
+          throw new Error('process killed before cleanup');
+        }),
+      }),
+    ).rejects.toThrow('process killed before cleanup');
+    const pending = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ) as Record<string, unknown>;
+    expect(pending).toMatchObject({
+      snapshotName: '20260901-demo',
+      generation: 1,
+      allocation: 'pending',
+    });
+    expect(existsSync(fixture.projectPath)).toBe(true);
+
+    // The retry resumes that allocation on a later date: same identity, the
+    // partial copy replaced by the complete one.
+    const resumed = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-03T09:00:00Z',
+    });
+    expect(resumed.archivePath).toBe(archivePath);
+    expect(resumed.s3Path).toMatch(/\/projects\/20260901-demo$/);
+    const metadata = JSON.parse(
+      await readFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        'utf8',
+      ),
+    ) as Record<string, unknown>;
+    expect(metadata).toMatchObject({
+      snapshotName: '20260901-demo',
+      generation: 1,
+    });
+    expect(metadata).not.toHaveProperty('allocation');
+    expect(metadata).not.toHaveProperty('allocationOwner');
+    expect(existsSync(join(archivePath, 'partial.md'))).toBe(false);
+    await expect(readFile(join(archivePath, 'state.md'), 'utf8')).resolves.toBe(
+      '# state\n',
+    );
+    expect(await readdir(fixture.archiveRoot)).toEqual([PROJECT]);
+  });
+
   it('archives into an empty base directory instead of a clock-suffixed sibling', async () => {
     const fixture = await createFixture();
     await mkdir(join(fixture.archiveRoot, PROJECT), { recursive: true });
