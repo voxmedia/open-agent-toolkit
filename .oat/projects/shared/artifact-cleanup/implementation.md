@@ -1686,6 +1686,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - **Complexity review at exit-gate exhaustion (final scope, 2026-10-12).** Exhaustion point: configured implementation exit gate, generation 2, `block` at `maxAttempts` 2. Verdict: **Partially compliant** (identity, rehash, pending marker, reason codes, scope-qualified naming and generations Keep; the per-write owner-token ownership protocol Simplify). Chosen disposition: **simplify**, selected by Thomas on 2026-10-12, answering the review's R1 "OAT should not protect simultaneous archive runs at all" and directing deletion rather than the recommended lock; R2 keeps `--new-generation` as shipped on cost grounds. Report: `reviews/archived/complexity-final-2026-10-12T155559Z.md`. Gate attempt-2 H1 (`p04-t28`) is dissolved by that disposition rather than fixed, because the `takeOverPendingGeneration` protocol it raced is removed; p04-t29 carries the removal and the docs retraction.
 
+### Review Received: final (round 8)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T170404Z.md (round 8, narrowed to ca08d622b..dd1231a7f, reviewed head `e8fe10465`)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 0
+- Low: 1
+
+**New tasks added:** none
+
+**Design drift / artifact alignment notes:**
+
+- Reviewer substitution: the Fable 5.1 high reviewer stopped at launch on an account session limit (HTTP 429, reset 13:00 CDT). Thomas directed the round to codex `gpt-6.1-sol` at high effort instead of waiting. Sol ran read-only via `codex exec`, so it reviewed source only; the root ran the executable evidence on the same head: CLI build 0, archive + sync + completion + validation suites 721/721, `pnpm check` 0, journal at completion reports only `journal-status-not-terminal`. With the exit gate also on Sol, this delta has no second model family; recorded as the operator's choice.
+- The protocol removal, the retained sequential contracts, the cleanup comparison against `origin/main` and the docs rewrite are verified closed; both declared p04-t29 deviations accepted.
+- The Low (an assertion that completed metadata lacks the deleted `allocationOwner` field) was removed by the root in `e86462118`; the file's 44 tests pass.
+
+**Next:** exit gate generation 3 (attempts reset), then the deferred final HiLL approval.
+
 ## Deferred Findings
 
 - Low (final round 5 trade-off): a synced archive run resumed recordlessly after Step 8 reports a manual PR body update instead of syncing it; tracked as `BL-261012-regenerate-the-archive-aware`.

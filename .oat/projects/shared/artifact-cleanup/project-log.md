@@ -104,6 +104,10 @@ Exit gate generation 2 attempt 1 (codex-6-sol-xhigh) blocked 0/1/2/0 → p04-t23
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:0 exit=1 status=blocked artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T153824Z.md run=1a234bff-2713-4f6d-9fbd-ee952a153b4a
 
+### 2026-10-12 · structural · oat-project-implement · final-outcome-4
+
+Operator disposition simplify (2026-10-12): concurrent-archive ownership protocol deleted as p04-t29 (dd1231a7f, +147/-377), dissolving exit gate gen 2's open High. Final round 8 (Sol high, operator-substituted) 0/0/0/1 passed; Low fixed e86462118. Exit gate generation 3 follows. Key ac-final-outcome-4.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
