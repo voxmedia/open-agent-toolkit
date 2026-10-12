@@ -46,13 +46,13 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
 oat_post_implement_sequence:
-  status: awaiting_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  status: post_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # configured | autonomous-default
   final_phase: p04
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending # pending | approved | not_required
-  approval_source: null # null | user | oat-autonomous
+  approval: approved # pending | approved | not_required
+  approval_source: user # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
@@ -163,8 +163,12 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T17:33:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T17:33:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-10-12T17:33:29.491Z'
 ---
 
 # Project State: artifact-cleanup
