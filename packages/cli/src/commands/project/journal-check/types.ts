@@ -23,6 +23,7 @@ export type JournalReasonCode =
   // metadata
   | 'journal-frontmatter-malformed'
   | 'journal-frontmatter-missing'
+  | 'journal-missing'
   | 'state-frontmatter-malformed'
   | 'journal-status-not-terminal'
   | 'journal-pointer-not-cleared'

@@ -203,9 +203,15 @@ describe('complete-state evaluates the final journal before its write', () => {
     });
   });
 
-  it('keeps completing a project that has no journal (the invariant alone applies)', async () => {
+  it('keeps completing a plan-less project with no journal (the invariant alone applies)', async () => {
     const fixture = await createProjectFixture(tempDirs);
     const completed = await completeState(fixture);
     expect(completed.exitCode).toBe(0);
+  });
+
+  it('refuses a planned project with no journal, state byte-identical', async () => {
+    const fixture = await createProjectFixture(tempDirs);
+    await writeFile(join(fixture.projectPath, 'plan.md'), PLAN, 'utf8');
+    await expectRefusedWithoutWrite(fixture, 'journal-missing');
   });
 });

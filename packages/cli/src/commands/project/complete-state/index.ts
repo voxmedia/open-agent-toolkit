@@ -5,6 +5,7 @@ import {
 import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { readStateWorkflowMode } from '@commands/project/closeout-check/closeout-invariant';
 import {
   checkProjectCloseout,
   DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES,
@@ -93,8 +94,34 @@ async function runProjectCompleteState(
     // shape. Both guards refuse before any write; no override bypasses the
     // closeout invariant above.
     const journalPath = join(targetProjectPath, 'implementation.md');
-    if (await dependencies.fileExists(journalPath)) {
-      const planPath = join(targetProjectPath, 'plan.md');
+    const planPath = join(targetProjectPath, 'plan.md');
+    const hasJournal = await dependencies.fileExists(journalPath);
+    if (!hasJournal && (await dependencies.fileExists(planPath))) {
+      // A planned project completes only through its journal: a missing
+      // journal must never silently turn the final evaluator off.
+      throw new CliError(
+        formatJournalRefusal(projectPath, {
+          status: 'refused',
+          boundary: 'completion',
+          workflowMode: readStateWorkflowMode(content) ?? 'spec-driven',
+          scope: null,
+          reasons: [
+            {
+              code: 'journal-missing',
+              path: 'implementation.md',
+              line: null,
+              owner: 'oat-project-implement',
+              message:
+                'plan.md exists but implementation.md is missing; a planned project completes only with its journal.',
+            },
+          ],
+          warnings: [],
+          overrides: [],
+        }),
+        1,
+      );
+    }
+    if (hasJournal) {
       const journal = evaluateJournal({
         boundary: 'completion',
         scope: null,
