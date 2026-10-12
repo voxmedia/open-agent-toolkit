@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: false
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Autonomous Project Completion

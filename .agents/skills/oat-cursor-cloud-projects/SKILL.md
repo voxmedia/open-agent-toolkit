@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # OAT in Cursor Cloud

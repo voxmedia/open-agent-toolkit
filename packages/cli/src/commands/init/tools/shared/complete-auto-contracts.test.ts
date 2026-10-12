@@ -406,7 +406,7 @@ describe('oat-project-complete-auto identity', () => {
     expect(fm).toContain(`name: ${SKILL}`);
     expect(fm).toContain('disable-model-invocation: false');
     expect(fm).toContain('user-invocable: false');
-    expect(fm).toMatch(/metadata:\n {2}version: 1\.0\.0/);
+    expect(fm).toMatch(/metadata:\n {2}version: 1\.0\.1/);
     expect(fm).not.toContain('AskUserQuestion');
   });
 
