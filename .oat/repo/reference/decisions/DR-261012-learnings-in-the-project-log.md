@@ -14,7 +14,7 @@ Autonomous, cloud and goal runs wrote learnings to oat-execution-learnings.md wh
 
 ## Decision
 
-Learnings are judgment entries in project-log.md with a body head of **Category:** (gotcha, efficiency, documentation-gap, candidate-skill-content, decision, environment-limited), **Source:**, **Origin:** and **Recorded:**, written through one shared producer function with the source id as idempotency key. No producer creates oat-execution-learnings.md; summary and retro read the log first and an existing legacy file second, deduplicating only proven twins. With the project log disabled, learnings are not persisted: the producer warns once and continues (artifact-cleanup D3, D14).
+Learnings are judgment entries in project-log.md with a body head of **Category:** (gotcha, efficiency, documentation-gap, candidate-skill-content, decision, environment-limited), **Source:**, **Origin:** and **Recorded:**, written through one shared producer function with the source id as idempotency key. No producer creates oat-execution-learnings.md; summary and retro read the log first and an existing legacy file second, deduplicating only proven twins. Disabling the project log (`workflow.projectLog: false`) stops its creation: when no project-log.md exists, learnings are not persisted, the append skips and the producer warns once and continues. An existing project-log.md keeps accepting learnings without a warning regardless of the flag, so recorded history is never stranded (DR-260718-automatic-create-on-first; artifact-cleanup D3, D14 as amended 2026-10-12).
 
 ## Consequences
 
