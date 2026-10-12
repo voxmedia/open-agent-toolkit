@@ -724,6 +724,35 @@ Done.
       });
     });
 
+    it('renders no item when maxLines is below the first item plus the reserve', async () => {
+      // The first item here is three lines and the trailer and cross-reference
+      // reserve four, so 5 lines cannot hold it: the documented minimum edge.
+      const { root, logPath, summaryPath } = await createRepo({
+        digest: { maxLines: 5 },
+      });
+      await writeFile(logPath, OVER_BOUND_LOG, 'utf8');
+
+      const result = await rollupProjectLog({
+        repoRoot: root,
+        home: join(root, 'home'),
+      });
+
+      expect(result).toMatchObject({
+        status: 'ok',
+        summarySection: 'written',
+        digest: { maxLines: 5, rendered: 0, omitted: { overBound: 5 } },
+      });
+      const section = workflowObservations(await readFile(summaryPath, 'utf8'));
+      assertBoundedDigest(section, { maxEntries: 12, maxLines: 5 });
+      expect(section).toBe(
+        [
+          '_5 more judgment entries are omitted by the digest bound (12 entries, 5 lines); the archived project log keeps every entry._',
+          '',
+          'Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.',
+        ].join('\n'),
+      );
+    });
+
     it('is within bounds on a small log in both versions (accepted neighbor)', async () => {
       const { root, summaryPath } = await createRepo();
 

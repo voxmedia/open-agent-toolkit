@@ -1091,7 +1091,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       'oat config set workflow.projectLogDigest.maxLines <positive-integer>',
     description:
-      'Maximum rendered lines of the summary Workflow Observations digest written by project-log rollup. Independent of workflow.projectLog. Resolution: local > shared > user > default.',
+      'Maximum rendered lines of the summary Workflow Observations digest written by project-log rollup, counting the omitted-count trailer and cross-reference lines it reserves first; the minimum useful value is about 6 (a two-line first item plus that reserve), and below it no item is rendered. Independent of workflow.projectLog. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.designMode',
