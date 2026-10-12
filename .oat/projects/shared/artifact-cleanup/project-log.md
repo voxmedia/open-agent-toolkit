@@ -108,6 +108,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:0,low:
 
 Operator disposition simplify (2026-10-12): concurrent-archive ownership protocol deleted as p04-t29 (dd1231a7f, +147/-377), dissolving exit gate gen 2's open High. Final round 8 (Sol high, operator-substituted) 0/0/0/1 passed; Low fixed e86462118. Exit gate generation 3 follows. Key ac-final-outcome-4.
 
+### 2026-10-12 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T171133Z.md run=ed7250e6-6a46-49db-bc43-65ce785166db
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
