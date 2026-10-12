@@ -45,6 +45,44 @@ oat_phase_recovery_policy:
       pending_attempt: null
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: '1419c4b0c26f48986b6cb8d17b594962bf363003a303cad73fe08f52f03b79b9'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: fca56bd2fa8a4851c3c50776e117dd76cecfad6c
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v2:4bd592663b5b90ab16d81a42743c479738301f4b846d6f17af24948b99220511'
+  freshness_head: fca56bd2fa8a4851c3c50776e117dd76cecfad6c
+  freshness_fingerprint: 'sha256:effective-delta-v2:4bd592663b5b90ab16d81a42743c479738301f4b846d6f17af24948b99220511'
+  waivers: []
+  launch_state: intent_persisted
+  launch_attempt_id: exit-gate-20261012T054902Z
+  launch_started_at: '2026-10-12T05:49:02Z'
+  launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T054902Z.receipt.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-10-12T05:49:02Z'
+  decided_at: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -108,7 +146,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T05:44:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T05:49:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
