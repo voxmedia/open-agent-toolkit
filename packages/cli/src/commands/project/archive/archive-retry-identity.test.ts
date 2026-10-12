@@ -243,6 +243,74 @@ describe('archive retry identity (archive-retry-identity)', () => {
     expect(existsSync(fixture.projectPath)).toBe(false);
   });
 
+  it('refuses to adopt a damaged archive as a retry, leaving both copies untouched', async () => {
+    const fixture = await createFixture();
+    const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await restoreSource(fixture);
+    // Unchanged-retry control: the intact archive is reused.
+    const control = await evaluateArchiveRetryIdentity({
+      repoRoot: fixture.repoRoot,
+      projectsRoot: '.oat/projects/shared',
+      projectName: PROJECT,
+      projectPath: fixture.projectPath,
+      scope: 'shared',
+      timestamp: '2026-09-02T09:00:00Z',
+    });
+    expect(control).toMatchObject({
+      disposition: 'retry',
+      archivePath: first.archivePath,
+    });
+
+    // Damage one archived file; the metadata (and its manifestHash) stays.
+    await writeFile(join(first.archivePath, 'state.md'), '# damaged\n');
+    const archiveBefore = await treeHash(fixture.archiveRoot);
+    const sourceBefore = await treeHash(fixture.projectPath);
+    const exportBefore = await treeHash(join(fixture.repoRoot, SUMMARY_EXPORT));
+    const s3 = stubS3();
+
+    await expect(
+      archiveProjectOnCompletion(archiveOptions(fixture), {
+        ...s3,
+        timestamp: () => '2026-09-02T09:00:00Z',
+      }),
+    ).rejects.toMatchObject({
+      code: 'archive-retry-candidate-damaged',
+      message: expect.stringMatching(
+        /^archive-retry-candidate-damaged: .*no longer matches the manifest recorded/,
+      ),
+    });
+    expect(s3.calls).toEqual([]);
+    expect(s3.ensureS3ArchiveAccess).not.toHaveBeenCalled();
+    expect(await treeHash(fixture.archiveRoot)).toBe(archiveBefore);
+    expect(await treeHash(fixture.projectPath)).toBe(sourceBefore);
+    expect(await treeHash(join(fixture.repoRoot, SUMMARY_EXPORT))).toBe(
+      exportBefore,
+    );
+    expect(
+      await previewArchive(
+        fixture,
+        fixture.projectPath,
+        '2026-09-02T09:00:00Z',
+      ),
+    ).toMatchObject({
+      status: 'error',
+      code: 'archive-retry-candidate-damaged',
+    });
+
+    // The source-absent resume path refuses the same damaged archive.
+    await rm(fixture.projectPath, { recursive: true });
+    await expect(
+      archiveProjectOnCompletion(archiveOptions(fixture), {
+        ...stubS3(),
+        timestamp: () => '2026-09-03T09:00:00Z',
+      }),
+    ).rejects.toMatchObject({ code: 'archive-retry-candidate-damaged' });
+    expect(await treeHash(fixture.archiveRoot)).toBe(archiveBefore);
+  });
+
   it('reuses the dated export identity and S3 destination for a cross-date retry', async () => {
     const fixture = await createFixture();
     const first = await archiveProjectOnCompletion(archiveOptions(fixture), {

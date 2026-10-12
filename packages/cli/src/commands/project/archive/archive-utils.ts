@@ -1048,6 +1048,7 @@ export const ARCHIVE_IDENTITY_REFUSAL_CODES = [
   'archive-generation-path-occupied',
   'archive-synced-recordless-unbound',
   'archive-synced-recordless-ambiguous',
+  'archive-retry-candidate-damaged',
 ] as const;
 
 export type ArchiveIdentityRefusalCode =
@@ -1074,6 +1075,38 @@ export class ArchiveIdentityError extends CliError {
  */
 function occupantGuidance(projectName: string): string {
   return `If this directory is a partial copy left by an interrupted archive, inspect and remove it, then retry; otherwise record reopened work in a follow-up project (for example \`oat project new ${projectName}-followup\`).`;
+}
+
+/**
+ * Rehashes a retry candidate's retained bytes before the retry is acted on.
+ * The current manifest must equal the hash recorded at archive time and, when
+ * the source is present, the source's manifest; otherwise the archive was
+ * damaged after it was written, and adopting it would let the apply remove the
+ * only intact copy. A pending generation allocation holds no copy yet and is
+ * re-copied by the apply, so it is not rehashed. Read-only.
+ */
+async function assertRetryCandidateIntact(
+  projectName: string,
+  archivePath: string,
+  metadata: ArchiveSnapshotMetadata | null,
+  sourceManifestHash: string | null,
+): Promise<void> {
+  if (metadata?.allocation === 'pending') return;
+  const actual = await computeArchiveManifestHash(archivePath);
+  const recordedMismatch =
+    metadata?.manifestHash !== undefined && metadata.manifestHash !== actual;
+  const sourceMismatch =
+    sourceManifestHash !== null && sourceManifestHash !== actual;
+  if (recordedMismatch || sourceMismatch) {
+    throw new ArchiveIdentityError(
+      'archive-retry-candidate-damaged',
+      `Archive \`${archivePath}\` of \`${projectName}\` no longer matches ${
+        recordedMismatch
+          ? 'the manifest recorded when it was written'
+          : 'the project it would replace'
+      } (current ${actual}); refusing to adopt it as a retry before any export, copy, removal or S3 mutation. Restore the archive from its S3 snapshot (\`oat repo archive sync ${projectName}\`) or from backup, then retry; the project directory is left in place.`,
+    );
+  }
 }
 
 function followUpGuidance(projectName: string): string {
@@ -1162,6 +1195,17 @@ export async function evaluateArchiveRetryIdentity(
       existing = null;
     }
     const archiveExists = await pathExists(target.archivePath);
+    if (archiveExists && existing !== null) {
+      // The synced source checkout may legitimately differ from the bound
+      // snapshot (it is pinned by the source ref), so only the recorded
+      // manifest is checked here.
+      await assertRetryCandidateIntact(
+        options.projectName,
+        target.archivePath,
+        existing,
+        null,
+      );
+    }
     return {
       ...base,
       ...identityFromMetadata(existing),
@@ -1232,6 +1276,12 @@ export async function evaluateArchiveRetryIdentity(
     // `--new-generation` request (same predecessor and content, so the same
     // generation request id) all reuse the persisted identity.
     const match = matches[0]!;
+    await assertRetryCandidateIntact(
+      options.projectName,
+      match.archivePath,
+      match.metadata,
+      manifestHash,
+    );
     return {
       ...base,
       ...identityFromMetadata(match.metadata),
