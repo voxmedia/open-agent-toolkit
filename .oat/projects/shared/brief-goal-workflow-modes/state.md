@@ -40,6 +40,17 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
+oat_post_implement_sequence:
+  status: complete # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # configured | autonomous-default
+  final_phase: p12
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document, pr]
+  approval: approved # pending | approved | not_required
+  approval_source: user # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
