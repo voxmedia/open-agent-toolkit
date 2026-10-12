@@ -1706,7 +1706,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - The protocol removal, the retained sequential contracts, the cleanup comparison against `origin/main` and the docs rewrite are verified closed; both declared p04-t29 deviations accepted.
 - The Low (an assertion that completed metadata lacks the deleted `allocationOwner` field) was removed by the root in `e86462118`; the file's 44 tests pass.
 
-**Next:** exit gate generation 3 (attempts reset), then the deferred final HiLL approval.
+**Next:** exit gate generation 3 attempt 1 (`reviews/archived/final-review-2026-10-12T171133Z.md`, `codex-6-sol-xhigh`, run `ed7250e6-6a46-49db-bc43-65ce785166db`, reviewed head `75e3d2da2`) returned `ok` 0/0/0/0; judgment sweep found nothing to disposition; gate `allowed/passed`. Closeout returns to the deferred final HiLL approval.
 
 ## Deferred Findings
 
