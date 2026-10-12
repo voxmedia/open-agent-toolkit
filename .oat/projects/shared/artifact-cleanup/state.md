@@ -62,26 +62,26 @@ oat_implement_exit_gate:
   freshness_head: fca56bd2fa8a4851c3c50776e117dd76cecfad6c
   freshness_fingerprint: 'sha256:effective-delta-v2:4bd592663b5b90ab16d81a42743c479738301f4b846d6f17af24948b99220511'
   waivers: []
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: exit-gate-20261012T054902Z
   launch_started_at: '2026-10-12T05:49:02Z'
   launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T054902Z.receipt.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T//oat-gate-runs/91b4bf42-6074-4a2d-8545-7ac7451bb7ae
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/91b4bf42-6074-4a2d-8545-7ac7451bb7ae.json
   gate_run_id: 91b4bf42-6074-4a2d-8545-7ac7451bb7ae
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  envelope_status: blocked
+  artifact: reviews/final-review-2026-10-12T055711Z.md
+  handoff: 'Run oat-project-review-receive for reviews/final-review-2026-10-12T055711Z.md'
+  receive_state: intent_persisted
+  receive_correlation: '{"run_id": "91b4bf42-6074-4a2d-8545-7ac7451bb7ae", "handoff": "review-receive", "source_artifact": "reviews/final-review-2026-10-12T055711Z.md", "scope": "final", "type": "code", "source_filename": "final-review-2026-10-12T055711Z.md"}'
+  receive_source_artifact: reviews/final-review-2026-10-12T055711Z.md
+  receive_archived_artifact: reviews/archived/final-review-2026-10-12T055711Z.md
+  receive_event_identity: 'final|code|final-review-2026-10-12T055711Z.md'
+  receive_pre_head: a9809ac8aca3100ab99d25b4bb303f59e66c2f0e
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-12T05:50:03Z'
+  updated_at: '2026-10-12T06:03:23Z'
   decided_at: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -146,7 +146,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T05:50:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T06:03:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
