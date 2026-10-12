@@ -318,7 +318,9 @@ Status summaries, completed bookkeeping, and "clean boundary" pauses are not com
 Projects live in `.oat/projects/<scope>/<project>/` with:
 
 - Core files: `state.md`, `discovery.md`, `spec.md`, `design.md`, `plan.md`, `implementation.md`
-- Optional: `reviews/`, `pr/`
+- Optional: `reviews/`, `pr/`, `project-log.md`, `summary.md`
+- `implementation.md` has fixed slots (phase sections with task blocks, `## Orchestration Runs`, `## Reviews and Gates`, `## Deferred Findings`); `oat project journal check` validates them at review and completion, and `state.md` owns gate transitions.
+- Learnings are category-bearing entries in `project-log.md`, written only with `oat project log append`; no new project writes `oat-execution-learnings.md`. Review files are local-only and never archived, so journal receipts must stand without them.
 
 ### Docs Pack Workflows
 
