@@ -19,7 +19,7 @@ import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { defaultGitRunner } from '@commands/project/sync/git';
 import { buildSyncTarget } from '@commands/project/sync/ref-sync';
-import { copyDirectory } from '@fs/io';
+import { copyDirectory, ensureDir } from '@fs/io';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -1304,6 +1304,75 @@ describe('explicit archive generations (archive-generation-authorization)', () =
       'demo',
       'demo-g2',
     ]);
+  });
+
+  it('never overwrites or clears a generation that an overlapping call completed', async () => {
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    await reopen(fixture, '# reopened\n');
+    const generationPath = join(fixture.archiveRoot, 'demo-g2');
+    let release!: () => void;
+    const barrier = new Promise<void>((resolveBarrier) => {
+      release = resolveBarrier;
+    });
+    let reached!: () => void;
+    const paused = new Promise<void>((resolvePaused) => {
+      reached = resolvePaused;
+    });
+
+    // Call B evaluates the vacant g2 path, then pauses just before it would
+    // write the allocation.
+    const delayed = archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      {
+        ...stubS3(),
+        timestamp: () => '2026-09-05T09:00:00Z',
+        ensureDir: async (directory: string) => {
+          if (directory === generationPath) {
+            reached();
+            await barrier;
+          }
+          await ensureDir(directory);
+        },
+      },
+    ).then(
+      (value) => ({ value, error: null }),
+      (error: unknown) => ({ value: null, error }),
+    );
+    await paused;
+
+    // Call A completes g2 and removes the source meanwhile.
+    const completed = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+    expect(completed.archivePath).toBe(generationPath);
+    expect(existsSync(fixture.projectPath)).toBe(false);
+    const completedTree = await treeHash(generationPath);
+    const completedManifest = await computeArchiveManifestHash(generationPath);
+    const repoBefore = await treeHash(fixture.repoRoot);
+
+    release();
+    const outcome = await delayed;
+
+    // B refuses without writing anything; A's g2 stays byte-identical.
+    expect(outcome.value).toBeNull();
+    expect(outcome.error).toMatchObject({
+      code: 'archive-generation-claim-held',
+      message: expect.stringMatching(/^archive-generation-claim-held: /),
+    });
+    expect(await treeHash(generationPath)).toBe(completedTree);
+    expect(await computeArchiveManifestHash(generationPath)).toBe(
+      completedManifest,
+    );
+    await expect(
+      readFile(join(generationPath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# reopened\n');
+    expect(await readMetadata(generationPath)).not.toHaveProperty('allocation');
+    expect(await treeHash(fixture.repoRoot)).toBe(repoBefore);
   });
 
   it('never copies the predecessor metadata of a source reopened from its archive over the pending allocation', async () => {
