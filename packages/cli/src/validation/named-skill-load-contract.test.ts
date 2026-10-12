@@ -1415,6 +1415,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: '3.0: Phase Status at Completion',
+    match: 'Stop and route back to `oat-project-implement`',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Routing instruction: completion stops and the user resumes implementation; nothing is loaded here.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: 'Step 1.5: Closeout Invariant Gate',
     match: 'a refusal routes to its `nextOwner.skill`',
     classification: 'non-executing',

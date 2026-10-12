@@ -41,8 +41,17 @@ oat_dispatch_policy:
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p02:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: ac-p02-recovery-2
+        original_request_id: ac-p02-implementation
+        original_task_id: p02-t09
+        original_commit: cb94f433817c3affd411de75be008dc16f017db8
+        discovered_by: 'HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation'
+        dispatch_target: oat-phase-implementer-claude-claude-opus-5-5-high
+        reservation_head: cb94f433817c3affd411de75be008dc16f017db8
+        status: completed
 oat_workflow_mode: quick # spec-driven | quick | import | lite | brief
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
