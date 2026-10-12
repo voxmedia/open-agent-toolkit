@@ -560,6 +560,7 @@
 | BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
 | BL-260909-use-handle-bound-traversal     | Use handle-bound traversal in the managed-copy and manifest filesystem readers                           | open   | low      | task       | M        |
 | BL-260909-wave-7-review-polish-leftovers | Wave-7 review polish leftovers                                                                           | open   | low      | task       | S        |
+| BL-261012-wrap-up-pr-cross-reference     | Wrap-up PR cross-reference without a pr/ directory                                                       | open   | low      | task       | S        |
 | BL-261012-complete-state-json-refusals   | complete-state --json refusals carry structured reason codes                                             | open   | low      | task       | S        |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                      | open   | low      | task       | S        |
 

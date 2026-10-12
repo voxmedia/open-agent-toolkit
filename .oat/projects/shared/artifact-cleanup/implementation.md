@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 7     | 7/7       |
-| Phase 2 | complete    | 12    | 12/12     |
-| Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 20    | 12/20     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 7     | 7/7       |
+| Phase 2 | complete | 12    | 12/12     |
+| Phase 3 | complete | 13    | 13/13     |
+| Phase 4 | complete | 20    | 20/20     |
 
 **Total:** 44/44 tasks completed
 
@@ -881,8 +881,9 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -893,6 +894,7 @@ oat_generated: false
 **Outcome (what changed):**
 
 - Fresh lifecycle probes across quick, lite, brief and goal (229 assertions, protected surfaces byte-identical, eleven named guards run by real title) accept the phase-1 to phase-3 contracts; disabled-log and legacy-learning rows proven agent-run.
+- External PR review fix round (p04-t13..t20, `fca8060e0..5bbc20b10`): one archive retention set, archive-owned entries never copied, generation-aware sync, scope-qualified successors, masked plan progress, request-identity and inline-slot residue rules, and the disabled-log prose aligned to `DR-260718`.
 - Documentation audit (root `AGENTS.md`, `project-artifacts.md`), ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, and the full Definition-of-Done gate run green with no expected red remaining.
 
 **Key files touched:**
@@ -1159,57 +1161,153 @@ oat_generated: false
 
 ### Task p04-t13: (review) One retention set: `pr/` excluded from local copy, manifest, S3 and hydration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 94628aa15
+
+**Outcome:**
+
+- `pr/` joins `reviews/` and `.git` in `ARCHIVE_RETENTION_EXCLUSIONS`; `S3_ARCHIVE_SYNC_EXCLUDES` is derived from that set (now also `.git/*`) and shared by the local copy, the manifest, the upload and hydration; the summary finalizer exports `pr/…` links as plain provenance like `reviews/…`.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `archive-utils.test.ts`, project and repo `index.test.ts`, `sync-runner.test.ts`, `project-artifacts.md`, `picking-up-projects.md`
+
+**Verification:**
+
+- archive + repo/archive 240/240; docs check 0; control: with the pre-fix retention set the hydrated archive's source-absent retry refuses `archive-retry-candidate-damaged`
 
 ---
 
 ### Task p04-t14: (review) Never copy archive-owned entries from the source
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4e8163127
+
+**Outcome:**
+
+- The source copy filter rejects `ARCHIVE_OWNED_ENTRIES`, so a source reopened by copying its archive never overwrites the pending allocation; an interrupted copy resumes the same generation.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`
+
+**Verification:**
+
+- archive suite 0; control: without the filter the g2 pending marker became the g1 metadata
 
 ---
 
 ### Task p04-t15: (review) Resolve archive generations when syncing by project name
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** dfdd0985c
+
+**Outcome:**
+
+- `parseArchiveSnapshotName` captures `-gN` as `generation` with the base project name; by-name sync precedence is exact snapshot, full generation name, then base name (latest generation, then latest date); hydration targets keep the full name; the damaged-archive hint names the exact snapshot with `--force`.
+
+**Files changed:**
+
+- `archive-utils.ts`, `sync-runner.ts`, `archive-retry-identity.test.ts`, `archive-utils.test.ts`, `sync-runner.test.ts`, `lifecycle.md`, `project-artifacts.md`, `oat-directory-structure.md`
+
+**Verification:**
+
+- archive + repo/archive 244/244; docs 0; controls: old selector picks g1 (2 tests), old parser fails the unit, old hint finds no snapshot
 
 ---
 
 ### Task p04-t16: (review) Scope-qualify successor archive paths on other-scope collisions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 19389ca1e
+
+**Outcome:**
+
+- Successor allocation applies the generation-1 scope qualification to both the local path and the export identity when the dated identity collides or another scope's valid archive holds `<project>-gN`; junk at the path still refuses `archive-generation-path-occupied`.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `cli-reference.md`, `project-artifacts.md`
+
+**Verification:**
+
+- archive suite 0; docs 0; control: old allocation refused both scope orders; empty-directory reuse stays green
 
 ---
 
 ### Task p04-t17: (review) Read plan progress through the masked record reader
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 52af5bf1a
+
+**Outcome:**
+
+- `parsePhaseProgress` reads plan task headings through the masked record reader (legacy heading spellings verified accepted), so progress and validation share one plan reading.
+
+**Files changed:**
+
+- `control-plane/src/state/tasks.ts`, `tasks.test.ts`, `journal-check/__tests__/fixtures.ts`, `evaluator.test.ts`, `complete-state/journal.test.ts`
+
+**Verification:**
+
+- control-plane src/state 162/162; journal-check, complete-state, promote, closeout-check, milestones 213/213; control: raw-line reader refuses the truthful 1/1 and accepts the false overview
 
 ---
 
 ### Task p04-t18: (review) Refuse run lines without a valid request identity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4f5f1823c
+
+**Outcome:**
+
+- `checkRunLines` refuses `run-line-malformed` when `request` is null or fails the producer's identifier pattern, imported from `generic-dispatch-record.ts`; other nullable selectors unchanged.
+
+**Files changed:**
+
+- `rules.ts`, `generic-dispatch-record.ts`, `fixtures.ts`, `evaluator.test.ts`
+
+**Verification:**
+
+- journal-check, complete-state, dispatch, identity 703/703; control: guard off reports `ok` and completion writes
 
 ---
 
 ### Task p04-t19: (review) Catch template placeholders inside inline-code slots
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 687d63b53
+
+**Outcome:**
+
+- Inline code is no longer blanked wholesale: a span that is exactly a template vocabulary token in a slot position (list-item start or after a `**Label:**` marker) is residue; `quoted-evidence` (inline or on the preceding line) opts out; prose heuristics unchanged; this journal's L531 stays accepted.
+
+**Files changed:**
+
+- `rules.ts`, `fixtures.ts`, `evaluator.test.ts`, `complete-state/journal.test.ts`
+
+**Verification:**
+
+- journal-check + complete-state 79/79; control: slot rule off accepts the template's own `{path}` line at completion
 
 ---
 
 ### Task p04-t20: (review) State the real disabled-log contract for learning writes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5bbc20b10
+
+**Outcome:**
+
+- The three producer skills, `brief-contract.md` and three docs pages state the real rule: a disabled project log stops creation (append skips with its warning); an existing log keeps accepting learnings (`DR-260718`); `append.test.ts` asserts both branches and a new test runs the skill's write against the branch-built CLI; `append.ts` unchanged.
+
+**Files changed:**
+
+- `oat-project-autonomous/SKILL.md`, `cursor-cloud-mechanics.md`, `oat-project-goal/SKILL.md`, `brief-contract.md`, `autonomy.md`, `cursor-cloud.md`, `closeout-skills.md`, `append.test.ts`, `learning-producer-contracts.test.ts`
+
+**Verification:**
+
+- log + validation + init/tools/shared 1364/1364; format:root, validate-skills, docs 0; controls: unconditional config check in `append.ts` fails the existing-log pin; reverted goal prose fails the D14 pin
 
 ---
 
@@ -1251,17 +1349,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Deviations from Plan / Design
 
-| Date       | Phase/Task  | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                 | Source of truth now                                                               | Follow-up                                                                                         |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| 2026-10-12 | p02-t02     | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp                                                                                                                                                                                       | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted | Code and `cli-reference.md`                                                       | p02-t06 writers pass the stamp; docs updated in p02-t07                                           |
-| 2026-10-12 | p02-t04     | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                                                                                                                                                                                                           | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                     | Code (`complete-state/index.ts`)                                                  | None                                                                                              |
-| 2026-10-12 | p02-t04     | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                                                                                                                                                                                                      | Existing completion tests depend on journal-less projects                                                              | Code                                                                              | p04-t01 probes exercise journal-bearing projects only                                             |
-| 2026-10-12 | p02-t05     | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                                                                                                                                                                                                         | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran       | Commit 29ba174eb                                                                  | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories |
-| 2026-10-12 | p03-t03     | Snapshot metadata key is `generationRequest` (camelCase) rather than the plan's `generation_request`                                                                                                                                                                                                          | Matches the other metadata keys                                                                                        | Code and `project-artifacts.md`                                                   | None                                                                                              |
-| 2026-10-12 | p03-t02     | Same-day archives of one slug from two scopes get a scope-qualified dated identity; a non-empty metadata-less occupant at the archive path refuses instead of creating a twin; `.git` excluded from shared/local copies; `--new-generation` with unchanged content resolves to the existing latest generation | Retry identity must be unambiguous (D11); re-pins two #254 tests                                                       | Code and `project-artifacts.md#archive-identity`                                  | Reviewer to confirm; p04-t01 probes                                                               |
-| 2026-10-12 | p03-t05/t06 | Scope qualification applies to the local path and export name whenever another archive holds the base path (not only same-day); a tenth reason code `archive-generation-source-absent`                                                                                                                        | Local names must match what `repo archive sync` restores; the missing-directory refusal needed a code                  | Code and `project-artifacts.md#archive-identity`                                  | None                                                                                              |
-| 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                           | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                              |
-| 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                  | Commit 8fbda566e                                                                  | None                                                                                              |
+| Date       | Phase/Task  | Deviation                                                                                                                                                                                                                                                                                                     | Reason                                                                                                                      | Source of truth now                                                               | Follow-up                                                                                                     |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 2026-10-12 | p02-t02     | `dispatch record --format line` takes a `--dispatch-stamp <line>` flag; the generic record carries no `Dispatch:` stamp                                                                                                                                                                                       | The caller owns the resolver's stamp; the record producer validates the canonical prefix and format, null when omitted      | Code and `cli-reference.md`                                                       | p02-t06 writers pass the stamp; docs updated in p02-t07                                                       |
+| 2026-10-12 | p02-t04     | The pure journal evaluator does not re-check delivery coverage or the goal sequence                                                                                                                                                                                                                           | Those remain `closeout-check`'s invariant; `complete-state` runs both side by side                                          | Code (`complete-state/index.ts`)                                                  | None                                                                                                          |
+| 2026-10-12 | p02-t04     | `complete-state` skips the journal evaluator when the project has no `implementation.md`                                                                                                                                                                                                                      | Existing completion tests depend on journal-less projects                                                                   | Code                                                                              | p04-t01 probes exercise journal-bearing projects only                                                         |
+| 2026-10-12 | p02-t05     | Task committed with `git add -f` by exact path instead of `oat internal commit-paths`                                                                                                                                                                                                                         | `commit-paths` exits 1 on `git add` of a tracked file under the ignored `packages/cli/assets/*`; hooks still ran            | Commit 29ba174eb                                                                  | Backlog candidate for p04-t03: commit-paths should accept tracked files under ignored directories             |
+| 2026-10-12 | p03-t03     | Snapshot metadata key is `generationRequest` (camelCase) rather than the plan's `generation_request`                                                                                                                                                                                                          | Matches the other metadata keys                                                                                             | Code and `project-artifacts.md`                                                   | None                                                                                                          |
+| 2026-10-12 | p03-t02     | Same-day archives of one slug from two scopes get a scope-qualified dated identity; a non-empty metadata-less occupant at the archive path refuses instead of creating a twin; `.git` excluded from shared/local copies; `--new-generation` with unchanged content resolves to the existing latest generation | Retry identity must be unambiguous (D11); re-pins two #254 tests                                                            | Code and `project-artifacts.md#archive-identity`                                  | Reviewer to confirm; p04-t01 probes                                                                           |
+| 2026-10-12 | p03-t05/t06 | Scope qualification applies to the local path and export name whenever another archive holds the base path (not only same-day); a tenth reason code `archive-generation-source-absent`                                                                                                                        | Local names must match what `repo archive sync` restores; the missing-directory refusal needed a code                       | Code and `project-artifacts.md#archive-identity`                                  | None                                                                                                          |
+| 2026-10-12 | p04-t01     | Third protected fixture is `project-complete-cli` instead of `backlog-wave-5` (989 MB)                                                                                                                                                                                                                        | Fixture size                                                                                                                | Probe evidence under `.oat/repo/analysis/2026-10-12-artifact-cleanup-p04-probes/` | None                                                                                                          |
+| 2026-10-12 | p04-t04     | Three extra skills bumped (`oat-project-document`, `-lite`, `-quick-start`)                                                                                                                                                                                                                                   | They vendor the shared `.agents/docs/autonomy-contract.md`, which p02 and p03 changed                                       | Commit 8fbda566e                                                                  | None                                                                                                          |
+| 2026-10-12 | p04-t13     | `S3_ARCHIVE_SYNC_EXCLUDES` derived from the whole retention set also excludes `.git/*`; summary finalizer exports `pr/…` links as provenance                                                                                                                                                                  | One list defines the retained archive; `.git` was already excluded from the local copy                                      | Code and `project-artifacts.md`                                                   | `BL-261012-wrap-up-pr-cross-reference`: wrap-up Step 7 sibling `pr/` scan finds nothing for archived projects |
+| 2026-10-12 | p04-t15     | Damaged-archive hint names the exact snapshot with `--force` instead of a by-name sync                                                                                                                                                                                                                        | By-name sync now restores the latest generation, not the damaged one; without `--force` sync skips a matching local archive | Code and `project-artifacts.md`                                                   | None                                                                                                          |
+| 2026-10-12 | p04-t19     | `quoted-evidence` opt-out applies only to the inline-code slot rule; slot detection ignores other code spans on the line                                                                                                                                                                                      | Keeps the p02 prose heuristics and this journal's L531 accepted                                                             | Code (`rules.ts`)                                                                 | None                                                                                                          |
+| 2026-10-12 | p04-t20     | Prose fix extended to `brief-contract.md` and three docs pages; pins live in `learning-producer-contracts.test.ts`; a branch-CLI test covers the existing-log write                                                                                                                                           | Same claim appeared there; those skills are already bumped in this PR                                                       | Skills, docs, tests                                                               | None                                                                                                          |
 
 ## Reviews and Gates
 
@@ -1331,11 +1433,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - B1 (`archive.awsProfile` pin): Thomas's instruction for this repository; no change.
 - The exit gate generation (`allowed/passed`, reviewed head `a59ad47cd`) goes `stale` once the first fix commit lands; a narrowed final review and a new gate generation follow the fixes.
 
-**Next:** p04-t13..p04-t20 via a fresh implementer dispatch (`ac-ext-fix-implementation`), then final round 4 (narrowed), exit gate generation 2, and the deferred final HiLL approval.
+**Next:** p04-t13..p04-t20 landed `94628aa15..5bbc20b10` via `ac-ext-fix-implementation` (DONE_WITH_CONCERNS: the wrap-up `pr/` scan, deferred above), root-verified; the exit gate generation is marked `stale`; final round 4 (narrowed to `fca8060e0..5bbc20b10`) and exit gate generation 2 follow, then the deferred final HiLL approval.
 
 ## Deferred Findings
 
-- None.
+- Low (implementer concern after p04-t13): `oat-wrap-up` Step 7 cross-references PRs through a sibling `pr/` directory that archived projects no longer keep; tracked as `BL-261012-wrap-up-pr-cross-reference` (the summary export already names the PR).
 
 ## Final Summary (for PR/docs)
 
