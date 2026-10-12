@@ -81,14 +81,14 @@ oat_implement_exit_gate:
   gate_run_id: ed7250e6-6a46-49db-bc43-65ce785166db
   envelope_status: ok
   artifact: reviews/final-review-2026-10-12T171133Z.md
-  handoff: "Run oat-project-review-receive for .oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T171133Z.md before treating this gate review as consumed."
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T171133Z.md before treating this gate review as consumed.'
   receive_state: completed
   receive_correlation: '{"run_id": "ed7250e6-6a46-49db-bc43-65ce785166db", "handoff": "review-receive", "source_artifact": "reviews/final-review-2026-10-12T171133Z.md", "scope": "final", "type": "code", "source_filename": "final-review-2026-10-12T171133Z.md"}'
   receive_source_artifact: reviews/final-review-2026-10-12T171133Z.md
   receive_archived_artifact: reviews/archived/final-review-2026-10-12T171133Z.md
   receive_event_identity: 'final|code|final-review-2026-10-12T171133Z.md'
   receive_pre_head: b4225399735e3efd4ca9d779dd4b1f3e5708311c
-  receive_commit: null
+  receive_commit: 0a5dcd75bc3b90d71caf1173a4775ee831e53d58
   receive_eligible: true
   receive_completed: true
   failure: null
