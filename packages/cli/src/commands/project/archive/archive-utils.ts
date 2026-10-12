@@ -1297,7 +1297,12 @@ export async function evaluateArchiveRetryIdentity(
   const archivePath = scopeQualified
     ? join(dirname(archiveBasePath), `${options.projectName}-${options.scope}`)
     : archiveBasePath;
-  if (scopeQualified && (await pathExists(archivePath))) {
+  // One rule for empty directories at both paths: an empty one is free.
+  if (
+    scopeQualified &&
+    (await pathExists(archivePath)) &&
+    !(await isEmptyDirectory(archivePath))
+  ) {
     throw new ArchiveIdentityError(
       'archive-occupant-unverifiable',
       `\`${archivePath}\` already exists and is not an archive of \`${options.projectName}\` (${options.scope}); refusing to overwrite it or create a second copy before any export, copy or S3 mutation. ${occupantGuidance(options.projectName)}`,

@@ -504,6 +504,50 @@ describe('archive retry identity (archive-retry-identity)', () => {
     ).resolves.toBe('# state\n');
   });
 
+  it('reuses an empty scope-qualified directory and refuses a non-empty unverifiable one', async () => {
+    const shared = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(shared), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    const localPath = join(
+      shared.repoRoot,
+      '.oat',
+      'projects',
+      'local',
+      PROJECT,
+    );
+    await mkdir(localPath, { recursive: true });
+    await writeFile(join(localPath, 'state.md'), '# local state\n');
+    const qualified = join(shared.archiveRoot, `${PROJECT}-local`);
+
+    await mkdir(qualified);
+    await writeFile(join(qualified, 'notes.md'), '# unrelated\n');
+    const before = await treeHash(shared.archiveRoot);
+    await expect(
+      archiveProjectOnCompletion(
+        archiveOptions(shared, { projectPath: localPath }),
+        { ...stubS3(), timestamp: () => '2026-09-01T10:00:00Z' },
+      ),
+    ).rejects.toMatchObject({ code: 'archive-occupant-unverifiable' });
+    expect(await treeHash(shared.archiveRoot)).toBe(before);
+
+    await rm(join(qualified, 'notes.md'));
+    const archived = await archiveProjectOnCompletion(
+      archiveOptions(shared, { projectPath: localPath }),
+      { ...stubS3(), timestamp: () => '2026-09-01T10:00:00Z' },
+    );
+    expect(archived.archivePath).toBe(qualified);
+    expect(archived.snapshotId).toBe(`${PROJECT}-local`);
+    await expect(readFile(join(qualified, 'state.md'), 'utf8')).resolves.toBe(
+      '# local state\n',
+    );
+    expect((await readdir(shared.archiveRoot)).sort()).toEqual([
+      PROJECT,
+      `${PROJECT}-local`,
+    ]);
+  });
+
   it('refuses an ambiguous retry when two same-scope archives hold the same content', async () => {
     const fixture = await createFixture();
     const first = await archiveProjectOnCompletion(archiveOptions(fixture), {
