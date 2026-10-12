@@ -737,12 +737,10 @@ printf 'artifact-read\\n'`,
     expect(appendPoints).toContain('the helper no-ops when the feature is off');
     expect(content).toMatch(/^allowed-tools:.*Bash\(oat project log:\*\).*$/m);
     expect(appendPoints).toMatch(
-      /accepted subagent dispatch[\s\S]*?generic\s+dispatch record/i,
+      /accepted subagent dispatch[\s\S]*?run line[\s\S]*?## Orchestration Runs/i,
     );
-    expect(appendPoints).toContain(
-      '$PROJECT_PATH/implementation.md#<run-anchor>',
-    );
-    expect(appendPoints).toContain('never mirror that record');
+    expect(appendPoints).toContain('`$PROJECT_PATH/implementation.md`');
+    expect(appendPoints).toContain('never paste the record');
     expect(appendPoints).toContain(
       'Do not write the project log at acceptance',
     );
@@ -2263,7 +2261,28 @@ printf 'artifact-read\\n'`,
     );
     expect(completeContent).toContain('SHOULD_GENERATE_SUMMARY');
     expect(completeContent).toContain(
-      'If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.',
+      'If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing, as a **staged** invocation: state `staged: true`',
+    );
+    // Closeout validates the journal before the suspended summary resumes its
+    // roll-up, and the inline fallback stops at the same suspension point.
+    expect(completeContent).toContain(
+      'oat project journal check --project "$PROJECT_PATH" --at completion --json',
+    );
+    expect(completeContent).toContain(
+      'send the suspended summary run `resume: roll-up`',
+    );
+    expect(completeContent).toContain(
+      'The inline fallback honors the same suspension point',
+    );
+    expect(
+      completeContent.indexOf(
+        '### Step 3.55: Terminal Prose and Final Journal Validation',
+      ),
+    ).toBeLessThan(
+      completeContent.indexOf('### Step 3.7: Project Log Completion Gate'),
+    );
+    expect(completeContent).toContain(
+      '`oat_summary_learnings_fingerprint` field, makes `summary.md` `stale`',
     );
     expect(completeContent).toContain(
       'Do not assume `oat-project-summary` is a shell command on `PATH`.',

@@ -3258,6 +3258,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 7: Update Implementation.md',
+    match:
+      'Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide', 'oat-project-review-receive'],
+    reason:
+      'Follow-up instruction recorded beside the journal receipt; the re-review runs later through its own skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
     anchor: 'Step 10A: Route to Next Action for Artifact Reviews',
     match: 'Re-run `oat-project-review-provide artifact {scope}`',
     classification: 'non-executing',

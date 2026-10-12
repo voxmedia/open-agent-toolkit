@@ -487,7 +487,7 @@ for smoke mode and `false` for normal mode.
 
 When baseline failures occur under `allow-failing` policy and an active project exists:
 
-Append to `implementation.md` under `## Implementation Log`:
+Append to `implementation.md` under `## Deviations from Plan / Design`, after that section's existing content and before the next `##` heading:
 
 ```markdown
 ### {YYYY-MM-DD} — Baseline Warning (autonomous bootstrap)
@@ -500,7 +500,7 @@ Append to `implementation.md` under `## Implementation Log`:
 - {check_name}: {failure summary}
 ```
 
-When a base mismatch is detected (Step 2.7) and an active project exists, append a distinct entry regardless of baseline policy so post-mortems can find it:
+When a base mismatch is detected (Step 2.7) and an active project exists, append a distinct entry in the same section regardless of baseline policy so post-mortems can find it:
 
 ```markdown
 ### {YYYY-MM-DD} — Base Mismatch (autonomous bootstrap)

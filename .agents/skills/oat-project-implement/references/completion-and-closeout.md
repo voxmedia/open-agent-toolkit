@@ -297,7 +297,8 @@ remembered review or receive outcome does not satisfy this step.
   the review state and report the exact resume action instead of falling
   through to the prompt.
 - Record gate `IMPLEMENT-11`, the selected route, achieved independence, and
-  dispatch-record reference in `implementation.md`.
+  the reviewer's request ID (its run line) as one line under
+  `## Reviews and Gates` in `implementation.md`.
 
 After this autonomous branch succeeds, skip the workflow preference,
 fresh-session guidance, and standard prompt below. When `OAT_AUTONOMOUS` is not
@@ -392,7 +393,7 @@ dispatch the complexity review that
 `references/docs/complexity-review-fallback.md` defines for the final loop,
 then show its decision message; under `OAT_AUTONOMOUS=1`, put the same content
 in the boundary report instead. Record the operator's choice with the report
-path in `implementation.md`. Agents never select the disposition. One exhausted
+path as one line under `## Reviews and Gates` in `implementation.md`. Agents never select the disposition. One exhausted
 loop gets one review: follow that doc's reuse rule, so a report the receive
 step's cycle cap already produced for this final loop serves here too.
 
@@ -578,8 +579,12 @@ artifact before deciding the next transition:
 
 Persist and commit every state transition before crossing its launch, receive,
 stop, approval-aware sequence, completion, or output boundary. Append a concise
-audit event to `implementation.md`; that prose and review ledger rows are
-evidence, not routing state.
+terminal line for the gate run under `## Reviews and Gates` in
+`implementation.md` (`**Gate:** <gate> · **Scope:** <scope> · **Outcome:**
+<outcome> · <attempt, waiver or operator choice>`), updated in place for the
+same run: `state.md` owns the gate transitions, so the journal keeps one line
+per gate run, never one per transition. That line and the review ledger rows
+are evidence, not routing state.
 
 **Structured outcomes, receive, and policy:**
 
@@ -885,8 +890,8 @@ completion, or success output, run the configured gate:
    - `block`: read gate feedback, remediate, and re-run the gate up to
      `maxAttempts` attempts (default `2`). Persist each consumed remediation
      attempt. If the gate ends in `block` after attempts are exhausted,
-     escalate to the human with accumulated feedback and append that feedback
-     to `implementation.md`.
+     escalate to the human with accumulated feedback and record that feedback
+     on the gate's line under `## Reviews and Gates` in `implementation.md`.
    - `prompt`: persist the blocked boundary, surface the gate failure, and ask
      the human how to proceed. Continue only after an explicit persisted
      approval.
@@ -906,7 +911,7 @@ completion, or success output, run the configured gate:
    gate loop before escalating, then show its decision message with the
    accumulated feedback; under `OAT_AUTONOMOUS=1`, put the same content in the
    boundary report instead. Record the operator's choice with the report path
-   in `implementation.md`. Agents never select the disposition. A single
+   as one line under `## Reviews and Gates` in `implementation.md`. Agents never select the disposition. A single
    unresolved policy boundary that consumed no remediation attempt is not a
    budget exhaustion and does not trigger the review.
 
@@ -1283,6 +1288,22 @@ result leaves implementation in progress: report its `invariant` and
 `nextOwner`, write nothing, and resume Step 15 at that owner. `not_required`
 means no snapshot was owed: the closeout is not configured, not autonomous,
 and not lite. A command error fails closed the same way.
+
+Then run the journal check at the pre-Step-16 boundary, which validates the
+accepted task and phase evidence, slot placement, run lines and residue while
+the terminal headers and pointers below are still unwritten:
+
+```bash
+JOURNAL_CHECK_EXIT=0
+JOURNAL_CHECK_JSON=$(oat project journal check --project "$PROJECT_PATH" --at implement-preflight --json) || JOURNAL_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `ok`. A `refused` result leaves implementation
+in progress: report each reason's `code`, `path:line` and `owner`, write
+nothing here, correct the journal through that owner (a missing task block or
+commit, a misplaced receipt, a pasted payload, an unresolved run line), commit
+the correction as bookkeeping, and run both checks again. A command error fails
+closed the same way.
 
 Update `"$PROJECT_PATH/implementation.md"` frontmatter:
 

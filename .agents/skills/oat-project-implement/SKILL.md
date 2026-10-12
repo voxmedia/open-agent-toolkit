@@ -48,13 +48,13 @@ the helper no-ops when the feature is off.
 dirties the tree that the child's preflight and per-task commit checks require
 to be clean; each append is committed by the bookkeeping that owns it.
 
-- After every accepted subagent dispatch, record the acceptance in the generic
-  dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
-  never mirror that record. Do not write the project log at acceptance; append
+- After every accepted subagent dispatch, record the acceptance as its run line
+  in `$PROJECT_PATH/implementation.md` `## Orchestration Runs` (`--format line`);
+  never paste the record. Do not write the project log at acceptance; append
   it with the phase-outcome entry after the child's report returns.
 - Implementing a phase in the root during a Tier 1 run is a deviation, never a
-  silent default: record the phase ID, reason, and root model under a sibling
-  `Root-inline phase` heading at that run anchor. Sanctioned Tier 2 needs none.
+  silent default: record the phase ID, reason, and root model on a
+  `Root-inline phase:` line under `## Orchestration Runs`. Sanctioned Tier 2 needs none.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`

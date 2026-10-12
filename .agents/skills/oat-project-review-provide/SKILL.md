@@ -902,8 +902,8 @@ If `review type == code` and `scope == final`, gather unresolved deferred findin
 
 Preferred sources:
 
-- `implementation.md` sections titled `Deferred Findings (...)`
-- prior review artifacts under `reviews/archived/` when implementation notes are incomplete (plus the current active review file in `reviews/`, if one exists for the in-flight cycle)
+- the lines under `implementation.md`'s `## Deferred Findings` section (older journals: sections titled `Deferred Findings (...)`)
+- prior review artifacts under `reviews/archived/` when implementation notes are incomplete and the files are still on this machine (plus the current active review file in `reviews/`, if one exists for the in-flight cycle); review files are local-only, so a missing one is never a finding
 
 Build:
 
@@ -915,6 +915,29 @@ Rules:
 
 - Include this ledger in review metadata so final review explicitly re-evaluates carry-forward debt.
 - Final review should call out whether each deferred Medium remains acceptable or should now be fixed.
+
+### Step 4.6: Journal Check for the Review Scope (Code Reviews)
+
+For a `code` review whose scope resolves to phases, run the read-only journal
+check with that explicit phase scope (`pNN-pMM` expands to every phase in the
+range; `final` passes every phase the plan declares):
+
+```bash
+JOURNAL_CHECK_JSON=$(oat project journal check --project "$PROJECT_PATH" --at review --scope "{comma-separated phase ids}" --json) || true
+```
+
+The review boundary ignores future phases and only warns for live run lines.
+Put each refused reason (`code`, `path:line`, `owner`) in the Review Scope under
+`**Journal check:**` so the reviewer reports the evidence defects among them
+(a missing or duplicate task block, missing commit evidence, a pasted dispatch
+payload, a misplaced receipt or deferral).
+
+**Refresh-only findings are not tasks.** A finding that a mechanical pointer or
+projection refresh resolves (stale Progress Overview totals, a run line that
+needs re-rendering, a phase status line or resume pointer that lags the
+recorded evidence) is reported as a refresh-only note owned by closeout's
+refresh, never as a fix task. Substantive evidence corrections and accepted
+design changes remain traceable fix tasks with commits.
 
 ### Step 5: Prepare Review Metadata Block
 
@@ -938,6 +961,8 @@ Build the "Review Scope" metadata for the reviewer:
 - Implementation: {PROJECT_PATH}/implementation.md
 - Discovery: {PROJECT_PATH}/discovery.md
 - Imported Plan Reference: {PROJECT_PATH}/references/imported-plan.md (optional; import mode)
+
+**Journal check (code review only):** {status and each refused reason from Step 4.6, or "ok"}
 
 **Tasks in Scope (code review only):** {task IDs from plan.md matching scope; in brief modes, the execution-record IDs under the phases in scope in implementation.md, which label commits and never narrow the range}
 

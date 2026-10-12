@@ -65,11 +65,11 @@ cat "$PROJECT_PATH/plan.md" | head -10 | grep "oat_status:"
 
 ### Step 1.5: Resumption Detection
 
-If `{PROJECT_PATH}/implementation.md` already contains orchestration run entries, we may be resuming an interrupted run.
+If `{PROJECT_PATH}/implementation.md` already contains run lines under `## Orchestration Runs`, we may be resuming an interrupted run.
 
-1. Read `implementation.md` and find the most recent `### Run N` entry.
-2. Compare its phases-passed / phases-failed / phases-stopped counts against the plan's phase list.
-3. If there are phases in the plan that are not yet covered by any run entry, those are the resume targets.
+1. Read `implementation.md`: the run lines under `## Orchestration Runs` (one `run/v1` line per request ID) and each phase section's `**Status:**`. A journal written before run lines existed carries `### Run N` entries instead; read the most recent one.
+2. A run line with `terminal=no` is a live or interrupted launch: reconcile its handle (below) before any new launch.
+3. Phases in the plan whose phase section is not complete are the resume targets.
 4. Read `state.md` for `oat_current_task` to cross-check the expected resume point.
 5. Read `git log` to verify the most recent bookkeeping commit matches the last reported state.
 

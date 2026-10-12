@@ -439,6 +439,11 @@ endpoint.
 
 ### Step 6: Optional - Open PR
 
+Journal placement: the PR record lives in `state.md` (and, in goal mode, the
+delivery registry). When the PR is also noted in `implementation.md`, write one
+receipt line under `## Reviews and Gates` (PR URL, scope, date); never after
+`## References`.
+
 For a synced project whose user chooses to open the PR, use this ordered flow:
 
 1. Finish or refresh `summary.md` and the progress PR artifact.

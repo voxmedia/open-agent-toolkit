@@ -404,6 +404,11 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
   endpoint); `summary.md` is `stale` when its `oat_summary_phase_fingerprint`
   is absent or differs from the recomputed value and `current` when they
   match. `oat_summary_last_task` is not consulted for a brief or goal project.
+- In every workflow mode, also recompute `summary_learnings_fingerprint` with
+  the `oat-project-summary` Step 3 function and compare it with
+  `oat_summary_learnings_fingerprint`. A mismatch, or a missing
+  `oat_summary_learnings_fingerprint` field, makes `summary.md` `stale` on its
+  own, whatever the task, revision or phase tracking says.
 
 Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.
 The safety-net offer is governed by how this completion run executes, not by how
@@ -510,7 +515,10 @@ IMPL_FILE="${PROJECT_PATH}/implementation.md"
 
 if [[ -f "$IMPL_FILE" ]]; then
   medium_items=$(awk '
-    BEGIN { in_medium = 0 }
+    BEGIN { in_medium = 0; in_slot = 0 }
+    /^## Deferred Findings[[:space:]]*$/ { in_slot = 1; next }
+    /^## / { in_slot = 0 }
+    in_slot && /^[[:space:]]*-[[:space:]]+/ && /Medium/ { print; next }
     /^\*\*Deferred Findings \(Medium\):\*\*/ { in_medium = 1; next }
     /^\*\*Deferred Findings \(Medium\/Minor\):\*\*/ { in_medium = 1; next }
     in_medium && /^\*\*/ { in_medium = 0; next }
@@ -570,9 +578,9 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
 
 Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against the implementation state:
 
-- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.
+- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing, as a **staged** invocation: state `staged: true` so the summary skill writes only its `summary.md` sections and freshness frontmatter, records any selected promotions without appending them, and suspends before its Step 6 roll-up. Record `SUMMARY_STAGED="true"`; Step 3.7 sends `resume: roll-up` only after Step 3.55's final journal check succeeds.
 - When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it; never synthesize the summary from a remembered version of that skill.
-- If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing).
+- If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing). The inline fallback honors the same suspension point: it writes no project-log append, roll-up, ledger write or promotion before `resume: roll-up`.
 - Do not assume `oat-project-summary` is a shell command on `PATH`. Only execute a shell command with that name if the environment explicitly provides a real executable.
 - If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="false"`, emit: `Warning: Proceeding without summary generation.`
 - If summary generation succeeds, proceed with the refreshed `summary.md` available for PR and archive steps.
@@ -580,6 +588,52 @@ Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against th
 - If `summary.md` already exists and is current, note it as available. Summary.md will be:
   - Used as source for the PR description (in Step 7)
   - Preserved in the archived project directory (in Step 8)
+
+### Step 3.55: Terminal Prose and Final Journal Validation
+
+Run this step on every completion, after the summary refresh and before any
+roll-up, promotion append, seal, archive or lifecycle write.
+
+**Terminal prose refresh.** Rewrite only the journal's
+`## Final Summary (for PR/docs)` and `summary.md` prose from observed facts:
+present-tense status that the journal and `state.md` now contradict ("PR
+pending", "phase in progress") is rewritten; real follow-ups and timestamped
+historical observations stay. Never rewrite task blocks, receipts, completed
+synthesis, or project-log entries: a wrong log judgment is corrected by
+appending a source-linked correction before the seal. A mechanical pointer or
+projection refresh (overview totals, resume pointers, a run line re-render)
+creates no task; a substantive evidence correction stays traceable work.
+
+**Final journal check.**
+
+```bash
+JOURNAL_CHECK_EXIT=0
+JOURNAL_CHECK_JSON=$(oat project journal check --project "$PROJECT_PATH" --at completion --json) || JOURNAL_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `ok`. On `refused` (or a command error), stop
+completion: report each reason's `code`, `path:line` and `owner`, and route the
+correction to that owner. The prose refresh above may remain; nothing else
+happens: no `resume: roll-up`, no deferred promotion append, no roll-up, no
+ledger graduation, no seal, no archive or export, and no lifecycle write.
+
+**Overrides.** When every remaining reason is an overridable gap (a missing
+task block, an incomplete task, missing commit evidence, or an unaccepted
+phase) and the user authorizes an override with a decision identity, record it
+as exactly one line under `## Deviations from Plan / Design`:
+
+```markdown
+**Override:** <scope-disposition-approved|evidence-lost|operator-accepted-gap> · **Authorized by:** <decision id> · **Scope:** <pNN-tNN|pNN> · <reason>
+```
+
+Write it idempotently: when a line with the same code, scope and decision id
+already exists, write nothing. When the project log is enabled and not sealed,
+also append one structural entry for it
+(`oat project log append --structural --producer oat-project-complete --ref override --idempotency-key "oat-override:<code>:<scope>:<decision id>" --body "... oat-override:<code>:<scope>:<decision id>"`)
+before any seal. Commit both, then run the journal check again. Under
+`OAT_AUTONOMOUS=1` never author an override: refuse and report. No override
+bypasses the closeout invariant, the goal audit, delivery coverage, the
+project-log ambiguity refusal or the seal guards.
 
 ### Step 3.5.5: Retro Safety-Net
 
@@ -898,6 +952,12 @@ Skip this roll-up entirely when the probe reported `sealed: true`; a sealed log
 has already been rolled up and sealed, and the seal must remain its final
 entry.
 
+When `SUMMARY_STAGED="true"`, send the suspended summary run `resume: roll-up`
+now, after Step 3.55's journal check returned `ok`: it performs its deferred
+promotion appends first and then its Step 6 roll-up, and that roll-up result is
+the one reused below. A staged run is resumed only here, never after a refused
+journal check.
+
 For an unsealed log with entries, reuse the summary flow's structured roll-up
 result only
 when this completion run has that exact result in memory and it reports
@@ -1011,8 +1071,15 @@ oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 
 Re-run the closeout check immediately before `complete-state`, because the
 Step 3 gates ran children that can change `state.md`. `complete-state`
-evaluates the same invariant and refuses an incomplete closeout without
+evaluates the same invariant and the final journal evaluator (the Step 3.55
+check, on the bytes it is about to complete) and refuses either without
 writing.
+
+After `complete-state` succeeds and before any archive, record when the PR
+fields were observed: set `oat_pr_status_observed_at: '<UTC ISO 8601 now>'` in
+`state.md` frontmatter beside `oat_pr_status` (only when `oat_pr_status` is not
+`null`). An archived `oat_pr_status`/`oat_pr_url` is an observation at that
+time, not a live PR state.
 
 For `synced`, keep this finalized lifecycle state in the project checkout until
 Step 7.5 publishes it together with every later pre-archive artifact write. Do

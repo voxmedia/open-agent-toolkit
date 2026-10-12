@@ -794,6 +794,11 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 ### Step 6: Update Project State to pr_open
 
+Journal placement: the PR record lives in `state.md` (and, in goal mode, the
+delivery registry). When the PR is also noted in `implementation.md`, write one
+receipt line under `## Reviews and Gates` (PR URL, scope, date); never after
+`## References`.
+
 After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.md"` so project routing reflects both the actual PR state and the `pr_open` review posture.
 
 **Frontmatter updates:**

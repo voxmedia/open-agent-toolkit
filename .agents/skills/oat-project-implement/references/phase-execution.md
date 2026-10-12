@@ -864,7 +864,7 @@ the artifact record fields come from the phase anchors as Brief-Mode Phase
 Execution describes; validate the anchors before launch.
 
 The Review Scope names review-outcome bookkeeping as out of scope: this
-review's `## Reviews` row and its disposition, the Orchestration Run entry for
+review's `## Reviews` row and its disposition, the run-line update for
 this review's outcome, the deferred phase-outcome and review-orchestration
 project-log entries, and the ledger's record of any review-fix commit. Step 7b
 writes all of them after the review returns, so their absence at the reviewed
@@ -964,14 +964,14 @@ On hosts that do not support resuming a completed child handle, this fresh
 same-target fix launch is expected rather than an anomalous recovery.
 
 Retry exhaustion stops a sequential run. In a parallel group, mark the phase
-`excluded`, do not merge its worktree, and report the review artifact and
-worktree in Outstanding Items.
+`excluded`, do not merge its worktree, and record the review artifact and
+worktree as one line under `## Deferred Findings`.
 
 **Complexity review at retry exhaustion.** Before escalating, dispatch the
 complexity review that `references/docs/complexity-review-fallback.md` defines
 for this exhausted loop, then show its decision message; under
 `OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
-Record the operator's choice with the report path in `implementation.md`.
+Record the operator's choice with the report path as one line under `## Reviews and Gates` in `implementation.md`.
 Agents never select the disposition. For an excluded parallel phase, the
 review reads that phase's committed worktree range and its decision joins the
 fan-in report.
@@ -1015,7 +1015,7 @@ that limit, the phase row goes `blocked`. Before escalating, dispatch the
 complexity review that `references/docs/complexity-review-fallback.md` defines
 for this exhausted gate loop, then show its decision message; under
 `OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
-Record the operator's choice with the report path in `implementation.md`.
+Record the operator's choice with the report path as one line under `## Reviews and Gates` in `implementation.md`.
 Agents never select the disposition. Launch, transport, and validation
 failures consume no retry round and do not trigger the review.
 
@@ -1105,7 +1105,7 @@ reviewer. Write the phase's task ledger:
 - when the phase report carried a recovery attempt, after the matching
   handoff-matrix row validates, clear the terminal `pending_attempt` marker,
   preserve `used_attempts`, and append the validated canonical recovery event
-  to `implementation.md`;
+  to the phase's section of `implementation.md`;
 - remove legacy `oat_execution_mode: subagent-driven`; and
 - preserve any configured retry override.
 
@@ -1152,9 +1152,23 @@ the root ledger.
 Run after the phase's terminal review outcome (pass, or retry exhaustion).
 Write the review-outcome bookkeeping that Step 7a leaves out:
 
-- append an Orchestration Run with phase outcomes, task commits, phase/root
-  review result, fix iterations, dispatch stamps, selection reasons,
-  candidates, optional nested dispatches, worktrees, and outstanding items;
+- under `## Orchestration Runs`, update in place the one run line per request
+  ID this phase launched (implementer, reviewer, fix, continuation and
+  optional nested requests): re-render it with
+  `oat project dispatch record --event-file <input> --format line --dispatch-stamp "<resolver dispatchStamp>"`
+  from the record that carries the terminal outcome and replace the line that
+  has the same request ID; never append a second line for one request ID and
+  never paste the record or event JSON;
+- record the review result in the phase section: when review-receive ran,
+  its `### Review Received: pNN` receipt is that record (finding identity and
+  substance, disposition and rationale, the fix task or approved deferral it
+  links to, final outcome; the review path is a local-only citation);
+  otherwise write one line with the reviewer's request ID, verdict and
+  severity counts. Write one terminal line per gate run under
+  `## Reviews and Gates`; `state.md` owns gate transitions, so the journal line
+  records only the outcome, waivers and operator choices;
+- write excluded parallel phases and unmerged worktrees as lines under
+  `## Deferred Findings`;
 - update only the plan review event whose Scope + Type + artifact filename
   identifies the review being dispositioned, through `fixes_added` /
   `fixes_completed` / `passed` as appropriate;

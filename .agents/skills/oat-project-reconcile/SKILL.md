@@ -737,34 +737,28 @@ oat_project_state_updated: '{ISO 8601 UTC timestamp}'
 # may advance to complete after the final review passes.
 ```
 
-**5f. Append to Implementation Log:**
+**5f. Record the reconciliation session:**
 
-Add a reconciliation session entry to the `## Implementation Log` section:
+Write the reconciliation entry into the owning phase section of
+`implementation.md` (the phase whose task blocks 5d updated), after that
+phase's task blocks and before the next `##` heading. When no single phase
+owns it (unplanned work across phases, or no reconciled task), write it under
+`## Deviations from Plan / Design` instead. Never append it after
+`## References`.
 
 ```markdown
-### {today's date}
-
-**Session Start:** reconciliation
+### Reconciliation — {today's date}
 
 {For each reconciled task:}
 
-- [x] {task_id}: {task_name} - {sha} (reconciled, confidence: {level})
+- {task_id}: {task_name} - {sha} (reconciled, confidence: {level})
 
 {For each unplanned entry:}
 
-- [x] unplanned: {summary} - {sha}
+- unplanned: {summary} - {sha}
 
-**What changed (high level):**
-
-- Reconciled {N} manually-implemented tasks from {M} commits
-- Logged {K} unplanned work entries
-
-**Decisions:**
-
-- Mapping confidence breakdown: {high_count} high, {medium_count} medium, {low_count} low
-- Skipped commits: {skip_count}
-
-**Session End:** reconciliation complete
+- Reconciled {N} manually-implemented tasks from {M} commits; logged {K} unplanned work entries.
+- Mapping confidence: {high_count} high, {medium_count} medium, {low_count} low; skipped commits: {skip_count}.
 ```
 
 ### Step 6: Commit and Report

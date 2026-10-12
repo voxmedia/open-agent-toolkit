@@ -156,10 +156,15 @@ For every lifecycle dispatch:
 
 For project-aware launches, construct and redact the complete generic record
 plus OAT event before the native host call. When the call returns accepted or
-`blocked-before-start`, the calling workflow writes the request ID, the
-`Dispatch:` stamp, the launch status, and later the terminal outcome into its
-run record in `implementation.md`; that run record is the only launch record.
-`oat project dispatch record` validates a record and writes nothing.
+`blocked-before-start`, the calling workflow renders the run line with
+`oat project dispatch record --event-file <input> --format line --dispatch-stamp "<resolver dispatchStamp>"`
+and writes it as one list item under `## Orchestration Runs` in
+`implementation.md`; after the terminal outcome it re-renders the line from the
+record carrying that outcome and replaces the line with the same request ID in
+place. That one line per request ID (request ID, `Dispatch:` stamp, launch
+status, terminal outcome) is the run record and the only launch record; the record and event
+JSON are never pasted into the journal. `oat project dispatch record` validates a
+record and writes nothing.
 
 An accepted launch closes replacement. A rejected record must include
 `provesNoChildStarted: true` before one target-preserving canonical-instruction
