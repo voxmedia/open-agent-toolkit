@@ -62,12 +62,12 @@ oat_implement_exit_gate:
   freshness_head: a59ad47cd793a2bb806024bfde6ece239ef00c04
   freshness_fingerprint: 'sha256:effective-delta-v2:a6aa9ed1d254bf4fc4e44679645cda2b29431e5bfa0c5eb19554fe2f037ff210'
   waivers: []
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: exit-gate-20261012T062051Z
   launch_started_at: '2026-10-12T06:20:51Z'
   launch_result_receipt: .oat/repo/analysis/dispatch/exit-gate-20261012T062051Z.receipt.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/43b2fd6a-ad0d-45d4-ae25-fa669f86c2ec.json
+  gate_run_id: 43b2fd6a-ad0d-45d4-ae25-fa669f86c2ec
   envelope_status: null
   artifact: null
   handoff: null
@@ -81,7 +81,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: 'attempt 1 blocked 0/1/3/2; remediated by p04-t08..p04-t12, final round 3 passed; attempt 2 launched'
-  updated_at: '2026-10-12T06:20:51Z'
+  updated_at: '2026-10-12T06:21:48Z'
   decided_at: null
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
@@ -146,7 +146,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T06:20:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T06:21:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
