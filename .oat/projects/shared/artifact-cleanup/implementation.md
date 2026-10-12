@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: null
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -17,21 +17,21 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
+> - When all plan tasks are complete, set `oat_current_task_id: p04-t06`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 7     | 5/7       |
 
-**Total:** 37/37 tasks completed
+**Total:** 37/39 tasks completed
 
 ---
 
@@ -587,7 +587,7 @@ oat_generated: false
 **Outcome (what changed):**
 
 - The autonomous, cloud and goal producers write learnings to the project log through one shared `oat_record_learning` function (category → judgment type, `--category/--source/--origin`, source id as idempotency key); a disabled log yields one warning and the run continues (D14); no producer creates `oat-execution-learnings.md`; the autonomous commit identity carries the written source id.
-- Archive retry identity: a read-only evaluator shared by apply and dry-run identifies archives by a manifest hash over retained files; identical retries reuse snapshot, export, S3 destination and receipt across dates and after source removal; local paths derive from the identity (scope-qualified when another archive holds the base path, empty directories reused); conflicting, ambiguous, occupant and recordless-synced cases refuse before any side effect with a stable reason code (`archive-*`, thirteen codes tabled in `project-artifacts.md`); summary exports rewrite `oat-project:` tokens to `oat-archive:<snapshot>#<id>`.
+- Archive retry identity: a read-only evaluator shared by apply and dry-run identifies archives by a manifest hash over retained files; identical retries reuse snapshot, export, S3 destination and receipt across dates and after source removal; local paths derive from the identity (scope-qualified when another archive holds the base path, empty directories reused); conflicting, ambiguous, occupant and recordless-synced cases refuse before any side effect with a stable reason code (`archive-*`, twelve codes tabled in `project-artifacts.md`); summary exports rewrite `oat-project:` tokens to `oat-archive:<snapshot>#<id>`.
 - `--new-generation <reason>` ships with predecessor binding persisted before any side effect, replay detection by manifest match (`generationRequest` recorded as the witness), an audible warning when it resolves to an existing generation, and dry-run parity.
 
 **Key files touched:**
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1025,6 +1024,41 @@ oat_generated: false
 
 ---
 
+### Review Received: final
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T052402Z.md (round 1, Fable 5.1 high, auto; 87433267b..b38441a26)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 0
+- Low: 3
+
+**New tasks added:** p04-t06 (L2), p04-t07 (L3)
+
+**Design drift / artifact alignment notes:**
+
+- L1: the phase-3 summary and the Final Summary said thirteen `archive-*` reason codes; twelve exist. Fixed by the root in the receive commit (journal text only).
+- Deferred Findings ledger: none to disposition; every prior finding was converted and landed.
+
+**Next:** execute p04-t06 and p04-t07 as bounded fix continuations, then a narrowed final round 2 on the fix delta to reach `passed`; then the configured implementation exit gate and the closeout sequence.
+
+### Task p04-t06: (review) Replay-warning docs sentence matches both messages
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t07: (review) Empty generation directory is reusable like the other archive paths
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1081,7 +1115,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Project-log judgment entries carry category, source, origin and recorded-head fields; roll-up writes a bounded observations digest with non-link locators and omits the section when empty; `workflow.projectLogDigest` config; slimmer project-log and summary templates.
 - Summary and retro read the unified log first and `oat-execution-learnings.md` second with proven-twin deduplication; the summary gains the staged invocation contract and learning-driven freshness; the autonomous, cloud and goal producers write learnings to the project log and never create the legacy file (D14: a disabled log warns and continues).
 - A shared journal record reader, `dispatch record --format line` run records, the journal evaluator and `oat project journal check` at three lifecycle boundaries, `complete-state` refusing on an invalid journal (writing nothing), journal templates with `## Reviews and Gates` and `## Deferred Findings` slots, and sixteen writer skills targeting them; the complete skill runs summary staged, validates, then resumes roll-up, and writes `oat_pr_status_observed_at`.
-- Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, thirteen `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
+- Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, twelve `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
 - Documentation audit, ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, full gate run green.
 
 **Behavioral changes (user-facing):**

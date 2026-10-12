@@ -731,6 +731,59 @@ Expected: eleven guards, each with a non-zero matched-test count and exit 0; `ou
 
 ---
 
+### Task p04-t06: (review) Replay-warning docs sentence matches both messages
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/project-artifacts.md` (lines ~254–256: a `--new-generation` replay resolves to that generation and warns that no new generation was allocated, naming the persisted reason when the predecessor was itself an explicit generation)
+
+**Step 1: Understand the issue**
+
+Final review L2 (`final-review-2026-10-12T052402Z.md`): the docs say a replay "warns that the reason was not recorded", but since p03-t11 that text appears only when the matched archive has no persisted reason.
+Location: `apps/oat-docs/docs/reference/project-artifacts.md:254-256`
+
+**Step 2: Implement fix**
+
+Reword the sentence; docs only.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter oat-docs check`
+Expected: exit 0.
+
+**Step 4: Commit**
+
+`docs(p04-t06): replay-warning sentence covers both messages`
+
+---
+
+### Task p04-t07: (review) Empty generation directory is reusable like the other archive paths
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (`allocateArchiveGeneration`: throw `archive-generation-path-occupied` only when the `<project>-gN` path exists and is non-empty, using `isEmptyDirectory` like the base and scope-qualified checks)
+- Modify: `packages/cli/src/commands/project/archive/archive-retry-identity.test.ts` (one accepted-neighbor case: an empty `<project>-gN` directory is reused; the existing occupied-path case stays refused)
+
+**Step 1: Understand the issue**
+
+Final review L3: p03-t13 made empty base and scope-qualified directories reusable and the docs say so, but `allocateArchiveGeneration` still refuses any existing `<project>-gN` path on `pathExists` alone, so an operator who emptied a half-copied generation directory per the occupant hint is refused on the next `--new-generation`.
+Location: `packages/cli/src/commands/project/archive/archive-utils.ts:1397-1403`
+
+**Step 2: Implement fix**
+
+One rule for empty directories at all three paths.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive`
+Expected: green; with the guard reverted to bare `pathExists`, the new case fails.
+
+**Step 4: Commit**
+
+`fix(p04-t07): empty generation directory is reusable`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                               |
@@ -742,7 +795,7 @@ Expected: eleven guards, each with a non-zero matched-test count and exit 0; `ou
 | p03    | code     | fixes_completed | 2026-10-12 | reviews/archived/p03-review-2026-10-12T035735Z.md           | 6ccbc207df036960615182dcf0bc575360ddb1cc | auto       | round 1: 0/0/3/5; L1 aligned in plan/design; seven converted (p03-t04..p03-t10); fixes landed 60d10eb8b..a6a9950a5                                        |
 | p03    | code     | passed          | 2026-10-12 | reviews/archived/p03-review-2026-10-12T042217Z.md           | 1f5601c3f080ac4ca284ab634ef92039437a48be | auto       | round 2 (narrowed to 53340c9ec..a6a9950a5): 0/0/0/3; three new Lows converted (p03-t11..t13), root-verified, covered by the final review                  |
 | p04    | code     | passed          | 2026-10-12 | reviews/archived/p04-review-2026-10-12T051738Z.md           | aec70adab4381d0e713a2c199a03990828824e68 | auto       | round 1: 0/0/1/1; M1 → p04-t05; L1 fixed by the root in the receive commit; p04-t05 landed b7c2eeb29, root-verified; final review covers the fix delta    |
-| final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T052402Z.md                  | b38441a265f3b76757225863ac09a8b4aef32de1 | auto       | round 1: 0/0/0/3 over 87433267b..b38441a26 (61 commits, 135 files)                                                                                        |
+| final  | code     | fixes_added     | 2026-10-12 | reviews/archived/final-review-2026-10-12T052402Z.md         | b38441a265f3b76757225863ac09a8b4aef32de1 | auto       | round 1: 0/0/0/3 over 87433267b..b38441a26 (61 commits, 135 files); L1 fixed by the root; L2 → p04-t06, L3 → p04-t07                                      |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-1.md                          | fd158b6f5                                | manual     | Astra (gpt-6-astra, high) round 1: ALIGNED WITH CHANGES, 13                                                                                               |
 | design | artifact | received        | 2026-10-11 | references/astra-design-round-2.md                          | e07fa3be7                                | manual     | Astra round 2: ALIGNED WITH CHANGES, 7 narrowed; D14 recorded                                                                                             |
 | design | artifact | passed          | 2026-10-11 | references/astra-design-round-3.md                          | c2648e860                                | manual     | Astra round 3: ALIGNED; duplicate body removed, labels synced                                                                                             |
@@ -766,9 +819,9 @@ For code-review events, `Reviewed Head` is the full 40-character SHA at the head
 - Phase 1: 7 tasks - Log categories and source identity, digest configuration, bounded roll-up digest, summary/log templates, summary and retro readers with the staged closeout invocation, two review fix tasks (template placeholder, maxLines minimum)
 - Phase 2: 12 tasks - Shared record reader, one-line dispatch record, journal evaluator, `journal check` command and complete-state integration, journal templates with slots, writer skills and roles, phase-2 docs and walkthrough, five review fix tasks (receipt placement, completion posture docs, journal-missing refusal, oat_ready_for agreement, brace residue pattern)
 - Phase 3: 13 tasks - Unified learning producers (D14), archive retry identity, explicit generations, seven review fix tasks (generation warning, deterministic paths, reason codes, latest-generation message, synced dry-run parity, .git control, learning commit identity; round-2 polish: replay reason wording, two more refusal codes, empty scope-qualified directory)
-- Phase 4: 5 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates, one review fix task (guard evidence pointer)
+- Phase 4: 7 tasks - Lifecycle probes, documentation audit, decision records and backlog, version bumps and gates, three review fix tasks (guard evidence pointer, replay-warning docs sentence, empty generation directory)
 
-**Total: 37 tasks**
+**Total: 39 tasks**
 
 Ready for code review and merge.
 
