@@ -52,6 +52,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:7,low:
 
 Plan revision 5 approved by the orchestrator after Fable artifact rounds 1-2, the configured gate (0/0/7/1 passed) and Astra plan rounds 1-2 (ALIGNED); ready for oat-project-implement, not active until brief-goal-workflow-modes ships. Key ac-plan-approved-rev5.
 
+### 2026-10-12 · structural · oat-project-implement · p01-outcome
+
+Phase p01 outcome: pass. Tasks p01-t01..p01-t05 landed 1619b49f6..819c6fe44; review round 1 0/0/1/3 (M1, L3 aligned in plan; L1, L2 fixed as p01-t06 0bce1f045 and p01-t07 d905d0110 via continuation cont-ac-p01-fix-1); round 2 on the fix delta 0/0/0/0; fix-loop count 1. Reviewer reconnaissance not attempted in either round.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

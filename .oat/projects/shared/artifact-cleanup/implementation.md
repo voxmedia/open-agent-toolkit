@@ -37,8 +37,9 @@ oat_generated: false
 
 ## Phase 1: Log and summary contract
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-10-12
+**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch, plan "Expected-red policy"):**
 
@@ -46,23 +47,32 @@ oat_generated: false
 - In-phase re-pins, green again at the task that moves them: `rollup.test.ts` and `lifecycle.integration.test.ts` (`## Workflow Observations` output, p01-t03); `template-heading-literals.test.ts`, `skills-bundled-docs-contract.test.ts`, `project/new` scaffold tests (p01-t04); `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts` (summary/retro text, p01-t05).
 - Nothing else may be red at the p01 review.
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- (pending)
+- Project-log judgment entries carry category, source, origin and recorded head fields (six categories, validated); `log append --category/--source/--origin`, `log check` reports `learnings: legacy` when the old learnings file exists.
+- `workflow.projectLogDigest.{maxEntries,maxLines}` config (12/60) with a documented minimum useful `maxLines`.
+- Roll-up writes a bounded observations digest (judgment entries only, ordered, capped with an omitted-count trailer, non-link `oat-project:<slug>#<entry-id>` locators) and omits the section when empty; ledger graduation untouched; `--json` exposes digest counts.
+- Project-log template header is two lines; the summary template no longer seeds `## Workflow Observations` and previews `oat_summary_learnings_fingerprint`.
+- Summary and retro skills read the unified log first and `oat-execution-learnings.md` second with proven-twin deduplication; summary gains the staged invocation contract (`staged: true` … `resume: roll-up`) and learning-driven freshness; docs updated.
 
 **Key files touched:**
 
-- (pending)
+- `packages/cli/src/commands/project/log/{grammar,append,check,rollup}.ts` and tests; `packages/cli/src/config/{oat-config,resolve}.ts`; `packages/cli/src/commands/config/index.ts`
+- `.oat/templates/{project-log,summary,project-retro}.md`; `.agents/skills/oat-project-summary/SKILL.md`; `.agents/skills/oat-project-retro/{SKILL.md,references/evidence-and-lanes.md}`
+- `apps/oat-docs/docs/{reference/configuration,reference/cli-reference,workflows/projects/execution/project-log,workflows/projects/closeout/retro}.md`
 
 **Verification:**
 
-- (pending)
+- Per-task scoped vitest under an isolated HOME (2673/2673 at the phase head, 864/864 for the fix tasks), `pnpm check` 0 (uncached), `pnpm type-check` 0, `oat:validate-skills` 0, `format:root` 0, `oat-docs check` 0; three named guards proven by the implementer and re-proven by the reviewer; real-artifact probes with the branch dist. Expected red only: `check:skill-bumps` (p04-t04).
+- Review: round 1 (0/0/1/3) and round 2 on the fix delta (0/0/0/0), Fable 5.1 high.
 
 **Notes / Decisions:**
 
-- (pending)
+- `entriesRolledUp` keeps counting every entry; digest counts live under `digest`. An empty digest removes any existing observations section (roll-up is its only writer).
+- Twin detection requires exact recorded-head/category/title equality with the legacy record; p03-t01 producers should write the learning title as `--area`.
+- Mechanical additions beyond the plan's file lists: `.oxfmtrc.jsonc` fixture ignore, `lifecycle.integration.test.ts` re-pin (p01-t04), `named-skill-load-contract.test.ts` row (p01-t05).
 
 ### Task p01-t01: Project-log judgment categories and source identity
 
@@ -185,7 +195,7 @@ oat_generated: false
 - M1: plan drift, not a code defect. The complete skill's summary-status preflight must also honor `oat_summary_learnings_fingerprint` (design "Closeout prose and refresh"); p01-t05's summary-side rule is accepted as implemented and the plan is the artifact that was stale. Aligned now: one clause added to p02-t06's `oat-project-complete/SKILL.md` description. Source of truth: plan revision 5 as amended.
 - L3: two p01-t05 reader controls (legacy-only consumption, proven twin emitted once) are prose-pinned; executable proof is agent-run and belongs to p04-t01. Aligned now: two named rows added to p04-t01's Verify.
 
-**Next:** fix continuation `cont-ac-p01-fix-1` landed `0bce1f045` and `d905d0110`; narrow re-review of `5c7e60601..d905d0110` pending to reach `passed`.
+**Next:** fix continuation `cont-ac-p01-fix-1` landed `0bce1f045` and `d905d0110`; round 2 (`reviews/archived/p01-review-2026-10-12T013544Z.md`, reviewed head `a359c4524`, narrowed to the fix delta) returned 0/0/0/0 and the p01 event is `passed`. Review artifacts are local-only (not archived to S3).
 
 ### Task p01-t06: (review) Add the learnings-fingerprint placeholder to the summary template
 
@@ -231,6 +241,12 @@ oat_generated: false
 
 **Status:** pending
 **Started:** -
+
+**Expected-red list (frozen 2026-10-12 before dispatch):**
+
+- `pnpm run check:skill-bumps` — phase-crossing red until p04-t04; owner p04-t04.
+- In-phase re-pins, green again at the task that moves them: control-plane progress fixtures unchanged (p02-t01); `help-snapshots.test.ts` (p02-t02, p02-t04); `template-heading-literals.test.ts`, `skills-bundled-docs-contract.test.ts`, `project/new` scaffold tests, `promote.brief.test.ts`, `stamp.test.ts` (p02-t05); `skills.test.ts`, `named-skill-load-contract.test.ts`, `review-skill-contracts.test.ts`, `autonomy-gate-inventory.test.ts` (p02-t06, and p02-t07 if it re-keys prompts).
+- Nothing else may be red at the p02 review.
 
 ### Phase Summary (fill when phase is complete)
 
@@ -466,11 +482,15 @@ _- Outstanding Items_
 
 - `ac-p01-implementation` — accepted 2026-10-12, native agent type `oat-phase-implementer-claude-claude-opus-5-5-high`; selection candidate-requested beneath frontier (operator run rule); managed record `validated-only`; canonical role resolved (tier loaded, role 1.1.7); base `df988e4315fb567c8a6890237237b169707c2b61`; outcome `DONE_WITH_CONCERNS`, range `df988e431..819c6fe44`, 5/5 tasks, 0 recovery attempts. Stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-phase-implementer-claude-claude-opus-5-5-high`
 
-**Phase Outcomes:** (filled at Step 7b)
+**Phase Outcomes:**
+
+| Phase | Verdict | Task commits                                                                             | Review                                                                                                     | Fix rounds              | Reviewer dispatches                                                                                                                                                                                                                                                                                                                                                                 |
+| ----- | ------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| p01   | pass    | 1619b49f6, 90db795fc, 93eb25e76, a954972bf, 819c6fe44; review fixes 0bce1f045, d905d0110 | round 1 0/0/1/3 (`p01-review-2026-10-12T012710Z.md`), round 2 0/0/0/0 (`p01-review-2026-10-12T013544Z.md`) | 1 (`cont-ac-p01-fix-1`) | `ac-p01-review-1`, `ac-p01-review-2`: native `oat-reviewer-claude-claude-fable-5-1-high`, managed record validated-only; stamp `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-fable-5-1 effort_axis=selected:high dispatch_policy=frontier dispatch_ceiling=high target=oat-reviewer-claude-claude-fable-5-1-high` |
 
 **Parallel Groups:** none (sequential plan)
 
-**Outstanding Items:** (filled at Step 7b)
+**Outstanding Items:** none after p01.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
