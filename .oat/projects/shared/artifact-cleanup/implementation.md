@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
-oat_current_task_id: p04-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,7 +17,7 @@ oat_generated: false
 > Conventions:
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: p04-t08`.
+> - When all plan tasks are complete, set `oat_current_task_id: null`.
 > - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, fill the Final Summary (for PR/docs) section below with what was actually implemented.
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 7     | 7/7       |
 | Phase 2 | complete    | 12    | 12/12     |
 | Phase 3 | complete    | 13    | 13/13     |
-| Phase 4 | in_progress | 12    | 7/12      |
+| Phase 4 | in_progress | 12    | 12/12     |
 
-**Total:** 39/44 tasks completed
+**Total:** 44/44 tasks completed
 
 ---
 
@@ -1064,36 +1064,96 @@ oat_generated: false
 
 ### Task p04-t08: (review) Rehash the existing archive before adopting a retry
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 80a8a724e
+
+**Outcome:**
+
+- `assertRetryCandidateIntact` rehashes the candidate archive's retained bytes before any `retry` is acted on (apply, dry-run, source-absent resume); mismatch with the recorded manifest, or with the source manifest when present, refuses `archive-retry-candidate-damaged` touching neither copy (synced checks the recorded manifest only; a pending allocation is skipped). Code added to the table.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `project-artifacts.md`
+
+**Verification:**
+
+- archive suite 236/236; oat-docs check 0; control: rehash off → damaged archive adopted and source removed on a scratch repo; restored → refused, trees unchanged, no S3 call
 
 ---
 
 ### Task p04-t09: (review) Detect each fenced payload independently in the journal evaluator
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5fa7ce118
+
+**Outcome:**
+
+- `fencedBlocks` parses each fence on its own (opener, info string, matching closer, preceding marker; unclosed fence runs to end); marked evidence followed by an unmarked payload and an indented line before a payload both yield `dispatch-payload`; a single marked evidence fence stays accepted.
+
+**Files changed:**
+
+- `journal-check/rules.ts`, `evaluator.test.ts`
+
+**Verification:**
+
+- journal-check + complete-state 71/71; control: pre-fix rules → 0 reasons for the evidence-then-payload case; `journal-check-placement` guard green
 
 ---
 
 ### Task p04-t10: (review) Digest honors the whole-section line limit
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** aed6a94df
+
+**Outcome:**
+
+- Trailer and cross-reference count against `maxLines` and are appended only when they fit (trailer first); ledger graduation unchanged at every bound.
+
+**Files changed:**
+
+- `log/rollup.ts`, `rollup.test.ts`, `reference/configuration.md` (sentence about tiny values updated)
+
+**Verification:**
+
+- log suite 275/275; oat-docs check 0; control: pre-fix rollup renders 3 lines at `maxLines` 1 and 2
 
 ---
 
 ### Task p04-t11: (review) Count digest origins without inherited object properties
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2e97b1eb6
+
+**Outcome:**
+
+- Producers tallied in a `Map` and serialized with `Object.fromEntries`; `__proto__` counts as one origin and `Object.prototype` stays untouched.
+
+**Files changed:**
+
+- `log/rollup.ts`, `rollup.test.ts`
+
+**Verification:**
+
+- log suite 276/276; control: pre-fix rollup pollutes `Object.prototype.rendered`
 
 ---
 
 ### Task p04-t12: (review) Export selected review references as plain provenance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7e32ece6e
+
+**Outcome:**
+
+- Local review links (`reviews/…`, `./reviews/…`, with or without an anchor) export as `label (review \`reviews/…\`, local to the project; not archived)`; external links kept.
+
+**Files changed:**
+
+- `archive-utils.ts`, `archive-retry-identity.test.ts`, `project-artifacts.md`
+
+**Verification:**
+
+- archive + log 512/512; oat-docs check 0; control: pre-fix finalizer keeps the review link
 
 ---
 
@@ -1190,7 +1250,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - M3: this journal kept its final-review receipts inside Phase 4 and had no `## Reviews and Gates` slot; fixed by the root in the receive commit (receipts relocated here, slot created, `## Deferred Findings` slot added empty).
 
-**Next:** execute p04-t08..p04-t12 as a bounded fix continuation; re-review the fix delta (final round 3); rerun the exit gate (attempt 2).
+**Next:** p04-t08..p04-t12 landed 80a8a724e..7e32ece6e via `cont-ac-p03-fix-4` (guards 11/11 green); final round 3 on the fix delta, then exit gate attempt 2.
 
 ## Deferred Findings
 
