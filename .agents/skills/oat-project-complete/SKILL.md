@@ -469,15 +469,15 @@ If `oat_pr_url` is present, show it in the completion summary.
 
 ### Step 3: Check Completion Gates
 
-#### 3.0: Phase Status Permissiveness
+#### 3.0: Phase Status at Completion
 
-Read `oat_phase_status` from `state.md` frontmatter and handle permissively:
+Read `oat_phase_status` from `state.md` frontmatter and route on it:
 
 - **`pr_open`:** Proceed normally. This is the expected entry point after `oat-project-pr-final`.
 - **`complete`:** Proceed normally. Implementation is done.
-- **`in_progress`:** Note: "Project is still in progress. Completing anyway." — proceed without additional confirmation.
+- **`in_progress`:** Stop and route back to `oat-project-implement`. At completion the journal and `state.md` must agree: the Step 3.55 journal check and `oat project complete-state` refuse `state-status-disagrees` for `oat_phase_status: in_progress`. Status disagreement is not an override-eligible gap, so no override line can complete it; finish implementation (its Step 16 writes the terminal headers) and run completion again.
 
-All three are valid starting states for completion. Do not block on any phase status value. The Step 1.5 closeout invariant gate still applies to every phase status.
+`pr_open` and `complete` are the valid starting states for completion. The Step 1.5 closeout invariant gate still applies to both.
 
 #### 3.1: Final Review Status
 
