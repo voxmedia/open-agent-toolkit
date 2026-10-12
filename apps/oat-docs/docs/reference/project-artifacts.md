@@ -45,7 +45,7 @@ archive metadata own terminal reachability and retry identity.
 - `spec.md`: requirements + acceptance criteria
 - `design.md`: architecture and implementation approach (full in spec-driven mode; optional lightweight version in quick mode covering architecture, components, and testing strategy)
 - `plan.md`: phase/task breakdown and review tracking
-- `implementation.md`: execution log, verification, final summary
+- `implementation.md`: the execution journal — phase sections with task blocks, run lines, review and gate receipts, deferred findings, deviations, and the final summary (see [The implementation journal](#the-implementation-journal))
 - `summary.md`: institutional memory artifact — generated from project artifacts at closeout, used as PR description source and archive cover page
 
 Mode-sensitive notes:
@@ -145,6 +145,44 @@ child project records `oat_extracted_from: <goal slug>` in its `state.md`. The
 brief and journal targets must match. The outcome audit requires the child to
 be complete or its outstanding obligation to carry an approved deferral, and
 promotion of the goal to quick refuses any extracted phase.
+
+## The implementation journal
+
+`implementation.md` has fixed slots, and every writer targets them:
+
+- **Phase sections** (`## Phase …`) hold each phase's `**Status:**`, one
+  `### Task pNN-tNN:` block per plan task with exactly one `**Status:**` and,
+  once completed, one `**Commit:**` SHA (brief and goal: execution records and
+  the phase's `**Base:**`/`**Head:**` anchors), one free-text verification
+  line, and the phase's review receipt. Tables and checklists are display,
+  never completion evidence.
+- `## Orchestration Runs` holds one run line per dispatch request ID, rendered
+  by `oat project dispatch record --format line` (`run/v1 · request=… · stamp=Dispatch: … · launch=… · outcome=… · terminal=…`)
+  and updated in place with the terminal outcome. Record and event JSON is
+  never pasted into the journal.
+- `## Reviews and Gates` holds final and multi-phase review receipts and one
+  terminal line per gate run (`**Gate:** … · **Scope:** … · **Outcome:** …`).
+  `state.md` owns gate transitions; the journal keeps the outcome, waivers and
+  operator choices.
+- `## Deferred Findings` holds one line per approved deferral, excluded
+  parallel phase, and unmerged worktree.
+- `## Deviations from Plan / Design` holds deviations, exception blocks, and
+  override lines:
+  `**Override:** <scope-disposition-approved|evidence-lost|operator-accepted-gap> · **Authorized by:** <decision id> · **Scope:** <pNN-tNN|pNN> · <reason>`.
+- `## Final Summary (for PR/docs)` is rewritten at closeout from observed
+  facts, and `## References` is always the last section.
+
+A receipt carries the finding identity and substance, the disposition and its
+rationale, the fix task or approved deferral it links to, and the final
+outcome, so the journal and plan stand without the review file. Review paths
+are local-only citations: reviews are not archived, so an unresolved review
+path is never a completion defect. `oat project journal check` validates these
+slots at implement's pre-Step-16 boundary, at review with an explicit phase
+scope, and at completion; see the [CLI reference](cli-reference.md).
+
+`oat-project-complete` writes `oat_pr_status_observed_at` (UTC) beside
+`oat_pr_status` before archive: in an archived `state.md`, `oat_pr_status` and
+`oat_pr_url` are observations at that time, not live PR state.
 
 ## Blockers in state.md
 

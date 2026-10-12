@@ -77,9 +77,9 @@ Typical progression:
 8. Ready for implement
 9. Implement in progress
 10. Implement complete (final review passed)
-11. PR open (`pr_open`) — post-PR review posture; actual PR existence is tracked via `oat_pr_status` / `oat_pr_url`
+11. PR open (`pr_open`) — post-PR review posture; actual PR existence is tracked via `oat_pr_status` / `oat_pr_url`. `pr_open` is a valid posture for the completion journal check
 12. Revision loop (optional): `pr_open` → revise → `in_progress` → implement → `pr_open`
-13. Complete
+13. Complete — `oat project journal check --at completion` passes (terminal journal shape: every plan task block completed with commit evidence or an authorized override, terminal run lines, receipts and deferrals in their slots, no template residue), then `oat project complete-state` rechecks the closeout invariant and that evaluator before it writes; `oat_pr_status_observed_at` records when the archived PR fields were observed
 
 Lite progression:
 

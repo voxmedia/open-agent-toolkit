@@ -180,6 +180,15 @@ This mechanism covers configured lifecycle skill gates only. It does not affect
 the optional `oat_phase_review_gate`, HiLL policy, or autonomous design-gate
 behavior, and it cannot disable every gate with one project-wide boolean.
 
+### Gate lines in the journal
+
+`state.md` owns every gate transition (`pending`, `allowed`, `blocked`,
+`stale`, waivers). `implementation.md` keeps one terminal line per gate run
+under `## Reviews and Gates`, updated in place for that run:
+`**Gate:** <gate> · **Scope:** <scope> · **Outcome:** <outcome> · <attempt, waiver or operator choice>`.
+The journal line is evidence for readers; routing reads `state.md`. See
+[Project Artifacts](../../reference/project-artifacts.md#the-implementation-journal).
+
 ### Implementation exit-gate closeout
 
 For `oat-project-implement`, the configured skill gate is a final, resumable

@@ -605,8 +605,20 @@ non-archive completion. Shared and synced projects use the configured archive
 preference or an explicit answer.
 
 Completion changes lifecycle state through the `oat` CLI, checks whether the
-summary is current, runs any retro and recap work you selected, and seals
-(closes) the project log through the project-log command. When a shared or
+summary is current (including the learnings fingerprint), runs any retro and
+recap work you selected, and seals (closes) the project log through the
+project-log command. Before any of that writes, it rewrites the journal's Final
+Summary and `summary.md` prose from observed facts, runs the summary staged
+(`staged: true`), and validates the journal with
+`oat project journal check --at completion`; only when that passes does the
+summary resume its roll-up (`resume: roll-up`). A refusal stops completion with
+the reason, line and owner: the prose refresh may remain, but no promotion
+append, roll-up, ledger graduation, seal, archive or lifecycle change happens.
+An authorized override is written as one line under
+`## Deviations from Plan / Design` (idempotent on code, scope and decision id),
+never by an autonomous run, and never bypasses the closeout invariant. Before
+archive, completion records `oat_pr_status_observed_at` beside
+`oat_pr_status`. When a shared or
 synced project will be archived, the active project stays set until the
 archive succeeds, so an archive or S3 failure leaves the completion
 resumable. Every other completion clears the active project right away. Synced

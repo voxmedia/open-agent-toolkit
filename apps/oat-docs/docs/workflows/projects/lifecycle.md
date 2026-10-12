@@ -66,7 +66,7 @@ Implementation closeout has one authoritative order:
 4. Run the configured pre-approval sequence.
 5. Record final HiLL approval when the final phase is a checkpoint.
 6. Run the configured post-approval sequence.
-7. Mark implementation complete and emit the implementation success output.
+7. Check the journal (`oat project journal check --at implement-preflight`), then mark implementation complete and emit the implementation success output.
 
 The configured exit gate is independent from the mandatory lifecycle review,
 root-owned phase reviews, and optional `oat_phase_review_gate`. It must reach an
@@ -91,7 +91,7 @@ After implementation closeout finishes:
    - GitHub PR feedback delegates to `oat-project-review-receive-remote`
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
-5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt. Before any completion write it runs the read-only `oat project closeout-check`: a configured, autonomous, or lite closeout whose `oat_post_implement_sequence` snapshot is missing, malformed, or incomplete stops and routes back to `oat-project-implement`, and `oat project complete-state` refuses the same state. There is no override; see the [CLI reference](../../reference/cli-reference.md).
+5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt. Before any completion write it runs the read-only `oat project closeout-check`: a configured, autonomous, or lite closeout whose `oat_post_implement_sequence` snapshot is missing, malformed, or incomplete stops and routes back to `oat-project-implement`, and `oat project complete-state` refuses the same state. There is no override for that invariant. Completion then refreshes the journal's Final Summary and `summary.md` prose from observed facts, runs the summary staged, and validates the journal with `oat project journal check --at completion` before any roll-up, seal, archive or lifecycle write; a refusal stops completion with the reason, line and owner, and `complete-state` rechecks the same evaluator before its write. A journal-only override line under `## Deviations from Plan / Design` can cover an authorized gap such as lost commit evidence, never the closeout invariant; see the [CLI reference](../../reference/cli-reference.md) and [Project Artifacts](../../reference/project-artifacts.md#the-implementation-journal).
 
 ### Project-recap gate (non-lite)
 
