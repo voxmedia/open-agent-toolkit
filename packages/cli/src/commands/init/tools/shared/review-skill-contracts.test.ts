@@ -10,6 +10,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { parseProjectLogEntries } from '@commands/project/log/check';
+import { assignProjectLogEntryIds } from '@commands/project/log/rollup';
 import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { readDeclaredVersion } from '@test-support/skills/skill-version';
 import { describe, expect, it } from 'vitest';
@@ -5173,5 +5175,235 @@ describe('gate dispatch audit policy-view label', () => {
     expect(paragraph).toContain('`oat_gate_target`');
     expect(paragraph).toContain('`gate_dispatch_audit_mismatched`');
     expect(paragraph).toMatch(/selected:<[^>]+>/);
+  });
+});
+
+describe('oat-project-summary unified learnings readers', () => {
+  const SUMMARY_SKILL = '.agents/skills/oat-project-summary/SKILL.md';
+
+  function bashBlock(name: string): string {
+    const block = [
+      // A fence closes only on a run of the same length, so the four-backtick
+      // block whose awk mentions triple backticks is read whole.
+      ...readRepoFile(SUMMARY_SKILL).matchAll(
+        /^(`{3,})bash\n([\s\S]*?)\n\1$/gm,
+      ),
+    ]
+      .map((match) => match[2]!)
+      .find((candidate) => candidate.includes(`${name}() {`));
+    expect(block, `${name} is defined in the skill`).toBeDefined();
+    return block!;
+  }
+
+  function runSkillFunction(
+    name: string,
+    projectPath: string,
+    extraBlocks: string[] = [],
+  ): string {
+    const result = spawnSync(
+      'bash',
+      ['-c', `${[...extraBlocks, bashBlock(name)].join('\n')}\n${name}`],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, PROJECT_PATH: projectPath },
+      },
+    );
+    expect(result.status, result.stderr).toBe(0);
+    return result.stdout.trim().split('\n').at(-1) ?? '';
+  }
+
+  function scratchProject(files: Record<string, string>): string {
+    const root = mkdtempSync(join(tmpdir(), 'oat-summary-learnings-'));
+    for (const [name, content] of Object.entries(files)) {
+      writeFileSync(join(root, name), content, 'utf8');
+    }
+    return root;
+  }
+
+  const logWith = (entries: string): string =>
+    `# Project Log: demo\n\n## Entries\n${entries}\n## End-of-run synthesis\n\nDone.\n`;
+  const CATEGORIZED_A = `
+### 2026-10-11 · project · friction · cache misses
+
+**Category:** gotcha
+**Source:** obs-1
+**Recorded:** 2026-10-11T10:00:00Z
+
+Observation: The cache missed.
+Recommendation: Warm the cache.
+`;
+  const CATEGORIZED_B = `
+### 2026-10-12 · project · feedback · docs gap
+
+**Category:** documentation-gap
+**Source:** obs-2
+**Recorded:** 2026-10-12T10:00:00Z
+
+Observation: The page omits the flag.
+Recommendation: Document the flag.
+`;
+  const UNCATEGORIZED = `
+### 2026-10-12 · project · bug · exit code
+
+The gate exited zero.
+`;
+  const LEGACY = `# Learnings
+
+## 2026-10-01T09:00:00Z - gotcha - legacy cache lesson
+
+**Observation:** The legacy cache missed.
+**Recommendation:** Pin the cache key.
+`;
+
+  it('pins the staged invocation contract verbatim and its deferred promotion', () => {
+    const content = readRepoFile(SUMMARY_SKILL);
+    expect(content).toContain(
+      'Staged invocation: the caller states `staged: true`; the summary skill completes Steps 0–5, writes frontmatter, and stops; the caller later states `resume: roll-up` to run Step 6 onward; standalone invocations run straight through',
+    );
+    const staged =
+      content.match(/### Staged Invocation[\s\S]*?(?=### Step 0:)/)?.[0] ?? '';
+    expect(staged).toMatch(/read-only `oat project log check`/);
+    expect(staged).toMatch(/append nothing yet/);
+    expect(staged).toMatch(
+      /write only `summary.md` sections and their freshness\s+frontmatter: no project-log append, roll-up, ledger write, decision\s+promotion or commit/,
+    );
+    expect(staged).toMatch(
+      /`resume: roll-up` only after its final journal validation\s+succeeds/,
+    );
+    expect(staged).toMatch(
+      /first perform the deferred `project` → `general`\s+appends[\s\S]*?then run Step 6 onward/,
+    );
+    expect(staged).toMatch(
+      /Standalone behavior, the seal and ambiguity routing in Step 2.5 and the\s+promotion consent rule are unchanged/,
+    );
+  });
+
+  it('reads unified learnings first and the legacy file second with export-safe identities', () => {
+    const content = readRepoFile(SUMMARY_SKILL);
+    const ael =
+      content.match(
+        /\*\*Autonomous Execution Learnings \(conditional\):\*\*[\s\S]*?\*\*Workflow Observations coexistence contract:\*\*/,
+      )?.[0] ?? '';
+    expect(ael).toMatch(
+      /1\. \*\*Unified log entries\*\*[\s\S]*?2\. \*\*Legacy entries\*\*/,
+    );
+    expect(ael).toContain('`oat-project:<slug>#<entry-id>`');
+    expect(ael).toMatch(/never a Markdown link/);
+    expect(ael).toMatch(
+      /proven twin of a unified entry only when the unified\s+entry's `\*\*Recorded:\*\*` value equals the timestamp/,
+    );
+    expect(ael).toMatch(
+      /Keep every other entry, including a\s+distinct lesson that only shares a title/,
+    );
+    expect(ael).not.toMatch(/relative link to `oat-execution-learnings.md`/);
+    expect(content).toMatch(
+      /The roll-up writes a bounded digest[\s\S]*?one-line cross-reference/,
+    );
+    const template = readRepoFile('.oat/templates/summary.md');
+    expect(template).toContain('oat-project:<slug>#<entry-id>');
+    expect(template).not.toContain('relative pointer');
+  });
+
+  it('derives the entry ids project log rollup assigns', () => {
+    const log = logWith(
+      `${CATEGORIZED_A}
+### 2026-10-11 · general · friction · Cache Misses
+
+Promoted.
+
+### 2026-10-11 · project · worked-well · Ünïcode / paths!
+
+Third.
+`,
+    );
+    const project = scratchProject({ 'project-log.md': log });
+    try {
+      const result = spawnSync(
+        'bash',
+        ['-c', `${bashBlock('project_log_entry_ids')}\nproject_log_entry_ids`],
+        { encoding: 'utf8', env: { ...process.env, PROJECT_PATH: project } },
+      );
+      expect(result.status, result.stderr).toBe(0);
+      const skillIds = result.stdout
+        .trim()
+        .split('\n')
+        .map((line) => line.split('\t')[0]);
+      const cliIds = [
+        ...assignProjectLogEntryIds(
+          parseProjectLogEntries(log).entries,
+        ).values(),
+      ];
+      expect(skillIds).toEqual(cliIds);
+      expect(skillIds).toEqual([
+        '2026-10-11-friction-cache-misses-1',
+        '2026-10-11-friction-cache-misses-2',
+        '2026-10-11-worked-well-n-code-paths-1',
+      ]);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  it('marks the summary stale on a learning-only change and is none without sources', () => {
+    const project = scratchProject({});
+    try {
+      const fingerprint = (): string =>
+        runSkillFunction('summary_learnings_fingerprint', project);
+
+      expect(fingerprint()).toBe('none');
+
+      writeFileSync(join(project, 'project-log.md'), logWith(UNCATEGORIZED));
+      expect(fingerprint(), 'uncategorized entries are not learnings').toBe(
+        'none',
+      );
+
+      writeFileSync(
+        join(project, 'project-log.md'),
+        logWith(`${CATEGORIZED_A}${UNCATEGORIZED}`),
+      );
+      const withA = fingerprint();
+      expect(withA).toMatch(/^[0-9a-f]{64}$/);
+      expect(fingerprint(), 'deterministic').toBe(withA);
+
+      // A new learning source (new source id), task and phase state untouched.
+      writeFileSync(
+        join(project, 'project-log.md'),
+        logWith(`${CATEGORIZED_A}${UNCATEGORIZED}${CATEGORIZED_B}`),
+      );
+      expect(fingerprint()).not.toBe(withA);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  it('consumes a legacy-only file and re-renders a changed recommendation under an unchanged phase fingerprint', () => {
+    const project = scratchProject({
+      'oat-execution-learnings.md': LEGACY,
+      'plan.md':
+        '# Plan\n\n## Goal\n\nShip.\n\n## Outcomes\n\n1. Shipped.\n\n## Decisions\n\n- None.\n',
+      'implementation.md': '# Implementation\n',
+    });
+    try {
+      const learnings = (): string =>
+        runSkillFunction('summary_learnings_fingerprint', project);
+      const phase = (): string =>
+        runSkillFunction('brief_summary_fingerprint', project);
+
+      const legacyOnly = learnings();
+      expect(legacyOnly, 'a legacy-only file is a learning source').not.toBe(
+        'none',
+      );
+      const phaseBefore = phase();
+
+      writeFileSync(
+        join(project, 'oat-execution-learnings.md'),
+        LEGACY.replace('Pin the cache key.', 'Pin the cache key per branch.'),
+      );
+
+      expect(phase(), 'phase fingerprint unchanged').toBe(phaseBefore);
+      expect(learnings(), 'learning fingerprint changed').not.toBe(legacyOnly);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
   });
 });

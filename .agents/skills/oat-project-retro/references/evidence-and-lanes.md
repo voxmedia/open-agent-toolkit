@@ -5,9 +5,15 @@
 Inventory and read available evidence in this order:
 
 1. `project-log.md` — always check first; use its append-only entries as
-   workflow evidence.
-2. `oat-execution-learnings.md` — when present, extract observations, impact,
-   and recommendations without treating them as already proven.
+   workflow evidence. Judgment entries whose body opens with a `**Category:**`
+   head are the unified learnings: extract their observation, impact,
+   recommendation and uncertainty without treating them as already proven.
+2. `oat-execution-learnings.md` — the legacy learnings file, read second when
+   present, with the same treatment. Skip a legacy entry only when it is a
+   proven twin of a unified entry (same `**Recorded:**` timestamp, category and
+   title, each exactly); keep a distinct lesson that only shares a title. Its
+   absence is recorded as `oat-execution-learnings: unavailable`, which is the
+   normal state for projects whose learnings live in the log.
 3. Lifecycle artifacts — at minimum `implementation.md`, `state.md`, and
    `plan.md`; also read load-bearing `discovery.md`, `design.md`, `spec.md`,
    reviews, references, and evidence ledgers when present.

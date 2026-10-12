@@ -75,8 +75,10 @@ Pull from implementation.md task notes flagged as issues/blockers.}
      oat-execution-learnings.md has actionable entries; read the log first and
      the legacy file second. Otherwise remove the heading, category
      subheadings, and placeholders. Omit empty categories.
-     Each recommendation needs a one-line rationale and a relative pointer to
-     every supporting source entry (timestamp, category, and title).
+     Each recommendation needs a one-line rationale and the plain-text source
+     identity of every supporting entry, never a link: the token
+     oat-project:<slug>#<entry-id> for a log entry, or "legacy learning
+     <timestamp> — <category> — <title>" for a legacy entry.
      The Workflow Observations section is owned by `oat project log rollup`,
      which appends or omits it; never add it here or by hand. -->
 

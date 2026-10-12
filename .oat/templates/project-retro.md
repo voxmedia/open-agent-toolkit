@@ -22,7 +22,10 @@ oat_template_name: project-retro
 <!-- Rendered artifacts must replace oat_retro_project with a non-null project
      slug and oat_retro_generated with a UTC YYYY-MM-DDTHH:MM:SSZ timestamp,
      set oat_template: false, and remove oat_template_name. Record every
-     inspected evidence source above with status: used | unavailable. When an
+     inspected evidence source above with status: used | unavailable.
+     project-log covers the unified learnings (category-bearing judgment
+     entries) and is read first; oat-execution-learnings is the legacy file,
+     read second and recorded unavailable when absent. When an
      evidence family is partial, split it into truthful source entries, such as
      archived-review-markdown: unavailable and gate-receipts: used. Do not add
      a `partial` evidence status. Derivative current-run reconnaissance

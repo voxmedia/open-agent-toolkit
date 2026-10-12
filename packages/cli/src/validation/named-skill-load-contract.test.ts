@@ -3384,6 +3384,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason: 'Frontmatter description listing example user phrasings.',
   },
   {
+    file: '.agents/skills/oat-project-summary/SKILL.md',
+    anchor: 'Staged Invocation',
+    match: 'An inline fallback that follows this skill without loading it',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      "Names the caller whose inline fallback must honor this skill's staged suspension point; not a directive to run it.",
+  },
+  {
     file: '.agents/skills/oat-project-complete-auto/SKILL.md',
     anchor: 'Autonomous Project Completion',
     match: 'A person completing a project uses',

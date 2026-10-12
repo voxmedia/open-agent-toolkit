@@ -88,7 +88,10 @@ The output is always:
 ### Step 2: Inventory Evidence Honestly
 
 Follow the reading order and environment detection in
-[references/evidence-and-lanes.md](references/evidence-and-lanes.md).
+[references/evidence-and-lanes.md](references/evidence-and-lanes.md): the
+unified project log (including its category-bearing learnings) first, the
+legacy `oat-execution-learnings.md` second, then lifecycle artifacts and
+session evidence. Evidence order and evidence-strength rules are unchanged.
 
 Create an inventory before synthesis. Record every source in
 `oat_retro_evidence_sources` with `status: used | unavailable`; name unavailable
