@@ -285,7 +285,7 @@ export const ARCHIVE_OWNED_ENTRIES: readonly string[] = [
  */
 export const ARCHIVE_LOCATOR_PREFIX = 'oat-archive:';
 
-interface RecordlessSyncedArchiveIdentity {
+export interface RecordlessSyncedArchiveIdentity {
   archivePath: string;
   metadata: ArchiveSnapshotMetadata & { sourceRefSha: string };
 }
@@ -1480,7 +1480,13 @@ async function verifyArchiveSnapshotMetadata(
   }
 }
 
-async function resolveRecordlessSyncedArchiveIdentity(
+/**
+ * Binds a recordless synced project's archive identity through its
+ * authoritative completed ref (read-only: it scans local archive metadata and
+ * probes refs). Apply and dry-run both use it, so a preview reports the
+ * snapshot the apply would bind, or refuses as the apply would.
+ */
+export async function resolveRecordlessSyncedArchiveIdentity(
   options: Pick<
     ArchiveProjectOnCompletionOptions,
     'repoRoot' | 'projectsRoot' | 'projectName'

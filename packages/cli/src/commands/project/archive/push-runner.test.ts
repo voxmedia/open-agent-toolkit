@@ -154,6 +154,17 @@ function createHarness(options: HarnessOptions = {}): {
     archiveProjectOnCompletion,
     processEnv,
     timestamp: () => options.timestamp ?? '2026-04-01T12:34:56Z',
+    // A recordless synced project binds through its completed ref; the
+    // harness stands in for that read-only resolver.
+    resolveRecordlessSyncedArchiveIdentity: vi.fn(async () => ({
+      archivePath: join(cwd, '.oat', 'projects', 'archived', 'demo-project'),
+      metadata: {
+        projectName: 'demo-project',
+        snapshotName: '20260401-demo-project',
+        scope: 'synced' as const,
+        sourceRefSha: 'a'.repeat(40),
+      },
+    })),
   };
   const command = createProjectArchiveCommand(dependencies);
 

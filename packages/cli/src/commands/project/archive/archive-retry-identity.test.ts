@@ -17,6 +17,8 @@ import { join, relative } from 'node:path';
 
 import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { defaultGitRunner } from '@commands/project/sync/git';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -24,11 +26,13 @@ import {
   archiveProjectOnCompletion,
   computeArchiveManifestHash,
   evaluateArchiveRetryIdentity,
+  resolveRecordlessSyncedArchiveIdentity,
   type ExecFileLike,
 } from './archive-utils';
 import {
   defaultProjectArchivePushCommandDependencies,
   runArchivePushCommand,
+  type ProjectArchivePushCommandDependencies,
 } from './push-runner';
 
 /**
@@ -170,6 +174,7 @@ async function previewArchive(
   projectPath: string,
   timestamp: string,
   options: { newGeneration?: string } = {},
+  overrides: Partial<ProjectArchivePushCommandDependencies> = {},
 ): Promise<Record<string, unknown>> {
   const capture = createLoggerCapture();
   const exitCode = process.exitCode;
@@ -178,6 +183,7 @@ async function previewArchive(
       ...defaultProjectArchivePushCommandDependencies(),
       resolveProjectRoot: async () => fixture.repoRoot,
       timestamp: () => timestamp,
+      ...overrides,
     },
     projectPath,
     { dryRun: true, ...options },
@@ -1235,5 +1241,141 @@ describe('archive identity refusal codes', () => {
       code: 'archive-retry-conflict',
       message: expect.stringMatching(/^archive-retry-conflict: Project `demo`/),
     });
+  });
+});
+
+describe('recordless synced dry-run binds through the completed ref', () => {
+  const SLUG = 'recordless';
+  const SHA_A = 'a'.repeat(40);
+  const SHA_B = 'b'.repeat(40);
+
+  async function syncedFixture(
+    shas: readonly string[],
+  ): Promise<Fixture & { syncedPath: string }> {
+    const fixture = await createFixture();
+    const names = [SLUG, `${SLUG}-20260830120000`];
+    for (const [index, sha] of shas.entries()) {
+      const archivePath = join(fixture.archiveRoot, names[index]!);
+      await mkdir(archivePath, { recursive: true });
+      await writeFile(join(archivePath, 'summary.md'), `# synced ${index}\n`);
+      await writeFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        `${JSON.stringify({
+          projectName: SLUG,
+          snapshotName: `2026083${index}-${SLUG}`,
+          scope: 'synced',
+          sourceRefSha: sha,
+        })}\n`,
+      );
+    }
+    return {
+      ...fixture,
+      syncedPath: join(fixture.repoRoot, '.oat', 'projects', 'synced', SLUG),
+    };
+  }
+
+  function probeCompleted(completedSha: string) {
+    return vi.fn(async (_target: unknown, expectedSha: string) => ({
+      state: 'completed-only' as const,
+      activeRef: `refs/oat/projects/${SLUG}`,
+      completedRef: `refs/oat/completed/${SLUG}`,
+      expectedSha,
+      activeSha: null,
+      completedSha,
+    }));
+  }
+
+  function preview(
+    fixture: Fixture & { syncedPath: string },
+    probe: ReturnType<typeof probeCompleted>,
+  ) {
+    return previewArchive(
+      fixture,
+      fixture.syncedPath,
+      '2026-10-01T09:00:00Z',
+      {},
+      {
+        resolveRecordlessSyncedArchiveIdentity: (options) =>
+          resolveRecordlessSyncedArchiveIdentity(
+            options,
+            buildSyncTarget(
+              options.repoRoot,
+              options.projectsRoot,
+              options.projectName,
+            ),
+            defaultGitRunner,
+            { probeSyncedTerminalRefs: probe },
+          ),
+      },
+    );
+  }
+
+  function apply(
+    fixture: Fixture & { syncedPath: string },
+    probe: ReturnType<typeof probeCompleted>,
+    s3: ReturnType<typeof stubS3>,
+  ) {
+    return archiveProjectOnCompletion(
+      {
+        repoRoot: fixture.repoRoot,
+        projectPath: fixture.syncedPath,
+        projectName: SLUG,
+        projectsRoot: '.oat/projects/shared',
+        summaryExportPath: SUMMARY_EXPORT,
+        s3Uri: S3_URI,
+        s3SyncOnComplete: true,
+        commit: false,
+      },
+      {
+        ...s3,
+        timestamp: () => '2026-10-01T09:00:05Z',
+        probeSyncedTerminalRefs: probe,
+        retireSyncedRef: vi.fn(async () => ({
+          status: 'already-retired' as const,
+          state: 'completed-only' as const,
+          activeAliasRetained: false,
+          activeRef: `refs/oat/projects/${SLUG}`,
+          completedRef: `refs/oat/completed/${SLUG}`,
+          verifiedSha: SHA_B,
+        })),
+        removeSyncedCheckout: vi.fn(async () => ({
+          status: 'absent' as const,
+        })),
+        removeSyncedRecord: vi.fn(async () => undefined),
+      },
+    );
+  }
+
+  it('previews and applies the archive the completed ref selects among several', async () => {
+    const fixture = await syncedFixture([SHA_A, SHA_B]);
+    const probe = probeCompleted(SHA_B);
+    const report = await preview(fixture, probe);
+    const applied = await apply(fixture, probe, stubS3());
+
+    expect(report).toMatchObject({
+      mode: 'dry-run',
+      snapshotId: `20260831-${SLUG}`,
+      archivePath: join(fixture.archiveRoot, `${SLUG}-20260830120000`),
+    });
+    expect(applied.snapshotId).toBe(report.snapshotId);
+    expect(applied.archivePath).toBe(report.archivePath);
+  });
+
+  it('refuses in both modes when several archives match the completed ref', async () => {
+    const fixture = await syncedFixture([SHA_B, SHA_B]);
+    const probe = probeCompleted(SHA_B);
+    const before = await treeHash(fixture.archiveRoot);
+    const report = await preview(fixture, probe);
+    const s3 = stubS3();
+
+    expect(report).toMatchObject({
+      status: 'error',
+      message: expect.stringMatching(/multiple persisted archives match/),
+    });
+    await expect(apply(fixture, probe, s3)).rejects.toThrow(
+      /multiple persisted archives match/,
+    );
+    expect(s3.calls).toEqual([]);
+    expect(await treeHash(fixture.archiveRoot)).toBe(before);
   });
 });

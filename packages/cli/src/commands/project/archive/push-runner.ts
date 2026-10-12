@@ -1,7 +1,9 @@
 import { basename, isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { defaultGitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   resolveScopeRoot,
@@ -26,9 +28,11 @@ import {
   evaluateArchiveRetryIdentity,
   newGenerationReplayWarning,
   resolveArchiveProjectTarget,
+  resolveRecordlessSyncedArchiveIdentity,
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
   type ArchiveRetryIdentity,
+  type RecordlessSyncedArchiveIdentity,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
   type ArchiveProjectRecapExportV1,
@@ -63,6 +67,12 @@ export interface ProjectArchivePushCommandDependencies {
   assertExactArchiveProjectRoot: typeof assertExactArchiveProjectRoot;
   processEnv: NodeJS.ProcessEnv;
   timestamp: () => string;
+  /** Recordless synced identity through the completed ref; defaults to the shared resolver. */
+  resolveRecordlessSyncedArchiveIdentity?: (options: {
+    repoRoot: string;
+    projectsRoot: string;
+    projectName: string;
+  }) => Promise<RecordlessSyncedArchiveIdentity>;
 }
 
 interface ResolvedArchiveTarget {
@@ -317,6 +327,29 @@ export async function runArchivePushCommand(
             ),
           )
         : null;
+    // A recordless synced project binds its snapshot through the completed
+    // ref, in dry-run exactly as in apply.
+    const recordless =
+      projectScope === 'synced' && syncedRecord === null
+        ? await (
+            dependencies.resolveRecordlessSyncedArchiveIdentity ??
+            ((resolverOptions) =>
+              resolveRecordlessSyncedArchiveIdentity(
+                resolverOptions,
+                buildSyncTarget(
+                  resolverOptions.repoRoot,
+                  resolverOptions.projectsRoot,
+                  resolverOptions.projectName,
+                ),
+                defaultGitRunner,
+                { env: dependencies.processEnv },
+              ))
+          )({ repoRoot, projectsRoot, projectName: target.projectName })
+        : null;
+    const persistedSnapshot =
+      syncedRecord?.archiveSnapshot ?? recordless?.metadata.snapshotName;
+    const persistedSourceRefSha =
+      syncedRecord?.archiveSourceRefSha ?? recordless?.metadata.sourceRefSha;
     const identity = await evaluateArchiveRetryIdentity(
       {
         repoRoot,
@@ -325,11 +358,9 @@ export async function runArchivePushCommand(
         projectPath: target.projectPath,
         scope: projectScope,
         timestamp: dependencies.timestamp(),
-        ...(syncedRecord?.archiveSnapshot
-          ? { persistedSnapshot: syncedRecord.archiveSnapshot }
-          : {}),
-        ...(syncedRecord?.archiveSourceRefSha
-          ? { sourceRefSha: syncedRecord.archiveSourceRefSha }
+        ...(persistedSnapshot ? { persistedSnapshot } : {}),
+        ...(persistedSourceRefSha
+          ? { sourceRefSha: persistedSourceRefSha }
           : {}),
         ...(options.newGeneration !== undefined
           ? { newGeneration: { reason: options.newGeneration } }
