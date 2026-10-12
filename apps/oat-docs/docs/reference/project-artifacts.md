@@ -208,8 +208,11 @@ A retry resolves to that identity before anything is written:
   export, copy, overwrite or S3 upload, and points reopened work at a
   follow-up project;
 - the same slug from a different scope is a separate identity; when the other
-  archive already holds the dated export identity, the new one is qualified
-  with the scope (`<YYYYMMDD>-<project>-<scope>`).
+  archive already holds the project's archive path or the dated export
+  identity, the new one is qualified with the scope in both: local path
+  `<project>-<scope>` and export identity `<YYYYMMDD>-<project>-<scope>`. An
+  empty directory at the archive path is reused. Local paths always derive
+  from the identity, never from the clock.
 
 Reopened work can instead be archived as a new generation with
 `oat project archive --new-generation <reason>` (shared and local projects).

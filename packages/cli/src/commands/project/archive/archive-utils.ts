@@ -1217,20 +1217,40 @@ export async function evaluateArchiveRetryIdentity(
     }
   }
 
+  // The local path and the dated export identity derive from the identity,
+  // never the clock: a free or empty base path is used as is; when another
+  // project's archive holds the base path or the dated identity, both carry
+  // the scope (`<project>-<scope>`, `<YYYYMMDD>-<project>-<scope>`), the name
+  // `oat repo archive sync` hydrates the snapshot to.
   const datedIdentity = buildArchiveSnapshotName(
     options.projectName,
     options.timestamp,
   );
-  const snapshotName = candidates.some(
-    (candidate) => candidate.metadata?.snapshotName === datedIdentity,
-  )
+  const baseOccupied =
+    (await pathExists(archiveBasePath)) &&
+    (await readdir(archiveBasePath)).length > 0;
+  const scopeQualified =
+    baseOccupied ||
+    candidates.some(
+      (candidate) => candidate.metadata?.snapshotName === datedIdentity,
+    );
+  const snapshotName = scopeQualified
     ? `${datedIdentity}-${options.scope}`
     : datedIdentity;
+  const archivePath = scopeQualified
+    ? join(dirname(archiveBasePath), `${options.projectName}-${options.scope}`)
+    : archiveBasePath;
+  if (scopeQualified && (await pathExists(archivePath))) {
+    throw new CliError(
+      `\`${archivePath}\` already exists and is not an archive of \`${options.projectName}\` (${options.scope}); refusing to overwrite it or create a second copy before any export, copy or S3 mutation.`,
+      1,
+    );
+  }
   return {
     ...base,
     disposition: 'new',
     snapshotName,
-    archivePath: target.archivePath,
+    archivePath,
     archiveExists: false,
     generation: 1,
     predecessor: null,
@@ -2782,9 +2802,11 @@ export async function archiveProjectOnCompletion(
     });
     allocationPending = true;
   }
-  const archiveExists = await (dependencies.dirExists ?? dirExists)(
-    archivePath,
-  );
+  // An empty directory at the identity's path holds no archive; the copy
+  // fills it in place.
+  const archiveExists =
+    (await (dependencies.dirExists ?? dirExists)(archivePath)) &&
+    !(await isEmptyDirectory(archivePath));
   if (archiveExists) {
     await verifyArchiveSnapshotMetadata(archivePath, {
       projectName: options.projectName,
@@ -3095,6 +3117,14 @@ export async function archiveProjectOnCompletion(
     generation: identity.generation,
     predecessorSnapshot: identity.predecessor,
   };
+}
+
+async function isEmptyDirectory(target: string): Promise<boolean> {
+  try {
+    return (await readdir(target)).length === 0;
+  } catch {
+    return false;
+  }
 }
 
 /** Removes everything but the allocation metadata from a pending generation. */

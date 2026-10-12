@@ -475,7 +475,9 @@ describe('oat project archive push', () => {
     );
     expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
     expect(capture.info[0]).toBe(
-      'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456`.',
+      // The preview derives the path from the identity in the resolved
+      // primary checkout, never from the target resolver's clock suffix.
+      'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project`.',
     );
     expect(process.exitCode).toBe(0);
   });

@@ -1477,11 +1477,12 @@ describe('archive utils', () => {
         },
       ),
     ).rejects.toEqual(
-      // The local-scope archive already holds the dated identity
-      // `20260827-demo`, so the shared project's new identity is
-      // scope-qualified; the occupied path is still never overwritten.
+      // The local-scope archive holds the base path and the dated identity,
+      // so the shared project's identity is scope-qualified in both
+      // (`demo-shared`, `20260827-demo-shared`). An archive appearing at that
+      // path between evaluation and copy is still never overwritten.
       new CliError(
-        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo-shared\`; refusing to overwrite it.`,
+        `Existing archive \`${archivePath}-shared\` cannot be verified for retry; restore or remove it before retrying.`,
       ),
     );
   });
@@ -2333,7 +2334,9 @@ describe('archive utils', () => {
             timestamp: () => '2026-08-28T12:00:00Z',
           });
           const snapshotId = `20260827-${slug}`;
-          const localArchiveId = `${slug}-20260827120000`;
+          // The pre-created empty base directory holds no archive, so the
+          // identity reuses it rather than a clock-suffixed sibling.
+          const localArchiveId = slug;
           expect(retried.snapshotId).toBe(snapshotId);
           expect(retried.archivePath).toBe(
             join(

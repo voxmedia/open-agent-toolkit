@@ -164,6 +164,38 @@ function archiveOptions(
   };
 }
 
+/** Runs the public archive dry-run in process and returns its JSON report. */
+async function previewArchive(
+  fixture: Fixture,
+  projectPath: string,
+  timestamp: string,
+  options: { newGeneration?: string } = {},
+): Promise<Record<string, unknown>> {
+  const capture = createLoggerCapture();
+  const exitCode = process.exitCode;
+  await runArchivePushCommand(
+    {
+      ...defaultProjectArchivePushCommandDependencies(),
+      resolveProjectRoot: async () => fixture.repoRoot,
+      timestamp: () => timestamp,
+    },
+    projectPath,
+    { dryRun: true, ...options },
+    {
+      scope: 'project',
+      dryRun: false,
+      verbose: false,
+      json: true,
+      cwd: fixture.repoRoot,
+      home: fixture.repoRoot,
+      interactive: false,
+      logger: capture.logger,
+    },
+  );
+  process.exitCode = exitCode;
+  return capture.jsonPayloads[0] as Record<string, unknown>;
+}
+
 describe('archive retry identity (archive-retry-identity)', () => {
   it('reuses the original snapshot for an identical same-day retry instead of creating a timestamp-suffixed twin', async () => {
     const fixture = await createFixture();
@@ -338,12 +370,24 @@ describe('archive retry identity (archive-retry-identity)', () => {
     await writeFile(join(localPath, 'state.md'), '# local state\n');
     await writeFile(join(localPath, 'summary.md'), '# Local summary\n');
 
+    const preview = await previewArchive(
+      shared,
+      localPath,
+      '2026-09-01T10:00:00Z',
+    );
     const localS3 = stubS3();
     const localArchive = await archiveProjectOnCompletion(
       archiveOptions(shared, { projectPath: localPath }),
-      { ...localS3, timestamp: () => '2026-09-01T10:00:00Z' },
+      { ...localS3, timestamp: () => '2026-09-01T10:00:07Z' },
     );
 
+    expect(localArchive.archivePath).toBe(
+      join(shared.archiveRoot, `${PROJECT}-local`),
+    );
+    expect(preview).toMatchObject({
+      mode: 'dry-run',
+      archivePath: localArchive.archivePath,
+    });
     expect(localArchive.archivePath).not.toBe(sharedArchive.archivePath);
     expect(localArchive.s3Path).toMatch(/\/projects\/20260901-demo-local$/);
     expect(localArchive.summaryExportFile).toMatch(/20260901-demo-local\.md$/);
@@ -354,6 +398,27 @@ describe('archive retry identity (archive-retry-identity)', () => {
     await expect(
       readFile(sharedArchive.summaryExportFile!, 'utf8'),
     ).resolves.toBe('# Summary\n\nDone.\n');
+  });
+
+  it('archives into an empty base directory instead of a clock-suffixed sibling', async () => {
+    const fixture = await createFixture();
+    await mkdir(join(fixture.archiveRoot, PROJECT), { recursive: true });
+    const preview = await previewArchive(
+      fixture,
+      fixture.projectPath,
+      '2026-09-01T09:00:00Z',
+    );
+    const archived = await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:05Z',
+    });
+
+    expect(archived.archivePath).toBe(join(fixture.archiveRoot, PROJECT));
+    expect(preview).toMatchObject({ archivePath: archived.archivePath });
+    expect(await readdir(fixture.archiveRoot)).toEqual([PROJECT]);
+    await expect(
+      readFile(join(archived.archivePath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# state\n');
   });
 
   it('refuses an ambiguous retry when two same-scope archives hold the same content', async () => {
