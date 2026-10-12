@@ -76,6 +76,10 @@ Final integrated review outcome: pass. Round 1 (ac-final-review-1, Fable 5.1 hig
 
 Final gate review used three read-only reconnaissance lanes for archive, journal and log evidence; primary independently reproduced all accepted observations. Artifact: reviews/final-review-2026-10-12T055711Z.md. 91b4bf42-6074-4a2d-8545-7ac7451bb7ae:review-orchestration
 
+### 2026-10-12 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:3,low:2 exit=1 status=blocked artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T055711Z.md run=91b4bf42-6074-4a2d-8545-7ac7451bb7ae
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
