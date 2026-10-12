@@ -1637,7 +1637,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Gate H1, M1, M2 verified closed (the gate's own probes re-run and no longer reproduce); the p04-t26 first-archive claim is closed for overlap and interruption but narrowed one protection: a metadata-less directory appearing after evaluation is now cleared instead of refused. p04-t27 restores the refusal.
 - Review cycles for this post-gate final loop: 1 of 3 (round 6); the post-external loop closed at 2 of 3 (rounds 4–5).
 
-**Next:** p04-t27 (089a65a98) landed via `cont-ac-ext-fix-4`, root-verified; narrowed final round 7 over `d94bff8d6..089a65a98`, then gate attempt 2 of generation 2.
+**Next:** p04-t27 (089a65a98) landed via `cont-ac-ext-fix-4`, root-verified; final round 7 (`reviews/archived/final-review-2026-10-12T152842Z.md`, reviewed head `4acebec12`) returned 0/0/0/0 and the final event is `passed` (post-gate loop closed at 2 of 3 cycles). Exit gate generation 2 attempt 2 follows.
 
 ## Deferred Findings
 

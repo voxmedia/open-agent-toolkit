@@ -96,6 +96,10 @@ Two synchronously awaited read-only reconnaissance lanes completed for reviews/f
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:1,medium:2,low:0 exit=1 status=blocked artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T144139Z.md run=fd67d667-727f-4e6c-a0d2-69d8fd947220
 
+### 2026-10-12 · structural · oat-project-implement · final-outcome-3
+
+Exit gate generation 2 attempt 1 (codex-6-sol-xhigh) blocked 0/1/2/0 → p04-t23..t25 plus p04-t26 (first-archive claims) and p04-t27 (round 6 M1); final rounds 6 (0/0/1/0) and 7 (0/0/0/0, passed at 4acebec12). Gate attempt 2 follows. Key ac-final-outcome-3.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
