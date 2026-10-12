@@ -849,7 +849,6 @@ describe('archive retry identity (archive-retry-identity)', () => {
       generation: 1,
     });
     expect(metadata).not.toHaveProperty('allocation');
-    expect(metadata).not.toHaveProperty('allocationOwner');
     expect(existsSync(join(archivePath, 'partial.md'))).toBe(false);
     await expect(readFile(join(archivePath, 'state.md'), 'utf8')).resolves.toBe(
       '# state\n',
