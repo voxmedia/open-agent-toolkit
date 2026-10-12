@@ -938,19 +938,77 @@ export function checkRunLines(context: RuleContext): void {
 }
 
 /**
+ * The templates' own brace placeholder vocabulary, as alternatives inside
+ * one pair of braces.
+ */
+const BRACE_VOCABULARY =
+  '(?:Project Name|Phase Name|Task Name|N|path|why|purpose|bullet|sha|time|capability \\d+|command\\(s\\)[^{}\\n]*|2-5 bullets[^{}\\n]*|gotchas[^{}\\n]*|trade-offs[^{}\\n]*|tests\\/lint[^{}\\n]*|what (?:changed|materially)[^{}\\n]*|pass\\/fail[^{}\\n]*|Notes will be added[^{}\\n]*|Continue log[^{}\\n]*)';
+
+/**
  * Brace residue is the templates' own placeholder vocabulary anywhere, or any
  * brace token that starts a list item or follows a `**Label:**` marker (the
  * slots the templates fill). Ordinary prose such as `returns {status,
  * reasons}` is not residue.
  */
-const BRACE_PLACEHOLDER =
-  /\{(?:Project Name|Phase Name|Task Name|N|path|why|purpose|bullet|sha|time|capability \d+|command\(s\)[^{}\n]*|2-5 bullets[^{}\n]*|gotchas[^{}\n]*|trade-offs[^{}\n]*|tests\/lint[^{}\n]*|what (?:changed|materially)[^{}\n]*|pass\/fail[^{}\n]*|Notes will be added[^{}\n]*|Continue log[^{}\n]*)\}|^\s*(?:[-*]|\d+\.)\s+\{[^{}\n]+\}|\*\*[^*\n]+:\*\*\s*\{[^{}\n]+\}/;
+const BRACE_PLACEHOLDER = new RegExp(
+  `\\{${BRACE_VOCABULARY}\\}|^\\s*(?:[-*]|\\d+\\.)\\s+\\{[^{}\\n]+\\}|\\*\\*[^*\\n]+:\\*\\*\\s*\\{[^{}\\n]+\\}`,
+);
+/** A whole inline-code span that is exactly one vocabulary placeholder. */
+const BRACE_VOCABULARY_TOKEN = new RegExp(`^\\{${BRACE_VOCABULARY}\\}$`);
+/** Text before a slot: a list-item start or a `**Label:**` marker. */
+const SLOT_PREFIX = /(?:^\s*(?:[-*]|\d+\.)\s+|\*\*[^*\n]+:\*\*\s*)$/;
+const INLINE_CODE_SPAN = /(`+)([^`]*?)\1/g;
+const QUOTED_EVIDENCE_COMMENT = /<!--\s*(?:oat:)?quoted-evidence\b[^>]*-->/;
 const DATE_PLACEHOLDER = /\bYYYY-MM-DD\b/;
 const BRACKET_PLACEHOLDER =
   /\[(?:Phase Name|Project Name|Execution record name|N|capability \d+|bullet|path|purpose|time|full (?:base |head |commit )?SHA[^\]]*|Summary prose[^\]]*|root \| phase-implementer[^\]]*|tests\/lint[^\]]*|observed evidence[^\]]*|what changed vs[^\]]*|short bullets[^\]]*|Decision made[^\]]*|anything discovered[^\]]*|Blocker description[^\]]*)\]/;
 
 function stripInlineCode(line: string): string {
-  return line.replace(/(`+)[^`]*?\1/g, '');
+  return line.replace(INLINE_CODE_SPAN, '');
+}
+
+/**
+ * A template slot left unfilled inside inline code: a backtick span whose
+ * whole content is one vocabulary placeholder (`{path}`), at a slot position
+ * (list-item start or after a `**Label:**` marker, read with every other code
+ * span masked). Quoted prose mid-line, other brace text in code
+ * (`{ sourceId, locator }`, `packages/{cli,control-plane}`) and lines marked
+ * quoted-evidence are not slots.
+ */
+function inlineCodeSlotPlaceholder(
+  line: string,
+  previousLine: string,
+): string | null {
+  if (
+    QUOTED_EVIDENCE_COMMENT.test(line) ||
+    QUOTED_EVIDENCE_MARKER.test(previousLine.trim())
+  ) {
+    return null;
+  }
+  const masked = line.replace(INLINE_CODE_SPAN, (span) =>
+    '`'.repeat(span.length),
+  );
+  for (const span of line.matchAll(INLINE_CODE_SPAN)) {
+    const content = (span[2] ?? '').trim();
+    if (
+      BRACE_VOCABULARY_TOKEN.test(content) &&
+      SLOT_PREFIX.test(masked.slice(0, span.index))
+    ) {
+      return span[0];
+    }
+  }
+  return null;
+}
+
+/** The nearest non-blank line above `index`, or `''`. */
+function previousRecordLine(context: RuleContext, index: number): string {
+  for (let back = index - 1; back >= 0; back -= 1) {
+    const candidate = context.journal.lines[back] ?? '';
+    if (candidate.trim() !== '') {
+      return candidate;
+    }
+  }
+  return '';
 }
 
 export function checkTemplateResidue(context: RuleContext): void {
@@ -980,17 +1038,18 @@ export function checkTemplateResidue(context: RuleContext): void {
       }
     }
     const text = stripInlineCode(line);
-    const match =
-      text.match(BRACE_PLACEHOLDER) ??
-      text.match(BRACKET_PLACEHOLDER) ??
-      text.match(DATE_PLACEHOLDER);
-    if (match !== null) {
+    const placeholder =
+      text.match(BRACE_PLACEHOLDER)?.[0] ??
+      text.match(BRACKET_PLACEHOLDER)?.[0] ??
+      text.match(DATE_PLACEHOLDER)?.[0] ??
+      inlineCodeSlotPlaceholder(line, previousRecordLine(context, index));
+    if (placeholder != null) {
       push(context, {
         code: 'template-residue',
         path: 'implementation.md',
         line: lineNumber,
         owner: IMPLEMENT,
-        message: `Template placeholder ${match[0]} survives.`,
+        message: `Template placeholder ${placeholder} survives.`,
       });
     }
   });

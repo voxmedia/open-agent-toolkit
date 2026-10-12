@@ -374,6 +374,39 @@ ${body}`,
     }
   });
 
+  it('a template placeholder left in an inline-code slot is residue', () => {
+    const slot = (line: string) =>
+      replaceOnce(VALID, '- Reader reads records.', line);
+    for (const residue of [
+      '- `{path}` - Reader module.',
+      '1. `{path}` - Reader module.',
+      '**Files:** `{path}`',
+      '- `{Task Name}`',
+    ]) {
+      expect(codes(slot(residue)), residue).toEqual(['template-residue']);
+      expect(
+        check(slot(residue), { boundary: 'review', scope: ['p01'] }).status,
+        residue,
+      ).toBe('refused');
+    }
+    // Brace text in code that is not a whole placeholder token, a quoted
+    // placeholder mid-line, and a line marked quoted-evidence are accepted.
+    for (const accepted of [
+      '- `{ sourceId, locator }` is the locator shape.',
+      '- `packages/{cli,control-plane}/package.json` stay in lockstep.',
+      '- `returns {status, reasons}` to the caller.',
+      '- The rule refuses `{Task Name}` as evidence and accepts `{status}`.',
+      '- `BRACE_PLACEHOLDER` matches a `**Label:**` marker; `{Task Name}` refused.',
+      '- `{Task Name}` <!-- quoted-evidence -->',
+      '<!-- quoted-evidence -->\n- `{Task Name}` is the template heading slot.',
+    ]) {
+      expect(check(slot(accepted)), accepted).toMatchObject({
+        status: 'ok',
+        reasons: [],
+      });
+    }
+  });
+
   it('receipt appended after References', () => {
     const appended = `${VALID}
 ### Review Received: p02

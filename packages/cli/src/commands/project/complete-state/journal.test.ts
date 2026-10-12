@@ -166,6 +166,26 @@ describe('complete-state evaluates the final journal before its write', () => {
     await expectRefusedWithoutWrite(fixture, 'overview-total-mismatch');
   });
 
+  it("refuses the real template's key-files line with only its prose slot filled", async () => {
+    const template = await readFile(
+      join(
+        import.meta.dirname,
+        '../../../../../../.oat/templates/implementation.md',
+      ),
+      'utf8',
+    );
+    const templateLine = template.split('\n')[42] ?? '';
+    expect(templateLine).toBe('- `{path}` - {why}');
+    const filled = templateLine.replace('{why}', 'Reader module.');
+    const fixture = await project(
+      VALID.replace(
+        '- Reader reads records.',
+        `- Reader reads records.\n${filled}`,
+      ),
+    );
+    await expectRefusedWithoutWrite(fixture, 'template-residue');
+  });
+
   for (const variant of NEGATIVE_VARIANTS) {
     it(`baseline accepts and complete-state refuses: ${variant.name}`, async () => {
       const fixture = await project(variant.apply(VALID, RUNNING_LINE));

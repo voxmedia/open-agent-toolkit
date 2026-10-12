@@ -535,6 +535,16 @@ export const NEGATIVE_VARIANTS: ReadonlyArray<{
     apply: (valid) => withRunLineRequest(valid, '~'),
   },
   {
+    name: 'unfilled inline-code path slot',
+    code: 'template-residue',
+    apply: (valid) =>
+      replaceOnce(
+        valid,
+        '- Reader reads records.',
+        '- Reader reads records.\n- `{path}` - Reader module.',
+      ),
+  },
+  {
     name: '{Task Name} residue',
     code: 'template-residue',
     apply: (valid) =>
