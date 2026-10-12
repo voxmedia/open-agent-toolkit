@@ -1,7 +1,7 @@
 ---
 id: BL-261012-raise-the-timeout
 title: Raise the timeout of the review-ledger path guard contract test
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -10,7 +10,7 @@ labels:
   - flaky
 assignee: null
 created: 2026-10-12T15:34:45.409Z
-updated: 2026-10-12T15:34:45.409Z
+updated: '2026-10-12T17:34:08Z'
 associated_issues: []
 external_plans: []
 ---

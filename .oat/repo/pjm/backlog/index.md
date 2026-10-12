@@ -546,7 +546,6 @@
 | BL-261011-persist-pre-registration       | Persist pre-registration review staleness for goal milestones                                            | open   | low      | task       | S        |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                         | open   | low      | task       | S        |
 | BL-261002-publish-an-owner-statement     | Publish an owner statement on project stability, support, and non-goals                                  | open   | low      | task       | XS       |
-| BL-261012-raise-the-timeout              | Raise the timeout of the review-ledger path guard contract test                                          | open   | low      | task       | XS       |
 | BL-261011-re-project-oat-pr-status-from  | Re-project oat_pr_status from goal delivery observations at terminal closeout                            | open   | low      | task       | S        |
 | BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs                | open   | low      | task       | S        |
 | BL-261012-read-only-journal-lint         | Read-only journal lint for in-flight projects                                                            | open   | low      | task       | M        |

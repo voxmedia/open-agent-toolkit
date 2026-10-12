@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-12
@@ -1722,6 +1722,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - A shared journal record reader, `dispatch record --format line` run records, the journal evaluator and `oat project journal check` at three lifecycle boundaries, `complete-state` refusing on an invalid journal (writing nothing), journal templates with `## Reviews and Gates` and `## Deferred Findings` slots, and sixteen writer skills targeting them; the complete skill runs summary staged, validates, then resumes roll-up, and writes `oat_pr_status_observed_at`.
 - Archive retry identity by manifest hash with dry-run parity, deterministic scope-qualified paths, thirteen `archive-*` reason codes, locator finalization to `oat-archive:` tokens at export, and `--new-generation <reason>` with predecessor binding.
 - Documentation audit, ten decision records, six backlog items, 21 skill bumps, lockstep 0.3.22, full gate run green.
+- Post-PR fix round (p04-t13..p04-t29): one archive retention set (`pr/` joins `reviews/` locally, in the manifest, on S3 and in hydration), archive-owned entries never copied from the source, generation-aware and scope-aware by-name sync, masked plan progress, refusals for missing run-line request ids, inline-code template residue and duplicate or misplaced plan tasks, the disabled-log prose aligned to `DR-260718`, and `oat-project-complete` carrying the PR body across the archive. A concurrent-archive ownership protocol grown during the exit-gate loop was deleted by operator decision (complexity review, `simplify`); OAT does not serialize simultaneous archive runs of one project.
 
 **Behavioral changes (user-facing):**
 
@@ -1736,7 +1737,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Verification performed:**
 
 - Per-phase scoped vitest under an isolated HOME; eleven named guards proven by implementers and re-proven by reviewers; real-artifact probes on scratch repos with stubbed S3 and gh across quick, lite, brief and goal (229 assertions); p04-t04 gate run: check, type-check, forced uncached tests (8807 + 287 + 61), build, check:skill-bumps (21), release:check-versions, release:validate, build:docs, smoke (163), skills (700), scripts, lint, format, all exit 0.
-- Reviews: p01 (2 rounds), p02 (2), p03 (2), p04 (1), final (2), all Fable 5.1 high; the configured exit gate follows.
+- Reviews: p01 (2 rounds), p02 (2), p03 (2), p04 (1), final rounds 1-7 (Fable 5.1 high) and round 8 (codex gpt-6.1-sol high, operator-substituted); external PR review (Warp, Cursor Bugbot) verified and fixed; configured exit gate passed in generation 3 (generation 1 passed on attempt 2, went stale at the fix round; generation 2 exhausted, closed by the operator's `simplify` disposition); one operator waiver covers a test-only timeout commit.
 
 **Design deltas (if any):**
 
