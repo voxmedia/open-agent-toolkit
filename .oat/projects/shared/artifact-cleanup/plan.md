@@ -1296,6 +1296,32 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 
 ---
 
+### Task p04-t27: (review) A new first-archive claim refuses foreign content instead of clearing it
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts` (~L3029-3042, ~L3057-3066, ~L3080-3083, ~L3526-3540: for `identity.disposition === 'new'` skip `clearPendingGeneration` (a brand-new claim has nothing to clear); right after the exclusive create, list the directory and, if anything other than `ARCHIVE_SNAPSHOT_METADATA_FILENAME` is present, remove only the own metadata file (owner-checked) and refuse `archive-occupant-unverifiable` with `occupantGuidance`; keep `clearPendingGeneration` for resumed pending allocations, whose partial copy belongs to this identity)
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts` (~L1459-1512: add the metadata-less variant to the "wrong scope" case: inject a stray `notes.md` via `ensureDir` after the directory is created → refused `archive-occupant-unverifiable`, stray file and source intact, own metadata removed; control: with the listing check removed the stray file is deleted and the archive completes) and `archive-retry-identity.test.ts` if the overlapping/interrupted first-archive cases need the resumed-allocation branch pinned
+
+**Step 1: Understand the issue**
+
+Final review round 6 M1 (`reviews/archived/final-review-2026-10-12T151935Z.md`): the p04-t26 claim proves only that no metadata file was written since evaluation; the copy-time re-check now always passes for a fresh claim (the directory holds this call's own metadata) and the first-archive branch then runs `clearPendingGeneration`, deleting a metadata-less directory that appeared in the window. Pre-fix that case was refused as unverifiable for retry; the p04-t26 test rewrite dropped the protection.
+
+**Step 2: Implement fix**
+
+Refuse rather than clear anything a new claim did not write.
+
+**Step 3: Verify**
+
+Run: `HOME=$FH pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive src/commands/repo/archive`; the metadata-less variant fails with the listing check removed and passes restored; overlapping and interrupted first-archive cases stay green.
+Expected: green with explicit exit codes; the named control fails neutralized and passes restored.
+
+**Step 4: Commit**
+
+`fix(p04-t27): a new first-archive claim refuses foreign content instead of clearing it`
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                                                                                                                                                                                                               |
@@ -1325,7 +1351,8 @@ Expected: green with explicit exit codes; the named control fails neutralized an
 | final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T141023Z.md         | 731a5d78165e49c4dae9cf4c9ec9128066aebbbd | auto       | round 4 (narrowed to fca8060e0..5bbc20b10): 0/1/1/2; W1–W8 verified closed; H1 → p04-t21, M1 + L2 → p04-t22, L1 (overview total) fixed by the root                                                                                                        |
 | final  | code     | passed          | 2026-10-12 | reviews/archived/final-review-2026-10-12T142835Z.md         | 5fe8ac058a35db697d5cc40077d4c38f90967b74 | auto       | round 5 (narrowed to fd5b5351c..c0b261839): 0/0/0/1; H1, M1, L1, L2 verified closed; the Low (Step 11.5 failure wording) fixed by the root                                                                                                                |
 | final  | code     | received        | 2026-10-12 | reviews/final-review-2026-10-12T144139Z.md                  | b70b067ea74a1d98359ccc2c5612edaf0843a807 | gate       | codex-6-sol-xhigh                                                                                                                                                                                                                                         |
-| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T144139Z.md         | b70b067ea74a1d98359ccc2c5612edaf0843a807 | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 1 blocked 0/1/2/0; H1→p04-t23, M1→p04-t24, M2→p04-t25                                                                                                                                                   |
+| final  | code     | fixes_completed | 2026-10-12 | reviews/archived/final-review-2026-10-12T144139Z.md         | b70b067ea74a1d98359ccc2c5612edaf0843a807 | gate       | codex-6-sol-xhigh: exit gate generation 2 attempt 1 blocked 0/1/2/0; H1→p04-t23, M1→p04-t24, M2→p04-t25                                                                                                                                                   |
+| final  | code     | fixes_pending   | 2026-10-12 | reviews/archived/final-review-2026-10-12T151935Z.md         | 9bf9b667298bc8d61fd53c3e74856962ecf034fc | auto       | round 6 (narrowed to bc9ac35ae..76c931e7a): 0/0/1/0; gate H1, M1, M2 and the p04-t26 follow-up verified closed; M1 (new claim clears foreign content) → p04-t27                                                                                           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events.
 

@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 7     | 7/7       |
-| Phase 2 | complete | 12    | 12/12     |
-| Phase 3 | complete | 13    | 13/13     |
-| Phase 4 | complete | 26    | 26/26     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 7     | 7/7       |
+| Phase 2 | complete    | 12    | 12/12     |
+| Phase 3 | complete    | 13    | 13/13     |
+| Phase 4 | in_progress | 27    | 26/27     |
 
-**Total:** 58/58 tasks completed
+**Total:** 58/59 tasks completed
 
 ---
 
@@ -881,9 +881,8 @@ oat_generated: false
 
 ## Phase 4: Acceptance, documentation audit, records and release
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-12
-**Completed:** 2026-10-12
 
 **Expected-red list (frozen 2026-10-12 before dispatch):**
 
@@ -1425,6 +1424,13 @@ oat_generated: false
 
 ---
 
+### Task p04-t27: (review) A new first-archive claim refuses foreign content instead of clearing it
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -1598,6 +1604,27 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - M2 restores D5's raw plan-record checks (duplicate identities, misplaced tasks).
 
 **Next:** p04-t23 (6c05e7699), p04-t24 (43f979f29), p04-t25 (753f046b9) landed via `cont-ac-ext-fix-2`, root-verified; the gate's two probes no longer reproduce against the rebuilt dist. p04-t26 (589f056d5) landed via `cont-ac-ext-fix-3`, root-verified; the root re-pinned the Step 11.5 wording contract test (CI failure on 20fc9c76d). Narrowed final round 6 over `bc9ac35ae..HEAD`, then gate attempt 2 of generation 2.
+
+### Review Received: final (round 6)
+
+**Date:** 2026-10-12
+**Review artifact:** reviews/archived/final-review-2026-10-12T151935Z.md (round 6, Fable 5.1 high, auto; narrowed to bc9ac35ae..76c931e7a, reviewed head `9bf9b6672`)
+
+**Findings:**
+
+- Critical: 0
+- High: 0
+- Medium: 1
+- Low: 0
+
+**New tasks added:** p04-t27 (M1)
+
+**Design drift / artifact alignment notes:**
+
+- Gate H1, M1, M2 verified closed (the gate's own probes re-run and no longer reproduce); the p04-t26 first-archive claim is closed for overlap and interruption but narrowed one protection: a metadata-less directory appearing after evaluation is now cleared instead of refused. p04-t27 restores the refusal.
+- Review cycles for this post-gate final loop: 1 of 3 (round 6); the post-external loop closed at 2 of 3 (rounds 4–5).
+
+**Next:** p04-t27 via continuation `cont-ac-ext-fix-4`; narrowed final round 7; gate attempt 2 of generation 2.
 
 ## Deferred Findings
 
