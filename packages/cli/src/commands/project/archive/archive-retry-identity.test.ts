@@ -302,7 +302,7 @@ describe('archive retry identity (archive-retry-identity)', () => {
         timestamp: () => '2026-09-02T09:00:00Z',
       }),
     ).rejects.toThrow(
-      `Project \`demo\` (shared) was already archived as \`20260901-demo\` at \`${first.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. Record reopened work in a follow-up project (for example \`oat project new demo-followup\`) and archive that project instead.`,
+      `Project \`demo\` (shared) was already archived as \`20260901-demo\` (generation 1) at \`${first.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. Record reopened work in a follow-up project (for example \`oat project new demo-followup\`) and archive that project instead.`,
     );
     expect(retryS3.calls).toEqual([]);
     expect(retryS3.ensureS3ArchiveAccess).not.toHaveBeenCalled();
@@ -311,6 +311,48 @@ describe('archive retry identity (archive-retry-identity)', () => {
       exportBefore,
     );
     expect(await treeHash(fixture.projectPath)).toBe(sourceBefore);
+  });
+
+  it('names the latest generation when changed content is refused', async () => {
+    const fixture = await createFixture();
+    const generations = [
+      { dir: PROJECT, snapshot: '20260901-demo', generation: 1 },
+      { dir: `${PROJECT}-g2`, snapshot: '20260902-demo-g2', generation: 2 },
+      { dir: `${PROJECT}-g3`, snapshot: '20260903-demo-g3', generation: 3 },
+      { dir: `${PROJECT}-g4`, snapshot: '20260904-demo-g4', generation: 4 },
+      {
+        dir: `${PROJECT}-g5`,
+        snapshot: '20260905-demo-g5',
+        generation: 5,
+        pending: true,
+      },
+    ];
+    for (const entry of generations) {
+      const archivePath = join(fixture.archiveRoot, entry.dir);
+      await mkdir(archivePath, { recursive: true });
+      await writeFile(join(archivePath, 'state.md'), `# ${entry.dir}\n`);
+      await writeFile(
+        join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+        `${JSON.stringify({
+          projectName: PROJECT,
+          snapshotName: entry.snapshot,
+          scope: 'shared',
+          manifestHash: `sha256:${String(entry.generation).repeat(64)}`,
+          generation: entry.generation,
+          ...(entry.generation > 1 ? { predecessor: 'earlier' } : {}),
+          ...(entry.pending ? { allocation: 'pending' } : {}),
+        })}\n`,
+      );
+    }
+
+    await expect(
+      archiveProjectOnCompletion(archiveOptions(fixture), {
+        ...stubS3(),
+        timestamp: () => '2026-09-06T09:00:00Z',
+      }),
+    ).rejects.toThrow(
+      `archive-retry-conflict: Project \`demo\` (shared) was already archived as \`20260905-demo-g5\` (generation 5, allocation: pending) at \`${join(fixture.archiveRoot, 'demo-g5')}\``,
+    );
   });
 
   it('accepts a retry whose only difference is review evidence, which is never archived', async () => {

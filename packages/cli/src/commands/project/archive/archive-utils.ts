@@ -1248,14 +1248,17 @@ export async function evaluateArchiveRetryIdentity(
   }
 
   if (sourcePresent) {
+    // Name the latest generation, the archive the operator would build on.
+    const latestGeneration = Math.max(0, ...sameIdentity.map(generationOf));
     const conflict =
-      sameIdentity[0] ??
-      candidates.find((candidate) => candidate.metadata === null);
+      sameIdentity.find(
+        (candidate) => generationOf(candidate) === latestGeneration,
+      ) ?? candidates.find((candidate) => candidate.metadata === null);
     if (conflict) {
       throw conflict.metadata
         ? new ArchiveIdentityError(
             'archive-retry-conflict',
-            `Project \`${options.projectName}\` (${options.scope}) was already archived as \`${conflict.metadata.snapshotName}\` at \`${conflict.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`,
+            `Project \`${options.projectName}\` (${options.scope}) was already archived as \`${conflict.metadata.snapshotName}\` (generation ${generationOf(conflict)}${conflict.metadata.allocation === 'pending' ? ', allocation: pending' : ''}) at \`${conflict.archivePath}\`, and its retained artifacts differ from that snapshot; refusing to overwrite the archive or create a second copy before any export, copy or S3 mutation. ${followUpGuidance(options.projectName)}`,
           )
         : new ArchiveIdentityError(
             'archive-occupant-unverifiable',
