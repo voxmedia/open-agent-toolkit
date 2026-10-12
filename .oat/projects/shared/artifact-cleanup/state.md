@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -50,7 +50,7 @@ oat_post_implement_sequence:
   source: configured # configured | autonomous-default
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -153,11 +153,11 @@ oat_quick_start_gate:
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-12T06:36:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-12T06:38:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -169,7 +169,7 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -184,6 +184,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ⧗ Awaiting user input
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -191,4 +193,8 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
