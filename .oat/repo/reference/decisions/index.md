@@ -17,6 +17,8 @@
 | DR-261012-journal-slots-and-state-owned  | 2026-10-12 | accepted   | Journal slots and state-owned gates                                                                    | -       |
 | DR-261012-learnings-in-the-project-log   | 2026-10-12 | accepted   | Learnings in the project log                                                                           | -       |
 | DR-261012-no-artifact-renames            | 2026-10-12 | accepted   | No artifact renames                                                                                    | -       |
+| DR-261012-no-protection-for-simultaneous | 2026-10-12 | accepted   | No protection for simultaneous archive runs                                                            | -       |
+| DR-261012-one-archive-retention-set      | 2026-10-12 | accepted   | One archive retention set                                                                              | -       |
 | DR-261012-reviews-are-not-archived       | 2026-10-12 | accepted   | Reviews are not archived                                                                               | -       |
 | DR-261012-summary-observations-digest    | 2026-10-12 | accepted   | Summary observations digest                                                                            | -       |
 | DR-261012-writers-only-fresh-output      | 2026-10-12 | accepted   | Writers-only fresh output measurement                                                                  | -       |
