@@ -125,6 +125,10 @@ covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
 `packages/control-plane` included, but one surface still has no CI gate:
 `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`. Run `pnpm lint`
 and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`.
+When a change edits skill prose under `.agents/skills`, also run
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`:
+contract tests there pin skill sentences verbatim, so a one-line wording fix
+can fail CI that no lint or format pass predicts.
 
 `packages/control-plane`'s `lint` is reached twice. Its `check` script runs the
 same `oxlint` passes under `pnpm check`, and
@@ -312,6 +316,8 @@ When executing an OAT project implementation or OAT project review workflow, do 
 - or explicit user input is required.
 
 Status summaries, completed bookkeeping, and "clean boundary" pauses are not completion criteria. After updating tracking artifacts, continue execution until one of the allowed stop conditions applies.
+
+Before turning a review or gate finding into a fix task, check that `discovery.md`, `spec.md`, `design.md`, or a decision record requires the guarantee the finding demands. A finding that adds a new requirement, rather than reporting a regression or a gap in an accepted one, goes to the operator before any fix task exists. In `artifact-cleanup` the exit gate asked for safety between two simultaneous archive runs of one project, which no contract source named; four fix rounds built an ownership protocol that the operator then had deleted.
 
 ### Project Structure
 
