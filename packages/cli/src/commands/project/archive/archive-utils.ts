@@ -1500,6 +1500,13 @@ async function allocateArchiveGeneration(
   // (`<project>-gN-<scope>`, `<YYYYMMDD>-<project>-gN-<scope>`), the name
   // `oat repo archive sync` hydrates the snapshot to. Anything else at the
   // path still refuses.
+  // A family keeps its qualifier: when the predecessor's own archive name
+  // carries this scope (`<project>[-gN]-<scope>`), every successor does too,
+  // whatever order the scopes reach the next generation in, so
+  // `oat repo archive sync <project>-<scope>` keeps restoring its latest one.
+  const predecessorQualified =
+    basename(heads[0]!.archivePath) ===
+    formatArchiveLocalName(options.projectName, latest, options.scope);
   const pathHeldByOtherScope = candidates.some(
     (candidate) =>
       candidate.archivePath === generationPath &&
@@ -1507,6 +1514,7 @@ async function allocateArchiveGeneration(
       candidate.metadata.scope !== options.scope,
   );
   const scopeQualified =
+    predecessorQualified ||
     pathHeldByOtherScope ||
     candidates.some(
       (candidate) => candidate.metadata?.snapshotName === datedIdentity,

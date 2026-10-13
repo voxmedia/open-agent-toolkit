@@ -1662,15 +1662,15 @@ describe('explicit archive generations (archive-generation-authorization)', () =
   });
 
   it.each([
-    // Same day: the second request's dated identity also collides.
+    // Same day and a later day, in both orders: the family qualified at
+    // generation 1 (`demo-local`) stays qualified at generation 2, and the
+    // unqualified family stays unqualified, whichever scope arrives first.
     ['shared', 'local', '2026-09-05T10:00:00Z', '20260905'],
     ['local', 'shared', '2026-09-05T10:00:00Z', '20260905'],
-    // A later day: only the other scope's archive at `demo-g2` qualifies the
-    // path, so the path-held-by-another-scope rule alone decides.
     ['shared', 'local', '2026-09-06T10:00:00Z', '20260906'],
     ['local', 'shared', '2026-09-06T10:00:00Z', '20260906'],
   ] as const)(
-    'scope-qualifies the successor path and identity of the second scope to reach generation 2 (%s first, then %s at %s)',
+    'keeps each scope family qualified as it was at generation 1 (%s first, then %s at %s)',
     async (firstScope, secondScope, secondTimestamp, secondDate) => {
       const fixture = await createFixture();
       const localPath = join(
@@ -1716,27 +1716,31 @@ describe('explicit archive generations (archive-generation-authorization)', () =
       );
       const second = await archiveScope(secondScope, secondTimestamp, REASON);
 
-      expect(first.archivePath).toBe(join(fixture.archiveRoot, 'demo-g2'));
-      expect(first.s3Path).toMatch(/\/projects\/20260905-demo-g2$/);
-      expect(second.archivePath).toBe(
-        join(fixture.archiveRoot, `demo-g2-${secondScope}`),
-      );
-      expect(second.s3Path).toMatch(
-        new RegExp(`/projects/${secondDate}-demo-g2-${secondScope}$`),
-      );
-      expect(second.summaryExportFile).toMatch(
-        new RegExp(`${secondDate}-demo-g2-${secondScope}\\.md$`),
-      );
-      expect(await readMetadata(first.archivePath)).toMatchObject({
-        snapshotName: '20260905-demo-g2',
-        scope: firstScope,
-        generation: 2,
-      });
-      expect(await readMetadata(second.archivePath)).toMatchObject({
-        snapshotName: `${secondDate}-demo-g2-${secondScope}`,
-        scope: secondScope,
-        generation: 2,
-      });
+      const nameOf = { shared: 'demo-g2', local: 'demo-g2-local' };
+      const dateOf = {
+        [firstScope]: '20260905',
+        [secondScope]: secondDate,
+      } as Record<'shared' | 'local', string>;
+      for (const [scope, archived] of [
+        [firstScope, first],
+        [secondScope, second],
+      ] as const) {
+        const snapshotName = `${dateOf[scope]}-${nameOf[scope]}`;
+        expect(archived.archivePath).toBe(
+          join(fixture.archiveRoot, nameOf[scope]),
+        );
+        expect(archived.s3Path).toMatch(
+          new RegExp(`/projects/${snapshotName}$`),
+        );
+        expect(archived.summaryExportFile).toMatch(
+          new RegExp(`${snapshotName}\\.md$`),
+        );
+        expect(await readMetadata(archived.archivePath)).toMatchObject({
+          snapshotName,
+          scope,
+          generation: 2,
+        });
+      }
 
       // Each source-absent retry resumes its own generation.
       for (const [scope, archived] of [
@@ -1751,11 +1755,104 @@ describe('explicit archive generations (archive-generation-authorization)', () =
       expect((await readdir(fixture.archiveRoot)).sort()).toEqual([
         'demo',
         'demo-g2',
-        `demo-g2-${secondScope}`,
+        'demo-g2-local',
         'demo-local',
       ]);
     },
   );
+
+  it('restores the latest generation of a qualified family when it reaches generation 2 first', async () => {
+    const fixture = await createFixture();
+    const mirror = fakeS3Mirror(await scratch('oat-fake-s3-mirror-'));
+    const localPath = join(
+      fixture.repoRoot,
+      '.oat',
+      'projects',
+      'local',
+      PROJECT,
+    );
+    const writeLocal = async (state: string): Promise<void> => {
+      await mkdir(localPath, { recursive: true });
+      await writeFile(join(localPath, 'state.md'), state);
+    };
+    const archive = (
+      projectPath: string,
+      timestamp: string,
+      newGenerationReason?: string,
+    ) =>
+      archiveProjectOnCompletion(
+        archiveOptions(fixture, {
+          projectPath,
+          ...(newGenerationReason ? { newGenerationReason } : {}),
+        }),
+        { ...mirror, timestamp: () => timestamp },
+      );
+
+    await archive(fixture.projectPath, '2026-09-01T09:00:00Z');
+    await writeLocal('# local state\n');
+    await archive(localPath, '2026-09-02T09:00:00Z');
+    // Reversed order: the qualified family reaches generation 2 first, on a
+    // day no other archive's dated identity collides with.
+    await writeLocal('# local reopened\n');
+    const localSecond = await archive(
+      localPath,
+      '2026-09-03T09:00:00Z',
+      REASON,
+    );
+    expect(localSecond.s3Path).toMatch(/\/projects\/20260903-demo-g2-local$/);
+    await reopen(fixture, '# shared reopened\n');
+    const sharedSecond = await archive(
+      fixture.projectPath,
+      '2026-09-04T09:00:00Z',
+      REASON,
+    );
+    expect(sharedSecond.s3Path).toMatch(/\/projects\/20260904-demo-g2$/);
+
+    await rm(fixture.archiveRoot, { recursive: true, force: true });
+    expect(await hydrate(fixture, mirror.execFile, 'demo-local')).toMatchObject(
+      {
+        status: 'ok',
+        sources: [localSecond.s3Path],
+        targets: ['.oat/projects/archived/demo-g2-local'],
+      },
+    );
+  });
+
+  it('qualifies a successor whose unqualified path another scope already holds', async () => {
+    // An archive written before families kept their qualifier can hold the
+    // unqualified successor path for the other scope.
+    const fixture = await createFixture();
+    await archiveProjectOnCompletion(archiveOptions(fixture), {
+      ...stubS3(),
+      timestamp: () => '2026-09-01T09:00:00Z',
+    });
+    const legacy = join(fixture.archiveRoot, 'demo-g2');
+    await mkdir(legacy);
+    await writeFile(join(legacy, 'state.md'), '# legacy local g2\n');
+    const sharedFirst = await readMetadata(join(fixture.archiveRoot, PROJECT));
+    await writeFile(
+      join(legacy, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        ...sharedFirst,
+        snapshotName: '20260902-demo-g2',
+        scope: 'local',
+        generation: 2,
+        predecessor: '20260901-demo-local',
+      })}\n`,
+    );
+    await reopen(fixture, '# shared reopened\n');
+
+    const second = await archiveProjectOnCompletion(
+      archiveOptions(fixture, { newGenerationReason: REASON }),
+      { ...stubS3(), timestamp: () => '2026-09-05T09:00:00Z' },
+    );
+    expect(second.archivePath).toBe(
+      join(fixture.archiveRoot, 'demo-g2-shared'),
+    );
+    await expect(readFile(join(legacy, 'state.md'), 'utf8')).resolves.toBe(
+      '# legacy local g2\n',
+    );
+  });
 
   it('restores a writer-produced scope-qualified successor by its family and project name', async () => {
     const fixture = await createFixture();

@@ -222,10 +222,11 @@ Reopened work can instead be archived as a new generation with
 `oat project archive --new-generation <reason>` (shared and local projects).
 The option needs exactly one latest generation of the same project and scope as
 its predecessor and refuses otherwise. The new generation lives at
-`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`; when the same
-project's archive from another scope already holds that path or identity, both
-carry the scope, as for a first archive: `<project>-gN-<scope>` and
-`<YYYYMMDD>-<project>-gN-<scope>`. Anything else at the path refuses. `oat repo
+`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`. Both carry the
+scope (`<project>-gN-<scope>` and `<YYYYMMDD>-<project>-gN-<scope>`) when the
+predecessor's own name carries it, so a family qualified at its first archive
+stays qualified in every generation, or when the same project's archive from
+another scope already holds that path or identity. Anything else at the path refuses. `oat repo
 archive sync` reads the same `<project>[-gN][-<scope>]` contract: by name,
 `<project>-<scope>` restores that scope's latest generation and `<project>`
 restores every family of the project at its latest generation. Its
