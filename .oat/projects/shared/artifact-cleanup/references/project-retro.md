@@ -25,7 +25,7 @@ oat_retro_evidence_sources:
   - source: subagent-transcripts
     status: unavailable
 oat_retro_promotions: complete
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -85,10 +85,11 @@ Labels below: **confirmed** means durable evidence supports it;
 
 - **Promotions:** `complete`. RP-01 and RP-02 are applied in
   `13a851b73fa91b7f73d1d5ba2f59249f69ee3826` (AGENTS.md).
-- **Filing:** `proposed`. UP-01, UP-02 and UP-03 are proposed and unfiled;
-  `workflow.retro.filing.upstream` is unset.
-- **Unsettled items:** UP-01, UP-02, UP-03 (file with
-  `oat-project-retro-file`).
+- **Filing:** `complete`. UP-01 and UP-03 are filed as local backlog
+  items `BL-261013-classify-review-findings` and
+  `BL-261013-documentation-sync-after` (receipt `2285880108074557780e3882bbc2fcb616150f39`, unpushed); UP-02 is
+  rejected because BL-260713 already shipped its proposal.
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -304,12 +305,12 @@ wording fix in `oat-project-complete` failed CI on 20fc9c76d until re-pinned
 
 ### UP-01: Classify findings at every receive, not only at budget exhaustion
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261013-classify-review-findings.md`
+- **Destination-receipt:** `2285880108074557780e3882bbc2fcb616150f39`
+- **Remote-visibility:** unpushed
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as new; related to BL-260818-distinguish-operator-directed, which covers only the post-exhaustion decision point.
 
 `oat-project-review-receive` and the implement gate receive convert findings
 into fix tasks directly. The complexity-review fallback is the first place a
@@ -322,12 +323,12 @@ operator before creating a task.
 
 ### UP-02: Prompt the orchestrator to record judgment learnings at decision points
 
-- **Status:** proposed
+- **Status:** rejected
 - **Destination:** —
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Already shipped as BL-260713-root-agent-judgment-logging (2026-10-02): oat-project-implement tells the root agent to log judgment entries at the next bookkeeping boundary. The zero-entry log in this run was a root execution miss, not a missing prompt, so the proposal's premise does not hold.
 
 `oat-project-implement` appends structural entries at each phase and gate
 boundary, but nothing prompts a judgment or learning entry. A 60-task project
@@ -339,12 +340,12 @@ the root to append one categorized learning through `oat project log append`.
 
 ### UP-03: Documentation sync after closeout stales the exit gate
 
-- **Status:** proposed
-- **Destination:** —
-- **Destination-receipt:** —
-- **Remote-visibility:** —
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-261013-documentation-sync-after.md`
+- **Destination-receipt:** `2285880108074557780e3882bbc2fcb616150f39`
+- **Remote-visibility:** unpushed
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as new; related to BL-260820-track-pr-closeout-evidence and BL-260903-project-document-should-prompt, whose mechanisms differ.
 
 Running `oat-project-document` after the closeout snapshot is complete writes
 docs outside the effective-delta exclusion set, so the passed exit gate no
