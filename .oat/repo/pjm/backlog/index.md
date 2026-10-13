@@ -457,6 +457,7 @@
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                              | open   | medium   | task       | M        |
 | BL-261002-catch-hardcoded-docs-paths     | Catch hardcoded docs paths in skill tests when docs pages move                                           | open   | medium   | task       | S        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                   | open   | medium   | feature    | M        |
+| BL-261013-classify-review-findings       | Classify review findings against the contract at every receive                                           | open   | medium   | task       | M        |
 | BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                                 | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                            | open   | medium   | initiative | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                      | open   | medium   | task       | S        |
@@ -539,6 +540,7 @@
 | BL-261002-correct-misleading-init-status | Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync | open   | low      | task       | S        |
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                                   | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                          | open   | low      | idea       | L        |
+| BL-261013-documentation-sync-after       | Documentation sync after closeout silently stales the exit gate                                          | open   | low      | task       | S        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                   | open   | low      | feature    | M        |
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                            | open   | low      | task       | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                 | open   | low      | task       | S        |
