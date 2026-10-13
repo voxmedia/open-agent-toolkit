@@ -85,6 +85,12 @@ oat_implement_exit_gate:
       to_commit: '5f8b679a772b00e7edf17c99bd8db52660bf5b77'
       covered_fingerprint: 'sha256:effective-delta-v2:f2ec7aa0c1c2c3c32ee567d130bbaf1e2ebd4ace10871197a524b7638dc85c3f'
       waived_at: '2026-10-13T01:35:02Z'
+    - waived_by: 'Thomas Stang'
+      reason: 'Instruction-only commit from oat-project-retro after the gate: two AGENTS.md paragraphs (classify findings against the contract; run contract suites after skill edits).'
+      from_commit: 'f1ebfb900c053ca2188a4cd30046d5284304fc34'
+      to_commit: '13a851b73fa91b7f73d1d5ba2f59249f69ee3826'
+      covered_fingerprint: 'sha256:effective-delta-v2:71a57b906387b9395d2e19f53e9e12081c5b693d1aff272947544b7ac92b781d'
+      waived_at: '2026-10-13T03:58:16Z'
   launch_state: result_persisted
   launch_attempt_id: exit-gate-20261012T170421Z
   launch_started_at: '2026-10-12T17:04:21Z'
@@ -169,7 +175,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/365' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-11T15:10:48.714Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-13T01:35:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-13T03:58:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
