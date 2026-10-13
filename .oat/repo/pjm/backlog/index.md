@@ -9,7 +9,12 @@
   `BL-261012-read-only-journal-lint`, `BL-261012-convert-legacy-journals`,
   `BL-261012-rename-the-project-retro`, `BL-261012-commit-paths-should-accept`,
   `BL-261012-oat-wave-execute-writes-into` and
-  `BL-261012-complete-state-json-refusals`.
+  `BL-261012-complete-state-json-refusals`. Its post-PR fix round added
+  `BL-261012-wrap-up-pr-cross-reference` (archives no longer keep `pr/`),
+  `BL-261012-regenerate-the-archive-aware` (resumed completion skips the PR
+  body sync) and `BL-261012-archive-metadata-reads-map` (EACCES reads as a
+  missing marker); `BL-261012-raise-the-timeout` was filed and closed in the
+  same round.
 - 2026-10-11: the `brief-goal-workflow-modes` project (lockstep 0.3.20; v1 as
   [PR #361](https://github.com/voxmedia/open-agent-toolkit/pull/361), goal seam
   stacked on it) closed

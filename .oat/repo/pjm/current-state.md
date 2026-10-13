@@ -38,7 +38,8 @@ copying their content here. -->
 
 ## What's Implemented
 
-- CLI `0.3.22` (`artifact-cleanup`, implementation complete, final PR pending)
+- CLI `0.3.22` (`artifact-cleanup`, implementation complete, open as
+  [PR #365](https://github.com/voxmedia/open-agent-toolkit/pull/365))
   makes lifecycle artifacts readable for projects archived from now on:
   category-bearing project-log judgment entries with a bounded observations
   digest in `summary.md` (`workflow.projectLogDigest`); a shared journal record
@@ -49,8 +50,12 @@ copying their content here. -->
   written into `project-log.md` by the autonomous, cloud and goal producers
   (the legacy learnings file is read, never written); archive retry identity by
   manifest hash with dry-run parity, thirteen `archive-*` refusal codes, and
-  `archive --new-generation <reason>`. Decisions `DR-261012-*` (ten records);
-  follow-ups `BL-261012-*` (six items).
+  `archive --new-generation <reason>`. Archives retain neither `reviews/` nor
+  `pr/`, locally or on S3, and by-name `oat repo archive sync` resolves `-gN`
+  generations and scope-qualified names. Simultaneous archive runs of one
+  project are unsupported by decision (the ownership protocol grown during the
+  exit-gate loop was deleted). Decisions `DR-261012-*` (ten records);
+  follow-ups `BL-261012-*` (nine items).
 
 - CLI `0.3.20` (`brief-goal-workflow-modes`, implementation complete; v1 open
   as [PR #361](https://github.com/voxmedia/open-agent-toolkit/pull/361), the
