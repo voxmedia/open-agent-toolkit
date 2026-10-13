@@ -112,6 +112,10 @@ Operator disposition simplify (2026-10-12): concurrent-archive ownership protoco
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/artifact-cleanup/reviews/final-review-2026-10-12T171133Z.md run=ed7250e6-6a46-49db-bc43-65ce785166db
 
+### 2026-10-13 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/artifact-cleanup/references/project-retro.md evidence_used=archived-review-markdown,ci-run-logs,complexity-review-report,dispatch-run-notes,gate-receipts,lifecycle-artifacts,pr-review-threads,project-log,session-transcript evidence_unavailable=oat-execution-learnings,subagent-transcripts promotions=2 upstream=3 apply=performed filing=performed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
