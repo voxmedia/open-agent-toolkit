@@ -1271,9 +1271,9 @@ describe('post-implementation sequence contracts', () => {
       const normalized = normalizeWhitespace(readImplementSkill());
 
       expect(normalized).toContain(
-        'record the acceptance in the generic dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`',
+        'record the acceptance as its run line in `$PROJECT_PATH/implementation.md` `## Orchestration Runs` (`--format line`)',
       );
-      expect(normalized).toContain('never mirror that record');
+      expect(normalized).toContain('never paste the record');
     });
 
     it('defers review-orchestration appends to a terminal phase outcome', () => {
@@ -2116,7 +2116,9 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       );
     }
     expect(post).toContain('`fixes_added` / `fixes_completed` / `passed`');
-    expect(post).toContain('append an Orchestration Run');
+    expect(post).toContain(
+      'under `## Orchestration Runs`, update in place the one run line per request ID',
+    );
     expect(post).toContain('Reviews Ledger Mutation Contract');
   });
 
@@ -2289,7 +2291,7 @@ describe('phase bookkeeping ordering around per-phase review', () => {
       'Book["Review-outcome bookkeeping',
     ]);
     expect(docs).toContain(
-      'Review-outcome bookkeeping — the Reviews row and its disposition, the Orchestration Run, and the deferred project-log entries — is out of scope at the reviewed head',
+      'Review-outcome bookkeeping — the Reviews row and its disposition, the run-line update, and the deferred project-log entries — is out of scope at the reviewed head',
     );
   });
 });

@@ -1179,6 +1179,7 @@ describe('help output snapshots', () => {
         delivery                                     Observe goal delivery registry members and check delivery evidence freshness
         dispatch                                     Validate project dispatch provenance
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
+        journal                                      Validate the implementation journal (read-only)
         list [options]                               List tracked OAT projects
         links [options] [project-path|slug]          Render pinned reviewer links for a synced OAT project
         log                                          Manage the append-only project observation log
@@ -1212,7 +1213,25 @@ describe('help output snapshots', () => {
     expect(help).toContain('writes nothing');
     expect(help).toContain('--event-file <json-file-or-dash>');
     expect(help).toMatch(/or -\s+for standard input/);
+    expect(help).toContain('--format <format>');
+    expect(help).toMatch(/line \(one\s+journal run line, run\/v1\)/);
+    expect(help).toContain('--dispatch-stamp <line>');
     expect(help).not.toMatch(/launch/i);
+  });
+
+  it('project journal check --help documents the boundaries and read-only scope', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'project',
+      'journal',
+      'check',
+    ]).helpInformation();
+
+    expect(help).toContain('writes nothing');
+    expect(help).toContain('--project <path>');
+    expect(help).toContain('--at <boundary>');
+    expect(help).toMatch(/implement-preflight, review, or\s+completion/);
+    expect(help).toContain('--scope <phases>');
   });
 
   it('dispatch-ceiling resolve help documents the ephemeral named ceiling tier', () => {

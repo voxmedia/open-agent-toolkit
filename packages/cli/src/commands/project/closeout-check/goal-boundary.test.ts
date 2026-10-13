@@ -83,8 +83,13 @@ ${reviews}
 `;
 }
 
+// Accepted phases carry their **Head:** line and a completed journal its
+// terminal oat_status: complete-state also runs the final journal evaluator.
+const EARLIER_HEAD = 'e'.repeat(40);
+
 function journal(p03 = 'completed', p03Head = '-'): string {
   return `---
+oat_status: ${p03 === 'completed' ? 'complete' : 'in_progress'}
 oat_current_task_id: null
 ---
 
@@ -93,10 +98,12 @@ oat_current_task_id: null
 ## Phase p01: Research
 
 **Status:** completed
+**Head:** ${EARLIER_HEAD}
 
 ## Phase p02: Build
 
 **Status:** completed
+**Head:** ${EARLIER_HEAD}
 
 ## Phase p03: Correct
 

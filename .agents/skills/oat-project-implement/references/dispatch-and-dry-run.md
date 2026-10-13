@@ -138,8 +138,8 @@ a phase in the root during a Tier 1 run is different: subagents were available
 and approved, and the root took the work anyway. That is a deviation and must be
 recorded, but no child was accepted, so the generic dispatch record cannot carry
 it — that record is keyed on launch state the deviation does not have. Record it
-instead under a `Root-inline phase` heading placed beside the generic record at
-the same `$PROJECT_PATH/implementation.md#<run-anchor>`, giving the phase ID,
+instead as one `Root-inline phase:` line under `## Orchestration Runs` in
+`$PROJECT_PATH/implementation.md`, beside the run lines, giving the phase ID,
 the reason the root did not dispatch, and the model the root was running.
 
 **Tier lock:** tier is locked for the remainder of the run only after the
@@ -401,9 +401,14 @@ facts; producer stamps or self-report never overwrite configured invocation.
 All project-aware launch paths record the launch in the project's run record.
 Construct and redact the complete generic record plus OAT role event before the
 native host call; when the call returns `accepted` or `blocked-before-start`,
-write the request ID, the `Dispatch:` stamp, the launch status, and later the
-terminal outcome into the run record in `implementation.md`; that run record
-is the only launch record. The managed Claude validation-only
+render the run line with
+`oat project dispatch record --event-file <input> --format line --dispatch-stamp "<resolver dispatchStamp>"`
+and write it as one list item under `## Orchestration Runs` in
+`implementation.md`. After the terminal child outcome, re-render the line from
+the record that carries that outcome and replace the line with the same request
+ID in place. That one line per request ID (request ID, `Dispatch:` stamp,
+launch status, terminal outcome) is the run record and the only launch
+record; never paste the record or event JSON into the journal. The managed Claude validation-only
 `oat project dispatch record` call below is mandatory and writes nothing. A rejected
 launch must attest `provesNoChildStarted: true`; only it permits one
 exact-target approximation with a fresh request ID. Preserve exact model,

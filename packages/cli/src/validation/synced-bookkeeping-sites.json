@@ -301,7 +301,7 @@
   },
   {
     "file": ".agents/skills/oat-project-autonomous/SKILL.md",
-    "anchor": "  oat project push \"$PROJECT_PATH\" --message \"chore(oat): update autonomous execution learnings\"",
+    "anchor": "    oat project push \"$PROJECT_PATH\" --message \"chore(oat): record autonomous execution learning\"",
     "kind": "write",
     "guard": "project-scope"
   },

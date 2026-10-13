@@ -11,16 +11,20 @@ would otherwise remain in agent transcripts, then roll that evidence into
 tracked project and repository references before archiving the project.
 
 The command group is the only supported writer for the artifact. Do not edit
-entries or the synthesis section by hand.
+entries or the synthesis section by hand. A new log starts with a two-line
+header that links to this page; the entry contract lives here and in
+`oat project log append --help` rather than in every log.
 
 ## Configure project logs
 
-Two workflow keys control the feature:
+Four workflow keys control the feature:
 
-| Key                             | Values                   | Default                                       |
-| ------------------------------- | ------------------------ | --------------------------------------------- |
-| `workflow.projectLog`           | `auto`, `true`, `false`  | `auto`                                        |
-| `workflow.projectLogLedgerPath` | repository-relative path | `.oat/repo/reference/project-observations.md` |
+| Key                                    | Values                   | Default                                       |
+| -------------------------------------- | ------------------------ | --------------------------------------------- |
+| `workflow.projectLog`                  | `auto`, `true`, `false`  | `auto`                                        |
+| `workflow.projectLogLedgerPath`        | repository-relative path | `.oat/repo/reference/project-observations.md` |
+| `workflow.projectLogDigest.maxEntries` | positive integer         | `12`                                          |
+| `workflow.projectLogDigest.maxLines`   | positive integer         | `60`                                          |
 
 ```bash
 oat config set workflow.projectLog auto --shared
@@ -34,6 +38,12 @@ current config value.
 
 For one scaffold operation, `oat project new --with-project-log` forces
 creation and `--no-project-log` suppresses it.
+
+The two `workflow.projectLogDigest` keys bound the Workflow Observations digest
+that roll-up writes into `summary.md` (see
+[Promote and roll up observations](#promote-and-roll-up-observations)). They
+are siblings of `workflow.projectLog`, resolve independently of it, and accept
+only positive integers.
 
 ## Append entries
 
@@ -56,6 +66,48 @@ Judgment flags:
 - `--body <text>` — use `--body -` to read from stdin
 - `--version-note <text>` — adds an `observed on` clause
 - `--project <path>` — optional when an active project resolves
+
+### Learning entries
+
+A judgment entry can carry a learning category and a stable source identity.
+Autonomous, cloud and goal runs record their learnings this way, so the log is
+the one place learnings live; summary and retro read these entries first and a
+legacy `oat-execution-learnings.md` second.
+
+```bash
+oat project log append \
+  --project .oat/projects/shared/example \
+  --type friction --scope project --area "cloud cache misses" \
+  --category environment-limited \
+  --source obs-2026-10-11-cache \
+  --origin oat-project-autonomous \
+  --idempotency-key obs-2026-10-11-cache \
+  --body "Observation: the runner cache missed on every run. Impact: builds doubled. Recommendation: warm the cache in setup."
+```
+
+- `--category <category>` — one of `gotcha`, `efficiency`,
+  `documentation-gap`, `candidate-skill-content`, `decision`, or
+  `environment-limited`, carried verbatim. Any other value is refused, and
+  `--category` without `--source` is refused.
+- `--source <id>` — the stable per-observation source id, one word. Pass the
+  same id as `--idempotency-key` and a retried write appends nothing; the key
+  is found in the `**Source:**` line, so the body need not repeat it.
+- `--origin <producer>` — the producer that recorded the learning.
+
+These flags write a body head above the body:
+
+```text
+**Category:** environment-limited
+**Source:** obs-2026-10-11-cache
+**Origin:** oat-project-autonomous
+**Recorded:** 2026-10-11T14:03:22Z
+```
+
+The heading grammar and the four judgment types are unchanged, and an entry
+written without these flags is stored exactly as before. The flags are refused
+on structural entries.
+
+### Structural entries
 
 Structural entries record lifecycle events without duplicating larger
 artifacts:
@@ -185,7 +237,10 @@ oat project log check --project .oat/projects/shared/example --json
 
 `check` reports whether the log is absent, ready, or still awaiting synthesis;
 entry counts by class, type, and scope; the last entry date; and invalid
-hand-written headings. It reads only `project-log.md`.
+hand-written headings. It reads `project-log.md` and checks only for the
+presence of the legacy learnings file: `learnings` is `legacy` when the project
+still has `oat-execution-learnings.md` (summary and retro read it after the
+log) and `none` otherwise, in every status including `absent`.
 
 It also reports whether the log carries a completion seal:
 
@@ -253,16 +308,50 @@ oat project log rollup \
   --json
 ```
 
-`rollup` writes or updates `## Workflow Observations` in `summary.md` and
-appends `general` judgments to `workflow.projectLogLedgerPath`. Ledger entries
+`rollup` writes a bounded observations digest into `summary.md` and appends
+`general` judgments to `workflow.projectLogLedgerPath`. Ledger entries
 deduplicate by date and area. The command is idempotent.
+
+The digest is a projection, not a copy:
+
+- Only judgment entries qualify. Structural entries are provenance and stay in
+  the log; they are counted, never rendered.
+- Entries are ordered newest first, then `decision` and `gotcha` categories
+  ahead of the rest, then by heading text, and taken while both bounds hold:
+  at most `workflow.projectLogDigest.maxEntries` items and at most
+  `workflow.projectLogDigest.maxLines` lines for the whole section. Entries
+  beyond the bound are counted in a one-line trailer, never copied.
+- Each item is concise: a line with date, type, area, scope, category and the
+  entry's source locator, then the first observation sentence and any
+  limitation or uncertainty line. A recommendation is rendered only for an
+  uncategorized entry; a categorized learning's recommendation belongs to the
+  summary's Autonomous Execution Learnings section, and the digest adds a
+  one-line cross-reference to it.
+- The locator is a plain token, never a link:
+  `oat-project:<slug>#<entry-id>`, where the entry id is
+  `<date>-<type>-<area slug>-<n>` and `n` counts entries sharing that date,
+  type and area slug in log order. Archive export finalizes the token to the
+  archive identity.
+- Live `.oat/projects/<scope>/<slug>/…` paths in rendered text are replaced by
+  a `(project file …)` label that keeps the project-relative remainder.
+- When no judgment entry qualifies, the section is omitted: an existing
+  Workflow Observations section is removed and none is created.
+
+The digest never feeds the ledger. Ledger graduation reads the complete
+judgment set, so a `general` lesson the digest bound left out still graduates.
 
 The structured result contains:
 
 - `status`: `ok`, `failed`, or `ambiguous`
-- `summarySection`: `written` or `updated`
+- `summarySection`: `written`, `updated`, or `omitted`
 - `ledgerOutcome`: `appended`, `deduplicated`, `skipped_permitted`, or `failed`
-- `entriesRolledUp`: number of log entries written to the summary section
+- `entriesRolledUp`: number of log entries read, structural and judgment
+- `digest`: the bounds used (`maxEntries`, `maxLines`), the `rendered` count,
+  `omitted` counts (`overBound`, `structural`, and `malformed` for a heading
+  that matches neither grammar and was skipped individually),
+  `omittedEntries` (the locator tokens of over-bound entries, no bodies), and
+  `byProducer` rendered/omitted counts keyed by a judgment's `**Origin:**` (or
+  `unattributed`) or a structural entry's producer
 
 An `ambiguous` result carries only `status` and an `ambiguity` reason, and exits
 1: the log's structure has two readings, so no count would mean anything and

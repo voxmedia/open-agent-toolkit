@@ -6,6 +6,26 @@ export {
   recordLineMask,
 } from './state/quick-plan-readiness';
 export {
+  classifyMetadataField,
+  normalizeTaskId,
+  parsePhaseHeadingLine,
+  parseTaskHeadingLine,
+  readFrontmatterMetadata,
+  readJournalRecords,
+} from './state/journal-records';
+export type {
+  FrontmatterMetadata,
+  JournalHeadingRecord,
+  JournalRecords,
+  JournalSectionRecord,
+  JournalTaskRecord,
+  MetadataField,
+  NormalizedTaskId,
+  OwnedLine,
+  PhaseHeading,
+  TaskHeading,
+} from './state/journal-records';
+export {
   normalizePhaseId,
   parsePhaseMarkers,
   parseProvisionalPhaseIds,

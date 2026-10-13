@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.6.11
+  version: 1.6.12
 ---
 
 # Receive Review
@@ -365,7 +365,7 @@ Read `oat_review_type` and `oat_review_invocation` from review artifact frontmat
   - **Judgment-sweep mode.** The phase gate already passed at its `exit_nonzero_on` threshold, so the phase does not stop. Consume the artifact anyway, so its sub-threshold findings become durable, ordered dispositions in `implementation.md` instead of evaporating. Fully non-pausing; no user prompts.
     - The gate verdict decided whether the phase stops; it did **not** decide whether Medium/Low findings are ignored. There are, by definition, no unresolved Critical/High findings in a passing gate (if there were, the gate would have blocked).
     - Make a per-finding **judgment call** for each Medium/Low — do not mechanically dump them all:
-      - **Defer to final** (default): record under "Deferred Findings" (Mediums under "Deferred Findings (Medium)" so Step 8.5 resurfacing picks them up) with concrete rationale.
+      - **Defer to final** (default): record one line under the journal's `## Deferred Findings` section (Mediums tagged `Medium` so Step 8.5 resurfacing picks them up) with the finding ID and substance and concrete rationale.
       - **Address now:** only for small, contained, low-risk fixes. Apply the fix, commit it with the phase bookkeeping, and record the disposition. Do **not** re-run the standard reviewer or re-gate the phase for address-now fixes.
       - **Reject** as false-positive / out-of-scope, with concrete rationale.
     - `address now` is an **exception, not the norm** — when in doubt, defer. Do not let a passing gate drift into behaving like a Medium-blocking gate by habit.
@@ -662,34 +662,48 @@ moves to `passed`, citing the revision review in the implementation note.
 
 ### Step 7: Update Implementation.md
 
-Add a note to implementation.md:
+Write one receipt per received review. Placement is fixed:
+
+- a phase-scoped review (`pNN`): inside that phase's section of
+  `implementation.md`, after its task blocks and before the next `##` heading;
+- a revision-phase review (`p-revN`): inside the `## Phase p-revN` section that
+  `oat-project-revise` creates (never in the phase it corrects), or under
+  `## Reviews and Gates`;
+- a task-scoped review (`pNN-tNN`, `prevN-tNN`): inside that task's phase
+  section, after its task blocks;
+- a final, multi-phase (`pNN-pMM`), milestone or spec/design/plan review: under
+  `## Reviews and Gates`;
+- never after `## References`, which stays the journal's last section.
+
+The receipt carries everything a reader needs without the review file, which
+is a local-only citation (reviews are not archived, so an unresolved review
+path is never a completion defect):
 
 ```markdown
 ### Review Received: {scope}
 
 **Date:** {today}
-**Review artifact:** reviews/archived/$REVIEW_FILENAME
+**Review artifact (local-only):** reviews/archived/$REVIEW_FILENAME
 
-**Findings:**
+**Findings:** Critical {N} · High {N} · Medium {N} · Low {N}
 
-- Critical: {N}
-- High: {N}
-- Medium: {N}
-- Low: {N}
-
-**New tasks added:** {task_ids}
+- {finding_id} ({severity}): {one-line substance} → {disposition: fix task {task_id} | approved deferral (see Deferred Findings) | rejected | accepted drift}; {rationale}
 
 **Design drift / artifact alignment notes:**
 
 - {finding_id}: {review found stale design/spec/plan relative to shipped implementation; why the implementation is accepted; source of truth; artifact-alignment task ID or explicit deferral}
 
-**Next:** Execute fix tasks via the `oat-project-implement` skill.
+**Outcome:** {fixes queued: {task_ids} | passed | deferred items only}
+```
+
+Each approved deferral is also one line under `## Deferred Findings`, and each
+fix task is a plan task whose journal block lands in its phase as usual.
 
 After the fix tasks are complete:
 
 - Update this same artifact-identified review event to `fixes_completed`
 - Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
-```
+- Update the receipt's **Outcome** line in place when the re-review passes
 
 **Restart safety (required):**
 
@@ -699,7 +713,7 @@ After the fix tasks are complete:
   - If any finding is resolved by accepting the shipped implementation and aligning stale artifacts instead of changing code, add an explicit review note under the current "Review Received" section and update `## Deviations from Plan / Design` when that table exists.
     - For existing project artifacts, treat any `## Deviations...` heading as the deviations section; migrate to the preferred `## Deviations from Plan / Design` heading and table shape when already touching the section.
     - The note must say the review found design/spec/plan drift, why the shipped implementation is accepted, which source is now authoritative, and which artifact-alignment task will update the stale artifact.
-    - If the artifact update is intentionally deferred, record the deferral rationale and follow-up trigger in `implementation.md`.
+    - If the artifact update is intentionally deferred, record the deferral rationale and follow-up trigger as a line under `## Deferred Findings` in `implementation.md`.
   - Update `{PROJECT_PATH}/state.md` frontmatter so routing/UI is accurate:
     - `oat_phase: implement`
     - `oat_phase_status: in_progress`
@@ -786,7 +800,7 @@ Before showing the menu, dispatch the complexity review that
 `references/docs/complexity-review-fallback.md` defines for this scope's
 exhausted loop, then show its decision message with the menu below; under
 `OAT_AUTONOMOUS=1`, put the same content in the boundary report instead.
-Record the operator's choice with the report path in `implementation.md`.
+Record the operator's choice with the report path as one line under `## Reviews and Gates` in `implementation.md`.
 Agents never select the disposition. The loop history in the brief includes
 this scope's gate-originated artifacts even though the count excludes them. To
 launch the review, load the current `oat-project-dispatch-subagents/SKILL.md`
@@ -818,7 +832,7 @@ Choose an option:
 
 If `scope == final`, resurface previously deferred Medium findings from prior review cycles before marking final as `passed`.
 
-- Source of truth: `implementation.md` review notes ("Deferred Findings"), plus prior review artifacts in `reviews/archived/` (and any still-active top-level `reviews/` file for the current cycle).
+- Source of truth: the `## Deferred Findings` lines in `implementation.md` (older journals: review notes headed "Deferred Findings"), plus prior review artifacts in `reviews/archived/` when they are still on this machine (and any still-active top-level `reviews/` file for the current cycle). Review files are local-only: the journal line must stand without them.
 - Build a "Deferred Medium Ledger" with each item and current disposition state.
 
 Ask user to decide each deferred Medium:
@@ -830,7 +844,7 @@ Rules:
 
 - Do not silently keep deferred Mediums in final scope.
 - If any deferred Medium remains undecided, final review cannot be marked `passed`.
-- Record user decisions + rationale in `implementation.md` under the final review notes.
+- Record user decisions + rationale on each item's `## Deferred Findings` line, and the summary in the final receipt under `## Reviews and Gates`.
 
 ### Step 9: Handle Medium Deferral Requests and Low Findings
 
@@ -842,7 +856,7 @@ If any Medium is proposed for deferral:
 
 - Ask user explicitly for approval per finding.
 - If user declines deferral, convert that Medium to a fix task now.
-- If user approves deferral, record rationale in `implementation.md` under "Deferred Findings (Medium)".
+- If user approves deferral, record one line under `## Deferred Findings` in `implementation.md`: severity `Medium`, finding ID and substance, rationale, who approved, and the follow-up trigger.
 
 Design drift handling applies before Medium/Low convenience deferrals:
 

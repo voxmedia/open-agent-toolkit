@@ -11,6 +11,8 @@ import { Command } from 'commander';
 
 import { createCanonicalRoleCommand } from './canonical-role';
 import {
+  assertFormalDispatchStamp,
+  projectDispatchRunLine,
   recordProjectDispatch,
   redactDispatchMessage,
   type DispatchRecordRuntimeIdentity,
@@ -18,7 +20,11 @@ import {
 
 interface DispatchRecordCommandOptions {
   eventFile: string;
+  format?: string;
+  dispatchStamp?: string;
 }
+
+const RECORD_FORMATS = ['text', 'line'] as const;
 
 export interface ProjectDispatchCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -89,6 +95,12 @@ async function runRecordCommand(
 ): Promise<void> {
   let repoRoot: string | null = null;
   try {
+    const format = options.format ?? 'text';
+    if (!(RECORD_FORMATS as readonly string[]).includes(format)) {
+      throw new Error(
+        `Unknown --format ${format}; expected one of ${RECORD_FORMATS.join(', ')}.`,
+      );
+    }
     repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const content =
       options.eventFile === '-'
@@ -114,8 +126,23 @@ async function runRecordCommand(
               }),
       },
     };
+    // The stamp is caller-supplied text, so it passes the same redaction
+    // boundary before it can reach the projection.
+    const dispatchStamp =
+      options.dispatchStamp === undefined
+        ? null
+        : redactDispatchMessage(options.dispatchStamp, {
+            repo: repoRoot,
+            home: context.home,
+          });
+    if (dispatchStamp !== null) {
+      assertFormalDispatchStamp(dispatchStamp);
+    }
+    const runLine = projectDispatchRunLine(result, { dispatchStamp });
     if (context.json) {
-      context.logger.json(result);
+      context.logger.json({ ...result, runLine });
+    } else if (format === 'line') {
+      context.logger.info(runLine.line);
     } else {
       context.logger.info('Dispatch evidence is valid; nothing was written.');
       for (const line of runtimeIdentityLines(result.runtimeIdentity)) {
@@ -152,6 +179,14 @@ export function createProjectDispatchCommand(
         .requiredOption(
           '--event-file <json-file-or-dash>',
           'Complete record and event JSON file, or - for standard input',
+        )
+        .option(
+          '--format <format>',
+          'Text output: text (default) or line (one journal run line, run/v1)',
+        )
+        .option(
+          '--dispatch-stamp <line>',
+          'Formal "Dispatch:" stamp copied verbatim from the resolver into the run line',
         )
         .action(
           async (

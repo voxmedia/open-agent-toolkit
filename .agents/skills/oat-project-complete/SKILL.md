@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.17
+  version: 1.7.18
 ---
 
 # Complete Project
@@ -404,6 +404,11 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
   endpoint); `summary.md` is `stale` when its `oat_summary_phase_fingerprint`
   is absent or differs from the recomputed value and `current` when they
   match. `oat_summary_last_task` is not consulted for a brief or goal project.
+- In every workflow mode, also recompute `summary_learnings_fingerprint` with
+  the `oat-project-summary` Step 3 function and compare it with
+  `oat_summary_learnings_fingerprint`. A mismatch, or a missing
+  `oat_summary_learnings_fingerprint` field, makes `summary.md` `stale` on its
+  own, whatever the task, revision or phase tracking says.
 
 Preflight `{PROJECT_PATH}/references/project-retro.md` alongside the summary.
 The safety-net offer is governed by how this completion run executes, not by how
@@ -464,15 +469,15 @@ If `oat_pr_url` is present, show it in the completion summary.
 
 ### Step 3: Check Completion Gates
 
-#### 3.0: Phase Status Permissiveness
+#### 3.0: Phase Status at Completion
 
-Read `oat_phase_status` from `state.md` frontmatter and handle permissively:
+Read `oat_phase_status` from `state.md` frontmatter and route on it:
 
 - **`pr_open`:** Proceed normally. This is the expected entry point after `oat-project-pr-final`.
 - **`complete`:** Proceed normally. Implementation is done.
-- **`in_progress`:** Note: "Project is still in progress. Completing anyway." — proceed without additional confirmation.
+- **`in_progress`:** Stop and route back to `oat-project-implement`. At completion the journal and `state.md` must agree: the Step 3.55 journal check and `oat project complete-state` refuse `state-status-disagrees` for `oat_phase_status: in_progress`. Status disagreement is not an override-eligible gap, so no override line can complete it; finish implementation (its Step 16 writes the terminal headers) and run completion again.
 
-All three are valid starting states for completion. Do not block on any phase status value. The Step 1.5 closeout invariant gate still applies to every phase status.
+`pr_open` and `complete` are the valid starting states for completion. The Step 1.5 closeout invariant gate still applies to both.
 
 #### 3.1: Final Review Status
 
@@ -510,7 +515,10 @@ IMPL_FILE="${PROJECT_PATH}/implementation.md"
 
 if [[ -f "$IMPL_FILE" ]]; then
   medium_items=$(awk '
-    BEGIN { in_medium = 0 }
+    BEGIN { in_medium = 0; in_slot = 0 }
+    /^## Deferred Findings[[:space:]]*$/ { in_slot = 1; next }
+    /^## / { in_slot = 0 }
+    in_slot && /^[[:space:]]*-[[:space:]]+/ && /Medium/ { print; next }
     /^\*\*Deferred Findings \(Medium\):\*\*/ { in_medium = 1; next }
     /^\*\*Deferred Findings \(Medium\/Minor\):\*\*/ { in_medium = 1; next }
     in_medium && /^\*\*/ { in_medium = 0; next }
@@ -570,9 +578,9 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
 
 Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against the implementation state:
 
-- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.
+- If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing, as a **staged** invocation: state `staged: true` so the summary skill writes only its `summary.md` sections and freshness frontmatter, records any selected promotions without appending them, and suspends before its Step 6 roll-up. Record `SUMMARY_STAGED="true"`; Step 3.7 sends `resume: roll-up` only after Step 3.55's final journal check succeeds.
 - When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it; never synthesize the summary from a remembered version of that skill.
-- If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing).
+- If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing). The inline fallback honors the same suspension point: it writes no project-log append, roll-up, ledger write or promotion before `resume: roll-up`.
 - Do not assume `oat-project-summary` is a shell command on `PATH`. Only execute a shell command with that name if the environment explicitly provides a real executable.
 - If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="false"`, emit: `Warning: Proceeding without summary generation.`
 - If summary generation succeeds, proceed with the refreshed `summary.md` available for PR and archive steps.
@@ -580,6 +588,52 @@ Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against th
 - If `summary.md` already exists and is current, note it as available. Summary.md will be:
   - Used as source for the PR description (in Step 7)
   - Preserved in the archived project directory (in Step 8)
+
+### Step 3.55: Terminal Prose and Final Journal Validation
+
+Run this step on every completion, after the summary refresh and before any
+roll-up, promotion append, seal, archive or lifecycle write.
+
+**Terminal prose refresh.** Rewrite only the journal's
+`## Final Summary (for PR/docs)` and `summary.md` prose from observed facts:
+present-tense status that the journal and `state.md` now contradict ("PR
+pending", "phase in progress") is rewritten; real follow-ups and timestamped
+historical observations stay. Never rewrite task blocks, receipts, completed
+synthesis, or project-log entries: a wrong log judgment is corrected by
+appending a source-linked correction before the seal. A mechanical pointer or
+projection refresh (overview totals, resume pointers, a run line re-render)
+creates no task; a substantive evidence correction stays traceable work.
+
+**Final journal check.**
+
+```bash
+JOURNAL_CHECK_EXIT=0
+JOURNAL_CHECK_JSON=$(oat project journal check --project "$PROJECT_PATH" --at completion --json) || JOURNAL_CHECK_EXIT=$?
+```
+
+Continue only when `status` is `ok`. On `refused` (or a command error), stop
+completion: report each reason's `code`, `path:line` and `owner`, and route the
+correction to that owner. The prose refresh above may remain; nothing else
+happens: no `resume: roll-up`, no deferred promotion append, no roll-up, no
+ledger graduation, no seal, no archive or export, and no lifecycle write.
+
+**Overrides.** When every remaining reason is an overridable gap (a missing
+task block, an incomplete task, missing commit evidence, or an unaccepted
+phase) and the user authorizes an override with a decision identity, record it
+as exactly one line under `## Deviations from Plan / Design`:
+
+```markdown
+**Override:** <scope-disposition-approved|evidence-lost|operator-accepted-gap> · **Authorized by:** <decision id> · **Scope:** <pNN-tNN|pNN> · <reason>
+```
+
+Write it idempotently: when a line with the same code, scope and decision id
+already exists, write nothing. When the project log is enabled and not sealed,
+also append one structural entry for it
+(`oat project log append --structural --producer oat-project-complete --ref override --idempotency-key "oat-override:<code>:<scope>:<decision id>" --body "... oat-override:<code>:<scope>:<decision id>"`)
+before any seal. Commit both, then run the journal check again. Under
+`OAT_AUTONOMOUS=1` never author an override: refuse and report. No override
+bypasses the closeout invariant, the goal audit, delivery coverage, the
+project-log ambiguity refusal or the seal guards.
 
 ### Step 3.5.5: Retro Safety-Net
 
@@ -898,6 +952,12 @@ Skip this roll-up entirely when the probe reported `sealed: true`; a sealed log
 has already been rolled up and sealed, and the seal must remain its final
 entry.
 
+When `SUMMARY_STAGED="true"`, send the suspended summary run `resume: roll-up`
+now, after Step 3.55's journal check returned `ok`: it performs its deferred
+promotion appends first and then its Step 6 roll-up, and that roll-up result is
+the one reused below. A staged run is resumed only here, never after a refused
+journal check.
+
 For an unsealed log with entries, reuse the summary flow's structured roll-up
 result only
 when this completion run has that exact result in memory and it reports
@@ -1011,8 +1071,15 @@ oat project complete-state "${COMPLETE_STATE_ARGS[@]}"
 
 Re-run the closeout check immediately before `complete-state`, because the
 Step 3 gates ran children that can change `state.md`. `complete-state`
-evaluates the same invariant and refuses an incomplete closeout without
+evaluates the same invariant and the final journal evaluator (the Step 3.55
+check, on the bytes it is about to complete) and refuses either without
 writing.
+
+After `complete-state` succeeds and before any archive, record when the PR
+fields were observed: set `oat_pr_status_observed_at: '<UTC ISO 8601 now>'` in
+`state.md` frontmatter beside `oat_pr_status` (only when `oat_pr_status` is not
+`null`). An archived `oat_pr_status`/`oat_pr_url` is an observation at that
+time, not a live PR state.
 
 For `synced`, keep this finalized lifecycle state in the project checkout until
 Step 7.5 publishes it together with every later pre-archive artifact write. Do
@@ -1122,6 +1189,36 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
   the date or project name.
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
+
+**Carry the PR body across the archive (archive completion only).** Step 8
+copies the project into an archive that never retains `pr/` (review and PR
+evidence are not archived) and then removes the active project, so after Step 8
+the PR-description artifact exists nowhere on disk. Once the artifact above is
+final and before Step 8 runs, copy its frontmatter-stripped body to a
+run-scoped temporary file recorded as `PR_BODY_FILE`:
+
+```bash
+PR_BODY_FILE=""
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
+  test -f "$PR_DESCRIPTION_PATH" || exit 1
+  PR_BODY_FILE=$(mktemp "${TMPDIR:-/tmp}/oat-pr-body.XXXXXX") || exit 1
+  awk 'NR == 1 && $0 == "---" { in_frontmatter = 1; next }
+    in_frontmatter { if ($0 == "---") in_frontmatter = 0; next }
+    !started && /^[[:space:]]*$/ { next }
+    { started = 1; print }' "$PR_DESCRIPTION_PATH" > "$PR_BODY_FILE" || exit 1
+  head -n 1 "$PR_BODY_FILE" | grep -q '^# ' || {
+    echo "The PR body carried from $PR_DESCRIPTION_PATH does not start with a markdown heading; refusing to archive." >&2
+    exit 1
+  }
+fi
+```
+
+Every later read or edit of an archive completion's PR body uses
+`PR_BODY_FILE`: the Step 8 recap-link rewrite, the Step 8.6 links block, and
+Steps 11 and 11.5. Never read `pr/` from `ARCHIVE_PATH`. A resumed archive run
+(`SHARED_ARCHIVE_RESUME="true"` or `SYNCED_ARCHIVE_RESUME="true"`) skips this
+step, so it carries no body: treat an unset `PR_BODY_FILE` as empty
+(`${PR_BODY_FILE:-}`). Non-archive completion keeps `PR_DESCRIPTION_PATH`.
 
 #### Step 7.5: Publish Synced Project Pin Source
 
@@ -1310,9 +1407,10 @@ Rewrite recap links in the tracked summary export and the PR description body fr
 Use a repository-relative path under
 `.oat/repo/reference/project-recaps/` and a blob URL on the current head branch
 while the PR is open. If `summaryExportFile` is non-null, update its concise
-`Explainer Outcome` recap link. Update the archived PR-description artifact
+`Explainer Outcome` recap link. Update the carried PR body (`PR_BODY_FILE`)
 used by Step 11 or 11.5 so its recap reference points to the same tracked HTML page.
-Omit either link when its containing artifact does not exist.
+Omit either link when its containing artifact does not exist (an empty
+`PR_BODY_FILE` on a resumed archive run).
 
 Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
@@ -1325,8 +1423,12 @@ Run this for every synced completion after the final project ref or archive SHA
 is known. It is required even when no project recap was selected and
 `summaryExportFile` is null.
 
-Locate the PR-description artifact under the current `PROJECT_PATH` (which is
-the archive path after Step 8). Render the canonical pinned block:
+Render into the PR body this run publishes. For archive completion that is the
+carried `PR_BODY_FILE` from Step 7 (the archive keeps no `pr/`, so never look
+under `ARCHIVE_PATH`); when `PR_BODY_FILE` is empty on a resumed archive run,
+skip the insertion and let Step 11.5 report the skipped sync. For non-archive
+synced completion it is the active PR-description artifact. Render the
+canonical pinned block:
 
 ```bash
 FINAL_LINK_ARGS=("$PROJECT_NAME" --format markdown)
@@ -1438,7 +1540,9 @@ Expected changes may include:
 - `{PROJECT_PATH}/state.md`
 - `{PROJECT_PATH}/implementation.md` (if touched earlier in the lifecycle closeout)
 - `{PROJECT_PATH}/plan.md` (if review receive just ran)
-- `{PROJECT_PATH}/pr/project-pr-*.md` (PR description artifact)
+- `PR_DESCRIPTION_PATH` (the active PR description artifact, non-archive
+  completion only; an archive completion carries the body in `PR_BODY_FILE`
+  and the archive keeps no `pr/`)
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions; synced archive record deletion is already sealed by
@@ -1519,8 +1623,10 @@ The local artifact file contains YAML frontmatter (`---` delimited block at the 
 
 Steps:
 
-1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`.
-2. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
+1. For archive completion, use the carried body: `TMP_BODY="$PR_BODY_FILE"`
+   (Step 7 already stripped and verified it). Otherwise locate the PR
+   description artifact at `PR_DESCRIPTION_PATH`.
+2. For the non-archive artifact, write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
 4. Create the PR from the branch already pushed in Step 10:
 
@@ -1528,7 +1634,9 @@ Steps:
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
 
-5. Clean up the temp file.
+5. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
+   When `gh` is missing or `gh pr create` fails, keep it and report its path
+   in Step 12.
 
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
 
@@ -1553,8 +1661,14 @@ Skip this step when:
 
 Steps:
 
-1. Locate the exact PR description artifact. After archive, use
-   `{ARCHIVE_PATH}/pr/project-pr-*.md`. For non-archive synced completion, use
+1. Locate the exact PR description body. After archive, use the carried body:
+   `TMP_BODY="$PR_BODY_FILE"` (Step 7 already stripped and verified it; skip
+   step 2). The archive keeps no `pr/`, so never read `{ARCHIVE_PATH}/pr/`.
+   When `${PR_BODY_FILE:-}` is empty after an archive, the run resumed an
+   archive whose regenerated body was not carried across the interruption: do
+   not fail; skip steps 2 through 5 and print
+   `PR description not synced: this resumed archive run carries no archive-aware body; update the tracked PR description manually.`
+   For non-archive synced completion, use
    `PR_DESCRIPTION_PATH`, require the retained remote ref to contain
    `PROJECT_REF_COMMIT`, and require
    `git show "$PROJECT_REF_COMMIT:$PR_DESCRIPTION_RELATIVE_PATH"` to equal the
@@ -1587,15 +1701,18 @@ Steps:
    fi
    ```
 
-5. Clean up the temp file.
+5. Clean up the temp file, including `PR_BODY_FILE`, once the PR body is
+   updated. When the update failed, keep it for the manual update.
 
 Failure handling:
 
 - If `gh` is missing or `gh pr edit` fails, always print the manual-update path.
-  For a synced archive completion this tracked-PR update is required: stop
-  before Step 12, retain the active pointer, and let the next invocation resume
-  recordlessly. Other completion shapes retain their existing warning-only
-  behavior and Step 12 summary guidance.
+  For a synced archive completion, stop before Step 12 and retain the active
+  pointer; the failed run keeps `PR_BODY_FILE` and prints its path. The next
+  invocation resumes recordlessly without a carried body, so it reports the
+  skipped sync (Step 12) rather than retrying the update: apply the retained
+  body to the tracked PR by hand. Other completion shapes retain their existing
+  warning-only behavior and Step 12 summary guidance.
 - A shared archive completion also reaches this step with the pointer still
   retained, but its sync failure stays warning-only. Its shared-scope resume
   goes straight to the Step 12 clear and would not retry this PR update, so
@@ -1649,4 +1766,4 @@ Show user:
   already sealed — and it stays a report, never a completion failure.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
-- If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.
+- If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`), that it was skipped because a resumed archive run carried no body, or warn that the sync failed and surface the retained body path (`PR_BODY_FILE` for archive completion) so the user can update it manually.

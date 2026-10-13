@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,7 +11,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { appendProjectLog } from './append';
-import { checkProjectLog } from './check';
+import { checkProjectLog, parseProjectLogEntries } from './check';
 import { createProjectLogCommand } from './index';
 
 function createHarness(cwd: string): {
@@ -138,6 +138,7 @@ Synthesis content.
       lastEntryDate: null,
       synthesisPending: false,
       grammarViolations: [],
+      learnings: 'none',
     });
     expect(process.exitCode).toBe(0);
   });
@@ -460,9 +461,149 @@ Completion sealed. oat-seal:demo`),
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'absent',
       grammarViolations: [],
+      learnings: 'legacy',
     });
     expect(capture.warn).toEqual([]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a legacy learnings file beside a present log, and none without one', async () => {
+    const { root, projectPath, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent('### 2026-07-17 · project · feedback · lifecycle\n\nUseful.'),
+      'utf8',
+    );
+
+    const without = createHarness(root);
+    await runCommand(without.command);
+    expect(without.capture.jsonPayloads[0]).toMatchObject({
+      status: 'synthesis_pending',
+      learnings: 'none',
+    });
+
+    await writeFile(
+      join(projectPath, 'oat-execution-learnings.md'),
+      '# Learnings\n',
+      'utf8',
+    );
+    const withLegacy = createHarness(root);
+    await runCommand(withLegacy.command);
+    expect(withLegacy.capture.jsonPayloads[0]).toMatchObject({
+      status: 'synthesis_pending',
+      learnings: 'legacy',
+    });
+
+    const human = createHarness(root);
+    await runCommand(human.command, [], []);
+    expect(human.capture.info.join('\n')).toContain('; learnings: legacy');
+  });
+
+  describe('judgment body head', () => {
+    it('exposes category, source, origin and recorded from the head', () => {
+      const parsed = parseProjectLogEntries(
+        logContent(`### 2026-07-17 · project · feedback · docs
+
+**Category:** documentation-gap
+**Source:** obs-7
+**Origin:** oat-cursor-cloud-projects
+**Recorded:** 2026-07-17T12:00:00Z
+
+Observation: the page omits the flag.`),
+      );
+
+      expect(parsed.entries[0]).toEqual({
+        class: 'judgment',
+        heading: '### 2026-07-17 · project · feedback · docs',
+        date: '2026-07-17',
+        scope: 'project',
+        type: 'feedback',
+        area: 'docs',
+        body: '**Category:** documentation-gap\n**Source:** obs-7\n**Origin:** oat-cursor-cloud-projects\n**Recorded:** 2026-07-17T12:00:00Z\n\nObservation: the page omits the flag.',
+        category: 'documentation-gap',
+        source: 'obs-7',
+        origin: 'oat-cursor-cloud-projects',
+        recorded: '2026-07-17T12:00:00Z',
+      });
+    });
+
+    it('does not report a hand-written category outside the six, or a head line below the body start', () => {
+      const parsed = parseProjectLogEntries(
+        logContent(`### 2026-07-17 · project · friction · a
+
+**Category:** bogus
+**Source:** obs-1
+
+Body.
+
+### 2026-07-17 · project · friction · b
+
+Body first.
+**Category:** gotcha`),
+      );
+
+      expect(parsed.entries[0]).toMatchObject({ source: 'obs-1' });
+      expect(parsed.entries[0]).not.toHaveProperty('category');
+      expect(parsed.entries[1]).not.toHaveProperty('category');
+      expect(parsed.entries[1]).not.toHaveProperty('source');
+    });
+  });
+
+  // Compatibility: a real archived log parses to the same entries it always did.
+  describe('real archived log fixture (lite-workflow-mode)', () => {
+    const fixturePath = join(
+      import.meta.dirname,
+      '__tests__',
+      'fixtures',
+      'lite-workflow-mode-project-log.md',
+    );
+
+    it('parses every entry with the pre-head shape and reports the seal', async () => {
+      const content = await readFile(fixturePath, 'utf8');
+      const parsed = parseProjectLogEntries(content);
+
+      expect(parsed.grammarViolations).toEqual([]);
+      expect(parsed.entries).toHaveLength(10);
+      for (const entry of parsed.entries) {
+        expect(Object.keys(entry).sort()).toEqual(
+          ['body', 'class', 'date', 'heading', 'producer', 'ref'].sort(),
+        );
+      }
+      expect(parsed.entries[0]).toEqual({
+        class: 'structural',
+        heading: '### 2026-09-04 · structural · oat gate review · plan',
+        date: '2026-09-04',
+        producer: 'oat gate review',
+        ref: 'plan',
+        body: 'target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:3,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/lite-workflow-mode/reviews/artifact-plan-review-2026-09-04T231105Z.md',
+      });
+      expect(parsed.entries.at(-1)).toEqual({
+        class: 'structural',
+        heading: '### 2026-09-07 · structural · oat-project-complete · seal',
+        date: '2026-09-07',
+        producer: 'oat-project-complete',
+        ref: 'seal',
+        body: 'Completion sealed at 2026-09-07T03:52:36Z; project-log roll-up status: ok.',
+      });
+    });
+
+    it('checks as a sealed log with no legacy learnings', async () => {
+      const { root, logPath } = await createRepo();
+      await writeFile(logPath, await readFile(fixturePath, 'utf8'), 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        sealed: true,
+        entryCounts: { structural: 10 },
+        scopeCounts: { project: 0, general: 0 },
+        lastEntryDate: '2026-09-07',
+        grammarViolations: [],
+        learnings: 'none',
+      });
+    });
   });
 
   describe('non-line-feed terminators are not section boundaries', () => {

@@ -117,8 +117,12 @@ function expectExhaustionPointer(raw: string, name: string): void {
     dispatch!.index,
     `${name} dispatches before the boundary report`,
   ).toBeLessThan(boundary);
+  // Journal writers record the choice in the fixed `## Reviews and Gates`
+  // slot; the plan-phase quick-start gate keeps its plain journal reference.
   expect(section, `${name} records the choice with the report path`).toMatch(
-    /record the operator's choice with the report path in `implementation\.md`/i,
+    name.startsWith('quick-start')
+      ? /record the operator's choice with the report path in `implementation\.md`/i
+      : /record the operator's choice with the report path as one line under `## Reviews and Gates` in `implementation\.md`/i,
   );
   expect(section, `${name} forbids agent-selected dispositions`).toMatch(
     /Agents never select the disposition/,

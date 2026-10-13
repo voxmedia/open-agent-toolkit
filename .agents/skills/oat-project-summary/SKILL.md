@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat template:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.10
+  version: 1.5.11
 ---
 
 # Project Summary
@@ -88,6 +88,31 @@ writing prose artifacts does not imply unrelated full test suites.
 
 ## Process
 
+### Staged Invocation
+
+Staged invocation: the caller states `staged: true`; the summary skill completes Steps 0–5, writes frontmatter, and stops; the caller later states `resume: roll-up` to run Step 6 onward; standalone invocations run straight through.
+
+In a staged run:
+
+- Step 2.5 performs only the read-only `oat project log check` and identifies
+  promotion candidates. Offer them and record the selection under the same
+  promotion consent rule as a standalone run, but append nothing yet.
+- Before suspending, write only `summary.md` sections and their freshness
+  frontmatter: no project-log append, roll-up, ledger write, decision
+  promotion or commit. Suspend with a report that names each selected
+  promotion by the original entry's exact heading.
+- The caller sends `resume: roll-up` only after its final journal validation
+  succeeds. On resume, first perform the deferred `project` → `general`
+  appends exactly as Step 2.5 describes (setting
+  `PROJECT_LOG_PROMOTION_APPENDED`), then run Step 6 onward, so the roll-up's
+  ledger graduation reads the complete judgment set including the promotions.
+- A staged run that is never resumed has written nothing beyond `summary.md`.
+
+Standalone behavior, the seal and ambiguity routing in Step 2.5 and the
+promotion consent rule are unchanged. An inline fallback that follows this
+skill without loading it (`oat-project-complete` Step 3.5) stops at the same
+suspension point.
+
 ### Step 0: Resolve Active Project
 
 OAT stores active project context in `.oat/config.local.json` (`activeProject`, local-only).
@@ -167,14 +192,17 @@ For every other workflow mode, read all available artifacts for synthesis:
 - `"$PROJECT_PATH/implementation.md"` — task outcomes, deviations, challenges, review notes
 - `"$PROJECT_PATH/state.md"` — associated issues, workflow mode
 - `"$PROJECT_PATH/project-log.md"` — optional append-only workflow
-  observations; never hand-edit
-- `"$PROJECT_PATH/oat-execution-learnings.md"` — optional append-only
-  autonomous-run observations and recommendations
+  observations; never hand-edit. Judgment entries whose body opens with a
+  `**Category:**` head are the project's learnings; read them first
+- `"$PROJECT_PATH/oat-execution-learnings.md"` — optional legacy learnings
+  file written before the log carried categories; read it second and never
+  write it
 
 **Priority for content:** Implementation.md outcomes take precedence over design.md plans. Summary should reflect what actually happened, not what was planned.
 
-If `oat-execution-learnings.md` is absent, do not infer autonomous learnings
-from other artifacts and do not add an Autonomous Execution Learnings section.
+If the project log has no category-bearing judgment entry and
+`oat-execution-learnings.md` is absent, do not infer autonomous learnings from
+other artifacts and do not add an Autonomous Execution Learnings section.
 
 ### Step 2.5: Check Project Log and Offer Ledger Graduation
 
@@ -244,15 +272,55 @@ test -f "$PROJECT_PATH/summary.md"
    ```
 
 3. Determine update scope:
-   - If `oat-execution-learnings.md` exists, compare its dated entry
-     identifiers (timestamp, category, and title) with the source pointers in
-     the existing `## Autonomous Execution Learnings` section. Treat missing,
-     added, or changed recommendations as `learnings_changed`.
-   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports `status: "ok"` with no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
+   - Compute `CURRENT_LEARNINGS_FINGERPRINT` with the function below and
+     compare it with `oat_summary_learnings_fingerprint`. When they differ,
+     the learning sources are `learnings_changed`: a new or changed learning
+     source identity, or a changed recommendation in a legacy entry, requires
+     a refresh on its own, whatever the task, revision or phase tracking says.
+     A missing field compares as `none`.
+   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are not `learnings_changed` AND the project-log check reports `status: "ok"` with no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
    - If `current_rev_count > oat_summary_revision_count`: New revision phases exist. Update: Revision History, What Was Implemented, Follow-up Items.
    - If `current_last_task > oat_summary_last_task`: New tasks completed. Update: What Was Implemented, Notable Challenges, Tradeoffs Made.
    - If `learnings_changed`: update Autonomous Execution Learnings even when
      task and revision tracking fields are unchanged.
+
+The learnings fingerprint hashes every category-bearing judgment entry of the
+project log (heading and body) and the whole legacy file, and is `none` when
+neither exists. Uncategorized and structural entries do not move it; they
+reach the summary through the project-log check above and the roll-up.
+
+```bash
+summary_learnings_fingerprint() {
+  local sources
+  sources=$(
+    if [ -f "$PROJECT_PATH/project-log.md" ]; then
+      awk '
+        function flush() { if (heading != "" && categorized) printf "log %s\n%s", heading, body; heading = "" }
+        { sub(/\r$/, "") }
+        /^## / { flush(); in_entries = ($0 == "## Entries"); next }
+        !in_entries { next }
+        /^### / { flush(); heading = $0; body = ""; categorized = 0; head = 1; next }
+        heading == "" { next }
+        head && /^\*\*Category:\*\* / { categorized = 1 }
+        head && !/^\*\*(Category|Source|Origin|Recorded):\*\* / && !/^[ \t]*$/ { head = 0 }
+        { body = body $0 "\n" }
+        END { flush() }
+      ' "$PROJECT_PATH/project-log.md"
+    fi
+    if [ -f "$PROJECT_PATH/oat-execution-learnings.md" ]; then
+      printf 'legacy\n'
+      cat "$PROJECT_PATH/oat-execution-learnings.md"
+    fi
+  )
+  if [ -z "$sources" ]; then
+    echo none
+    return
+  fi
+  printf '%s' "$sources" | { command -v sha256sum >/dev/null 2>&1 && sha256sum || shasum -a 256; } | cut -d' ' -f1
+}
+
+CURRENT_LEARNINGS_FINGERPRINT=$(summary_learnings_fingerprint)
+```
 
 **If does not exist (first run):**
 
@@ -396,7 +464,7 @@ spec, or design artifacts.
 | Follow-up Items                | implementation.md deferred findings, plan.md deferred items                    |
 | Associated Issues              | state.md `associated_issues` field                                             |
 | Workflow Observations          | project-log.md via `oat project log rollup` only                               |
-| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                                       |
+| Autonomous Execution Learnings | project-log.md category-bearing judgments, then legacy learnings entries       |
 | Explainer Outcome              | project-recap `manifest.json` and `qa/result.json`, or the recorded recap skip |
 | Exit-Gate Waivers              | state.md `oat_implement_exit_gate.waivers`                                     |
 
@@ -455,7 +523,8 @@ only when the list is absent or empty.
 
 **Autonomous Execution Learnings (conditional):**
 
-When `"$PROJECT_PATH/oat-execution-learnings.md"` exists, synthesize
+When the project log has category-bearing judgment entries or the legacy
+`"$PROJECT_PATH/oat-execution-learnings.md"` exists, synthesize
 `## Autonomous Execution Learnings` as actionable recommendations grouped
 under exactly these categories:
 
@@ -468,6 +537,47 @@ under exactly these categories:
 - **Workflow issues** — lifecycle, gate, review, dispatch, or orchestration
   process changes.
 
+Read learning sources in this order and deduplicate them by source identity:
+
+1. **Unified log entries** — judgment entries of `project-log.md` whose body
+   opens with a `**Category:**` head. Read the observation, impact,
+   recommendation and uncertainty from the body below the head. The source
+   identity is the export-safe token `oat-project:<slug>#<entry-id>`, where
+   `<slug>` is the project directory name and `<entry-id>` is the id
+   `oat project log rollup` assigns and prints in its digest:
+   `<date>-<type>-<area slug>-<n>`. Derive it with `project_log_entry_ids`
+   below; never construct a different id.
+2. **Legacy entries** — the `## {timestamp} - {category} - {title}` sections of
+   `oat-execution-learnings.md`. The source identity is that exact
+   `{timestamp} — {category} — {title}` triple.
+
+A legacy entry is a proven twin of a unified entry only when the unified
+entry's `**Recorded:**` value equals the timestamp, its `**Category:**` equals
+the category and its heading area equals the title, each exactly. Use a proven
+twin once, under its unified token. Keep every other entry, including a
+distinct lesson that only shares a title.
+
+```bash
+project_log_entry_ids() {
+  awk '
+    { sub(/\r$/, "") }
+    /^## / { in_entries = ($0 == "## Entries"); next }
+    !in_entries { next }
+    /^### [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] · (project|general) · (bug|friction|worked-well|feedback) · / {
+      split($0, field, " · ")
+      date = substr(field[1], 5); type = field[3]; area = field[4]
+      sub(/[ \t]+$/, "", area)
+      slug = tolower(area); gsub(/[^a-z0-9]+/, "-", slug); gsub(/^-+|-+$/, "", slug)
+      if (slug == "") slug = "entry"
+      stem = date "-" type "-" slug
+      print stem "-" (++seen[stem]) "\t" $0
+    }
+  ' "$PROJECT_PATH/project-log.md"
+}
+```
+
+Each output line is `<entry-id>`, a tab, then the entry's heading.
+
 For each source entry:
 
 1. Use its `Observation`, `Impact`, and `Recommendation` fields to decide
@@ -479,28 +589,35 @@ For each source entry:
    not a one-to-one output mapping.
 3. Write a concise action plus one-line rationale. Preserve uncertainty and
    environment-limited status; do not claim an unverified fix.
-4. End the item with a relative link to `oat-execution-learnings.md` and the
-   exact source entry identifier (`timestamp — category — title`). Link to the
-   entry heading anchor when one exists; otherwise link to the file and include
-   the identifier in the link text so the entry remains traceable.
+4. End the item with the source identity of every supporting entry as plain
+   text, never a Markdown link: the `oat-project:<slug>#<entry-id>` token for a
+   unified entry, and `legacy learning {timestamp} — {category} — {title}` for
+   a legacy entry. The summary is exported into the tracked repository while
+   the log and the legacy file stay with the archived project, so never
+   present either as a retrievable path; the archive export finalizes the
+   tokens.
 5. Deduplicate recommendations that describe the same action, while retaining
-   pointers to every supporting source entry.
+   every distinct supporting source identity; a merged recommendation lists
+   each token and legacy triple once.
 
-Omit empty category subheadings. If the learnings file contains no actionable
-entries, omit the entire section. If the file is absent, this behavior is inert:
-remove the template placeholder during a first render and make no
+Omit empty category subheadings. If no source contains an actionable entry,
+omit the entire section. With no learning source at all this behavior is
+inert: remove the template placeholder during a first render and make no
 learnings-driven update on a re-run.
 
 **Workflow Observations coexistence contract:**
 
 Keep `## Workflow Observations` and `## Autonomous Execution Learnings` as
 distinct summary sections. Author the autonomous-execution section first, then
-perform the project-log roll-up in Step 6. Because the roll-up command writes
-every project-log entry, keep the project-log observation in Workflow
-Observations and represent any overlap from Autonomous Execution Learnings with
-a one-line cross-reference instead of copying it there. The roll-up command
-remains the only writer of Workflow Observations—never hand-implement its
-section or ledger writes.
+perform the project-log roll-up in Step 6. The roll-up writes a bounded digest
+of judgment entries (structural entries stay in the log): one observation line
+per selected entry, with a recommendation only for an uncategorized entry. A
+categorized learning's synthesized recommendation therefore appears once, in
+Autonomous Execution Learnings, while the digest keeps its observation line and
+adds a one-line cross-reference to that section; never restate the digest's
+observations here or a recommendation there. The roll-up command remains the
+only writer of Workflow Observations—never hand-implement its section or
+ledger writes.
 
 **For incremental updates (re-run):**
 
@@ -520,8 +637,11 @@ oat_generated: true
 oat_summary_last_task: { highest completed task ID }
 oat_summary_revision_count: { count of p-revN phases }
 oat_summary_includes_revisions: [{ list of p-revN IDs reflected }]
+oat_summary_learnings_fingerprint: { CURRENT_LEARNINGS_FINGERPRINT }
 ---
 ```
+
+`oat_summary_learnings_fingerprint` is written in every workflow mode (Step 3).
 
 In brief and goal modes write `oat_summary_phase_fingerprint: {CURRENT_PHASE_FINGERPRINT}`
 (Step 3) and omit `oat_summary_last_task`; keep `oat_summary_revision_count`
@@ -530,8 +650,9 @@ and `oat_summary_includes_revisions` as informational fields.
 ### Step 6: Roll Up Project Observations and Offer Backlog Graduation
 
 Run this step after `summary.md` has been authored or refreshed, including the
-distinct `## Autonomous Execution Learnings` section when its source artifact
-exists.
+distinct `## Autonomous Execution Learnings` section when a learning source
+exists. In a staged invocation this step runs only after `resume: roll-up`,
+once the deferred Step 2.5 promotions are appended.
 
 **Goal terminal deferral.** When `oat_workflow_mode` is `goal`, this run
 comes before `pr` in the post-implement sequence (`oat_post_implement_sequence`
@@ -606,9 +727,12 @@ Route only on the structured `ProjectLogRollupResult`:
 - `status: "failed"` or `ledgerOutcome: "failed"`: surface the failure to the
   user and stop before commit. Do not describe the summary as fully rolled up.
 
-The command mechanically writes or updates `## Workflow Observations` and
-appends/deduplicates eligible `general` judgments in the configured ledger. Do
-not reproduce either write by hand.
+The command mechanically writes, updates or omits the bounded
+`## Workflow Observations` digest (`summarySection: "written" | "updated" |
+"omitted"`; `omitted` means no judgment entry qualified and the section is
+absent) and appends/deduplicates every eligible `general` judgment in the
+configured ledger, whether or not the digest bound selected it. Do not
+reproduce either write by hand.
 
 Separately inspect follow-up-marked project-log entries and offer backlog
 graduation through `oat-pjm-add-backlog-item`. Backlog graduation creates a
@@ -819,11 +943,16 @@ Summary tracks: last task {task_id}, {N} revision phases
 - Summary is under 200 lines for typical projects
 - Re-run after revisions updates only affected sections
 - Re-run with no changes produces no modifications
-- When `oat-execution-learnings.md` exists, actionable recommendations are
-  grouped under Agent-instruction updates, Cloud-environment improvements, Code
-  follow-ups, and Workflow issues with source-entry pointers
-- When `oat-execution-learnings.md` is absent, no Autonomous Execution
-  Learnings section is rendered and normal summary behavior is unchanged
+- When learning sources exist (category-bearing log entries first, the legacy
+  `oat-execution-learnings.md` second), actionable recommendations are grouped
+  under Agent-instruction updates, Cloud-environment improvements, Code
+  follow-ups, and Workflow issues, each with plain-text source identities and
+  each proven twin counted once
+- With no learning source, no Autonomous Execution Learnings section is
+  rendered and normal summary behavior is unchanged
+- A new or changed learning source makes the summary stale on its own
+- A staged invocation writes only summary sections and frontmatter before
+  `resume: roll-up`
 - Project-log ledger graduation appends a new referencing `general` judgment
   before roll-up and never mutates the original `project` judgment
 - `oat project log rollup --json` owns the distinct Workflow Observations

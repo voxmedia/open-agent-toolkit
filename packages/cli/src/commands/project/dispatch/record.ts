@@ -12,9 +12,11 @@ import { CLAUDE_OBSERVATION_SOURCE } from '@providers/identity/claude-runtime-ob
 import { CODEX_OBSERVATION_SOURCE } from '@providers/identity/codex-runtime-observation';
 import {
   assertNoSensitiveDispatchContent,
+  classifyDispatchOutcome,
   collectSensitiveDispatchContent,
   parseGenericDispatchRecord,
   redactSensitiveValues,
+  type DispatchTerminalClassification,
   type GenericDispatchRecord,
 } from '@providers/identity/generic-dispatch-record';
 import {
@@ -35,6 +37,7 @@ import {
   projectRuntimeObservation,
   providerSupportsRuntimeObservation,
 } from '@providers/identity/runtime-observation';
+import { parseDispatchStamps } from '@providers/identity/stamp';
 import { ZodError } from 'zod';
 
 /**
@@ -139,6 +142,266 @@ export type ProjectDispatchRecordResult = {
   record: PersistedOatDispatchRecordV1;
   runtimeIdentity: DispatchRecordRuntimeIdentity;
 };
+
+/**
+ * One-line journal run record, projection v1.
+ *
+ * An additive rendering of the same validated, redacted record and event: one
+ * line per request id, written by the owning skill under
+ * `## Orchestration Runs` and updated in place with the terminal outcome. The
+ * renderer writes nothing.
+ *
+ * Grammar: `run/v1` followed by named `key=value` fields in the fixed order of
+ * `DISPATCH_RUN_LINE_FIELDS`, joined by ` · `. Inside a value, `\\`, `\·`,
+ * `\~`, `\n` and `\r` escape a backslash, the delimiter, a literal tilde, a
+ * newline and a carriage return; a bare `~` value is null. The configured
+ * identity (`target`, `model`, `effort`) and the observed identity are
+ * separate fields: an observation never replaces the configured invocation.
+ */
+export const DISPATCH_RUN_LINE_PREFIX = 'run/v1';
+export const DISPATCH_RUN_LINE_DELIMITER = ' · ';
+export const DISPATCH_RUN_LINE_FIELDS = [
+  'request',
+  'scope',
+  'action',
+  'role',
+  'target',
+  'model',
+  'effort',
+  'stamp',
+  'launch',
+  'outcome',
+  'terminal',
+  'class',
+  'continuation',
+  'observed',
+  'match',
+] as const;
+
+export type DispatchRunLineField = (typeof DISPATCH_RUN_LINE_FIELDS)[number];
+export type DispatchRunLineFields = Record<DispatchRunLineField, string | null>;
+
+export interface DispatchRunLineProjection {
+  version: 1;
+  line: string;
+  fields: DispatchRunLineFields;
+  classification: DispatchTerminalClassification;
+  terminal: boolean;
+}
+
+const NULL_VALUE = '~';
+
+function escapeRunLineValue(value: string | null): string {
+  if (value === null) {
+    return NULL_VALUE;
+  }
+  return value
+    .replaceAll('\\', '\\\\')
+    .replaceAll('·', '\\·')
+    .replaceAll('~', '\\~')
+    .replaceAll('\n', '\\n')
+    .replaceAll('\r', '\\r');
+}
+
+export function renderDispatchRunLine(fields: DispatchRunLineFields): string {
+  return [
+    DISPATCH_RUN_LINE_PREFIX,
+    ...DISPATCH_RUN_LINE_FIELDS.map(
+      (field) => `${field}=${escapeRunLineValue(fields[field])}`,
+    ),
+  ].join(DISPATCH_RUN_LINE_DELIMITER);
+}
+
+/**
+ * Split a run line on unescaped delimiters, keeping escapes intact so a bare
+ * `~` (null) stays distinguishable from an escaped `\~` (literal tilde).
+ */
+function splitRunLine(text: string): string[] | null {
+  const parts: string[] = [];
+  let current = '';
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === '\\') {
+      const next = text[index + 1];
+      if (next === undefined) {
+        return null;
+      }
+      current += character + next;
+      index += 1;
+      continue;
+    }
+    if (text.startsWith(DISPATCH_RUN_LINE_DELIMITER, index)) {
+      parts.push(current);
+      current = '';
+      index += DISPATCH_RUN_LINE_DELIMITER.length - 1;
+      continue;
+    }
+    current += character;
+  }
+  parts.push(current);
+  return parts;
+}
+
+function unescapeRunLineValue(raw: string): string | null {
+  if (raw === NULL_VALUE) {
+    return null;
+  }
+  let value = '';
+  for (let index = 0; index < raw.length; index += 1) {
+    const character = raw[index];
+    if (character !== '\\') {
+      if (character === '~') {
+        // An unescaped tilde inside a value is not a valid encoding.
+        throw new Error('unescaped ~ inside a value');
+      }
+      value += character;
+      continue;
+    }
+    const next = raw[index + 1];
+    index += 1;
+    if (next === 'n') value += '\n';
+    else if (next === 'r') value += '\r';
+    else if (next === '\\' || next === '·' || next === '~') value += next;
+    else throw new Error(`unknown escape \\${next ?? ''}`);
+  }
+  return value;
+}
+
+export type ParsedDispatchRunLine =
+  | { ok: true; fields: DispatchRunLineFields }
+  | { ok: false; reason: string };
+
+/**
+ * Parse one journal run line (optionally written as a `- ` list item). Every
+ * field must be present exactly once, in order; anything else is malformed.
+ * Callers derive terminality from `launch` and `outcome` with
+ * `classifyDispatchOutcome`, never from the recorded `terminal` text alone.
+ */
+export function parseDispatchRunLine(text: string): ParsedDispatchRunLine {
+  const body = text.trim().replace(/^[-*][ \t]+/, '');
+  const parts = splitRunLine(body);
+  if (parts == null || parts[0] !== DISPATCH_RUN_LINE_PREFIX) {
+    return {
+      ok: false,
+      reason: `run line must start with ${DISPATCH_RUN_LINE_PREFIX}`,
+    };
+  }
+  const values = parts.slice(1);
+  if (values.length !== DISPATCH_RUN_LINE_FIELDS.length) {
+    return {
+      ok: false,
+      reason: `run line carries ${values.length} fields; ${DISPATCH_RUN_LINE_FIELDS.length} are required`,
+    };
+  }
+  const fields = {} as DispatchRunLineFields;
+  for (const [index, field] of DISPATCH_RUN_LINE_FIELDS.entries()) {
+    const raw = values[index] ?? '';
+    const prefix = `${field}=`;
+    if (!raw.startsWith(prefix)) {
+      return { ok: false, reason: `field ${index + 1} must be ${field}` };
+    }
+    try {
+      fields[field] = unescapeRunLineValue(raw.slice(prefix.length));
+    } catch (error) {
+      return {
+        ok: false,
+        reason: `${field}: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+  }
+  return { ok: true, fields };
+}
+
+function continuationReference(entry: unknown): string | null {
+  if (typeof entry === 'string' || typeof entry === 'number') {
+    return String(entry);
+  }
+  if (!isRecord(entry)) {
+    return null;
+  }
+  for (const key of [
+    'request_id',
+    'requestId',
+    'continuation_event',
+    'event',
+    'event_id',
+    'eventId',
+    'id',
+  ]) {
+    const value = entry[key];
+    if (typeof value === 'string' && value.length > 0) {
+      return value;
+    }
+  }
+  return null;
+}
+
+/**
+ * Validate a caller-supplied formal `Dispatch:` stamp: one line with the
+ * canonical prefix that parses as a modern stamp. The stamp comes from the
+ * resolver's `dispatchStamp` field; the projection carries it verbatim and
+ * never assembles one.
+ */
+export function assertFormalDispatchStamp(stamp: string): void {
+  if (/[\r\n]/.test(stamp) || !stamp.startsWith('Dispatch: ')) {
+    throw new Error(
+      'A dispatch stamp must be one line beginning with the canonical "Dispatch: " prefix.',
+    );
+  }
+  const parsed = parseDispatchStamps(stamp);
+  if (parsed.length !== 1 || parsed[0]?.legacy !== false) {
+    throw new Error(
+      'A dispatch stamp must be a formal Dispatch: line with scope, action and role fields.',
+    );
+  }
+}
+
+/** Project a validated record result onto the one-line run record. */
+export function projectDispatchRunLine(
+  result: ProjectDispatchRecordResult,
+  options: { dispatchStamp?: string | null } = {},
+): DispatchRunLineProjection {
+  const { record, runtimeIdentity } = result;
+  const classification = classifyDispatchOutcome(
+    record.launch_status,
+    record.child_outcome,
+  );
+  const continuation = record.continuation_events
+    .map(continuationReference)
+    .filter((reference): reference is string => reference !== null);
+  const observed = runtimeIdentity.observed;
+  const fields: DispatchRunLineFields = {
+    request: record.request_id,
+    scope: record.scope,
+    action: record.action,
+    role: record.role_name,
+    target: record.role_selector,
+    model: record.model_selector,
+    effort: record.effort_selector,
+    stamp: options.dispatchStamp ?? null,
+    launch: record.launch_status,
+    outcome: record.child_outcome,
+    terminal: classification.terminal ? 'yes' : 'no',
+    class: classification.classification,
+    continuation: continuation.length === 0 ? null : continuation.join(','),
+    observed:
+      observed === null
+        ? null
+        : [
+            observed.provider,
+            observed.model ?? '?',
+            observed.effort ?? '?',
+          ].join('/'),
+    match: runtimeIdentity.match,
+  };
+  return {
+    version: 1,
+    line: renderDispatchRunLine(fields),
+    fields,
+    classification: classification.classification,
+    terminal: classification.terminal,
+  };
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);

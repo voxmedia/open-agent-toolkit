@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: false
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Autonomous Project Completion
@@ -275,9 +275,9 @@ steps never reach it.
 
 Only when the PR-merge precondition passed through the exception row, append
 this block to the project's `implementation.md` before any other write. Place
-it at the end of the `## Implementation Log` section, or at the end of the file
-when that section is absent, and do not append a second block for the same PR
-and requesting step:
+it under `## Deviations from Plan / Design`, after that section's existing
+content and before the next `##` heading (never after `## References`), and do
+not append a second block for the same PR and requesting step:
 
 ```markdown
 ### Completion-before-merge exception ({UTC timestamp})

@@ -154,6 +154,17 @@ function createHarness(options: HarnessOptions = {}): {
     archiveProjectOnCompletion,
     processEnv,
     timestamp: () => options.timestamp ?? '2026-04-01T12:34:56Z',
+    // A recordless synced project binds through its completed ref; the
+    // harness stands in for that read-only resolver.
+    resolveRecordlessSyncedArchiveIdentity: vi.fn(async () => ({
+      archivePath: join(cwd, '.oat', 'projects', 'archived', 'demo-project'),
+      metadata: {
+        projectName: 'demo-project',
+        snapshotName: '20260401-demo-project',
+        scope: 'synced' as const,
+        sourceRefSha: 'a'.repeat(40),
+      },
+    })),
   };
   const command = createProjectArchiveCommand(dependencies);
 
@@ -475,7 +486,9 @@ describe('oat project archive push', () => {
     );
     expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
     expect(capture.info[0]).toBe(
-      'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project-20260401123456`.',
+      // The preview derives the path from the identity in the resolved
+      // primary checkout, never from the target resolver's clock suffix.
+      'Dry-run: would archive project `demo-project` from `/tmp/worktrees/sc-pinned-cryostat-af7a/.oat/projects/shared/demo-project` to `/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project`.',
     );
     expect(process.exitCode).toBe(0);
   });

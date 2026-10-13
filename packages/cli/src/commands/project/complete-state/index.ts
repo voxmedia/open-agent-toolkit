@@ -2,14 +2,20 @@ import {
   readFile as defaultReadFile,
   writeFile as defaultWriteFile,
 } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { readStateWorkflowMode } from '@commands/project/closeout-check/closeout-invariant';
 import {
   checkProjectCloseout,
   DEFAULT_CLOSEOUT_CHECK_DEPENDENCIES,
   formatCloseoutRefusal,
   type CloseoutInputDependencies,
 } from '@commands/project/closeout-check/index';
+import {
+  evaluateJournal,
+  formatJournalRefusal,
+} from '@commands/project/journal-check/index';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { resolveEffectiveConfig } from '@config/resolve';
 import { CliError } from '@errors/cli-error';
@@ -81,6 +87,53 @@ async function runProjectCompleteState(
     );
     if (result.status === 'incomplete') {
       throw new CliError(formatCloseoutRefusal(projectPath, result), 1);
+    }
+
+    // Immediately before the write, the final journal evaluator: a project
+    // that has a journal completes only when that journal holds its terminal
+    // shape. Both guards refuse before any write; no override bypasses the
+    // closeout invariant above.
+    const journalPath = join(targetProjectPath, 'implementation.md');
+    const planPath = join(targetProjectPath, 'plan.md');
+    const hasJournal = await dependencies.fileExists(journalPath);
+    if (!hasJournal && (await dependencies.fileExists(planPath))) {
+      // A planned project completes only through its journal: a missing
+      // journal must never silently turn the final evaluator off.
+      throw new CliError(
+        formatJournalRefusal(projectPath, {
+          status: 'refused',
+          boundary: 'completion',
+          workflowMode: readStateWorkflowMode(content) ?? 'spec-driven',
+          scope: null,
+          reasons: [
+            {
+              code: 'journal-missing',
+              path: 'implementation.md',
+              line: null,
+              owner: 'oat-project-implement',
+              message:
+                'plan.md exists but implementation.md is missing; a planned project completes only with its journal.',
+            },
+          ],
+          warnings: [],
+          overrides: [],
+        }),
+        1,
+      );
+    }
+    if (hasJournal) {
+      const journal = evaluateJournal({
+        boundary: 'completion',
+        scope: null,
+        planContent: (await dependencies.fileExists(planPath))
+          ? await dependencies.readFile(planPath, 'utf8')
+          : '',
+        journalContent: await dependencies.readFile(journalPath, 'utf8'),
+        stateContent: content,
+      });
+      if (journal.status === 'refused') {
+        throw new CliError(formatJournalRefusal(projectPath, journal), 1);
+      }
     }
 
     const now = dependencies.now();

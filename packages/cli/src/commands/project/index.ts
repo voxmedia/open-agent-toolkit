@@ -7,6 +7,7 @@ import { createProjectCompleteStateCommand } from './complete-state';
 import { createProjectDeliveryCommand } from './delivery';
 import { createProjectDispatchCommand } from './dispatch';
 import { createProjectDispatchCeilingCommand } from './dispatch-ceiling';
+import { createProjectJournalCommand } from './journal-check/index';
 import { createProjectLinksCommand } from './links';
 import { createProjectListCommand } from './list';
 import { createProjectLogCommand } from './log/index';
@@ -34,6 +35,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectDeliveryCommand())
     .addCommand(createProjectDispatchCommand())
     .addCommand(createProjectDispatchCeilingCommand())
+    .addCommand(createProjectJournalCommand())
     .addCommand(createProjectListCommand())
     .addCommand(createProjectLinksCommand())
     .addCommand(createProjectLogCommand())

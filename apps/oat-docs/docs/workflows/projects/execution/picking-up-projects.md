@@ -137,8 +137,9 @@ refuses to delete either ref when their SHAs differ.
 
 When archive is selected, completion copies a synced project into
 `.oat/projects/archived/<project>/` without the nested checkout's `.git`
-pointer or `reviews/`. S3 snapshots also omit `pr/`, following the existing
-archive policy. When archive is disabled or declined, the active synced
+pointer, `reviews/` or `pr/`. S3 snapshots and `oat repo archive sync`
+restores leave out the same entries, so a restored archive matches the one
+that was uploaded. When archive is disabled or declined, the active synced
 checkout remains in place. Successful archived closeout instead uploads the S3
 snapshot first when configured, makes the completed ref authoritative, removes
 the checkout, and deletes the tracked JSON record. The local archive metadata

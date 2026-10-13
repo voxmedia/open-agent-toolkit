@@ -1014,6 +1014,60 @@ describe('resolveEffectiveConfig', () => {
       });
     });
 
+    it('defaults the project-log digest bounds and lets a shared value override one', async () => {
+      const defaults = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+      expect(defaults.resolved['workflow.projectLogDigest.maxEntries']).toEqual(
+        { value: 12, source: 'default' },
+      );
+      expect(defaults.resolved['workflow.projectLogDigest.maxLines']).toEqual({
+        value: 60,
+        source: 'default',
+      });
+
+      const overridden = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                projectLog: false,
+                projectLogDigest: { maxEntries: 5 },
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: { projectLogDigest: { maxEntries: 7, maxLines: 40 } },
+            }) satisfies UserConfig,
+        },
+      );
+      expect(
+        overridden.resolved['workflow.projectLogDigest.maxEntries'],
+      ).toEqual({ value: 5, source: 'shared' });
+      expect(overridden.resolved['workflow.projectLogDigest.maxLines']).toEqual(
+        { value: 40, source: 'user' },
+      );
+      expect(overridden.resolved['workflow.projectLog']).toEqual({
+        value: false,
+        source: 'shared',
+      });
+    });
+
     it('resolves project-log settings with local over shared over user precedence', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',

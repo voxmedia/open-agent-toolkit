@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep
 metadata:
-  version: 1.1.3
+  version: 1.1.4
 ---
 
 # OAT in Cursor Cloud
@@ -33,7 +33,8 @@ end-to-end requests route to `oat-project-autonomous` after orientation.
 
 - A shell and Node/npm are available.
 - Read `references/cursor-cloud-mechanics.md` only when model-family identity,
-  dispatch-surface catalogs, or degraded review evidence is needed.
+  dispatch-surface catalogs, degraded review evidence, or a learning write is
+  needed.
 
 ## Mode Assertion
 
@@ -62,7 +63,7 @@ context without taking ownership of a lifecycle phase.
 - Verifying or installing the supported OAT CLI.
 - Comparing skill versions as a freshness check.
 - Loading Cursor mechanics and org-layer context skills when relevant.
-- Recording environment anomalies and degraded routes in project learnings.
+- Recording environment anomalies and degraded routes as project-log learnings.
 
 **Self-Correction Protocol:**
 
@@ -243,9 +244,10 @@ user version >= repo version
 It never chooses the source:
 
 - user version equal to or higher than repo → read the user copy;
-- repo version higher than user → still read the user copy, append an anomaly
-  to `oat-execution-learnings.md`, and flag the user tier for refresh with
-  `oat tools update` or an environment rebuild;
+- repo version higher than user → still read the user copy, record the anomaly
+  as a learning through the project-log learning write in
+  `references/cursor-cloud-mechanics.md` (Learning Write), and flag the user
+  tier for refresh with `oat tools update` or an environment rebuild;
 - if freshness is safety-critical, refresh and re-verify before continuing;
   stop if the user tier cannot be refreshed safely.
 
@@ -283,8 +285,10 @@ the provider dispatch algorithm.
   environment when integrated systems require them. Do not hard-depend on,
   name, or emulate an absent org layer.
 - When an expected skill, MCP server, CLI surface, or credential is absent,
-  record the gap in the active project's `oat-execution-learnings.md`. Continue
-  only through a documented integrity-preserving route.
+  record the gap as a learning in the active project's `project-log.md` through
+  the Learning Write in `references/cursor-cloud-mechanics.md`; with the
+  project log disabled it warns once and records nothing. Continue only through
+  a documented integrity-preserving route.
 
 Return an orientation summary:
 

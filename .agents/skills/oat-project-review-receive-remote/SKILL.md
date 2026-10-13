@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.4
+  version: 1.5.5
 ---
 
 # Project Remote Review Receive
@@ -249,12 +249,16 @@ Update `plan.md`:
 
 Update `implementation.md`:
 
-- Add "Remote Review Received" section with:
-  - date
-  - PR number
+- Add a `### Remote Review Received: PR #<N>` receipt under `## Reviews and Gates`
+  (never after `## References`) with:
+  - date and PR number (the PR comments are the citation; nothing local is
+    required to read the receipt)
   - severity counts
-  - new task IDs
-  - deferred/dismissed notes
+  - one line per finding: identity (comment author and anchor) and one-line
+    substance, disposition and rationale, and the fix task ID or approved
+    deferral it links to
+  - final outcome (fixes queued, dismissed, or passed)
+- Write each approved deferral as one line under `## Deferred Findings`.
 - Set `oat_current_task_id` to first new review-fix task ID when tasks were added.
 - If no new tasks: keep current task pointer unchanged or set `null` if all work is complete.
 

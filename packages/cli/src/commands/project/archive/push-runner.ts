@@ -1,7 +1,9 @@
 import { basename, isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { defaultGitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   resolveScopeRoot,
@@ -18,15 +20,19 @@ import { CliError } from '@errors/cli-error';
 import { resolveProjectRoot } from '@fs/paths';
 
 import {
+  ArchiveIdentityError,
   archiveProjectOnCompletion,
   assertExactArchiveProjectRoot,
   assertDurableArchiveProjectTarget,
-  buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
+  evaluateArchiveRetryIdentity,
+  newGenerationReplayWarning,
   resolveArchiveProjectTarget,
+  resolveRecordlessSyncedArchiveIdentity,
   resolvePrimaryRepoRoot,
   verifySelectedProjectRecapForArchive,
-  type ArchiveProjectTarget,
+  type ArchiveRetryIdentity,
+  type RecordlessSyncedArchiveIdentity,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
   type ArchiveProjectRecapExportV1,
@@ -36,6 +42,8 @@ export interface ArchivePushOptions {
   dryRun?: boolean;
   projectRecapRun?: string;
   commit?: boolean;
+  /** `--new-generation <reason>`. */
+  newGeneration?: string;
 }
 
 export interface ProjectArchivePushCommandDependencies {
@@ -59,6 +67,12 @@ export interface ProjectArchivePushCommandDependencies {
   assertExactArchiveProjectRoot: typeof assertExactArchiveProjectRoot;
   processEnv: NodeJS.ProcessEnv;
   timestamp: () => string;
+  /** Recordless synced identity through the completed ref; defaults to the shared resolver. */
+  resolveRecordlessSyncedArchiveIdentity?: (options: {
+    repoRoot: string;
+    projectsRoot: string;
+    projectName: string;
+  }) => Promise<RecordlessSyncedArchiveIdentity>;
 }
 
 interface ResolvedArchiveTarget {
@@ -83,6 +97,8 @@ interface ArchivePushReport {
   verifiedSourceSha: string | null;
   activeAliasDisposition: 'retained' | 'removed' | null;
   recordRetired: boolean;
+  generation?: number;
+  predecessorSnapshot?: string | null;
 }
 
 export function defaultProjectArchivePushCommandDependencies(): ProjectArchivePushCommandDependencies {
@@ -158,6 +174,9 @@ function buildArchiveOptions(
     awsProfile: config.archive?.awsProfile,
     awsRegion: config.archive?.awsRegion,
     ...(options.commit === false ? { commit: false } : {}),
+    ...(options.newGeneration !== undefined
+      ? { newGenerationReason: options.newGeneration }
+      : {}),
   };
 }
 
@@ -166,10 +185,14 @@ async function buildDryRunReport(
   repoRoot: string,
   config: OatConfig,
   target: ResolvedArchiveTarget,
-  archiveTarget: ArchiveProjectTarget,
-  snapshotName: string,
+  identity: ArchiveRetryIdentity,
   projectScope: ProjectScope | null,
+  newGenerationReason?: string,
 ): Promise<ArchivePushReport> {
+  // Every reported destination comes from the shared retry-identity
+  // evaluator, so an identical retry previews the persisted snapshot it would
+  // reuse rather than a new identity derived from today's date.
+  const snapshotName = identity.snapshotName;
   const remoteRepoRoot = await dependencies.resolvePrimaryRepoRoot(repoRoot);
   const s3Path =
     config.archive?.s3Uri && config.archive.s3SyncOnComplete === true
@@ -188,20 +211,22 @@ async function buildDryRunReport(
     mode: 'dry-run',
     projectName: target.projectName,
     projectPath: target.projectPath,
-    archivePath: archiveTarget.archivePath,
+    archivePath: identity.archivePath,
     s3Path,
     summaryExportFile,
-    warnings: [],
+    warnings: [
+      newGenerationReplayWarning(identity, newGenerationReason),
+    ].filter((warning): warning is string => warning !== null),
     lifecycleCommit: null,
     recapExportPaths: [],
     snapshotId:
-      projectScope === 'synced'
-        ? snapshotName
-        : basename(archiveTarget.archivePath),
+      projectScope === 'synced' ? snapshotName : basename(identity.archivePath),
     completedRef: null,
     verifiedSourceSha: null,
     activeAliasDisposition: null,
     recordRetired: false,
+    generation: identity.generation,
+    predecessorSnapshot: identity.predecessor,
   };
 }
 
@@ -218,6 +243,11 @@ function emitArchivePushText(
     logger.info(
       `Dry-run: would archive project \`${report.projectName}\` from \`${report.projectPath}\` to \`${report.archivePath}\`.`,
     );
+    if (report.predecessorSnapshot) {
+      logger.info(
+        `Generation ${report.generation} after \`${report.predecessorSnapshot}\`.`,
+      );
+    }
     if (report.s3Path) {
       logger.info(`S3 archive: ${report.s3Path}`);
     }
@@ -230,6 +260,11 @@ function emitArchivePushText(
   logger.info(
     `Archived project \`${report.projectName}\` to \`${report.archivePath}\`.`,
   );
+  if (report.predecessorSnapshot) {
+    logger.info(
+      `Generation ${report.generation} after \`${report.predecessorSnapshot}\`.`,
+    );
+  }
   if (report.s3Path) {
     logger.info(`S3 archive: ${report.s3Path}`);
   }
@@ -283,10 +318,6 @@ export async function runArchivePushCommand(
       projectName: target.projectName,
       projectsRoot,
     });
-    const defaultSnapshotName = buildArchiveSnapshotName(
-      target.projectName,
-      dependencies.timestamp(),
-    );
     const syncedRecord =
       projectScope === 'synced'
         ? await dependencies.readSyncedRecord(
@@ -296,25 +327,52 @@ export async function runArchivePushCommand(
             ),
           )
         : null;
-    const snapshotName = syncedRecord?.archiveSnapshot ?? defaultSnapshotName;
-    const archiveTarget = await dependencies.resolveArchiveProjectTarget(
+    // A recordless synced project binds its snapshot through the completed
+    // ref, in dry-run exactly as in apply.
+    const recordless =
+      projectScope === 'synced' && syncedRecord === null
+        ? await (
+            dependencies.resolveRecordlessSyncedArchiveIdentity ??
+            ((resolverOptions) =>
+              resolveRecordlessSyncedArchiveIdentity(
+                resolverOptions,
+                buildSyncTarget(
+                  resolverOptions.repoRoot,
+                  resolverOptions.projectsRoot,
+                  resolverOptions.projectName,
+                ),
+                defaultGitRunner,
+                { env: dependencies.processEnv },
+              ))
+          )({ repoRoot, projectsRoot, projectName: target.projectName })
+        : null;
+    const persistedSnapshot =
+      syncedRecord?.archiveSnapshot ?? recordless?.metadata.snapshotName;
+    const persistedSourceRefSha =
+      syncedRecord?.archiveSourceRefSha ?? recordless?.metadata.sourceRefSha;
+    const identity = await evaluateArchiveRetryIdentity(
       {
         repoRoot,
         projectsRoot,
         projectName: target.projectName,
-        ...(syncedRecord?.archiveSnapshot
-          ? {
-              archiveSnapshot: syncedRecord.archiveSnapshot,
-              archiveScope: projectScope ?? undefined,
-            }
+        projectPath: target.projectPath,
+        scope: projectScope,
+        timestamp: dependencies.timestamp(),
+        ...(persistedSnapshot ? { persistedSnapshot } : {}),
+        ...(persistedSourceRefSha
+          ? { sourceRefSha: persistedSourceRefSha }
+          : {}),
+        ...(options.newGeneration !== undefined
+          ? { newGeneration: { reason: options.newGeneration } }
           : {}),
       },
       {
+        resolveArchiveProjectTarget: dependencies.resolveArchiveProjectTarget,
         env: dependencies.processEnv,
         timestamp: dependencies.timestamp,
       },
     );
-    assertDurableArchiveProjectTarget(archiveTarget);
+    assertDurableArchiveProjectTarget(identity.target);
     const dryRun = options.dryRun === true || context.dryRun;
     const recordlessSyncedApply =
       projectScope === 'synced' && syncedRecord === null && !dryRun;
@@ -331,9 +389,9 @@ export async function runArchivePushCommand(
         repoRoot,
         config,
         target,
-        archiveTarget,
-        snapshotName,
+        identity,
         projectScope,
+        options.newGeneration,
       );
       emitArchivePushReport(report, config.archive?.summaryExportPath, context);
       process.exitCode = 0;
@@ -366,6 +424,12 @@ export async function runArchivePushCommand(
           : 'removed'
         : null,
       recordRetired: result.recordRetired,
+      ...(result.generation !== undefined
+        ? {
+            generation: result.generation,
+            predecessorSnapshot: result.predecessorSnapshot ?? null,
+          }
+        : {}),
     };
 
     emitArchivePushReport(report, config.archive?.summaryExportPath, context);
@@ -373,7 +437,11 @@ export async function runArchivePushCommand(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
-      context.logger.json({ status: 'error', message });
+      context.logger.json({
+        status: 'error',
+        ...(error instanceof ArchiveIdentityError ? { code: error.code } : {}),
+        message,
+      });
     } else {
       context.logger.error(message);
     }

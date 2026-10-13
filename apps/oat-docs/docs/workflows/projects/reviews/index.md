@@ -259,6 +259,24 @@ Final review `passed` gate requires:
 A goal milestone delivery is gated by its passed, fresh integrated review and
 exit carrier rather than by a `final` row.
 
+## Receipts in the journal
+
+`oat-project-review-receive` writes one receipt per received review: a
+phase-scoped receipt in that phase's section of `implementation.md`, a final,
+multi-phase, milestone or remote (PR) receipt under `## Reviews and Gates`,
+never after `## References`. Each receipt lists every finding's identity and
+substance, its disposition and rationale, the fix task or approved deferral it
+links to, and the final outcome; approved deferrals are also lines under
+`## Deferred Findings`. The review file path is a local-only citation: reviews
+are not archived, so the journal and plan must stand without it, and an
+unresolved review path is never a completion defect.
+
+Code reviews run `oat project journal check --at review --scope <phases>`
+first; its reasons reach the reviewer in the Review Scope. A finding that a
+mechanical pointer or projection refresh resolves (stale overview totals, a
+run line to re-render, a lagging resume pointer) is refresh-only and belongs to
+closeout's refresh, never a fix task.
+
 ## Complexity review at budget exhaustion
 
 When a review or gate budget runs out, another round of the same review is

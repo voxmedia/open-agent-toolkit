@@ -2,6 +2,8 @@ import { isWorkflowDispatchCandidateLadder } from './dispatch-matrix';
 import {
   BUILTIN_EXEC_TARGETS,
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
+  DEFAULT_PROJECT_LOG_DIGEST_MAX_ENTRIES,
+  DEFAULT_PROJECT_LOG_DIGEST_MAX_LINES,
   isWorkflowPostImplementStructuredSequence,
   readOatConfig,
   readOatLocalConfig,
@@ -127,6 +129,10 @@ const DEFAULT_WORKFLOW_CONFIG = {
     },
     projectLog: 'auto',
     projectLogLedgerPath: '.oat/repo/reference/project-observations.md',
+    projectLogDigest: {
+      maxEntries: DEFAULT_PROJECT_LOG_DIGEST_MAX_ENTRIES,
+      maxLines: DEFAULT_PROJECT_LOG_DIGEST_MAX_LINES,
+    },
     designMode: null,
     dispatchCeiling: {
       preset: null,

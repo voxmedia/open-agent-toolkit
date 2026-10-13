@@ -25,6 +25,28 @@ const REPO_ROOT = resolve(import.meta.dirname, '../../../../../../');
 const CANONICAL_ASSETS_ROOT = join(REPO_ROOT, '.oat');
 const PROJECT_NAME = 'demo';
 const FIXED_DATE = '2026-07-18';
+/** Two judgments digested; the two structural entries stay in the log. */
+const LIFECYCLE_DIGEST = {
+  maxEntries: 12,
+  maxLines: 60,
+  rendered: 2,
+  omitted: { overBound: 0, structural: 2, malformed: 0 },
+  omittedEntries: [],
+  byProducer: {
+    'oat-project-implement': { rendered: 0, omitted: 1 },
+    'oat gate review': { rendered: 0, omitted: 1 },
+    unattributed: { rendered: 2, omitted: 0 },
+  },
+};
+/** One general judgment, digested and graduated. */
+const SINGLE_GENERAL_DIGEST = {
+  maxEntries: 12,
+  maxLines: 60,
+  rendered: 1,
+  omitted: { overBound: 0, structural: 0, malformed: 0 },
+  omittedEntries: [],
+  byProducer: { unattributed: { rendered: 1, omitted: 0 } },
+};
 const ORIGINAL_HEADING =
   '### 2026-07-18 · project · friction · gate review handoff';
 
@@ -273,7 +295,19 @@ describe('project-log lifecycle integration', () => {
     const createdLog = await readFile(fixture.logPath, 'utf8');
     expect(createdLog).toContain('purpose: project-observations');
     expect(createdLog).toContain(`# Project Log: ${PROJECT_NAME}`);
-    expect(createdLog).toContain('## Logging contract');
+    // The header is two lines and a docs link; the contract lives in the docs
+    // and in `append --help`, not in every log.
+    const header = createdLog
+      .slice(createdLog.indexOf(`# Project Log: ${PROJECT_NAME}`))
+      .split('\n## Entries')[0]!
+      .split('\n')
+      .slice(1)
+      .filter((line) => line.trim() !== '');
+    expect(header).toHaveLength(2);
+    expect(header[1]).toContain(
+      'https://voxmedia.github.io/open-agent-toolkit/workflows/projects/execution/project-log',
+    );
+    expect(createdLog).not.toContain('## Logging contract');
     expect(createdLog).not.toContain('oat_template: true');
 
     await runLogCommand(fixture.root, 'append', [
@@ -326,12 +360,21 @@ describe('project-log lifecycle integration', () => {
         summarySection: 'written',
         ledgerOutcome: 'appended',
         entriesRolledUp: 4,
+        digest: LIFECYCLE_DIGEST,
       },
       exitCode: 0,
     });
     const summary = await readFile(fixture.summaryPath, 'utf8');
     expect(summary).toContain('## Workflow Observations');
     expect(summary).toContain(ORIGINAL_HEADING);
+    expect(summary).toContain(
+      '- **2026-07-18 · friction · gate review handoff** (project) `oat-project:demo#2026-07-18-friction-gate-review-handoff-1`',
+    );
+    expect(summary).toContain(
+      '- **2026-07-18 · friction · gate review handoff** (general) `oat-project:demo#2026-07-18-friction-gate-review-handoff-2`',
+    );
+    expect(summary).not.toContain('· structural ·');
+    expect(summary).not.toContain('Dispatch recorded at implementation.md');
 
     const ledger = await readFile(fixture.ledgerPath, 'utf8');
     expect(ledger).toContain(
@@ -350,6 +393,7 @@ describe('project-log lifecycle integration', () => {
         summarySection: 'updated',
         ledgerOutcome: 'deduplicated',
         entriesRolledUp: 4,
+        digest: LIFECYCLE_DIGEST,
       },
       exitCode: 0,
     });
@@ -407,6 +451,7 @@ describe('project-log lifecycle integration', () => {
         summarySection: 'written',
         ledgerOutcome: 'skipped_permitted',
         entriesRolledUp: 1,
+        digest: SINGLE_GENERAL_DIGEST,
       },
       exitCode: 0,
     });
@@ -428,6 +473,7 @@ describe('project-log lifecycle integration', () => {
         summarySection: 'written',
         ledgerOutcome: 'failed',
         entriesRolledUp: 1,
+        digest: SINGLE_GENERAL_DIGEST,
       },
       exitCode: 1,
     });

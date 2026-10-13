@@ -45,7 +45,7 @@ archive metadata own terminal reachability and retry identity.
 - `spec.md`: requirements + acceptance criteria
 - `design.md`: architecture and implementation approach (full in spec-driven mode; optional lightweight version in quick mode covering architecture, components, and testing strategy)
 - `plan.md`: phase/task breakdown and review tracking
-- `implementation.md`: execution log, verification, final summary
+- `implementation.md`: the execution journal — phase sections with task blocks, run lines, review and gate receipts, deferred findings, deviations, and the final summary (see [The implementation journal](#the-implementation-journal))
 - `summary.md`: institutional memory artifact — generated from project artifacts at closeout, used as PR description source and archive cover page
 
 Mode-sensitive notes:
@@ -146,6 +146,144 @@ brief and journal targets must match. The outcome audit requires the child to
 be complete or its outstanding obligation to carry an approved deferral, and
 promotion of the goal to quick refuses any extracted phase.
 
+## The implementation journal
+
+`implementation.md` has fixed slots, and every writer targets them:
+
+- **Phase sections** (`## Phase …`) hold each phase's `**Status:**`, one
+  `### Task pNN-tNN:` block per plan task with exactly one `**Status:**` and,
+  once completed, one `**Commit:**` SHA (brief and goal: execution records and
+  the phase's `**Base:**`/`**Head:**` anchors), one free-text verification
+  line, and the phase's review receipt. Tables and checklists are display,
+  never completion evidence.
+- `## Orchestration Runs` holds one run line per dispatch request ID, rendered
+  by `oat project dispatch record --format line` (`run/v1 · request=… · stamp=Dispatch: … · launch=… · outcome=… · terminal=…`)
+  and updated in place with the terminal outcome. Record and event JSON is
+  never pasted into the journal.
+- `## Reviews and Gates` holds final and multi-phase review receipts and one
+  terminal line per gate run (`**Gate:** … · **Scope:** … · **Outcome:** …`).
+  `state.md` owns gate transitions; the journal keeps the outcome, waivers and
+  operator choices.
+- `## Deferred Findings` holds one line per approved deferral, excluded
+  parallel phase, and unmerged worktree.
+- `## Deviations from Plan / Design` holds deviations, exception blocks, and
+  override lines:
+  `**Override:** <scope-disposition-approved|evidence-lost|operator-accepted-gap> · **Authorized by:** <decision id> · **Scope:** <pNN-tNN|pNN> · <reason>`.
+- `## Final Summary (for PR/docs)` is rewritten at closeout from observed
+  facts, and `## References` is always the last section.
+
+A receipt carries the finding identity and substance, the disposition and its
+rationale, the fix task or approved deferral it links to, and the final
+outcome, so the journal and plan stand without the review file. Review paths
+are local-only citations: reviews are not archived, so an unresolved review
+path is never a completion defect. `oat project journal check` validates these
+slots at implement's pre-Step-16 boundary, at review with an explicit phase
+scope, and at completion; see the [CLI reference](cli-reference.md).
+
+`oat-project-complete` writes `oat_pr_status_observed_at` (UTC) beside
+`oat_pr_status` before archive: in an archived `state.md`, `oat_pr_status` and
+`oat_pr_url` are observations at that time, not live PR state.
+
+## Archive identity
+
+`oat project archive` (and completion's archive step) records each archive's
+identity in `.oat-archive-source.json` inside the local snapshot: the project
+name, its originating scope, the dated export identity `<YYYYMMDD>-<project>`
+(the summary export file stem and the S3 key), the synced source-ref SHA where
+one applies, the generation (`1` for the first archive), and `manifestHash`.
+The manifest hash covers every retained file of the project as sorted
+`<sha256>  <path>` lines; it excludes the top-level `reviews/` and `pr/`
+directories (review and PR evidence are process artifacts and are never
+archived), a synced checkout's `.git`, and the archive-owned
+`.oat-archive-source.json` itself, so a project and its archive hash equal.
+One retention set defines the archive: the local copy, the manifest, the S3
+upload and `oat repo archive sync` all leave out `reviews/`, `pr/` and `.git`,
+so an archive restored from S3 hashes equal to the one that was uploaded.
+
+A retry resolves to that identity before anything is written:
+
+- an identical retry (the source's manifest matches exactly one archive of the
+  same project and scope) reuses its local snapshot, dated export identity, S3
+  destination and receipt, on a later date too;
+- a retry whose source is gone resumes the single archive of that project and
+  scope;
+- changed content, more than one matching archive, or a non-empty directory at
+  the project's archive path that does not identify itself refuses before any
+  export, copy, overwrite or S3 upload, and points reopened work at a
+  follow-up project;
+- the same slug from a different scope is a separate identity; when the other
+  archive already holds the project's archive path or the dated export
+  identity, the new one is qualified with the scope in both: local path
+  `<project>-<scope>` and export identity `<YYYYMMDD>-<project>-<scope>`. An
+  empty directory at the archive path is reused. Local paths always derive
+  from the identity, never from the clock.
+
+Reopened work can instead be archived as a new generation with
+`oat project archive --new-generation <reason>` (shared and local projects).
+The option needs exactly one latest generation of the same project and scope as
+its predecessor and refuses otherwise. The new generation lives at
+`<project>-gN` with export identity `<YYYYMMDD>-<project>-gN`. Both carry the
+scope (`<project>-gN-<scope>` and `<YYYYMMDD>-<project>-gN-<scope>`) when the
+predecessor's own name carries it, so a family qualified at its first archive
+stays qualified in every generation, or when the same project's archive from
+another scope already holds that path or identity. Anything else at the path refuses. `oat repo
+archive sync` reads the same `<project>[-gN][-<scope>]` contract: by name,
+`<project>-<scope>` restores that scope's latest generation and `<project>`
+restores every family of the project at its latest generation. Its
+metadata records `predecessor`, `generationReason` and `generationRequest`, the
+`sha256` of the project, scope, predecessor snapshot and manifest. That
+metadata is written with `allocation: pending` before any export, copy or S3
+upload, so an interrupted run resumes the same generation; the marker is
+removed once the copy completes. A first archive writes the same pending
+marker. The marker exists so an interrupted run resumes the same identity: a
+run killed mid-copy leaves a pending allocation that the next identical archive
+resumes. OAT does not serialize concurrent archive runs of one project and does
+not attempt to. A stray occupant that is not this run's archive (content at the
+path when the marker would be written) refuses as `archive-occupant-unverifiable`
+and is not touched, and an archive whose metadata is final is never removed or
+overwritten. Running the request again with the same
+content resolves to the same generation, while changed content after it
+completes becomes the next generation. Without the option, changed content
+still refuses.
+
+`--dry-run` runs the same read-only evaluation and reports the identity an
+apply would use, so a retry previews the persisted snapshot rather than
+today's date. The synced protections (recordless retry by completed ref,
+stale-source refusal, exact project-root checks) are unchanged.
+
+Every refusal fails closed before any write. Its message starts with a stable
+reason code, and `--json` reports the same code as `code` in the error object:
+
+| Code                                       | Refused when                                                                                                                                                                                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `archive-retry-ambiguous`                  | more than one same-scope archive matches the retry, or a persisted snapshot resolves to several local archives                                                                                                                                              |
+| `archive-retry-conflict`                   | the retained artifacts differ from the project's archive                                                                                                                                                                                                    |
+| `archive-occupant-unverifiable`            | a non-empty directory at the archive path does not identify itself as this project; if it is a partial copy left by an interrupted archive from before pending allocations were written, inspect and remove it, then retry                                  |
+| `archive-generation-synced`                | `--new-generation` was given for a synced project                                                                                                                                                                                                           |
+| `archive-generation-reason`                | the `--new-generation` reason is empty, multi-line or longer than 200 characters                                                                                                                                                                            |
+| `archive-generation-source-absent`         | `--new-generation` was given but the project directory is absent                                                                                                                                                                                            |
+| `archive-generation-no-predecessor`        | `--new-generation` found no archive of the project and scope                                                                                                                                                                                                |
+| `archive-generation-ambiguous-predecessor` | more than one archive holds the latest generation                                                                                                                                                                                                           |
+| `archive-generation-pending`               | the latest generation is still allocated but not copied                                                                                                                                                                                                     |
+| `archive-generation-path-occupied`         | the `<project>-gN` path is held by something other than another scope's archive of the project (or its scope-qualified path is occupied)                                                                                                                    |
+| `archive-synced-recordless-unbound`        | a synced project without a record has no archive whose identity matches its authoritative completed ref                                                                                                                                                     |
+| `archive-synced-recordless-ambiguous`      | a synced project without a record has several archives matching its completed ref                                                                                                                                                                           |
+| `archive-retry-candidate-damaged`          | the matched archive's current bytes no longer match the manifest recorded when it was written (or the project it would replace); restore it from S3 (`oat repo archive sync <snapshot> --force`, naming the archive's exact snapshot) or backup, then retry |
+
+When `--new-generation` content is identical to an existing archive, the
+command resolves to that generation and warns that no new generation was
+allocated, naming the persisted reason when that archive was itself an
+explicit generation (otherwise the warning says the reason was not recorded).
+
+The exported summary finalizes source locators: each
+`oat-project:<project>#<entry-id>` token becomes
+`oat-archive:<YYYYMMDD>-<project>#<entry-id>`, and a relative link to the
+archived-only `project-log.md` or legacy `oat-execution-learnings.md` becomes
+plain text naming the archive identity. A relative link into `reviews/` or
+`pr/` becomes its label plus the review or PR artifact file name, marked local
+to the project and not archived, since neither is ever archived; external
+links are kept. The summary inside the archive keeps its original bytes.
+
 ## Blockers in state.md
 
 `oat_blockers` accepts legacy reason strings and structured workflow records:
@@ -176,7 +314,8 @@ or the state refresh command's existing raw-frontmatter handling.
 
 ## Supporting artifacts
 
-- `summary.md`: generated by `oat-project-summary` — re-runnable, tracks its own state via frontmatter for incremental updates after revisions
+- `summary.md`: generated by `oat-project-summary` — re-runnable, tracks its own state via frontmatter for incremental updates after revisions. Its `## Workflow Observations` section is written only by `oat project log rollup`: a bounded digest of judgment entries, omitted when none qualifies
+- `project-log.md`: the append-only observation log, written only with `oat project log append`. Learnings from autonomous, cloud and goal runs are judgment entries whose body opens with `**Category:**`, `**Source:**`, `**Origin:**` and `**Recorded:**` lines (see [Project Log](../workflows/projects/execution/project-log.md)). A legacy `oat-execution-learnings.md` from an older project is still read by summary and retro after the log, and no new run creates one; with the log disabled, learnings are not recorded
 - `reviews/*.md`: phase/final review files
 - `pr/*.md`: generated PR descriptions
 - `references/imported-plan.md`: preserved source plan for import mode

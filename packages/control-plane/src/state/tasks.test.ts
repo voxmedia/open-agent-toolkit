@@ -456,6 +456,75 @@ oat_current_task_id: p02-t01
     });
   });
 
+  it('reads plan task headings through the record mask, so fenced examples never count', () => {
+    const planContent = `---
+oat_status: in_progress
+---
+
+## Phase 1: Real work
+
+### Task p01-t01: Real task
+
+Example of the task heading shape:
+
+\`\`\`markdown
+### Task p01-t02: Example
+\`\`\`
+
+    ### Task p01-t03: Indented code example
+`;
+    const implementationContent = `---
+oat_current_task_id: null
+---
+
+## Phase 1: Real work
+
+### Task p01-t01: Real task
+
+**Status:** completed
+`;
+
+    expect(parseTaskProgress(planContent, implementationContent)).toEqual({
+      total: 1,
+      completed: 1,
+      currentTaskId: null,
+      phases: [
+        {
+          phaseId: 'p01',
+          name: 'Real work',
+          total: 1,
+          completed: 1,
+          isRevision: false,
+        },
+      ],
+    });
+  });
+
+  it('keeps every legacy task heading spelling under the record mask', () => {
+    const planContent = `## Phase 1: Ordinary
+
+### Task p1-t01: Unpadded phase
+### Task p01-t02: Padded phase
+
+## Phase p-rev1: Revision
+
+### Task prev1-t01: Legacy revision spelling
+### Task p-rev1-t02: Canonical revision spelling
+`;
+    const progress = parseTaskProgress(planContent, '');
+    expect(progress.total).toBe(4);
+    expect(
+      progress.phases.map(({ phaseId, total, isRevision }) => ({
+        phaseId,
+        total,
+        isRevision,
+      })),
+    ).toEqual([
+      { phaseId: 'p01', total: 2, isRevision: false },
+      { phaseId: 'p-rev1', total: 2, isRevision: true },
+    ]);
+  });
+
   it('returns empty progress for plans without task definitions', () => {
     expect(
       parseTaskProgress(

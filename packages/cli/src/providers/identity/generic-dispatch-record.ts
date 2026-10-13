@@ -21,10 +21,17 @@ const identifier = () => z.string().min(1).max(MAX_IDENTIFIER_LENGTH);
 const reasonText = () => z.string().min(1).max(MAX_REASON_LENGTH);
 const proseText = () => z.string().min(1).max(MAX_PROSE_LENGTH);
 
+/**
+ * The producer contract for a dispatch request identity. Consumers that read
+ * a projected identity back (journal run lines) validate against this same
+ * pattern instead of a copy.
+ */
+export const REQUEST_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/;
+
 const requestIdSchema = z
   .string()
   .regex(
-    /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/,
+    REQUEST_ID_PATTERN,
     'request_id must be a stable contained identifier: expected [a-zA-Z0-9] followed by up to 127 of [a-zA-Z0-9._-]',
   );
 
@@ -697,4 +704,95 @@ export function parseGenericDispatchRecord(
   const revalidated = genericDispatchRecordSchema.parse(sanitized);
   assertBoundedDispatchRecordSize(revalidated);
   return revalidated;
+}
+
+/**
+ * Journal terminal classification of one dispatch, derived from the generic
+ * launch enum and the raw child outcome through one explicit
+ * producer-to-outcome mapping. The run-line projection and the journal
+ * evaluator both use this mapping unchanged, so a line is terminal exactly
+ * when the producer's own outcome says so; no response is ever converted into
+ * success to finalize a line.
+ *
+ * - `completed`: a supported successful completion (terminal).
+ * - `terminal-stop`: blocked, failed, cancelled, timed-out or invalid-run
+ *   abort after acceptance (terminal history).
+ * - `blocked-before-start`: the existing pre-start rejection contract; no
+ *   child exists, so no outcome is required (terminal).
+ * - `live`: planned, running, pending, or `NEEDS_CONTEXT` whose accepted
+ *   handle is still open (non-terminal).
+ * - `unrecognized`: an outcome outside the mapping (non-terminal; it fails
+ *   closed at completion instead of being read as success).
+ */
+export type DispatchTerminalClassification =
+  | 'completed'
+  | 'terminal-stop'
+  | 'blocked-before-start'
+  | 'live'
+  | 'unrecognized';
+
+export interface DispatchOutcomeClassification {
+  classification: DispatchTerminalClassification;
+  terminal: boolean;
+}
+
+/** Outcome spellings are compared case-insensitively with `_` read as `-`. */
+function normalizeOutcome(outcome: string): string {
+  return outcome.trim().toLowerCase().replaceAll('_', '-');
+}
+
+export const DISPATCH_COMPLETED_OUTCOMES: ReadonlySet<string> = new Set([
+  'completed',
+  'caller-inline-completed',
+  'done',
+  'done-with-concerns',
+]);
+
+export const DISPATCH_TERMINAL_STOP_OUTCOMES: ReadonlySet<string> = new Set([
+  'blocked',
+  'failed',
+  'cancelled',
+  'canceled',
+  'timeout',
+  'timed-out',
+  'interrupted',
+  'crashed',
+  'refused',
+  'aborted',
+  'invalid-run-abort',
+]);
+
+export const DISPATCH_LIVE_OUTCOMES: ReadonlySet<string> = new Set([
+  'running',
+  'pending',
+  'needs-context',
+]);
+
+export function classifyDispatchOutcome(
+  launchStatus: string,
+  childOutcome: string | null,
+): DispatchOutcomeClassification {
+  if (launchStatus === 'blocked-before-start') {
+    return { classification: 'blocked-before-start', terminal: true };
+  }
+  if (launchStatus === 'planned' || childOutcome === null) {
+    return {
+      classification: launchStatus === 'planned' ? 'live' : 'unrecognized',
+      terminal: false,
+    };
+  }
+  if (launchStatus !== 'accepted') {
+    return { classification: 'unrecognized', terminal: false };
+  }
+  const outcome = normalizeOutcome(childOutcome);
+  if (DISPATCH_COMPLETED_OUTCOMES.has(outcome)) {
+    return { classification: 'completed', terminal: true };
+  }
+  if (DISPATCH_TERMINAL_STOP_OUTCOMES.has(outcome)) {
+    return { classification: 'terminal-stop', terminal: true };
+  }
+  if (DISPATCH_LIVE_OUTCOMES.has(outcome)) {
+    return { classification: 'live', terminal: false };
+  }
+  return { classification: 'unrecognized', terminal: false };
 }

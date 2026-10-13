@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.11
+  version: 1.6.12
 ---
 
 # Project PR (Final)
@@ -793,6 +793,11 @@ gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
 Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents and note the resolved base branch.
 
 ### Step 6: Update Project State to pr_open
+
+Journal placement: the PR record lives in `state.md` (and, in goal mode, the
+delivery registry). When the PR is also noted in `implementation.md`, write one
+receipt line under `## Reviews and Gates` (PR URL, scope, date); never after
+`## References`.
 
 After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.md"` so project routing reflects both the actual PR state and the `pr_open` review posture.
 

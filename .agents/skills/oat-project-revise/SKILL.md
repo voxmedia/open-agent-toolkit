@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.7
+  version: 1.0.8
 ---
 
 # Project Revise
@@ -257,13 +257,20 @@ Update frontmatter to point at the first revision task so `oat-project-implement
 
 Update the Progress Overview table to include the new revision phase (e.g., add a `Phase p-rev{N}` row with task count and `in_progress` status).
 
+In task modes add a `## Phase p-rev{N}: Revision {N}` section after the last
+phase section (before `## Orchestration Runs`) with `**Status:** in_progress`
+and one `### Task prev{N}-tNN:` block per revision task (`**Status:** pending`,
+`**Commit:** -`), so every revision task has its block in its own phase.
+
 In brief modes point the journal at the phase instead of a task: set
 `oat_current_task_id: p-rev{N}`, add a `## Phase p-rev{N}: Revision {N}`
 section after the last phase section with `**Status:** pending` directly under
 the heading (the root writes `**Base:**` when the phase starts), and add a
 `p-rev{N}` Progress Overview row with one unit, `0/1` accepted.
 
-Add a "Revision Received" entry:
+Add a "Revision Received" entry inside the new revision phase's section, after
+its status line (brief: after its markers) and before its first task block;
+never after `## References`:
 
 ```markdown
 ### Revision Received: Inline Feedback

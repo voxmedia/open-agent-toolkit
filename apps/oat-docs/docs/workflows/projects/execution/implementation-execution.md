@@ -89,9 +89,12 @@ The root does not implement phase tasks while an accepted phase launch owns
 that scope.
 
 Before a native launch, the root constructs and redacts the complete generic
-dispatch record and OAT role event. When the host returns, it writes the
-request ID, the `Dispatch:` stamp, and the accepted or `blocked-before-start`
-result into the run record in `implementation.md`, the only launch record.
+dispatch record and OAT role event. When the host returns `accepted` or
+`blocked-before-start`, it renders the run line with
+`oat project dispatch record --format line --dispatch-stamp "<Dispatch: …>"`
+and writes it under `## Orchestration Runs` in `implementation.md`; after the
+terminal outcome it re-renders that line and replaces it in place. One line per
+request ID is the run record and the only launch record.
 Before an effort-pinned managed Claude launch, the root must run
 `oat project dispatch record`, which writes nothing, as a validation-only
 boundary. It supplies the real
@@ -262,12 +265,23 @@ commit range, task IDs and boundaries, project artifacts, and verification
 evidence. The root commits the phase's task ledger — task rows, the resume
 pointer, and any settled recovery marker — before it dispatches the reviewer,
 so the reviewed head is never stale by construction. Review-outcome
-bookkeeping — the Reviews row and its disposition, the Orchestration Run, and
+bookkeeping — the Reviews row and its disposition, the run-line update, and
 the deferred project-log entries — is out of scope at the reviewed head: the
 root writes it after the review returns. In a parallel group the phase worktree
 does not carry the root ledger, so the reviewer brief names the task ledger out
 of scope as well. The review passes with zero Critical and zero High findings.
 Medium and Low findings are recorded without blocking the phase.
+
+## Journal slots and the pre-Step-16 check
+
+The root writes each phase's task blocks, receipts and verification line in
+that phase's section, run lines under `## Orchestration Runs`, gate lines and
+multi-phase receipts under `## Reviews and Gates`, and excluded parallel phases
+and unmerged worktrees under `## Deferred Findings`. Before Step 16 writes the
+terminal journal headers, implement runs the closeout invariant and then
+`oat project journal check --at implement-preflight`; a refusal names the
+reason, line and owner, and implementation stays in progress until the journal
+is corrected. See [Project Artifacts](../../../reference/project-artifacts.md#the-implementation-journal).
 
 ## Final Exit-Gate Boundary
 

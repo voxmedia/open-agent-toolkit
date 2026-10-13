@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -9,6 +9,9 @@ import {
 } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
+  DEFAULT_PROJECT_LOG_DIGEST_MAX_ENTRIES,
+  DEFAULT_PROJECT_LOG_DIGEST_MAX_LINES,
+  isValidProjectLogDigestBound,
   resolveActiveProject,
   type ActiveProjectResolution,
 } from '@config/oat-config';
@@ -23,6 +26,7 @@ import {
   PROJECT_LOG_FILENAME,
   type ParsedProjectLogEntry,
 } from './check';
+import { parseProjectLogBodyHead } from './grammar';
 
 const DEFAULT_LEDGER_PATH = '.oat/repo/reference/project-observations.md';
 const WORKFLOW_OBSERVATIONS_HEADING = '## Workflow Observations';
@@ -45,12 +49,45 @@ export interface RollupProjectLogInput {
   artifactTarget?: ProjectLogArtifactTarget;
 }
 
+/**
+ * What the Workflow Observations digest selected, reported under `--json`
+ * without copying any entry body.
+ */
+export interface ProjectLogDigestReport {
+  /** The bounds the digest was rendered under, after config resolution. */
+  maxEntries: number;
+  maxLines: number;
+  /** Judgment entries rendered into the summary section. */
+  rendered: number;
+  omitted: {
+    /** Judgment entries left out by the entry or line bound. */
+    overBound: number;
+    /** Structural entries, which are provenance and never rendered. */
+    structural: number;
+    /** `### ` headings that match neither grammar, skipped individually. */
+    malformed: number;
+  };
+  /** Locator tokens of the over-bound judgment entries, in priority order. */
+  omittedEntries: string[];
+  /**
+   * Rendered and omitted counts per producer: a judgment entry's `**Origin:**`
+   * (or `unattributed`), a structural entry's producer.
+   */
+  byProducer: Record<string, { rendered: number; omitted: number }>;
+}
+
 /** The outcome of a roll-up that actually read the log. */
 export interface ProjectLogRollupSuccess {
   status: 'ok' | 'failed';
-  summarySection: 'written' | 'updated';
+  /**
+   * `omitted` when the log has no judgment entry to digest: an existing
+   * Workflow Observations section is removed and none is created.
+   */
+  summarySection: 'written' | 'updated' | 'omitted';
   ledgerOutcome: 'appended' | 'deduplicated' | 'skipped_permitted' | 'failed';
+  /** Every entry read from the log, structural and judgment. */
   entriesRolledUp: number;
+  digest: ProjectLogDigestReport;
 }
 
 export type ProjectLogRollupResult =
@@ -127,16 +164,288 @@ function renderEntries(entries: ParsedProjectLogEntry[]): string {
     .join('\n\n');
 }
 
+type JudgmentEntry = Extract<ParsedProjectLogEntry, { class: 'judgment' }>;
+
+/**
+ * The prefix of the export-safe source locator a digest item and a summary
+ * recommendation carry. It is a plain token, never a Markdown link: the log is
+ * archived with the project and is not retrievable from a tracked export, so
+ * the archive export (not this command) finalizes the token to the archive
+ * identity.
+ */
+export const PROJECT_LOG_LOCATOR_PREFIX = 'oat-project:';
+
+function slugifyArea(area: string): string {
+  return (
+    area
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'entry'
+  );
+}
+
+/**
+ * Assigns each judgment entry its collision-safe entry id:
+ * `<date>-<type>-<area slug>-<n>`, where `n` counts, from 1 in log order, the
+ * judgment entries sharing that date, type and area slug. The log is
+ * append-only, so an id never changes once assigned.
+ */
+export function assignProjectLogEntryIds(
+  entries: readonly ParsedProjectLogEntry[],
+): Map<JudgmentEntry, string> {
+  const ids = new Map<JudgmentEntry, string>();
+  const ordinals = new Map<string, number>();
+  for (const entry of entries) {
+    if (entry.class !== 'judgment') continue;
+    const stem = `${entry.date}-${entry.type}-${slugifyArea(entry.area)}`;
+    const ordinal = (ordinals.get(stem) ?? 0) + 1;
+    ordinals.set(stem, ordinal);
+    ids.set(entry, `${stem}-${ordinal}`);
+  }
+  return ids;
+}
+
+/** `oat-project:<slug>#<entry-id>`. */
+export function projectLogEntryLocator(slug: string, entryId: string): string {
+  return `${PROJECT_LOG_LOCATOR_PREFIX}${slug}#${entryId}`;
+}
+
+const LIVE_PROJECT_PATH_RE =
+  /(?:[^\s`'"()<>[\]]*\/)?\.oat\/projects\/(?:shared|local|synced)\/[^\s/`'"()<>[\]]+(?:\/([^\s`'"()<>[\]]*))?/g;
+
+/**
+ * Removes live project-directory paths from text bound for `summary.md`.
+ *
+ * A `.oat/projects/<scope>/<slug>/…` path stops resolving once the project is
+ * archived, and the summary is the one artifact exported into the tracked
+ * repository. The project-relative remainder is kept and labelled, so a review
+ * file name or run artifact stays identifiable.
+ */
+export function sanitizeLiveProjectPaths(text: string): string {
+  return text.replace(LIVE_PROJECT_PATH_RE, (_match, rest?: string) => {
+    const trimmed = (rest ?? '').replace(/[.,;:]+$/, '');
+    const trailing = (rest ?? '').slice(trimmed.length);
+    return trimmed
+      ? `(project file ${trimmed})${trailing}`
+      : `(project directory)${trailing}`;
+  });
+}
+
+function firstSentence(text: string): string {
+  const collapsed = text.replace(/\s+/g, ' ').trim();
+  const match = /^.*?[.!?](?=\s|$)/.exec(collapsed);
+  return match ? match[0] : collapsed;
+}
+
+function labelledLine(lines: string[], labels: RegExp): string | undefined {
+  for (const line of lines) {
+    const match = labels.exec(line.trim());
+    if (match) return match[1]!.trim();
+  }
+  return undefined;
+}
+
+const CATEGORY_PRIORITY: Record<string, number> = { decision: 0, gotcha: 1 };
+
+function categoryRank(entry: JudgmentEntry): number {
+  return entry.category === undefined
+    ? 2
+    : (CATEGORY_PRIORITY[entry.category] ?? 2);
+}
+
+/**
+ * The digest's deterministic order: newest first, then `decision` and
+ * `gotcha` ahead of every other category, then heading text, then entry id.
+ */
+function compareDigestEntries(
+  ids: Map<JudgmentEntry, string>,
+): (left: JudgmentEntry, right: JudgmentEntry) => number {
+  return (left, right) =>
+    right.date.localeCompare(left.date) ||
+    categoryRank(left) - categoryRank(right) ||
+    left.heading.localeCompare(right.heading) ||
+    ids.get(left)!.localeCompare(ids.get(right)!);
+}
+
+/**
+ * One concise digest item: a header line carrying date, type, area, scope,
+ * category and the locator token, then the first observation sentence and any
+ * limitation and uncertainty. A recommendation is rendered only for an
+ * uncategorized entry; a categorized entry's synthesized recommendation is
+ * owned by the summary's Autonomous Execution Learnings section, so rendering
+ * it here too would state it twice.
+ */
+function renderDigestItem(entry: JudgmentEntry, locator: string): string[] {
+  const { rest } = parseProjectLogBodyHead(entry.body);
+  const lines = rest.split('\n');
+  const observation =
+    labelledLine(lines, /^Observation:\s*(.+)$/i) ??
+    lines.find((line) => line.trim() !== '')?.trim() ??
+    '';
+  const meta = [entry.scope, ...(entry.category ? [entry.category] : [])];
+  const item = [
+    `- **${entry.date} · ${entry.type} · ${entry.area}** (${meta.join(', ')}) \`${locator}\``,
+  ];
+  if (observation) item.push(`  ${firstSentence(observation)}`);
+  const limitation = labelledLine(
+    lines,
+    /^(?:Environment limitations?|Limitations?):\s*(.+)$/i,
+  );
+  if (limitation) item.push(`  Limitation: ${limitation}`);
+  const uncertainty = labelledLine(lines, /^Uncertainty:\s*(.+)$/i);
+  if (uncertainty) item.push(`  Uncertainty: ${uncertainty}`);
+  if (entry.category === undefined) {
+    const recommendation = labelledLine(lines, /^Recommendation:\s*(.+)$/i);
+    if (recommendation) item.push(`  Recommendation: ${recommendation}`);
+  }
+  return item.map((line) => sanitizeLiveProjectPaths(line));
+}
+
+export interface ProjectLogDigest {
+  /** The section body, or undefined when there is no judgment entry. */
+  body: string | undefined;
+  report: ProjectLogDigestReport;
+}
+
+/**
+ * Projects the log into the bounded Workflow Observations digest.
+ *
+ * Only judgment entries are eligible; structural entries are provenance and
+ * stay in the log. Items are taken in priority order while both bounds hold:
+ * at most `maxEntries` items, and at most `maxLines` lines for the whole
+ * section body including the omitted-count trailer and the cross-reference.
+ * Selection never feeds the ledger, which graduates the complete judgment set.
+ */
+export function renderProjectLogDigest(
+  parsed: { entries: ParsedProjectLogEntry[]; grammarViolations: string[] },
+  slug: string,
+  bounds: { maxEntries: number; maxLines: number },
+): ProjectLogDigest {
+  const ids = assignProjectLogEntryIds(parsed.entries);
+  const judgments = parsed.entries
+    .filter((entry): entry is JudgmentEntry => entry.class === 'judgment')
+    .sort(compareDigestEntries(ids));
+  // A Map, not an object literal: an origin is caller-supplied text, and a
+  // name such as `__proto__` must count like any other, never reach
+  // `Object.prototype`.
+  const producerCounts = new Map<
+    string,
+    { rendered: number; omitted: number }
+  >();
+  const tally = (producer: string, key: 'rendered' | 'omitted'): void => {
+    const counts = producerCounts.get(producer) ?? { rendered: 0, omitted: 0 };
+    counts[key] += 1;
+    producerCounts.set(producer, counts);
+  };
+  let structural = 0;
+  for (const entry of parsed.entries) {
+    if (entry.class === 'structural') {
+      structural += 1;
+      tally(entry.producer, 'omitted');
+    }
+  }
+
+  const hasCategorized = judgments.some(
+    (entry) => entry.category !== undefined,
+  );
+  const crossReference =
+    'Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.';
+  const rendered: string[] = [];
+  const omittedEntries: string[] = [];
+  let renderedCount = 0;
+  for (const entry of judgments) {
+    const locator = projectLogEntryLocator(slug, ids.get(entry)!);
+    const item = renderDigestItem(entry, locator);
+    const remaining = judgments.length - renderedCount - 1;
+    // Lines the section would need with this item: the items so far, this one,
+    // and the trailer and cross-reference blocks (two lines each with their
+    // blank separator) that would follow it.
+    const reserved = (remaining > 0 ? 2 : 0) + (hasCategorized ? 2 : 0);
+    const fits =
+      omittedEntries.length === 0 &&
+      renderedCount < bounds.maxEntries &&
+      rendered.length + item.length + reserved <= bounds.maxLines;
+    if (fits) {
+      rendered.push(...item);
+      renderedCount += 1;
+      tally(entry.origin ?? 'unattributed', 'rendered');
+    } else {
+      omittedEntries.push(locator);
+      tally(entry.origin ?? 'unattributed', 'omitted');
+    }
+  }
+
+  const report: ProjectLogDigestReport = {
+    maxEntries: bounds.maxEntries,
+    maxLines: bounds.maxLines,
+    rendered: renderedCount,
+    omitted: {
+      overBound: omittedEntries.length,
+      structural,
+      malformed: parsed.grammarViolations.length,
+    },
+    omittedEntries,
+    // `Object.fromEntries` defines own data properties, so every origin,
+    // `__proto__` included, serializes as an ordinary key.
+    byProducer: Object.fromEntries(producerCounts),
+  };
+  if (judgments.length === 0) {
+    return { body: undefined, report };
+  }
+  // The trailer and cross-reference count against `maxLines` like every
+  // item: each block after the first costs its lines plus a blank separator,
+  // and a block that would exceed the limit is left out (the trailer before
+  // the cross-reference). The JSON report keeps every count either way.
+  const blocks = rendered.length > 0 ? [rendered.join('\n')] : [];
+  let usedLines = rendered.length;
+  const appendWithinLimit = (block: string): void => {
+    const cost = block.split('\n').length + (blocks.length > 0 ? 1 : 0);
+    if (usedLines + cost <= bounds.maxLines) {
+      blocks.push(block);
+      usedLines += cost;
+    }
+  };
+  if (omittedEntries.length > 0) {
+    appendWithinLimit(
+      `_${omittedEntries.length} more judgment ${
+        omittedEntries.length === 1 ? 'entry is' : 'entries are'
+      } omitted by the digest bound (${bounds.maxEntries} entries, ${bounds.maxLines} lines); the archived project log keeps every entry._`,
+    );
+  }
+  if (hasCategorized) appendWithinLimit(crossReference);
+  return { body: blocks.join('\n\n'), report };
+}
+
 function writeSummarySection(
   content: string,
   heading: string,
-  body: string,
+  body: string | undefined,
 ): {
   content: string;
   outcome: ProjectLogRollupSuccess['summarySection'];
 } {
   const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const marker = new RegExp(`^${escapedHeading}\\s*$`, 'm').exec(content);
+  if (body === undefined) {
+    // No durable lesson: the section is never created, and an existing one —
+    // empty, or a stale copy an earlier roll-up wrote — is removed, because
+    // this command is its only writer.
+    if (!marker) {
+      return { content, outcome: 'omitted' };
+    }
+    const remainder = content.slice(marker.index + marker[0].length);
+    const nextHeading = /^## .+$/m.exec(remainder);
+    const end =
+      nextHeading?.index === undefined
+        ? content.length
+        : marker.index + marker[0].length + nextHeading.index;
+    const before = content.slice(0, marker.index).trimEnd();
+    const after = content.slice(end).trimStart();
+    return {
+      content: after ? `${before}\n\n${after}` : `${before}\n`,
+      outcome: 'omitted',
+    };
+  }
   const section = `${heading}\n\n${body}\n`;
   if (!marker) {
     return {
@@ -163,6 +472,29 @@ interface ProjectLogLedgerTarget {
   path: string;
   explicitlyConfigured: boolean;
   defaultReferenceLayer: string;
+}
+
+async function resolveDigestBounds(
+  repoRoot: string,
+  home: string,
+  dependencies: Pick<RollupProjectLogDependencies, 'resolveEffectiveConfig'>,
+): Promise<{ maxEntries: number; maxLines: number }> {
+  const effective = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    join(home, '.oat'),
+  );
+  const maxEntries =
+    effective.resolved['workflow.projectLogDigest.maxEntries']?.value;
+  const maxLines =
+    effective.resolved['workflow.projectLogDigest.maxLines']?.value;
+  return {
+    maxEntries: isValidProjectLogDigestBound(maxEntries)
+      ? maxEntries
+      : DEFAULT_PROJECT_LOG_DIGEST_MAX_ENTRIES,
+    maxLines: isValidProjectLogDigestBound(maxLines)
+      ? maxLines
+      : DEFAULT_PROJECT_LOG_DIGEST_MAX_LINES,
+  };
 }
 
 export async function resolveProjectLogLedgerTarget(
@@ -299,19 +631,34 @@ export async function rollupProjectLog(
   }
 
   const parsed = parseProjectLogEntries(content);
-  const summaryUpdate = writeSummarySection(
-    await readFile(summaryPath, 'utf8'),
-    artifactTarget.summaryHeading ?? WORKFLOW_OBSERVATIONS_HEADING,
-    renderEntries(parsed.entries),
+  const digest = renderProjectLogDigest(
+    parsed,
+    basename(projectPath),
+    await resolveDigestBounds(
+      input.repoRoot,
+      input.home ?? homedir(),
+      dependencies,
+    ),
   );
-  await writeFile(summaryPath, summaryUpdate.content, 'utf8');
+  const summaryBefore = await readFile(summaryPath, 'utf8');
+  const summaryUpdate = writeSummarySection(
+    summaryBefore,
+    artifactTarget.summaryHeading ?? WORKFLOW_OBSERVATIONS_HEADING,
+    digest.body,
+  );
+  if (summaryUpdate.content !== summaryBefore) {
+    await writeFile(summaryPath, summaryUpdate.content, 'utf8');
+  }
 
+  // The ledger graduates the complete original judgment set, never the digest
+  // selection: a general lesson beyond the digest bound still graduates.
   const ledgerOutcome = await rollupLedger(input, parsed.entries, dependencies);
   return {
     status: ledgerOutcome === 'failed' ? 'failed' : 'ok',
     summarySection: summaryUpdate.outcome,
     ledgerOutcome,
     entriesRolledUp: parsed.entries.length,
+    digest: digest.report,
   };
 }
 
@@ -349,7 +696,11 @@ async function runRollupCommand(
       context.logger.json(result);
     } else if (result.status === 'ok') {
       context.logger.success(
-        `Rolled up ${result.entriesRolledUp} project log entries.`,
+        `Rolled up ${result.entriesRolledUp} project log entries; Workflow Observations ${
+          result.summarySection === 'omitted'
+            ? 'omitted (no judgment entries)'
+            : `digest renders ${result.digest.rendered}, omits ${result.digest.omitted.overBound} over the bound`
+        }.`,
       );
       if (result.ledgerOutcome === 'skipped_permitted') {
         context.logger.warn(

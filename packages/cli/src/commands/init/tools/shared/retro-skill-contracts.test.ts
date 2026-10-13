@@ -802,3 +802,38 @@ describe('retro skill content contracts', () => {
     );
   });
 });
+
+describe('retro unified learnings evidence', () => {
+  it('reads the unified project log first and the legacy learnings file second', () => {
+    const order =
+      evidenceAndLanes.match(
+        /## Required Reading Order[\s\S]*?(?=## Environment Detection)/,
+      )?.[0] ?? '';
+    const logIndex = order.indexOf('1. `project-log.md`');
+    const legacyIndex = order.indexOf('2. `oat-execution-learnings.md`');
+    expect(logIndex).toBeGreaterThanOrEqual(0);
+    expect(legacyIndex).toBeGreaterThan(logIndex);
+    expect(order).toMatch(
+      /`\*\*Category:\*\*`\s+head are the unified learnings/,
+    );
+    expect(order).toMatch(/legacy learnings file, read second/);
+    expect(order).toMatch(
+      /proven twin of a unified entry \(same `\*\*Recorded:\*\*` timestamp, category and\s+title, each exactly\); keep a distinct lesson that only shares a title/,
+    );
+    expect(retroSkill).toMatch(
+      /unified project log \(including its category-bearing learnings\) first, the\s+legacy `oat-execution-learnings.md` second/,
+    );
+    expect(retroSkill).toMatch(
+      /Evidence order and evidence-strength rules are unchanged/,
+    );
+    expect(retroDocs).toMatch(
+      /1\. `project-log.md`, including the unified learnings[\s\S]*?2\. `oat-execution-learnings.md`, the legacy learnings file/,
+    );
+    const sources = retroTemplate.match(
+      /oat_retro_evidence_sources:[\s\S]*?oat_retro_promotions/,
+    )?.[0];
+    expect(sources?.indexOf('source: project-log')).toBeLessThan(
+      sources?.indexOf('source: oat-execution-learnings') ?? -1,
+    );
+  });
+});

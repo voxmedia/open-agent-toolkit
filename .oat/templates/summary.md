@@ -9,6 +9,7 @@ oat_template_name: summary
 oat_summary_last_task: null
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
+oat_summary_learnings_fingerprint: none
 ---
 
 # Summary: {Project Name}
@@ -69,11 +70,18 @@ Pull from implementation.md task notes flagged as issues/blockers.}
 
 ## Autonomous Execution Learnings
 
-<!-- CONDITIONAL: Include this entire section only when the project contains
-     oat-execution-learnings.md with actionable entries. Otherwise remove the
-     heading, category subheadings, and placeholders. Omit empty categories.
-     Each recommendation needs a one-line rationale and a relative pointer to
-     every supporting source entry (timestamp, category, and title). -->
+<!-- CONDITIONAL: Include this entire section only when the project log has
+     actionable category-bearing judgment entries (a **Category:** head written
+     by `oat project log append --category`) or a legacy
+     oat-execution-learnings.md has actionable entries; read the log first and
+     the legacy file second. Otherwise remove the heading, category
+     subheadings, and placeholders. Omit empty categories.
+     Each recommendation needs a one-line rationale and the plain-text source
+     identity of every supporting entry, never a link: the token
+     oat-project:<slug>#<entry-id> for a log entry, or "legacy learning
+     <timestamp> — <category> — <title>" for a legacy entry.
+     The Workflow Observations section is owned by `oat project log rollup`,
+     which appends or omits it; never add it here or by hand. -->
 
 ### Agent-instruction updates
 

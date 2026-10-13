@@ -271,6 +271,24 @@ export interface WorkflowGatesConfig {
   skills?: Record<string, GateConfig | null>;
 }
 
+/**
+ * Bounds for the Workflow Observations digest `oat project log rollup` writes
+ * into `summary.md`. A sibling of `projectLog`, which stays `true | false |
+ * "auto"`; each bound is a positive integer and an invalid value is dropped so
+ * the resolver's default applies.
+ */
+export interface WorkflowProjectLogDigest {
+  maxEntries?: number;
+  maxLines?: number;
+}
+
+export const DEFAULT_PROJECT_LOG_DIGEST_MAX_ENTRIES = 12;
+export const DEFAULT_PROJECT_LOG_DIGEST_MAX_LINES = 60;
+
+export function isValidProjectLogDigestBound(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 1;
+}
+
 export interface WorkflowGateTimeouts {
   code?: number;
   artifact?: number;
@@ -288,6 +306,7 @@ export interface OatWorkflowConfig {
   autoArtifactReview?: WorkflowAutoArtifactReview;
   projectLog?: WorkflowProjectLog;
   projectLogLedgerPath?: string;
+  projectLogDigest?: WorkflowProjectLogDigest;
   designMode?: WorkflowDesignMode;
   dispatchPolicy?: WorkflowDispatchPolicy;
   dispatchCeiling?: WorkflowDispatchCeiling;
@@ -788,6 +807,19 @@ function normalizeWorkflowConfig(
   const projectLogLedgerPath = trimNonEmptyString(parsed.projectLogLedgerPath);
   if (projectLogLedgerPath !== undefined) {
     next.projectLogLedgerPath = projectLogLedgerPath;
+  }
+
+  if (isRecord(parsed.projectLogDigest)) {
+    const projectLogDigest: WorkflowProjectLogDigest = {};
+    if (isValidProjectLogDigestBound(parsed.projectLogDigest.maxEntries)) {
+      projectLogDigest.maxEntries = parsed.projectLogDigest.maxEntries;
+    }
+    if (isValidProjectLogDigestBound(parsed.projectLogDigest.maxLines)) {
+      projectLogDigest.maxLines = parsed.projectLogDigest.maxLines;
+    }
+    if (Object.keys(projectLogDigest).length > 0) {
+      next.projectLogDigest = projectLogDigest;
+    }
   }
 
   if (

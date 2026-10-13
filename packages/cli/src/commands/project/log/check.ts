@@ -23,8 +23,10 @@ import {
   isProjectLogEntryMarker,
   isProjectLogSealEntry,
   JUDGMENT_HEADING_RE,
+  parseProjectLogBodyHead,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
+  type ProjectLogCategory,
   type ProjectLogSection,
   type ProjectLogScope,
   type ProjectLogType,
@@ -34,6 +36,12 @@ export const PROJECT_LOG_FILENAME = 'project-log.md';
 export const SYNTHESIS_PENDING_HEADING =
   '## End-of-run synthesis (pending — do not skip at project completion)';
 export const SYNTHESIS_COMPLETE_HEADING = '## End-of-run synthesis';
+/**
+ * The separate learnings file the autonomous, cloud and goal producers wrote
+ * before judgment entries carried a category. It is read, never migrated;
+ * `check` reports its presence so summary and retro know to read it second.
+ */
+export const LEGACY_LEARNINGS_FILENAME = 'oat-execution-learnings.md';
 
 /**
  * The completion seal a project log already carries.
@@ -78,6 +86,13 @@ export interface ProjectLogCheckResult {
   lastEntryDate: string | null;
   synthesisPending: boolean;
   grammarViolations: string[];
+  /**
+   * `legacy` when the project still carries `oat-execution-learnings.md`, which
+   * summary and retro read after the unified log; `none` otherwise. Reported in
+   * every status, including `absent` and `ambiguous`, because the file's
+   * presence does not depend on the log's.
+   */
+  learnings: 'legacy' | 'none';
 }
 
 export type ParsedProjectLogEntry =
@@ -89,6 +104,15 @@ export type ParsedProjectLogEntry =
       type: ProjectLogType;
       area: string;
       body: string;
+      /**
+       * Body-head fields, present only when the entry's body opens with them
+       * (`append --category/--source/--origin`). Absent rather than null so a
+       * log written before the head existed parses to exactly the same entries.
+       */
+      category?: ProjectLogCategory;
+      source?: string;
+      origin?: string;
+      recorded?: string;
     }
   | {
       class: 'structural';
@@ -232,6 +256,7 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
 
     const judgment = JUDGMENT_HEADING_RE.exec(heading);
     if (judgment) {
+      const { head } = parseProjectLogBodyHead(body);
       entries.push({
         class: 'judgment',
         heading,
@@ -240,6 +265,10 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
         type: judgment[3] as ProjectLogType,
         area: judgment[4]!.trim(),
         body,
+        ...(head.category !== undefined ? { category: head.category } : {}),
+        ...(head.source !== undefined ? { source: head.source } : {}),
+        ...(head.origin !== undefined ? { origin: head.origin } : {}),
+        ...(head.recorded !== undefined ? { recorded: head.recorded } : {}),
       });
       continue;
     }
@@ -404,6 +433,11 @@ export async function checkProjectLog(
   const dependencies = { ...DEFAULT_CHECK_DEPENDENCIES, ...overrides };
   const projectPath = await resolveTargetProject(input, dependencies);
   const logPath = join(projectPath, PROJECT_LOG_FILENAME);
+  const learnings = (await fileExists(
+    join(projectPath, LEGACY_LEARNINGS_FILENAME),
+  ))
+    ? 'legacy'
+    : 'none';
   if (!(await fileExists(logPath))) {
     return {
       status: 'absent',
@@ -415,6 +449,7 @@ export async function checkProjectLog(
       lastEntryDate: null,
       synthesisPending: false,
       grammarViolations: [],
+      learnings,
     };
   }
 
@@ -436,6 +471,7 @@ export async function checkProjectLog(
       lastEntryDate: null,
       synthesisPending: false,
       grammarViolations: [],
+      learnings,
     };
   }
 
@@ -465,6 +501,7 @@ export async function checkProjectLog(
     lastEntryDate: parsed.entries.at(-1)?.date ?? null,
     synthesisPending,
     grammarViolations: parsed.grammarViolations,
+    learnings,
   };
 }
 
@@ -490,23 +527,25 @@ async function runCheckCommand(
       context.logger.error(result.ambiguity ?? 'Project log has two readings.');
     } else {
       context.logger.info(
-        result.status === 'absent'
-          ? 'Project log: absent'
-          : `Project log: ${result.status}; entries: ${
-              result.entryCounts.structural +
-              PROJECT_LOG_TYPES.reduce(
-                (total, type) => total + result.entryCounts.judgment[type],
-                0,
-              )
-            }${
-              result.seal
-                ? `; sealed${
-                    result.seal.count > 1
-                      ? ` (${result.seal.count} seal entries)`
-                      : ''
-                  }`
-                : ''
-            }`,
+        `${
+          result.status === 'absent'
+            ? 'Project log: absent'
+            : `Project log: ${result.status}; entries: ${
+                result.entryCounts.structural +
+                PROJECT_LOG_TYPES.reduce(
+                  (total, type) => total + result.entryCounts.judgment[type],
+                  0,
+                )
+              }${
+                result.seal
+                  ? `; sealed${
+                      result.seal.count > 1
+                        ? ` (${result.seal.count} seal entries)`
+                        : ''
+                    }`
+                  : ''
+              }`
+        }${result.learnings === 'legacy' ? '; learnings: legacy' : ''}`,
       );
     }
     // An ambiguous log exits non-zero whether or not synthesis was required: a

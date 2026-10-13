@@ -92,10 +92,71 @@ That provider reference owns Cursor launch, acceptance, continuation, retry,
 and recovery mechanics. `oat-project-dispatch-subagents` owns lifecycle scope
 and policy adaptation. Do not duplicate those contracts here.
 
+## Learning Write
+
+Cloud learnings — environment anomalies, setup gaps, degraded checks, freshness
+anomalies and missing skills, MCP servers, CLI surfaces or credentials — are
+category-bearing judgment entries in the active project's `project-log.md`,
+written only through `oat project log append`. Never create or append to
+`oat-execution-learnings.md`.
+
+Give each observation a stable, whitespace-free source id unique to this run
+and observation (for example `cloud-<run id>-<NN>`) and retain it for retries;
+it is both `--source` and `--idempotency-key`, so a replay appends nothing.
+Write the learning title as `--area` and the body as `Observation:`,
+`Impact:`, `Recommendation:` and, when it applies, `Uncertainty:` lines.
+
+```bash
+# Learning write (shared by oat-project-autonomous, oat-cursor-cloud-projects
+# and oat-project-goal): oat_record_learning <category> <source-id> <title> <body>
+oat_record_learning() {
+  local category="$1" source="$2" title="$3" body="$4" type result
+  case "$category" in
+    gotcha | environment-limited) type=friction ;;
+    efficiency | candidate-skill-content) type=worked-well ;;
+    documentation-gap | decision) type=feedback ;;
+    *)
+      echo "oat: unknown learning category '$category'" >&2
+      return 1
+      ;;
+  esac
+  result=$(oat project log append --json --project "$PROJECT_PATH" \
+    --type "$type" --scope project --area "$title" \
+    --category "$category" \
+    --source "$source" \
+    --origin "${LEARNING_ORIGIN:?set to the producer skill name}" \
+    --idempotency-key "$source" \
+    --body "$body") || {
+    printf '%s\n' "$result" >&2
+    return 1
+  }
+  if printf '%s' "$result" | grep -Eq '"status": *"skipped"'; then
+    echo "oat: warning: project log disabled (workflow.projectLog=false); learning $source not recorded" >&2
+  fi
+}
+```
+
+Set `LEARNING_ORIGIN=oat-cursor-cloud-projects`. Use the six categories
+verbatim; an environment anomaly or a missing surface is usually
+`environment-limited`, a stale user tier `gotcha`. The write maps the category
+to the judgment type (`gotcha`, `environment-limited` → `friction`;
+`efficiency`, `candidate-skill-content` → `worked-well`; `documentation-gap`,
+`decision` → `feedback`).
+
+Call it unconditionally; do not read `workflow.projectLog` yourself. The
+append consults that flag only while `project-log.md` does not exist: with the
+log disabled and absent it creates nothing and reports `status: skipped`, the
+write prints one warning line, records nothing, and orientation continues. An
+existing `project-log.md` keeps accepting categorized learnings whatever the
+flag says (`DR-260718-automatic-create-on-first`). Commit `project-log.md`, when it
+exists, with the next bookkeeping commit for the project (a synced project uses
+`oat project push`).
+
 ## Degraded Route Evidence
 
 Degradation is a pre-launch selection outcome, not a post-accept fallback.
-Record it in the canonical dispatch record plus project learnings.
+Record it in the canonical dispatch record plus one learning (see Learning
+Write).
 
 Use this shape for the Cursor-specific evidence supplied to the generic record:
 
@@ -149,7 +210,7 @@ independence:
 degradation:
   present: true
   reason: catalog-contained-one-dispatchable-family
-learnings_entry: oat-execution-learnings.md#<entry>
+learnings_entry: <learning source id>
 ```
 
 Include the exact configured invocation evidence required by the generic record

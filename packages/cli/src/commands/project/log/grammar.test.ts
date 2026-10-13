@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  composeJudgmentBodyHead,
   containsAmbiguousProjectLogMarker,
+  isProjectLogCategory,
+  parseProjectLogBodyHead,
+  PROJECT_LOG_CATEGORIES,
   findProjectLogSealHeadingLine,
   findProjectLogSections,
   normalizeProjectLogLineEndings,
@@ -263,6 +267,51 @@ describe('project log grammar', () => {
         isProjectLogSealHeading('### 2026-07-17 · general · feedback · notes'),
       ).toBe(false);
       expect(isProjectLogSealHeading('not a heading')).toBe(false);
+    });
+  });
+
+  describe('judgment body head', () => {
+    it('carries the six learning categories verbatim', () => {
+      expect(PROJECT_LOG_CATEGORIES).toEqual([
+        'gotcha',
+        'efficiency',
+        'documentation-gap',
+        'candidate-skill-content',
+        'decision',
+        'environment-limited',
+      ]);
+      expect(isProjectLogCategory('gotcha')).toBe(true);
+      expect(isProjectLogCategory('Gotcha')).toBe(false);
+      expect(isProjectLogCategory('friction')).toBe(false);
+    });
+
+    it('round-trips a composed head and keeps the rest of the body', () => {
+      const head = {
+        category: 'decision' as const,
+        source: 'obs-1',
+        origin: 'oat-project-goal',
+        recorded: '2026-10-11T00:00:00Z',
+      };
+      const body = `${composeJudgmentBodyHead(head).join('\n')}\n\nRest of body.\nSecond line.`;
+
+      expect(parseProjectLogBodyHead(body)).toEqual({
+        head,
+        rest: 'Rest of body.\nSecond line.',
+      });
+    });
+
+    it('returns the body unchanged when there is no head', () => {
+      expect(parseProjectLogBodyHead('Just prose.')).toEqual({
+        head: {},
+        rest: 'Just prose.',
+      });
+      expect(composeJudgmentBodyHead({})).toEqual([]);
+    });
+
+    it('keeps the first occurrence of a repeated field', () => {
+      expect(
+        parseProjectLogBodyHead('**Source:** a\n**Source:** b\n\nx').head,
+      ).toEqual({ source: 'a' });
     });
   });
 });

@@ -9,6 +9,96 @@ export const PROJECT_LOG_SCOPES = ['project', 'general'] as const;
 export type ProjectLogType = (typeof PROJECT_LOG_TYPES)[number];
 export type ProjectLogScope = (typeof PROJECT_LOG_SCOPES)[number];
 
+/**
+ * The learning taxonomy a judgment entry may carry verbatim in its body head.
+ *
+ * These are the six categories the autonomous, cloud and goal producers used
+ * in `oat-execution-learnings.md`. They ride beside the four judgment types
+ * rather than replacing them: the heading grammar and `JUDGMENT_HEADING_RE`
+ * are unchanged, so every existing reader keeps parsing every existing log.
+ */
+export const PROJECT_LOG_CATEGORIES = [
+  'gotcha',
+  'efficiency',
+  'documentation-gap',
+  'candidate-skill-content',
+  'decision',
+  'environment-limited',
+] as const;
+
+export type ProjectLogCategory = (typeof PROJECT_LOG_CATEGORIES)[number];
+
+export function isProjectLogCategory(
+  value: string,
+): value is ProjectLogCategory {
+  return (PROJECT_LOG_CATEGORIES as readonly string[]).includes(value);
+}
+
+/**
+ * The structured head a judgment body may open with, in the order the command
+ * writes it. Every field is optional; an entry written without `--category`,
+ * `--source` or `--origin` has no head at all and its bytes are unchanged.
+ */
+export interface ProjectLogBodyHead {
+  category?: ProjectLogCategory;
+  source?: string;
+  origin?: string;
+  recorded?: string;
+}
+
+const BODY_HEAD_LINE_RE = /^\*\*(Category|Source|Origin|Recorded):\*\* (\S.*)$/;
+
+/** Renders the head lines `append` writes above a judgment body. */
+export function composeJudgmentBodyHead(head: ProjectLogBodyHead): string[] {
+  const lines: string[] = [];
+  if (head.category !== undefined) lines.push(`**Category:** ${head.category}`);
+  if (head.source !== undefined) lines.push(`**Source:** ${head.source}`);
+  if (head.origin !== undefined) lines.push(`**Origin:** ${head.origin}`);
+  if (head.recorded !== undefined) lines.push(`**Recorded:** ${head.recorded}`);
+  return lines;
+}
+
+/**
+ * Reads the structured head off the top of a judgment body.
+ *
+ * Only the leading run of head lines counts; a `**Source:**` line further down
+ * is body prose. The first occurrence of a field wins, and a category outside
+ * the six is not reported as a category (a hand-written head cannot smuggle a
+ * value `append` would refuse). `rest` is the body below the head, or the whole
+ * body when there is no head.
+ */
+export function parseProjectLogBodyHead(body: string): {
+  head: ProjectLogBodyHead;
+  rest: string;
+} {
+  const lines = body.split(/\r?\n/);
+  const head: ProjectLogBodyHead = {};
+  let index = 0;
+  for (; index < lines.length; index += 1) {
+    const match = BODY_HEAD_LINE_RE.exec(lines[index] ?? '');
+    if (!match) break;
+    const value = match[2]!.trim();
+    switch (match[1]) {
+      case 'Category':
+        if (head.category === undefined && isProjectLogCategory(value)) {
+          head.category = value;
+        }
+        break;
+      case 'Source':
+        head.source ??= value;
+        break;
+      case 'Origin':
+        head.origin ??= value;
+        break;
+      case 'Recorded':
+        head.recorded ??= value;
+        break;
+    }
+  }
+  if (index === 0) return { head, rest: body };
+  return { head, rest: lines.slice(index).join('\n').trim() };
+}
+
 export const PROJECT_LOG_AREA_MAX_LENGTH = 120;
 export const PROJECT_LOG_HEADING_DELIMITER = '·';
 

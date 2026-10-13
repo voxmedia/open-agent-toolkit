@@ -42,6 +42,8 @@ import {
   buildArchiveSnapshotName,
   buildProjectArchiveS3Uri,
   ensureS3ArchiveAccess,
+  formatArchiveLocalName,
+  parseArchiveSnapshotName,
   resolveArchiveProjectTarget,
   resolveLocalArchiveProjectPath,
   resolvePrimaryRepoRoot,
@@ -1457,10 +1459,13 @@ describe('archive utils', () => {
       })}\n`,
       'utf8',
     );
-    const targetExists = vi
-      .fn<() => Promise<boolean>>()
-      .mockResolvedValueOnce(false)
-      .mockResolvedValueOnce(true);
+    const qualifiedPath = `${archivePath}-shared`;
+    const foreign = `${JSON.stringify({
+      projectName: 'demo',
+      snapshotName: '20260827-demo-shared',
+      scope: 'shared',
+      manifestHash: `sha256:${'f'.repeat(64)}`,
+    })}\n`;
 
     await expect(
       archiveProjectOnCompletion(
@@ -1472,14 +1477,90 @@ describe('archive utils', () => {
           s3SyncOnComplete: false,
         },
         {
-          dirExists: targetExists,
+          // Another archive lands at the evaluated path between evaluation and
+          // this call's pending-allocation write.
+          ensureDir: async (directory: string) => {
+            if (directory === qualifiedPath) {
+              await mkdir(qualifiedPath, { recursive: true });
+              await writeFile(
+                join(qualifiedPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+                foreign,
+                'utf8',
+              );
+              await writeFile(join(qualifiedPath, 'state.md'), '# other\n');
+            }
+            await mkdir(directory, { recursive: true });
+          },
           timestamp: () => '2026-08-27T12:00:00Z',
         },
       ),
-    ).rejects.toEqual(
-      new CliError(
-        `Existing archive \`${archivePath}\` does not match persisted snapshot \`20260827-demo\`; refusing to overwrite it.`,
+    ).rejects.toMatchObject({
+      // The local-scope archive holds the base path and the dated identity,
+      // so the shared project's identity is scope-qualified in both
+      // (`demo-shared`, `20260827-demo-shared`). An archive appearing at that
+      // path between evaluation and copy is never overwritten: the copy-time
+      // re-check refuses it as unverifiable and writes nothing.
+      code: 'archive-occupant-unverifiable',
+    });
+    await expect(
+      readFile(join(qualifiedPath, ARCHIVE_SNAPSHOT_METADATA_FILENAME), 'utf8'),
+    ).resolves.toBe(foreign);
+    await expect(
+      readFile(join(qualifiedPath, 'state.md'), 'utf8'),
+    ).resolves.toBe('# other\n');
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('refuses a metadata-less occupant that appears at the path after evaluation, without clearing it', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const archivePath = join(repoRoot, '.oat', 'projects', 'archived', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    await mkdir(archivePath, { recursive: true });
+    await writeFile(join(projectPath, 'state.md'), '# state\n', 'utf8');
+    await writeFile(
+      join(archivePath, ARCHIVE_SNAPSHOT_METADATA_FILENAME),
+      `${JSON.stringify({
+        projectName: 'demo',
+        snapshotName: '20260827-demo',
+        scope: 'local',
+      })}\n`,
+      'utf8',
+    );
+    const qualifiedPath = `${archivePath}-shared`;
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          s3SyncOnComplete: false,
+        },
+        {
+          // An older CLI mid-copy, a person or a tool writes into the
+          // evaluated path after the directory exists, without metadata.
+          ensureDir: async (directory: string) => {
+            await mkdir(directory, { recursive: true });
+            if (directory === qualifiedPath) {
+              await writeFile(join(qualifiedPath, 'notes.md'), '# stray\n');
+            }
+          },
+          timestamp: () => '2026-08-27T12:00:00Z',
+        },
       ),
+    ).rejects.toMatchObject({
+      code: 'archive-occupant-unverifiable',
+      message: expect.stringContaining('`notes.md`'),
+    });
+    // The stray content and the source stay; this run wrote nothing there.
+    await expect(readdir(qualifiedPath)).resolves.toEqual(['notes.md']);
+    await expect(
+      readFile(join(qualifiedPath, 'notes.md'), 'utf8'),
+    ).resolves.toBe('# stray\n');
+    await expect(readFile(join(projectPath, 'state.md'), 'utf8')).resolves.toBe(
+      '# state\n',
     );
   });
 
@@ -1829,7 +1910,10 @@ describe('archive utils', () => {
         timestamp: () => '2026-08-28T12:00:00Z',
       });
       expect(retried.archivePath).toBe(syncedArchive.archivePath);
-      expect(retried.snapshotId).toBe('20260827-same-scope-retry');
+      // The shared archive already holds the dated identity (its summary
+      // export stem and S3 key), so the synced project's is scope-qualified
+      // and the retry reuses it across dates.
+      expect(retried.snapshotId).toBe('20260827-same-scope-retry-synced');
       await expect(
         readFile(join(retried.archivePath, 'summary.md'), 'utf8'),
       ).resolves.toBe('# synced summary\n');
@@ -2327,7 +2411,9 @@ describe('archive utils', () => {
             timestamp: () => '2026-08-28T12:00:00Z',
           });
           const snapshotId = `20260827-${slug}`;
-          const localArchiveId = `${slug}-20260827120000`;
+          // The pre-created empty base directory holds no archive, so the
+          // identity reuses it rather than a clock-suffixed sibling.
+          const localArchiveId = slug;
           expect(retried.snapshotId).toBe(snapshotId);
           expect(retried.archivePath).toBe(
             join(
@@ -3073,6 +3159,8 @@ describe('archive utils', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({ cwd: repoRoot }),
     );
@@ -3897,6 +3985,8 @@ describe('archive utils', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
       ],
       expect.objectContaining({ cwd: worktreeRoot }),
     );
@@ -4176,6 +4266,82 @@ describe('archive utils', () => {
         '2026-04-01T12:34:56Z',
       ),
     ).toBe('20260401-documentation-improvement');
+  });
+
+  it('parses the generation of a snapshot name and keeps its full local name', () => {
+    expect(parseArchiveSnapshotName('20261012-demo-g2')).toEqual({
+      projectName: 'demo',
+      localName: 'demo-g2',
+      familyName: 'demo',
+      scope: null,
+      snapshotName: '20261012-demo-g2',
+      dateStamp: '20261012',
+      generation: 2,
+    });
+    expect(parseArchiveSnapshotName('20261012-demo-g12/')).toMatchObject({
+      projectName: 'demo',
+      localName: 'demo-g12',
+      generation: 12,
+    });
+    expect(parseArchiveSnapshotName('20261011-demo')).toEqual({
+      projectName: 'demo',
+      localName: 'demo',
+      familyName: 'demo',
+      scope: null,
+      snapshotName: '20261011-demo',
+      dateStamp: '20261011',
+      generation: 1,
+    });
+    // `-g1`/`-g0` are never generation suffixes, a slug containing `-gN`
+    // mid-name keeps it, and an undated name is its own project.
+    expect(parseArchiveSnapshotName('20261011-demo-g1')).toMatchObject({
+      projectName: 'demo-g1',
+      generation: 1,
+    });
+    expect(parseArchiveSnapshotName('20261011-my-g2-project')).toMatchObject({
+      projectName: 'my-g2-project',
+      familyName: 'my-g2-project',
+      generation: 1,
+    });
+    expect(parseArchiveSnapshotName('demo-g2')).toMatchObject({
+      projectName: 'demo-g2',
+      localName: 'demo-g2',
+      dateStamp: null,
+      generation: 1,
+    });
+  });
+
+  it('parses the scope-qualified names the archive writer emits', () => {
+    expect(parseArchiveSnapshotName('20261012-demo-g2-local')).toEqual({
+      projectName: 'demo',
+      localName: 'demo-g2-local',
+      familyName: 'demo-local',
+      scope: 'local',
+      snapshotName: '20261012-demo-g2-local',
+      dateStamp: '20261012',
+      generation: 2,
+    });
+    expect(parseArchiveSnapshotName('20261011-demo-local')).toMatchObject({
+      projectName: 'demo',
+      localName: 'demo-local',
+      familyName: 'demo-local',
+      scope: 'local',
+      generation: 1,
+    });
+    // Writer and parser share one contract.
+    for (const [projectName, generation, scope] of [
+      ['demo', 1, null],
+      ['demo', 1, 'local'],
+      ['demo', 3, null],
+      ['demo', 2, 'shared'],
+      ['my-g2-project', 2, 'local'],
+    ] as const) {
+      const localName = formatArchiveLocalName(projectName, generation, scope);
+      expect(
+        parseArchiveSnapshotName(`20261012-${localName}`),
+        localName,
+      ).toMatchObject({ projectName, localName, generation, scope });
+    }
   });
 
   it('fails for explicit sync when aws credentials are unusable', async () => {

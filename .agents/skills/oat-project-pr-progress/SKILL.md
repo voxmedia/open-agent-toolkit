@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.3.4
+  version: 1.3.5
 ---
 
 # Progress PR
@@ -438,6 +438,11 @@ milestone belongs to `oat-project-goal` once the delivery reaches its agreed
 endpoint.
 
 ### Step 6: Optional - Open PR
+
+Journal placement: the PR record lives in `state.md` (and, in goal mode, the
+delivery registry). When the PR is also noted in `implementation.md`, write one
+receipt line under `## Reviews and Gates` (PR URL, scope, date); never after
+`## References`.
 
 For a synced project whose user chooses to open the PR, use this ordered flow:
 

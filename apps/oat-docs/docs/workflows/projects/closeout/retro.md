@@ -28,8 +28,12 @@ in the project log when that log exists.
 
 Evidence is read in this order:
 
-1. `project-log.md`
-2. `oat-execution-learnings.md`, when present
+1. `project-log.md`, including the unified learnings: judgment entries whose
+   body opens with a `**Category:**` head, written by autonomous, cloud and
+   goal runs
+2. `oat-execution-learnings.md`, the legacy learnings file, when present; an
+   entry that is a proven twin of a unified entry (same recorded timestamp,
+   category and title) is read once
 3. Lifecycle artifacts such as `implementation.md`, `state.md`, `plan.md`,
    design and discovery artifacts, reviews, and evidence ledgers
 4. The current session or run transcript when the environment makes it

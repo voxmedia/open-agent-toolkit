@@ -52,14 +52,17 @@ import {
   type ProjectLogSeal,
 } from './check';
 import {
+  composeJudgmentBodyHead,
   composeJudgmentHeading,
   composeStructuralHeading,
   containsAmbiguousProjectLogMarker,
+  isProjectLogCategory,
   isProjectLogEntryMarker,
   findProjectLogSealHeadingLine,
   isProjectLogSealHeading,
   isProjectLogSectionMarker,
   PROJECT_LOG_AREA_MAX_LENGTH,
+  PROJECT_LOG_CATEGORIES,
   PROJECT_LOG_HEADING_DELIMITER,
   PROJECT_LOG_LINE_TERMINATOR_RE,
   PROJECT_LOG_LONE_TERMINATOR_RE,
@@ -67,6 +70,7 @@ import {
   PROJECT_LOG_TYPES,
   normalizeProjectLogLineEndings,
   splitProjectLogLines,
+  type ProjectLogBodyHead,
   type ProjectLogScope,
   type ProjectLogType,
 } from './grammar';
@@ -1085,6 +1089,12 @@ export interface AppendProjectLogInput {
   body?: string;
   versionNote?: string;
   idempotencyKey?: string;
+  /** Learning category for a judgment entry; one of `PROJECT_LOG_CATEGORIES`. */
+  category?: string;
+  /** Stable per-observation source id; required with `category`. */
+  source?: string;
+  /** The producer that recorded the learning. */
+  origin?: string;
 }
 
 /**
@@ -1191,6 +1201,9 @@ interface AppendCommandOptions {
   idempotencyKey?: string;
   commit?: boolean;
   dryRun?: boolean;
+  category?: string;
+  source?: string;
+  origin?: string;
 }
 
 export interface ProjectLogAppendCommandDependencies extends AppendProjectLogDependencies {
@@ -1255,6 +1268,86 @@ function validateVersionNote(value: string | undefined): string | undefined {
 }
 
 /**
+ * Validates `--category`. The named guard `learning-category-validation`: a
+ * category outside the six is refused, so a typo can never become a seventh
+ * category that summary, retro and the digest silently fail to recognize.
+ */
+function validateCategory(value: string): string {
+  const category = validateSingleLine(value, '--category');
+  if (!isProjectLogCategory(category)) {
+    throw new Error(
+      `Invalid --category '${category}'; accepted values: ${PROJECT_LOG_CATEGORIES.join(
+        ' | ',
+      )}.`,
+    );
+  }
+  return category;
+}
+
+/**
+ * Validates `--source`, the stable per-observation id. It is one
+ * whitespace-free word so a producer can pass the same id as
+ * `--idempotency-key` and the existing whole-word replay check recognizes it in
+ * the `**Source:**` head line.
+ */
+function validateSource(value: string): string {
+  const source = validateSingleLine(value, '--source');
+  if (/\s/.test(source)) {
+    throw new Error('--source must be one word without whitespace.');
+  }
+  return source;
+}
+
+/**
+ * The judgment body head requested by `--category`, `--source` and `--origin`,
+ * or undefined when none was passed. `recorded` is filled by the caller.
+ */
+function validateBodyHead(
+  input: AppendProjectLogInput,
+): Omit<ProjectLogBodyHead, 'recorded'> | undefined {
+  if (
+    input.category === undefined &&
+    input.source === undefined &&
+    input.origin === undefined
+  ) {
+    return undefined;
+  }
+  if (input.category !== undefined && input.source === undefined) {
+    throw new Error(
+      '--category requires --source: a categorized learning carries a stable per-observation source id.',
+    );
+  }
+  return {
+    ...(input.category !== undefined
+      ? {
+          category: validateCategory(
+            input.category,
+          ) as ProjectLogBodyHead['category'],
+        }
+      : {}),
+    ...(input.source !== undefined
+      ? { source: validateSource(input.source) }
+      : {}),
+    ...(input.origin !== undefined
+      ? { origin: validateHeadingField(input.origin, '--origin') }
+      : {}),
+  };
+}
+
+/**
+ * The body a judgment entry is stored with: the head lines, a blank line, then
+ * the caller's body. Without a head the body is returned unchanged, so an entry
+ * written without the new flags keeps exactly the bytes it always had.
+ */
+function composeJudgmentBody(
+  head: ProjectLogBodyHead | undefined,
+  body: string,
+): string {
+  if (head === undefined) return body;
+  return `${composeJudgmentBodyHead(head).join('\n')}\n\n${body}`;
+}
+
+/**
  * Whether any line of `body` is a `## ` or `### ` marker the command owns.
  *
  * The split is `splitProjectLogLines` rather than `/\r?\n/` so validation
@@ -1272,7 +1365,7 @@ function containsCommandOwnedMarker(body: string): boolean {
 
 function validateEntry(
   input: AppendProjectLogInput,
-  date: string,
+  now: Date,
 ): {
   heading: string;
   body: string;
@@ -1304,6 +1397,7 @@ function validateEntry(
   const normalized = supplied.includes('\r\n');
   const body = normalizeProjectLogLineEndings(supplied);
   const versionNote = validateVersionNote(input.versionNote);
+  const date = now.toISOString().slice(0, 10);
 
   if (input.structural) {
     if (
@@ -1313,6 +1407,15 @@ function validateEntry(
     ) {
       throw new Error(
         '--structural cannot be combined with judgment flags --type, --scope, or --area.',
+      );
+    }
+    if (
+      input.category !== undefined ||
+      input.source !== undefined ||
+      input.origin !== undefined
+    ) {
+      throw new Error(
+        '--structural cannot be combined with judgment flags --category, --source, or --origin.',
       );
     }
     if (PROJECT_LOG_LINE_TERMINATOR_RE.test(body)) {
@@ -1383,6 +1486,7 @@ function validateEntry(
     );
   }
   const area = validateHeadingField(input.area, '--area');
+  const head = validateBodyHead(input);
   return {
     heading: composeJudgmentHeading({
       date,
@@ -1390,7 +1494,12 @@ function validateEntry(
       scope: input.scope as ProjectLogScope,
       area,
     }),
-    body,
+    body: composeJudgmentBody(
+      head === undefined
+        ? undefined
+        : { ...head, recorded: now.toISOString().replace(/\.\d{3}Z$/, 'Z') },
+      body,
+    ),
     versionNote,
     normalized,
   };
@@ -1641,8 +1750,9 @@ async function prepareProjectLogAppend(
     }
   }
 
-  const date = dependencies.now().toISOString().slice(0, 10);
-  const { heading, body, versionNote, normalized } = validateEntry(input, date);
+  const now = dependencies.now();
+  const date = now.toISOString().slice(0, 10);
+  const { heading, body, versionNote, normalized } = validateEntry(input, now);
   const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, body);
   let instantiated: string | undefined;
 
@@ -1932,6 +2042,39 @@ function reportReceiptMismatch(
   );
 }
 
+/**
+ * The body the commit's identity check derives its token from. A judgment head
+ * puts `--source` above the caller's body, and a producer passes that same id
+ * as `--idempotency-key`, so the identity must see the head the stored entry
+ * carries (without the varying `**Recorded:**` line) to find the same token.
+ */
+function identityBody(options: AppendCommandOptions, body: string): string {
+  if (
+    options.structural ||
+    (options.category === undefined &&
+      options.source === undefined &&
+      options.origin === undefined)
+  ) {
+    return body;
+  }
+  return composeJudgmentBody(
+    {
+      ...(options.category !== undefined
+        ? {
+            category: options.category.trim() as ProjectLogBodyHead['category'],
+          }
+        : {}),
+      ...(options.source !== undefined
+        ? { source: options.source.trim() }
+        : {}),
+      ...(options.origin !== undefined
+        ? { origin: options.origin.trim() }
+        : {}),
+    },
+    body,
+  );
+}
+
 async function runAppendCommand(
   options: AppendCommandOptions,
   context: CommandContext,
@@ -2016,7 +2159,12 @@ async function runAppendCommand(
         repoRoot,
         logPath: result.logPath,
         ...(options.idempotencyKey !== undefined && body !== undefined
-          ? { identity: { key: options.idempotencyKey, body } }
+          ? {
+              identity: {
+                key: options.idempotencyKey,
+                body: identityBody(options, body),
+              },
+            }
           : {}),
       });
       if (
@@ -2111,6 +2259,18 @@ export function createProjectLogAppendCommand(
       'Globally unique key (a run id, not a common word) that must appear in --body; an entry already carrying it is reported as already-appended instead of duplicated',
     )
     .option(
+      '--category <category>',
+      `Learning category for a judgment entry: ${PROJECT_LOG_CATEGORIES.join(', ')}; requires --source`,
+    )
+    .option(
+      '--source <id>',
+      'Stable per-observation source id for a judgment entry (one word); pass the same id as --idempotency-key so a retry appends nothing',
+    )
+    .option(
+      '--origin <producer>',
+      'Producer that recorded a judgment entry, for example oat-project-autonomous',
+    )
+    .option(
       '--commit',
       'Stage and commit the project log after appending, retrying across a transient index lock',
     )
@@ -2123,6 +2283,7 @@ Entry contract:
   High-value judgments may use Observation:, Impact:, and Recommendation: fields.
   Structural bodies are one line and reference artifacts by path instead of inlining them.
   Add --version-note for tool-related observations.
+  Learnings: --category, --source, and --origin write a body head (**Category:**, **Source:**, **Origin:**, **Recorded:**) above a judgment body; --category requires --source, and the category must be one of the six.
   Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.
   The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every append carrying new content onto a sealed log is refused.
   A replay recognized by its own --idempotency-key still reports already-appended on a sealed log and writes nothing.

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   assertNoSensitiveDispatchContent,
+  classifyDispatchOutcome,
   collectSensitiveDispatchContent,
   genericDispatchRecordBaseSchema,
   isSensitiveDispatchKey,
@@ -554,4 +555,30 @@ describe('collecting validation helpers', () => {
       /expected .*\[a-zA-Z0-9\]/,
     );
   });
+});
+
+describe('classifyDispatchOutcome (producer-to-outcome terminal mapping)', () => {
+  it.each([
+    ['accepted', 'completed', 'completed', true],
+    ['accepted', 'caller-inline-completed', 'completed', true],
+    ['accepted', 'DONE', 'completed', true],
+    ['accepted', 'DONE_WITH_CONCERNS', 'completed', true],
+    ['accepted', 'BLOCKED', 'terminal-stop', true],
+    ['accepted', 'INVALID_RUN_ABORT', 'terminal-stop', true],
+    ['accepted', 'cancelled', 'terminal-stop', true],
+    ['blocked-before-start', null, 'blocked-before-start', true],
+    ['accepted', 'running', 'live', false],
+    ['accepted', 'pending', 'live', false],
+    ['accepted', 'NEEDS_CONTEXT', 'live', false],
+    ['planned', null, 'live', false],
+    ['accepted', 'looks-fine', 'unrecognized', false],
+  ] as const)(
+    '%s / %s → %s (terminal %s)',
+    (launchStatus, outcome, classification, terminal) => {
+      expect(classifyDispatchOutcome(launchStatus, outcome)).toEqual({
+        classification,
+        terminal,
+      });
+    },
+  );
 });

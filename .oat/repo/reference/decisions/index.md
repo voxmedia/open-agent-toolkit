@@ -10,6 +10,18 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261012-archive-retry-identity         | 2026-10-12 | accepted   | Archive retry identity and generations                                                                 | -       |
+| DR-261012-archived-pr-status-is          | 2026-10-12 | accepted   | Archived PR status is an observation                                                                   | -       |
+| DR-261012-canonical-journal-format       | 2026-10-12 | accepted   | Canonical journal format and validator                                                                 | -       |
+| DR-261012-closeout-refresh-and-prose     | 2026-10-12 | accepted   | Closeout refresh and prose rewrite                                                                     | -       |
+| DR-261012-journal-slots-and-state-owned  | 2026-10-12 | accepted   | Journal slots and state-owned gates                                                                    | -       |
+| DR-261012-learnings-in-the-project-log   | 2026-10-12 | accepted   | Learnings in the project log                                                                           | -       |
+| DR-261012-no-artifact-renames            | 2026-10-12 | accepted   | No artifact renames                                                                                    | -       |
+| DR-261012-no-protection-for-simultaneous | 2026-10-12 | accepted   | No protection for simultaneous archive runs                                                            | -       |
+| DR-261012-one-archive-retention-set      | 2026-10-12 | accepted   | One archive retention set                                                                              | -       |
+| DR-261012-reviews-are-not-archived       | 2026-10-12 | accepted   | Reviews are not archived                                                                               | -       |
+| DR-261012-summary-observations-digest    | 2026-10-12 | accepted   | Summary observations digest                                                                            | -       |
+| DR-261012-writers-only-fresh-output      | 2026-10-12 | accepted   | Writers-only fresh output measurement                                                                  | -       |
 | DR-261011-anchor-based-review-scope      | 2026-10-11 | accepted   | Anchor-based review scope for brief modes                                                              | -       |
 | DR-261011-bookkeeping-successors-keep    | 2026-10-11 | accepted   | Bookkeeping successors keep goal delivery evidence fresh                                               | -       |
 | DR-261011-brief-mode-family              | 2026-10-11 | accepted   | Brief mode family and isBriefMode predicate                                                            | -       |

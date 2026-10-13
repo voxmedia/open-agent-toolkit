@@ -180,6 +180,8 @@ describe('oat repo archive sync', () => {
         'reviews/*',
         '--exclude',
         'pr/*',
+        '--exclude',
+        '.git/*',
         '--dryrun',
       ],
       expect.objectContaining({

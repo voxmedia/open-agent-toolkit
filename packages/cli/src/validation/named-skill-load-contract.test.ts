@@ -1415,6 +1415,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: '3.0: Phase Status at Completion',
+    match: 'Stop and route back to `oat-project-implement`',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Routing instruction: completion stops and the user resumes implementation; nothing is loaded here.',
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: 'Step 1.5: Closeout Invariant Gate',
     match: 'a refusal routes to its `nextOwner.skill`',
     classification: 'non-executing',
@@ -3258,6 +3267,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Step 7: Update Implementation.md',
+    match:
+      'Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide', 'oat-project-review-receive'],
+    reason:
+      'Follow-up instruction recorded beside the journal receipt; the re-review runs later through its own skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
     anchor: 'Step 10A: Route to Next Action for Artifact Reviews',
     match: 'Re-run `oat-project-review-provide artifact {scope}`',
     classification: 'non-executing',
@@ -3382,6 +3401,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-summary'],
     reason: 'Frontmatter description listing example user phrasings.',
+  },
+  {
+    file: '.agents/skills/oat-project-summary/SKILL.md',
+    anchor: 'Staged Invocation',
+    match: 'An inline fallback that follows this skill without loading it',
+    classification: 'non-executing',
+    skills: ['oat-project-complete'],
+    reason:
+      "Names the caller whose inline fallback must honor this skill's staged suspension point; not a directive to run it.",
   },
   {
     file: '.agents/skills/oat-project-complete-auto/SKILL.md',

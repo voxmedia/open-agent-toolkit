@@ -509,8 +509,11 @@ changed is kept. The `oat project log` command, not the skill, rolls project-log
 entries up into the Workflow Observations section. A project log the skill
 cannot read clearly is reported rather than treated as empty, and a sealed
 (closed) log accepts no new entries. An Autonomous Execution Learnings section
-appears only when the project has an `oat-execution-learnings.md` file with
-actionable recommendations. Recorded exit-gate waivers stay explicit; the
+appears only when the project has actionable learnings: category-bearing
+project-log entries written by autonomous, cloud or goal runs, or a legacy
+`oat-execution-learnings.md` file from an older project, which is still read
+after the log. New runs never create that file; with the project log disabled and never created they record no learnings,
+and the summary has no such section. Recorded exit-gate waivers stay explicit; the
 skill does not infer them.
 
 **What it does without asking:** when the repository has adopted PJM, every
@@ -580,7 +583,11 @@ project (or keeps it until an archive succeeds), commits the completion
 bookkeeping, and pushes it. A yes to the PR question, or
 `workflow.createPrOnComplete: true` when no PR is tracked, creates a new PR
 against `main`. If a PR is already open, the skill updates its description
-with `gh pr edit` when archiving or for a synced project. A summary refresh
+with `gh pr edit` when archiving or for a synced project. Archives keep no
+`pr/` directory, so when archiving the skill carries the regenerated PR body in
+a temporary file until the PR is created or updated; a run that resumes an
+interrupted archive has no such body and reports that it skipped the
+description sync. A summary refresh
 runs `oat-project-summary`, with its own commit and decision promotion, and an
 archive runs `oat project archive`, including an S3 upload when
 `archive.s3SyncOnComplete` is enabled.
@@ -605,8 +612,20 @@ non-archive completion. Shared and synced projects use the configured archive
 preference or an explicit answer.
 
 Completion changes lifecycle state through the `oat` CLI, checks whether the
-summary is current, runs any retro and recap work you selected, and seals
-(closes) the project log through the project-log command. When a shared or
+summary is current (including the learnings fingerprint), runs any retro and
+recap work you selected, and seals (closes) the project log through the
+project-log command. Before any of that writes, it rewrites the journal's Final
+Summary and `summary.md` prose from observed facts, runs the summary staged
+(`staged: true`), and validates the journal with
+`oat project journal check --at completion`; only when that passes does the
+summary resume its roll-up (`resume: roll-up`). A refusal stops completion with
+the reason, line and owner: the prose refresh may remain, but no promotion
+append, roll-up, ledger graduation, seal, archive or lifecycle change happens.
+An authorized override is written as one line under
+`## Deviations from Plan / Design` (idempotent on code, scope and decision id),
+never by an autonomous run, and never bypasses the closeout invariant. Before
+archive, completion records `oat_pr_status_observed_at` beside
+`oat_pr_status`. When a shared or
 synced project will be archived, the active project stays set until the
 archive succeeds, so an archive or S3 failure leaves the completion
 resumable. Every other completion clears the active project right away. Synced

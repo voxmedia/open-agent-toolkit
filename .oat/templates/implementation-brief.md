@@ -80,50 +80,19 @@ Intent, files, proof command, result.
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
+<!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
-
 <!-- orchestration-runs-end -->
 
----
+## Reviews and Gates
 
-## Implementation Log
+<!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
-Chronological log of implementation progress.
+## Deferred Findings
 
-### YYYY-MM-DD
-
-**Session Start:** [time]
-
-- [x] p01: [Phase name] - [head SHA]
-- [ ] p02: [Phase name] - in progress
-
-**What changed (high level):**
-
-- [short bullets suitable for PR/docs]
-
-**Decisions:**
-
-- [Decision made and rationale]
-
-**Follow-ups / TODO:**
-
-- [anything discovered during implementation that should be captured for later]
-
-**Blockers:**
-
-- [Blocker description] - [status: resolved/pending]
-
-**Session End:** [time]
-
----
+<!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 ## Deviations from Plan / Design
 
