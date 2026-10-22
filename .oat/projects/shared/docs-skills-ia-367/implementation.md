@@ -39,18 +39,18 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | pending   | 1     | 0/1      |
-| p02    | pending   | 1     | 0/1      |
-| p03    | pending   | 1     | 0/1      |
-| p04    | pending   | 1     | 0/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | in_progress | 1     | 0/1      |
+| p02    | pending     | 1     | 0/1      |
+| p03    | pending     | 1     | 0/1      |
+| p04    | pending     | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 1/10 phases accepted
 
@@ -272,8 +272,12 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 ## Phase p-rev1: Correct the scaffold navigation command
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 7c05e8ab0e563f39996fb8c87643443040fb0ed9
+**Executor:** inline:docs367-p-rev1-doc-command
 **Corrects:** p01
+
+Root inline exception: no new surface, unresolved design or consequential change; a bounded docs command correction plus a regression in the existing scaffold integration suite, with existing focused proof command `HOME=<isolated> pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/integration.test.ts`. Root is the committing owner in the temporary p01 checkout. No parallel group applies: p02 yielded at clean `e49345b0087f2a50b276ca799140981906ea0d1b` and remains suspended until integration. Recovery default 10, used 0, remaining 10, pending null. Original p01 Base/Head stay frozen. Revision is ordered immediately after p01 and before resumed p02 so review heads remain chronological; p02's original Base is preserved and its review will identify this integration.
 
 Queued after root independently reproduced remote H1. Execute after p02 clean handoff, integrate on p02 before its review, and preserve original p01 anchors.
 
@@ -328,6 +332,8 @@ Queued after root independently reproduced remote H1. Execute after p02 clean ha
 ---
 
 ## Orchestration Runs
+
+Root-inline phase: p-rev1; reason=bounded existing docs-command regression, no new surface/design/consequence, existing focused proof; root model=gpt-6.1-sol high; committing owner=root in isolated p01 checkout; p02 yielded clean before execution.
 
 run/v1 · request=docs367-p01-review-r3-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
