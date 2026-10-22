@@ -551,12 +551,17 @@ Proof: real storage/config command regressions for both null keys fail on pre-fi
 
 ### Task p03-t04: (review) Name artifact and IDs at bootstrap repair handoff
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
 **Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (L4)
 
 Intent: the repair bullet explicitly hands off an analysis artifact plus approved recommendation IDs, with explicit items individually approved, matching G4 and Step 7b.
 Files: `.agents/skills/oat-docs-bootstrap/SKILL.md`.
 Proof: conservation read and existing isolated-HOME skill sentence contracts; no new prose-change-only test required.
+**Commit:** d2d7e2fd61762c61448ea0258886992e0ea460a4
+
+**Evidence:** Conservation diff changes only the Allowed mutations bullet to the G4 artifact-plus-approved-IDs input, retaining the repair route, preserved state and both stop conditions. Existing isolated-HOME sentence contracts pass before and immediately after commit (1,087 tests, exit 0); scoped lint/format pass. No new prose-only test or version bump.
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
