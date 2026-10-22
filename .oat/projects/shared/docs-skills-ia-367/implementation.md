@@ -42,7 +42,7 @@ oat_template: false
 | Phase  | Status      | Units | Accepted |
 | ------ | ----------- | ----- | -------- |
 | p01    | completed   | 1     | 1/1      |
-| p-rev1 | in_progress | 1     | 0/1      |
+| p-rev1 | in_progress | 1     | 1/1      |
 | p02    | pending     | 1     | 0/1      |
 | p03    | pending     | 1     | 0/1      |
 | p04    | pending     | 1     | 0/1      |
@@ -274,12 +274,26 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 **Status:** in_progress
 **Base:** 7c05e8ab0e563f39996fb8c87643443040fb0ed9
+**Head:** 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
 **Executor:** inline:docs367-p-rev1-doc-command
 **Corrects:** p01
 
 Root inline exception: no new surface, unresolved design or consequential change; a bounded docs command correction plus a regression in the existing scaffold integration suite, with existing focused proof command `HOME=<isolated> pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/integration.test.ts`. Root is the committing owner in the temporary p01 checkout. No parallel group applies: p02 yielded at clean `e49345b0087f2a50b276ca799140981906ea0d1b` and remains suspended until integration. Recovery default 10, used 0, remaining 10, pending null. Original p01 Base/Head stay frozen. Revision is ordered immediately after p01 and before resumed p02 so review heads remain chronological; p02's original Base is preserved and its review will identify this integration.
 
 Queued after root independently reproduced remote H1. Execute after p02 clean handoff, integrate on p02 before its review, and preserve original p01 anchors.
+
+---
+
+### Task prev1-t01: Select the app in the generated navigation instructions
+
+**Status:** completed
+**Executor:** inline:docs367-p-rev1-doc-command
+**Intent:** Make the emitted repository-root command usable for nested apps without changing CLI resolution.
+**Files:** `.oat/templates/docs-app-fuma/docs/contributing.md`, `packages/cli/src/commands/docs/init/integration.test.ts`.
+**Proof command:** isolated-HOME owning integration suite; new regression extracts the rendered command, shell-tokenizes it and invokes the real nav command with repo-root context, checking emitted navigation. Existing tests did not execute the newly documented command. Before/after and full gate logs: `/tmp/oat-docs367-p01-nav-fix-proof/`.
+
+**Commit:** 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
+**Verification:** pre-fix regression exit 1 at framework detection; corrected emitted command succeeds and writes expected index/getting-started/contributing navigation. Final isolated-HOME owning suites pass 63/63 (exit 0), scoped oxlint and CLI build exit 0. Earlier precommit attempts exposed an incomplete expected page list and prefer-template lint; both corrected before commit, with evidence retained. Product boundary is exactly the two declared files; no recovery attempt. Full ordered gates pending.
 
 ---
 
