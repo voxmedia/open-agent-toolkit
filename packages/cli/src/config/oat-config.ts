@@ -2524,13 +2524,12 @@ const USER_CONFIG_OWNED_KEYS = new Set([
   'knownStrays',
 ]);
 
-/** Validate guidance without reading, fetching or rewriting the referenced inputs. */
 /** Shared by stored-config reads and the real config command. */
 export function normalizeDocumentationIa(
   value: unknown,
   configPath: string,
 ): OatDocumentationIa | undefined {
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   const nonempty = (entry: unknown): entry is string =>
     typeof entry === 'string' && entry.trim().length > 0;
   const repoRelative = (entry: unknown): entry is string =>
@@ -2590,7 +2589,7 @@ export function normalizeDocumentationNavOwner(
   value: unknown,
   configPath: string,
 ): OatDocumentationConfig['navOwner'] {
-  if (value === undefined) return undefined;
+  if (value === undefined || value === null) return undefined;
   if (value !== 'nav-sync' && value !== 'hand-authored')
     throw new Error(
       `Invalid documentation.navOwner in ${configPath}: expected nav-sync or hand-authored. Repair with oat config set documentation.navOwner <value> or oat config unset documentation.navOwner --shared.`,
@@ -2598,6 +2597,7 @@ export function normalizeDocumentationNavOwner(
   return value;
 }
 
+/** Validate guidance without reading, fetching or rewriting the referenced inputs. */
 export function normalizeDocumentationGuidance(
   value: unknown,
   configPath: string,

@@ -211,6 +211,42 @@ describe('repository IA mirrors through real command and storage', () => {
     expect(await readFile(f.repoPath, 'utf8')).toBe(before);
   });
 
+  it.each(['ia', 'navOwner'])(
+    'treats stored null %s as undeclared without blocking unrelated reads',
+    async (key) => {
+      const f = await fixture();
+      const raw = {
+        version: 1,
+        documentation: {
+          root: 'docs',
+          guidance: ['public/index.md'],
+          ia,
+          navOwner: 'hand-authored',
+          [key]: null,
+        },
+        future: { keep: true },
+      };
+      await writeFile(f.repoPath, JSON.stringify(raw));
+      expect(await f.command('get', 'documentation.root')).toMatchObject({
+        status: 'ok',
+        value: 'docs',
+        source: 'shared',
+      });
+      expect(await f.command('get', `documentation.${key}`)).toMatchObject({
+        status: 'ok',
+        value: null,
+        source: 'default',
+      });
+      const other = key === 'ia' ? 'navOwner' : 'ia';
+      expect(await f.command('get', `documentation.${other}`)).toMatchObject({
+        status: 'ok',
+        value: key === 'ia' ? 'hand-authored' : ia,
+        source: 'shared',
+      });
+      expect(JSON.parse(await readFile(f.repoPath, 'utf8'))).toEqual(raw);
+    },
+  );
+
   it('rejects invalid stored mirrors and permits exact-key repair without losing unrelated data', async () => {
     const f = await fixture();
     for (const [key, value] of [
