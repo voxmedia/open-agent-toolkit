@@ -78,9 +78,10 @@ review audits every P-number against this list.
    the old Path B shape; a docs-path check that fails on a seeded stale
    reference from a skill test.
 2. **The `authoring-docs` IA reference teaches the axes method and presets
-   instead of one Standard Top-Level Model (P28 D1–D9).** Evidence: rewritten
-   `references/information-architecture.md` plus presets, IA proposal template
-   and smell-test rows; `metadata.version` at least 1.1.0 (later phases bump
+   instead of one Standard Top-Level Model (P28 D1–D9, except D9's Feature
+   and QA validation templates, which p07 ships with P26).** Evidence:
+   rewritten `references/information-architecture.md` plus presets, IA
+   proposal template, new page types and smell-test rows; `metadata.version` at least 1.1.0 (later phases bump
    it again); skill contract tests updated.
 3. **Bootstrap and analyze propose an IA from a resolved guidance source
    (P1, P2, BL-260911 front door).** Evidence: `documentation.guidance` in the
@@ -179,23 +180,30 @@ realignment with the user, not a phase-local decision.
 **G2. Recorded IA (`documentation.ia`, `documentation.navOwner`).**
 
 - The accepted IA is written as a decision record (`oat decision new`) plus a
-  short "Information architecture" section in the docs-app `AGENTS.md`
-  (tracks, organizing principle per track, placement rules, verification
-  overlay). The authored record is authoritative.
+  short "Information architecture" section (tracks, organizing principle per
+  track, placement rules, verification overlay) in the docs-app `AGENTS.md`
+  for Fumadocs and MkDocs, or in the contributing page for Markdown mode,
+  which has no app and no docs-root `AGENTS.md`. The authored record is
+  authoritative.
 - Config mirrors it for tools: `documentation.ia` =
   `{ preset: string, decision: string /* repo-relative path */, tracks?: Array<{ path: string, principle: string }>, verification?: 'triad' | 'agent-only' | 'none' }`.
-- `documentation.navOwner` = `'nav-sync' | 'hand-authored'`. It is
-  independent of IA because a repo can own its sidebar either way without a
-  recorded IA.
-- New scaffolds (`oat docs init`, bootstrap) write `navOwner: nav-sync`
-  explicitly. Absent means **undeclared**, never `nav-sync`: nothing
-  regenerates `meta.json` automatically (an explicit `oat docs nav sync` run
-  behaves as today), analyze raises an `ask_user` finding to choose an owner,
-  and `oat docs check` applies the read-only membership-and-order comparison.
-- Non-reader pages (page templates, drafts) are kept out of navigation through
-  `documentation.excludes`. Nav sync inventory, `--check`, `generate-index`
-  and `oat docs check` all honor it, and the docs app does not render excluded
-  paths. Presets that scaffold `contributing/templates/` add that glob.
+- `documentation.navOwner` = `'nav-sync' | 'hand-authored'`, for Fumadocs
+  and MkDocs only. It is independent of IA because a repo can own its sidebar
+  either way without a recorded IA. Markdown mode has no sidebar, never runs
+  nav sync, and ignores `navOwner`.
+- New Fumadocs and MkDocs scaffolds (`oat docs init`, bootstrap) write
+  `navOwner: nav-sync` explicitly. Absent means **undeclared**, never
+  `nav-sync`: nothing regenerates navigation automatically (an explicit
+  `oat docs nav sync` run behaves as today), analyze raises an `ask_user`
+  finding to choose an owner, and `oat docs check` applies the read-only
+  comparison.
+- Non-reader pages (page templates, drafts) are declared in a new key,
+  `documentation.nonReaderPaths` (globs relative to the docs root). Nav sync
+  inventory, `--check`, `generate-index`, `oat docs check`'s reader rules and,
+  where the framework allows, rendering all skip them. Presets that scaffold
+  `contributing/templates/` write that glob. `documentation.excludes` keeps
+  its existing manifest-only meaning, so existing configurations are
+  unchanged.
 
 **G3. Contents grammar and nav sync.**
 
@@ -216,8 +224,11 @@ realignment with the user, not a phase-local decision.
   Markdown scope. A drift recommendation includes the exact upgrade command.
 - An explicitly approved tooling update may do only three things: bump the
   docs app's `@open-agent-toolkit/docs-*` dependencies, run `oat docs migrate`
-  where a template shape changed, and run the build verifier. Apply's other
-  out-of-scope prohibitions stay.
+  for the content conversions it supports today (admonitions and injected
+  frontmatter), and run the build verifier. Scaffold changes the CLI cannot
+  make (app config, routes, package scripts) are reported as `manual` with
+  the change needed, never edited. Apply's other out-of-scope prohibitions
+  stay.
 - Apply's one documented input is the analysis artifact plus a list of
   approved recommendation IDs. `explicit` items need their own approval in
   the approval step, are never covered by blanket approval, and are skipped
@@ -228,16 +239,19 @@ realignment with the user, not a phase-local decision.
 **G5. `oat docs check`.**
 
 - `oat docs check [--target-dir <dir>] [--json] [--rule <id>...]`, reading
-  `documentation.*` config, for Markdown, Fumadocs and MkDocs.
+  `documentation.*` config, for Markdown, Fumadocs and MkDocs. Markdown mode
+  runs the file, Contents and page rules only: no site build, no sidebar
+  rule, and no manifest unless one is configured.
 - Rules have stable IDs and a severity of `error` or `warn`. Exit 1 when any
   error is reported, 0 otherwise.
 - JSON: `{ summary: { errors, warnings }, findings: Array<{ ruleId, severity, path, line?, message }> }`.
 - Defaults are the P20 thresholds. `documentation.check` overrides a rule's
   severity (`error | warn | off`) or threshold.
-- The `meta.json` rule (P21) runs as `nav sync --check` semantics when
+- The navigation rule (P21) applies to Fumadocs `meta.json` and to the
+  MkDocs `nav:` block. It runs as `nav sync --check` semantics when
   `navOwner` is `nav-sync` and as a membership-and-order comparison against
   Contents when it is `hand-authored` or undeclared. Paths in
-  `documentation.excludes` are skipped.
+  `documentation.nonReaderPaths` are skipped.
 - P24 is not part of this command (see Decisions).
 
 **G6. What the skills ship about IA.** A generic method: the five axes, the
@@ -328,6 +342,9 @@ procedure. Exemplars and repo evidence stay in external guidance.
 - Whether Fumadocs static export supports redirects for P4's old-URL plan, or
   stub pages and `not-found.tsx` recovery are the only options — Settled by:
   p03
+- Whether the pinned Fumadocs source config can skip `nonReaderPaths` when
+  rendering, or those pages render but stay out of navigation — Settled by:
+  p04
 - Whether the pinned Fumadocs versions accept a string `root` — Settled by:
   p04
 - Whether Fumadocs' llms routes work under `output: 'export'` at the pinned
@@ -365,20 +382,20 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Phase p02: IA method and guidance input
 
-**Intent:** Rewrite the `authoring-docs` IA reference to the axes method, presets, placement and landing rules, IA proposal template and companion edits (P28 D1–D9, G6). Add `documentation.guidance` and its resolution order (P2, G1). Add bootstrap Step 2.5 IA discovery and proposal and `oat-docs-analyze --ia`, loading `authoring-docs` where #367 P1 lists (P1). Make an existing docs surface route to analyze then apply as the primary path, with replace and second-app behind an explicit choice (BL-260911 front door).
+**Intent:** Rewrite the `authoring-docs` IA reference to the axes method, presets, placement and landing rules, IA proposal template and companion edits (P28 D1–D9 and G6; D9's Feature and QA validation templates move to p07). Add `documentation.guidance` and its resolution order (P2, G1). Add bootstrap Step 2.5 IA discovery and proposal and `oat-docs-analyze --ia`, loading `authoring-docs` where #367 P1 lists (P1). Make an existing docs surface route to analyze then apply as the primary path, with replace and second-app behind an explicit choice (BL-260911 front door).
 **Exit evidence:** config schema and resolution tests for every tier of G1; `authoring-docs` 1.1.0 with contract tests updated; a bootstrap dry run on a fixture repo shows two proposed structures with the nearest preset and cites the resolved guidance; a fixture with existing docs routes to analyze; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p03: Record and act on the IA
 
 **Intent:** Write the accepted IA as a decision record plus a docs-app `AGENTS.md` section and mirror it in `documentation.ia` and `documentation.navOwner` (P3, G2). Add analyze's Information Architecture Fit section, misroute severity rule, `ask_user` finding when no IA is recorded, and IA-driven coverage surfaces (P3). Add apply's `restructure` action (P4). Add approval classes and offline package-drift reporting, and the single apply input that bootstrap Step 7b also uses (BL-260911, E12 handoff, G4).
-**Exit evidence:** schema tests for `documentation.ia` and `navOwner`; analyze and apply skill text and templates updated with the new section, rule, action and input; a negative control shows an `explicit` recommendation skipped under unattended approval and listed in the structured result, and an explicitly approved tooling update performs only the G4 carve-out; drift reported with the upgrade command from `public-package-versions.json` with no network; gates pass; phase PR open.
+**Exit evidence:** schema tests for `documentation.ia` and `navOwner`; analyze and apply skill text and templates updated with the new section, rule, action and input; a negative control shows an `explicit` recommendation skipped under unattended approval and listed in the structured result, and an explicitly approved tooling update performs only the G4 carve-out and reports an unsupported scaffold change as `manual`; a Markdown-mode fixture records its IA in the contributing page; drift reported with the upgrade command from `public-package-versions.json` with no network; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p04: Navigation follows Contents
 
-**Intent:** Emit `---Label---` groups from `###` subheadings in Contents, accept a string `root`, and make non-dash bullets an error (P13, G3). Then run nav sync at the end of `oat docs init` and bootstrap and add `nav sync --check` to the template prebuild, writing `navOwner: nav-sync` on new scaffolds and leaving undeclared repos untouched (P12). Make nav sync inventory, `--check` and `generate-index` honor `documentation.excludes`, and keep excluded paths out of the rendered app (prerequisite for p07's templates). Make `generate-index` follow Contents order and index titles with tooling-aware header text (P14). Update the Contents grammar docs.
-**Exit evidence:** nav sync and parser tests for groups, empty groups, string `root` and `*` bullets; a fresh `oat docs init` fixture has `navOwner: nav-sync`, `meta.json` in Contents order and a prebuild that fails on drift; a repo with no `navOwner` is not regenerated by init or bootstrap; an excluded template directory passes `--check` while an omitted reader page still fails; `generate-index` tests for authored order, titles and header text per tooling; gates pass; phase PR open.
+**Intent:** Emit `---Label---` groups from `###` subheadings in Contents, accept a string `root`, and make non-dash bullets an error (P13, G3). Then run nav sync at the end of `oat docs init` and bootstrap and add `nav sync --check` to the template prebuild, writing `navOwner: nav-sync` on new Fumadocs and MkDocs scaffolds and leaving undeclared repos and Markdown mode untouched (P12). Add `documentation.nonReaderPaths` and make nav sync inventory, `--check` and `generate-index` honor it, keeping those paths out of the rendered app where the framework allows (prerequisite for p07's templates). Make `generate-index` follow Contents order and index titles with tooling-aware header text (P14). Update the Contents grammar docs.
+**Exit evidence:** nav sync and parser tests for groups, empty groups, string `root` and `*` bullets; a fresh `oat docs init` fixture has `navOwner: nav-sync`, `meta.json` in Contents order and a prebuild that fails on drift; a repo with no `navOwner` is not regenerated by init or bootstrap; a Markdown-mode fixture runs no nav sync and is unchanged; a `nonReaderPaths` template directory passes `--check` while an omitted reader page still fails, and an existing `documentation.excludes` entry still affects only the manifest; `generate-index` tests for authored order, titles and header text per tooling; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p05: Reader-first starter app
@@ -390,13 +407,13 @@ procedure. Exemplars and repo evidence stay in external guidance.
 ## Phase p06: oat docs check
 
 **Intent:** Add `oat docs check` per G5 with the P20 rules and thresholds, the `meta.json` comparison (P21), the contributing-command rule (P22), the provenance and escaping-link rule (P25) and the diagram rules (P23). Wire it into the starter app and OAT's own docs, have bootstrap wire it into the target repo's PR CI with the build and manifest-freshness steps for each tooling mode, and replace the MkDocs template's `echo` test with it.
-**Exit evidence:** one test per rule with a seeded failure and a passing control at each threshold boundary; `--json` output matches G5; OAT's own docs pass with no errors; the starter app runs it; a bootstrapped fixture's PR workflow invokes the check, build and manifest-freshness steps and fails on a seeded docs error; gates pass; phase PR open.
+**Exit evidence:** one test per rule with a seeded failure and a passing control at each threshold boundary; `--json` output matches G5; OAT's own docs pass with no errors; a Markdown-mode fixture is checked without a site build or manifest; the starter app runs it; a bootstrapped fixture's PR workflow invokes the check, build and manifest-freshness steps and fails on a seeded docs error; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p07: Page templates and presets
 
-**Intent:** Ship the Product feature, Engineering feature, QA validation and Screen spec templates (P26) and the operations, reference and agent templates (P27) in `authoring-docs`, then have bootstrap scaffold each preset's tree, section indexes with purpose paragraphs, `contributing/templates/` and track table, with the flat outcome below about 15 pages (P5).
-**Exit evidence:** one fixture per preset plus the flat outcome; templates carry the literal-versus-concept rule and are excluded from navigation through `documentation.excludes`; `oat docs check` and `nav sync --check` pass on every preset scaffold; gates pass; phase PR open.
+**Intent:** Ship the Product feature, Engineering feature, QA validation and Screen spec templates (P26, including the Feature and QA validation templates listed in P28 D9) and the operations, reference and agent templates (P27) in `authoring-docs`, then have bootstrap scaffold each preset's tree, section indexes with purpose paragraphs, `contributing/templates/` and track table, with the flat outcome below about 15 pages (P5).
+**Exit evidence:** one fixture per preset plus the flat outcome; templates carry the literal-versus-concept rule and are declared in `documentation.nonReaderPaths`; `oat docs check` and `nav sync --check` pass on every preset scaffold; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p08: Product and QA checks against source
