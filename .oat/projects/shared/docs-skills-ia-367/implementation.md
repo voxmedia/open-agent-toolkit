@@ -499,6 +499,53 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 **Root pre-review validation:** Verified clean handoff d654e4934fe233addbbdf5c83aff9a8ecf58cd3b, Base-to-Head ancestry, exactly 21 owned product paths, and journal-only changes after candidate a8286fdc58dfd1e1d6f29f2207cf74737efd6927. All 17 explicit gate/supplemental exits are 0; raw Turbo summaries match the disclosed cache accounting, including 12/12 fresh forced tasks. Manual fixture and approval-prose limitations remain part of the review scope. P03-t01 is complete; p03 remains in_progress pending independent review and its configured external gate. Recovery stays 0/10, pending null.
 
+### Review Received: p03 (round 1)
+
+**Date:** 2026-10-22
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-22T231217Z.md
+**Reviewed Head:** a8286fdc58dfd1e1d6f29f2207cf74737efd6927
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 4
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before artifact validation; no Review Orchestration section is present. Anchors and severity schema match the requested p03 scope. All six findings stay within Outcomes 4–5, G2/G4 and p03 exit evidence; no later phase has a Base, so fixes advance p03 only. Independent correctness, test-value, docs-conservation, complexity and packaging lenses are covered by this review.
+
+- M1 (Medium): installed-newer packages are labeled drift with a downgrade command → fix p03-t02; Outcome 5 promises an upgrade, so numeric/version precedence must distinguish ahead from older and omit unsafe commands. Task Scope: Moderate.
+- M2 (Medium): stored null IA/navOwner blocks unrelated reads → fix p03-t03; G2 undeclared behavior and the non-opted-in constraint require null absence matching existing guidance behavior, while other invalid values remain rejected. Task Scope: Minor.
+- L1 (Low): pnpm oat shim defeats bundle lookup with an unusable fallback → fix p03-t02; give a verified running-install discovery path without registry lookup or a generic resolver. Task Scope: Minor.
+- L2 (Low): guidance docblock is attached above the IA normalizer → fix p03-t03; restore it to the guidance function. Task Scope: Negligible.
+- L3 (Low): static-export settlement lacks a tracked summary → addressed here as artifact alignment; the shipped stub strategy remains authoritative. Task Scope: Negligible.
+- L4 (Low): repair front door describes approval without artifact+IDs → fix p03-t04; state the existing G4 input and individual explicit approval locally. Task Scope: Minor.
+
+**Static-export settlement (L3):** Next static export does not apply next.config redirects/rewrites/headers (installed `apps/oat-docs/node_modules/next/dist/export/index.js:143-148`; public Next static-export unsupported-features reference cited in apply's restructure procedure). P4 therefore preserves old URLs through authored retained stubs/archive pointers and verifies their links and anchors under the real base path; host redirects are manual when app/host configuration is needed. No not-found.tsx mutation is allowed by the tooling carve-out. The manual exported stub/link control supports this answer; it does not prove host redirects.
+
+**Outcome:** fixes queued: p03-t02, p03-t03, p03-t04. Review-fix round 1; recovery remains 0/10, pending null. External p03 gate and acceptance remain pending. Inherited p02 portability remains queued in p-rev2 and PR #369 is held.
+
+### Task p03-t02: (review) Report safe package upgrades and locate shim bundles
+
+**Status:** pending
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M1, L1)
+
+Intent: distinguish installed-newer from an actual upgrade without ever emitting a downgrade as an upgrade; update the analyze consumer and bounded apply wording if needed. Give shim users an actionable discovery path verified against the invoked CLI version, preserving offline metadata provenance and dependency section.
+Files: `.agents/skills/oat-docs-analyze/scripts/package-drift.mjs`, `.agents/skills/oat-docs-analyze/tests/package-drift.test.mjs`, `.agents/skills/oat-docs-analyze/SKILL.md`; `.agents/skills/oat-docs-apply/SKILL.md` only if the carve-out needs matching no-downgrade wording.
+Proof: real-helper newer/older/equal/missing regression and valid controls, pre-fix failure at the intended assertion, numeric ordering/prerelease ambiguity handled safely, documented shim-discovery command executed against this host's actual install. Keep tests at the public helper boundary with literal expected outcomes; no own-reader mocks or new resolver runtime.
+
+### Task p03-t03: (review) Preserve undeclared null mirrors and restore guidance comment
+
+**Status:** pending
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M2, L2)
+
+Intent: stored null ia/navOwner means undeclared; unrelated real reads succeed and mirrors return null/default. Preserve rejection and repair for all other invalid values and shared-only mirror scope. Move the guidance docblock back to its function.
+Files: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/ia.test.ts`.
+Proof: real storage/config command regressions for both null keys fail on pre-fix code and pass after; invalid stored mirror and scope/unknown-field controls remain passing. No broader set/null semantics expansion is required.
+
+### Task p03-t04: (review) Name artifact and IDs at bootstrap repair handoff
+
+**Status:** pending
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (L4)
+
+Intent: the repair bullet explicitly hands off an analysis artifact plus approved recommendation IDs, with explicit items individually approved, matching G4 and Step 7b.
+Files: `.agents/skills/oat-docs-bootstrap/SKILL.md`.
+Proof: conservation read and existing isolated-HOME skill sentence contracts; no new prose-change-only test required.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -588,7 +635,7 @@ run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementatio
 
 run/v1 · request=docs367-p03-resume-verification-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-review-r1-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-review-r1-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
