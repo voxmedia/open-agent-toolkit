@@ -569,6 +569,40 @@ Proof: conservation read and existing isolated-HOME skill sentence contracts; no
 
 **Root fix-report validation:** Verified clean handoff 00e5d9672ae6b2005b785183b7664739e6d2fc08, three bounded product commits and separate journals, seven authorized product paths, fixed Base ancestry and journal-only changes after candidate 366218ea358a908e5e5849c375df90bd2c53be94. Inspected all 17 explicit gate/supplemental exit files (0), raw cache summaries including 12/12 fresh forced tasks, and the pre-fix regression exits (1). Existing PR-scoped versions remain unchanged. P03 stays in_progress for re-review and external gate; recovery 0/10, pending null.
 
+### Review Received: p03 (round 2)
+
+**Date:** 2026-10-22
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-22T233634Z.md
+**Reviewed Head:** 366218ea358a908e5e5849c375df90bd2c53be94
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before artifact validation; no Review Orchestration section. Anchors/provenance and count sources match. The re-review closes all six round-1 findings, with full-phase coverage inherited from that event and changed-boundary probes recorded independently. Both new findings are narrow composition regressions within G2/G4, not new requirements. No later phase has a Base, so fixes remain in p03.
+
+- R2-L1 (Low): shared stored-read/set normalizer now accepts `config set documentation.ia null`, removes the mirror and misreports shared provenance → fix p03-t05; restore the original invalid-JSON-shape rejection and byte preservation at the set boundary, retaining stored-null-as-undeclared reads. Task Scope: Minor.
+- R2-L2 (Low): analysis artifact template omits ahead and implies every package has a tooling recommendation → fix p03-t06; align template statuses and conditional package commands/recommendation IDs with the existing helper and skill. Task Scope: Minor.
+
+**Evidence correction:** The p03-t03 claim that only stored-value behavior changed was too broad: the normalizer also serves `config set`. Round 2 reproduced that untested side effect. That earlier claim is superseded by this receipt and the p03-t05 set-boundary correction; preserve the historical pre-fix evidence and add the new command regression. `unset` remains the intended mirror-removal operation. No documentation of a new set-null behavior is authorized.
+
+**Outcome:** all round-1 findings closed; fixes queued: p03-t05, p03-t06. Review-fix round 2, with one standard independent review round remaining under the three-cycle cap. Recovery remains 0/10, pending null. External p03 gate and acceptance remain pending; p-rev2/PR #369 portability correction remains untouched.
+
+### Task p03-t05: (review) Reject null IA set without affecting stored absence
+
+**Status:** pending
+**Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L1)
+
+Intent: reject JSON null at the real documentation.ia set boundary with a neutral invalid-value diagnostic, preserving declared config bytes; keep stored null ia/navOwner undeclared and readable. Preserve unset, valid set, invalid repair, scope and unrelated fields. Correct the earlier overly broad no-set-change evidence by an explicit appended correction.
+Files: `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/ia.test.ts`; ignored `analysis/p03/fix-r1/README.md` correction plus new `analysis/p03/fix-r2/` proofs.
+Proof: one real-command regression starts with a declared IA, set documentation.ia null is rejected with bytes unchanged; fails on immutable pre-fix code at the intended acceptance/removal error, then passes. Existing stored-null, valid set/unset/invalid repair controls remain passing.
+
+### Task p03-t06: (review) Align package-drift template with ahead results
+
+**Status:** pending
+**Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L2)
+
+Intent: package status includes current/drift/ahead/unverified. Only actual older-package drift gets a package-upgrade recommendation ID and command; ahead asks to select/update the CLI before re-analysis and unverified needs manual verification. Current needs no tooling recommendation. Keep the existing stable IDs and explicit approval contract.
+Files: `.agents/skills/oat-docs-analyze/references/analysis-artifact-template.md`.
+Proof: prose conservation and existing helper/sentence contracts; no new copy-only test or resolver mechanism. The existing helper may report a current-version reinstall command, but this template need not recommend executing it.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -662,7 +696,7 @@ run/v1 · request=docs367-p03-review-r1-20261022 · scope=p03 · action=review �
 
 run/v1 · request=docs367-p03-fix-r1-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-review-r2-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-review-r2-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
