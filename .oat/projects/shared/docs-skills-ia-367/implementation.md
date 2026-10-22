@@ -83,6 +83,8 @@ Additional final checks: `pnpm lint` and `pnpm format` exit 0 (`extra-lint.log`,
 
 Recovery capacity: 1/10 consumed, 9 remaining. Root verified the matching completed marker, immutable original/recovery commits, exact dispatch target and before/after proof, then cleared the marker without resetting usage. No failed attempt, scope realignment or independent review was performed. `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p01 --json` exits 0 with status `ok`; the pending-outcome warning was settled by root before review (`journal-check.log`).
 
+Review round 1 (`docs367-p01-review-r1-20261022`): 1 Critical, 0 High, 1 Medium, 1 Low; artifact `reviews/p01-review-2026-10-22T203848Z.md`, reviewed anchored Head `169c15cf503ec55071a2a2c255cf4da2d486942b`. Root accepts all three findings within Outcome 1/P8, E12 and P19: unconditional app Turbopack root breaks pnpm workspace resolution (scratch control exit 0, template exit 1); legacy object tooling contradicts the string schema; fixed pack membership/count contradict runtime Contents routing. Bounded fix round 1/2 authorized to the original exact target. No new requirement or project-log entry is introduced.
+
 ### Task p01-t01: Preserve export configuration and render scaffold facts
 
 **Status:** completed
@@ -242,7 +244,7 @@ run/v1 · request=docs367-p01-lenses-r1-20261022 · scope=p01 · action=review �
 
 - run/v1 · request=docs367-p01-impl-20261022 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-- run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

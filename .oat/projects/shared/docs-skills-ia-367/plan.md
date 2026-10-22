@@ -448,12 +448,12 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 
 ## Reviews
 
-| Scope | Type     | Status  | Date       | Artifact                                                         | Reviewed Head                            | Invocation                                                      | Gate Target       |
-| ----- | -------- | ------- | ---------- | ---------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ----------------- |
-| plan  | artifact | passed  | 2026-10-22 | structured (no artifact); 3 rounds: 9, 4, 0 findings, all folded | 61b2e3281739e094979d5ded38488de69d2c86d6 | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
-| p01   | code     | pending | -          | -                                                                | -                                        | -                                                               | -                 |
-| final | code     | pending | -          | -                                                                | -                                        | -                                                               | -                 |
-| plan  | artifact | passed  | 2026-10-22 | reviews/archived/artifact-plan-review-2026-10-22T200026Z.md      | e6a6a4f7bcce399a2bd33d1229de77026c787436 | gate                                                            | codex-6-sol-xhigh |
+| Scope | Type     | Status      | Date       | Artifact                                                         | Reviewed Head                            | Invocation                                                      | Gate Target       |
+| ----- | -------- | ----------- | ---------- | ---------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ----------------- |
+| plan  | artifact | passed      | 2026-10-22 | structured (no artifact); 3 rounds: 9, 4, 0 findings, all folded | 61b2e3281739e094979d5ded38488de69d2c86d6 | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
+| p01   | code     | fixes_added | 2026-10-22 | reviews/p01-review-2026-10-22T203848Z.md                         | 169c15cf503ec55071a2a2c255cf4da2d486942b | auto                                                            | -                 |
+| final | code     | pending     | -          | -                                                                | -                                        | -                                                               | -                 |
+| plan  | artifact | passed      | 2026-10-22 | reviews/archived/artifact-plan-review-2026-10-22T200026Z.md      | e6a6a4f7bcce399a2bd33d1229de77026c787436 | gate                                                            | codex-6-sol-xhigh |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
