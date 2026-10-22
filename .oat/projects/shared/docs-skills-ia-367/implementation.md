@@ -497,6 +497,8 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 **Root handoff validation:** Verified p03-t01 product `306ea28cbc450a8f97b356124a49f0e36b9107f1` (21 owned paths), separate journal `8101e55402ae845ef1f5ece2683675dbfc8977d3`, clean tree and matching ownership marker. All focused/postcommit exit files reported 0; manual walkthroughs and full gates remain unverified. Recovery remains 0/10, pending null. The inherited p02 portability finding is recorded for the immediately following p-rev2; finish p03 verification first to preserve sequential anchors, then integrate the separately reviewed correction into PR #369.
 
+**Root pre-review validation:** Verified clean handoff d654e4934fe233addbbdf5c83aff9a8ecf58cd3b, Base-to-Head ancestry, exactly 21 owned product paths, and journal-only changes after candidate a8286fdc58dfd1e1d6f29f2207cf74737efd6927. All 17 explicit gate/supplemental exits are 0; raw Turbo summaries match the disclosed cache accounting, including 12/12 fresh forced tasks. Manual fixture and approval-prose limitations remain part of the review scope. P03-t01 is complete; p03 remains in_progress pending independent review and its configured external gate. Recovery stays 0/10, pending null.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -584,7 +586,7 @@ run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · act
 
 run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-resume-verification-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-resume-verification-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
