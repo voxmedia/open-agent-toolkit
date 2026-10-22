@@ -5,6 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-10-22
 oat_current_task_id: p01
 oat_generated: false
+oat_template: false
 ---
 
 # Implementation: docs-skills-ia-367
@@ -42,35 +43,67 @@ oat_generated: false
 | ----- | ------- | ----- | -------- |
 | p01   | pending | 1     | 0/1      |
 | p02   | pending | 1     | 0/1      |
+| p03   | pending | 1     | 0/1      |
+| p04   | pending | 1     | 0/1      |
+| p05   | pending | 1     | 0/1      |
+| p06   | pending | 1     | 0/1      |
+| p07   | pending | 1     | 0/1      |
+| p08   | pending | 1     | 0/1      |
+| p09   | pending | 1     | 0/1      |
 
-**Total:** 0/[N] phases accepted
+**Total:** 0/9 phases accepted
 
 ---
 
-## Phase p01: [Phase Name]
+## Phase p01: Contract cleanup and silent defects
 
 **Status:** pending
-**Base:** [full base SHA, recorded when the phase starts]
-**Head:** [full head SHA, recorded when the phase's work ends, before its review]
-**Executor:** [root | phase-implementer:<id> | worker:<id> | inline:<exception-ref> | reconciled]
-
-[Summary prose: verification, review disposition, authority changes, deviations, next action.]
-
-<!-- Execution records follow the summary. Replace this example with real records when work starts: -->
-
-```markdown
-### Task p01-t01: [Execution record name]
-
-**Status:** completed
-**Commit:** [full commit SHA]
-**Executor:** worker:w1
-
-Intent, files, proof command, result.
-```
 
 ---
 
-## Phase p02: [Phase Name]
+## Phase p02: IA method and guidance input
+
+**Status:** pending
+
+---
+
+## Phase p03: Record and act on the IA
+
+**Status:** pending
+
+---
+
+## Phase p04: Navigation follows Contents
+
+**Status:** pending
+
+---
+
+## Phase p05: Reader-first starter app
+
+**Status:** pending
+
+---
+
+## Phase p06: oat docs check
+
+**Status:** pending
+
+---
+
+## Phase p07: Page templates and presets
+
+**Status:** pending
+
+---
+
+## Phase p08: Product and QA checks against source
+
+**Status:** pending
+
+---
+
+## Phase p09: Docs, release and closeout
 
 **Status:** pending
 
