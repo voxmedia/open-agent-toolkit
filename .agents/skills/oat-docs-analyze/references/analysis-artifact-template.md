@@ -47,9 +47,16 @@ Do not invent missing audiences or choose an IA without approval.
 - Bundle metadata: {running CLI public-package-versions.json path or unverified}
 - Docs app manifest: {path; Markdown: not applicable}
 
-| Package                       | Declared / installed                | Bundled   | Status                         | Exact upgrade command                                    | Recommendation ID           |
-| ----------------------------- | ----------------------------------- | --------- | ------------------------------ | -------------------------------------------------------- | --------------------------- |
-| {@open-agent-toolkit/docs-\*} | {range / actual version or missing} | {version} | {current / drift / unverified} | {command from offline helper, adapted to actual manager} | {R-NNN; approval: explicit} |
+| Package                       | Declared / installed                | Bundled   | Status                                 | Exact upgrade command                                                          | Recommendation ID                                       |
+| ----------------------------- | ----------------------------------- | --------- | -------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| {@open-agent-toolkit/docs-\*} | {range / actual version or missing} | {version} | {current / drift / ahead / unverified} | {drift only: helper upgrade command adapted to actual manager; otherwise none} | {drift only: R-NNN; approval: explicit; otherwise none} |
+
+Only older installed packages (`drift`) receive a package-upgrade command and
+stable recommendation ID with `approval: explicit`. `current` needs no tooling
+recommendation, even if the helper emits a reinstall command. For `ahead`, select
+or update the intended CLI installation, then re-analyze; do not recommend a docs
+package downgrade. `unverified` requires manual verification before a package
+recommendation.
 
 Unsupported app config/routes/scripts: {manual changes required; never automatic}.
 
