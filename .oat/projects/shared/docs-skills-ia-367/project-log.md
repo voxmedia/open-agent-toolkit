@@ -23,6 +23,10 @@ docs367-p01-review-wait-20261022: yielding for accepted asynchronous correctness
 
 docs367-p01-confirmation-wait-20261022: bounded fix d42f19285 passed gates and both real scaffold builds; independent phase re-review and testing confirmation accepted; yielding for their results before p01 acceptance.
 
+### 2026-10-22 · structural · oat-project-implement · p01-final-delta-wait
+
+docs367-p01-final-delta-wait-20261022: final renderer formatting candidate 183b3d3 passes all three output-format probes and gates; independent round-3 delta review accepted; yielding for result before phase acceptance and p02 start.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
