@@ -45,6 +45,12 @@ oat_dispatch_policy:
     claude: opus
   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_brief_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: 'sha256:f7e3a5406a8a8a184532a47f3c6ec30ffca5b79b0b4494d47f79df3b4339f2e4'
+  reviewed_head: 'e6a6a4f7bcce399a2bd33d1229de77026c787436'
+  decided_at: '2026-10-22T20:04:44Z'
 oat_workflow_mode: brief # spec-driven | quick | import | lite | brief | goal
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
