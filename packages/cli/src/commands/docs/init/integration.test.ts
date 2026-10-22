@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   chmod,
   mkdir,
@@ -15,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { createDocsNavSyncCommand } from '@commands/docs/nav/sync';
 import { resolveAssetsRoot } from '@fs/assets';
 import { OAT_VERSION } from '@shared/oat-version';
 import { Command } from 'commander';
@@ -64,6 +66,88 @@ describe('scaffold integration', () => {
     );
     createdRoots.length = 0;
   });
+
+  it(
+    'runs the rendered navigation command from the repository root for a nested app',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(
+        join(tmpdir(), 'oat-integration-nav-command-'),
+      );
+      createdRoots.push(root);
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'nested-standalone',
+        framework: 'fumadocs',
+        appName: 'docs',
+        siteName: 'Docs',
+        targetDir: 'docs-site',
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+      });
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat/config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: { root: 'docs-site', tooling: 'fumadocs' },
+        }),
+      );
+      const contributing = await readFile(
+        join(result.appRoot, 'docs/contributing.md'),
+        'utf8',
+      );
+      const command = contributing.match(/`(oat docs nav sync[^`]*)`/)?.[1];
+      expect(command).toBeDefined();
+      const args = execFileSync('bash', ['-c', `printf "%s\\0" ${command}`], {
+        cwd: root,
+        encoding: 'utf8',
+      })
+        .split('\0')
+        .filter(Boolean);
+      await writeFile(
+        join(result.appRoot, 'docs/meta.json'),
+        JSON.stringify({ pages: [] }),
+      );
+      const capture = createLoggerCapture();
+      const program = new Command()
+        .name('oat')
+        .exitOverride()
+        .addCommand(
+          createDocsNavSyncCommand({
+            buildCommandContext: () => ({
+              scope: 'project',
+              dryRun: false,
+              verbose: false,
+              json: true,
+              cwd: root,
+              home: root,
+              interactive: false,
+              logger: capture.logger,
+            }),
+          }),
+        );
+      const priorExitCode = process.exitCode;
+      try {
+        process.exitCode = undefined;
+        await program.parseAsync(args.slice(3), { from: 'user' });
+        expect(capture.jsonPayloads).toEqual([
+          expect.objectContaining({ status: 'ok', framework: 'fumadocs' }),
+        ]);
+        expect(process.exitCode ?? 0).toBe(0);
+        expect(
+          JSON.parse(
+            await readFile(join(result.appRoot, 'docs/meta.json'), 'utf8'),
+          ).pages,
+        ).toEqual(['index', 'getting-started', 'contributing']);
+      } finally {
+        process.exitCode = priorExitCode;
+      }
+    },
+  );
 
   it.each([
     ['nested-standalone', true],
