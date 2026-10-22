@@ -59,7 +59,7 @@ oat_template: false
 
 **Status:** in_progress
 **Base:** c3ba7e31d17521cf51252b5ee5167c6c81d8a629
-**Head:** d42f19285c2841d72fecac32fbd7f0ec130f4d31
+**Head:** 183b3d3aa7944c85919f09cc05dcb47b08c8f011
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
@@ -228,6 +228,38 @@ Review-fix phase verification: all eight DoD gates pass in order against committ
 Execution evidence: gate 1 ran 6 Turbo tasks and replayed 5; root validation/format executed. Gate 2 ran 6 type checks and replayed 5 dependency builds. Gate 3 genuinely ran all 12 Turbo tasks (0 cached) and the smoke/skill/script suites: 10,158 passing tests total, including 8,856 CLI tests in 422 files. Gate 4 replayed all 5 builds already executed in gate 3. Gate 8 genuinely ran all 6 build tasks (0 cached). Additional `pnpm lint` passed all 10 tasks without cache replays plus root oxlint; `pnpm format` ran 5 tasks/replayed 5 plus root format. Isolated sentence contracts passed 1,087 tests in 26 files. Individual `.exit` files record all gate exits. Gate 6's fetch showed no main changes in the owned implementation paths. No cached log is claimed as fresh execution. Journal review check exits 0 with status `ok`; the two pending fix/lens run-line warnings remain root-owned and were not modified.
 
 Round-2 disposition: correctness/docs pass (0 Critical/High/Medium, 1 Low) at `d42f19285`, artifact `reviews/p01-review-2026-10-22T205540Z.md`; testing/complexity confirmation passes with zero findings, artifact `reviews/p01-testing-complexity-confirmation-20261022.md`, independent 39/39 integration tests. All four prior findings are independently confirmed resolved. Root accepts the remaining Low within existing scaffold quality: empty conditional tokens leave whitespace and make generated monorepo/single-package config fail oxfmt (root reproduced exit 1). A same-handle formatting-only continuation is authorized; no new tests, behavior or guarantee. Phase remains in progress until disposition completes.
+
+### Task p01-t07: (review) Render conditional config lines format-clean
+
+**Status:** completed
+**Commit:** 183b3d3aa7944c85919f09cc05dcb47b08c8f011
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-format-continuation-20261022
+**Source review:** `reviews/p01-review-2026-10-22T205540Z.md` (Low: empty conditional token lines).
+
+Intent: consume the full conditional import/option lines in the renderer so empty replacements leave no leading blank or whitespace-only line, with identical config tokens and semantics.
+Files: `packages/cli/src/commands/docs/init/scaffold.ts` only; this phase record and candidate Head are the tracking boundary.
+Proof: fresh monorepo/single-package/nested-standalone renders, `oxfmt --check` on all three, whitespace-normalized byte equality with pre-fix configs, isolated-HOME owning integration tests, required DoD gates 1–8 in order with explicit exits and cache disclosure. Logs and exact render command remain under `/tmp/oat-docs367-p01-format/`; prior proofs remain intact.
+Continuation: `docs367-p01-format-continuation-20261022` -> `docs367-p01-fix-r1-20261022` -> `docs367-p01-impl-20261022`. Clean accepted-dispatch commit `2c777d826` descends from expected prelaunch `1431156ea54707d604b7542304a5c9e908dd3da8`. Target stays `codex_codex_proxy / gpt-6.1-sol / medium / priority`; review-fix round 2/2; recovery usage stays 1/10, pending null. No later phase Base exists; no tests, template, runtime/structural tokens, plan decisions or root run lines are changed.
+
+Output proof: pre-fix fresh renders reproduce `oxfmt --check` exits monorepo=1, single-package=1, nested-standalone=0 (`format-before-*.log/.exit`). After the renderer-only fix, all three fresh configs pass with exit 0 (`format-after-*.log/.exit`). Whitespace-normalized byte comparison is identical for all three; nested-standalone is exactly byte-identical. Monorepo/single-package remove only the leading blank line and two-space-only option line. The fresh pre-fix monorepo/nested configs also exactly match the previous build-verified configs; `semantic-comparison.txt` and `prior-config-comparison.txt` retain the comparisons. No standalone or workspace template build was repeated solely for whitespace.
+
+Focused verification: owning real-template integration suite passes 39/39 under isolated HOME (`integration.log/.exit`); scoped renderer oxlint, owned-file formatting/diff checks and CLI build pass. No automated test, template, skill prose, package version, test fixture, or generic normalization code changes. Existing skill sentence-contract evidence remains applicable.
+
+Formatting-continuation phase verification: all DoD gates pass in required order against committed candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`. Candidate Head advances, Base remains unchanged, p01 remains in progress for root disposition/acceptance, and recovery usage remains 1/10 with pending null. Root run lines and state were not edited.
+
+| Order | Command                                                     | Exit | Log under `/tmp/oat-docs367-p01-format/` |
+| ----- | ----------------------------------------------------------- | ---- | ---------------------------------------- |
+| 1     | `pnpm check`                                                | 0    | `gate1-check.log`                        |
+| 2     | `pnpm type-check`                                           | 0    | `gate2-type-check.log`                   |
+| 3     | `env HOME=<isolated-temp> pnpm test`                        | 0    | `gate3-test.log`                         |
+| 4     | `pnpm build`                                                | 0    | `gate4-build.log`                        |
+| 5     | `pnpm run check:skill-bumps`                                | 0    | `gate5-skill-bumps.log`                  |
+| 6     | `git fetch origin main`, then `pnpm release:check-versions` | 0, 0 | `gate6-fetch.log`, `gate6-versions.log`  |
+| 7     | `pnpm release:validate`                                     | 0    | `gate7-release.log`                      |
+| 8     | `pnpm build:docs`                                           | 0    | `gate8-docs.log`                         |
+
+Cache disclosure: ordinary caching was used. Gate 1 executed 3 Turbo tasks/replayed 8, plus root skill validation/format. Gate 2 executed 2/replayed 9. Gate 3 executed 3/replayed 9: changed CLI tests genuinely passed 8,856 tests in 422 files, docs tests passed 85, and smoke/skill/script suites genuinely ran 165/700/1 tests. Four unchanged package test suites (351 tests) replayed cached results. Gate 4 replayed all 5 builds; gate 8 replayed all 6 builds. Those cached builds are not claimed as fresh executions. Gates 5–7 ran their root commands normally; every exit has its own `.exit` file and `verified-head.txt` records the candidate. No main drift appeared in the renderer path after gate 6's fetch. Prior skill sentence-contract evidence remains applicable because no skill prose changed.
 
 ---
 
