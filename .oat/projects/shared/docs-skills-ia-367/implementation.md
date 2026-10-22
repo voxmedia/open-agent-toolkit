@@ -454,6 +454,8 @@ The review observation about both tiers holding invalid guidance is not a findin
 
 Formatting, scoped CLI lint and scoped CLI build passed before commit. No skill prose or smoke paths changed, so no extra skill-specific sentence/lint/format invocation was required; the full fresh CLI suite contains the contracts. No gate failed or needed a no-edit rerun this round; historical unrelated visual-smoke failure/rerun disclosure remains in p02-t01. Post-hook product hashes match tested bytes (`tested-product-sha256.json`), avoiding redundant full reruns on unchanged content. Review-scope journal validation exit 0; expected warning is root's nonterminal accepted fix-r2 run.
 
+Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711ca47e` changes only config command and guidance test; journal `f5b0e38b70e4069d6139c6949b7765c65e5a2fce` leaves clean tree and frozen Base. Narrow input catch precedes file I/O; stored-file diagnostics remain intact. Intended pre-fix assertion fails, all eight gate exits are 0, and actual branch probe preserves both valid files. Round-2 L1 moves to fixes_completed; final independent confirmation pending with phase in_progress. Review-fix usage 2/2, recovery 0/10 pending null.
+
 ---
 
 ## Phase p03: Record and act on the IA
@@ -500,7 +502,7 @@ Formatting, scoped CLI lint and scoped CLI build passed before commit. No skill 
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-fix-r2-20261022 · scope=p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-fix-r2-20261022 · scope=p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p02-review-r2-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
