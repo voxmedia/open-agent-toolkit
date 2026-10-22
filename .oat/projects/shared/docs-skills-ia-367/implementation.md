@@ -84,7 +84,7 @@ Additional final checks: `pnpm lint` and `pnpm format` exit 0 (`extra-lint.log`,
 
 Recovery capacity: 1/10 consumed, 9 remaining. Root verified the matching completed marker, immutable original/recovery commits, exact dispatch target and before/after proof, then cleared the marker without resetting usage. No failed attempt, scope realignment or independent review was performed. `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p01 --json` exits 0 with status `ok`; the pending-outcome warning was settled by root before review (`journal-check.log`).
 
-Review round 1 (`docs367-p01-review-r1-20261022`): 1 Critical, 0 High, 1 Medium, 1 Low; artifact `reviews/p01-review-2026-10-22T203848Z.md`, reviewed anchored Head `169c15cf503ec55071a2a2c255cf4da2d486942b`. Root accepts all three findings within Outcome 1/P8, E12 and P19: unconditional app Turbopack root breaks pnpm workspace resolution (scratch control exit 0, template exit 1); legacy object tooling contradicts the string schema; fixed pack membership/count contradict runtime Contents routing. Bounded fix round 1/2 authorized to the original exact target. No new requirement or project-log entry is introduced.
+Review round 1 (`docs367-p01-review-r1-20261022`): 1 Critical, 0 High, 1 Medium, 1 Low; artifact `reviews/archived/p01-review-2026-10-22T203848Z.md`, reviewed anchored Head `169c15cf503ec55071a2a2c255cf4da2d486942b`. Root accepts all three findings within Outcome 1/P8, E12 and P19: unconditional app Turbopack root breaks pnpm workspace resolution (scratch control exit 0, template exit 1); legacy object tooling contradicts the string schema; fixed pack membership/count contradict runtime Contents routing. Bounded fix round 1/2 authorized to the original exact target. No new requirement or project-log entry is introduced.
 
 ### Task p01-t01: Preserve export configuration and render scaffold facts
 
@@ -193,7 +193,7 @@ Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling
 **Commit:** d42f19285c2841d72fecac32fbd7f0ec130f4d31
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 **Handle:** docs367-p01-fix-r1-20261022
-**Source review:** `reviews/p01-review-2026-10-22T203848Z.md` (Critical P8, Medium E12, Low P19); `reviews/p01-testing-complexity-20261022.md` (M1).
+**Source review:** `reviews/archived/p01-review-2026-10-22T203848Z.md` (Critical P8, Medium E12, Low P19); `reviews/archived/p01-testing-complexity-20261022.md` (M1).
 
 Intent: emit the ESM-safe app root only for nested-standalone, retain automatic discovery for other shapes, restore real-template factory/basePath protection, and correct accepted E12/P19 prose.
 Files: `.oat/templates/docs-app-fuma/next.config.js`; `packages/cli/src/commands/docs/init/{scaffold.ts,integration.test.ts}`; `.agents/skills/oat-docs-bootstrap/SKILL.md`; `.agents/skills/oat-docs/SKILL.md`; `.agents/skills/oat-docs-authoring/references/mkdocs-to-oat-fumadocs-refactor-guide.md`; `packages/docs-config/README.md`; `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`.
@@ -228,7 +228,7 @@ Review-fix phase verification: all eight DoD gates pass in order against committ
 
 Execution evidence: gate 1 ran 6 Turbo tasks and replayed 5; root validation/format executed. Gate 2 ran 6 type checks and replayed 5 dependency builds. Gate 3 genuinely ran all 12 Turbo tasks (0 cached) and the smoke/skill/script suites: 10,158 passing tests total, including 8,856 CLI tests in 422 files. Gate 4 replayed all 5 builds already executed in gate 3. Gate 8 genuinely ran all 6 build tasks (0 cached). Additional `pnpm lint` passed all 10 tasks without cache replays plus root oxlint; `pnpm format` ran 5 tasks/replayed 5 plus root format. Isolated sentence contracts passed 1,087 tests in 26 files. Individual `.exit` files record all gate exits. Gate 6's fetch showed no main changes in the owned implementation paths. No cached log is claimed as fresh execution. Journal review check exits 0 with status `ok`; the two pending fix/lens run-line warnings remain root-owned and were not modified.
 
-Round-2 disposition: correctness/docs pass (0 Critical/High/Medium, 1 Low) at `d42f19285`, artifact `reviews/p01-review-2026-10-22T205540Z.md`; testing/complexity confirmation passes with zero findings, artifact `reviews/p01-testing-complexity-confirmation-20261022.md`, independent 39/39 integration tests. All four prior findings are independently confirmed resolved. Root accepts the remaining Low within existing scaffold quality: empty conditional tokens leave whitespace and make generated monorepo/single-package config fail oxfmt (root reproduced exit 1). A same-handle formatting-only continuation is authorized; no new tests, behavior or guarantee. Phase remains in progress until disposition completes.
+Round-2 disposition: correctness/docs pass (0 Critical/High/Medium, 1 Low) at `d42f19285`, artifact `reviews/archived/p01-review-2026-10-22T205540Z.md`; testing/complexity confirmation passes with zero findings, artifact `reviews/archived/p01-testing-complexity-confirmation-20261022.md`, independent 39/39 integration tests. All four prior findings are independently confirmed resolved. Root accepts the remaining Low within existing scaffold quality: empty conditional tokens leave whitespace and make generated monorepo/single-package config fail oxfmt (root reproduced exit 1). A same-handle formatting-only continuation is authorized; no new tests, behavior or guarantee. Phase remains in progress until disposition completes.
 
 ### Task p01-t07: (review) Render conditional config lines format-clean
 
@@ -236,7 +236,7 @@ Round-2 disposition: correctness/docs pass (0 Critical/High/Medium, 1 Low) at `d
 **Commit:** 183b3d3aa7944c85919f09cc05dcb47b08c8f011
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 **Handle:** docs367-p01-format-continuation-20261022
-**Source review:** `reviews/p01-review-2026-10-22T205540Z.md` (Low: empty conditional token lines).
+**Source review:** `reviews/archived/p01-review-2026-10-22T205540Z.md` (Low: empty conditional token lines).
 
 Intent: consume the full conditional import/option lines in the renderer so empty replacements leave no leading blank or whitespace-only line, with identical config tokens and semantics.
 Files: `packages/cli/src/commands/docs/init/scaffold.ts` only; this phase record and candidate Head are the tracking boundary.
@@ -266,7 +266,7 @@ Cache disclosure: ordinary caching was used. Gate 1 executed 3 Turbo tasks/repla
 
 ### Root Acceptance: p01
 
-Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged. Final reviewer `docs367-p01-review-r3-20261022`: pass, 0 critical / 0 high / 0 medium / 0 low, artifact `reviews/p01-review-2026-10-22T210641Z.md`. Its final formatting delta coverage combines with independent r1/r2 correctness/documentation reviews and the passing testing/complexity confirmation at `d42f19285c2841d72fecac32fbd7f0ec130f4d31`. All prior findings are resolved by p01-t06 and p01-t07; no open fix tasks or selected external p01 gate remain. Two review-fix rounds used; recovery ledger remains 1/10, pending null. Reconnaissance was not attempted in the final review. Gates 1–8 passed at the final candidate with the cache disclosures in p01-t07; real workspace and nested standalone builds passed at the semantically identical p01-t06 config. Phase PR #368 is open; remote CI status is tracked separately from local acceptance.
+Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged. Final reviewer `docs367-p01-review-r3-20261022`: pass, 0 critical / 0 high / 0 medium / 0 low, artifact `reviews/archived/p01-review-2026-10-22T210641Z.md`. Its final formatting delta coverage combines with independent r1/r2 correctness/documentation reviews and the passing testing/complexity confirmation at `d42f19285c2841d72fecac32fbd7f0ec130f4d31`. All prior findings are resolved by p01-t06 and p01-t07; no open fix tasks or selected external p01 gate remain. Two review-fix rounds used; recovery ledger remains 1/10, pending null. Reconnaissance was not attempted in the final review. Gates 1–8 passed at the final candidate with the cache disclosures in p01-t07; real workspace and nested standalone builds passed at the semantically identical p01-t06 config. Phase PR #368 is open; remote CI status is tracked separately from local acceptance.
 
 ---
 
@@ -373,7 +373,7 @@ Root pre-review validation: accepted the clean same-handle verification handoff 
 
 ### Review Received: p02
 
-Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-r1-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..7564e8332cdcae4d40e6dbf746f0c54ba93a23a8`; 0 Critical, 0 High, 1 Medium, 3 Low. Exactly one `not-attempted` reconnaissance signal consumed; artifact has no Review Orchestration section. Anchors and ignored artifact validated. Root accepts all four findings for bounded p02-t02; phase stays in_progress. Review-fix round 1/2, recovery usage remains 0/10, pending null.
+Source: `reviews/archived/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-r1-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..7564e8332cdcae4d40e6dbf746f0c54ba93a23a8`; 0 Critical, 0 High, 1 Medium, 3 Low. Exactly one `not-attempted` reconnaissance signal consumed; artifact has no Review Orchestration section. Anchors and ignored artifact validated. Root accepts all four findings for bounded p02-t02; phase stays in_progress. Review-fix round 1/2, recovery usage remains 0/10, pending null.
 
 - M1 accepted — invalid user guidance prescribes an unscoped command that fails; G1's actual user-config support and the config repair precedent require actionable diagnostics. Identify the real config path and a working scope-specific repair. Preserve scope/precedence semantics rather than making unscoped operations silently change user config. Add one real-file command-boundary regression that executes the repair advertised by the error and preserves unrelated state.
 - L1 accepted — shipped IA references use project-phase language and the contract test pins it; portable authoring guidance (Outcome 2/D9) needs reader-neutral wording. Preserve all method/preset guards, remove or replace only the transient deferral pin with an explicit protection accounting under deliberate-testing.
@@ -386,7 +386,7 @@ Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-
 **Commit:** bbefca279ca3a24108f465b65c7b6f351be3ee80
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 **Handle:** docs367-p02-impl-20261022 (same pinned conversation)
-**Source review:** `reviews/p02-review-2026-10-22T215711Z.md` — M1, L1, L2, L3 (accepted by root).
+**Source review:** `reviews/archived/p02-review-2026-10-22T215711Z.md` — M1, L1, L2, L3 (accepted by root).
 **Intent:** Close accepted M1/L1/L2/L3 without changing guidance resolution or adding p03/p07 behavior.
 **Files:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`, `.agents/skills/authoring-docs/references/information-architecture.md`, `.agents/skills/authoring-docs/references/templates.md`, `.agents/skills/authoring-docs/tests/ia-contract.test.mjs`, `apps/oat-docs/docs/reference/configuration.md`; p02-local journal/Head and ignored `analysis/p02/` proof outputs only.
 **Proof command:** real-file repair regression fails before and passes after, valid guidance/control and unrelated state retained; focused config/IA/sentence contracts; ordered gates 1–8 with explicit exits and cache disclosure; skill lint/format.
@@ -417,7 +417,7 @@ Root fix validation: verified seven assigned product paths in `bbefca279ca3a2410
 
 ### Review Received: p02 round 2
 
-Source: `reviews/p02-review-2026-10-22T221413Z.md`, request `docs367-p02-review-r2-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..bbefca279ca3a24108f465b65c7b6f351be3ee80`; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal consumed; ignored artifact and anchors validated, no Review Orchestration section. M1/L1/L2/L3 from round 1 independently confirmed closed. New L1 is accepted as a regression in the same G1/config repair contract: an invalid set argument incorrectly blames a valid stored file and advises deleting valid guidance. Correct only the argument-validation diagnostic and protect existing raw config. Queue p02-t03 under review-fix round 2/2; phase stays in_progress, recovery 0/10 pending null.
+Source: `reviews/archived/p02-review-2026-10-22T221413Z.md`, request `docs367-p02-review-r2-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..bbefca279ca3a24108f465b65c7b6f351be3ee80`; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal consumed; ignored artifact and anchors validated, no Review Orchestration section. M1/L1/L2/L3 from round 1 independently confirmed closed. New L1 is accepted as a regression in the same G1/config repair contract: an invalid set argument incorrectly blames a valid stored file and advises deleting valid guidance. Correct only the argument-validation diagnostic and protect existing raw config. Queue p02-t03 under review-fix round 2/2; phase stays in_progress, recovery 0/10 pending null.
 
 The review observation about both tiers holding invalid guidance is not a finding and does not change scope: retain the accepted targeted strict barrier, default scopes and precedence. Manual-walkthrough and inherited-gate-evidence limitations remain disclosed.
 
@@ -427,7 +427,7 @@ The review observation about both tiers holding invalid guidance is not a findin
 **Commit:** 7f6ee861b5bee201f636d80dcae74b78711ca47e
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 **Handle:** docs367-p02-impl-20261022 (same pinned conversation)
-**Source review:** `reviews/p02-review-2026-10-22T221413Z.md` — Low L1, accepted by root.
+**Source review:** `reviews/archived/p02-review-2026-10-22T221413Z.md` — Low L1, accepted by root.
 **Intent:** Reject invalid `config set documentation.guidance` input with a neutral argument-specific diagnostic; preserve the working file/scope repair hints for invalid stored config.
 **Files:** `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`; p02-local journal/Head and ignored `analysis/p02/fix-r2/` outputs only.
 **Proof command:** existing real config command malformed-input cases fail a no-unset/no-file-blame diagnostic assertion before the fix, pass after, preserve valid shared/user bytes and retain a valid-set control; stored-config repair cases still pass; focused config and ordered gates 1–8 with explicit exits/cache disclosure.
@@ -458,7 +458,7 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 ---
 
-**Phase acceptance:** Final independent review `docs367-p02-review-r3-20261022` passed with 0 Critical, 0 High, 0 Medium and 0 Low findings at `7f6ee861b5bee201f636d80dcae74b78711ca47e`. Exactly one not-attempted reconnaissance signal was consumed before validation; ignored artifact `reviews/p02-review-2026-10-22T222739Z.md` has matching anchors and no Review Orchestration section. Prior findings are independently closed; two review-fix rounds used, recovery 0/10 with pending null. All ordered gates pass. No additional phase gate is configured for p02. Phase accepted; next p03.
+**Phase acceptance:** Final independent review `docs367-p02-review-r3-20261022` passed with 0 Critical, 0 High, 0 Medium and 0 Low findings at `7f6ee861b5bee201f636d80dcae74b78711ca47e`. Exactly one not-attempted reconnaissance signal was consumed before validation; ignored artifact `reviews/archived/p02-review-2026-10-22T222739Z.md` has matching anchors and no Review Orchestration section. Prior findings are independently closed; two review-fix rounds used, recovery 0/10 with pending null. All ordered gates pass. No additional phase gate is configured for p02. Phase accepted; next p03.
 
 ## Phase p03: Record and act on the IA
 
