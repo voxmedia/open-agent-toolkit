@@ -25,6 +25,9 @@ oat_phase_recovery_policy:
     p02:
       used_attempts: 0
       pending_attempt: null
+    p03:
+      used_attempts: 0
+      pending_attempt: null
     p-rev1:
       used_attempts: 0
       pending_attempt: null
@@ -133,7 +136,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p02 accepted; prepare its progress PR and continue p03.
+Implement — p03: IA persistence, safe restructuring and approval handoff.
 
 ## Artifacts
 
@@ -147,4 +150,4 @@ None.
 
 ## Next Milestone
 
-PR #369 is open against main; complete supplemental complexity review, then continue p03. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+Execute concrete p03; PR #369 is ready and monitored for automatic landing. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.

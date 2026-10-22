@@ -462,9 +462,11 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 ## Phase p03: Record and act on the IA
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 63db688ca813ddfbbd01fcde7bf92b9b5a7e15ae
+**Executor:** phase-implementer:docs367-p03-impl-20261022
 
----
+**Phase start:** Worktree `/Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367`, branch `docs/docs-skills-ia-367-p03`; the phase implementer is the sole committing owner after release. Precedence rung 3: no declared parallel group; root fan-out fails independence because config, shared skill/template contracts and verification outputs overlap. Scope is now concrete in the approved brief. Fresh main drift inspection found no changes in planned paths since branch base. P02 correctness, testing, documentation and supplemental complexity reviews are settled; remote CI/Bugbot remain monitored on PR #369. Public package version target 0.3.25, subject to main at verification. Recovery default/phase limit 10, durable usage 0, remaining 10, pending null. Root owns review/gates and PR landing.
 
 ## Phase p04: Navigation follows Contents
 
