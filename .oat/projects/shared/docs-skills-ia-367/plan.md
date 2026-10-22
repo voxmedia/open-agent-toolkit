@@ -455,7 +455,7 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 | final | code     | pending         | -          | -                                                                | -                                        | -                                                               | -                 |
 | plan  | artifact | passed          | 2026-10-22 | reviews/archived/artifact-plan-review-2026-10-22T200026Z.md      | e6a6a4f7bcce399a2bd33d1229de77026c787436 | gate                                                            | codex-6-sol-xhigh |
 | p01   | code     | fixes_completed | 2026-10-22 | reviews/p01-testing-complexity-20261022.md                       | f0c3bedf0179c49cb790763ed98d1e7ad34b7731 | manual                                                          | -                 |
-| p01   | code     | fixes_added     | 2026-10-22 | reviews/p01-review-2026-10-22T205540Z.md                         | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | auto                                                            | -                 |
+| p01   | code     | fixes_completed | 2026-10-22 | reviews/p01-review-2026-10-22T205540Z.md                         | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | auto                                                            | -                 |
 | p01   | code     | passed          | 2026-10-22 | reviews/p01-testing-complexity-confirmation-20261022.md          | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | manual                                                          | -                 |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
