@@ -45,6 +45,7 @@ oat_template: false
 | p-rev1 | completed   | 1     | 1/1      |
 | p02    | completed   | 1     | 1/1      |
 | p03    | in_progress | 1     | 0/1      |
+| p-rev2 | pending     | 1     | 0/1      |
 | p04    | pending     | 1     | 0/1      |
 | p05    | pending     | 1     | 0/1      |
 | p06    | pending     | 1     | 0/1      |
@@ -52,7 +53,7 @@ oat_template: false
 | p08    | pending     | 1     | 0/1      |
 | p09    | pending     | 1     | 0/1      |
 
-**Total:** 3/10 phases accepted
+**Total:** 3/11 phases accepted
 
 ---
 
@@ -486,6 +487,13 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 **Root handoff:** Root requested the next committed boundary for a separate p02 portability revision after Bugbot feedback. This task is committed; no task record remains open. Phase stays in_progress, original Base unchanged, no phase Head/acceptance recorded. Manual framework/Markdown IA, restructure/old-URL/owner and approval/tooling walkthroughs; ordered gates 1–8; forced whole-suite/tail execution; full lint/format; independent review and external p03 gate remain pending. Root owns the portability correction and will resume this same target/handle. Recovery 0/10, remaining 10, pending null. The ignored `analysis/p03/root-handoff-portability.json` marker transfers ownership; no further writer activity follows it.
 
+**Root handoff validation:** Verified p03-t01 product `306ea28cbc450a8f97b356124a49f0e36b9107f1` (21 owned paths), separate journal `8101e55402ae845ef1f5ece2683675dbfc8977d3`, clean tree and matching ownership marker. All focused/postcommit exit files reported 0; manual walkthroughs and full gates remain unverified. Recovery remains 0/10, pending null. The inherited p02 portability finding is recorded for the immediately following p-rev2; finish p03 verification first to preserve sequential anchors, then integrate the separately reviewed correction into PR #369.
+
+## Phase p-rev2: Preserve loaded skill bindings
+
+**Status:** pending
+**Corrects:** p02
+
 ## Phase p04: Navigation follows Contents
 
 **Status:** pending
@@ -566,7 +574,7 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 
 run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-complexity action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
@@ -577,6 +585,10 @@ run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementatio
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
 - PR https://github.com/voxmedia/open-agent-toolkit/pull/369 opened for p02 on 2026-10-22; supplemental complexity review passed with zero findings; all four self-review lenses covered.
+
+### Remote Review Received: PR #369
+
+2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
 

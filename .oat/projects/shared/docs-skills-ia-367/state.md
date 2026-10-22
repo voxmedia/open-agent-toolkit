@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03
-oat_last_commit: 7f6ee861b5bee201f636d80dcae74b78711ca47e
+oat_last_commit: 306ea28cbc450a8f97b356124a49f0e36b9107f1
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -141,7 +141,7 @@ Implement — p03: IA persistence, safe restructuring and approval handoff.
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01 and p-rev1 accepted; 3/10 phases accepted.
+- **Implementation:** `implementation.md` — p01 and p-rev1 accepted; 3/11 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -150,4 +150,4 @@ None.
 
 ## Next Milestone
 
-Execute concrete p03; PR #369 is ready and monitored for automatic landing. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+Finish p03 verification/review, then execute p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
