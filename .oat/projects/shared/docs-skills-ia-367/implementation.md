@@ -521,7 +521,7 @@ Root consumed exactly one `**Reconnaissance:** not-attempted` signal before arti
 
 **Static-export settlement (L3):** Next static export does not apply next.config redirects/rewrites/headers (installed `apps/oat-docs/node_modules/next/dist/export/index.js:143-148`; public Next static-export unsupported-features reference cited in apply's restructure procedure). P4 therefore preserves old URLs through authored retained stubs/archive pointers and verifies their links and anchors under the real base path; host redirects are manual when app/host configuration is needed. No not-found.tsx mutation is allowed by the tooling carve-out. The manual exported stub/link control supports this answer; it does not prove host redirects.
 
-**Outcome:** fixes queued: p03-t02, p03-t03, p03-t04. Review-fix round 1; recovery remains 0/10, pending null. External p03 gate and acceptance remain pending. Inherited p02 portability remains queued in p-rev2 and PR #369 is held.
+**Outcome:** fixes completed: p03-t02, p03-t03, p03-t04; independent re-review pending. Review-fix round 1; recovery remains 0/10, pending null. External p03 gate and acceptance remain pending. Inherited p02 portability remains queued in p-rev2 and PR #369 is held.
 
 ### Task p03-t02: (review) Report safe package upgrades and locate shim bundles
 
@@ -566,6 +566,8 @@ Proof: conservation read and existing isolated-HOME skill sentence contracts; no
 **Commit:** d2d7e2fd61762c61448ea0258886992e0ea460a4
 
 **Evidence:** Conservation diff changes only the Allowed mutations bullet to the G4 artifact-plus-approved-IDs input, retaining the repair route, preserved state and both stop conditions. Existing isolated-HOME sentence contracts pass before and immediately after commit (1,087 tests, exit 0); scoped lint/format pass. No new prose-only test or version bump.
+
+**Root fix-report validation:** Verified clean handoff 00e5d9672ae6b2005b785183b7664739e6d2fc08, three bounded product commits and separate journals, seven authorized product paths, fixed Base ancestry and journal-only changes after candidate 366218ea358a908e5e5849c375df90bd2c53be94. Inspected all 17 explicit gate/supplemental exit files (0), raw cache summaries including 12/12 fresh forced tasks, and the pre-fix regression exits (1). Existing PR-scoped versions remain unchanged. P03 stays in_progress for re-review and external gate; recovery 0/10, pending null.
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
@@ -658,7 +660,7 @@ run/v1 · request=docs367-p03-resume-verification-20261022 · scope=p03 · actio
 
 run/v1 · request=docs367-p03-review-r1-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-fix-r1-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-fix-r1-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
