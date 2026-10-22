@@ -15,6 +15,10 @@ Contract, entry grammar and roll-up: https://voxmedia.github.io/open-agent-toolk
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/docs-skills-ia-367/reviews/artifact-plan-review-2026-10-22T200026Z.md run=0a6ba336-f23e-494f-98cf-16330eb9a234
 
+### 2026-10-22 · structural · oat-project-implement · p01-review-wait
+
+docs367-p01-review-wait-20261022: yielding for accepted asynchronous correctness/docs and testing/complexity reviews; draft PR #368 is open, phase p01 remains in progress, and p02 continues after acceptance.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
