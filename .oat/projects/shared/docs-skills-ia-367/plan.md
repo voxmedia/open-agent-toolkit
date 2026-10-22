@@ -69,7 +69,9 @@ review audits every P-number against this list.
 1. **The shipped skills and packages stop contradicting the CLI, config and
    template (P6, P7, P8, P19, `BL-261002-correct-docs-bootstrap-docs` E12/E13
    corrections, `BL-261002-catch-hardcoded-docs-paths`).** Evidence: closed FP
-   patches and plan IDs gone from `oat-docs-bootstrap`; each P7 and E12/E13
+   patches and plan IDs gone from `oat-docs-bootstrap`; the CLI renders the
+   detected Node version in place of FP-13E's hedge; an old-scaffold shape is
+   reported as an analyze finding; each P7 and E12/E13
    statement corrected with a cited source line; a `createDocsConfig` test
    proving `output: 'export'`, `trailingSlash`, `images.unoptimized` and
    `basePath` survive the nested-standalone path, with a negative control on
@@ -78,7 +80,8 @@ review audits every P-number against this list.
 2. **The `authoring-docs` IA reference teaches the axes method and presets
    instead of one Standard Top-Level Model (P28 D1–D9).** Evidence: rewritten
    `references/information-architecture.md` plus presets, IA proposal template
-   and smell-test rows; `metadata.version` 1.1.0; skill contract tests updated.
+   and smell-test rows; `metadata.version` at least 1.1.0 (later phases bump
+   it again); skill contract tests updated.
 3. **Bootstrap and analyze propose an IA from a resolved guidance source
    (P1, P2, BL-260911 front door).** Evidence: `documentation.guidance` in the
    config schema with resolution-order tests; bootstrap Step 2.5 and
@@ -95,9 +98,10 @@ review audits every P-number against this list.
    (BL-260911), through one handoff contract that bootstrap also uses
    (E12 handoff).** Evidence: `approval: explicit | default` on every
    recommendation; apply skips `explicit` items under blanket or unattended
-   approval and reports them; drift computed offline from
-   `public-package-versions.json`; bootstrap Step 7b uses apply's documented
-   input.
+   approval and lists them in its structured result; an explicitly approved
+   tooling update runs only the G4 carve-out; drift computed offline from
+   `public-package-versions.json` and reported with the upgrade command;
+   bootstrap Step 7b uses apply's documented input.
 6. **The sidebar follows authored Contents, including groups (P12, P13,
    P14).** Evidence: nav sync tests for `###` group headings emitted as
    `---Label---`, string `root`, and `*`-bullet errors; `oat docs init` runs nav
@@ -113,7 +117,9 @@ review audits every P-number against this list.
 8. **`oat docs check` validates Markdown, Fumadocs and MkDocs docs with
    calibrated rules (P20, P21, P22, P23, P25).** Evidence: the command with
    `--json`, stable rule IDs and the P20 default thresholds; tests per rule
-   including a seeded failure; OAT's own docs pass; the starter app wires it.
+   including a seeded failure; OAT's own docs pass; the starter app runs it,
+   and bootstrap wires it into the target repo's PR CI with the build and
+   manifest-freshness steps.
 9. **Bootstrap scaffolds preset trees and page templates (P5, P26, P27).**
    Evidence: one fixture per preset showing the tree, section indexes with
    purpose paragraphs and `contributing/templates/`; the flat size outcome
@@ -123,9 +129,12 @@ review audits every P-number against this list.
     Evidence: a prototype result in `references/` and either the shipped check
     or a recorded descope decision.
 11. **OAT's own docs describe the shipped behavior and the release is
-    prepared.** Evidence: updated `apps/oat-docs` pages; lockstep versions
-    bumped; every changed skill's `metadata.version` bumped; the three folded
-    backlog items closed and #367 answered with a P-number checklist.
+    audited.** Evidence: updated `apps/oat-docs` pages; every phase PR
+    carried its own lockstep and skill version bumps; the two
+    `BL-261002-*` items closed; `BL-260911` closed only after its outstanding
+    external criteria move to the rollout item with reciprocal links (otherwise
+    left open with its OAT-side slice marked done); #367 answered with a
+    P-number checklist.
 
 ## Approach
 
@@ -175,9 +184,18 @@ realignment with the user, not a phase-local decision.
   overlay). The authored record is authoritative.
 - Config mirrors it for tools: `documentation.ia` =
   `{ preset: string, decision: string /* repo-relative path */, tracks?: Array<{ path: string, principle: string }>, verification?: 'triad' | 'agent-only' | 'none' }`.
-- `documentation.navOwner` = `'nav-sync' | 'hand-authored'`; absent means
-  `nav-sync` for Fumadocs and MkDocs. It is independent of IA because a repo
-  can own its sidebar either way without a recorded IA.
+- `documentation.navOwner` = `'nav-sync' | 'hand-authored'`. It is
+  independent of IA because a repo can own its sidebar either way without a
+  recorded IA.
+- New scaffolds (`oat docs init`, bootstrap) write `navOwner: nav-sync`
+  explicitly. Absent means **undeclared**, never `nav-sync`: nothing
+  regenerates `meta.json` automatically (an explicit `oat docs nav sync` run
+  behaves as today), analyze raises an `ask_user` finding to choose an owner,
+  and `oat docs check` applies the read-only membership-and-order comparison.
+- Non-reader pages (page templates, drafts) are kept out of navigation through
+  `documentation.excludes`. Nav sync inventory, `--check`, `generate-index`
+  and `oat docs check` all honor it, and the docs app does not render excluded
+  paths. Presets that scaffold `contributing/templates/` add that glob.
 
 **G3. Contents grammar and nav sync.**
 
@@ -195,12 +213,17 @@ realignment with the user, not a phase-local decision.
 
 - Every analyze recommendation carries `approval: explicit | default`.
   `explicit` covers the docs package update and anything outside the
-  Markdown scope.
+  Markdown scope. A drift recommendation includes the exact upgrade command.
+- An explicitly approved tooling update may do only three things: bump the
+  docs app's `@open-agent-toolkit/docs-*` dependencies, run `oat docs migrate`
+  where a template shape changed, and run the build verifier. Apply's other
+  out-of-scope prohibitions stay.
 - Apply's one documented input is the analysis artifact plus a list of
   approved recommendation IDs. `explicit` items need their own approval in
   the approval step, are never covered by blanket approval, and are skipped
-  and reported when unattended. Bootstrap's Step 7b and the existing-docs
-  front door hand off through the same input.
+  and reported when unattended. Apply's structured result lists applied,
+  skipped (with reason) and failed recommendation IDs. Bootstrap's Step 7b and
+  the existing-docs front door hand off through the same input.
 
 **G5. `oat docs check`.**
 
@@ -213,7 +236,8 @@ realignment with the user, not a phase-local decision.
   severity (`error | warn | off`) or threshold.
 - The `meta.json` rule (P21) runs as `nav sync --check` semantics when
   `navOwner` is `nav-sync` and as a membership-and-order comparison against
-  Contents when it is `hand-authored`.
+  Contents when it is `hand-authored` or undeclared. Paths in
+  `documentation.excludes` are skipped.
 - P24 is not part of this command (see Decisions).
 
 **G6. What the skills ship about IA.** A generic method: the five axes, the
@@ -233,19 +257,24 @@ procedure. Exemplars and repo evidence stay in external guidance.
   `AGENTS.md`, in order, with explicit exit codes and evidence-grade reruns
   where Turborepo replays cache. Skill prose edits also run the skill contract
   tests named in `AGENTS.md`.
-- **Constraint:** One `metadata.version` bump per changed skill per PR, and
-  lockstep package versions per the release gates.
+- **Constraint:** Every phase PR carries its own release bumps: one
+  `metadata.version` bump per changed skill and, when lockstep packages
+  change, the lockstep bump required by the release gates. Re-run the version
+  gates after `main` advances.
 - **Constraint:** Tests that exercise the bundle template tier use an isolated
   `HOME`. P0 guards (the FP-11 regression, approval-class skipping) get a
   negative control.
 - **Constraint:** Existing plain `docs/` fallback behavior and existing
   hand-authored `meta.json` repos keep working: nothing becomes stricter for a
   repo that has not opted in, except through `oat docs check`, which is new.
+  Named exceptions: the G3 parser errors for non-dash bullets and empty
+  `###` groups apply to every nav sync and index run. They are documented in
+  the Contents grammar and release notes with the one-line repair.
 - **Out of scope:** Updating consumer repositories to the new tooling. That
   is a follow-on rollout wave after this project lands and is reviewed.
-- **Out of scope:** BL-260911's pntr `oat-docs-update` configuration change
-  and acceptance runs in external repositories; both move to that rollout
-  wave.
+- **Out of scope:** BL-260911's change to the external docs-update
+  automation's configuration and its acceptance runs in external
+  repositories; both move to that rollout wave.
 - **Out of scope:** `BL-260830-make-documentation-aware` (configurable
   discovery prerequisites, #205). It changes project discovery, not the docs
   skills, and stays open as its own item.
@@ -265,8 +294,8 @@ procedure. Exemplars and repo evidence stay in external guidance.
   phases can merge first. Rejected: one PR at the end (too large to review).
 - **BL-260830 excluded.** Different subsystem; adjacent to P2/P3 only.
 - **BL-260911 split.** OAT-side front door, approval classes and drift
-  reporting are in scope; pntr automation config and external acceptance go
-  to the rollout wave.
+  reporting are in scope; the external automation config and external
+  acceptance go to the rollout wave.
 - **Ship a generic IA method in `authoring-docs` (G6), with external guidance
   taking precedence (G1).** Rejected: a thin skill that is only useful with an
   external pack.
@@ -330,8 +359,8 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Phase p01: Contract cleanup and silent defects
 
-**Intent:** Make the shipped docs skills, CLI help and packages tell the truth before new stages are added. Retire the closed FP patches and plan IDs in `oat-docs-bootstrap`, move the "Generated files" section into the template and update `add-docs-to-a-repo.md` (P6). Fix each P7 statement and the E12 corrections that do not depend on the new apply input (`setup-docs.sh` venv claim, MkDocs index location, `tooling` as a string) and the E13 `allowed-tools` gaps (`BL-261002-correct-docs-bootstrap-docs`). Add a `turbopack` passthrough to `createDocsConfig`, have the template pass the ESM-safe directory, and delete FP-11 (P8). Derive the `oat-docs` topic map from the installed docs index, resolve or mark repo-internal `docs-completed-projects-gap-review`, and package the MkDocs migration guide (P19). Add a check that fails when a skill test references a docs path that no longer exists (`BL-261002-catch-hardcoded-docs-paths`).
-**Exit evidence:** `oat-docs-bootstrap` contains no closed FP patches or plan-task IDs and its exit summary matches the remaining patches; each corrected P7 and E12/E13 statement is listed in the phase record with its source citation; a `createDocsConfig` test passes for the nested-standalone shape and a negative control shows the old Path B shape dropping `output: 'export'`; the docs-path check fails on a seeded stale reference and passes after it is removed; changed skills carry one version bump each; Definition of Done gates 1–8 pass with recorded exit codes; phase PR open.
+**Intent:** Make the shipped docs skills, CLI help and packages tell the truth before new stages are added. Retire the closed FP patches and plan IDs in `oat-docs-bootstrap`, move the "Generated files" section into the template, have the CLI render the detected Node version in place of FP-13E's hedge, route old-scaffold shapes to analyze findings, and update `add-docs-to-a-repo.md` (P6). Fix each P7 statement and the E12 corrections that do not depend on the new apply input (`setup-docs.sh` venv claim, MkDocs index location, `tooling` as a string) and the E13 `allowed-tools` gaps (`BL-261002-correct-docs-bootstrap-docs`). Add a `turbopack` passthrough to `createDocsConfig`, have the template pass the ESM-safe directory, and delete FP-11 (P8). Derive the `oat-docs` topic map from the installed docs index, resolve or mark repo-internal `docs-completed-projects-gap-review`, and package the MkDocs migration guide (P19). Add a check that fails when a skill test references a docs path that no longer exists (`BL-261002-catch-hardcoded-docs-paths`).
+**Exit evidence:** `oat-docs-bootstrap` contains no closed FP patches or plan-task IDs and its exit summary matches the remaining patches; a scaffold test shows the detected Node version rendered; an old-scaffold fixture produces an analyze finding; each corrected P7 and E12/E13 statement is listed in the phase record with its source citation; a `createDocsConfig` test passes for the nested-standalone shape and a negative control shows the old Path B shape dropping `output: 'export'`; the docs-path check fails on a seeded stale reference and passes after it is removed; changed skills carry one version bump each; Definition of Done gates 1–8 pass with recorded exit codes; phase PR open.
 **Provisional:** no
 
 ## Phase p02: IA method and guidance input
@@ -343,13 +372,13 @@ procedure. Exemplars and repo evidence stay in external guidance.
 ## Phase p03: Record and act on the IA
 
 **Intent:** Write the accepted IA as a decision record plus a docs-app `AGENTS.md` section and mirror it in `documentation.ia` and `documentation.navOwner` (P3, G2). Add analyze's Information Architecture Fit section, misroute severity rule, `ask_user` finding when no IA is recorded, and IA-driven coverage surfaces (P3). Add apply's `restructure` action (P4). Add approval classes and offline package-drift reporting, and the single apply input that bootstrap Step 7b also uses (BL-260911, E12 handoff, G4).
-**Exit evidence:** schema tests for `documentation.ia` and `navOwner`; analyze and apply skill text and templates updated with the new section, rule, action and input; a negative control shows an `explicit` recommendation skipped under unattended approval; drift reported from `public-package-versions.json` with no network; gates pass; phase PR open.
+**Exit evidence:** schema tests for `documentation.ia` and `navOwner`; analyze and apply skill text and templates updated with the new section, rule, action and input; a negative control shows an `explicit` recommendation skipped under unattended approval and listed in the structured result, and an explicitly approved tooling update performs only the G4 carve-out; drift reported with the upgrade command from `public-package-versions.json` with no network; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p04: Navigation follows Contents
 
-**Intent:** Emit `---Label---` groups from `###` subheadings in Contents, accept a string `root`, and make non-dash bullets an error (P13, G3). Then run nav sync at the end of `oat docs init` and bootstrap and add `nav sync --check` to the template prebuild, honoring `navOwner` (P12). Make `generate-index` follow Contents order and index titles with tooling-aware header text (P14). Update the Contents grammar docs.
-**Exit evidence:** nav sync and parser tests for groups, empty groups, string `root` and `*` bullets; a fresh `oat docs init` fixture has `meta.json` in Contents order and a prebuild that fails on drift; `generate-index` tests for authored order, titles and header text per tooling; gates pass; phase PR open.
+**Intent:** Emit `---Label---` groups from `###` subheadings in Contents, accept a string `root`, and make non-dash bullets an error (P13, G3). Then run nav sync at the end of `oat docs init` and bootstrap and add `nav sync --check` to the template prebuild, writing `navOwner: nav-sync` on new scaffolds and leaving undeclared repos untouched (P12). Make nav sync inventory, `--check` and `generate-index` honor `documentation.excludes`, and keep excluded paths out of the rendered app (prerequisite for p07's templates). Make `generate-index` follow Contents order and index titles with tooling-aware header text (P14). Update the Contents grammar docs.
+**Exit evidence:** nav sync and parser tests for groups, empty groups, string `root` and `*` bullets; a fresh `oat docs init` fixture has `navOwner: nav-sync`, `meta.json` in Contents order and a prebuild that fails on drift; a repo with no `navOwner` is not regenerated by init or bootstrap; an excluded template directory passes `--check` while an omitted reader page still fails; `generate-index` tests for authored order, titles and header text per tooling; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p05: Reader-first starter app
@@ -360,14 +389,14 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Phase p06: oat docs check
 
-**Intent:** Add `oat docs check` per G5 with the P20 rules and thresholds, the `meta.json` comparison (P21), the contributing-command rule (P22), the provenance and escaping-link rule (P25) and the diagram rules (P23). Wire it into the starter app and OAT's own docs, and replace the MkDocs template's `echo` test with it.
-**Exit evidence:** one test per rule with a seeded failure and a passing control at each threshold boundary; `--json` output matches G5; OAT's own docs pass with no errors; the starter app runs it; gates pass; phase PR open.
+**Intent:** Add `oat docs check` per G5 with the P20 rules and thresholds, the `meta.json` comparison (P21), the contributing-command rule (P22), the provenance and escaping-link rule (P25) and the diagram rules (P23). Wire it into the starter app and OAT's own docs, have bootstrap wire it into the target repo's PR CI with the build and manifest-freshness steps for each tooling mode, and replace the MkDocs template's `echo` test with it.
+**Exit evidence:** one test per rule with a seeded failure and a passing control at each threshold boundary; `--json` output matches G5; OAT's own docs pass with no errors; the starter app runs it; a bootstrapped fixture's PR workflow invokes the check, build and manifest-freshness steps and fails on a seeded docs error; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p07: Page templates and presets
 
 **Intent:** Ship the Product feature, Engineering feature, QA validation and Screen spec templates (P26) and the operations, reference and agent templates (P27) in `authoring-docs`, then have bootstrap scaffold each preset's tree, section indexes with purpose paragraphs, `contributing/templates/` and track table, with the flat outcome below about 15 pages (P5).
-**Exit evidence:** one fixture per preset plus the flat outcome; templates carry the literal-versus-concept rule; `oat docs check` passes on every preset scaffold; gates pass; phase PR open.
+**Exit evidence:** one fixture per preset plus the flat outcome; templates carry the literal-versus-concept rule and are excluded from navigation through `documentation.excludes`; `oat docs check` and `nav sync --check` pass on every preset scaffold; gates pass; phase PR open.
 **Provisional:** yes
 
 ## Phase p08: Product and QA checks against source
@@ -378,8 +407,8 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Phase p09: Docs, release and closeout
 
-**Intent:** Finish OAT's own docs for everything shipped, prepare the lockstep version bump, close the three folded backlog items with links to their phases, and answer #367 with a P-number checklist pointing at the phase PRs. Record the follow-on consumer rollout wave as a backlog item.
-**Exit evidence:** docs pages updated and `pnpm build:docs` passes; release gates pass; backlog items closed; the #367 checklist covers P1–P28; a rollout backlog item exists; phase PR open.
+**Intent:** Finish OAT's own docs for everything shipped and audit release readiness (each earlier phase PR already carried its own version bumps). Create the consumer rollout backlog item, carrying BL-260911's outstanding external criteria with reciprocal links; close the two `BL-261002-*` items and close BL-260911 only once its criteria have moved, otherwise mark its OAT-side slice done and leave it open. Answer #367 with a P-number checklist pointing at the phase PRs.
+**Exit evidence:** docs pages updated and `pnpm build:docs` passes; release gates pass against current `main`; the rollout item exists with the transferred criteria; backlog dispositions match the rule above; the #367 checklist covers P1–P28; phase PR open.
 **Provisional:** yes
 
 ---
