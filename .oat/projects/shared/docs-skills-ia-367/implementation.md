@@ -59,12 +59,12 @@ oat_template: false
 
 **Status:** in_progress
 **Base:** c3ba7e31d17521cf51252b5ee5167c6c81d8a629
-**Head:** 169c15cf503ec55071a2a2c255cf4da2d486942b
+**Head:** d42f19285c2841d72fecac32fbd7f0ec130f4d31
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
 
-Phase verification: all Definition of Done gates passed in order against committed implementation. Candidate Head is the append-only recovery commit above; phase acceptance remains root-owned. Draft phase PR: https://github.com/voxmedia/open-agent-toolkit/pull/368 (base `main`, branch `docs/docs-skills-ia-367`). Correctness/docs and testing/complexity reviews are pending. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
+Original-candidate verification: all Definition of Done gates passed in order against committed implementation. Original candidate was append-only recovery commit `169c15cf503ec55071a2a2c255cf4da2d486942b`; phase acceptance remains root-owned. Draft phase PR: https://github.com/voxmedia/open-agent-toolkit/pull/368 (base `main`, branch `docs/docs-skills-ia-367`). Correctness/docs and testing/complexity reviews are pending. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
 
 | Order | Command                                                     | Exit                     | Log under `/tmp/oat-docs367-p01/`       |
 | ----- | ----------------------------------------------------------- | ------------------------ | --------------------------------------- |
@@ -183,6 +183,49 @@ Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling
 - Recovery commit: 169c15cf503ec55071a2a2c255cf4da2d486942b
 - Verification: `pnpm --filter oat-docs test` (85 tests) and `pnpm check` pass before and immediately after the candidate commit; authoritative post-commit exit codes 0/0.
 - Reason: P19 replaced fixed skill topic routing, but the docs-app validator still required the retired table (`missing docs topic table`). Mechanically aligned `apps/oat-docs/scripts/validate.ts` and `tests/migration.test.ts` with the installed entrypoint's Contents map. Original task history is unchanged; exact target and handle are unchanged; no product/architecture decision. Reservation was written atomically before correction; only the p01 ledger entry changed in state.md. Static-table-only coverage is obsolete under accepted P19; stale file/directory/fragment protection is retained against the runtime map. Evidence: `recovery01-eligibility.txt`, `recovery01-{focused,phase}-pre.log`, `recovery01-focused-post.log`, final `gate1-check.log`; original bounded sources retained in `/tmp/oat-docs367-p01/` for reproduction.
+
+---
+
+### Task p01-t06: (review) Scope scaffold roots and restore contract protection
+
+**Status:** completed
+**Commit:** d42f19285c2841d72fecac32fbd7f0ec130f4d31
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-fix-r1-20261022
+**Source review:** `reviews/p01-review-2026-10-22T203848Z.md` (Critical P8, Medium E12, Low P19); `reviews/p01-testing-complexity-20261022.md` (M1).
+
+Intent: emit the ESM-safe app root only for nested-standalone, retain automatic discovery for other shapes, restore real-template factory/basePath protection, and correct accepted E12/P19 prose.
+Files: `.oat/templates/docs-app-fuma/next.config.js`; `packages/cli/src/commands/docs/init/{scaffold.ts,integration.test.ts}`; `.agents/skills/oat-docs-bootstrap/SKILL.md`; `.agents/skills/oat-docs/SKILL.md`; `.agents/skills/oat-docs-authoring/references/mkdocs-to-oat-fumadocs-refactor-guide.md`; `packages/docs-config/README.md`; `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`.
+Proof: isolated-HOME real-template integration regression and factory/basePath mutation controls; real Next builds for pnpm monorepo and nested-standalone; focused docs-init tests, skill sentence contracts, lint/format and DoD gates 1–8, explicit exits under `/tmp/oat-docs367-p01-fix-r1/`.
+Continuation: `docs367-p01-fix-r1-20261022` -> `docs367-p01-impl-20261022`; accepted dispatch commit `679c4b8141695a607bbd19bdecd16f32b6592a01` descends from expected prelaunch `ff1a2238e344d50dea9ded25f110aec5f9231e9e`, with clean tree before edits. Target remains `codex_codex_proxy / gpt-6.1-sol / medium / priority`; fix round 1/2; recovery usage 1/10, pending null, unchanged. No later phase Base exists.
+
+Accepted finding dispositions:
+
+| Finding                 | Disposition                                                                                                                                        | Evidence / authority                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Critical P8 / Outcome 1 | Fixed: render `turbopack.root` and ESM imports only for `nested-standalone`; other shapes keep automatic Next root discovery; listed prose aligned | Real-template scaffold regression fails on pre-fix monorepo and single-package output (exit 1), passes after (111 docs-init tests, exit 0). Fresh monorepo and nested-standalone Next 16.1.6 builds both exit 0 and produce static `out/index.html`; final logs `monorepo-final-build.log`, `standalone-final-build.log`. |
+| Medium E12              | Corrected preflight: non-empty tooling string only; a legacy object is invalid/undeclared and requires user disposition                            | `packages/cli/src/config/oat-config.ts:1875-1880` accepts only a non-empty string and never reads object `framework`; `OatDocumentationConfig.tooling` at `oat-config.ts:79` is a string. This extends the E12 corrections above to the remaining preflight sentence.                                                     |
+| Low P19                 | Removed explicit core skill membership and utility count from the installed-doc example                                                            | `.agents/skills/oat-docs/SKILL.md` retains installed tool-pack documentation as authority for scope/current membership.                                                                                                                                                                                                   |
+| M1 (testing lens)       | Restored the real-template factory export invocation and conditional basePath forwarding protections in the existing owning integration test       | `mutation-controls.py` independently bypasses the factory and removes the basePath spread: each exits 1 at its intended assertion; unchanged valid control exits 0, all under isolated HOME.                                                                                                                              |
+
+Focused verification: 111 docs-init tests in 8 files; 1,087 sentence contracts in 26 files; scoped CLI build/lint, current docs-page Markdown lint, `pnpm lint`, `pnpm format`, owned-file formatting and diff checks pass. `scaffold.test.ts` and sentence-contract test files required no changes. The previous PR-scoped skill bumps and 0.3.23 lockstep version remain unchanged.
+
+Proof provenance: all logs, exact mutation/render commands, generated apps and package artifacts remain outside tracked files under `/tmp/oat-docs367-p01-fix-r1/` (see `README.md`). The inherited reviewer bad monorepo build log remains `monorepo-before-build.log` with its matching `monorepo-before.config.js`; fresh builds use the final rendered configs. Nested standalone dependencies were deployed app-locally; the first scratch build compiled successfully then failed on a CSS declaration under the repository's TypeScript 6.0.2. Provisioning TypeScript 5.9.3, within the scaffold's declared `^5.8.3`, passes without a product workaround; the failed scratch log remains `standalone-after-build.log` and the successful compiler-aligned/final logs are retained. This was a scratch dependency mismatch, not a broadened fix.
+
+Review-fix phase verification: all eight DoD gates pass in order against committed candidate `d42f19285c2841d72fecac32fbd7f0ec130f4d31`; p01 stays in progress for root review/acceptance. Base is unchanged and no later phase has a Base. `run-gates.sh` and `verified-head.txt` retain exact commands and candidate; no new recovery attempt was used.
+
+| Order | Command                                                     | Exit | Log under `/tmp/oat-docs367-p01-fix-r1/` |
+| ----- | ----------------------------------------------------------- | ---- | ---------------------------------------- |
+| 1     | `pnpm check`                                                | 0    | `gate1-check.log`                        |
+| 2     | `pnpm type-check`                                           | 0    | `gate2-type-check.log`                   |
+| 3     | `env HOME=<isolated-temp> TURBO_FORCE=true pnpm test`       | 0    | `gate3-test.log`                         |
+| 4     | `pnpm build`                                                | 0    | `gate4-build.log`                        |
+| 5     | `pnpm run check:skill-bumps`                                | 0    | `gate5-skill-bumps.log`                  |
+| 6     | `git fetch origin main`, then `pnpm release:check-versions` | 0, 0 | `gate6-fetch.log`, `gate6-versions.log`  |
+| 7     | `pnpm release:validate`                                     | 0    | `gate7-release.log`                      |
+| 8     | `env TURBO_FORCE=true pnpm build:docs`                      | 0    | `gate8-docs.log`                         |
+
+Execution evidence: gate 1 ran 6 Turbo tasks and replayed 5; root validation/format executed. Gate 2 ran 6 type checks and replayed 5 dependency builds. Gate 3 genuinely ran all 12 Turbo tasks (0 cached) and the smoke/skill/script suites: 10,158 passing tests total, including 8,856 CLI tests in 422 files. Gate 4 replayed all 5 builds already executed in gate 3. Gate 8 genuinely ran all 6 build tasks (0 cached). Additional `pnpm lint` passed all 10 tasks without cache replays plus root oxlint; `pnpm format` ran 5 tasks/replayed 5 plus root format. Isolated sentence contracts passed 1,087 tests in 26 files. Individual `.exit` files record all gate exits. Gate 6's fetch showed no main changes in the owned implementation paths. No cached log is claimed as fresh execution. Journal review check exits 0 with status `ok`; the two pending fix/lens run-line warnings remain root-owned and were not modified.
 
 ---
 
