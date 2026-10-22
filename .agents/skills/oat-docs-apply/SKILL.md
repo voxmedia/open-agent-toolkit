@@ -310,7 +310,9 @@ approval, its out-of-Markdown allowance is only these three operations:
 
 1. Bump the docs app's existing `@open-agent-toolkit/docs-*` dependencies to the
    bundled versions using the artifact's exact upgrade command (preserve dependency
-   section and package manager; include its resulting lockfile only).
+   section and package manager; include its resulting lockfile only). Never downgrade
+   an installed version: `ahead` or `unverified` requires CLI selection/update or
+   manual verification before re-analysis, not a docs-package tooling update.
 2. Run `oat docs migrate --docs-dir <authored-root> --apply` only for its currently
    supported admonition conversions and injected frontmatter; inspect the diff.
 3. Run the docs build verifier from the app's existing scripts.

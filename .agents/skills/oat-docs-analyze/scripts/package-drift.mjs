@@ -85,19 +85,38 @@ try {
       } catch (error) {
         if (error.code !== 'ENOENT') throw error;
       }
+      // Only stable numeric releases are orderable here; prereleases and other
+      // package-manager version forms need manual verification, never an upgrade.
+      const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+      let status = 'unverified';
+      if (
+        installed !== null &&
+        stable.test(installed) &&
+        stable.test(bundled)
+      ) {
+        const left = installed.split('.').map(BigInt);
+        const right = bundled.split('.').map(BigInt);
+        const differing = left.findIndex(
+          (part, index) => part !== right[index],
+        );
+        status =
+          differing === -1
+            ? 'current'
+            : left[differing] < right[differing]
+              ? 'drift'
+              : 'ahead';
+      }
       packages.push({
         name,
         section,
         declared,
         installed,
         bundled,
-        status:
-          installed === null
-            ? 'unverified'
-            : installed === bundled
-              ? 'current'
-              : 'drift',
-        upgradeCommand: `pnpm --dir ${shellQuote(appPath)} add${section === 'devDependencies' ? ' --save-dev' : section === 'optionalDependencies' ? ' --save-optional' : ''} ${name}@${bundled}`,
+        status,
+        upgradeCommand:
+          status === 'drift' || status === 'current'
+            ? `pnpm --dir ${shellQuote(appPath)} add${section === 'devDependencies' ? ' --save-dev' : section === 'optionalDependencies' ? ' --save-optional' : ''} ${name}@${bundled}`
+            : null,
       });
     }
   }

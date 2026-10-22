@@ -94,6 +94,38 @@ test('offline drift uses installed docs packages and bundled versions, with exac
       JSON.stringify({ version: '0.3.25' }),
     );
     assert.equal(run().packages[0].status, 'current');
+    // Literal order/status oracles protect against stale CLIs proposing downgrades.
+    for (const [version, status, command] of [
+      ['0.3.26', 'ahead', null],
+      [
+        '0.3.9',
+        'drift',
+        `pnpm --dir '${app}' add @open-agent-toolkit/docs-config@0.3.25`,
+      ],
+      ['0.10.0', 'ahead', null],
+      ['0.3.25-rc.1', 'unverified', null],
+      ['workspace:*', 'unverified', null],
+    ]) {
+      await writeFile(
+        join(app, 'node_modules/@open-agent-toolkit/docs-config/package.json'),
+        JSON.stringify({ version }),
+      );
+      const actual = run().packages[0];
+      assert.equal(actual.status, status, version);
+      assert.equal(actual.upgradeCommand, command, version);
+    }
+    await writeFile(
+      versions,
+      JSON.stringify({
+        'docs-config': '0.4.0-rc.1',
+        'docs-theme': '0.3.25',
+        'docs-transforms': '0.3.25',
+      }),
+    );
+    assert.equal(result.packages[2].upgradeCommand, null);
+    const prereleaseTarget = run().packages[0];
+    assert.equal(prereleaseTarget.status, 'unverified');
+    assert.equal(prereleaseTarget.upgradeCommand, null);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

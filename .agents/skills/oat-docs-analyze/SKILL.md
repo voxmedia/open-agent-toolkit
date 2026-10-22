@@ -516,17 +516,42 @@ Run this skill's production helper after resolving this skill's own directory:
 node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --cli "$(command -v oat)"
 ```
 
-If a package-manager wrapper prevents locating the CLI root, pass `--versions
-<installed-cli-root>/assets/public-package-versions.json` explicitly. Never
-substitute registry latest or this target repo's package version. Missing bundle
-metadata or missing installed packages means unverified, never current. The
-helper reports declared and installed versions, target versions and per-package
-upgrade commands. If the app uses a different package manager, translate the
+If a package-manager wrapper prevents locating the CLI root, discover the bundle
+from that invoked installation offline. Inspect `command -v oat` and, for a shell
+shim, read its `exec` lines or `cmd-shim-target` comment (for example,
+`sed -n '1,160p' "$(command -v oat)"`). Resolve a relative JavaScript target from
+the shim's directory; do not evaluate copied shell text. Locate that target's
+package root containing `package.json` named `@open-agent-toolkit/cli` and
+`assets/public-package-versions.json`. `pnpm root -g` or `npm root -g` can help
+locate it, but newer pnpm installations may nest it in a hashed directory; use
+the actual shim target, never another checkout's bundle. Bind the inspected paths:
+
+```bash
+OAT_INSTALLED_ENTRY="<absolute JavaScript target from the invoked shim>"
+OAT_INSTALLED_ROOT="<that installed @open-agent-toolkit/cli package root>"
+# Both must equal the invoked oat version; stop if either differs.
+test "$(node "$OAT_INSTALLED_ENTRY" --version)" = "$(oat --version)" &&
+  test "$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).version' "$OAT_INSTALLED_ROOT/package.json")" = "$(oat --version)" &&
+  node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --versions "$OAT_INSTALLED_ROOT/assets/public-package-versions.json"
+```
+
+Never substitute registry latest or this target repo's package version. Missing
+bundle metadata, missing installed packages, or non-orderable versions (including
+prereleases) mean unverified, never an upgrade. The helper compares stable numeric
+version components: older installed packages are `drift`; equal versions are
+`current`; newer installed packages are `ahead`, with no upgrade command. For
+`ahead`, report that the running CLI is stale and ask the operator to update or
+select the intended CLI installation before re-analysis; do not recommend a docs
+package downgrade. `unverified` also has no package command and needs manual
+verification. Neither status authorizes a tooling update.
+
+The helper reports declared and installed versions, target versions and commands
+for orderable targets. If the app uses a different package manager, translate the
 command to its documented equivalent preserving package, exact target and
 dependency section. Cite the manifest, installed package path, bundle path and
-exact command. Report drift as `tooling-update`, `approval: explicit`; describe
-unsupported scaffold repairs separately as `manual`. Markdown has no app-package
-drift check. This helper reads only and never upgrades anything.
+exact command. Report older-package drift as `tooling-update`, `approval: explicit`;
+describe unsupported scaffold repairs separately as `manual`. Markdown has no
+app-package drift check. This helper reads only and never upgrades anything.
 
 ### Step 7: Severity-Rate Findings
 
