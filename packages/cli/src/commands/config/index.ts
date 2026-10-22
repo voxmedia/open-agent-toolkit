@@ -508,7 +508,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
   },
   {
     key: 'documentation.guidance',
-    group: 'Documentation',
+    group: 'Documentation Guidance (shared > user)',
     scope: 'shared | user',
     file: '.oat/config.json | ~/.oat/config.json',
     type: 'string | string[]',
@@ -2413,14 +2413,16 @@ async function setConfigValue(
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
 
   if (key === 'documentation.guidance') {
-    const trimmed = rawValue.trim();
-    const guidance = normalizeDocumentationGuidance(
-      trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
-    );
     const configPath =
       effectiveSurface === 'user'
         ? join(userConfigDir, 'config.json')
         : join(repoRoot, '.oat', 'config.json');
+    const trimmed = rawValue.trim();
+    const guidance = normalizeDocumentationGuidance(
+      trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
+      configPath,
+      effectiveSurface === 'user' ? 'user' : 'shared',
+    );
     let raw: Record<string, unknown> = { version: 1 };
     try {
       const parsed: unknown = parseJsonConfig(

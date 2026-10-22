@@ -230,6 +230,61 @@ describe('documentation.guidance through real config files and skill selection',
     ).toEqual({ value: null, source: 'default' });
   });
 
+  it.each(['user', 'shared'] as const)(
+    'repairs invalid %s guidance with the diagnostic command while preserving unrelated state',
+    async (scope) => {
+      const f = await fixture();
+      const flag = `--${scope}`;
+      const configPath = scope === 'user' ? f.userPath : f.repoPath;
+      // Accepted control: this real producer/reader pair works before corruption.
+      expect(
+        await f.command(
+          'set',
+          'documentation.guidance',
+          './valid/index.md',
+          flag,
+        ),
+      ).toMatchObject({ status: 'ok', value: './valid/index.md' });
+      expect(await f.command('get', 'documentation.guidance')).toMatchObject({
+        status: 'ok',
+        value: './valid/index.md',
+        source: scope,
+      });
+      const original = JSON.parse(await readFile(configPath, 'utf8'));
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          ...original,
+          documentation: { ...original.documentation, guidance: [42] },
+        }),
+      );
+      const diagnostic = await f.command('get', 'documentation.root');
+      expect(diagnostic).toMatchObject({ status: 'error' });
+      const repair = diagnostic.message?.match(
+        /oat config unset documentation\.guidance(?: --(?:user|shared))?/,
+      )?.[0];
+      expect(repair).toBeDefined();
+      process.exitCode = 0;
+      // Execute exactly the advertised repair, rather than assuming a scope.
+      expect(await f.command(...repair!.split(' ').slice(2))).toMatchObject({
+        status: 'ok',
+      });
+      expect(process.exitCode).toBe(0);
+      expect(diagnostic.message).toContain(configPath);
+      expect(repair).toContain(flag);
+      const { guidance: _guidance, ...documentation } = original.documentation;
+      expect(JSON.parse(await readFile(configPath, 'utf8'))).toEqual({
+        ...original,
+        documentation,
+      });
+      expect(await f.command('get', 'documentation.guidance')).toMatchObject({
+        status: 'ok',
+        value: null,
+        source: 'default',
+      });
+    },
+  );
+
   it('rejects malformed inputs and local scope without changing valid config', async () => {
     const f = await fixture();
     await f.command('set', 'documentation.guidance', './valid/index.md');

@@ -123,8 +123,8 @@ use filename/slug parity for paired features and reciprocal links. A Product
 feature must link to its QA validation and Engineering counterpart (and back).
 Quote exact UI literals only when verified against source; distinguish a user
 concept from literal screen text. Do not fabricate test IDs or independent
-verification needs. Feature and QA validation page templates ship separately;
-this phase provides the selection method and IA Proposal template.
+verification needs. Feature and QA validation page templates are not included here;
+use the page-type guidance and IA Proposal template to plan their content.
 
 ## Navigation Principles
 

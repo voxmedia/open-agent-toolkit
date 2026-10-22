@@ -366,9 +366,10 @@ Use `.oat/config.local.json` for checkout-specific workflow state:
 - `lastPausedProject`
 - repo-scoped `activeIdea`
 
-Use `~/.oat/config.json` for user fallback state when no repo-local value is set:
+Use `~/.oat/config.json` for user fallback state when no higher-priority value is set:
 
 - `activeIdea`
+- [`documentation.guidance`](#shared-repo-config-you-will-touch-most-often) — advisory IA sources when shared repo guidance is unset
 
 Repo-local and user config can also hold workflow defaults, including
 `workflow.gates.*`. This is useful for personal runtime availability: for

@@ -552,7 +552,8 @@ docs/
 
 Use for bootstrap or an existing-tree `--ia` analysis. This proposes structure;
 it neither persists an IA decision nor materializes a preset. Feature and QA
-validation page templates are deferred to the page-template delivery.
+validation page templates are not included; use the page-type guidance to
+plan their content.
 
 ````markdown
 # IA Proposal: {surface}

@@ -42,10 +42,6 @@ test('portable IA contract keeps the six approved presets, reader-first decision
     assert.ok(types.includes(`## ${type}`));
   assert.match(read('references/templates.md'), /## IA Proposal/);
   assert.match(
-    read('references/templates.md'),
-    /Feature and QA\s+validation page templates are deferred/,
-  );
-  assert.match(
     read('references/workflow.md'),
     /Map personas to tracks by work context/,
   );
