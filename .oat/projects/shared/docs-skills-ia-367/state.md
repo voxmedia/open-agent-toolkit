@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [
@@ -15,8 +15,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval; [] = none for brief modes
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement
+oat_phase_status: in_progress
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -110,36 +110,30 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-22T20:09:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-22T20:11:06.235283+00:00'
 oat_generated: false
 ---
 
 # Project State: docs-skills-ia-367
 
-**Status:** Plan
+**Status:** Implementation
 **Started:** 2026-10-22
 **Last Updated:** 2026-10-22
 
 ## Current Phase
 
-Plan - Authoring the Project Brief
+Implement — p01: Contract cleanup and silent defects.
 
 ## Artifacts
 
-- **Plan:** `plan.md` (scaffolded Project Brief template — not started)
-- **Implementation:** `implementation.md` (scaffolded brief journal template — not started)
-- **Research:** `references/research/` (empty)
-
-## Progress
-
-- ✓ Brief project scaffolded
-- ✓ Brief and implementation artifacts scaffolded
-- ⧗ Awaiting brief interview and authoring
+- **Brief:** `plan.md` — approved; independent review and configured gate passed.
+- **Implementation:** `implementation.md` — p01 starting; 0/9 phases accepted.
+- **Research:** `references/research/issue-367.md`.
 
 ## Blockers
 
-None
+None.
 
 ## Next Milestone
 
-Run `oat-project-brief` to author and approve the brief
+Complete p01 verification and independent review, then open its phase PR.

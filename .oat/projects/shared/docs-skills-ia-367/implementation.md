@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status  | Units | Accepted |
-| ----- | ------- | ----- | -------- |
-| p01   | pending | 1     | 0/1      |
-| p02   | pending | 1     | 0/1      |
-| p03   | pending | 1     | 0/1      |
-| p04   | pending | 1     | 0/1      |
-| p05   | pending | 1     | 0/1      |
-| p06   | pending | 1     | 0/1      |
-| p07   | pending | 1     | 0/1      |
-| p08   | pending | 1     | 0/1      |
-| p09   | pending | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | in_progress | 1     | 0/1      |
+| p02   | pending     | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
+| p04   | pending     | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 0/9 phases accepted
 
@@ -57,7 +57,11 @@ oat_template: false
 
 ## Phase p01: Contract cleanup and silent defects
 
-**Status:** pending
+**Status:** in_progress
+**Base:** c3ba7e31d17521cf51252b5ee5167c6c81d8a629
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+
+Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
 
 ---
 
