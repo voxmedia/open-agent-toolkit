@@ -286,6 +286,8 @@ Queued after root independently reproduced remote H1. Execute after p02 clean ha
 
 Independent review round 1 (`docs367-p-rev1-review-r1-20261022`), artifact `reviews/p-rev1-review-2026-10-22T213617Z.md`, passes with 0 Critical/High/Medium/Low against the phase anchors. Root consumed the single not-attempted reconnaissance signal, read the full artifact and validated all scope/anchor fields; no orchestration section or new review fix. Reviewer independently reran 63/63 tests and real nested/spaced-path controls. Acceptance remains pending full ordered gates and PR update.
 
+Revision verification: gates 1–8 passed in CI order against product Head `79ab7f30a1831fe2b09d7a199c4bb178395f0d22`, with one no-edit retry of gate 3 before gate 4. Explicit exits in `/tmp/oat-docs367-p01-nav-fix-proof/`: check 0, type-check 0, original test 1, no-edit test retry 0, build 0, skill bumps 0, fetch main 0, release versions 0, release validation 0, docs build 0. Original test task freshly passed 8,857 CLI tests (422 files); 9/12 Turbo tasks replayed. Its root smoke tail failed one resolver test with a transient built-module import error; a no-edit isolated rerun passed 4/4. The complete gate-3 retry replayed 12/12 Turbo tasks, then freshly passed 165 smoke, 700 skill and 1 script tests. Other cache disclosure: check 8/11, types 9/11, build 5/5, docs build 6/6 replayed; focused 63/63 and scoped CLI build executed separately. No source change, recovery attempt, version re-bump or waiver.
+
 ### Task prev1-t01: Select the app in the generated navigation instructions
 
 **Status:** completed
