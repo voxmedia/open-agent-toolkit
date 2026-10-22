@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01
-oat_last_commit: null
+oat_last_commit: 169c15cf503ec55071a2a2c255cf4da2d486942b
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -21,24 +21,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: docs367-p01-recovery-01
-        original_request_id: docs367-p01-impl-20261022
-        original_task_id: p01-t03
-        original_commit: 352ef17d804441a6c1501971b51db8af51ab733e
-        discovered_by: pnpm check
-        dispatch_target:
-          {
-            harness: codex,
-            model: gpt-6.1-sol,
-            effort: medium,
-            crossHarness: false,
-            routeIndex: 0,
-            routeLength: 1,
-          }
-        reservation_head: f7d4aa714b1f9d614c6dde85eaabb426a289def3
-        status: completed
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -132,7 +115,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-22T20:11:06.235283+00:00'
+oat_project_state_updated: '2026-10-22T20:33:38.334740Z'
 oat_generated: false
 ---
 

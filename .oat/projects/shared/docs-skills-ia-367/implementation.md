@@ -81,7 +81,7 @@ Gate 3 genuinely executed all 12 Turbo tasks (0 cache replays), then smoke, skil
 
 Additional final checks: `pnpm lint` and `pnpm format` exit 0 (`extra-lint.log`, `extra-format.log`; package tasks cached, root oxlint/format executed). `env HOME=<isolated-temp> pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation` genuinely passes 1,087 tests in 26 files (`extra-sentence-contracts.log`). Earlier scoped builds/lint/type-check and negative-control commands are recorded in their task records. Exact focused test boundaries were docs-config `test`, CLI `vitest run src/commands/docs/init`, CLI `vitest run src/commands/help-snapshots.test.ts`, the dedicated `node --test tools/smoke/verification/skill-docs-paths.test.mjs`, and `node /tmp/oat-docs367-p01/config-negative-control.mjs`.
 
-Recovery capacity: 1/10 consumed, 9 remaining; `state.md` retains the matching completed pending-attempt marker for root validation and clearing. No failed attempt, scope realignment or independent review was performed. `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p01 --json` exits 0 with status `ok`; its sole warning is the root-owned dispatch run still having outcome pending (`journal-check.log`).
+Recovery capacity: 1/10 consumed, 9 remaining. Root verified the matching completed marker, immutable original/recovery commits, exact dispatch target and before/after proof, then cleared the marker without resetting usage. No failed attempt, scope realignment or independent review was performed. `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p01 --json` exits 0 with status `ok`; the pending-outcome warning was settled by root before review (`journal-check.log`).
 
 ### Task p01-t01: Preserve export configuration and render scaffold facts
 
@@ -238,7 +238,7 @@ Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling
 
 <!-- orchestration-runs-start -->
 
-- run/v1 · request=docs367-p01-impl-20261022 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p01-impl-20261022 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
