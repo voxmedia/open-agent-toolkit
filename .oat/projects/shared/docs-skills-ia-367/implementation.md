@@ -39,19 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | pending   | 1     | 0/1      |
-| p03   | pending   | 1     | 0/1      |
-| p04   | pending   | 1     | 0/1      |
-| p05   | pending   | 1     | 0/1      |
-| p06   | pending   | 1     | 0/1      |
-| p07   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | pending   | 1     | 0/1      |
+| p02    | pending   | 1     | 0/1      |
+| p03    | pending   | 1     | 0/1      |
+| p04    | pending   | 1     | 0/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 1/9 phases accepted
+**Total:** 1/10 phases accepted
 
 ---
 
@@ -269,6 +270,15 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 ---
 
+## Phase p-rev1: Correct the scaffold navigation command
+
+**Status:** pending
+**Corrects:** p01
+
+Queued after root independently reproduced remote H1. Execute after p02 clean handoff, integrate on p02 before its review, and preserve original p01 anchors.
+
+---
+
 ## Phase p02: IA method and guidance input
 
 **Status:** pending
@@ -342,6 +352,10 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #368
+
+2026-10-22; source https://github.com/voxmedia/open-agent-toolkit/pull/368#pullrequestreview-5621004819, reviewed Head `7a0078df58e2f94868216c3381d6a9dcc421891b`, invocation auto. Counts: 0 critical, 1 high (source "important"), 0 medium, 0 low. H1: warp-factories discussion [4353654033](https://github.com/voxmedia/open-agent-toolkit/pull/368#discussion_r4353654033), repository-root nav command fails nested-app detection; **convert**, regression of Outcome 1/P6, linked to `p-rev1` / `prev1-t01`. Root reproduction: bare command exit 1, explicit docs-site target exit 0, public scratch evidence `/tmp/oat-docs367-p01-nav-fix-proof/`. Disposition: fix queued, no deferral. Remote receipt `reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md` is local-only; this tracked receipt carries the substance. P01 implementation anchors and accepted historical review stay frozen. P02's active writer was asked to yield after its current coherent verified record; no correction implementation starts before that handoff. No GitHub reply posted.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 

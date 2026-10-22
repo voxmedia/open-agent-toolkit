@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02
+oat_current_task: p-rev1
 oat_last_commit: 183b3d3aa7944c85919f09cc05dcb47b08c8f011
 oat_blockers: []
 associated_issues: [
@@ -127,12 +127,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p02: IA method and guidance input.
+Implement — p-rev1: Correct the scaffold navigation command; p02 yields at a verified boundary.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01 accepted; 1/9 phases accepted.
+- **Implementation:** `implementation.md` — p01 accepted; 1/10 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -141,4 +141,4 @@ None.
 
 ## Next Milestone
 
-Make p02 concrete, start its stacked branch and dispatch implementation. PR #368 has passed independent reviews; remote CI remains separately tracked.
+Correct the reproduced external nav-command finding before resuming p02. Original p01 acceptance is preserved; its correction has separate revision anchors.

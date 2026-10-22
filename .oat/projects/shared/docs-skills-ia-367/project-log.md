@@ -35,6 +35,10 @@ docs367-p01-accepted-20261022: p01 accepted after pass with zero findings; two r
 
 docs367-p01-ledger-correction-20261022: received Bugbot discussion 4353594144; expanded three in-memory plan review events and corrected findings-bearing p01 statuses to fixes_completed with explicit provenance; final clean reviews and phase acceptance are preserved; bookkeeping-only correction.
 
+### 2026-10-22 · structural · oat-project-implement · p-rev1
+
+docs367-nav-review-received-20261022: converted remote H1 4353654033 to concrete p-rev1; reproduced bare command exit1 and targeted command exit0; awaiting current p02 verified commit handoff before correction execution; p01 anchors stay frozen.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
