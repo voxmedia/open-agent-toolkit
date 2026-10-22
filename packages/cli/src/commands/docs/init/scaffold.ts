@@ -359,13 +359,13 @@ function renderTemplate(
     options.appName,
   );
   const replacements: Record<string, string> = {
-    '// {{TURBOPACK_ROOT_IMPORTS}}':
+    '// {{TURBOPACK_ROOT_IMPORTS}}\n':
       options.repoShape === 'nested-standalone'
-        ? "import { dirname } from 'node:path';\nimport { fileURLToPath } from 'node:url';\n"
+        ? "import { dirname } from 'node:path';\nimport { fileURLToPath } from 'node:url';\n\n"
         : '',
-    '// {{TURBOPACK_ROOT_OPTION}}':
+    '  // {{TURBOPACK_ROOT_OPTION}}\n':
       options.repoShape === 'nested-standalone'
-        ? 'turbopack: { root: dirname(fileURLToPath(import.meta.url)) },'
+        ? '  turbopack: { root: dirname(fileURLToPath(import.meta.url)) },\n'
         : '',
     '{{APP_NAME}}': options.appName,
     '{{NODE_REQUIREMENT}}': nodeRequirement,
