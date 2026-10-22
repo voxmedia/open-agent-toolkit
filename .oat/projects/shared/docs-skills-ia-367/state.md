@@ -2,7 +2,11 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues: [
+    { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
+    { type: backlog, ref: 'BL-261002-correct-docs-bootstrap-docs' },
+    { type: backlog, ref: 'BL-261002-catch-hardcoded-docs-paths' },
+  ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -93,7 +97,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-22T19:03:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
