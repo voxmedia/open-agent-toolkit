@@ -321,7 +321,7 @@ Resolution options:
     ```
 
 - **`repair`** — Fix the existing setup in place rather than replacing it. Delegate to the docs-analysis pack.
-  - **Allowed mutations (by this sub-procedure):** None directly. The bootstrap skill does not modify existing docs app files. It hands off to `oat-docs-analyze` (read-only audit) and, with user approval, to `oat-docs-apply` (applies approved recommendations).
+  - **Allowed mutations (by this sub-procedure):** None directly. The bootstrap skill does not modify existing docs app files. It hands off to `oat-docs-analyze` (read-only audit), then passes the analysis artifact plus approved recommendation IDs to `oat-docs-apply`; explicit items require individual approval.
   - **Preserved state:** Existing docs app directory, the `documentation` config section, the root `AGENTS.md` `## Documentation` section — all preserved unless analyze surfaces a recommendation and the user approves it via apply.
   - **Stop conditions:**
     - Invoke `oat-docs-analyze` and surface its report to the user. If analyze cannot produce meaningful recommendations (e.g., `documentation.index` points at a missing file, or the app directory is empty), **stop the flow before Scaffold Runner**, report what analyze found, and ask the user whether to escalate to `replace`.
