@@ -9,6 +9,11 @@ oat_phase_status: in_progress
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: brief
+oat_phase_review_gate:
+  enabled: true
+  phases: ['p03', 'p06']
+  review_type: code
+  exit_nonzero_on: high
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
