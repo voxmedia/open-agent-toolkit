@@ -19,6 +19,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 docs367-p01-review-wait-20261022: yielding for accepted asynchronous correctness/docs and testing/complexity reviews; draft PR #368 is open, phase p01 remains in progress, and p02 continues after acceptance.
 
+### 2026-10-22 · structural · oat-project-implement · p01-confirmation-wait
+
+docs367-p01-confirmation-wait-20261022: bounded fix d42f19285 passed gates and both real scaffold builds; independent phase re-review and testing confirmation accepted; yielding for their results before p01 acceptance.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
