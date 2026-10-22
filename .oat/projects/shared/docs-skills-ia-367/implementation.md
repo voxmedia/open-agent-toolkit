@@ -307,6 +307,7 @@ Root acceptance: p-rev1 is accepted after clean independent review, ordered pass
 
 **Status:** in_progress
 **Base:** eaf354667bc270d51ebc27eb292375b9dc32cf06
+**Head:** 7564e8332cdcae4d40e6dbf746f0c54ba93a23a8
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 
 Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
@@ -348,6 +349,25 @@ The fresh workspace run passed 8,858 CLI tests and all four other package suites
 **Negative controls:** `probes.py` neutralized actual user normalization and explicit-source precedence separately; both behavioral tests failed (exit 1) for the intended reason, and the restored valid control passed. Exact logs/probe are preserved locally. Prose-only guidance and docs changes use conservation review rather than inflated controls.
 
 **Scheduling handoff:** Root requested a clean boundary before integrating p01 correction/bookkeeping. This completed record is committed execution, not phase acceptance. Phase p02 stays in_progress with no final Head until resumed verification finishes. No new task, reviewer dispatch, PR work, p01 merge/cherry-pick, state write or project-log append was performed.
+
+**Integrated candidate verification (same-handle continuation):** Resumed request `docs367-p02-resume-after-p01-nav-20261022` after validating the release marker against clean HEAD `7564e8332cdcae4d40e6dbf746f0c54ba93a23a8`. Root merge `5bc00b09123ea686895611394c2b304f8fe1b624` preserves product `677e0c6dc377c3bfaeebf743f18e95b9406282ff` and record `e49345b0087f2a50b276ca799140981906ea0d1b`; its only product additions are the accepted p01 rendered navigation command and regression. Composition review found no change to p02 guidance producers/consumers. No new execution record or product delta was needed. Original Base, root run lines and all prior phase/review records remain intact.
+
+All ordered gates ran in order on that integrated candidate. Evidence is under `/tmp/oat-docs367-p02/integrated/`; every gate has its own `.exit` file.
+
+| Gate                                          | Exit | Evidence and execution disclosure                                                                                                                          |
+| --------------------------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. `pnpm check`                               | 0    | `gate-1-check.log`: 11 Turbo tasks, 8 replayed; CLI check/build and docs check fresh; root validation/format executed.                                     |
+| 2. `pnpm type-check`                          | 0    | `gate-2-types.log`: 11 tasks, 5 dependency builds replayed; all 6 type checks fresh.                                                                       |
+| 3. isolated-HOME `TURBO_FORCE=true pnpm test` | 0    | `gate-3-test.log`: 12/12 fresh Turbo tasks, zero replays; CLI 8,860 tests, other packages 351, docs 85; root smoke 165, skills 701 and scripts 1 all pass. |
+| 4. `pnpm build`                               | 0    | `gate-4-build.log`: all 5 tasks replayed; their builds executed fresh in gate 3.                                                                           |
+| 5. `pnpm run check:skill-bumps`               | 0    | `gate-5-skills.log`: 7 changed canonical skill/agent checks pass against main.                                                                             |
+| 6. `pnpm release:check-versions`              | 0    | `gate-6-versions.log`; fresh fetch exit 0, main `01d5bc2f35f5f453af80c5f854bb2ce719850113`, no planned-path drift (`main-drift.log`).                      |
+| 7. `pnpm release:validate`                    | 0    | `gate-7-release.log`: all five public 0.3.24 package tarballs validated.                                                                                   |
+| 8. `pnpm build:docs`                          | 0    | `gate-8-docs.log`: all 6 tasks replayed; dependencies and docs built fresh in gate 3.                                                                      |
+
+Required extras: `lint.log` and `format.log` exit 0 (each 9/10 Turbo tasks replayed; CLI task and root pass executed); `sentence-contracts.log` exit 0, isolated HOME, 1,087 tests across 26 files executed fresh. The complete integrated gate 3 passed without retry. The earlier unrelated visual-companion HTTP parser failure and its one successful no-edit focused rerun remain disclosed above; no failures were erased or relabeled. Recovery usage remains 0/10, remaining 10, pending null; no recovery event or product correction occurred.
+
+Prior focused real-file config proofs, both negative controls/restored valid control, P1/P2/G1/G6 and D1–D9 conservation citations, and manual proposal/routing evidence remain applicable. Public walkthrough source digest maps match before/after/current (the serialized JSON files differ only by trailing newline). The integrated diff is preserved as `composition.diff`. Feature/QA templates remain p07 and persistence/restructure remain p03. Review-scope journal validation passed (exit 0); the expected warning is root's accepted continuation run still nonterminal. Phase remains in_progress; root owns independent review and acceptance.
 
 ---
 
