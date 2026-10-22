@@ -413,6 +413,8 @@ Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-
 
 `lint.log` and `format.log` exit 0, each 5/10 Turbo tasks replayed with root passes executed. Isolated-HOME `sentence-contracts.log` exit 0: 1,087 tests across 26 files fresh. Scoped precommit lint and CLI build exit 0. No fix-r1 gate failed or needed a no-edit rerun. The original visual-smoke failure and its no-edit rerun remain disclosed in p02-t01. After hooks all seven committed product files match the tested SHA-256 map (`tested-product-sha256.json`), so full gates were not redundantly repeated for unchanged bytes. Review-scope journal validation exit 0; root's accepted continuation remains nonterminal until handoff bookkeeping.
 
+Root fix validation: verified seven assigned product paths in `bbefca279ca3a24108f465b65c7b6f351be3ee80`, separate journal `6b67fa69f13acb5c3314146c3a92ca08c403fe1b`, clean worktree, original Base retained and all eight fix gate exits 0. M1 now names the real file and working --user/--shared unset; public-boundary regression executes that command and preserves unrelated state. L1 phase prose and transient pin removed with protection accounting; L2 docs/catalog aligned; L3 evidence copied with hashes under ignored analysis/p02. Earlier review event moves to fixes_completed without rewriting its counts or identity. Independent confirmation pending; p02 stays in_progress. Review-fix usage 1/2, recovery 0/10 pending null.
+
 ---
 
 ## Phase p03: Record and act on the IA
@@ -459,7 +461,7 @@ Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-fix-r1-20261022 · scope=p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-fix-r1-20261022 · scope=p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p02-review-r1-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
