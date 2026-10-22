@@ -3,9 +3,9 @@ name: oat-docs-analyze
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT documentation contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat docs nav sync --check:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.6.2'
+  version: '1.6.3'
 ---
 
 # Docs Analysis
@@ -161,6 +161,8 @@ Capture the evidence sources that will justify later findings and recommendation
 - `package.json` scripts, `requirements.txt`, and docs bootstrap scripts
 - existing `index.md` trees and repeated directory patterns
 - exact missing or stale paths, commands, and page references
+
+For framework apps, also read [Legacy scaffold checks](references/legacy-scaffold-checks.md). Apply those checks to the actual installed app, cite the observed file and source contract, and report discrepancies in Findings and Recommendations. These are read-only checks, not bootstrap post-patches. Do not change app-shell configuration during analysis or assume docs-apply can edit it; identify the manual upgrade needed when outside apply's current scope.
 
 Do **not** infer docs structure conventions from a tiny sample of pages when the broader
 tree or config disagrees.

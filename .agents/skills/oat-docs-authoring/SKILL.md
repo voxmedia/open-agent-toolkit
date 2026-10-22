@@ -3,10 +3,10 @@ name: oat-docs-authoring
 description: Use when authoring or restructuring targeted content inside an existing OAT Markdown surface or OAT/Fumadocs docs app. Preserves OAT docs navigation, generated indexes, and validation boundaries.
 argument-hint: '[docs task or target path]'
 disable-model-invocation: false
-allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: '1.1.2'
+  version: '1.1.3'
 ---
 
 # OAT Docs Authoring

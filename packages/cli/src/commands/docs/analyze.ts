@@ -53,7 +53,7 @@ export function createDocsAnalyzeCommand(
   };
 
   return new Command('analyze')
-    .description('Run the docs analysis workflow')
+    .description('Show guidance for the oat-docs-analyze skill')
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),

@@ -53,7 +53,7 @@ export function createDocsApplyCommand(
   };
 
   return new Command('apply')
-    .description('Run the docs apply workflow')
+    .description('Show guidance for the oat-docs-apply skill')
     .action(async (_options, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
