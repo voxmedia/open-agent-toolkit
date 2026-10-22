@@ -1,17 +1,21 @@
 ---
 name: docs-completed-projects-gap-review
-description: Audit documentation for gaps left by completed OAT projects. Cross-references shipped work against the docs surface and produces a prioritized fix plan.
+description: Repository-internal OAT maintainer audit for documentation gaps left by completed OAT projects. Cross-references shipped work against the docs surface and produces a prioritized fix plan.
 argument-hint: '[--since=<date>] [--output=<path>] [--scope=<area>] [--dry-run]'
 disable-model-invocation: true
-allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
+allowed-tools: Read, Write, Glob, Grep, Bash(git:*), Bash(oat config:*), AskUserQuestion, Task
 user-invocable: true
 metadata:
-  version: 1.2.2
+  version: 1.2.3
 ---
 
 # Docs Completed-Projects Gap Review
 
 Audit the documentation surface for gaps left by completed OAT projects. Builds an inventory of shipped work, maps it against existing docs, and produces a prioritized report of missing or stale documentation.
+
+## Repository-internal scope
+
+This skill is specific to the Open Agent Toolkit repository. Its `apps/oat-docs` paths describe OAT's own maintenance surface, not a portable consumer layout. It is not shipped in an installable pack. Before any report write, verify this is the OAT source repository with `packages/cli` and `apps/oat-docs/docs`. In another repository, stop and use `oat-docs-analyze` from installed scope to resolve that repository's docs; do not create or assume OAT's directories there.
 
 ## When to Use
 

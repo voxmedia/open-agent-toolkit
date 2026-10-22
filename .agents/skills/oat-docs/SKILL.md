@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.0.6
+  version: 1.0.7
 ---
 
 # OAT Docs
@@ -89,29 +89,15 @@ Read the user's question from `$ARGUMENTS`. If no question was provided or the q
 
 > "What would you like to know about OAT? I can help with workflows, CLI commands, skill authoring, configuration, project lifecycle, and more."
 
-Classify the question into one or more topic areas to guide the search:
+Read `DOCS_ROOT/index.md` and its `## Contents` section. Derive a temporary topic map from the installed labels, summaries, and link targets; do not assume OAT's repository layout or a fixed set of topic paths. Choose the entries that match the question and descend through their authored `index.md` Contents maps when needed. Resolve each link relative to its containing file and verify it exists before reading it.
 
-| Topic Area       | Docs Path                                                       | Key Content                                  |
-| ---------------- | --------------------------------------------------------------- | -------------------------------------------- |
-| Getting started  | `getting-started/quickstart.md`, `getting-started/bootstrap.md` | Installation, first project setup            |
-| Concepts         | `getting-started/concepts.md`                                   | Core OAT concepts and terminology            |
-| CLI commands     | `reference/cli-reference.md`                                    | Full CLI command reference                   |
-| Tool packs       | `getting-started/tool-packs.md`                                 | Installing and managing skill packs          |
-| Skills           | `contributing/skills.md`                                        | Skill authoring, SKILL.md format             |
-| Workflows        | `workflows/projects/`                                           | Project lifecycle, state machine, artifacts  |
-| Ideas            | `workflows/ideas/`                                              | Idea capture and brainstorming               |
-| Provider sync    | `provider-sync/`                                                | Multi-provider sync, config, commands        |
-| Documentation    | `docs-tooling/`                                                 | Docs analysis and apply workflows            |
-| Contributing     | `contributing/`                                                 | Code contributions, design principles, hooks |
-| File locations   | `reference/file-locations.md`                                   | Where OAT puts things                        |
-| Directory layout | `reference/oat-directory-structure.md`                          | `.oat/` and `.agents/` structure             |
-| Troubleshooting  | `reference/troubleshooting.md`                                  | Common issues and fixes                      |
+If the installed index has no usable Contents or a linked target is missing, report that specific stale or incomplete installation. Search within `DOCS_ROOT` for the requested terms to find existing evidence, and recommend updating the installed docs when appropriate. Never invent a replacement path or fall back to the repository.
 
 ### Step 3: Search and Read Documentation
 
 Based on the topic classification:
 
-1. **Read the most relevant docs file(s)** — start with the primary match from the topic table. All paths are relative to `DOCS_ROOT` (`~/.oat/docs/`).
+1. **Read the most relevant docs file(s)** — start with the primary match from the topic map derived in Step 2. All paths are relative to `DOCS_ROOT` (`~/.oat/docs/`).
 2. **Search for specific terms** — if the question mentions specific concepts, commands, or features, use Grep to find mentions across `~/.oat/docs/`.
 3. **Follow cross-references** — if the primary doc references other pages, read those for complete context.
 4. **Check the index** — read the `index.md` of relevant directories to discover additional relevant pages.
@@ -143,7 +129,7 @@ Frame these as suggestions, not automatic actions. Let the user decide.
 ```
 Based on the docs, here's how OAT project workflows work: [answer]
 
-You can read more in `workflows/projects/lifecycle.md`.
+Cite the installed workflow page discovered through Contents.
 
 Would you like me to:
 - Start a new project? (I'd invoke oat-project-lite for single-sitting work, oat-project-brief for one delivery planned as a Project Brief, oat-project-goal for an outcome delivered over several milestones, or oat-project-quick-start for a larger quick workflow)
@@ -190,7 +176,7 @@ Both create a project directory under your projects root
 state.md, plan.md, and implementation.md; quick and spec-driven modes also use
 discovery.md.
 
-See: workflows/projects/lifecycle.md, getting-started/quickstart.md
+See: the actual installed workflow and getting-started pages found through Contents.
 
 Would you like me to create a project for you?
 ```
@@ -203,20 +189,20 @@ Would you like me to create a project for you?
 
 ```
 Tool packs are bundles of related OAT skills that you install together.
-There are four packs:
+Describe the packs listed by the installed tool-pack documentation, for example:
 
 - **core** — Diagnostics and docs skills (oat-doctor, oat-docs).
-  Always installed at user level. 2 skills.
+  Read the installed docs for scope and current membership.
 - **workflows** — Project lifecycle skills (discover, plan, implement,
-  review, PR). 26 skills total.
-- **ideas** — Brainstorming and idea capture skills. 4 skills.
+  review, PR).
+- **ideas** — Brainstorming and idea capture skills.
 - **utility** — Cross-cutting tools (docs analysis, code review,
   skill creation). 9 skills.
 
 Install with: oat init tools
 Manage with: oat tools list, oat tools update, oat tools outdated
 
-See: getting-started/tool-packs.md
+See: the installed tool-pack page discovered through Contents.
 
 Would you like me to check which packs you have installed? (I'd run /oat-doctor --summary)
 ```
