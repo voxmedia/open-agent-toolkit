@@ -136,6 +136,17 @@ Proof: `node --test tools/smoke/verification/skill-docs-paths.test.mjs` passes (
 
 Coverage boundary: literal Markdown page paths in executable skill tests/helpers, including nested files and relative prefixes. Historical Markdown/JSON fixture prose is excluded; computed paths are not evaluated. The existing `test:smoke` glob enrolls the dedicated check in CI without a new script or checker command. This protects the moved-page failure that the prior docs surface checks missed.
 
+### Task p01-t05: Prepare the lockstep public release
+
+**Status:** completed
+**Commit:** d34481c1d0c8a60f284e91a4c65ea07e44aa08fc
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-impl-20261022
+
+Intent: carry p01's shipped skill/template/docs/config changes in a coherent public release above origin/main.
+Files: five public package manifests and generated public-package version metadata; lockfile only if dependency resolution changes it.
+Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling, all five public builds (0 cache replays), `pnpm lint`, `pnpm format`, formatter and diff checks exit 0. The lockfile remains unchanged because only workspace package versions changed. All five manifests are 0.3.23, strictly above fetched origin/main's 0.3.22; generated public-package metadata agrees. Six changed skills each carry one metadata.version bump across the final phase diff. Logs: `/tmp/oat-docs367-p01/t05-{lockfile,frozen,bundle,build}.log`, `extra-{lint,format}.log`, `fetch.log`. Lint had 5 cached tasks of 10; changed packages and the root oxlint pass executed. Phase-wide gates follow against the committed implementation.
+
 ---
 
 ## Phase p02: IA method and guidance input
