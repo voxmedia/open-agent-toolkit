@@ -536,12 +536,18 @@ Proof: real-helper newer/older/equal/missing regression and valid controls, pre-
 
 ### Task p03-t03: (review) Preserve undeclared null mirrors and restore guidance comment
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
 **Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M2, L2)
 
 Intent: stored null ia/navOwner means undeclared; unrelated real reads succeed and mirrors return null/default. Preserve rejection and repair for all other invalid values and shared-only mirror scope. Move the guidance docblock back to its function.
 Files: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/ia.test.ts`.
 Proof: real storage/config command regressions for both null keys fail on pre-fix code and pass after; invalid stored mirror and scope/unknown-field controls remain passing. No broader set/null semantics expansion is required.
+
+**Commit:** 36748f867a5adecc0b6def19cf993860f710e7d0
+
+**Evidence:** `analysis/p03/fix-r1/t03-red` fails both real null-key rows at unrelated config get (exit 1; 13 existing controls pass). Fixed and immediate postcommit config/config-command suites pass (653 tests, exit 0), preserving other valid mirrors, guidance/future bytes, invalid-value repair and shared-only behavior. CLI lint/type-check/build and scoped format exit 0. Only the two stored-value normalizers accept null as absence; the guidance docblock is restored.
 
 ### Task p03-t04: (review) Name artifact and IDs at bootstrap repair handoff
 
