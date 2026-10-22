@@ -133,7 +133,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p02: verification complete; independent phase review pending.
+Implement — p02: address four accepted review findings through the original implementer.
 
 ## Artifacts
 
@@ -147,4 +147,4 @@ None.
 
 ## Next Milestone
 
-Run independent p02 phase review, then open its PR against main. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+Complete p02-t02 scoped review fixes and verification, then independent confirmation and PR against main. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.

@@ -371,6 +371,25 @@ Prior focused real-file config proofs, both negative controls/restored valid con
 
 Root pre-review validation: accepted the clean same-handle verification handoff at `ac92dea999dd294b567b86f668fda0606b231a69`; all eight integrated gate exit files read as 0, no recovery or product correction, and original anchors retained. PR #368 is remotely verified merged at `e36497bead86df31fbffc6ea9cbc5b591d6ecadb` after all three current-head checks and resolved findings. Root merged current main ancestry with no file-content delta from the verified handoff (empty `git diff ac92dea999dd294b567b86f668fda0606b231a69 HEAD`); p02 release 0.3.24 remains newer than landed p01 0.3.23. Independent phase review remains pending. The user now authorizes automatic bottom-up landing once CI, Bugbot and findings clear; the brief authority below records that amendment.
 
+### Review Received: p02
+
+Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-r1-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..7564e8332cdcae4d40e6dbf746f0c54ba93a23a8`; 0 Critical, 0 High, 1 Medium, 3 Low. Exactly one `not-attempted` reconnaissance signal consumed; artifact has no Review Orchestration section. Anchors and ignored artifact validated. Root accepts all four findings for bounded p02-t02; phase stays in_progress. Review-fix round 1/2, recovery usage remains 0/10, pending null.
+
+- M1 accepted — invalid user guidance prescribes an unscoped command that fails; G1's actual user-config support and the config repair precedent require actionable diagnostics. Identify the real config path and a working scope-specific repair. Preserve scope/precedence semantics rather than making unscoped operations silently change user config. Add one real-file command-boundary regression that executes the repair advertised by the error and preserves unrelated state.
+- L1 accepted — shipped IA references use project-phase language and the contract test pins it; portable authoring guidance (Outcome 2/D9) needs reader-neutral wording. Preserve all method/preset guards, remove or replace only the transient deferral pin with an explicit protection accounting under deliberate-testing.
+- L2 accepted — the user fallback key list omits guidance and its catalog group drops the established layering label; p02 requires current config/workflow docs. Add the supported key with an existing anchor link and align the group label.
+- L3 accepted — preserve required public synthetic walkthroughs and controls under the project's ignored `analysis/p02/` folder, with a concise evidence index and byte-preserving copies. Retain historical /tmp citations as original provenance; add the persistent local location without tracking generated evidence or isolated homes.
+
+### Task p02-t02: Repair scoped guidance diagnostics and review gaps
+
+**Status:** pending
+**Executor:** phase-implementer:docs367-p02-impl-20261022
+**Handle:** docs367-p02-impl-20261022 (same pinned conversation)
+**Intent:** Close accepted M1/L1/L2/L3 without changing guidance resolution or adding p03/p07 behavior.
+**Files:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`, `.agents/skills/authoring-docs/references/information-architecture.md`, `.agents/skills/authoring-docs/references/templates.md`, `.agents/skills/authoring-docs/tests/ia-contract.test.mjs`, `apps/oat-docs/docs/reference/configuration.md`; p02-local journal/Head and ignored `analysis/p02/` proof outputs only.
+**Proof command:** real-file repair regression fails before and passes after, valid guidance/control and unrelated state retained; focused config/IA/sentence contracts; ordered gates 1–8 with explicit exits and cache disclosure; skill lint/format.
+**Outcome:** queued for the original exact Codex Sol 6.1 medium/priority implementation handle; no product fix made by root.
+
 ---
 
 ## Phase p03: Record and act on the IA
@@ -417,7 +436,7 @@ Root pre-review validation: accepted the clean same-handle verification handoff 
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-review-r1-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-review-r1-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p02-resume-after-p01-nav-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
