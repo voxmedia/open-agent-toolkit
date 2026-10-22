@@ -123,6 +123,19 @@ Conservation/self-review: Q&A retains read-only installed-doc scope and search f
 
 Source disposition: root searched history, refs, available worktrees and local context without locating the original guide. Root authorized reconstruction from current CLI/template contracts and `.oat/repo/reference/project-summaries/20260606-docs-authoring-skills.md:28`. This is newly authored generic guidance, not recovered historical text. Actual migrations still require user approval and preserve source pages and links; no external repository is changed.
 
+### Task p01-t04: Catch stale docs paths in executable skill tests
+
+**Status:** completed
+**Commit:** 85ac9fe9ae09eea7bc86659c4f75f802a623e53e
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-impl-20261022
+
+Intent: fail the existing smoke gate with test-file/line and stale literal docs path when a referenced docs page disappears.
+Files: `tools/smoke/verification/skill-docs-paths{,.test}.mjs`.
+Proof: `node --test tools/smoke/verification/skill-docs-paths.test.mjs` passes (2 tests, exit 0). The temporary fixture proves an existing page passes, renaming it reports the precise test/line/path, and updating the literal restores pass. A real seeded `.agents/skills/recon/tests/docs367-stale-seed.test.mjs` makes that command fail (exit 1, correct diagnostic); removing it restores exit 0. The seed was removed before commit. Scoped oxlint, oxfmt and diff checks pass. Logs: `/tmp/oat-docs367-p01/t04-{check,seeded,repaired}.log`.
+
+Coverage boundary: literal Markdown page paths in executable skill tests/helpers, including nested files and relative prefixes. Historical Markdown/JSON fixture prose is excluded; computed paths are not evaluated. The existing `test:smoke` glob enrolls the dedicated check in CI without a new script or checker command. This protects the moved-page failure that the prior docs surface checks missed.
+
 ---
 
 ## Phase p02: IA method and guidance input
