@@ -602,12 +602,17 @@ Proof: one real-command regression starts with a declared IA, set documentation.
 
 ### Task p03-t06: (review) Align package-drift template with ahead results
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r2-20261022 (original accepted handle)
 **Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L2)
 
 Intent: package status includes current/drift/ahead/unverified. Only actual older-package drift gets a package-upgrade recommendation ID and command; ahead asks to select/update the CLI before re-analysis and unverified needs manual verification. Current needs no tooling recommendation. Keep the existing stable IDs and explicit approval contract.
 Files: `.agents/skills/oat-docs-analyze/references/analysis-artifact-template.md`.
 Proof: prose conservation and existing helper/sentence contracts; no new copy-only test or resolver mechanism. The existing helper may report a current-version reinstall command, but this template need not recommend executing it.
+**Commit:** 83d893d3feb58befb4141b85c4321d29b3f6bf82
+
+**Evidence:** Conservation diff is confined to Offline Package Drift: ahead is representable; only older drift receives an upgrade command and stable explicit ID; current has no tooling recommendation; ahead selects/updates the intended CLI before re-analysis; unverified requires manual verification. Existing helper/prose checks (6 tests) and isolated sentence contracts (1,087) pass before and immediately after commit, all exit 0; scoped lint/format pass. No new copy-only test, helper edit or version bump.
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
