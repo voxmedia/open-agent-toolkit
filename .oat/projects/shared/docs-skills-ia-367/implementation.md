@@ -39,19 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status    | Units | Accepted |
-| ----- | --------- | ----- | -------- |
-| p01   | completed | 1     | 1/1      |
-| p02   | pending   | 1     | 0/1      |
-| p03   | pending   | 1     | 0/1      |
-| p04   | pending   | 1     | 0/1      |
-| p05   | pending   | 1     | 0/1      |
-| p06   | pending   | 1     | 0/1      |
-| p07   | pending   | 1     | 0/1      |
-| p08   | pending   | 1     | 0/1      |
-| p09   | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | in_progress | 1     | 0/1      |
+| p03    | pending     | 1     | 0/1      |
+| p04    | pending     | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 1/9 phases accepted
+**Total:** 2/10 phases accepted
 
 ---
 
@@ -269,6 +270,39 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 ---
 
+## Phase p-rev1: Correct the scaffold navigation command
+
+**Status:** completed
+**Base:** 7c05e8ab0e563f39996fb8c87643443040fb0ed9
+**Head:** 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
+**Executor:** inline:docs367-p-rev1-doc-command
+**Corrects:** p01
+
+Root inline exception: no new surface, unresolved design or consequential change; a bounded docs command correction plus a regression in the existing scaffold integration suite, with existing focused proof command `HOME=<isolated> pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/docs/init/integration.test.ts`. Root is the committing owner in the temporary p01 checkout. No parallel group applies: p02 yielded at clean `e49345b0087f2a50b276ca799140981906ea0d1b` and remains suspended until integration. Recovery default 10, used 0, remaining 10, pending null. Original p01 Base/Head stay frozen. Revision is ordered immediately after p01 and before resumed p02 so review heads remain chronological; p02's original Base is preserved and its review will identify this integration.
+
+Queued after root independently reproduced remote H1. Execute after p02 clean handoff, integrate on p02 before its review, and preserve original p01 anchors.
+
+---
+
+Independent review round 1 (`docs367-p-rev1-review-r1-20261022`), artifact `reviews/p-rev1-review-2026-10-22T213617Z.md`, passes with 0 Critical/High/Medium/Low against the phase anchors. Root consumed the single not-attempted reconnaissance signal, read the full artifact and validated all scope/anchor fields; no orchestration section or new review fix. Reviewer independently reran 63/63 tests and real nested/spaced-path controls. Acceptance remains pending full ordered gates and PR update.
+
+Revision verification: gates 1–8 passed in CI order against product Head `79ab7f30a1831fe2b09d7a199c4bb178395f0d22`, with one no-edit retry of gate 3 before gate 4. Explicit exits in `/tmp/oat-docs367-p01-nav-fix-proof/`: check 0, type-check 0, original test 1, no-edit test retry 0, build 0, skill bumps 0, fetch main 0, release versions 0, release validation 0, docs build 0. Original test task freshly passed 8,857 CLI tests (422 files); 9/12 Turbo tasks replayed. Its root smoke tail failed one resolver test with a transient built-module import error; a no-edit isolated rerun passed 4/4. The complete gate-3 retry replayed 12/12 Turbo tasks, then freshly passed 165 smoke, 700 skill and 1 script tests. Other cache disclosure: check 8/11, types 9/11, build 5/5, docs build 6/6 replayed; focused 63/63 and scoped CLI build executed separately. No source change, recovery attempt, version re-bump or waiver.
+
+### Task prev1-t01: Select the app in the generated navigation instructions
+
+**Status:** completed
+**Executor:** inline:docs367-p-rev1-doc-command
+**Intent:** Make the emitted repository-root command usable for nested apps without changing CLI resolution.
+**Files:** `.oat/templates/docs-app-fuma/docs/contributing.md`, `packages/cli/src/commands/docs/init/integration.test.ts`.
+**Proof command:** isolated-HOME owning integration suite; new regression extracts the rendered command, shell-tokenizes it and invokes the real nav command with repo-root context, checking emitted navigation. Existing tests did not execute the newly documented command. Before/after and full gate logs: `/tmp/oat-docs367-p01-nav-fix-proof/`.
+
+**Commit:** 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
+**Verification:** pre-fix regression exit 1 at framework detection; corrected emitted command succeeds and writes expected index/getting-started/contributing navigation. Final isolated-HOME owning suites pass 63/63 (exit 0), scoped oxlint and CLI build exit 0. Earlier precommit attempts exposed an incomplete expected page list and prefer-template lint; both corrected before commit, with evidence retained. Product boundary is exactly the two declared files; no recovery attempt. Full ordered gates pending.
+
+---
+
+Root acceptance: p-rev1 is accepted after clean independent review, ordered passing gates and successful PR #368 update at `0750505f1cc63ce9e19762eff5bd1fed247fae6e`. Review-fix rounds used 0/2; recovery 0/10, pending null. No selected extra phase gate applies. External H1 is fixed; its findings-bearing review event advances to fixes_completed and the separate clean p-rev1 event remains passed. No GitHub reply or merge performed. Resume p02 after merging the corrected p01 branch; original p01 and p02 anchors stay frozen.
+
 ## Phase p02: IA method and guidance input
 
 **Status:** in_progress
@@ -276,6 +310,8 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 
 Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
+
+Root integration: p02 implementer yielded clean at `e49345b0087f2a50b276ca799140981906ea0d1b`. Merge accepted p01 correction branch through `b57991522e041bf92aa8a951c1f036c6e321e0b7`, including the distinct-event review ledger correction and p-rev1 product `79ab7f30a1831fe2b09d7a199c4bb178395f0d22`. Product files merge without conflict; the four project files are reconciled by retaining p02 concrete Intent/Exit and its completed p02-t01 record, all p-rev1 anchors/acceptance, both recovery ledgers and all distinct review events. Original p02 Base `eaf354667bc270d51ebc27eb292375b9dc32cf06` and p01 anchors remain unchanged. Root returns write ownership only after a clean integration commit; the same pinned p02 implementation conversation will complete final ordered gates and candidate evidence.
 
 ### Task p02-t01: Ship reader-first IA selection and source-aware guidance
 
@@ -359,7 +395,11 @@ The fresh workspace run passed 8,858 CLI tests and all four other package suites
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-impl-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-impl-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p-rev1-review-r1-20261022 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+Root-inline phase: p-rev1; reason=bounded existing docs-command regression, no new surface/design/consequence, existing focused proof; root model=gpt-6.1-sol high; committing owner=root in isolated p01 checkout; p02 yielded clean before execution.
 
 run/v1 · request=docs367-p01-review-r3-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -384,6 +424,10 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #368
+
+2026-10-22; source https://github.com/voxmedia/open-agent-toolkit/pull/368#pullrequestreview-5621004819, reviewed Head `7a0078df58e2f94868216c3381d6a9dcc421891b`, invocation auto. Counts: 0 critical, 1 high (source "important"), 0 medium, 0 low. H1: warp-factories discussion [4353654033](https://github.com/voxmedia/open-agent-toolkit/pull/368#discussion_r4353654033), repository-root nav command fails nested-app detection; **convert**, regression of Outcome 1/P6, linked to `p-rev1` / `prev1-t01`. Root reproduction: bare command exit 1, explicit docs-site target exit 0, public scratch evidence `/tmp/oat-docs367-p01-nav-fix-proof/`. Disposition: fix queued, no deferral. Remote receipt `reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md` is local-only; this tracked receipt carries the substance. P01 implementation anchors and accepted historical review stay frozen. P02's active writer was asked to yield after its current coherent verified record; no correction implementation starts before that handoff. No GitHub reply posted.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 

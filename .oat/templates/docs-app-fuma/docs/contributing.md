@@ -69,7 +69,7 @@ Theme toggle is included in the layout. Mermaid diagrams re-render on mode switc
 
 The app-root `index.md` is the generated manifest, rebuilt from `docs/` on every `predev` and `prebuild` by `oat docs generate-index`. Edit the authored `docs/index.md` and its `## Contents`, then regenerate the manifest; do not hand-edit it.
 
-The `docs/**/meta.json` sidebar files are committed derived navigation. After changing authored `## Contents`, run `oat docs nav sync` from the repository root to update them. They are separate from the generated app-root manifest.
+The `docs/**/meta.json` sidebar files are committed derived navigation. After changing authored `## Contents`, run `oat docs nav sync --target-dir "{{APP_DIR}}"` from the repository root to update them. They are separate from the generated app-root manifest.
 
 ## Agent guidance
 

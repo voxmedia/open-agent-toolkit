@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02
-oat_last_commit: 183b3d3aa7944c85919f09cc05dcb47b08c8f011
+oat_last_commit: 677e0c6dc377c3bfaeebf743f18e95b9406282ff
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -23,6 +23,9 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p02:
+      used_attempts: 0
+      pending_attempt: null
+    p-rev1:
       used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -118,7 +121,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/368' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-22T21:10:59.746407Z'
+oat_project_state_updated: '2026-10-22T21:43:00Z'
 oat_generated: false
 ---
 
@@ -130,12 +133,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p02: IA method and guidance input.
+Implement — p02: resume after integrating the accepted navigation correction.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01 accepted; 1/9 phases accepted.
+- **Implementation:** `implementation.md` — p01 and p-rev1 accepted; 2/10 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -144,4 +147,4 @@ None.
 
 ## Next Milestone
 
-P02 is concrete; dispatch implementation on its stacked branch. PR #368 has passed independent reviews; remote CI remains separately tracked.
+Resume the original p02 implementer after this integrated clean boundary; complete ordered gates, then independent review and the stacked phase PR.
