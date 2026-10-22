@@ -236,6 +236,8 @@ Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling
 
 ## Orchestration Runs
 
+run/v1 · request=docs367-p01-fix-r1-20261022 · scope=p01 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+
 run/v1 · request=docs367-p01-lenses-r1-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
