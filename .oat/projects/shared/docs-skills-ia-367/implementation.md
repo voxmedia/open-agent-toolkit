@@ -78,6 +78,36 @@ Negative control: `/tmp/oat-docs367-p01/config-negative-control.mjs` exercises r
 
 Conservation/self-review: generated-file prose moved from the bootstrap patch contract into the template with committed `meta.json`/nav-sync guidance retained; the getting-started content is otherwise unchanged. Runtime option inventory covered factory/types, callers, template and scaffold assertions; no unrelated caller requires propagation. Independent phase review remains root-owned.
 
+### Task p01-t02: Retire bootstrap patches and correct shipped contracts
+
+**Status:** completed
+**Commit:** f2b10c6a2c16f3bd236f0e6705bca8f1d53458e7
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-impl-20261022
+
+Intent: retain only the live AGENTS bridge, route legacy scaffold defects to analyze, and correct P7/E12/E13 against source.
+Files: bootstrap/analyze/apply/authoring skills, legacy-scaffold reference, CLI analyze/apply help, and `add-docs-to-a-repo.md`.
+Proof: 1,087 installed-skill/validation contracts (isolated home), 67 help tests, scoped CLI build/lint, Markdown lint, format and diff checks all exit 0. The first contract run caught an installed-scope cross-skill reference; corrected before commit, with no test weakening. Logs: `/tmp/oat-docs367-p01/t02-{contracts,help,build,lint,docs-lint,format}.log`.
+
+Legacy-scaffold fixture: manually applied analyze Step 1's new reference to the retired Path B fixture. It produces a High finding for missing export settings plus ESM-invalid `__dirname`, citing fixture `next.config.js:4` and `package.json:1`; artifact `/tmp/oat-docs367-p01/legacy-scaffold-finding.md`. This is a skill-rule assessment, not a claim that the guidance-only CLI ran an analyzer.
+
+Corrected claims (P7/E12/E13), with authority:
+
+| Claim                     | Correction                                                                                                     | Source citation                                                                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| P7.1 framework validation | Markdown is supported alongside Fumadocs/MkDocs                                                                | `packages/cli/src/commands/docs/init/resolve-options.ts:11`; `scaffold.ts:423`                                                                                                             |
+| P7.2 completion gate      | Documentation state is complete or explicitly skipped after project-document prompt, not zero analyze findings | `.agents/skills/oat-project-complete/SKILL.md:562`                                                                                                                                         |
+| P7.3 config               | Optional framework config path can point to Next config or MkDocs YAML                                         | `packages/cli/src/config/oat-config.ts:80`; `.oat/config.json:33`                                                                                                                          |
+| P7.4 CLI analyze/apply    | Help describes guidance; handlers print a skill pointer                                                        | `packages/cli/src/commands/docs/analyze.ts:32`; `packages/cli/src/commands/docs/apply.ts:32`                                                                                               |
+| P7.5 authoring tool       | In-place authoring permits Edit                                                                                | `.agents/skills/oat-docs-authoring/references/targeted-authoring-workflow.md` (local edit steps)                                                                                           |
+| P7.6 factory example      | Runtime options are basePath/turbopack; metadata belongs in layout                                             | `packages/docs-config/src/next-config.ts:4`; `.oat/templates/docs-app-fuma/app/layout.tsx:9`                                                                                               |
+| E12 Python environment    | Setup installs with selected Python, does not create/activate venv                                             | `.oat/templates/docs-app-mkdocs/setup-docs.sh:17`                                                                                                                                          |
+| E12 MkDocs index          | Scaffold index/config point at mkdocs.yml                                                                      | `packages/cli/src/commands/docs/init/scaffold.ts:438`                                                                                                                                      |
+| E12 tooling               | Framework is a string; lint/format are package scripts                                                         | `packages/cli/src/config/oat-config.ts:79`; `packages/cli/src/commands/docs/init/scaffold.ts:430`                                                                                          |
+| E13 command tools         | Analyze/apply permit oat/pnpm/tracking bash/jq and shell helpers; analyze retains nav --check restriction      | `.agents/skills/oat-docs-analyze/SKILL.md:118`; `.agents/skills/oat-docs-analyze/SKILL.md:509`; `.agents/skills/oat-docs-apply/SKILL.md:243`; `.agents/skills/oat-docs-apply/SKILL.md:330` |
+
+E12's approved-subset/apply-input change remains p03 by the accepted brief. Conservation review retained preflight, conflict authority, Markdown routing, build handling, walkthrough sections and FP-15. Removed only retired patch instructions and obsolete plan IDs; preserved their useful diagnostic content in analyze and moved generated-file guidance into the template. No new IA/config/nav/checker behavior was introduced.
+
 ---
 
 ## Phase p02: IA method and guidance input
