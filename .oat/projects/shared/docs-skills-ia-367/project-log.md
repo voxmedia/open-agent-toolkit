@@ -27,6 +27,10 @@ docs367-p01-confirmation-wait-20261022: bounded fix d42f19285 passed gates and b
 
 docs367-p01-final-delta-wait-20261022: final renderer formatting candidate 183b3d3 passes all three output-format probes and gates; independent round-3 delta review accepted; yielding for result before phase acceptance and p02 start.
 
+### 2026-10-22 · structural · oat-project-implement · p01
+
+docs367-p01-accepted-20261022: p01 accepted after pass with zero findings; two review-fix rounds, recovery usage 1/10, no selected extra phase gate; candidate 183b3d3aa7944c85919f09cc05dcb47b08c8f011; review and gate evidence in implementation.md; continue p02.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

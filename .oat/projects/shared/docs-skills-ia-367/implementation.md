@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p01
+oat_current_task_id: p02
 oat_generated: false
 oat_template: false
 ---
@@ -39,32 +39,32 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | in_progress | 1     | 0/1      |
-| p02   | pending     | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
-| p04   | pending     | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | pending   | 1     | 0/1      |
+| p03   | pending   | 1     | 0/1      |
+| p04   | pending   | 1     | 0/1      |
+| p05   | pending   | 1     | 0/1      |
+| p06   | pending   | 1     | 0/1      |
+| p07   | pending   | 1     | 0/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 0/9 phases accepted
+**Total:** 1/9 phases accepted
 
 ---
 
 ## Phase p01: Contract cleanup and silent defects
 
-**Status:** in_progress
+**Status:** completed
 **Base:** c3ba7e31d17521cf51252b5ee5167c6c81d8a629
 **Head:** 183b3d3aa7944c85919f09cc05dcb47b08c8f011
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
 
-Original-candidate verification: all Definition of Done gates passed in order against committed implementation. Original candidate was append-only recovery commit `169c15cf503ec55071a2a2c255cf4da2d486942b`; phase acceptance remains root-owned. Draft phase PR: https://github.com/voxmedia/open-agent-toolkit/pull/368 (base `main`, branch `docs/docs-skills-ia-367`). Correctness/docs and testing/complexity reviews are pending. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
+Original-candidate verification: all Definition of Done gates passed in order against committed implementation. Original candidate was append-only recovery commit `169c15cf503ec55071a2a2c255cf4da2d486942b`; phase acceptance remains root-owned. Draft phase PR: https://github.com/voxmedia/open-agent-toolkit/pull/368 (base `main`, branch `docs/docs-skills-ia-367`). Correctness/docs and testing/complexity reviews are now passed; see the final acceptance receipt below. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
 
 | Order | Command                                                     | Exit                     | Log under `/tmp/oat-docs367-p01/`       |
 | ----- | ----------------------------------------------------------- | ------------------------ | --------------------------------------- |
@@ -263,6 +263,12 @@ Cache disclosure: ordinary caching was used. Gate 1 executed 3 Turbo tasks/repla
 
 ---
 
+### Root Acceptance: p01
+
+Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged. Final reviewer `docs367-p01-review-r3-20261022`: pass, 0 critical / 0 high / 0 medium / 0 low, artifact `reviews/p01-review-2026-10-22T210641Z.md`. Its final formatting delta coverage combines with independent r1/r2 correctness/documentation reviews and the passing testing/complexity confirmation at `d42f19285c2841d72fecac32fbd7f0ec130f4d31`. All prior findings are resolved by p01-t06 and p01-t07; no open fix tasks or selected external p01 gate remain. Two review-fix rounds used; recovery ledger remains 1/10, pending null. Reconnaissance was not attempted in the final review. Gates 1–8 passed at the final candidate with the cache disclosures in p01-t07; real workspace and nested standalone builds passed at the semantically identical p01-t06 config. Phase PR #368 is open; remote CI status is tracked separately from local acceptance.
+
+---
+
 ## Phase p02: IA method and guidance input
 
 **Status:** pending
@@ -313,7 +319,7 @@ Cache disclosure: ordinary caching was used. Gate 1 executed 3 Turbo tasks/repla
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-p01-review-r3-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p01-review-r3-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-p01-format-continuation-20261022 · scope=p01 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

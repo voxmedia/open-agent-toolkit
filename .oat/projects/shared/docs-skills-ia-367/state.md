@@ -1,5 +1,5 @@
 ---
-oat_current_task: p01
+oat_current_task: p02
 oat_last_commit: 183b3d3aa7944c85919f09cc05dcb47b08c8f011
 oat_blockers: []
 associated_issues: [
@@ -115,7 +115,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/368' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-22T20:33:38.334740Z'
+oat_project_state_updated: '2026-10-22T21:09:16.231509Z'
 oat_generated: false
 ---
 
@@ -127,12 +127,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p01: Contract cleanup and silent defects.
+Implement — p02: IA method and guidance input.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01 starting; 0/9 phases accepted.
+- **Implementation:** `implementation.md` — p01 accepted; 1/9 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -141,4 +141,4 @@ None.
 
 ## Next Milestone
 
-Complete p01 independent review and PR review lenses; draft PR #368 is open. Then accept p01 and continue p02.
+Make p02 concrete, start its stacked branch and dispatch implementation. PR #368 has passed independent reviews; remote CI remains separately tracked.
