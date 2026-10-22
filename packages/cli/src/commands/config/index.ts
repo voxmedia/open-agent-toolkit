@@ -2418,11 +2418,18 @@ async function setConfigValue(
         ? join(userConfigDir, 'config.json')
         : join(repoRoot, '.oat', 'config.json');
     const trimmed = rawValue.trim();
-    const guidance = normalizeDocumentationGuidance(
-      trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
-      configPath,
-      effectiveSurface === 'user' ? 'user' : 'shared',
-    );
+    let guidance: string | string[] | undefined;
+    try {
+      guidance = normalizeDocumentationGuidance(
+        trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
+        configPath,
+        effectiveSurface === 'user' ? 'user' : 'shared',
+      );
+    } catch {
+      throw new Error(
+        'Invalid documentation.guidance value: expected a non-empty path/URL string or ordered non-empty string array.',
+      );
+    }
     let raw: Record<string, unknown> = { version: 1 };
     try {
       const parsed: unknown = parseJsonConfig(

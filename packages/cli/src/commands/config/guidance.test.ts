@@ -287,13 +287,36 @@ describe('documentation.guidance through real config files and skill selection',
 
   it('rejects malformed inputs and local scope without changing valid config', async () => {
     const f = await fixture();
-    await f.command('set', 'documentation.guidance', './valid/index.md');
-    const before = await readFile(f.repoPath, 'utf8');
-    for (const value of ['[]', '[1]', '["valid",""]', '']) {
+    for (const flag of ['--shared', '--user']) {
       expect(
-        await f.command('set', 'documentation.guidance', value),
-      ).toMatchObject({ status: 'error' });
+        await f.command(
+          'set',
+          'documentation.guidance',
+          './valid/index.md',
+          flag,
+        ),
+      ).toMatchObject({ status: 'ok', value: './valid/index.md' });
     }
+    const before = await readFile(f.repoPath, 'utf8');
+    const userBefore = await readFile(f.userPath, 'utf8');
+    for (const flags of [[], ['--shared'], ['--user']]) {
+      for (const value of ['[]', '[1]', '["valid",""]', '', '[invalid-json']) {
+        const result = await f.command(
+          'set',
+          'documentation.guidance',
+          value,
+          ...flags,
+        );
+        expect(result).toMatchObject({ status: 'error' });
+        expect(result.message).toContain('documentation.guidance');
+        expect(result.message).not.toMatch(/unset/i);
+        expect(result.message).not.toContain(f.repoPath);
+        expect(result.message).not.toContain(f.userPath);
+        expect(result.message).not.toContain('.oat/config.json');
+      }
+    }
+    expect(await readFile(f.repoPath, 'utf8')).toBe(before);
+    expect(await readFile(f.userPath, 'utf8')).toBe(userBefore);
     expect(
       await f.command(
         'set',
