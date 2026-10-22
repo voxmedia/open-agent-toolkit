@@ -117,8 +117,8 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/368' # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/369' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-22T22:29:05Z'
@@ -147,4 +147,4 @@ None.
 
 ## Next Milestone
 
-Open p02 PR against main and continue p03. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+PR #369 is open against main; complete supplemental complexity review, then continue p03. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.

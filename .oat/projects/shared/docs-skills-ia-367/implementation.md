@@ -544,6 +544,8 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 
 <!-- orchestration-runs-end -->
 
+run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-complexity action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+
 ## Reviews and Gates
 
 ### Remote Review Received: PR #368
@@ -551,6 +553,8 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 2026-10-22; source https://github.com/voxmedia/open-agent-toolkit/pull/368#pullrequestreview-5621004819, reviewed Head `7a0078df58e2f94868216c3381d6a9dcc421891b`, invocation auto. Counts: 0 critical, 1 high (source "important"), 0 medium, 0 low. H1: warp-factories discussion [4353654033](https://github.com/voxmedia/open-agent-toolkit/pull/368#discussion_r4353654033), repository-root nav command fails nested-app detection; **convert**, regression of Outcome 1/P6, linked to `p-rev1` / `prev1-t01`. Root reproduction: bare command exit 1, explicit docs-site target exit 0, public scratch evidence `/tmp/oat-docs367-p01-nav-fix-proof/`. Disposition: fix queued, no deferral. Remote receipt `reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md` is local-only; this tracked receipt carries the substance. P01 implementation anchors and accepted historical review stay frozen. P02's active writer was asked to yield after its current coherent verified record; no correction implementation starts before that handoff. No GitHub reply posted.
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+- PR https://github.com/voxmedia/open-agent-toolkit/pull/369 opened for p02 on 2026-10-22; draft pending supplemental complexity pass.
 
 ## Deferred Findings
 
