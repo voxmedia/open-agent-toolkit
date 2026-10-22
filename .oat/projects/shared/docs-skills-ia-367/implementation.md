@@ -307,7 +307,7 @@ Root acceptance: p-rev1 is accepted after clean independent review, ordered pass
 
 **Status:** in_progress
 **Base:** eaf354667bc270d51ebc27eb292375b9dc32cf06
-**Head:** bbefca279ca3a24108f465b65c7b6f351be3ee80
+**Head:** 7f6ee861b5bee201f636d80dcae74b78711ca47e
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 
 Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
@@ -423,14 +423,36 @@ The review observation about both tiers holding invalid guidance is not a findin
 
 ### Task p02-t03: (review) Distinguish invalid guidance arguments from stored config
 
-**Status:** pending
+**Status:** completed
+**Commit:** 7f6ee861b5bee201f636d80dcae74b78711ca47e
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 **Handle:** docs367-p02-impl-20261022 (same pinned conversation)
 **Source review:** `reviews/p02-review-2026-10-22T221413Z.md` — Low L1, accepted by root.
 **Intent:** Reject invalid `config set documentation.guidance` input with a neutral argument-specific diagnostic; preserve the working file/scope repair hints for invalid stored config.
 **Files:** `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`; p02-local journal/Head and ignored `analysis/p02/fix-r2/` outputs only.
 **Proof command:** existing real config command malformed-input cases fail a no-unset/no-file-blame diagnostic assertion before the fix, pass after, preserve valid shared/user bytes and retain a valid-set control; stored-config repair cases still pass; focused config and ordered gates 1–8 with explicit exits/cache disclosure.
-**Outcome:** queued; no new resolution semantics, skill/package bumps, or p03/p07 work.
+**Outcome:** Accepted round-2 Low L1 fixed within the two assigned product files. Only argument parsing/normalization is caught and translated to a neutral invalid-value error before file I/O. Actual storage errors retain their file messages; `oat-config.ts`, stored-invalid repair hints, strict barriers, scope/default semantics, precedence and both-tiers-invalid behavior are untouched. No skill/package bumps or p03/p07 changes. Original product `677e0c6dc377c3bfaeebf743f18e95b9406282ff`, fix `bbefca279ca3a24108f465b65c7b6f351be3ee80` and all historical proof are preserved.
+
+**Continuity:** Release marker matched clean `a82f525e3f3cf18982eacd1ff5e8c74f811b94d2` before writes. Same original handle/request `docs367-p02-impl-20261022`, continuation `docs367-p02-fix-r2-20261022`, exact codex_codex_proxy / gpt-6.1-sol / medium / priority target retained. Review-fix round 2/2 is not recovery: usage remains 0/10, remaining 10, pending null. Original Base stays frozen; phase remains in_progress for root final review. No root run/review rows, state, plan or project log changed.
+
+**Test value and controls:** Existing malformed-input loop now covers default/shared/user forms with valid set controls and both stored files preserved byte-for-byte. It asserts semantic facts (key identified, no unset advice, no stored-path blame), not an exact cosmetic sentence. `pre-fix-input.log` exits 1 at the intended no-unset assertion; the other 4 guidance cases, including both stored-repair cases, pass. After correction `focused-config.log` exits 0, 280 tests, including all 5 guidance cases. No test-only production hook, duplicate layer or coverage deletion. Under deliberate-testing this protects the real command boundary from destructive diagnostic advice that the previous status-only malformed-input check missed.
+
+**Built CLI proof:** `analysis/p02/fix-r2/branch-probe.py` executes the branch dist against isolated real repository/user config files. `branch-probe.json` / `.exit` record exit 0: valid set controls; invalid empty-array and malformed-JSON arguments at default/shared/user scope produce neutral errors and no byte changes; both malformed stored tiers still name the real file, advertise the correct scoped repair, and repair while preserving unrelated state. A malformed stored JSON control still reports its file and stays unchanged, establishing that the catch does not hide storage errors. Temporary scratch/home data is cleaned; reproducible probe and results are retained locally.
+
+**Verification:** Evidence under `.oat/projects/shared/docs-skills-ia-367/analysis/p02/fix-r2/`; all eight ordered gate exits are 0 with separate `.exit` files. Original `analysis/p02/`, fix-r1 and `/tmp/oat-docs367-p02/` evidence is unchanged.
+
+| Gate                                          | Execution and cache disclosure                                                                                                                          |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. `pnpm check`                               | `gate-1-check.log`: 11 tasks, 8 replayed; CLI check/build and docs check fresh; root validation/format executed.                                        |
+| 2. `pnpm type-check`                          | `gate-2-types.log`: 11 tasks, 9 replayed; CLI and docs type checks fresh.                                                                               |
+| 3. isolated-HOME `TURBO_FORCE=true pnpm test` | `gate-3-test.log`: all 12 Turbo tasks fresh, zero replay; CLI 8,862 tests, other packages 351, docs 85; root smoke 165, skills 701, scripts 1 all pass. |
+| 4. `pnpm build`                               | `gate-4-build.log`: 5/5 replayed; builds executed fresh in gate 3.                                                                                      |
+| 5. `pnpm run check:skill-bumps`               | `gate-5-skills.log`: 5 changed canonical skill/agent checks pass, no additional bump.                                                                   |
+| 6. `pnpm release:check-versions`              | `gate-6-versions.log`: fetch exit 0; current main `e36497bead86df31fbffc6ea9cbc5b591d6ecadb`; assigned-path drift log empty.                            |
+| 7. `pnpm release:validate`                    | `gate-7-release.log`: five public 0.3.24 tarballs validated.                                                                                            |
+| 8. `pnpm build:docs`                          | `gate-8-docs.log`: 6/6 replayed; docs and dependencies built fresh in gate 3.                                                                           |
+
+Formatting, scoped CLI lint and scoped CLI build passed before commit. No skill prose or smoke paths changed, so no extra skill-specific sentence/lint/format invocation was required; the full fresh CLI suite contains the contracts. No gate failed or needed a no-edit rerun this round; historical unrelated visual-smoke failure/rerun disclosure remains in p02-t01. Post-hook product hashes match tested bytes (`tested-product-sha256.json`), avoiding redundant full reruns on unchanged content. Review-scope journal validation exit 0; expected warning is root's nonterminal accepted fix-r2 run.
 
 ---
 
