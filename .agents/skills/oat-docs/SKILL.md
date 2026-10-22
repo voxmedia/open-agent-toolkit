@@ -191,13 +191,13 @@ Would you like me to create a project for you?
 Tool packs are bundles of related OAT skills that you install together.
 Describe the packs listed by the installed tool-pack documentation, for example:
 
-- **core** — Diagnostics and docs skills (oat-doctor, oat-docs).
+- **core** — Diagnostics and docs skills.
   Read the installed docs for scope and current membership.
 - **workflows** — Project lifecycle skills (discover, plan, implement,
   review, PR).
 - **ideas** — Brainstorming and idea capture skills.
 - **utility** — Cross-cutting tools (docs analysis, code review,
-  skill creation). 9 skills.
+  skill creation).
 
 Install with: oat init tools
 Manage with: oat tools list, oat tools update, oat tools outdated

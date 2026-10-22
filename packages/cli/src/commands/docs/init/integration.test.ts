@@ -65,6 +65,48 @@ describe('scaffold integration', () => {
     createdRoots.length = 0;
   });
 
+  it.each([
+    ['nested-standalone', true],
+    ['single-package', false],
+  ] as const)(
+    'uses the expected Turbopack root policy for %s',
+    { timeout: 30_000 },
+    async (repoShape, needsAppRoot) => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-root-'));
+      createdRoots.push(root);
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape,
+        framework: 'fumadocs',
+        appName: 'docs',
+        siteName: 'Docs',
+        targetDir: 'docs',
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+      });
+      const nextConfig = await readFile(
+        join(result.appRoot, 'next.config.js'),
+        'utf8',
+      );
+      if (needsAppRoot) {
+        expect(nextConfig).toContain("import { dirname } from 'node:path';");
+        expect(nextConfig).toContain(
+          "import { fileURLToPath } from 'node:url';",
+        );
+        expect(nextConfig).toContain(
+          'turbopack: { root: dirname(fileURLToPath(import.meta.url)) }',
+        );
+      } else {
+        expect(nextConfig).not.toContain('turbopack:');
+        expect(nextConfig).not.toContain('node:path');
+        expect(nextConfig).not.toContain('node:url');
+      }
+    },
+  );
+
   it(
     'scaffolds a Fumadocs app from real templates with full token replacement',
     { timeout: 30_000 },
@@ -135,9 +177,9 @@ describe('scaffold integration', () => {
         join(result.appRoot, 'next.config.js'),
         'utf8',
       );
-      expect(nextConfig).toContain(
-        'turbopack: { root: dirname(fileURLToPath(import.meta.url)) }',
-      );
+      expect(nextConfig).toContain('export default createDocsConfig({');
+      expect(nextConfig).toContain('...(basePath ? { basePath } : {}),');
+      expect(nextConfig).not.toContain('turbopack:');
       expect(nextConfig).not.toContain('title:');
       expect(nextConfig).not.toContain('description:');
       expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');

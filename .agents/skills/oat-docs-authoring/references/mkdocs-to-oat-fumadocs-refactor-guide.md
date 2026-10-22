@@ -18,7 +18,7 @@ Produce an inventory and proposed migration scope for approval. Do not overwrite
 
 Use `oat docs init --help` to inspect installed capabilities. Scaffold Fumadocs into an empty, approved destination with `--framework fumadocs`, a package/app name, site name, description and target directory. Bootstrap can guide this step, but creating a second app does not imply support for two active `documentation` entries: the current config describes one surface. Explicitly agree when the configured docs root will switch, and preserve the old config for rollback.
 
-Read the rendered package scripts and configuration. The current Fumadocs template uses Next static export, trailing slashes and unoptimized images through `createDocsConfig`. It forwards an ESM-safe app directory as `turbopack.root`. Preserve the site's base path and `NEXT_PUBLIC_BASE_PATH`; set site identity through layout metadata and `DocsLayout` branding, not factory title options.
+Read the rendered package scripts and configuration. The current Fumadocs template uses Next static export, trailing slashes and unoptimized images through `createDocsConfig`. For nested-standalone repos only, it forwards an ESM-safe app directory as `turbopack.root`; monorepo and single-package scaffolds use Next.js root discovery. Preserve the site's base path and `NEXT_PUBLIC_BASE_PATH`; set site identity through layout metadata and `DocsLayout` branding, not factory title options.
 
 Install using the repository's package-manager conventions. Keep dependency or workspace changes visible in the migration diff. Do not delete the old site yet.
 
