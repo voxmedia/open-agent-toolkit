@@ -415,6 +415,23 @@ Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-
 
 Root fix validation: verified seven assigned product paths in `bbefca279ca3a24108f465b65c7b6f351be3ee80`, separate journal `6b67fa69f13acb5c3314146c3a92ca08c403fe1b`, clean worktree, original Base retained and all eight fix gate exits 0. M1 now names the real file and working --user/--shared unset; public-boundary regression executes that command and preserves unrelated state. L1 phase prose and transient pin removed with protection accounting; L2 docs/catalog aligned; L3 evidence copied with hashes under ignored analysis/p02. Earlier review event moves to fixes_completed without rewriting its counts or identity. Independent confirmation pending; p02 stays in_progress. Review-fix usage 1/2, recovery 0/10 pending null.
 
+### Review Received: p02 round 2
+
+Source: `reviews/p02-review-2026-10-22T221413Z.md`, request `docs367-p02-review-r2-20261022`, anchored `eaf354667bc270d51ebc27eb292375b9dc32cf06..bbefca279ca3a24108f465b65c7b6f351be3ee80`; 0 Critical, 0 High, 0 Medium, 1 Low. Exactly one not-attempted reconnaissance signal consumed; ignored artifact and anchors validated, no Review Orchestration section. M1/L1/L2/L3 from round 1 independently confirmed closed. New L1 is accepted as a regression in the same G1/config repair contract: an invalid set argument incorrectly blames a valid stored file and advises deleting valid guidance. Correct only the argument-validation diagnostic and protect existing raw config. Queue p02-t03 under review-fix round 2/2; phase stays in_progress, recovery 0/10 pending null.
+
+The review observation about both tiers holding invalid guidance is not a finding and does not change scope: retain the accepted targeted strict barrier, default scopes and precedence. Manual-walkthrough and inherited-gate-evidence limitations remain disclosed.
+
+### Task p02-t03: (review) Distinguish invalid guidance arguments from stored config
+
+**Status:** pending
+**Executor:** phase-implementer:docs367-p02-impl-20261022
+**Handle:** docs367-p02-impl-20261022 (same pinned conversation)
+**Source review:** `reviews/p02-review-2026-10-22T221413Z.md` — Low L1, accepted by root.
+**Intent:** Reject invalid `config set documentation.guidance` input with a neutral argument-specific diagnostic; preserve the working file/scope repair hints for invalid stored config.
+**Files:** `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`; p02-local journal/Head and ignored `analysis/p02/fix-r2/` outputs only.
+**Proof command:** existing real config command malformed-input cases fail a no-unset/no-file-blame diagnostic assertion before the fix, pass after, preserve valid shared/user bytes and retain a valid-set control; stored-config repair cases still pass; focused config and ordered gates 1–8 with explicit exits/cache disclosure.
+**Outcome:** queued; no new resolution semantics, skill/package bumps, or p03/p07 work.
+
 ---
 
 ## Phase p03: Record and act on the IA
@@ -461,7 +478,7 @@ Root fix validation: verified seven assigned product paths in `bbefca279ca3a2410
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-review-r2-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-review-r2-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p02-fix-r1-20261022 · scope=p02 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

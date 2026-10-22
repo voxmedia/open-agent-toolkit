@@ -133,7 +133,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p02: four review findings fixed; independent confirmation pending.
+Implement — p02: round-1 findings confirmed closed; correct the invalid-set diagnostic.
 
 ## Artifacts
 
@@ -147,4 +147,4 @@ None.
 
 ## Next Milestone
 
-Confirm p02-t02 fixes independently, then open the phase PR against main. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+Complete bounded p02-t03 diagnostic fix and final independent confirmation, then open the phase PR against main. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
