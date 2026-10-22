@@ -956,8 +956,8 @@ describe('help output snapshots', () => {
         --cwd <path>              Override working directory
 
       Commands:
-        analyze                   Run the docs analysis workflow
-        apply                     Run the docs apply workflow
+        analyze                   Show guidance for the oat-docs-analyze skill
+        apply                     Show guidance for the oat-docs-apply skill
         generate-index [options]  Generate a docs index from markdown files
         init [options]            Bootstrap an OAT docs app or authored Markdown
                                   documentation
@@ -978,7 +978,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs analyze [options]
 
-      Run the docs analysis workflow
+      Show guidance for the oat-docs-analyze skill
 
       Options:
         -h, --help     display help for command
@@ -998,7 +998,7 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat docs apply [options]
 
-      Run the docs apply workflow
+      Show guidance for the oat-docs-apply skill
 
       Options:
         -h, --help     display help for command

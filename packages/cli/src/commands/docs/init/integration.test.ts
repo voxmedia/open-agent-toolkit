@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import {
   chmod,
   mkdir,
@@ -15,6 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { createDocsNavSyncCommand } from '@commands/docs/nav/sync';
 import { resolveAssetsRoot } from '@fs/assets';
 import { OAT_VERSION } from '@shared/oat-version';
 import { Command } from 'commander';
@@ -66,6 +68,130 @@ describe('scaffold integration', () => {
   });
 
   it(
+    'runs the rendered navigation command from the repository root for a nested app',
+    { timeout: 30_000 },
+    async () => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(
+        join(tmpdir(), 'oat-integration-nav-command-'),
+      );
+      createdRoots.push(root);
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'nested-standalone',
+        framework: 'fumadocs',
+        appName: 'docs',
+        siteName: 'Docs',
+        targetDir: 'docs-site',
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+      });
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat/config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: { root: 'docs-site', tooling: 'fumadocs' },
+        }),
+      );
+      const contributing = await readFile(
+        join(result.appRoot, 'docs/contributing.md'),
+        'utf8',
+      );
+      const command = contributing.match(/`(oat docs nav sync[^`]*)`/)?.[1];
+      expect(command).toBeDefined();
+      const args = execFileSync('bash', ['-c', `printf "%s\\0" ${command}`], {
+        cwd: root,
+        encoding: 'utf8',
+      })
+        .split('\0')
+        .filter(Boolean);
+      await writeFile(
+        join(result.appRoot, 'docs/meta.json'),
+        JSON.stringify({ pages: [] }),
+      );
+      const capture = createLoggerCapture();
+      const program = new Command()
+        .name('oat')
+        .exitOverride()
+        .addCommand(
+          createDocsNavSyncCommand({
+            buildCommandContext: () => ({
+              scope: 'project',
+              dryRun: false,
+              verbose: false,
+              json: true,
+              cwd: root,
+              home: root,
+              interactive: false,
+              logger: capture.logger,
+            }),
+          }),
+        );
+      const priorExitCode = process.exitCode;
+      try {
+        process.exitCode = undefined;
+        await program.parseAsync(args.slice(3), { from: 'user' });
+        expect(capture.jsonPayloads).toEqual([
+          expect.objectContaining({ status: 'ok', framework: 'fumadocs' }),
+        ]);
+        expect(process.exitCode ?? 0).toBe(0);
+        expect(
+          JSON.parse(
+            await readFile(join(result.appRoot, 'docs/meta.json'), 'utf8'),
+          ).pages,
+        ).toEqual(['index', 'getting-started', 'contributing']);
+      } finally {
+        process.exitCode = priorExitCode;
+      }
+    },
+  );
+
+  it.each([
+    ['nested-standalone', true],
+    ['single-package', false],
+  ] as const)(
+    'uses the expected Turbopack root policy for %s',
+    { timeout: 30_000 },
+    async (repoShape, needsAppRoot) => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-integration-root-'));
+      createdRoots.push(root);
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape,
+        framework: 'fumadocs',
+        appName: 'docs',
+        siteName: 'Docs',
+        targetDir: 'docs',
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+      });
+      const nextConfig = await readFile(
+        join(result.appRoot, 'next.config.js'),
+        'utf8',
+      );
+      if (needsAppRoot) {
+        expect(nextConfig).toContain("import { dirname } from 'node:path';");
+        expect(nextConfig).toContain(
+          "import { fileURLToPath } from 'node:url';",
+        );
+        expect(nextConfig).toContain(
+          'turbopack: { root: dirname(fileURLToPath(import.meta.url)) }',
+        );
+      } else {
+        expect(nextConfig).not.toContain('turbopack:');
+        expect(nextConfig).not.toContain('node:path');
+        expect(nextConfig).not.toContain('node:url');
+      }
+    },
+  );
+
+  it(
     'scaffolds a Fumadocs app from real templates with full token replacement',
     { timeout: 30_000 },
     async () => {
@@ -73,6 +199,7 @@ describe('scaffold integration', () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
       createdRoots.push(root);
       await mkdir(join(root, 'apps'), { recursive: true });
+      await writeFile(join(root, '.nvmrc'), '24.4.1\n', 'utf8');
 
       // Seed OAT package dirs so detectIsOatRepo returns true
       for (const pkg of [
@@ -134,12 +261,16 @@ describe('scaffold integration', () => {
         join(result.appRoot, 'next.config.js'),
         'utf8',
       );
-      expect(nextConfig).toContain(
-        'createDocsConfig(basePath ? { basePath } : {})',
-      );
+      expect(nextConfig).toContain('export default createDocsConfig({');
+      expect(nextConfig).toContain('...(basePath ? { basePath } : {}),');
+      expect(nextConfig).not.toContain('turbopack:');
       expect(nextConfig).not.toContain('title:');
       expect(nextConfig).not.toContain('description:');
       expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
+
+      expect(
+        await readFile(join(result.appRoot, 'docs/getting-started.md'), 'utf8'),
+      ).toContain('- Node.js 24.4.1');
 
       // Verify layout has Next metadata and branding
       const layout = await readFile(

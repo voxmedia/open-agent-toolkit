@@ -3,9 +3,9 @@ name: oat-docs-apply
 description: Run when you have a docs analysis artifact and want to generate or update documentation structure and content. Creates a branch, applies approved changes, and optionally opens a PR.
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(oat:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.3'
+  version: '1.4.4'
 ---
 
 # Docs Apply

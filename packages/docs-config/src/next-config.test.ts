@@ -21,8 +21,11 @@ describe('createDocsConfig', () => {
     vi.clearAllMocks();
   });
 
-  it('should expose only basePath as an option at the type level', () => {
-    expectTypeOf<DocsConfigOptions>().toEqualTypeOf<{ basePath?: string }>();
+  it('should expose basePath and the Turbopack root option', () => {
+    expectTypeOf<DocsConfigOptions>().toEqualTypeOf<{
+      basePath?: string;
+      turbopack?: { root?: string };
+    }>();
   });
 
   it('should return a wrapped Next.js config with static export settings', () => {
@@ -66,6 +69,20 @@ describe('createDocsConfig', () => {
       reactStrictMode: true,
       basePath: '/my-project',
       env: { NEXT_PUBLIC_BASE_PATH: '/my-project' },
+    });
+  });
+  it('preserves static export and base-path settings for a nested standalone app', () => {
+    const config = createDocsConfig({
+      basePath: '/handbook',
+      turbopack: { root: '/workspace/apps/handbook' },
+    });
+    expect(config).toMatchObject({
+      output: 'export',
+      trailingSlash: true,
+      images: { unoptimized: true },
+      basePath: '/handbook',
+      env: { NEXT_PUBLIC_BASE_PATH: '/handbook' },
+      turbopack: { root: '/workspace/apps/handbook' },
     });
   });
 });

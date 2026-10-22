@@ -350,6 +350,7 @@ function renderTemplate(
   options: DocsInitResolvedOptions,
   depContext: OatDepContext,
   packageManagerField: string,
+  nodeRequirement: string,
 ): string {
   const repoName = basename(options.repoRoot);
   const commands = buildDocsCommands(
@@ -358,7 +359,16 @@ function renderTemplate(
     options.appName,
   );
   const replacements: Record<string, string> = {
+    '// {{TURBOPACK_ROOT_IMPORTS}}\n':
+      options.repoShape === 'nested-standalone'
+        ? "import { dirname } from 'node:path';\nimport { fileURLToPath } from 'node:url';\n\n"
+        : '',
+    '  // {{TURBOPACK_ROOT_OPTION}}\n':
+      options.repoShape === 'nested-standalone'
+        ? '  turbopack: { root: dirname(fileURLToPath(import.meta.url)) },\n'
+        : '',
     '{{APP_NAME}}': options.appName,
+    '{{NODE_REQUIREMENT}}': nodeRequirement,
     '{{PACKAGE_NAME}}': options.appName,
     '{{SITE_NAME}}': options.siteName,
     '{{SITE_DESCRIPTION}}': options.siteDescription,
@@ -441,6 +451,38 @@ export function buildDocumentationConfig(
   };
 }
 
+async function detectNodeRequirement(repoRoot: string): Promise<string> {
+  try {
+    const nvmrc = (await readFile(join(repoRoot, '.nvmrc'), 'utf8')).trim();
+    if (
+      /^v?\d+(?:\.\d+){0,2}$/.test(nvmrc) ||
+      /^(?:lts\/[a-z*]+|node|stable)$/.test(nvmrc)
+    ) {
+      return nvmrc;
+    }
+  } catch {
+    // Repositories need not pin Node with .nvmrc.
+  }
+  try {
+    const pkg = JSON.parse(
+      await readFile(join(repoRoot, 'package.json'), 'utf8'),
+    ) as {
+      engines?: { node?: unknown };
+    };
+    const requirement = pkg.engines?.node;
+    if (
+      typeof requirement === 'string' &&
+      requirement.trim() &&
+      !/[\r\n`]/.test(requirement)
+    ) {
+      return requirement.trim();
+    }
+  } catch {
+    // Fall back to the CLI's supported minimum when no requirement is recorded.
+  }
+  return '>=22.17.0';
+}
+
 async function ensureTargetWritable(appRoot: string): Promise<void> {
   if (!(await dirExists(appRoot))) {
     return;
@@ -485,6 +527,8 @@ export async function scaffoldDocsApp(
     dependencies,
   );
 
+  const nodeRequirement = await detectNodeRequirement(options.repoRoot);
+
   for (const templateFile of frameworkConfig.templateFiles) {
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
@@ -494,6 +538,7 @@ export async function scaffoldDocsApp(
       options,
       depContext,
       packageManagerField,
+      nodeRequirement,
     );
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');

@@ -42,8 +42,7 @@ Stop and reroute when you notice:
 ## Migration Pointer
 
 Full MkDocs-to-OAT-Fumadocs migration is not bootstrap and is not targeted
-authoring. Use the standalone `mkdocs-to-oat-fumadocs-refactor-guide.md` handoff
-when available, and keep the migration in an OAT project or explicit migration
+authoring. Use the bundled [MkDocs-to-OAT-Fumadocs migration guide](mkdocs-to-oat-fumadocs-refactor-guide.md), and keep the migration in an OAT project or explicit migration
 branch with owner-review items for unverifiable claims.
 
 For migration-sensitive follow-up after the migration workflow has created a

@@ -18,10 +18,11 @@ Install the required Fumadocs, Next.js, and React peer dependencies in your app 
 import { createDocsConfig } from '@open-agent-toolkit/docs-config';
 
 export default createDocsConfig({
-  title: 'My Docs',
-  description: 'Documentation site',
+  basePath: '/my-docs',
 });
 ```
+
+`createDocsConfig` preserves static export settings while accepting optional `basePath` and `turbopack.root`. For nested-standalone apps with their own lockfile, pass `turbopack: { root: dirname(fileURLToPath(import.meta.url)) }` with `dirname` from `node:path` and `fileURLToPath` from `node:url`. Leave it unset for monorepos and single-package apps so Next.js can discover the dependency root. Set the site title and description through the Next.js `metadata` export in `app/layout.tsx`, and the navigation title through `DocsLayout` branding.
 
 `source.config.ts`
 

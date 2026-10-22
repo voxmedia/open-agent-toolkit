@@ -174,6 +174,42 @@ describe('scaffoldDocsApp', () => {
     createdRoots.length = 0;
   });
 
+  it.each([
+    ['24.4.1', '>=22', '24.4.1'],
+    [null, '>=24.2.0', '>=24.2.0'],
+    [null, null, '>=22.17.0'],
+  ])(
+    'renders the Node requirement from %s / %s',
+    async (nvmrc, engine, expected) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-node-requirement-'));
+      createdRoots.push(root);
+      if (nvmrc) await writeFile(join(root, '.nvmrc'), nvmrc);
+      await writeFile(
+        join(root, 'package.json'),
+        JSON.stringify({ engines: { node: engine } }),
+      );
+      const assetsRoot = await seedAssets(root, 'docs-app-fuma', {
+        ...FUMA_TEMPLATE_FILES,
+        'docs/getting-started.md': '- Node.js {{NODE_REQUIREMENT}}',
+      });
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot: root,
+        repoShape: 'nested-standalone',
+        framework: 'fumadocs',
+        appName: 'handbook',
+        siteName: 'Handbook',
+        targetDir: 'docs-site',
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+      });
+      expect(
+        await readFile(join(result.appRoot, 'docs/getting-started.md'), 'utf8'),
+      ).toBe(`- Node.js ${expected}`);
+    },
+  );
+
   it('scaffolds a docs app in a monorepo-style target', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-monorepo-'));
     createdRoots.push(root);

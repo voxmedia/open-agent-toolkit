@@ -68,21 +68,15 @@ For framework apps, it wraps `oat docs init` with a seven-step guided flow: pref
 What the framework path adds over the raw CLI:
 
 - **Preflight + conflict resolution.** Detects existing `documentation` config / docs app dir / root `AGENTS.md` section and walks a deliberate resolution choice (replace, abort, repair, or deferred second-app) before any mutation.
-- **Richer inputs.** Asks for a **site name** separate from the package name, so `createDocsConfig()` / layout branding / page metadata all converge on the same display title.
-- **Post-scaffold patches for open CLI gaps.** Applied only when capability detection shows the CLI hasn't closed the gap. Each patch is labeled (e.g., `<!-- FP-12 patch -->`) so it can be removed deterministically when the upstream fix lands:
-  - **FP-11** — Turbopack `root` for nested-standalone Fumadocs apps (suppresses the multiple-lockfile warning)
-  - **FP-12** — `export const metadata = { title, description }` in `app/layout.tsx` (the only thing that populates page `<title>`, meta description, and Open Graph — `DocsLayout.branding.title` only renders nav chrome, and `createDocsConfig()` ignores `title` / `description` entirely)
-  - **FP-13** — four scaffold-content fixes (empty per-page `description:` frontmatter, bare install/build commands missing `--filter` or `cd`-prefix for monorepo/nested shapes, false `docs:lint` claim when `lint=none`, Node version line that doesn't match the consuming repo's `.nvmrc` / `engines.node`)
-  - **FP-15** — writes a task-framed `<appRoot>/AGENTS.md` bridge file when the CLI hasn't scaffolded one. The bridge is the docs app's runtime agent reference (separate audience from `docs/contributing.md`)
-  - **FP-16** — rewrites `docs/index.md` `## Contents` links to the `.md`-suffixed form that `@open-agent-toolkit/docs-transforms` normalizes at build time (agent-friendlier than extension-less; routes correctly)
-  - **FP-17** — trims `docs/contributing.md`'s "Agent guidance" section to a one-line pointer at the docs-app `AGENTS.md`, restoring the three-surfaces separation
+- **Richer inputs.** Asks for a **site name** separate from the package name, so layout branding and page metadata converge on the same display title. `createDocsConfig()` handles runtime configuration, not titles.
+- **AGENTS.md bridge.** FP-15 writes a task-framed `<appRoot>/AGENTS.md` only when the CLI does not scaffold it and no file already exists. Template content, metadata, command context, Node requirements, Contents links and generated-files guidance are CLI-owned. For nested-standalone repos only, the Fumadocs template passes an ESM-safe Turbopack root through `createDocsConfig` while preserving static export settings. Monorepo and single-package scaffolds use Next.js root discovery. Older scaffold shapes become analyze findings rather than post-patches.
 - **Build verification.** Runs install + build, classifies failures against known patterns, stops on unknown errors rather than guessing.
 - **Config inspection.** Reads `.oat/config.json` back, verifies paths exist on disk, handles the nested-standalone dual-config case, and collects the `requireForProjectCompletion` opt-in explicitly.
 - **Root-build explanation.** When the CLI safely patches a compatible Turbo root `build` script, the walkthrough explains why the filter was added, shows the diff shape, and documents how to adjust or revert it. When the CLI skips the patch, the walkthrough relays the recommended manual snippet.
 - **Educational walkthrough.** Seven sections covering the `documentation` config, the authored-source/generated-navigation model, the `## Contents` contract (with extension discipline), the three agent-instruction surfaces (root `AGENTS.md` pointer / docs-app `AGENTS.md` / `docs/contributing.md`), Fumadocs internals (or MkDocs Minimum Contract), and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 - **Optional content kickoff.** Hands off to `oat-docs-analyze` + `oat-docs-apply` if you want to populate initial repo-specific content immediately.
 
-Capability-gated: every post-patch self-ratchets off as CLI fixes land upstream. The skill's labeled markers (`<!-- FP-NN patch -->`) are how you find them later when the CLI catches up.
+Capability detection gates the remaining AGENTS bridge. Existing files are preserved; use analyze and reviewed recommendations to address older scaffold output.
 
 ### 3b. Direct CLI (deterministic / non-interactive)
 

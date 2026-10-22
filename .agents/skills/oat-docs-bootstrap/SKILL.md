@@ -6,12 +6,12 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.3.2'
+  version: '1.3.3'
 ---
 
 # Docs Bootstrap
 
-Bootstrap or adopt documentation in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, gated post-patches for open CLI gaps (FP-11 Turbopack root, FP-12 site-title coherence, FP-13 template content, FP-15 docs-app AGENTS.md, FP-16 `## Contents` link extensions, FP-17 `contributing.md` three-surfaces cleanup), build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
+Bootstrap or adopt documentation in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, the gated FP-15 docs-app AGENTS.md bridge, build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ Bootstrap or adopt documentation in this repo and guide the user through underst
 - Inspecting repo state read-only before any mutation
 - Prompting the user for richer inputs than the CLI asks for (notably a site name separate from the package/app name)
 - Invoking `oat docs init` non-interactively with collected flags
-- Applying gated, idempotent post-patches for open CLI gaps (FP-11/FP-12/FP-13/FP-15/FP-16/FP-17) only when capability detection shows the CLI has not addressed them
+- Applying gated, idempotent post-patches for open CLI gaps (FP-15) only when capability detection shows the CLI has not addressed them
 - Running install + build and classifying failures against known patterns
 - Reading `.oat/config.json` back to verify paths and prompting for `requireForProjectCompletion`
 - Narrating the scaffolded output as a chunked educational walkthrough
@@ -114,7 +114,7 @@ OAT ▸ DOCS BOOTSTRAP
 
 The detailed framework procedures below apply to Fumadocs/MkDocs. When the selected tooling is `markdown`, use this path for Steps 2–7 instead; never run framework post-patches, the FP-15 AGENTS bridge, dependency discovery/install, package/Turbo patches, or a site build. Step 1 remains the shared read-only detector.
 
-1. **Preflight and routing:** Read `documentation.tooling` as either its string form or its legacy object `framework` field. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, lead with **adopt and audit**, **audit only**, or **abort**. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
+1. **Preflight and routing:** Read `documentation.tooling` as a non-empty string. A non-string value (including a legacy object with a `framework` field) is invalid/undeclared tooling in the CLI; surface it for a user decision before proceeding, without silently clearing or retagging it. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, lead with **adopt and audit**, **audit only**, or **abort**. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
 2. **Gather inputs:** Offer “Markdown (plain files), Fumadocs, or MkDocs?” Collect documentation title (`--site-name`), dedicated relative target directory (default `docs` in every repo shape), and optional description. Reuse an existing compatible configured Markdown root. Ask no app/package name, package-manager, site-runtime, or dependency questions. Lint and format default to `none`; describe selected existing repository tools only, without installing them. Validate a nonempty title and a dedicated in-repository target, excluding the repository root and escaping symlinks. Confirm fresh setup or additive adoption, title, root, and audit handoff. `appName` is absent and `conflictResolution` is `adopt`, `audit`, `abort`, or null for this path.
 3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without post-patches. For success, read config back to resolve the actual content root and authored index.
 4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run already documented lint/link/format checks when applicable; otherwise inspect files/links directly. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
@@ -137,7 +137,7 @@ Check in order; the first match wins:
 3. If both `$REPO_ROOT/apps/` and `$REPO_ROOT/packages/` directories exist → **`monorepo`**
 4. Otherwise → **`single-package`**
 
-Once `single-package` is identified, apply the nested-standalone heuristic: if the user will place the docs app in a subdirectory of the repo (the common case for single-package repos) and that subdirectory will have its own `pnpm-lock.yaml` after scaffold + install, treat the shape as **`nested-standalone`**. This is a single-package shape with its own docs-app lockfile, which affects the Turbopack root patch (FP-11) and the install command pattern.
+Once `single-package` is identified, apply the nested-standalone heuristic: if the user will place the docs app in a subdirectory of the repo (the common case for single-package repos) and that subdirectory will have its own `pnpm-lock.yaml` after scaffold + install, treat the shape as **`nested-standalone`**. This is a single-package shape with its own docs-app lockfile, which affects the Turbopack app root and the install command pattern.
 
 In practice: for Fumadocs, any single-package repo with a target subdirectory is `nested-standalone`. For MkDocs, the shape stays `single-package` because MkDocs doesn't have the Turbopack concern.
 
@@ -198,11 +198,11 @@ Preflight Result:
 
 - **Read-only invariant.** Preflight never writes files, never modifies config, never runs scaffold. Every fix or prompt flows through later components.
 - **Conflict surfacing is a list, not a branch.** Preflight returns all conflicts found; the Input Gatherer presents them together. This keeps Preflight single-purpose and predictable.
-- **`nested-standalone` is a first-class shape** distinct from `single-package`. The CLI conflates them, but the skill treats them separately because Turbopack root (FP-11), build command patterns, and nested `.oat/config.json` handling all differ.
+- **`nested-standalone` is a first-class shape** distinct from `single-package`. The CLI conflates them, but the skill treats them separately because Turbopack app root, build command patterns, and nested `.oat/config.json` handling all differ.
 
 ### Step 2: Input Gatherer
 
-Collect the inputs needed to invoke `oat docs init` and apply post-scaffold patches. The skill asks for richer inputs than the CLI prompts for — most importantly, a **site name** separate from the package/app name (the FP-12 workaround). Ask one question at a time, surfacing defaults from the Preflight Result, and end with a coherence check before scaffold.
+Collect the inputs needed to invoke `oat docs init` and apply post-scaffold patches. The skill asks for richer inputs than the CLI prompts for — most importantly, a **site name** separate from the package/app name. Ask one question at a time, surfacing defaults from the Preflight Result, and end with a coherence check before scaffold.
 
 Print `[2/7] Gathering inputs…` at the start of this step.
 
@@ -217,7 +217,7 @@ If `conflicts[]` is empty, skip conflict handling and go to 2b.
 Each question includes plain-language context explaining what the value affects. Defaults come from the Preflight Result. Ask sequentially — each answer can inform the next default.
 
 - **Framework.** `"Which documentation tooling? Markdown (plain files), Fumadocs (Next.js), or MkDocs (Python)?"` Default: `fumadocs`. Selecting Markdown switches to the Markdown path above before app/site questions.
-- **Site name.** `"What's the name of the product or project these docs are for?"` Default: `defaults.siteName` (humanized repo name). Explain: "This becomes the display title — what shows up in the site header, browser tab, and page headings. It is **not** the package name." This is the FP-12 workaround — distinct from `appName`.
+- **Site name.** `"What's the name of the product or project these docs are for?"` Default: `defaults.siteName` (humanized repo name). Explain: "This becomes the display title — what shows up in the site header, browser tab, and page headings. It is **not** the package name." The display title is distinct from `appName`.
 - **Package / app name.** `"What should the docs package be called?"` Default: `defaults.appName`. Explain: "This becomes the `package.json` `name`, the directory name, and the pnpm filter (e.g., `pnpm --filter {appName} dev`). It does **not** show up in the UI."
 - **Target directory.** `"Where should the docs app live?"` Default: `defaults.targetDir`. Explain: "Relative to repo root. Monorepos typically use `apps/{appName}`; single-package repos use `{appName}` as a subdirectory."
 - **Site description.** `"One-sentence description of the docs site?"` Default: empty. Explain: "Used for search previews, social cards, and page metadata. Optional but strongly recommended."
@@ -229,7 +229,7 @@ Each question includes plain-language context explaining what the value affects.
 - `appName`: no spaces, no uppercase, no leading/trailing hyphens, matches `^[a-z0-9][a-z0-9-]*[a-z0-9]$` or single lowercase char. Reject and re-prompt on failure.
 - `siteName`: non-empty after trim. Reject empty.
 - `targetDir`: must be relative (no leading `/`, no `..`), must be writable based on the chosen `conflictResolution` (e.g., `replace` requires the path to be empty-after-cleanup; `second-app` requires a fresh path that doesn't overlap with an existing docs app).
-- `framework`: must be `fumadocs` or `mkdocs`.
+- `framework`: must be `markdown`, `fumadocs`, or `mkdocs`. Markdown follows the file-only path before app questions.
 - `lint`: must be `none` or `markdownlint-cli2`.
 - `format`: must be `none` or `oxfmt`.
 
@@ -260,7 +260,7 @@ Record internally for the Scaffold Runner:
 ```
 Input Result:
   framework: 'markdown' | 'fumadocs' | 'mkdocs'
-  siteName: string            // FP-12 workaround: display title distinct from appName
+  siteName: string            // display title distinct from appName
   appName: string
   targetDir: string
   siteDescription: string
@@ -357,7 +357,7 @@ If any mutation fails or any invariant check fails, **stop the flow before scaff
 
 ### Step 3: Scaffold Runner
 
-Invoke `oat docs init` with the collected inputs and then apply gated post-patches for any CLI gaps the Capability Detection sub-procedure reports as still-open. The Scaffold Runner has four phases: **CLI invocation** (authored here), **Capability Detection** (p03-t02), **site-identity patches** (p03-t03), and **scaffold-integrity patches** (p03-t04).
+Invoke `oat docs init` with the collected inputs and then apply gated post-patches for any CLI gaps the Capability Detection sub-procedure reports as still-open. The Scaffold Runner probes CLI capabilities, invokes the CLI, and applies the AGENTS.md bridge if still needed. Template content is CLI-owned; report old-scaffold shapes through `oat-docs-analyze`.
 
 Print `[3/7] Scaffolding…` at the start of this step.
 
@@ -379,73 +379,22 @@ Base flags (always passed):
 
 Capability-gated flags (added only when the Capability Probe reports support):
 
-- `--site-name {siteName}` — only if `capabilities.siteNameFlag === true` (FP-12 upstream fix landed). If `false`, **do not pass it**, and queue the FP-12 post-patch instead (applied in p03-t03).
+- `--site-name {siteName}` — only if `capabilities.siteNameFlag === true`. If absent, stop before scaffolding and recommend updating the CLI; do not rewrite the older template output.
 - `--no-root-patch` — only if `capabilities.noRootPatchFlag === true` and the Preflight / Conflict Resolution result says root package mutation should be skipped. This is recommended for no-root-package repositories or when the user explicitly chose no root mutation; current CLI builds also auto-skip when no root `package.json` exists, so the flag is optional documentation of intent, not a recovery mechanism.
 
 Do not pass flags the CLI doesn't advertise. Never assume a flag exists because the skill wants it — the Capability Probe is the source of truth for what's safe to pass.
 
 **3b. Run Capability Detection.**
 
-Before CLI invocation, probe the installed CLI to discover which FP-11 / FP-12 / FP-13 / FP-15 / FP-16 / FP-17 gaps it has already closed. Post-patches must never run blindly — they must be gated on both a CLI-level capability probe **and** a file-shape check on the specific target file. This self-ratcheting keeps the skill correct as CLI fixes land upstream.
+Before CLI invocation, run `$CLI_CMD docs init --help` once. Record:
 
-**CLI help probe.** Run `$CLI_CMD docs init --help` exactly once, capture stdout, and grep the flag list for known markers. Record boolean capability flags on the `capabilities` object:
+- `siteNameFlag`: whether `--site-name` is advertised.
+- `agentsMdScaffoldFlag`: whether help or the installed template file list confirms native `AGENTS.md` scaffolding.
+- `noRootPatchFlag`: whether `--no-root-patch` is advertised.
 
-- `siteNameFlag` — `true` if `--site-name` (or equivalent alias like `--title`) appears in the help output. Implies FP-12 upstream fix has landed.
-- `turbopackRootFlag` — `true` if a flag for forwarding a Turbopack root (or a `--framework-config` passthrough that accepts `turbopack.root`) appears. Implies FP-11 fix has landed in some form.
-- `agentsMdScaffoldFlag` — `true` if the help output mentions `AGENTS.md` scaffolding or the CLI's scaffold template list includes `AGENTS.md`. Implies FP-15 fix has landed.
-- `noRootPatchFlag` — `true` if `--no-root-patch` appears in help output. If supported, pass it when root package mutation should be skipped rather than relying only on auto-skip behavior.
+If the probe fails or returns no help, stop with the verbatim error and recommend updating or repairing the CLI. Never guess capabilities.
 
-For FP-16, there is no CLI-level help-probe marker; the capability is detected purely by file-shape check on the scaffolded `docs/index.md` (see below). When the CLI scaffold template is fixed upstream, the file-shape check will classify as `patched-shape` and the FP-16 patch will skip automatically.
-
-If the `--help` invocation fails (non-zero exit or empty stdout), treat all capabilities as `false` and record a warning in `Scaffold Result.cliLogs.stderr` — do not guess. Assuming a capability that doesn't exist leads to a broken scaffold; assuming absence just means an extra post-patch runs unnecessarily.
-
-**File-shape checks per patch target.** After the CLI writes the scaffold (3c completes), but before 3d applies any patch, read the target file and classify it as one of three states: `scaffold-shape` (unmodified CLI output, patch is safe), `patched-shape` (already patched by a previous skill run, patch is a no-op), or `drift` (neither — the file has been hand-edited or third-party-modified).
-
-For each patch, the classification rule is:
-
-- **FP-12 targets** — the patch sets display-title references in four files:
-  - `<appRoot>/app/layout.tsx` (Fumadocs only): scaffold shape has `DocsLayout` with `branding` pointing at `{appName}` and no `export const metadata`; patched/upstream shape has `branding.title` using `{siteName}` and module-scope Next metadata. Code-file patches may use `/* FP-12 */` markers where syntactically valid.
-  - `<appRoot>/docs/index.md`: scaffold shape has frontmatter `title: '{appName}'` and `# {appName}` H1; patched/upstream shape substitutes `{siteName}` in both positions. Do not add hidden FP comments to rendered Markdown; use content shape for idempotency.
-  - `<appRoot>/docs/getting-started.md`: scaffold shape has a body reference to `{appName}`; patched/upstream shape uses `{siteName}`.
-  - `<appRoot>/docs/contributing.md`: scaffold shape has `# {appName}` H1; patched/upstream shape uses `{siteName}`.
-  - Classification: if the expected literal (`appName` for scaffold shape, `siteName` for patched/upstream shape) matches exactly, the file is in that shape. If neither pattern matches (e.g., the user already renamed things manually), classify as `drift`.
-- **FP-11 target** — `<appRoot>/next.config.js` (Fumadocs, nested-standalone only):
-  - Scaffold shape: single-line `export default createDocsConfig()` or near-equivalent with no `turbopack` option.
-  - Patched shape (via passthrough): `createDocsConfig({ turbopack: { root: __dirname } })` plus `<!-- FP-11 patch -->` marker comment.
-  - Patched shape (via wrapper replacement): explicit `createMDX()` + hand-written config with `turbopack: { root: __dirname }` and the `<!-- FP-11 patch -->` marker.
-  - Classification: pattern-match on the wrapper call or the `createMDX()` import; any other shape is `drift`.
-- **FP-13 targets** — the five sub-findings (empty descriptions, bare commands, false lint claim, old authored-file generated warning, Node version mismatch) each target a specific line or section. Scaffold shape for each is "unchanged historical CLI scaffold output"; patched/upstream shape is the corrected content. Markdown patches do not add hidden FP comments; they classify by content shape. Sub-finding E (Node version) additionally reads `.nvmrc` / `package.json` `engines.node` at scaffold time to determine the correct version to write.
-- **FP-16 target** — `<appRoot>/docs/index.md` `## Contents` section (Fumadocs only):
-  - Scaffold shape: `## Contents` list items have extension-less link targets, e.g. `- [Getting Started](getting-started) - ...`. Detect by regex-matching bulleted list items where the link target is a slug (no file extension, no trailing slash) that corresponds to a real `.md` file in the same directory (or an `index.md` inside a matching subdirectory).
-  - Patched/upstream shape: `## Contents` list items have `.md`-suffixed link targets (e.g. `- [Getting Started](getting-started.md) - ...`). No hidden FP comments are added to rendered Markdown.
-  - Drift: neither scaffold nor patched shape — likely user-edited with mixed or inconsistent extensions. Record as `refused` with a suggested manual fix ("normalize all `## Contents` links to `.md`-suffixed form so the `docs-transforms` remark-links plugin handles routing").
-- **FP-17 target** — `<appRoot>/docs/contributing.md` `## Agent guidance` section (Fumadocs only):
-  - Scaffold shape: the section contains a short bulleted list of generic agent advice (typically two bullets: treating `index.md` as truth, preferring links to source files). Detect by matching the `## Agent guidance` heading followed by a small bulleted list.
-  - Patched/upstream shape: the section contains a one-paragraph pointer to the docs-app `AGENTS.md`. No hidden FP comments are added to rendered Markdown.
-  - Drift: user-edited with content beyond the scaffold bullets (paragraphs, custom agent rules, links to other files). Classify as `refused` — do not collapse user-authored content; instead suggest the user move custom guidance into `<appRoot>/AGENTS.md` and trim `contributing.md` to the pointer form manually.
-- **FP-15 target** — `<appRoot>/AGENTS.md`:
-  - Scaffold shape: file **does not exist** (current CLI doesn't scaffold it).
-  - Patched shape: file exists and begins with `# AGENTS —` (the template's H1 form).
-  - Any other state (file exists but has a different H1, file was hand-written) classifies as `drift`.
-
-**Refuse-and-surface contract.** If any target classifies as `drift`, the associated patch **does not run**. Instead, record an entry in `Scaffold Result.patchesApplied` with `status: 'refused'`, the target path, the observed shape snippet, and a suggested manual fix for the user. Example:
-
-```
-patchesApplied:
-  - id: FP-12/layout.tsx
-    status: refused
-    target: /abs/path/apps/docs/app/layout.tsx
-    reason: drift — expected `branding: { title: 'docs' }` (scaffold) or patched-shape marker; found neither
-    suggestedFix: manually set `DocsLayout.branding.title` to {siteName} and ensure `export const metadata = { title, description }` is present
-```
-
-Continue with remaining patches; one `refused` entry does not stop the flow. The Post-Scaffold Inspector (Step 5) surfaces the refused list to the user so they can address it manually.
-
-**Probe ordering.**
-
-- The CLI help probe runs **before** `oat docs init` (3c) so its result can feed flag assembly (3a).
-- The file-shape checks run **after** `oat docs init` (3c) so they operate on the actual scaffold output.
-- The post-patch sub-procedures (3d, site-identity and scaffold-integrity) read the combined `capabilities` record and target classifications to decide whether to apply each patch.
+After scaffolding, inspect `<appRoot>/AGENTS.md`: absent permits the FP-15 bridge; any existing file is preserved. Check template output against the current scaffold contract. Older output with missing metadata, unresolved Node-version advice, missing generated-files guidance, extension-less Contents links, duplicated agent instructions, or a Fumadocs wrapper that loses static export settings becomes a finding under `oat-docs-analyze`'s legacy scaffold checks (load that skill from installed scope and resolve `references/legacy-scaffold-checks.md` from its own directory). Record the observed path and evidence, then offer analyze; do not reinstate template patches. Ambiguous or user-authored shapes are reported for review, never overwritten.
 
 **3c. Invoke the CLI.**
 
@@ -491,73 +440,14 @@ Capture both stdout and stderr. **Do not** stream output directly to the user; t
     capabilities: { siteNameFlag: boolean, ... } // from Capability Detection (3b)
     cliLogs: { stdout: string, stderr: string }  // retained for Walkthrough
     rootBuildPatch: { status, reason?, diff?, manualSnippet? } | null // parsed from CLI output when available
-    patchesApplied: []               // populated by 3c/3d site-identity + scaffold-integrity sub-procedures
+    patchesApplied: []               // populated by the FP-15 bridge in 3d
   ```
 
 The Walkthrough (Step 6) and Post-Scaffold Inspector (Step 5) both consume `Scaffold Result`; keep it structured and avoid shell-side ephemeral state.
 
-**3d. Apply post-patches.**
+**3d. Apply the remaining bridge.**
 
-Each patch:
-
-- Reads the relevant capability flag from `Scaffold Result.capabilities` and the file-shape detection from Capability Detection (3b).
-- Runs only if the capability is **absent** (the CLI didn't already address the gap) AND the file-shape check passes.
-- Uses a marker comment only in code files where the comment syntax is valid (`/* FP-NN */` in TSX/JS, `// ...` where appropriate). Rendered Markdown patches do **not** add hidden `<!-- FP-NN -->` comments; they rely on content-shape idempotency and drift checks, and they defer to the project's normal comment conventions for user-facing prose.
-- Is **idempotent** — running the patch twice is a no-op.
-- Appends an entry to `Scaffold Result.patchesApplied` with `{ id, status: 'applied' | 'skipped' | 'refused', reason? }`.
-
-##### Site-identity patches (FP-12 + FP-15)
-
-These patches close the "site name + AGENTS.md" gaps. They run after `oat docs init` (3c) and before scaffold-integrity patches (see 3d ordering note below). Site-identity must run before scaffold-integrity because the FP-13 sub-findings may reference `{siteName}` strings that FP-12 has just written.
-
-**FP-12: title patches.**
-
-Gate: run **only if** `capabilities.siteNameFlag === false`. If the CLI wrote the site title itself, skip the entire FP-12 group and record `{ id: 'FP-12', status: 'skipped', reason: 'CLI --site-name flag supported' }`.
-
-Per-file edits (Fumadocs only — MkDocs has no `layout.tsx`; its title handling is covered by the MkDocs Minimum Contract in Step 6). **Critical ordering: insert the `layout.tsx` metadata export first — it's the load-bearing change for HTML `<head>` (page title, meta description, Open Graph). Everything else below is display-title coherence.**
-
-- **`<appRoot>/app/layout.tsx` — `export const metadata`.** This is the most important FP-12 edit: without it, the exported HTML has no `<title>`, no meta description, and no Open Graph tags. `DocsLayout`'s `branding.title` prop does **not** populate page metadata — it only renders nav chrome. `@open-agent-toolkit/docs-config`'s `createDocsConfig()` also does **not** accept or forward title/description — passing them there is a no-op (verified in the docs-config source: it reads `basePath` and ignores everything else). Next.js metadata must come from a module-scope `export const metadata`.
-
-  If no `export const metadata` exists in the file, insert it after the imports:
-
-  ```tsx
-  /* FP-12 patch: site metadata */
-  export const metadata = {
-    title: '{siteName}',
-    description: '{siteDescription}',
-  };
-  /* /FP-12 patch */
-  ```
-
-  (Use JS comment markers here — TSX does not allow HTML comments at module scope.) Idempotency: if `export const metadata` already exists anywhere in the file, skip; do not merge or replace user-authored metadata.
-
-  **Anti-patterns — do not do any of these (they look like they should work, they don't):**
-  - Passing `title` / `description` to `createDocsConfig()` in `next.config.js`. The wrapper ignores those keys; the exported HTML stays empty. Verify any `next.config.js` patch you consider against `@open-agent-toolkit/docs-config`'s actual exports.
-  - Setting `branding.title` alone and calling it done. `branding` populates nav chrome only; browser tab, search previews, and social cards all read `metadata`.
-  - Inserting `metadata` into a non-layout file (e.g., `page.tsx` under `[[...slug]]`). For site-wide metadata, `layout.tsx` is the authoritative location.
-
-- **`<appRoot>/app/layout.tsx` — `branding.title`.** Scaffold shape has `branding: { title: '{appName}' }`. Replace the literal string value with `{siteName}` (the user-supplied display title). If adding a marker, put it inside the object literal where TSX accepts JavaScript comments:
-
-  ```tsx
-  branding={{
-    /* FP-12 patch: branding title */
-    title: '{siteName}',
-    /* /FP-12 patch */
-  }}
-  ```
-
-  Idempotency: if `branding.title` already equals `{siteName}` or the marker is already present, skip and record `status: 'skipped'`. This is the nav-chrome display title — a separate concern from the metadata export above.
-
-- **`<appRoot>/docs/index.md`.** Two edits:
-  1. Frontmatter `title: '{appName}'` → `title: '{siteName}'`.
-  2. First H1 `# {appName}` → `# {siteName}`.
-     Do not add hidden FP comments. Idempotency: `{appName}` in both expected places = scaffold shape, safe to patch; `{siteName}` in both expected places = patched/upstream shape, skip; mixed or unexpected text = drift.
-
-- **`<appRoot>/docs/getting-started.md`.** Body contains references to `{appName}` in the intro paragraph (per the historical scaffold template). Replace those references with `{siteName}`. Do not add hidden FP comments; classify by literal content shape.
-
-- **`<appRoot>/docs/contributing.md`.** H1 `# {appName}` → `# {siteName}`. Do not add hidden FP comments; classify by literal content shape.
-
-Failure handling: if Capability Detection (3b) classified any of these files as `drift`, the patch is already recorded as `refused` in `Scaffold Result.patchesApplied` — skip and move on. Do not re-check drift here.
+FP-15 is the only post-scaffold patch. It is gated by detected capability and file absence, is idempotent, and appends `{ id, status: 'applied' | 'skipped', reason? }` to `Scaffold Result.patchesApplied`. All other scaffold content comes from the CLI template.
 
 **FP-15: AGENTS.md write-if-missing (Fumadocs/MkDocs only).**
 
@@ -585,159 +475,7 @@ Procedure when gate passes:
 
 When the CLI eventually scaffolds `AGENTS.md` natively and `agentsMdScaffoldFlag` becomes `true`, the bridge template in this skill can be retired (or folded back into the skill as a reference for how the CLI's template evolved).
 
-##### Scaffold-integrity patches (FP-11 + FP-13 + FP-16 + FP-17)
-
-These patches close the "scaffold works but produces inaccurate or incomplete output" gaps. They run after the site-identity patches so FP-13 sub-findings operate on the correct `{siteName}` text.
-
-**FP-11: Turbopack root patch.**
-
-Gate: run **only if** `repoShape === 'nested-standalone'` AND `framework === 'fumadocs'` AND `capabilities.turbopackRootFlag === false`. Monorepo and single-package shapes do not hit the multi-lockfile warning; MkDocs has no Turbopack concern. If any gate is unmet, record `{ id: 'FP-11', status: 'skipped', reason: '<gate that failed>' }`.
-
-Two code paths, selected by the file-shape classification of `<appRoot>/next.config.js` from Capability Detection (3b):
-
-- **Path A — `createDocsConfig` passthrough.** If `<appRoot>/next.config.js` is in scaffold shape using `createDocsConfig()` AND `@open-agent-toolkit/docs-config` exposes a `turbopack` passthrough option (determined by reading the installed package's type declarations or `package.json` exports), pass `{ root: __dirname }` through:
-
-  ```js
-  // <!-- FP-11 patch: turbopack root passthrough -->
-  export default createDocsConfig({
-    turbopack: { root: __dirname },
-  });
-  // <!-- /FP-11 patch -->
-  ```
-
-  Idempotency: if the marker is already present, skip with `status: 'skipped'`.
-
-- **Path B — wrapper replacement.** If the passthrough isn't supported (the `@open-agent-toolkit/docs-config` version installed is older than the one that added it), replace the `createDocsConfig()` wrapper with an explicit `createMDX()` + hand-written Next config. Preserve any user-authored edits the wrapper had accumulated (by diffing against the known scaffold shape before replacing):
-
-  ```js
-  // <!-- FP-11 patch: wrapper replaced for turbopack root -->
-  import createMDX from 'fumadocs-mdx/next';
-
-  const withMDX = createMDX();
-
-  /** @type {import('next').NextConfig} */
-  const config = {
-    reactStrictMode: true,
-    turbopack: { root: __dirname },
-  };
-
-  export default withMDX(config);
-  // <!-- /FP-11 patch -->
-  ```
-
-  Before replacing, snapshot the original `next.config.js` to `next.config.js.pre-fp11.bak` in the same directory so the user can inspect the prior state. Record the backup path in `patchesApplied` so the Walkthrough can mention it.
-
-  Idempotency: if the marker is present, skip; if the wrapper replacement has already happened but without the marker (indicating a user-customized variant), classify as `drift` and refuse.
-
-**FP-13: template-content patches.**
-
-Five sub-findings, each with its own gate, target, and idempotency check. All sub-findings apply to Fumadocs; MkDocs handling lives in the Walkthrough's MkDocs Minimum Contract (Step 6, p05-t02) because the MkDocs scaffold's content layout differs and doesn't share these specific gaps.
-
-- **Sub-finding A: Empty `description:` frontmatter.** Targets: `<appRoot>/docs/getting-started.md:3` and `<appRoot>/docs/contributing.md:3`.
-  - Gate: the target line matches `description: ''` (scaffold shape).
-  - Patch: replace with static defaults:
-    - `getting-started.md`: `description: 'Set up the local environment and preview the docs site.'`
-    - `contributing.md`: `description: 'Authoring conventions and navigation rules for this docs site.'`
-  - Do not add hidden FP comments. Idempotency: non-empty description matching the static default = patched/upstream shape, skip.
-  - Rationale: these are per-page descriptions, not site-level — do not template on `{siteDescription}`; use static text that describes the page's own purpose.
-
-- **Sub-finding B: Bare install/build commands lack working-directory context.** Target: `<appRoot>/docs/getting-started.md` (the install/build code block, per scaffold lines 15-33 or nearest equivalent after FP-12 patches).
-  - Gate: the block contains a bare `pnpm install` / `pnpm dev` / `pnpm build` sequence with no `--filter` or `cd` prefix (scaffold shape).
-  - Patch: rewrite the block using the same command shapes as the CLI command renderer:
-    - `monorepo`: install `pnpm install` at repo root; dev `pnpm --filter {appName} dev`; build `pnpm --filter {appName} build`.
-    - `nested-standalone`: prefix each command with `cd {appDir} && ` (e.g., `cd apps/docs && pnpm install`).
-    - `single-package`: leave bare form when the app is at repo root; if the app lives in a subdirectory, use `cd {appDir} && pnpm <command>`.
-  - Do not add hidden FP comments. Idempotency: command block already matches the renderer output = patched/upstream shape, skip. If the block has drifted (not bare, not renderer-shaped), classify as `drift` and refuse.
-
-- **Sub-finding C: False `docs:lint` claim.** Target: `<appRoot>/docs/contributing.md` line describing the `docs:lint` script (near line 31 per scaffold, may have shifted).
-  - Gate: `lint === 'none'` (Input Result) AND the line contains the exact scaffold string "Run Markdown formatting and linting as configured for this docs app."
-  - Patch: replace with "Run Markdown formatting as configured for this docs app." (dropping "and linting").
-  - If `lint === 'markdownlint-cli2'`, the original claim is accurate — skip with `status: 'skipped', reason: 'linting is configured'`.
-  - Do not add hidden FP comments. Idempotency: corrected sentence already present = patched/upstream shape, skip.
-
-- **Sub-finding D: Generated-file guidance and old authored-header cleanup.** Two sub-targets:
-  - **D.1 — `contributing.md` explanatory section.** Append a "Generated files" section to `<appRoot>/docs/contributing.md` (before any closing References section if present). Two sentences:
-
-    ```markdown
-    ## Generated files
-
-    For Fumadocs apps, the root-level generated manifest at `<appRoot>/index.md` is regenerated from the Markdown file tree under `docs/` on every `predev` / `prebuild`. Do not hand-edit it; edit the authored source under `docs/` instead, and compare the generated manifest against authored `## Contents` when checking freshness. For MkDocs apps, the derived navigation artifact is the `nav:` section of `mkdocs.yml`, not a root manifest.
-    ```
-
-    Idempotency: an existing `## Generated files` section with equivalent generated/root-manifest guidance = patched/upstream shape, skip. Do not add hidden FP comments.
-
-  - **D.2 — Authored `docs/index.md` false generated-header backstop.** Older scaffolds could place a generated-file warning on the authored source file at `<appRoot>/docs/index.md`. That warning is wrong: the authored file is edited by humans and agents; the generated Fumadocs manifest is `<appRoot>/index.md`.
-    - Gate: `<appRoot>/docs/index.md` contains the exact historical `AUTOGENERATED by \`oat docs generate-index\`` warning before the first H1.
-    - Patch: remove only that warning line, preserving frontmatter, the H1, and `## Contents`.
-    - Idempotency: no authored-file warning = patched/upstream shape, skip. If a different top comment is present, treat it as project prose and do not remove it.
-    - The generated root `<appRoot>/index.md` warning is CLI-owned. If it is missing after build, surface that as an Inspector warning; do not inject hooks into `package.json`.
-
-  - **E — Node version mismatch.** Target: `<appRoot>/docs/getting-started.md` "Prerequisites" section. The scaffold's `- Node.js 20+` claim (or any hard-coded major version) should reflect the **consuming repo's** actual Node requirement, not a scaffold-time default.
-    - Gate: always run when `<appRoot>/docs/getting-started.md` exists and has a `- Node.js` bullet in a "Prerequisites" section.
-    - Read (in priority order) `$REPO_ROOT/.nvmrc`, then `$REPO_ROOT/package.json` `engines.node`. If a version is found and it's different from the hard-coded version in the scaffold, rewrite the bullet to reference the detected version.
-    - Do not add hidden FP comments.
-    - If neither source is present or parseable, leave the scaffold default and record `{ id: 'FP-13/E', status: 'skipped', reason: 'no .nvmrc or engines.node to detect' }`.
-    - Idempotency: the bullet already reflects the detected version = patched/upstream shape, skip.
-
-**FP-16: `## Contents` link-extension patch.**
-
-Gate: run **only if** `framework === 'fumadocs'` AND the Capability Detection file-shape check classified `<appRoot>/docs/index.md` as `scaffold-shape` for FP-16 (extension-less `## Contents` links on real `.md` targets). If the scaffold has been fixed upstream and the file is already `patched-shape` (links are `.md`-suffixed), skip with `status: 'skipped', reason: 'CLI scaffold uses .md-suffixed links'`.
-
-Target: `<appRoot>/docs/index.md` `## Contents` section. For each list item whose link target is extension-less:
-
-- If the target corresponds to a sibling `.md` file (e.g., `getting-started` → `getting-started.md`), rewrite to append `.md`.
-- If the target corresponds to a sibling subdirectory with an `index.md` (e.g., `reference` → `reference/`, with `reference/index.md`), rewrite to `reference/index.md`.
-- Leave absolute URLs, anchors (`#section`), and already-suffixed links untouched.
-
-Rewrite the `## Contents` block in place without hidden FP comments:
-
-```markdown
-## Contents
-
-- [Getting Started](getting-started.md) - Set up the local docs toolchain and preview the site.
-- [Contributing](contributing.md) - Authoring conventions and navigation rules.
-```
-
-Idempotency: if all local file links in `## Contents` are already `.md`-suffixed or `dir/index.md`-suffixed, skip with `status: 'skipped'`. If the `## Contents` section has drifted (mixed extensions, non-bulleted structure, extra prose between items), classify as `drift` per Capability Detection and record `refused` — do not attempt a partial rewrite.
-
-**Rationale.** The `@open-agent-toolkit/docs-transforms` remark-links plugin strips `.md` / `dir/index.md` at build time for Fumadocs routing, so `.md`-suffixed authored links render correctly. `.md`-suffixed form is what `apps/oat-docs` uses in practice and is what agents can follow via direct file open without path inference. Extension-less links are the scaffold's historical form but are agent-hostile; FP-16 normalizes to the correct convention. When the CLI scaffold template is fixed upstream, the file-shape check will skip this patch automatically.
-
-**FP-17: `contributing.md` three-surfaces cleanup.**
-
-Gate: run **only if** `framework === 'fumadocs'` AND `<appRoot>/docs/contributing.md` exists AND contains a `## Agent guidance` section with scaffold-shape bullet content (short list of "treat index.md as truth", "prefer linking to source files", or similar).
-
-Target: the `## Agent guidance` section in `<appRoot>/docs/contributing.md`. This section duplicates the role of the docs-app `AGENTS.md` (FP-15 bridge) and violates the three-surfaces discipline the Walkthrough Section D teaches:
-
-- `docs/contributing.md` → human authoring conventions (Markdown features, frontmatter, linting).
-- `<appRoot>/AGENTS.md` → agent runtime reference (how to add pages, restructure nav, audit/apply).
-- Root `AGENTS.md` `## Documentation` section → repo-wide pointer.
-
-Patch: replace the section body with a one-line pointer:
-
-```markdown
-## Agent guidance
-
-See `AGENTS.md` in this directory for how agents should work inside this docs app. This `contributing.md` covers human authoring conventions; `AGENTS.md` covers agent runtime discipline (adding pages, restructuring nav, audit/apply, three agent-instruction surfaces). Keeping those concerns separate keeps each file useful to its audience.
-```
-
-Idempotency: if the section already contains the one-paragraph pointer to the docs-app `AGENTS.md`, skip with `status: 'skipped'`. If the `## Agent guidance` section has been edited beyond scaffold shape (more than the two or three default bullets; contains content that isn't "docs conventions already in AGENTS.md"), classify as `drift` and refuse — do not collapse user-authored content.
-
-**Rationale.** Without this patch, agents reading `docs/contributing.md` find partial agent guidance that duplicates (and risks diverging from) the docs-app `AGENTS.md`. The three-surfaces model only works if each surface is the single-source-of-truth for its audience.
-
-**Refuse-and-surface.** Every patch above respects the drift classification from Capability Detection. If a target was classified `drift`, the patch was already recorded as `refused` in 3b — skip here and do not re-check.
-
-##### Post-patch ordering
-
-Inside 3d, patches run in this order:
-
-1. Site-identity patches (this section) — FP-12 before FP-15 is irrelevant; they target disjoint files.
-2. Scaffold-integrity patches (p03-t04) — these run after site-identity because FP-13 sub-findings may reference strings FP-12 just rewrote.
-
-**Design discipline:**
-
-- **CLI is the source of truth for templates.** The Scaffold Runner never rewrites template content, re-renders frontmatter, or fabricates files the CLI was supposed to create. Post-patches only adjust specific known-gap locations and use either syntactically valid code markers or content-shape idempotency, depending on the target file type.
-- **Capability Detection gates every patch.** No patch runs blindly; the file-shape check must pass, and the capability must be absent. This means the skill self-ratchets as CLI fixes land — when `--site-name` is supported upstream, FP-12 patches are skipped automatically.
-- **Failure is loud, not silent.** CLI non-zero exit stops the flow with the verbatim error. Ambiguous file shapes record a `refused` patch status rather than guessing.
+**Design discipline:** CLI errors stop the flow. Preserve existing files, report legacy output through analyze, and apply only the absent-file AGENTS bridge. Template upgrades belong to the CLI rather than bootstrap rewrites.
 
 ### Step 4: Build Verifier
 
@@ -779,10 +517,10 @@ Inspect the captured install and build output. For each known pattern below, che
   - Handling: **auto-fix by rerunning install.** Re-run 4a once, then re-run 4b. If the second attempt still fails with the same pattern, escalate to surface-only — do not loop.
 - **Turbopack "inferred workspace root" warning.**
   - Detection: build stdout/stderr contains the Next.js/Turbopack inferred-root warning about multiple lockfiles.
-  - Handling: **benign if FP-11 patch was applied** (check `patchesApplied` for `status: 'applied'` on `FP-11/*`). If FP-11 was applied and the warning still appears, flag as an inconsistency in the Inspection stage, but do not fail the build. If FP-11 was not applied (e.g., shape was not `nested-standalone`), the warning shouldn't appear; if it does, flag it for the user because something unexpected is going on.
-- **FP-10 tsconfig rewrite churn.**
-  - Detection: build stdout contains repeated "Rewriting tsconfig..." lines (the historical FP-10 symptom prior to PR #27).
-  - Handling: **flag as regression.** PR #27 is supposed to have fixed this; if it still happens, add to `knownIssues[]` with note "FP-10 regression suspected — report to CLI maintainers". Build may still succeed, so do not halt the flow on this alone.
+  - Handling: flag the app's `next.config.js` and detected workspace root for analysis. Current nested-standalone scaffolds pass the ESM-safe app directory through `createDocsConfig`; monorepo and single-package scaffolds leave root discovery to Next.js. Older shapes need an analyze finding, not wrapper replacement.
+- **Repeated tsconfig rewrite churn.**
+  - Detection: build stdout contains repeated "Rewriting tsconfig..." lines.
+  - Handling: **flag as regression.** PR #27 is supposed to have fixed this; if it still happens, add to `knownIssues[]` with note "tsconfig rewrite regression suspected — report to CLI maintainers". Build may still succeed, so do not halt the flow on this alone.
 
 **4d. Unknown-error stop.**
 
@@ -795,7 +533,7 @@ If install or build fails with output that does not match any known pattern abov
 
 **Auto-fix discipline.** Auto-fix is narrow by design — it applies only when there is a **single known-correct answer**. Everything else is surfaced. The goal is to save the user time on truly deterministic retries (like the `fumadocs-mdx` + missing-node_modules combination) without masking real failures under speculative "try again" loops.
 
-**Cross-reference.** FP-13 (template-content sub-findings) is **not** a Build Verifier concern — FP-13 is handled entirely by the Scaffold Runner post-patches (Step 3d). The Build Verifier does not inspect markdown content or re-apply FP-13 patches; it only classifies install/build failures.
+**Cross-reference.** Template-content defects belong in an analyze finding. The Build Verifier classifies install/build failures; it does not rewrite Markdown or replace configuration wrappers.
 
 **4e. Emit the Verification Result.**
 
@@ -838,10 +576,9 @@ If the `documentation` section is missing or malformed after a successful CLI in
 For each field in `documentation`, check that the referenced path exists and has the expected type:
 
 - `root`: must be a directory that exists on disk (absolute or resolved-relative to `$REPO_ROOT`).
-- `index`: must be a file that exists on disk. For Fumadocs, this is the generated app-root manifest at `<appRoot>/index.md`, regenerated from the Markdown file tree under `docs/`. For MkDocs, this is the authored source root at `<appRoot>/docs/index.md`; generated navigation lives in `mkdocs.yml` `nav:`.
-- `config`: MkDocs only — must be a file that exists on disk (`<appRoot>/mkdocs.yml`). For Fumadocs, this field is absent; no check needed.
-- `tooling.framework`: must match the Input Result `framework`. Mismatch is surprising and indicates drift.
-- `tooling.lint` / `tooling.format`: must match Input Result values.
+- `index`: must be a file that exists on disk. For Fumadocs, this is the generated app-root manifest at `<appRoot>/index.md`, regenerated from the Markdown file tree under `docs/`. For MkDocs, this is the configured nav/config surface at `<appRoot>/mkdocs.yml`; authored source remains `<appRoot>/docs/index.md`.
+- `config`: optional framework configuration path. If present, verify it exists; examples are `<appRoot>/mkdocs.yml` and a Fumadocs `next.config.js`. Do not require it when absent.
+- `tooling`: a string (`markdown`, `fumadocs`, or `mkdocs`) that must match the Input Result `framework`. Check lint and format against the generated package scripts, not properties of this string.
 
 For each check that fails, append an entry to `issues[]`:
 
@@ -862,9 +599,8 @@ The parent config describes the repo's docs; the nested config (when present) sc
 
 Beyond basic path existence, check for drift between the config and what the Scaffold Runner actually did:
 
-- If `Scaffold Result.patchesApplied` contains an FP-11 wrapper-replacement entry (Path B), confirm that the config does not reference the old wrapper path. Config referencing `createDocsConfig` would be stale; record as `driftFinding`.
-- For every `status: 'refused'` entry in `patchesApplied`, surface the refusal here (the Scaffold Runner recorded a `suggestedFix`; repeat it). These are the main user-actionable items from the inspection.
-- If Turbopack "inferred workspace root" was flagged in `Verification Result.knownIssues` despite FP-11 having been applied, record a `driftFinding` — FP-11's patch should have suppressed the warning.
+- Surface legacy-scaffold findings with paths and suggested review actions. Preserve the CLI-owned wrapper and user-authored content.
+- If Turbopack reports an unexpected inferred workspace root, record a `driftFinding` for the app config and installed docs-config version.
 
 Each drift finding appends to `issues[]` with `severity: 'warning'` (user should address) or `severity: 'info'` (worth mentioning but not blocking).
 
@@ -877,7 +613,8 @@ Before asking, explain what it does:
 ```
 OAT projects can optionally require that docs are updated before completion.
 If enabled, `oat-project-complete` won't mark a project done until the
-`oat-docs-analyze` report shows no open recommendations.
+project documentation state records `oat_docs_updated: complete` or an explicit
+skip (`oat_docs_updated: skipped`) after the `oat-project-document` prompt.
 
 Enable this for {appName}? (default: no)
 ```
@@ -921,13 +658,13 @@ Ground this section in the `Inspection Result.parent.documentation` object read 
 Narrate each field actually present in their config (skip fields that are absent — don't teach MkDocs-only fields to a Fumadocs user):
 
 - **`documentation.root`** — the scaffolded app directory. Downstream tools (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`) use this to find "the docs" without the user having to tell them.
-- **`documentation.tooling`** — framework + lint + format. `oat-docs-analyze` uses `framework` to pick the right rule set; the tooling values also get echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
+- **`documentation.tooling`** — a framework string (`markdown`, `fumadocs`, or `mkdocs`). Lint and format choices live in package scripts. The framework is also echoed into the `## Documentation` section the CLI wrote into root `AGENTS.md`.
 - **`documentation.index`** — branch this narration on the inspected `documentation.tooling` and path; do not describe one meaning for every framework:
   - **Fumadocs:** this should be the generated app-root manifest, usually `<appRoot>/index.md`, after the successful build ran `oat docs generate-index`. Explain that this machine-shaped file is how tools inspect the full Markdown file tree, and that the authored source map the user edits is a separate file at `<appRoot>/docs/index.md` with its own `## Contents`.
   - **Fumadocs stale path warning:** if the inspected path still points inside `<appRoot>/docs/` after build verification, do not teach that as normal. Surface it as a warning that `oat docs generate-index` did not update `documentation.index` as expected, then point the user to Section B for the generated/authored split.
   - **MkDocs:** this should point at the configured MkDocs nav/config surface, usually `<appRoot>/mkdocs.yml` and matching `documentation.config`. Explain that the YAML file contains the generated/derived `nav:` block when `oat docs nav sync` is used, while authored `docs/index.md` and nested `## Contents` sections remain the source maps the user edits.
-- **`documentation.config`** (MkDocs only) — path to `mkdocs.yml`. Present for MkDocs because its chrome/nav is YAML-configured; absent for Fumadocs because chrome is code.
-- **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until `oat-docs-analyze` reports no open recommendations. Explain whichever value is set on this project.
+- **`documentation.config`** — optional path to the framework configuration, such as `mkdocs.yml` or `next.config.js`. Inspect whichever path is actually configured.
+- **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until the project records `oat_docs_updated: complete` or an explicit `skipped` after the `oat-project-document` prompt. Explain whichever value is set on this project.
 
 If `Scaffold Result.rootBuildPatch` is present, narrate it here before moving on:
 
@@ -940,7 +677,7 @@ End with: "This config is how every OAT docs tool finds your docs. Editing it by
 
 #### Section B (both frameworks) — Authored source and generated navigation
 
-This section prevents the footgun from FP-13 sub-finding D: users silently hand-edit the Fumadocs generated root `index.md` and wonder why their edits vanish on the next build.
+This section prevents a common generated-file mistake: users silently hand-edit the Fumadocs generated root `index.md` and wonder why their edits vanish on the next build.
 
 Narrate:
 
@@ -964,7 +701,7 @@ Narrate:
 - **The `## Contents` section is the machine-readable local map.** For Fumadocs, `oat docs nav sync` reads it to write the committed `meta.json` sidebar files, and agents compare it against the generated app-root manifest. For MkDocs, `oat docs nav sync` reads it to update `mkdocs.yml` `nav:`. `oat-docs-analyze` reads the same authored source to find orphaned pages and stale generated artifacts.
 - **Anything not listed in `## Contents` is invisible to the tooling.** Adding a Markdown file is not enough — it must also appear under the parent `index.md`'s `## Contents`.
 
-Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). If `patchesApplied` includes an `FP-16` entry with `status: 'applied'`, mention it — the skill rewrote the scaffold's extension-less links to `.md`-suffixed form so agents can follow them. Then note: "That's the pattern. Every directory you create from now on follows the same shape — `.md`-suffixed links, bulleted list, dash-separated summary per entry."
+Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). Then note: "That's the pattern. Every directory you create from now on follows the same shape — `.md`-suffixed links, bulleted list, dash-separated summary per entry."
 
 End with: "`## Contents` is how navigation stays in sync with filesystem. If the nav tooling seems confused, the answer is almost always 'check the nearest `## Contents`'. Always author with `.md` extensions; the build pipeline handles routing."
 
@@ -986,11 +723,11 @@ Skip this section entirely when `framework === 'mkdocs'`; the MkDocs equivalent 
 
 Narrate how the Fumadocs scaffold actually works, grounded in files the user can open alongside you:
 
-- **`app/layout.tsx` — `DocsLayout` renders the chrome.** The `<DocsLayout>` component from `@open-agent-toolkit/docs-theme` wraps every docs page with the top nav, sidebar, and search UI. It accepts a `branding` prop with `title`, `logo`, etc. **Runtime insight (worth knowing):** the compiled theme bundle only forwards `branding.title` into the nav header chrome — it doesn't use it for page metadata, social cards, or browser tab titles. That's why FP-12's patches also add `export const metadata = { title, description }` to `layout.tsx`: the chrome title and the document title are two separate concerns, and the scaffold only wired the first. **Anti-pattern to avoid:** passing `title` / `description` to `createDocsConfig()` in `next.config.js` is a no-op — the wrapper only reads `basePath` and ignores those keys. If your HTML `<head>` comes back empty (no `<title>`, no meta description, no Open Graph), the `export const metadata` in `layout.tsx` is missing.
+- **`app/layout.tsx` — `DocsLayout` renders the chrome.** The `<DocsLayout>` component from `@open-agent-toolkit/docs-theme` wraps every docs page with the top nav, sidebar, and search UI. It accepts a `branding` prop with `title`, `logo`, etc. **Runtime insight (worth knowing):** the compiled theme bundle only forwards `branding.title` into the nav header chrome — it doesn't use it for page metadata, social cards, or browser tab titles. The CLI template also includes `export const metadata = { title, description }` in `layout.tsx`: the chrome title and the document title are two separate concerns, and both surfaces must be configured. **Anti-pattern to avoid:** passing `title` / `description` to `createDocsConfig()` in `next.config.js` is a no-op — the wrapper accepts `basePath` and `turbopack`, not metadata. If your HTML `<head>` comes back empty (no `<title>`, no meta description, no Open Graph), the `export const metadata` in `layout.tsx` is missing.
 - **`next.config.js` — `createMDX()` picks up `docs/`.** The Fumadocs MDX pipeline uses `@open-agent-toolkit/docs-config`'s `createDocsConfig()` wrapper, which under the hood calls `createMDX()` with the docs directory hardcoded to `docs/`. Both `.md` and `.mdx` files are compiled at build time; frontmatter becomes typed metadata accessible from layouts and listings. **Default to `.md`** for plain content pages — agents, linters, grep rules, and the `remark-links` plugin all handle `.md` more predictably than `.mdx`. Reach for `.mdx` only when a page actually needs a JSX component inline (an embedded `<Callout>`, an interactive widget, a custom layout). FlexSearch indexes them identically.
 - **FlexSearch static indexing.** Search is client-side — on build, Fumadocs scans every `.md`/`.mdx` file under `docs/` and emits a precomputed FlexSearch index that loads alongside the first route. No server; no search API call. That's also why renaming a page without a redirect loses deep links silently: the old index entry stops existing at the next build, and the new one doesn't know the old slug.
-- **`@open-agent-toolkit/docs-theme` branding.** The theme package centralizes the nav/sidebar/footer look and forwards only a small surface of props. Don't expect `branding` to influence metadata; use the FP-12 `metadata` export for that.
-- **FP-11 Turbopack root.** If your repo is `nested-standalone` (docs app has its own lockfile inside the monorepo), Next's Turbopack infers the wrong workspace root and warns about multiple lockfiles. The FP-11 patch sets `turbopack: { root: __dirname }` either via `createDocsConfig` passthrough or (if the passthrough isn't available) by replacing the wrapper with an explicit `createMDX()` config. Check `patchesApplied` to see which code path your scaffold used.
+- **`@open-agent-toolkit/docs-theme` branding.** The theme package centralizes the nav/sidebar/footer look and forwards only a small surface of props. Don't expect `branding` to influence metadata; use the Next.js `metadata` export for that.
+- **Turbopack app root.** For `nested-standalone` only, the template passes `dirname(fileURLToPath(import.meta.url))` through `createDocsConfig({ turbopack: { root } })`. Monorepo and single-package scaffolds leave root discovery to Next.js so workspace dependencies remain reachable. This works in ESM and retains static export, trailing slashes, unoptimized images, and base-path settings. Report older wrappers to analyze instead of replacing them.
 
 End with: "Fumadocs gives you a typed MDX-capable pipeline with client-side search and code-owned chrome. Prefer `.md` for plain content, reach for `.mdx` only when you need embedded components. Branding is one layer (nav only); metadata is a separate, explicit concern. Most page-level edits are frontmatter + Markdown; only layout/theme changes go in `app/`."
 
@@ -1005,7 +742,7 @@ In scope (required — share these):
 - **`mkdocs.yml` is the root config.** Site name, nav, theme, plugins, Markdown extensions — all in one YAML file. The CLI scaffolded one tuned for the OAT conventions.
 - **Material theme provides the default UI.** Light/dark toggle, responsive sidebar, search UI. Config lives under `theme:` in `mkdocs.yml`.
 - **Plugins are pip-installed and named in `mkdocs.yml`.** The scaffold's `requirements.txt` pins the plugins currently wired in. Adding a new plugin = add to both files.
-- **Python environment via `requirements.txt` + `setup-docs.sh`.** The scaffold provides a `setup-docs.sh` that creates a venv, installs `requirements.txt`, and is idempotent on re-run. Use it; the skill assumes you will.
+- **Python environment via `requirements.txt` + `setup-docs.sh`.** The scaffold provides a `setup-docs.sh` that runs `PYTHON_BIN -m pip install -r requirements.txt`. It does not create or activate a virtual environment. Create and activate one first when desired (`python3 -m venv .venv` then `. .venv/bin/activate`), or set `PYTHON_BIN` to the intended environment's Python.
 - **The shared concepts still apply.** The `## Contents` contract (Section C), the authored-source/generated-navigation model (Section B), and the three agent-instruction surfaces (Section D) all transfer directly.
 
 Deferred (out of scope for this skill — point, don't teach):
@@ -1095,9 +832,6 @@ Created:
   - <count> files (see `git status` or `git log -1` for the full list)
 
 Patches applied:
-  - FP-11 Turbopack root: {applied | skipped | refused | n/a}
-  - FP-12 site title + metadata: {applied | skipped | refused}
-  - FP-13 template content (A–D): {applied | skipped | refused} per sub-finding
   - FP-15 docs-app AGENTS.md: {applied | skipped}
 
 Build:
@@ -1169,7 +903,7 @@ A successful `oat-docs-bootstrap` run satisfies every invariant below. Any failu
 **Ratcheting invariants:**
 
 - When a CLI capability is detected as present (`capabilities.{flag} === true`), the corresponding post-patch is **skipped** — not applied redundantly. The skill self-ratchets as CLI fixes land.
-- Every patch's `status` is recorded in `Scaffold Result.patchesApplied` as `applied` / `skipped` / `refused` with a `reason`. The Exit summary surfaces this so the user sees which CLI gaps the skill had to cover vs. which the CLI handled directly.
+- Every patch's `status` is recorded in `Scaffold Result.patchesApplied` as `applied` / `skipped` with a `reason`. The Exit summary surfaces this so the user sees which CLI gaps the skill had to cover vs. which the CLI handled directly.
 - When `capabilities.agentsMdScaffoldFlag === true` (CLI has added native AGENTS.md scaffolding), the FP-15 bridge in this skill is skipped and can be retired from the assets directory.
 
 **Stop-on-broken-state invariants:**

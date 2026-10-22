@@ -9,7 +9,7 @@ Use this guide to set up your local environment and preview {{SITE_NAME}}.
 
 ## Prerequisites
 
-- Node.js 20+ (or whatever your repo's `.nvmrc` / `package.json` `engines.node` pins — match that)
+- Node.js {{NODE_REQUIREMENT}}
 - pnpm 10+ (or npm/yarn)
 
 ## Install dependencies

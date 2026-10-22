@@ -605,7 +605,7 @@
     },
     {
       "name": "docs-completed-projects-gap-review",
-      "reason": "Currently unshipped: no installable pack membership; future distribution intent is not established by this mapping."
+      "reason": "Repository-internal OAT maintainer audit; intentionally unshipped with no installable pack membership."
     },
     {
       "name": "oat-dispatch-subagents",
