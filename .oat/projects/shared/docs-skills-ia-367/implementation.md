@@ -271,7 +271,11 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 ## Phase p02: IA method and guidance input
 
-**Status:** pending
+**Status:** in_progress
+**Base:** eaf354667bc270d51ebc27eb292375b9dc32cf06
+**Executor:** phase-implementer:docs367-p02-impl-20261022
+
+Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
 
 ---
 
