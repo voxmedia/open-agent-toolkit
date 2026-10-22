@@ -468,6 +468,24 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 **Phase start:** Worktree `/Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367`, branch `docs/docs-skills-ia-367-p03`; the phase implementer is the sole committing owner after release. Precedence rung 3: no declared parallel group; root fan-out fails independence because config, shared skill/template contracts and verification outputs overlap. Scope is now concrete in the approved brief. Fresh main drift inspection found no changes in planned paths since branch base. P02 correctness, testing, documentation and supplemental complexity reviews are settled; remote CI/Bugbot remain monitored on PR #369. Public package version target 0.3.25, subject to main at verification. Recovery default/phase limit 10, durable usage 0, remaining 10, pending null. Root owns review/gates and PR landing.
 
+### Task p03-t01: Record IA and honor the analyze/apply contract
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-impl-20261022 (same accepted invocation)
+**Intent:** Compose G2 repository IA mirrors/authored authority with G4 approval handoff, bounded restructure and offline package drift; retain p04/p07 deferrals.
+**Files:** CLI config readers/resolver/config commands and relevant tests; docs analyze/apply/bootstrap skills, templates and production drift helper; three assigned public docs pages; five public package manifests and bundled version metadata.
+**Proof command:** Direct Vitest config/config-command suites and shared/validation sentence contracts under isolated HOME; node:test skill helper/prose contracts; CLI lint/type-check/build; changed-skill oxlint and changed-doc Markdown lint; file-scoped oxfmt. Manual walkthroughs and ordered repository gates are phase-wide evidence, pending root handoff/resume.
+**Recovery:** 0/10 used; 10 remaining; pending null. Effective dispatch base `9988b179788d9e29d7bce3703673291d04fab811`; original Base stays fixed.
+
+**Commit:** 306ea28cbc450a8f97b356124a49f0e36b9107f1
+
+**Outcome:** One 21-file product commit adds repository-only IA/navOwner read/write/repair and atomic resolution; authored-record/IA-fit/restructure/approval handoff instructions and templates; offline installed-package drift helper with a real analyze consumer; public docs; three PR-scoped skill bumps and lockstep 0.3.25 metadata/manifests. No authoring-method, nav engine, nonReaderPaths, scaffold defaults, page templates, lockfile or root authority changes.
+
+**Focused evidence:** `analysis/p03/README.md`, `owned-files.json` and `run-focused.py` index exact commands/logs/exits. Config/config-command 651 tests and shared/validation sentence contracts 1,087 tests pass, directly executed with isolated HOME (no Turbo cache). Helper/prose 6 tests, CLI lint/type-check/build, changed-skill oxlint, changed-doc Markdown lint and file-scoped format pass, all exit 0. Postcommit config/resolver 81 tests and helper/prose 6 tests pass (exit 0). Five independently neutralized approval clauses and pre-fix prose fail their text contract guards (exit 1); restored valid prose passes (exit 0). These guard shipped prose; no automated agent execution or fake apply engine is claimed. Precommit corrections consumed no recovery attempts.
+
+**Root handoff:** Root requested the next committed boundary for a separate p02 portability revision after Bugbot feedback. This task is committed; no task record remains open. Phase stays in_progress, original Base unchanged, no phase Head/acceptance recorded. Manual framework/Markdown IA, restructure/old-URL/owner and approval/tooling walkthroughs; ordered gates 1–8; forced whole-suite/tail execution; full lint/format; independent review and external p03 gate remain pending. Root owns the portability correction and will resume this same target/handle. Recovery 0/10, remaining 10, pending null. The ignored `analysis/p03/root-handoff-portability.json` marker transfers ownership; no further writer activity follows it.
+
 ## Phase p04: Navigation follows Contents
 
 **Status:** pending
