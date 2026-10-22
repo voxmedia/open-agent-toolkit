@@ -64,7 +64,7 @@ oat_template: false
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
 
-Phase verification: all Definition of Done gates passed in order against committed implementation. Candidate Head is the append-only recovery commit above; phase acceptance and PR creation remain root-owned. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
+Phase verification: all Definition of Done gates passed in order against committed implementation. Candidate Head is the append-only recovery commit above; phase acceptance remains root-owned. Draft phase PR: https://github.com/voxmedia/open-agent-toolkit/pull/368 (base `main`, branch `docs/docs-skills-ia-367`). Correctness/docs and testing/complexity reviews are pending. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
 
 | Order | Command                                                     | Exit                     | Log under `/tmp/oat-docs367-p01/`       |
 | ----- | ----------------------------------------------------------- | ------------------------ | --------------------------------------- |
@@ -233,6 +233,8 @@ Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling
 ---
 
 ## Orchestration Runs
+
+run/v1 · request=docs367-p01-lenses-r1-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
 
 <!-- One line per dispatch request id, rendered by `oat project dispatch record --format line` and written as a list item. Update that line in place with the terminal outcome; never paste the record or event JSON. -->
 
