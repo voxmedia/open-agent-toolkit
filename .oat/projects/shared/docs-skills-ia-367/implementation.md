@@ -59,9 +59,29 @@ oat_template: false
 
 **Status:** in_progress
 **Base:** c3ba7e31d17521cf51252b5ee5167c6c81d8a629
+**Head:** 169c15cf503ec55071a2a2c255cf4da2d486942b
 **Executor:** phase-implementer:docs367-p01-impl-20261022
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
+
+Phase verification: all Definition of Done gates passed in order against committed implementation. Candidate Head is the append-only recovery commit above; phase acceptance and PR creation remain root-owned. No optional dispatches or later-phase changes. Initial base verification matched launch barrier `64470e2097bbb5ac91648556d56de4cc8ffd1a61`; root's accepted-dispatch bookkeeping commit `5dd174c89` precedes the first implementation commit.
+
+| Order | Command                                                     | Exit                     | Log under `/tmp/oat-docs367-p01/`       |
+| ----- | ----------------------------------------------------------- | ------------------------ | --------------------------------------- |
+| 1     | `pnpm check`                                                | 0 after bounded recovery | `gate1-check.log`                       |
+| 2     | `pnpm type-check`                                           | 0                        | `gate2-type-check.log`                  |
+| 3     | `env HOME=<isolated-temp> TURBO_FORCE=true pnpm test`       | 0                        | `gate3-test.log`                        |
+| 4     | `pnpm build`                                                | 0                        | `gate4-build.log`                       |
+| 5     | `pnpm run check:skill-bumps`                                | 0                        | `gate5-skill-bumps.log`                 |
+| 6     | `git fetch origin main`, then `pnpm release:check-versions` | 0, 0                     | `gate6-fetch.log`, `gate6-versions.log` |
+| 7     | `pnpm release:validate`                                     | 0                        | `gate7-release.log`                     |
+| 8     | `env TURBO_FORCE=true pnpm build:docs`                      | 0                        | `gate8-docs.log`                        |
+
+Gate 3 genuinely executed all 12 Turbo tasks (0 cache replays), then smoke, skill and worktree-script suites: 10,156 passing tests total, including 8,854 CLI tests in 422 files. Gate 8 genuinely executed all 6 build tasks. Gate 1's final post-commit Turbo portion replayed 11 tasks; the changed docs check executed in recovery pre-verification, and root skill validation/format checks executed in the final run. Gate 2 ran six type checks with five cached dependency builds. Gate 4 replayed five builds already executed during forced Gate 3. No cached log is claimed as a new execution.
+
+Additional final checks: `pnpm lint` and `pnpm format` exit 0 (`extra-lint.log`, `extra-format.log`; package tasks cached, root oxlint/format executed). `env HOME=<isolated-temp> pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation` genuinely passes 1,087 tests in 26 files (`extra-sentence-contracts.log`). Earlier scoped builds/lint/type-check and negative-control commands are recorded in their task records. Exact focused test boundaries were docs-config `test`, CLI `vitest run src/commands/docs/init`, CLI `vitest run src/commands/help-snapshots.test.ts`, the dedicated `node --test tools/smoke/verification/skill-docs-paths.test.mjs`, and `node /tmp/oat-docs367-p01/config-negative-control.mjs`.
+
+Recovery capacity: 1/10 consumed, 9 remaining; `state.md` retains the matching completed pending-attempt marker for root validation and clearing. No failed attempt, scope realignment or independent review was performed. `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p01 --json` exits 0 with status `ok`; its sole warning is the root-owned dispatch run still having outcome pending (`journal-check.log`).
 
 ### Task p01-t01: Preserve export configuration and render scaffold facts
 
@@ -146,6 +166,21 @@ Coverage boundary: literal Markdown page paths in executable skill tests/helpers
 Intent: carry p01's shipped skill/template/docs/config changes in a coherent public release above origin/main.
 Files: five public package manifests and generated public-package version metadata; lockfile only if dependency resolution changes it.
 Proof: lockfile-only resolution, offline frozen-lockfile install, asset bundling, all five public builds (0 cache replays), `pnpm lint`, `pnpm format`, formatter and diff checks exit 0. The lockfile remains unchanged because only workspace package versions changed. All five manifests are 0.3.23, strictly above fetched origin/main's 0.3.22; generated public-package metadata agrees. Six changed skills each carry one metadata.version bump across the final phase diff. Logs: `/tmp/oat-docs367-p01/t05-{lockfile,frozen,bundle,build}.log`, `extra-{lint,format}.log`, `fetch.log`. Lint had 5 cached tasks of 10; changed packages and the root oxlint pass executed. Phase-wide gates follow against the committed implementation.
+
+### Recovery Event docs367-p01-recovery-01
+
+- Phase/task: p01/p01-t03
+- Original request: docs367-p01-impl-20261022
+- Original commit: 352ef17d804441a6c1501971b51db8af51ab733e
+- Defect class: composition
+- Discovered by: pnpm check
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: {harness:codex,model:gpt-6.1-sol,effort:medium,crossHarness:false,routeIndex:0,routeLength:1}
+- Recovery commit: 169c15cf503ec55071a2a2c255cf4da2d486942b
+- Verification: `pnpm --filter oat-docs test` (85 tests) and `pnpm check` pass before and immediately after the candidate commit; authoritative post-commit exit codes 0/0.
+- Reason: P19 replaced fixed skill topic routing, but the docs-app validator still required the retired table (`missing docs topic table`). Mechanically aligned `apps/oat-docs/scripts/validate.ts` and `tests/migration.test.ts` with the installed entrypoint's Contents map. Original task history is unchanged; exact target and handle are unchanged; no product/architecture decision. Reservation was written atomically before correction; only the p01 ledger entry changed in state.md. Static-table-only coverage is obsolete under accepted P19; stale file/directory/fragment protection is retained against the runtime map. Evidence: `recovery01-eligibility.txt`, `recovery01-{focused,phase}-pre.log`, `recovery01-focused-post.log`, final `gate1-check.log`; original bounded sources retained in `/tmp/oat-docs367-p01/` for reproduction.
 
 ---
 
