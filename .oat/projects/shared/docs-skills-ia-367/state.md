@@ -1,6 +1,6 @@
 ---
 oat_current_task: p01
-oat_last_commit: 169c15cf503ec55071a2a2c255cf4da2d486942b
+oat_last_commit: d42f19285c2841d72fecac32fbd7f0ec130f4d31
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
