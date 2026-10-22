@@ -138,6 +138,25 @@ describe('repository IA mirrors through real command and storage', () => {
     );
   });
 
+  it('rejects JSON null set input without removing a declared IA', async () => {
+    const f = await fixture();
+    expect(
+      await f.command('set', 'documentation.ia', JSON.stringify(ia)),
+    ).toMatchObject({ status: 'ok', value: ia });
+    const before = await readFile(f.repoPath, 'utf8');
+    expect(await f.command('set', 'documentation.ia', 'null')).toMatchObject({
+      status: 'error',
+      message:
+        'Invalid documentation.ia value: expected IA JSON with preset, repo-relative decision, optional tracks and verification.',
+    });
+    expect(await readFile(f.repoPath, 'utf8')).toBe(before);
+    expect(await f.command('get', 'documentation.ia')).toMatchObject({
+      status: 'ok',
+      value: ia,
+      source: 'shared',
+    });
+  });
+
   it.each(['--user', '--local'])(
     'rejects mirror writes/unsets at %s and ignores unsupported stored tiers',
     async (scope) => {

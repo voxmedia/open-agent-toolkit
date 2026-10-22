@@ -2455,16 +2455,20 @@ async function setConfigValue(
     const trimmed = rawValue.trim();
     let value: unknown;
     try {
-      value =
-        key === 'documentation.ia'
-          ? normalizeDocumentationIa(JSON.parse(trimmed), configPath)
-          : key === 'documentation.navOwner'
+      if (key === 'documentation.ia') {
+        const parsed: unknown = JSON.parse(trimmed);
+        if (parsed === null) throw new Error('Expected an IA JSON object.');
+        value = normalizeDocumentationIa(parsed, configPath);
+      } else {
+        value =
+          key === 'documentation.navOwner'
             ? normalizeDocumentationNavOwner(trimmed, configPath)
             : normalizeDocumentationGuidance(
                 trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
                 configPath,
                 effectiveSurface === 'user' ? 'user' : 'shared',
               );
+      }
     } catch {
       throw new Error(
         `Invalid ${key} value: ${key === 'documentation.ia' ? 'expected IA JSON with preset, repo-relative decision, optional tracks and verification' : key === 'documentation.navOwner' ? 'expected nav-sync or hand-authored' : 'expected a non-empty path/URL string or ordered non-empty string array'}.`,
