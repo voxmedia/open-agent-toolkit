@@ -55,6 +55,10 @@ Gate 3 freshly passed 8,857 CLI tests, then a smoke resolver failed to import a 
 
 docs367-p02-p01-nav-integration-20261022: merged accepted p01 correction into held p02; code merged cleanly, four tracking files reconciled with p02 execution/concrete scope, distinct reviews and frozen anchors preserved; resume original handle after committed boundary.
 
+### 2026-10-22 · structural · oat-project-implement · p02-pre-review
+
+docs367-p02-landing-authority-20261022: user authorized automatic bottom-up phase PR landing after CI/Bugbot and findings clear; PR #368 merged at e36497bead86df31fbffc6ea9cbc5b591d6ecadb; p02 verified handoff reconciled with main ancestry without content changes; independent review next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

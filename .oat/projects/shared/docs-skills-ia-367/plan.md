@@ -361,15 +361,20 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Delivery endpoint and authority
 
-- **Endpoint:** open — one PR per phase, stacked in phase order against
+- **Endpoint:** merged — one PR per phase, stacked in phase order against
   `main`, each passing the Definition of Done gates and its phase review.
-  "Delivered" means every phase PR is open and reviewed; the user merges.
-- **Authority:** The user approves this brief, any change to an Outcome,
-  Constraint, Decision or `### Design` contract, and every merge. The agent
-  decides phase-local design inside the pinned contracts, may add, split or
-  reorder phases and make provisional phases concrete (logging each change),
-  and may open and update PRs. The agent does not merge, publish packages,
-  change other repositories or change shared configuration.
+  Delivered means every phase PR has merged after CI, Bugbot and actionable
+  review findings are clear.
+- **Authority:** The user approves this brief and any change to an Outcome,
+  Constraint, Decision or `### Design` contract. The agent decides phase-local
+  design inside the pinned contracts, may add, split or reorder phases and
+  make provisional phases concrete (logging each change), and may open,
+  update and merge phase PRs bottom-up once CI, Bugbot and blocking findings
+  are clear. The agent does not publish packages, change other repositories
+  or change shared configuration.
+- **Landing amendment:** 2026-10-22, user: "I want you to go ahead and just land
+  these PRs as ci/bugbot review clears instead of waiting for me". This replaces
+  the original open-PR endpoint and user-owned merge requirement.
 - **Brief approved:** 2026-10-22 by user at e6a6a4f7bcce399a2bd33d1229de77026c787436
 
 ## Milestones

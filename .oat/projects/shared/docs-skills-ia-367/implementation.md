@@ -369,6 +369,8 @@ Required extras: `lint.log` and `format.log` exit 0 (each 9/10 Turbo tasks repla
 
 Prior focused real-file config proofs, both negative controls/restored valid control, P1/P2/G1/G6 and D1–D9 conservation citations, and manual proposal/routing evidence remain applicable. Public walkthrough source digest maps match before/after/current (the serialized JSON files differ only by trailing newline). The integrated diff is preserved as `composition.diff`. Feature/QA templates remain p07 and persistence/restructure remain p03. Review-scope journal validation passed (exit 0); the expected warning is root's accepted continuation run still nonterminal. Phase remains in_progress; root owns independent review and acceptance.
 
+Root pre-review validation: accepted the clean same-handle verification handoff at `ac92dea999dd294b567b86f668fda0606b231a69`; all eight integrated gate exit files read as 0, no recovery or product correction, and original anchors retained. PR #368 is remotely verified merged at `e36497bead86df31fbffc6ea9cbc5b591d6ecadb` after all three current-head checks and resolved findings. Root merged current main ancestry with no file-content delta from the verified handoff (empty `git diff ac92dea999dd294b567b86f668fda0606b231a69 HEAD`); p02 release 0.3.24 remains newer than landed p01 0.3.23. Independent phase review remains pending. The user now authorizes automatic bottom-up landing once CI, Bugbot and findings clear; the brief authority below records that amendment.
+
 ---
 
 ## Phase p03: Record and act on the IA
@@ -415,7 +417,7 @@ Prior focused real-file config proofs, both negative controls/restored valid con
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p02-resume-after-p01-nav-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p02-resume-after-p01-nav-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p02-impl-20261022 · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
