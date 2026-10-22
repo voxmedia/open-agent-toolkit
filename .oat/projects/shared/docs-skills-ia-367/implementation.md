@@ -108,6 +108,21 @@ Corrected claims (P7/E12/E13), with authority:
 
 E12's approved-subset/apply-input change remains p03 by the accepted brief. Conservation review retained preflight, conflict authority, Markdown routing, build handling, walkthrough sections and FP-15. Removed only retired patch instructions and obsolete plan IDs; preserved their useful diagnostic content in analyze and moved generated-file guidance into the template. No new IA/config/nav/checker behavior was introduced.
 
+### Task p01-t03: Resolve docs at runtime and package the migration handoff
+
+**Status:** completed
+**Commit:** 352ef17d804441a6c1501971b51db8af51ab733e
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-impl-20261022
+
+Intent: derive Q&A routing from the installed Contents map, label the OAT-only gap audit accurately, and bundle a usable generic MkDocs migration guide.
+Files: oat-docs and gap-review skills; oat-docs-authoring lifecycle reference and migration guide; skill-catalog exclusion note if needed.
+Proof: 170 installed-skill/script-reference contracts, catalog freshness, formatter/diff checks and custom asset bundle all exit 0. The bundle contains `skills/oat-docs-authoring/references/mkdocs-to-oat-fumadocs-refactor-guide.md` and its same-directory lifecycle pointer; docs pack membership is `packages/cli/src/commands/tools/shared/pack-manifest.ts:221`. Read and resolved every local Contents target in the bundled docs root, all present. Logs: `/tmp/oat-docs367-p01/t03-{contracts,catalog,bundle,index-walkthrough}.log`; bundle path in `t03-bundle-path.txt`.
+
+Conservation/self-review: Q&A retains read-only installed-doc scope and search fallback; only fixed topic paths and example citations became index-derived. Gap-review's maintenance procedure is preserved and explicitly repo-internal, consistent with its existing absence from installable packs. The guide carries all historical summary requirements while grounding commands in the current migrate handler (dry-run default, admonitions/frontmatter only), nav helper and template scripts. No source pages, URLs or migration approval authority were removed.
+
+Source disposition: root searched history, refs, available worktrees and local context without locating the original guide. Root authorized reconstruction from current CLI/template contracts and `.oat/repo/reference/project-summaries/20260606-docs-authoring-skills.md:28`. This is newly authored generic guidance, not recovered historical text. Actual migrations still require user approval and preserve source pages and links; no external repository is changed.
+
 ---
 
 ## Phase p02: IA method and guidance input
