@@ -347,6 +347,8 @@ Queued after root independently reproduced remote H1. Execute after p02 clean ha
 
 ## Orchestration Runs
 
+run/v1 · request=docs367-p-rev1-review-r1-20261022 · scope=p-rev1 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+
 Root-inline phase: p-rev1; reason=bounded existing docs-command regression, no new surface/design/consequence, existing focused proof; root model=gpt-6.1-sol high; committing owner=root in isolated p01 checkout; p02 yielded clean before execution.
 
 run/v1 · request=docs367-p01-review-r3-20261022 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
