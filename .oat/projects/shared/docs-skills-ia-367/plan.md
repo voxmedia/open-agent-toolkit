@@ -446,11 +446,11 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status  | Date       | Artifact                                                         | Reviewed Head                            | Invocation                                                      | Gate Target |
+| ----- | -------- | ------- | ---------- | ---------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ----------- |
+| plan  | artifact | passed  | 2026-10-22 | structured (no artifact); 3 rounds: 9, 4, 0 findings, all folded | 61b2e3281739e094979d5ded38488de69d2c86d6 | codex exec gpt-6-astra high, read-only, user-requested reviewer | -           |
+| p01   | code     | pending | -          | -                                                                | -                                        | -                                                               | -           |
+| final | code     | pending | -          | -                                                                | -                                        | -                                                               | -           |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
