@@ -1,5 +1,5 @@
 ---
-oat_current_task: p-rev1
+oat_current_task: p02
 oat_last_commit: 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
 oat_blockers: []
 associated_issues: [
@@ -130,12 +130,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev1: Correct the scaffold navigation command; p02 yields at a verified boundary.
+Implement — p02: resume after integrating the accepted navigation correction.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01 accepted; 1/10 phases accepted.
+- **Implementation:** `implementation.md` — p01 and p-rev1 accepted; 2/10 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -144,4 +144,4 @@ None.
 
 ## Next Milestone
 
-Correct the reproduced external nav-command finding before resuming p02. Original p01 acceptance is preserved; its correction has separate revision anchors.
+Integrate corrected p01 into the held p02 branch, preserve p02 records and anchors, then resume its original implementer for final verification and independent review.

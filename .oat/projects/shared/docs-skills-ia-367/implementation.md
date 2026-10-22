@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p-rev1
+oat_current_task_id: p02
 oat_generated: false
 oat_template: false
 ---
@@ -39,20 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | in_progress | 1     | 0/1      |
-| p02    | pending     | 1     | 0/1      |
-| p03    | pending     | 1     | 0/1      |
-| p04    | pending     | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | pending   | 1     | 0/1      |
+| p03    | pending   | 1     | 0/1      |
+| p04    | pending   | 1     | 0/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 1/10 phases accepted
+**Total:** 2/10 phases accepted
 
 ---
 
@@ -272,7 +272,7 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 ## Phase p-rev1: Correct the scaffold navigation command
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 7c05e8ab0e563f39996fb8c87643443040fb0ed9
 **Head:** 79ab7f30a1831fe2b09d7a199c4bb178395f0d22
 **Executor:** inline:docs367-p-rev1-doc-command
@@ -300,6 +300,8 @@ Revision verification: gates 1–8 passed in CI order against product Head `79ab
 **Verification:** pre-fix regression exit 1 at framework detection; corrected emitted command succeeds and writes expected index/getting-started/contributing navigation. Final isolated-HOME owning suites pass 63/63 (exit 0), scoped oxlint and CLI build exit 0. Earlier precommit attempts exposed an incomplete expected page list and prefer-template lint; both corrected before commit, with evidence retained. Product boundary is exactly the two declared files; no recovery attempt. Full ordered gates pending.
 
 ---
+
+Root acceptance: p-rev1 is accepted after clean independent review, ordered passing gates and successful PR #368 update at `0750505f1cc63ce9e19762eff5bd1fed247fae6e`. Review-fix rounds used 0/2; recovery 0/10, pending null. No selected extra phase gate applies. External H1 is fixed; its findings-bearing review event advances to fixes_completed and the separate clean p-rev1 event remains passed. No GitHub reply or merge performed. Resume p02 after merging the corrected p01 branch; original p01 and p02 anchors stay frozen.
 
 ## Phase p02: IA method and guidance input
 

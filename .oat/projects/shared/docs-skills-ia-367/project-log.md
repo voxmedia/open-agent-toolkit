@@ -39,6 +39,14 @@ docs367-p01-ledger-correction-20261022: received Bugbot discussion 4353594144; e
 
 docs367-nav-review-received-20261022: converted remote H1 4353654033 to concrete p-rev1; reproduced bare command exit1 and targeted command exit0; awaiting current p02 verified commit handoff before correction execution; p01 anchors stay frozen.
 
+### 2026-10-22 · structural · oat-project-implement · p-rev1
+
+p-rev1 accepted: zero findings, fix loops 0/2, all ordered gates pass after one no-edit test retry; PR #368 updated, p02 integration next. docs367-prev1-accepted-20261022
+
+### 2026-10-22 · project · friction · verification runtime
+
+Gate 3 freshly passed 8,857 CLI tests, then a smoke resolver failed to import a built control-plane module. The isolated four-test rerun and complete gate retry passed without edits; original failure and cache disclosure remain in the p-rev1 journal and proof folder. docs367-prev1-module-retry-20261022
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
