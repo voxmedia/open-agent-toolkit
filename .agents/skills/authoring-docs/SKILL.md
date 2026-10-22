@@ -1,12 +1,12 @@
 ---
 name: authoring-docs
 description: Use when creating, restructuring, migrating, auditing, or reviewing technical documentation for software projects. Provides evidence-first, provider-portable Markdown authoring standards.
-argument-hint: '[docs task or target path]'
+argument-hint: '[docs task or target path] [--ia-guidance <path|url>]'
 disable-model-invocation: false
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.0.1
+  version: 1.1.0
 ---
 
 # Authoring Docs
@@ -70,15 +70,24 @@ Use one primary page type per page:
 - Reference: exact facts and contracts.
 - Explanation: mental model, design, and tradeoffs.
 - Runbook: operational recovery with checks, mitigation, and verification.
+- Feature guide: intended behavior and user-facing boundaries.
+- Validation matrix: independently checkable scenarios and outcomes.
+- Solution: a supported combination of capabilities for an end-to-end problem.
+- Decision record: an accepted choice, its context and consequences.
 
 Small supporting sections are fine, but keep the page's primary job clear.
 
 ### Step 4: Structure the Docs
 
-Prefer predictable information architecture: landing page, getting started,
-how-to guides, reference, concepts, and operations. Preserve useful existing
-intent, remove duplication, and avoid creating parallel docs when an existing
-page can be improved.
+Load `references/guidance-sources.md` and resolve explicit `--ia-guidance` or
+conversational input → repository config → user config → built-in reference.
+Then use the five-axis method in `references/information-architecture.md`:
+readers/work contexts, entry key per track, page purpose, verification overlay,
+and size gate. Name the nearest preset after these decisions. Preserve useful
+existing intent, remove duplication, and avoid parallel docs when an existing
+page can be improved. For IA proposals use `references/templates.md#ia-proposal`;
+external guidance is advisory to local AGENTS/contributing rules and conflicts
+become `ask_user`. Cite the selected source and provenance in the handoff.
 
 ### Step 5: Write Direct, Verifiable Markdown
 
@@ -100,9 +109,10 @@ Load only the references needed for the current task:
 
 - `references/principles.md`: core documentation principles.
 - `references/workflow.md`: evidence gathering and writing workflow.
-- `references/information-architecture.md`: docs structure, naming, and links.
+- `references/information-architecture.md`: five-axis IA method, presets, placement, naming, and links.
+- `references/guidance-sources.md`: ordered source resolution, provenance and read-only inputs.
 - `references/page-types.md`: tutorial, how-to, reference, explanation, and
-  runbook guidance.
+  runbook, feature, validation, solution and decision guidance.
 - `references/categories.md`: API, CLI, app, service, library, framework,
   monorepo, architecture, operations, and audience-specific guidance.
 - `references/writing-style.md`: plain technical writing and Markdown rules.

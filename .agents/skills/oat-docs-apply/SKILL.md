@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Bash(oat:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.4'
+  version: '1.4.5'
 ---
 
 # Docs Apply
@@ -199,6 +199,15 @@ git checkout -b "$BRANCH"
 If branch creation fails because of unrelated local changes, ask the user to resolve that state before continuing.
 
 ### Step 4: Apply Approved Changes
+
+Load `authoring-docs` from installed user scope then project scope before content
+actions. Use its page-purpose, landing, placement and five-axis IA method within
+the approved recommendation scope. Carry the analysis artifact's ordered guidance
+locators/provenance into the apply plan; do not silently re-resolve different
+sources. Verify cited inputs still exist and remain read-only outside the repo.
+Local AGENTS/contributing rules stay authoritative; a conflict is `ask_user`
+and blocks that recommendation pending a fresh analysis/user decision. Cite
+sources without copying private contents. This hook adds no restructure action.
 
 Before the first approved write, initialize `OWNED_OUTPUT_FILES=()`. Append
 each exact successfully created, modified or removed path at that write,

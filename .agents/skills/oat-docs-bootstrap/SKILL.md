@@ -1,12 +1,12 @@
 ---
 name: oat-docs-bootstrap
 description: Use when bootstrapping or adopting an OAT documentation surface in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, `oat docs init` invocation with gated post-patches for open CLI gaps, build verification, post-scaffold config inspection, and an educational walkthrough. Supports plain Markdown (file-level path), Fumadocs (full path), and MkDocs (lean path with defined minimum contract).
-argument-hint: '<optional-target-dir>'
+argument-hint: '<optional-target-dir> [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.3.3'
+  version: '1.4.0'
 ---
 
 # Docs Bootstrap
@@ -114,13 +114,15 @@ OAT ▸ DOCS BOOTSTRAP
 
 The detailed framework procedures below apply to Fumadocs/MkDocs. When the selected tooling is `markdown`, use this path for Steps 2–7 instead; never run framework post-patches, the FP-15 AGENTS bridge, dependency discovery/install, package/Turbo patches, or a site build. Step 1 remains the shared read-only detector.
 
-1. **Preflight and routing:** Read `documentation.tooling` as a non-empty string. A non-string value (including a legacy object with a `framework` field) is invalid/undeclared tooling in the CLI; surface it for a user decision before proceeding, without silently clearing or retagging it. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, lead with **adopt and audit**, **audit only**, or **abort**. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
+1. **Preflight and routing:** Read `documentation.tooling` as a non-empty string. A non-string value (including a legacy object with a `framework` field) is invalid/undeclared tooling in the CLI; surface it for a user decision before proceeding, without silently clearing or retagging it. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, default to `oat-docs-analyze` then `oat-docs-apply` for approved repairs and exit without scaffolding. Offer **adopt and audit**, **audit only**, or **abort** when adoption is explicitly requested. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
 2. **Gather inputs:** Offer “Markdown (plain files), Fumadocs, or MkDocs?” Collect documentation title (`--site-name`), dedicated relative target directory (default `docs` in every repo shape), and optional description. Reuse an existing compatible configured Markdown root. Ask no app/package name, package-manager, site-runtime, or dependency questions. Lint and format default to `none`; describe selected existing repository tools only, without installing them. Validate a nonempty title and a dedicated in-repository target, excluding the repository root and escaping symlinks. Confirm fresh setup or additive adoption, title, root, and audit handoff. `appName` is absent and `conflictResolution` is `adopt`, `audit`, `abort`, or null for this path.
+   Before Markdown CLI invocation, run **Step 2.5** for fresh setup and explicitly selected adoption; it is not bypassed by this condensed path.
+
 3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without post-patches. For success, read config back to resolve the actual content root and authored index.
 4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run already documented lint/link/format checks when applicable; otherwise inspect files/links directly. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
 5. **Inspect config:** `documentation.tooling` is the string `markdown`; `root` is the literal content directory; `index` is its authored entrypoint, normally `<root>/index.md`. Markdown introduces no `documentation.config`. Preserve unrelated config/excludes/completion settings. Verify deterministic managed root Documentation guidance names that root, Markdown tooling, authored index, and `<root>/contributing.md`; preserve manual/local guidance and surface unresolved disposition. The Step 5e completion opt-in remains available using the docs root rather than an app name, without silently changing an existing value. No nested app-config reconciliation or framework patch inspection applies.
 6. **Walkthrough:** In short chunks, show actual config and `<root>/index.md`: useful context plus the Contents map, title/description metadata, sibling `page.md` and child `section/index.md` links, exclusions and asset-only exceptions. Explain adding a page/section and updating the nearest authored map without overwriting existing context. Root AGENTS Documentation guidance and `<root>/contributing.md` establish agent/human conventions; a preexisting local AGENTS file remains authoritative, but bootstrap creates none. Authored indexes are edited directly. Optional generated inventories require explicit external output, e.g. `$CLI_CMD docs generate-index --docs-dir <root> --output .oat/docs-manifest.md`; output must stay outside the full configured content root and cannot overwrite the configured authored index even with a narrowed `--docs-dir`. Generation does not repoint `documentation.index`. Markdown bootstrap never generates a manifest automatically. Skip framework deep dives and preview-server/build commands.
-7. **Audit handoff and summary:** Offer `oat-docs-analyze` against the literal configured root, followed by `oat-docs-apply` only for approved repairs. An adopted incomplete tree needs that audit; config/guidance alone prove no full conformance. Explain `oat-project-document` for source-backed project deltas. Summarize tooling, actual root/authored index, created/preserved files, guidance/config disposition, file-check outcomes, unresolved audit gaps, optional manifest ownership, and exact skill handoff. For dry-run/partial/refusal, label the outcome accordingly rather than printing BOOTSTRAP COMPLETE. No app, install, build, patch, or dev-command fields apply.
+7. **Audit handoff and summary:** Offer `oat-docs-analyze` against the literal configured root, followed by `oat-docs-apply` only for approved repairs. An adopted incomplete tree needs that audit; config/guidance alone prove no full conformance. Explain `oat-project-document` for source-backed project deltas. Summarize tooling, actual root/authored index, created/preserved files, guidance/config disposition, ordered IA guidance locators/provenance and proposal recommendation/conflicts, file-check outcomes, unresolved audit gaps, optional manifest ownership, and exact skill handoff. For dry-run/partial/refusal, label the outcome accordingly rather than printing BOOTSTRAP COMPLETE. No app, install, build, patch, or dev-command fields apply.
 
 ### Step 1: Preflight Detector
 
@@ -155,7 +157,7 @@ Read (do not modify):
 
 Build `conflicts: []` by adding an entry for each finding:
 
-- If `configDocumentation` is non-null → `{ kind: 'existing-config', detail: <summary of what's there> }`
+- If `configDocumentation` declares a docs surface (`root`, `tooling`, `index` or `config`) → `{ kind: 'existing-config', detail: <summary of what's there> }`. A guidance-only section is an IA input, not evidence of an existing docs surface; retain it and continue fresh setup.
 - If `docsAppPath` exists on disk → `{ kind: 'existing-app-dir', detail: <path + whether it has uncommitted changes> }`
 - If `agentsMdSection` is true → `{ kind: 'existing-agents-section', detail: <what the section says> }`
 
@@ -208,7 +210,7 @@ Print `[2/7] Gathering inputs…` at the start of this step.
 
 **2a. Resolve Preflight conflicts (if any).**
 
-If `conflicts[]` from Preflight is non-empty, present them together and collect a `conflictResolution`. See the **Conflict Resolution Contract** sub-procedure below for the exact semantics of each option. Do not proceed to input questions until the user has chosen a resolution.
+If `conflicts[]` from Preflight is non-empty, present them together and default to `repair`: run `oat-docs-analyze` (with `--ia` when structure is requested), review its artifact, then `oat-docs-apply` for approved repairs and exit. Use replacement or a second app only after an explicit user choice; a generic request to bootstrap is insufficient. See the **Conflict Resolution Contract** below. Do not scaffold until that contract is satisfied.
 
 If `conflicts[]` is empty, skip conflict handling and go to 2b.
 
@@ -271,14 +273,14 @@ Input Result:
 
 #### Conflict Resolution Contract (sub-procedure)
 
-When Preflight (Step 1) records non-empty `conflicts[]`, present them to the user together and collect exactly one resolution. Each resolution below has a precise definition in terms of **allowed mutations**, **preserved state**, and **stop conditions**. The Scaffold Runner (Step 3) reads the chosen resolution and adjusts its behavior; it never reinvents these semantics.
+When Preflight (Step 1) records non-empty `conflicts[]`, present them together and default to `repair` unless the user explicitly selects another resolution. Record exactly one resolution. Each resolution below has a precise definition in terms of **allowed mutations**, **preserved state**, and **stop conditions**. The Scaffold Runner (Step 3) reads the chosen resolution and adjusts its behavior; it never reinvents these semantics.
 
 Resolution options:
 
 - **`replace`** — Treat the existing docs setup as disposable and scaffold fresh.
   - **Allowed mutations (executed by this sub-procedure before Scaffold Runner begins):**
     - Remove the existing docs app directory (`existingDocs.docsAppPath`), if present on disk.
-    - Remove the `documentation` section from `$REPO_ROOT/.oat/config.json`, if present. The CLI will rewrite it during init.
+    - Clear the replaced surface fields in `documentation` in `$REPO_ROOT/.oat/config.json`, preserving `documentation.guidance` if present. The CLI will rewrite surface ownership during init; advisory guidance is unrelated to the discarded scaffold.
     - Remove the `## Documentation` section from `$REPO_ROOT/AGENTS.md`, if present. The CLI upserts its own.
   - **Preserved state:** Everything outside the three touchpoints above. Git history is preserved — deletions are tracked normally and remain recoverable via `git revert` / `git checkout`.
   - **Stop conditions:**
@@ -336,10 +338,10 @@ Preflight detected existing docs setup:
   - existing-agents-section: AGENTS.md has a ## Documentation section
 
 How should I proceed?
-  1. replace    — remove the existing docs app and scaffold fresh at the same path
-  2. second-app — (deferred) add a new docs app alongside; not available in current CLI
-  3. abort      — exit without changes
-  4. repair     — run `oat-docs-analyze` / `oat-docs-apply` on the existing setup
+  1. repair     — default: run `oat-docs-analyze` / `oat-docs-apply` on the existing setup
+  2. replace    — explicit choice required: remove the existing docs app and scaffold fresh
+  3. second-app — explicit choice required; deferred because current CLI cannot support it
+  4. abort      — exit without changes
 
 Choose:
 ```
@@ -351,9 +353,38 @@ Record the user's choice as `conflictResolution` in the Input Result. If the use
 No matter which resolution the user picks, the Scaffold Runner (Step 3) **never** invokes `oat docs init` until:
 
 1. The chosen resolution's "Allowed mutations" have **completed successfully**, and
-2. The working-tree state **matches what the CLI expects** for that resolution (e.g., for `replace`: the target directory is empty or absent, the `documentation` config section is cleared, the root `AGENTS.md` `## Documentation` section is cleared; for `abort` / `repair`: the skill has already exited).
+2. The working-tree state **matches what the CLI expects** for that resolution (e.g., for `replace`: the target directory is empty or absent, the `documentation` surface fields are cleared (any `guidance` input is preserved), the root `AGENTS.md` `## Documentation` section is cleared; for `abort` / `repair`: the skill has already exited).
 
 If any mutation fails or any invariant check fails, **stop the flow before scaffold** and surface the error. A partial resolution followed by a scaffold produces a worse end state than either doing nothing or completing the resolution cleanly.
+
+### Step 2.5: IA Discovery and Proposal
+
+Run for fresh Markdown, Fumadocs and MkDocs setup, and explicit adoption, before
+any scaffold invocation. An existing surface routed to repair takes this stage
+through `oat-docs-analyze --ia`; it does not return to scaffold afterward.
+
+1. Resolve and load `authoring-docs` from installed user scope then project scope;
+   bind that skill root separately from this bootstrap root. Read its
+   `references/guidance-sources.md` and `references/information-architecture.md`.
+   Resolve explicit `--ia-guidance`/conversation → repo → user → built-in and
+   retain ordered locators/provenance. These are skill inputs, not new CLI flags.
+2. Read repo signals: manifests, UI navigators and journeys, CLI `bin`, routers,
+   IaC, `e2e/` or `.maestro/`, existing docs, independently consumed monorepo units.
+   Read AGENTS/contributing authority first. Do not infer triad needs from UI alone.
+3. Ask only decision-changing questions about readers/work contexts, independent
+   verification, canonical facts elsewhere and links that must survive.
+4. Use the shared five axes and IA Proposal template to present **two plausible
+   candidate structures**, each a **two-level tree with 5–8 representative page
+   placements**, one page job per placement and the **nearest approved preset**.
+   Size controls materialized depth; it does not select audience. For Flat Small,
+   use grouped index headings rather than new directories.
+5. Recommend one with evidence and tradeoffs; retain unresolved conflicts as
+   `ask_user` with local/external source citations. Non-repo guidance stays read-only
+   and private exemplars are never copied. Cite ordered sources in the proposal
+   and final summary, including the built-in path when it wins.
+6. Carry the proposal to analyze/apply content kickoff. This stage proposes only:
+   it does not persist an accepted IA, restructure pages or scaffold preset trees.
+   CLI scaffold output remains the existing starter; those capabilities ship later.
 
 ### Step 3: Scaffold Runner
 
@@ -826,6 +857,8 @@ OAT ▸ DOCS BOOTSTRAP COMPLETE
 App:         {appName}
 Location:    {appRoot}
 Framework:   {framework}
+IA guidance: {ordered selected locators + explicit/conversation/shared/user/builtin provenance}
+IA proposal: {candidate recommendation, nearest preset, conflicts or none}
 Config:      {configPath} (documentation section)
 
 Created:

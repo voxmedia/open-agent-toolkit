@@ -80,7 +80,12 @@ Most docs serve one or more of these readers:
 - support engineer
 - AI agent making future changes
 
-Write pages for actual tasks, not org-chart abstractions.
+Map personas to tracks by work context: consumers and CLI/API users usually
+enter through tasks or contracts; maintainers through domains and operations;
+product stakeholders through behavior; independent QA through validation;
+agents through exact task inputs and checks. One person may use several tracks.
+Use the five axes in [Information Architecture](information-architecture.md)
+before naming a preset. Write pages for actual tasks, not org-chart abstractions.
 
 ## 5. Decide the Minimum Useful Set
 

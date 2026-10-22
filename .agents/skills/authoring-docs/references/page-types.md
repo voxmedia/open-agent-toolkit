@@ -98,6 +98,30 @@ Rules:
 - Include verification, rollback, and escalation.
 - Avoid long historical background before recovery steps.
 
+## Feature Guide
+
+Describe intended user behavior, the problem solved, prerequisites, boundaries
+and linked Engineering/QA counterparts when the IA declares them. Distinguish
+concept names from verified literal screen text; do not infer behavior from a UI.
+
+## Validation Matrix
+
+Specify scenarios, preconditions, actions and expected outcomes independently
+of implementation details. Link the canonical feature and only cite test IDs
+that exist. Keep duplicate or contradictory scenarios out of the matrix.
+
+## Solution
+
+Explain how supported capabilities combine to solve one end-to-end problem.
+State constraints, tradeoffs, integration steps and verification; link exact
+contracts rather than duplicating reference facts.
+
+## Decision Record
+
+Record an accepted choice with context, alternatives, reasoning, consequences
+and status. Link the authoritative decision surface when it lives elsewhere;
+keep planning and execution evidence out of reader docs.
+
 ## Mixed Pages
 
 Some pages legitimately mix types. A landing page can include orientation,
@@ -110,10 +134,14 @@ and keep everything else subordinate.
 
 ## Smell Test
 
-| If the Reader Asks              | They Need    | Do Not Give Them            |
-| ------------------------------- | ------------ | --------------------------- |
-| I am new. Walk me through this. | Tutorial     | Full API reference          |
-| How do I do X?                  | How-to guide | Architecture essay          |
-| What does this option mean?     | Reference    | A blog post                 |
-| Why does this behave this way?  | Explanation  | A command list              |
-| Production is broken. What now? | Runbook      | Historical background first |
+| If the Reader Asks                          | They Need         | Do Not Give Them             |
+| ------------------------------------------- | ----------------- | ---------------------------- |
+| I am new. Walk me through this.             | Tutorial          | Full API reference           |
+| How do I do X?                              | How-to guide      | Architecture essay           |
+| What does this option mean?                 | Reference         | A blog post                  |
+| Why does this behave this way?              | Explanation       | A command list               |
+| Production is broken. What now?             | Runbook           | Historical background first  |
+| What behavior should this feature provide?  | Feature guide     | Implementation internals     |
+| How do I verify that behavior?              | Validation matrix | Unverified test IDs          |
+| How do these capabilities solve my problem? | Solution          | Disconnected reference dumps |
+| Why was this choice accepted?               | Decision record   | A transient project plan     |

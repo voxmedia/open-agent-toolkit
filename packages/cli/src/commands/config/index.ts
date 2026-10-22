@@ -58,6 +58,7 @@ import {
   type WorkflowManagedDispatchPolicy,
   type WorkflowPostImplementSequence,
   normalizeWorkflowPostImplementSequence,
+  normalizeDocumentationGuidance,
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
@@ -139,6 +140,7 @@ type ConfigKey =
   | 'archive.wrapUpExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
+  | 'documentation.guidance'
   | 'documentation.config'
   | 'documentation.excludes'
   | 'documentation.requireForProjectCompletion'
@@ -322,6 +324,7 @@ const KEY_ORDER: ConfigKey[] = [
   'archive.awsRegion',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
+  'documentation.guidance',
   'documentation.root',
   'documentation.tooling',
   'documentation.config',
@@ -502,6 +505,19 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     description:
       'Deprecated compatibility alias for workflow.autoReviewAtHillCheckpoints. Prefer `oat config set workflow.autoReviewAtHillCheckpoints <true|false>`.',
     deprecated: { supersededBy: 'workflow.autoReviewAtHillCheckpoints' },
+  },
+  {
+    key: 'documentation.guidance',
+    group: 'Documentation',
+    scope: 'shared | user',
+    file: '.oat/config.json | ~/.oat/config.json',
+    type: 'string | string[]',
+    defaultValue: 'null (skills use built-in IA reference)',
+    mutability: 'read-write',
+    owningCommand:
+      'oat config set documentation.guidance <path|JSON-array> [--user]',
+    description:
+      'Ordered advisory Markdown IA sources. Explicit skill input wins, then repo, then user, then built-in. Only path/URL strings are stored.',
   },
   {
     key: 'documentation.root',
@@ -1544,6 +1560,15 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
     return;
   }
 
+  if (key === 'documentation.guidance') {
+    if (surface !== 'shared' && surface !== 'user') {
+      throw new Error(
+        'documentation.guidance supports shared or user scope only.',
+      );
+    }
+    return;
+  }
+
   if (key === 'updateNotifications') {
     if (surface !== 'user') {
       throw new Error(
@@ -2387,6 +2412,63 @@ async function setConfigValue(
   const effectiveSurface: ConfigSurface =
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
 
+  if (key === 'documentation.guidance') {
+    const trimmed = rawValue.trim();
+    const guidance = normalizeDocumentationGuidance(
+      trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
+    );
+    const configPath =
+      effectiveSurface === 'user'
+        ? join(userConfigDir, 'config.json')
+        : join(repoRoot, '.oat', 'config.json');
+    let raw: Record<string, unknown> = { version: 1 };
+    try {
+      const parsed: unknown = parseJsonConfig(
+        await dependencies.readFile(configPath),
+        configPath,
+      );
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        Array.isArray(parsed)
+      ) {
+        throw new Error(`Expected a config object in ${configPath}`);
+      }
+      raw = parsed as Record<string, unknown>;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+    const documentation = raw.documentation;
+    if (
+      documentation !== undefined &&
+      (typeof documentation !== 'object' ||
+        documentation === null ||
+        Array.isArray(documentation))
+    ) {
+      throw new Error(`Expected a documentation object in ${configPath}`);
+    }
+    // Patch only the declared input; do not normalize away unrelated or future fields.
+    if (
+      !isDeepStrictEqual(
+        (documentation as Record<string, unknown> | undefined)?.guidance,
+        guidance,
+      )
+    ) {
+      await dependencies.atomicWriteJson(configPath, {
+        ...raw,
+        documentation: {
+          ...(documentation as Record<string, unknown>),
+          guidance,
+        },
+      });
+    }
+    return {
+      key,
+      value: guidance ?? null,
+      source: effectiveSurface as 'shared' | 'user',
+    };
+  }
+
   if (isPjmRemoteConfigKey(key)) {
     const config = await dependencies.readOatConfig(repoRoot);
     const remote = applyPjmRemoteSharedValue(config.pjm?.remote, key, rawValue);
@@ -3100,6 +3182,17 @@ async function removeFromSurface(
   path: string[],
   dependencies: ConfigCommandDependencies,
 ): Promise<boolean> {
+  if (key === 'documentation.guidance') {
+    const configPath =
+      effectiveSurface === 'user'
+        ? join(userConfigDir, 'config.json')
+        : join(repoRoot, '.oat', 'config.json');
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (!repaired) return false;
+    await dependencies.atomicWriteJson(configPath, repaired);
+    return true;
+  }
+
   if (effectiveSurface === 'user') {
     const configPath = join(userConfigDir, 'config.json');
     const userConfig = await dependencies.readUserConfig(userConfigDir);

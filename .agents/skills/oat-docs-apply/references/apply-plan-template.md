@@ -12,6 +12,15 @@ oat_docs_target: { docs-target-path }
 **Source Analysis:** `{analysis-artifact-path}`
 **Docs Target:** `{docs-target-path}`
 
+## Guidance provenance
+
+- Analysis-selected IA sources, in order: {locators + provenance}
+- Local authority: {AGENTS/contributing citations}
+- Read-only sources verified: {resolved entries or blocked recommendation IDs}
+- Conflicts: {ask_user disposition or none}
+
+Keep the analysis selection; do not copy private contents or invent missing evidence.
+
 ## Instructions
 
 Review the full recommendation set first, then choose a review mode:

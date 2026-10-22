@@ -233,7 +233,7 @@ Notable commands introduced in the current CLI surface:
 - `--local` — write to or remove from `.oat/config.local.json` (per-developer repo state, gitignored)
 - `--user` — write to or remove from `~/.oat/config.json` (user-level fallback, applies across all repos)
 
-When no flag is passed, the CLI picks a sensible default per key type: structural keys (`projects.root`, `documentation.*`, etc.) go to shared, state keys (`activeProject`, etc.) go to local, workflow preferences (`workflow.*`) go to local. Pass at most one flag — the command rejects multiple surface flags.
+When no flag is passed, the CLI picks a sensible default per key type: structural keys (`projects.root`, `documentation.*`, etc.) go to shared, state keys (`activeProject`, etc.) go to local, workflow preferences (`workflow.*`) go to local. Pass at most one flag — the command rejects multiple surface flags. `documentation.guidance` is shared by default and also accepts `--user`; use a path/URL string or a JSON string array, not a comma-separated list.
 
 Per-key restrictions apply identically to `set` and `unset`: structural keys can only be written at shared scope, most state keys can only be written at local scope (`activeIdea` is the exception — it accepts both local and user), and workflow preference keys accept any non-auto surface. Legacy `autoReviewAtCheckpoints` remains shared-only; prefer `workflow.autoReviewAtHillCheckpoints`.
 

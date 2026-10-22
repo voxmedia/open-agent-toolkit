@@ -15,6 +15,18 @@ oat_analysis_commit: { commitHash }
 **Surface Type:** {mkdocs-app|oat-fumadocs-app|docs-tree|root-markdown}
 **Commit:** {short-hash}
 
+## IA guidance and proposal
+
+- Selected sources in order: {locator + explicit/conversation/shared/user/builtin provenance}
+- Resolved index entries: {entry paths/URLs; external Markdown has index.md + Contents}
+- Local authority: {AGENTS/contributing source citations}
+- Conflicts/unreadable sources: {ask_user with both citations, or none}
+- IA proposal: {when --ia, embed the shared authoring-docs IA Proposal template:
+  two two-level trees, 5–8 placements each, page jobs, nearest approved presets,
+  evidence and tradeoffs; otherwise not requested}
+
+Do not copy private guidance contents or persist an IA decision from this report.
+
 ## Summary
 
 - **Files evaluated:** {N}

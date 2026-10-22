@@ -1,12 +1,12 @@
 ---
 name: oat-docs-authoring
 description: Use when authoring or restructuring targeted content inside an existing OAT Markdown surface or OAT/Fumadocs docs app. Preserves OAT docs navigation, generated indexes, and validation boundaries.
-argument-hint: '[docs task or target path]'
+argument-hint: '[docs task or target path] [--ia-guidance <path|url>]'
 disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: '1.1.3'
+  version: '1.2.0'
 ---
 
 # OAT Docs Authoring
@@ -111,9 +111,12 @@ Use `references/docs-root-resolution.md` before assuming any path. OAT docs apps
 commonly live outside `apps/oat-docs`, and `.oat/config.json` may describe the
 generated root index separately from the authored docs root.
 
-If the request needs universal documentation standards, load `authoring-docs`
-and use its reference map for evidence gathering, page type, writing style,
-templates, and review rubric.
+Load `authoring-docs` and use its reference map for evidence gathering, page
+type, writing style, templates and review rubric. For IA work use its five-axis
+method and `references/guidance-sources.md`: explicit `--ia-guidance` or
+conversation → repo config → user config → built-in. Cite ordered source
+locators/provenance in the handoff; respect AGENTS/contributing authority,
+keep non-repo sources read-only and report conflicts as `ask_user`.
 
 ### Step 2: Inspect Evidence and Local Maps
 
