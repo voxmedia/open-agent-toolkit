@@ -307,7 +307,7 @@ Root acceptance: p-rev1 is accepted after clean independent review, ordered pass
 
 **Status:** in_progress
 **Base:** eaf354667bc270d51ebc27eb292375b9dc32cf06
-**Head:** 7564e8332cdcae4d40e6dbf746f0c54ba93a23a8
+**Head:** bbefca279ca3a24108f465b65c7b6f351be3ee80
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 
 Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
@@ -380,15 +380,38 @@ Source: `reviews/p02-review-2026-10-22T215711Z.md`, request `docs367-p02-review-
 - L2 accepted — the user fallback key list omits guidance and its catalog group drops the established layering label; p02 requires current config/workflow docs. Add the supported key with an existing anchor link and align the group label.
 - L3 accepted — preserve required public synthetic walkthroughs and controls under the project's ignored `analysis/p02/` folder, with a concise evidence index and byte-preserving copies. Retain historical /tmp citations as original provenance; add the persistent local location without tracking generated evidence or isolated homes.
 
-### Task p02-t02: Repair scoped guidance diagnostics and review gaps
+### Task p02-t02: (review) Repair scoped guidance diagnostics and review gaps
 
-**Status:** pending
+**Status:** completed
+**Commit:** bbefca279ca3a24108f465b65c7b6f351be3ee80
 **Executor:** phase-implementer:docs367-p02-impl-20261022
 **Handle:** docs367-p02-impl-20261022 (same pinned conversation)
+**Source review:** `reviews/p02-review-2026-10-22T215711Z.md` — M1, L1, L2, L3 (accepted by root).
 **Intent:** Close accepted M1/L1/L2/L3 without changing guidance resolution or adding p03/p07 behavior.
 **Files:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/guidance.test.ts`, `.agents/skills/authoring-docs/references/information-architecture.md`, `.agents/skills/authoring-docs/references/templates.md`, `.agents/skills/authoring-docs/tests/ia-contract.test.mjs`, `apps/oat-docs/docs/reference/configuration.md`; p02-local journal/Head and ignored `analysis/p02/` proof outputs only.
 **Proof command:** real-file repair regression fails before and passes after, valid guidance/control and unrelated state retained; focused config/IA/sentence contracts; ordered gates 1–8 with explicit exits and cache disclosure; skill lint/format.
-**Outcome:** queued for the original exact Codex Sol 6.1 medium/priority implementation handle; no product fix made by root.
+**Outcome:** M1/L1/L2/L3 addressed in one bounded seven-file product commit. Guidance validation now carries the actual config path through repo/user readers and writers and the config-set command, advertising only a working scope-specific unset (`--user` or `--shared`). Strict validation, default scope and resolution semantics are unchanged. Two shipped IA passages now use reader-neutral wording; only the transient deferral assertion was removed. The user-fallback docs link the existing shared-key section and the catalog label states shared > user. No additional skill/package version bumps: the five skills and public 0.3.24 versions already satisfy this PR's gates.
+
+**Continuity and boundary:** Release marker matched clean `bd42a9cc0d64e25bfdbf25191290bfbd4c2ba8ce` before writes. Same original request `docs367-p02-impl-20261022`, continuation `docs367-p02-fix-r1-20261022`, exact Codex Sol 6.1 medium/priority target retained. Review-fix round 1/2, not recovery; recovery usage 0/10, remaining 10, pending null. Root integration/run lines, review dispositions, state, plan and project log were preserved. Phase remains in_progress for root re-review/acceptance.
+
+**Behavioral proof and test value:** `analysis/p02/fix-r1/pre-fix-repair.log` exit 1 reproduces the user advertised repair returning error, and the repo diagnostic omitting its actual file path; the existing 3 tests and each pre-corruption valid control pass. After correction, `focused-config.log` exit 0: 280 tests, including both user/shared real-file repair cases, execute the advertised command successfully, preserve all unrelated raw state, remove guidance and restore built-in fallback. `ia-baseline.log` passes before deletion and `ia-contract.log` passes after. The removed transient deferral protection is **Obsolete**, retired by accepted L1; phase/delivery wording is not a product contract and p07 deferral stays in this journal/brief. All real method/preset/page-type/IA Proposal/workflow/rubric/style guards remain. No cosmetic replacement pin or test-only production hook was added. Full deliberate-testing accounting: `analysis/p02/fix-r1/test-value.md`.
+
+**Preserved public evidence:** Byte-preserving copies now live at `.oat/projects/shared/docs-skills-ia-367/analysis/p02/` (gitignored) alongside index `README.md` and per-file `source-sha256.json`. Copies include `proposal-*.md`, `*-selection.json`, read-only maps, `probes.py`, negative-control logs and restored-valid-control log, conservation notes and the small public walkthrough inputs. Original provenance remains `/tmp/oat-docs367-p02/`; no isolated homes, dependencies or machine baselines were copied. These remain manual implementation-agent walkthroughs with actual helper outputs, not automated agent-execution claims. All P1/P2/G1/G6 and D1–D9 citations/conservation conclusions above are retained. The only removed prose is transient scheduling wording; no method facts or links were dropped. Persistence/restructure remain p03 and Feature/QA templates remain p07.
+
+**Verification:** All following exits are 0; commands ran in the required order, then skill extras. Evidence directory is `.oat/projects/shared/docs-skills-ia-367/analysis/p02/fix-r1/`, with individual `.exit` files. Historical `/tmp` and `integrated/` evidence was not overwritten.
+
+| Gate                                          | Evidence and cache disclosure                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. `pnpm check`                               | `gate-1-check.log`: all 11 Turbo tasks fresh, root validation/format executed.                                                                          |
+| 2. `pnpm type-check`                          | `gate-2-types.log`: all 6 type checks fresh; 5 dependency builds replayed.                                                                              |
+| 3. isolated-HOME `TURBO_FORCE=true pnpm test` | `gate-3-test.log`: all 12 Turbo tasks fresh, zero replay; CLI 8,862 tests, other packages 351, docs 85, root smoke 165, skills 701, scripts 1 all pass. |
+| 4. `pnpm build`                               | `gate-4-build.log`: 5/5 tasks replayed; builds executed fresh in gate 3.                                                                                |
+| 5. `pnpm run check:skill-bumps`               | `gate-5-skills.log`: 5 changed canonical skill/agent checks pass against current main.                                                                  |
+| 6. `pnpm release:check-versions`              | `gate-6-versions.log`: fresh main fetch exit 0, main `e36497bead86df31fbffc6ea9cbc5b591d6ecadb`, assigned-path drift log empty.                         |
+| 7. `pnpm release:validate`                    | `gate-7-release.log`: all five public 0.3.24 tarballs validated.                                                                                        |
+| 8. `pnpm build:docs`                          | `gate-8-docs.log`: 6/6 tasks replayed; docs and dependencies built fresh in gate 3.                                                                     |
+
+`lint.log` and `format.log` exit 0, each 5/10 Turbo tasks replayed with root passes executed. Isolated-HOME `sentence-contracts.log` exit 0: 1,087 tests across 26 files fresh. Scoped precommit lint and CLI build exit 0. No fix-r1 gate failed or needed a no-edit rerun. The original visual-smoke failure and its no-edit rerun remain disclosed in p02-t01. After hooks all seven committed product files match the tested SHA-256 map (`tested-product-sha256.json`), so full gates were not redundantly repeated for unchanged bytes. Review-scope journal validation exit 0; root's accepted continuation remains nonterminal until handoff bookkeeping.
 
 ---
 
