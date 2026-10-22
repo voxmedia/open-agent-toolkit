@@ -119,6 +119,8 @@ Execution: one delegated phase implementer in the current worktree, which is the
 
 <!-- orchestration-runs-start -->
 
+- run/v1 · request=docs367-p01-impl-20261022 · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
