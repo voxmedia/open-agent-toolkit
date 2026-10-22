@@ -521,12 +521,18 @@ Root consumed exactly one `**Reconnaissance:** not-attempted` signal before arti
 
 ### Task p03-t02: (review) Report safe package upgrades and locate shim bundles
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
 **Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M1, L1)
 
 Intent: distinguish installed-newer from an actual upgrade without ever emitting a downgrade as an upgrade; update the analyze consumer and bounded apply wording if needed. Give shim users an actionable discovery path verified against the invoked CLI version, preserving offline metadata provenance and dependency section.
 Files: `.agents/skills/oat-docs-analyze/scripts/package-drift.mjs`, `.agents/skills/oat-docs-analyze/tests/package-drift.test.mjs`, `.agents/skills/oat-docs-analyze/SKILL.md`; `.agents/skills/oat-docs-apply/SKILL.md` only if the carve-out needs matching no-downgrade wording.
 Proof: real-helper newer/older/equal/missing regression and valid controls, pre-fix failure at the intended assertion, numeric ordering/prerelease ambiguity handled safely, documented shim-discovery command executed against this host's actual install. Keep tests at the public helper boundary with literal expected outcomes; no own-reader mocks or new resolver runtime.
+
+**Commit:** 30d58ef98da5038794b68bc913b8d1820337317d
+
+**Evidence:** `analysis/p03/fix-r1/t02-red` preserves the baseline regression failing at installed 0.3.26: drift versus literal ahead (exit 1); fixed and immediate postcommit real-helper/prose suites pass (6 tests, exit 0). Numeric 0.3.9/0.10.0, prerelease/unknown, older/equal/missing and dependency-section controls pass. Existing isolated sentence contracts (1,087), scoped oxlint and format pass. The documented offline shim fallback was executed against this host: invoked oat, inspected JavaScript target and manifest all 0.3.22; its actual bundle reports installed app packages 0.3.25 as ahead with null command. Analyze requests intended CLI selection/update; apply explicitly forbids downgrade. No resolver framework or registry lookup added.
 
 ### Task p03-t03: (review) Preserve undeclared null mirrors and restore guidance comment
 
