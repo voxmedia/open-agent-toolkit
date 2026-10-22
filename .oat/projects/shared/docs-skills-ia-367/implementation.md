@@ -42,7 +42,7 @@ oat_template: false
 | Phase  | Status      | Units | Accepted |
 | ------ | ----------- | ----- | -------- |
 | p01    | completed   | 1     | 1/1      |
-| p-rev1 | in_progress | 1     | 1/1      |
+| p-rev1 | in_progress | 1     | 0/1      |
 | p02    | pending     | 1     | 0/1      |
 | p03    | pending     | 1     | 0/1      |
 | p04    | pending     | 1     | 0/1      |
