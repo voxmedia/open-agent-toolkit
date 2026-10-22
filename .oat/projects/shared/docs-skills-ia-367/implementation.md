@@ -63,6 +63,21 @@ oat_template: false
 
 Execution: one delegated phase implementer in the current worktree, which is the committing owner. No parallel group is declared. Root fan-out is unsuitable because the slices share skill contracts, template outputs, formatting, and verification. Root retains independent review and phase acceptance.
 
+### Task p01-t01: Preserve export configuration and render scaffold facts
+
+**Status:** completed
+**Commit:** a9cb2d58fe475eca71a9784e7191ef2640fddf4d
+**Executor:** phase-implementer:docs367-p01-impl-20261022
+**Handle:** docs367-p01-impl-20261022
+
+Intent: pass the ESM-safe app directory through `createDocsConfig`, preserve static export and base-path settings, render the consuming repository's Node requirement, and put generated-file guidance in the template.
+Files: `packages/docs-config/src/next-config{,.test}.ts`, `packages/docs-config/README.md`, `packages/cli/src/commands/docs/init/{scaffold.ts,scaffold.test.ts,integration.test.ts}`, `.oat/templates/docs-app-fuma/{next.config.js,docs/getting-started.md,docs/contributing.md}`.
+Proof: docs-config tests (11), docs-init tests (109, isolated home), docs-config lint/type-check, changed CLI-file lint, CLI type-check, scoped docs-config and CLI builds all exit 0. Builds executed changed packages (dependency cache replays are not claimed as executions). Missing dependency builds and bundle metadata caused initial setup failures; building dependencies and bundling assets resolved them without code changes.
+
+Negative control: `/tmp/oat-docs367-p01/config-negative-control.mjs` exercises real Fumadocs wrapping with only asynchronous source generation disabled: old Path B accepts `{reactStrictMode, turbopack}` but loses `output`; fixed config preserves `output: export`, `trailingSlash`, `images.unoptimized`, `basePath`, client environment and root; default valid control passes (exit 0). Removing the turbopack forwarding line makes the regression test fail (exit 1); restoring it passes (exit 0). Logs: `/tmp/oat-docs367-p01/t01-{config,init,neutralized,restored,negative-control,lint,types,build,cli-build,cli-types}.log`.
+
+Conservation/self-review: generated-file prose moved from the bootstrap patch contract into the template with committed `meta.json`/nav-sync guidance retained; the getting-started content is otherwise unchanged. Runtime option inventory covered factory/types, callers, template and scaffold assertions; no unrelated caller requires propagation. Independent phase review remains root-owned.
+
 ---
 
 ## Phase p02: IA method and guidance input
