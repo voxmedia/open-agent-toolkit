@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 
 export interface DocsConfigOptions {
   basePath?: string;
+  turbopack?: { root?: string };
 }
 
 export function createDocsConfig(options: DocsConfigOptions): NextConfig {
@@ -11,6 +12,7 @@ export function createDocsConfig(options: DocsConfigOptions): NextConfig {
     trailingSlash: true,
     images: { unoptimized: true },
     reactStrictMode: true,
+    ...(options.turbopack ? { turbopack: options.turbopack } : {}),
     ...(options.basePath
       ? {
           basePath: options.basePath,

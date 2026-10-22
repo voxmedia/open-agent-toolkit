@@ -73,6 +73,7 @@ describe('scaffold integration', () => {
       const root = await mkdtemp(join(tmpdir(), 'oat-integration-fuma-'));
       createdRoots.push(root);
       await mkdir(join(root, 'apps'), { recursive: true });
+      await writeFile(join(root, '.nvmrc'), '24.4.1\n', 'utf8');
 
       // Seed OAT package dirs so detectIsOatRepo returns true
       for (const pkg of [
@@ -135,11 +136,15 @@ describe('scaffold integration', () => {
         'utf8',
       );
       expect(nextConfig).toContain(
-        'createDocsConfig(basePath ? { basePath } : {})',
+        'turbopack: { root: dirname(fileURLToPath(import.meta.url)) }',
       );
       expect(nextConfig).not.toContain('title:');
       expect(nextConfig).not.toContain('description:');
       expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
+
+      expect(
+        await readFile(join(result.appRoot, 'docs/getting-started.md'), 'utf8'),
+      ).toContain('- Node.js 24.4.1');
 
       // Verify layout has Next metadata and branding
       const layout = await readFile(
