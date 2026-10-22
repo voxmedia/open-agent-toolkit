@@ -151,34 +151,21 @@ export async function validateSourceTargets(
   if (errors.length) throw new Error(errors.join('\n'));
 }
 
-export async function validateTopicMap(
-  docsRoot: string,
-  skillPath: string,
-): Promise<number> {
-  const markdown = await readFile(skillPath, 'utf8');
-  const lines = sourceText(markdown).split('\n');
-  const header = lines.findIndex((line) =>
-    /^\|\s*Topic Area\s*\|\s*Docs Path\s*\|/.test(line),
+/** Validate the runtime topic map from the installed docs entrypoint. */
+export async function validateTopicMap(docsRoot: string): Promise<number> {
+  const source = join(docsRoot, 'index.md');
+  const lines = sourceText(await readFile(source, 'utf8')).split('\n');
+  const header = lines.findIndex((line) => /^## Contents\s*$/.test(line));
+  if (header < 0) throw new Error(`${source}: missing Contents topic map`);
+  const end = lines.findIndex(
+    (line, index) => index > header && /^## /.test(line),
   );
-  if (header < 0) throw new Error(`${skillPath}: missing docs topic table`);
-  const targets: Array<{ source: string; href: string }> = [];
-  for (const line of lines.slice(header + 2)) {
-    if (!line.startsWith('|')) break;
-    const cell = line.split('|')[2] ?? '';
-    const paths = [...cell.matchAll(/`([^`]+)`/g)].map((match) => match[1]!);
-    if (!paths.length)
-      throw new Error(`${skillPath}: missing topic path in ${line}`);
-    for (const path of paths) {
-      if (
-        path.startsWith('/') ||
-        path.split('/').includes('..') ||
-        !/^(?:[^?#]+\.md(?:#[^?]+)?|[^?#]+\/)$/.test(path)
-      )
-        throw new Error(`${skillPath}: unsupported topic path ${path}`);
-      targets.push({ source: join(docsRoot, 'index.md'), href: path });
-    }
-  }
-  if (!targets.length) throw new Error(`${skillPath}: empty docs topic table`);
+  const section = lines.slice(header + 1, end < 0 ? undefined : end).join('\n');
+  const targets = markdownLinkTargets(section).map((href) => ({
+    source,
+    href,
+  }));
+  if (!targets.length) throw new Error(`${source}: empty Contents topic map`);
   await validateSourceTargets(docsRoot, targets);
   return targets.length;
 }
@@ -237,10 +224,7 @@ export async function validateHostedReadmes(
 
 export async function validateLiveConsumers(root: string): Promise<void> {
   const docsRoot = join(root, 'apps/oat-docs/docs');
-  const topics = await validateTopicMap(
-    docsRoot,
-    join(root, '.agents/skills/oat-docs/SKILL.md'),
-  );
+  const topics = await validateTopicMap(docsRoot);
   const hosted = await validateHostedReadmes(
     docsRoot,
     [

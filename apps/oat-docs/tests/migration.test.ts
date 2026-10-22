@@ -77,26 +77,23 @@ test('a moved-page fragment is checked against its actual target heading', async
   ]);
 });
 
-test('live skill topic paths reject stale file and directory owners without project inputs', async () => {
+test('runtime Contents topic paths reject stale file, directory and fragment owners', async () => {
   const root = await fixture();
-  const skill = join(root, 'SKILL.md');
-  const table = (path: string) =>
-    `# Docs\n\n| Topic Area | Docs Path | Key Content |\n| --- | --- | --- |\n| Research | \`${path}\` | Research guide |\n`;
-  await writeFile(skill, table('skills/research.md#compare-options'));
-  assert.equal(await validateTopicMap(root, skill), 1);
-  await writeFile(skill, table('workflows/skills/research.md'));
-  await assert.rejects(validateTopicMap(root, skill), /unresolved source link/);
-  await writeFile(skill, table('workflows/skills/'));
-  await assert.rejects(validateTopicMap(root, skill), /unresolved source link/);
-  await writeFile(skill, table('skills/research.md#absent'));
-  await assert.rejects(
-    validateTopicMap(root, skill),
-    /unresolved source fragment/,
-  );
-  await writeFile(skill, table('skills/'));
-  await assert.rejects(validateTopicMap(root, skill), /unresolved source link/);
+  const entrypoint = join(root, 'index.md');
+  const contents = (path: string) =>
+    `# Docs\n\n## Contents\n\n- [Research](${path}) - Research guide\n`;
+  await writeFile(entrypoint, contents('skills/research.md#compare-options'));
+  assert.equal(await validateTopicMap(root), 1);
+  await writeFile(entrypoint, contents('workflows/skills/research.md'));
+  await assert.rejects(validateTopicMap(root), /unresolved source link/);
+  await writeFile(entrypoint, contents('workflows/skills/'));
+  await assert.rejects(validateTopicMap(root), /unresolved source link/);
+  await writeFile(entrypoint, contents('skills/research.md#absent'));
+  await assert.rejects(validateTopicMap(root), /unresolved source fragment/);
+  await writeFile(entrypoint, contents('skills/'));
+  await assert.rejects(validateTopicMap(root), /unresolved source link/);
   await writeFile(join(root, 'skills/index.md'), '# Skills\n');
-  assert.equal(await validateTopicMap(root, skill), 1);
+  assert.equal(await validateTopicMap(root), 1);
 });
 
 test('hosted README links resolve leaf, landing and real fragments from source only', async () => {
