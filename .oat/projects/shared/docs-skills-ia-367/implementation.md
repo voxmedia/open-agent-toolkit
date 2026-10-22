@@ -587,12 +587,18 @@ Root consumed exactly one `**Reconnaissance:** not-attempted` signal before arti
 
 ### Task p03-t05: (review) Reject null IA set without affecting stored absence
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r2-20261022 (original accepted handle)
 **Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L1)
 
 Intent: reject JSON null at the real documentation.ia set boundary with a neutral invalid-value diagnostic, preserving declared config bytes; keep stored null ia/navOwner undeclared and readable. Preserve unset, valid set, invalid repair, scope and unrelated fields. Correct the earlier overly broad no-set-change evidence by an explicit appended correction.
 Files: `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/ia.test.ts`; ignored `analysis/p03/fix-r1/README.md` correction plus new `analysis/p03/fix-r2/` proofs.
 Proof: one real-command regression starts with a declared IA, set documentation.ia null is rejected with bytes unchanged; fails on immutable pre-fix code at the intended acceptance/removal error, then passes. Existing stored-null, valid set/unset/invalid repair controls remain passing.
+
+**Commit:** 65218cfd8d1b4aa3e4cdf7488e76667e38aea0ad
+
+**Evidence:** `analysis/p03/fix-r2/t05-red` fails at null set returning ok instead of a neutral invalid-value error (exit 1; 15 controls pass). Fixed and immediate committed-content config suites pass (654 tests, exit 0); byte preservation, valid set/unset, stored-null reads, repair and scope controls survive. CLI lint/types/build and focused format exit 0. The set validator alone rejects null; normalizers and navOwner behavior are unchanged. The ignored round-1 README now explicitly corrects the earlier no-set-change claim, preserving history.
 
 ### Task p03-t06: (review) Align package-drift template with ahead results
 
