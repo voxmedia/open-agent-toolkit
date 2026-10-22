@@ -74,7 +74,18 @@ export function isInstructionSyncStrategy(
   );
 }
 
+export interface OatDocumentationIa {
+  preset: string;
+  decision: string;
+  tracks?: Array<{ path: string; principle: string }>;
+  verification?: 'triad' | 'agent-only' | 'none';
+}
+
 export interface OatDocumentationConfig {
+  /** Repository-only mirror; the authored decision and local guidance own IA. */
+  ia?: OatDocumentationIa;
+  /** Absent is undeclared. Markdown ignores sidebar ownership. */
+  navOwner?: 'nav-sync' | 'hand-authored';
   /** Ordered advisory IA source paths/URLs; selected as a layer, never merged. */
   guidance?: string | string[];
   root?: string;
@@ -1859,6 +1870,13 @@ function normalizeOatConfig(
 
   if (isRecord(parsed.documentation)) {
     const doc: OatDocumentationConfig = {};
+    const ia = normalizeDocumentationIa(parsed.documentation.ia, configPath);
+    if (ia !== undefined) doc.ia = ia;
+    const navOwner = normalizeDocumentationNavOwner(
+      parsed.documentation.navOwner,
+      configPath,
+    );
+    if (navOwner !== undefined) doc.navOwner = navOwner;
     const guidance = normalizeDocumentationGuidance(
       parsed.documentation.guidance,
       configPath,
@@ -2507,6 +2525,79 @@ const USER_CONFIG_OWNED_KEYS = new Set([
 ]);
 
 /** Validate guidance without reading, fetching or rewriting the referenced inputs. */
+/** Shared by stored-config reads and the real config command. */
+export function normalizeDocumentationIa(
+  value: unknown,
+  configPath: string,
+): OatDocumentationIa | undefined {
+  if (value === undefined) return undefined;
+  const nonempty = (entry: unknown): entry is string =>
+    typeof entry === 'string' && entry.trim().length > 0;
+  const repoRelative = (entry: unknown): entry is string =>
+    nonempty(entry) &&
+    !/^(?:[\\/]|[a-zA-Z]:|[a-zA-Z][a-zA-Z+.-]*:)/.test(entry.trim()) &&
+    !entry.split(String.fromCharCode(92)).join('/').split('/').includes('..');
+  if (
+    !isRecord(value) ||
+    Object.keys(value).some(
+      (key) => !['preset', 'decision', 'tracks', 'verification'].includes(key),
+    ) ||
+    !nonempty(value.preset) ||
+    !repoRelative(value.decision) ||
+    (value.verification !== undefined &&
+      !['triad', 'agent-only', 'none'].includes(
+        value.verification as string,
+      )) ||
+    (value.tracks !== undefined &&
+      (!Array.isArray(value.tracks) ||
+        !value.tracks.every(
+          (track) =>
+            isRecord(track) &&
+            Object.keys(track).every((key) =>
+              ['path', 'principle'].includes(key),
+            ) &&
+            repoRelative(track.path) &&
+            nonempty(track.principle),
+        )))
+  ) {
+    throw new Error(
+      `Invalid documentation.ia in ${configPath}: expected { preset, decision (repo-relative path), tracks?: [{ path, principle }], verification?: triad|agent-only|none }. Repair with oat config set documentation.ia '<JSON>' or oat config unset documentation.ia --shared.`,
+    );
+  }
+  return {
+    preset: value.preset.trim(),
+    decision: value.decision.trim(),
+    ...(value.tracks !== undefined
+      ? {
+          tracks: (
+            value.tracks as Array<{ path: string; principle: string }>
+          ).map((track) => ({
+            path: track.path.trim(),
+            principle: track.principle.trim(),
+          })),
+        }
+      : {}),
+    ...(value.verification !== undefined
+      ? {
+          verification:
+            value.verification as OatDocumentationIa['verification'],
+        }
+      : {}),
+  };
+}
+
+export function normalizeDocumentationNavOwner(
+  value: unknown,
+  configPath: string,
+): OatDocumentationConfig['navOwner'] {
+  if (value === undefined) return undefined;
+  if (value !== 'nav-sync' && value !== 'hand-authored')
+    throw new Error(
+      `Invalid documentation.navOwner in ${configPath}: expected nav-sync or hand-authored. Repair with oat config set documentation.navOwner <value> or oat config unset documentation.navOwner --shared.`,
+    );
+  return value;
+}
+
 export function normalizeDocumentationGuidance(
   value: unknown,
   configPath: string,

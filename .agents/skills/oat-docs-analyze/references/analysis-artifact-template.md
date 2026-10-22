@@ -27,6 +27,32 @@ oat_analysis_commit: { commitHash }
 
 Do not copy private guidance contents or persist an IA decision from this report.
 
+## Information Architecture Fit
+
+- Authored decision and Information architecture section: {paths/lines or missing}
+- Config mirror: {preset, decision, tracks/principles, verification; agrees/conflicts}
+- Missing IA / conflicting authority: {ask_user recommendation ID or none}
+- Sidebar owner: {nav-sync / hand-authored / undeclared; Markdown: ignored}
+- Undeclared framework owner: {ask_user recommendation ID or none}
+
+| Declared reader/track                                    | Landing route and section reachability | Placement/coverage evidence               | Reader impact                                                  | Severity              |
+| -------------------------------------------------------- | -------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- | --------------------- |
+| {Product / QA / consumer / agent / other declared track} | {exact links}                          | {sources; page purpose; missing coverage} | {blocked first success/verification, material detour, or none} | {High / Medium / N/A} |
+
+Assess root breadth and implementation-directory mirroring using reader evidence.
+Do not invent missing audiences or choose an IA without approval.
+
+## Offline Package Drift
+
+- Bundle metadata: {running CLI public-package-versions.json path or unverified}
+- Docs app manifest: {path; Markdown: not applicable}
+
+| Package                       | Declared / installed                | Bundled   | Status                         | Exact upgrade command                                    | Recommendation ID           |
+| ----------------------------- | ----------------------------------- | --------- | ------------------------------ | -------------------------------------------------------- | --------------------------- |
+| {@open-agent-toolkit/docs-\*} | {range / actual version or missing} | {version} | {current / drift / unverified} | {command from offline helper, adapted to actual manager} | {R-NNN; approval: explicit} |
+
+Unsupported app config/routes/scripts: {manual changes required; never automatic}.
+
 ## Summary
 
 - **Files evaluated:** {N}
@@ -270,14 +296,18 @@ canonical docs/config/examples.
 
 1. **{Action}** — {rationale}
    - Target: `{path}`
-   - Action Type: {create / update / move / scaffold / sync-nav}
+   - ID: {R-NNN; unique and stable}
+   - approval: {explicit | default}
+   - Action Type: {create / update / move / scaffold / sync-nav / record-ia / restructure / tooling-update / manual}
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
    - Link Targets: {path or URL / N/A}
 2. **{Action}** — {rationale}
    - Target: `{path}`
-   - Action Type: {create / update / move / scaffold / sync-nav}
+   - ID: {R-NNN; unique and stable}
+   - approval: {explicit | default}
+   - Action Type: {create / update / move / scaffold / sync-nav / record-ia / restructure / tooling-update / manual}
    - Evidence: {exact refs}
    - Confidence: {high | medium | low}
    - Disclosure: {inline | link_only | omit | ask_user}
@@ -286,6 +316,9 @@ canonical docs/config/examples.
 
 ## Apply Contract
 
+- `oat-docs-apply` input is this artifact path plus approved recommendation IDs.
+- Every recommendation has a unique stable ID and approval: explicit | default.
+- Explicit items need individual approval by ID; blanket/unattended approval skips them and reports the reason.
 - `oat-docs-apply` may only implement recommendations backed by evidence in this artifact.
 - Findings based on contradicted claims must be resolved against cited repo sources before `oat-docs-apply` acts on them.
 - Generated artifacts must not be hand-edited by `oat-docs-apply`. If a

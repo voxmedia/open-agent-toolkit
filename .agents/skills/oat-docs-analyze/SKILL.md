@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.7.0'
+  version: '1.7.1'
 ---
 
 # Docs Analysis
@@ -106,8 +106,9 @@ Use the five axes before presets and show two plausible two-level trees with
 5–8 representative page placements each, page jobs, nearest approved presets
 and tradeoffs. A UI alone does not justify Product/Engineering/QA; size chooses
 depth, not audience. For an existing tree respect AGENTS/contributing authority;
-conflicts are `ask_user`, with both source citations. Propose only: no IA
-persistence, restructure action or scaffold materialization in this stage.
+conflicts are `ask_user`, with both source citations. Analyze remains read-only:
+propose `record-ia` or `restructure` recommendations for apply; never persist
+IA or materialize scaffolds from analysis.
 
 ### Step 0: Resolve Docs Target and Analysis Mode
 
@@ -308,6 +309,37 @@ For each evaluated page or directory:
 In `delta` mode, always evaluate changed docs files plus the nearest parent `index.md` pages.
 In `full` mode, evaluate the whole docs surface.
 
+### Information Architecture Fit
+
+Read the authored IA decision and `## Information architecture` section in the
+docs-app AGENTS.md (Fumadocs/MkDocs) or contributing page (Markdown).
+`documentation.ia` is a repository-only mirror: compare preset, decision path,
+tracks/principles and verification overlay to those authored sources. The
+authored record is authoritative; missing/broken records or contradictory
+mirrors become `ask_user` findings. No recorded IA means `ask_user` to choose
+and record one, not an inferred preset. Keep ordinary contract analysis useful
+while those recommendations are blocked.
+
+In the artifact's **Information Architecture Fit** section, cite whether the
+landing page routes each declared audience, all declared sections exist and are
+reachable, page reader/purpose matches placement, root breadth is usable, and an
+app's docs avoid merely mirroring implementation directories. Review coverage
+only for declared readers: Product features/journeys/screens/states; QA scenario
+tables with seeds and automation references; consumer first-success/task guides;
+agent entrypoints, canonical sources and verification commands. Do not demand
+these tracks from every repository or implement the later P24 source checks.
+
+Top-level IA misroutes a declared audience: `High` when the reader cannot find
+a normal first-success or required verification path; `Medium` when that path
+is reachable but its placement causes material detours/confusion. Cite the
+declared audience, route and concrete reader impact. This rule overrides Low
+organization polish; do not upgrade purely cosmetic differences.
+
+For framework apps read `documentation.navOwner` independently of IA. Missing
+means **undeclared**: issue `ask_user` to choose `nav-sync` or `hand-authored`,
+and run only read-only membership/order comparisons. Never assume nav sync owns
+existing navigation. Markdown ignores navOwner and never runs nav sync.
+
 ### Step 4: Verify Substantive Claims Against Repo Sources
 
 Add a dedicated accuracy verification pass between page-quality assessment and nav/drift checks.
@@ -429,8 +461,8 @@ If a generated root index or manifest exists:
    files, and representative links for each finding.
 5. Prefer source-of-truth fixes over generated-file edits.
 
-If the app is Fumadocs (a `source.config.ts` beside `docs/`), its sidebar comes from
-`docs/**/meta.json` files that `oat docs nav sync` generates from `## Contents`:
+For a Fumadocs app with recorded `navOwner: nav-sync`, compare generated
+`docs/**/meta.json` with authored `## Contents`:
 
 1. Flag a docs directory with an `index.md` but no `meta.json` as a missing
    generated artifact.
@@ -454,6 +486,13 @@ If the app is Fumadocs (a `source.config.ts` beside `docs/`), its sidebar comes 
    1 when either exists. The skill grants only this `--check` form; plain
    `oat docs nav sync` writes files and is not part of analysis.
 
+For `hand-authored` or undeclared Fumadocs navigation, compare current meta.json
+membership/order with Contents without assuming strict generator output; do not
+flag rest entries merely because they are hand-authored. Report missing reader
+routes and differences with local ownership evidence; recommend no automatic
+regeneration. For nav-sync-owned MkDocs, use the same explicit-target read-only
+`oat docs nav sync --check --target-dir <docs-app-dir>`.
+
 If `mkdocs.yml` exists:
 
 1. Compare nav entries with the docs tree.
@@ -467,6 +506,28 @@ site nav generation or builds. Lack of `mkdocs.yml`, a generated manifest, or an
 app package is expected, not a migration finding. For other unconfigured surfaces,
 record whether app migration is relevant only when evidence or user intent supports it.
 
+### Offline docs-package drift
+
+For framework apps read their package.json and installed docs packages against
+the running CLI's bundled `assets/public-package-versions.json`, without network.
+Run this skill's production helper after resolving this skill's own directory:
+
+```bash
+node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --cli "$(command -v oat)"
+```
+
+If a package-manager wrapper prevents locating the CLI root, pass `--versions
+<installed-cli-root>/assets/public-package-versions.json` explicitly. Never
+substitute registry latest or this target repo's package version. Missing bundle
+metadata or missing installed packages means unverified, never current. The
+helper reports declared and installed versions, target versions and per-package
+upgrade commands. If the app uses a different package manager, translate the
+command to its documented equivalent preserving package, exact target and
+dependency section. Cite the manifest, installed package path, bundle path and
+exact command. Report drift as `tooling-update`, `approval: explicit`; describe
+unsupported scaffold repairs separately as `manual`. Markdown has no app-package
+drift check. This helper reads only and never upgrades anything.
+
 ### Step 7: Severity-Rate Findings
 
 Use these defaults:
@@ -475,6 +536,19 @@ Use these defaults:
 - `High`: missing docs app/index coverage for important areas, broken nav, or stale commands that block reliable usage
 - `Medium`: incomplete `## Contents`, `overview.md` still in use, plugin/contributor guidance gaps, moderate duplication
 - `Low`: polish, wording, or organization improvements
+
+### Recommendation handoff
+
+Give every recommendation a unique stable ID (`R-001`, etc.) and
+`approval: explicit | default`; preserve IDs through review and never reuse a
+retired ID for a different change. `explicit` covers docs-package updates,
+restructure blocks and anything outside the Markdown scope (including authored
+IA decision/config writes). `default` covers ordinary in-scope content repairs.
+Missing evidence, `omit` and `ask_user` remain independent blockers regardless
+of approval class. Capture exact targets and commands; an explicit class is not
+permission to perform unsupported work. Apply's one input is this artifact plus
+a list of approved recommendation IDs. Blanket or unattended approval never
+covers explicit recommendations; apply reports skipped IDs with reasons.
 
 ### Step 8: Write Analysis Artifact
 
@@ -497,7 +571,8 @@ Populate the artifact with:
 - Accuracy verification verdicts for repo-checkable claims
 - Content opportunities for missing or thin docs coverage
 - Navigation/drift findings
-- Ordered recommendations
+- Information Architecture Fit and offline package drift
+- Ordered recommendations with stable IDs and approval classes
 - Exact evidence references for each finding and recommendation
 - Confidence for each recommendation
 - Progressive disclosure decisions (`inline`, `link_only`, `omit`, `ask_user`)

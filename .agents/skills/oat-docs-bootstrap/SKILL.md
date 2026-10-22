@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.0'
+  version: '1.4.1'
 ---
 
 # Docs Bootstrap
@@ -382,9 +382,19 @@ through `oat-docs-analyze --ia`; it does not return to scaffold afterward.
    `ask_user` with local/external source citations. Non-repo guidance stays read-only
    and private exemplars are never copied. Cite ordered sources in the proposal
    and final summary, including the built-in path when it wins.
-6. Carry the proposal to analyze/apply content kickoff. This stage proposes only:
-   it does not persist an accepted IA, restructure pages or scaffold preset trees.
-   CLI scaffold output remains the existing starter; those capabilities ship later.
+6. Obtain explicit approval of the selected IA before persistence. After setup,
+   use apply's `record-ia` procedure: target-repo `oat pjm doctor --json` and
+   adoption check before `oat decision new`, an Information architecture section
+   in the framework docs-app AGENTS.md or Markdown contributing page, and shared
+   `documentation.ia` mirror. Preserve existing guidance; the authored record is
+   authoritative. If approval/adoption is pending, retain the proposal and report
+   it unrecorded. Do not silently initialize PJM. For an existing surface, hand
+   off an analysis artifact plus approved recommendation IDs to apply, with
+   individual approval for explicit record/restructure/tooling items.
+   This stage does not materialize preset trees or change scaffold/nav defaults.
+   Sidebar ownership is separately chosen for existing framework apps; absent
+   remains undeclared, Markdown ignores it, and no automatic nav generation is
+   authorized by IA approval alone.
 
 ### Step 3: Scaffold Runner
 
@@ -828,7 +838,13 @@ Delegate — do not re-implement analyze/apply logic here.
 
 1. Invoke the `oat-docs-analyze` skill against the scaffolded app. Pass the Inspection Result's `documentation.root` path so analyze targets the right surface. Wait for analyze to complete.
 2. Surface analyze's report to the user in its native form — do not re-summarize. The user reads it, decides which recommendations to approve.
-3. If the user approves any recommendations, invoke the `oat-docs-apply` skill with the approved subset. Wait for apply to complete.
+3. Capture the analysis artifact path and approved recommendation IDs, then
+   invoke `oat-docs-apply` with exactly that input. Preserve every approval class:
+   blanket approval covers only default items; explicit items need individual
+   approval by ID, and unattended runs skip/report them. Wait for apply's
+   structured applied/skipped-with-reason/failed IDs; report partial/manual work.
+   Never pass an unexplained "approved subset" or treat kickoff consent as
+   approval of every recommendation.
 4. Report the outcome back briefly: branch name, PR URL if opened, files changed count.
 
 If analyze produces no recommendations (the scaffold is complete and nothing's missing — unlikely on a fresh scaffold but possible), tell the user and skip apply.
@@ -859,6 +875,8 @@ Location:    {appRoot}
 Framework:   {framework}
 IA guidance: {ordered selected locators + explicit/conversation/shared/user/builtin provenance}
 IA proposal: {candidate recommendation, nearest preset, conflicts or none}
+IA record: {decision + authored section + shared mirror, or pending reason}
+Apply handoff: {artifact path, approved IDs, applied/skipped/failed result or not run}
 Config:      {configPath} (documentation section)
 
 Created:
