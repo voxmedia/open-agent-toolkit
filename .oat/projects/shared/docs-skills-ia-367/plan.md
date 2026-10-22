@@ -476,6 +476,7 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 | p02    | code     | fixes_completed | 2026-10-22 | reviews/archived/p02-review-2026-10-22T215711Z.md                | 7564e8332cdcae4d40e6dbf746f0c54ba93a23a8 | auto                                                            | -                 |
 | p02    | code     | fixes_completed | 2026-10-22 | reviews/archived/p02-review-2026-10-22T221413Z.md                | bbefca279ca3a24108f465b65c7b6f351be3ee80 | auto                                                            | -                 |
 | p02    | code     | passed          | 2026-10-22 | reviews/archived/p02-review-2026-10-22T222739Z.md                | 7f6ee861b5bee201f636d80dcae74b78711ca47e | auto                                                            | -                 |
+| p02    | code     | passed          | 2026-10-22 | reviews/p02-complexity-20261022.md                               | c6d5877dc2284bce1d5a96bf7e823851da159839 | manual                                                          | -                 |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.

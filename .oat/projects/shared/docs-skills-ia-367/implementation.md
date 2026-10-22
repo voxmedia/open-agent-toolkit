@@ -544,7 +544,7 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 
 <!-- orchestration-runs-end -->
 
-run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-complexity action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-complexity action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
@@ -554,7 +554,7 @@ run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · act
 
 <!-- Receipts for final, milestone and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
-- PR https://github.com/voxmedia/open-agent-toolkit/pull/369 opened for p02 on 2026-10-22; draft pending supplemental complexity pass.
+- PR https://github.com/voxmedia/open-agent-toolkit/pull/369 opened for p02 on 2026-10-22; supplemental complexity review passed with zero findings; all four self-review lenses covered.
 
 ## Deferred Findings
 
