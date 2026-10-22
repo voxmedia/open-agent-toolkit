@@ -277,6 +277,42 @@ Accepted at candidate `183b3d3aa7944c85919f09cc05dcb47b08c8f011`, Base unchanged
 
 Execution: one phase implementer is the committing owner in the current worktree on `docs/docs-skills-ia-367-p02`, stacked on accepted p01 branch `docs/docs-skills-ia-367` at `782b984e6de7ac1427279dcb3573e0ce9d9c4324`. No parallel group is declared. Root fan-out fails independence because the IA reference, skills, config provenance, contract fixtures and bundled output share state and verification. Root owns acceptance, independent cross-provider phase review, PR creation and final p01 CI follow-up. Main was fetched at phase start; no changes since the branch base appeared in the p02 planned paths. This is normal multi-file implementation with clear pinned design: task class `default-implementation`, preferred effort medium; exact resolver candidate Sol 6.1 medium under policy high. T3-owned delegation preserves explicit reasoning effort and priority tier. Recovery limit 10 from default, prior p02 usage 0, remaining 10, pending null; no p02 override. No extra phase gate is selected for p02.
 
+### Task p02-t01: Ship reader-first IA selection and source-aware guidance
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p02-impl-20261022
+**Handle:** docs367-p02-impl-20261022 (same T3 implementation child, held for root integration)
+**Commit:** 677e0c6dc377c3bfaeebf743f18e95b9406282ff
+**Intent:** Integrate the five-axis method, ordered guidance input, config producers and skill consumers as one coherent p02 contract; preserve p03/p07 deferrals.
+**Files:** authoring-docs and the four assigned docs skills; CLI documentation guidance schema/config command/resolution tests; current config/workflow docs; five public release manifests and bundled public-version metadata. Lockfile-only install passed with no lockfile delta; ignored bundle metadata was regenerated at 0.3.24. Exact producer-owned paths retained in `/tmp/oat-docs367-p02/owned-files.json`.
+**Proof command:** focused real-file config/skill contracts, public synthetic proposal/routing walkthrough and conservation review; Definition of Done gates 1–8 in order, skill lint/format and isolated-HOME sentence contracts. Logs in `/tmp/oat-docs367-p02/`.
+
+**Outcome:** One coherent implementation commit ships the five-axis IA method, six approved presets, IA Proposal template and P28 companion edits; adds repository/user scalar-or-array guidance through real config set/get/normalization with ordered provenance; integrates bootstrap/analyze/authoring/apply and updates shipped docs. All five public manifests are 0.3.24; authoring-docs is 1.1.0; each other changed skill has one p02 bump. Guidance-only config is not an existing-docs conflict, and explicit replacement preserves the guidance input. No p03 persistence/restructure/approval-class work or p07 scaffold/page-template delivery was added.
+
+**Verification at scheduling handoff:**
+
+| Check                                                                                | Exit | Evidence under `/tmp/oat-docs367-p02/`                                                   |
+| ------------------------------------------------------------------------------------ | ---- | ---------------------------------------------------------------------------------------- |
+| Focused real-file config command suite (278 tests, including 3 new behavioral tests) | 0    | `focused-all-config.log`, `restored-valid-control.log`                                   |
+| Authoring IA contract                                                                | 0    | `ia-contract.log`                                                                        |
+| Isolated-HOME skill sentence/validation contracts (1,087 tests)                      | 0    | `skill-sentence-contracts.log`                                                           |
+| Latest `pnpm check`                                                                  | 0    | `prehold-check.log` (11/11 fresh Turbo tasks)                                            |
+| `pnpm type-check`                                                                    | 0    | `gate-2-types.log` (6 type checks executed, 5 dependency builds replayed)                |
+| Forced isolated-HOME `pnpm test`                                                     | 1    | `gate-3-test.log` (0/12 cache replays; 11 successful tasks, CLI test task failed)        |
+| One no-edit visual-companion smoke rerun (5 tests)                                   | 0    | `visual-smoke-no-edit-rerun.log`                                                         |
+| `pnpm lint`, `pnpm format`                                                           | 0, 0 | `prehold-lint.log`, `prehold-format.log` (each 5/10 Turbo replays; root passes executed) |
+| CLI scoped build                                                                     | 0    | `prehold-cli-build.log` (actual bundle/tsc build)                                        |
+
+The fresh workspace run passed 8,858 CLI tests and all four other package suites plus 85 docs tests, but one unrelated localhost visual-companion smoke returned `HTTPParserError: Response does not match the HTTP/1.1 protocol`. Its one no-edit rerun passed all 5 tests. The root smoke/skill/script tail was not reached because root `pnpm test` short-circuited. This is not a green full gate. Gates 4–8 have not run, and the ordered full phase gates must be rerun after root's p01 integration. No post-commit recovery attempt was reserved; usage stays 0/10, pending null.
+
+**Source/conservation review:** Source requirements are research `issue-367.md:47` (P1), `:63` (P2), `:380`–`:388` (P28 D1–D9), and brief G1/G6. D1/D4 map to `authoring-docs/references/information-architecture.md:23`; D2 to `:72`; D3 to `:50`; D5/D6 to `:89`; D7 to `:104`; D8 to `:112`. D9 maps to `page-types.md:101` and its smell rows, `workflow.md:83`, `writing-style.md:96`, `review-rubric.md:60`, the SKILL method reference, and `templates.md:551`. Feature and QA validation templates remain explicitly p07. The original navigation labels, page-naming examples and cross-link rules are retained verbatim; the old unconditional tree is deliberately replaced by the approved method while all landing questions remain as orientation/routes. No private exemplars were added. Full local conservation notes: `conservation.md`. Only one canonical authoring-docs copy exists here; provider/bundle copies derive from it.
+
+**Synthetic proof:** Public input fixture is `.agents/skills/authoring-docs/tests/fixtures/ia-inputs.md`. Manual implementation-agent walkthrough outputs are `proposal-markdown.md`, `proposal-framework.md`, and `proposal-adoption-and-routing.md`, with actual shared-helper selection outputs in `*-selection.json`. Each proposal has two two-level trees, 5–8 placements per tree, page jobs, nearest presets and resolved-source citations. Existing docs default to analyze→approved apply; additive adoption is explicit; replacement/second-app require explicit choices, and unsupported second-app is refused. Local authority versus advisory track guidance becomes `ask_user`. `read-only-before.json` and `read-only-after.json` match. These are manual skill walkthroughs, not an invented agent-execution test. Protects against: losing the proposal/routing/read-only acceptance examples; no executable proposal engine exists, so this public fixture anchors reproducible manual review rather than claiming automated generation.
+
+**Negative controls:** `probes.py` neutralized actual user normalization and explicit-source precedence separately; both behavioral tests failed (exit 1) for the intended reason, and the restored valid control passed. Exact logs/probe are preserved locally. Prose-only guidance and docs changes use conservation review rather than inflated controls.
+
+**Scheduling handoff:** Root requested a clean boundary before integrating p01 correction/bookkeeping. This completed record is committed execution, not phase acceptance. Phase p02 stays in_progress with no final Head until resumed verification finishes. No new task, reviewer dispatch, PR work, p01 merge/cherry-pick, state write or project-log append was performed.
+
 ---
 
 ## Phase p03: Record and act on the IA
