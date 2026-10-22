@@ -31,6 +31,10 @@ docs367-p01-final-delta-wait-20261022: final renderer formatting candidate 183b3
 
 docs367-p01-accepted-20261022: p01 accepted after pass with zero findings; two review-fix rounds, recovery usage 1/10, no selected extra phase gate; candidate 183b3d3aa7944c85919f09cc05dcb47b08c8f011; review and gate evidence in implementation.md; continue p02.
 
+### 2026-10-22 · structural · oat-project-implement · p02
+
+docs367-p02-concrete-20261022: made p02 concrete within G1/G6 and Outcomes 2–3; user normalization drops documentation today, so actual user-file support and provenance are required; keep persistence/restructure in p03 and page templates/scaffold presets in p07; branch docs/docs-skills-ia-367-p02 is based on accepted p01.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
