@@ -797,7 +797,7 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 **Status:** in_progress
 **Base:** 56e05597392dfb4951679d5236b960afb296f951
-**Head:** 905b048de4f64c836c3fce0797f4469dd790e145
+**Head:** 3bbe2a49326835a44c839a24de609335a119baa6
 **Executor:** phase-implementer:docs367-p04-impl-20261023
 
 Phase start: approved brief p04 made concrete after bounded read-only reconnaissance. One committing phase implementer owns this checkout, with no nested dispatch or parallel group: Contents parsing, reader-path matching, init defaults and index order share producer/consumer contracts and must compose before review. Root retains scope judgment, independent review, acceptance and delivery. Main fetched before phase concretization; no changes in planned paths beyond merged P03 already in the branch. Worktree init passed with SKIP_S3_ARCHIVE_SYNC=1; only its generated manifest version refresh was restored. Recovery 0/10, pending null. Prior phase anchors preserved.
@@ -1007,6 +1007,29 @@ Proof: committed marker/literal inspection and journal check; artifact-only chan
 
 **Commit:** 6ac9c55d68dd7404e17fd8c13cedb0c1d6f5db88
 **Evidence:** Committed exact Provisional marker and code-spanned star/plus/glob literals verified after formatter/hook. Accepted p04 behavior unchanged. Journal review-boundary refusal is expected while p04-t07/t08 remain open; final review validation waits for those fixes.
+
+### Review-fix verification and handoff
+
+**Review-fix verification candidate:** 3bbe2a49326835a44c839a24de609335a119baa6. Accepted H1 is implemented by t07 product f9a75274244347aff564bf8c49e0920c9be173df / journal d00f817feb4dcea89edb1a08cfe757b77e4e3e8c; accepted L2 by t08 product aa53c9d20bec4447a3ea03068f293ef365c16a28 / journal 3bbe2a49326835a44c839a24de609335a119baa6. Root's completed L1/t09 product 6ac9c55d68dd7404e17fd8c13cedb0c1d6f5db88 and receipt remain intact; plan.md, state.md, root receipt/Orchestration Runs and all other phase bytes are preserved. No replay of t01–t06 or new version bump. All nine p04 task records are closed; phase stays in_progress for root re-review, judgment and fixes_completed bookkeeping.
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 8/11                 |
+| 2            | `pnpm type-check`             | 0    | 9/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 9/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All gates were invoked in this order on the candidate; `git fetch origin main` exits0 immediately before gate6, with no newer main changes in p04 paths. All five0.3.26 public archives validate. Cached logs above are disclosed as gate results, not fresh executions. Additional isolated-HOME `pnpm exec turbo run test --force` exits0 with12/12 tasks freshly executed and0cached: CLI8,911, control-plane289, docs-config14, theme20, transforms31 and docs-app85, total9,350tests plus actual docs build. This preserves recovery03's real generated-consumer/string-root compilation contract. Direct isolated smoke165/skills712/scripts1, skill validation, full lint/format (each9/10cached, root passes executed) and isolated CLI sentence contracts1,087tests/26files all exit0. No infrastructure retry, unexpected failure, new recovery event or postcommit correction; usage3/10,pending null stays unchanged.
+
+**Fix controls and conservation:** t07's immutable-candidate negative probe preserves seven intended failures (escape/external/missing/unsupported/empty/prose/MDX) and one accepted exclusion control, then all137 focused nav/index tests pass before and after commit. Both original empty-Contents scaffold safety fixtures are restored. Public command assertions conserve literal hierarchical inventory/fallback outputs; real nav sync/check accepts present MDX while generate-index retains its existing Markdown-only inventory. Existing strict nav target failures, dash-only/empty-group file+line diagnostics, authored ordering/child titles/cross-directory nonduplication and non-reader exclusions remain green. No target filesystem reads, broad catch, generic engine or own-module mocks added. L2 is comment placement only. Human documentation/skill bytes, approval/ownership prose, generated app-index targets and t09's exact code-spanned literals/Provisional marker remain unchanged. Accepted MkDocs1.4.2 rendering limitation remains; no framework upgrade or MDX inventory expansion.
+
+**Journal validation:** Review-boundary check exits0, status ok, no reasons or warnings (analysis/p04/fix-r1/handoff-pre-journal.log).
+
+**Evidence:** ignored analysis/p04/fix-r1/ contains exact command/HEAD/log/exit receipts, phase-exits.json, supplemental-exits.json, extras-exits.json, fresh-test-counts.json, immutable-baseline.json, baseline logs, tested fixture literals and replay-baseline.py. Prior failures/recoveries/evidence remain preserved. Frozen Base56e05597392dfb4951679d5236b960afb296f951 and original immutable task history remain. No nested delegation, GitHub work, state/plan/other-phase writes or open execution records; independent review/acceptance remain root-owned.
 
 ---
 
