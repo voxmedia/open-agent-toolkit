@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p03
+oat_current_task_id: p-rev2
 oat_generated: false
 oat_template: false
 ---
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | in_progress | 1     | 0/1      |
-| p-rev2 | pending     | 1     | 0/1      |
-| p04    | pending     | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | pending   | 1     | 0/1      |
+| p04    | pending   | 1     | 0/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 3/11 phases accepted
+**Total:** 4/11 phases accepted
 
 ---
 
@@ -463,7 +463,7 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 ## Phase p03: Record and act on the IA
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 63db688ca813ddfbbd01fcde7bf92b9b5a7e15ae
 **Executor:** phase-implementer:docs367-p03-impl-20261022
 
@@ -630,6 +630,21 @@ Root consumed exactly one `**Reconnaissance:** not-attempted` signal before vali
 
 **Outcome:** standard review passed, no new fixes or deferrals. Three standard review rounds consumed, two fix continuations; recovery 0/10 pending null. P03 remains in_progress until the configured external phase gate passes and its findings are dispositioned. P-rev2/PR #369 correction follows acceptance. Intermediate PRs use land-pr when clear; final PR held until project completion.
 
+### Review Received: p03 (passing external gate)
+
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-23T000851Z.md
+**Reviewed Head:** 28887537aa3498293340bbc86f3f85772b4a9f09
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Gate f11cc34a-2996-48df-9555-2577c6f79eaa exited 0, status ok, receiveEligible true and non-null handoff; configured claude-opus-5-5-high / Claude / high, source exec-target-config. Artifact invocation/run/project corroboration matched. The original completion used invalid reconnaissance wording; before validation or receive mutation, root resumed the same Claude session 008bf1f7-e1bb-4aca-b99d-c1e0d98e1c64 for reporting only, no tools/new review, and consumed exactly one corrected `**Reconnaissance:** not-attempted` signal. No Review Orchestration section. Gate-produced commits a42767835 and db1e07ed9 are preserved.
+
+Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and p01 E13:
+
+- Gate-L1 (Low), helper package-drift.mjs reads only app/node_modules, so hoisted workspace installs report unverified instead of drift: defer to final. Root confirmed the path; the failure emits no wrong upgrade. Ancestor resolution adds filesystem-search and precedence cases, so settle and validate it in final integrated helper review rather than extending this passing gate. No blocking task queued.
+- Gate-L2 (Low), shim-discovery commands are missing narrow allowed-tools grants: defer to final. Root confirmed the procedure and frontmatter mismatch; discovery is read-only and explicit operator permission remains available. Correct the grants or use existing Read/node tools in the final integrated skill contract pass, after remaining analyze edits; no new privilege or silent bypass is accepted. No blocking task queued.
+
+**Phase acceptance:** P03 accepted: three standard review rounds, two fix continuations, final standard review 0/0/0/0, configured external gate passed at high threshold, both sub-threshold findings durably deferred to final. All required verification evidence is recorded above with cache/flake limitations. Recovery 0/10, pending null. Original Base and final Head frozen. Next p-rev2 corrects p02 and unblocks PR #369; final PR remains held until project completion.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -731,6 +746,8 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 
 ## Reviews and Gates
 
+- p03 external gate f11cc34a-2996-48df-9555-2577c6f79eaa: passed (exit 0, high threshold), 0 Critical/0 High/0 Medium/2 Low; both deferred to final in passing-gate judgment sweep, no waiver; received artifact reviews/archived/p03-review-2026-10-23T000851Z.md.
+
 ### Remote Review Received: PR #368
 
 2026-10-22; source https://github.com/voxmedia/open-agent-toolkit/pull/368#pullrequestreview-5621004819, reviewed Head `7a0078df58e2f94868216c3381d6a9dcc421891b`, invocation auto. Counts: 0 critical, 1 high (source "important"), 0 medium, 0 low. H1: warp-factories discussion [4353654033](https://github.com/voxmedia/open-agent-toolkit/pull/368#discussion_r4353654033), repository-root nav command fails nested-app detection; **convert**, regression of Outcome 1/P6, linked to `p-rev1` / `prev1-t01`. Root reproduction: bare command exit 1, explicit docs-site target exit 0, public scratch evidence `/tmp/oat-docs367-p01-nav-fix-proof/`. Disposition: fix queued, no deferral. Remote receipt `reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md` is local-only; this tracked receipt carries the substance. P01 implementation anchors and accepted historical review stay frozen. P02's active writer was asked to yield after its current coherent verified record; no correction implementation starts before that handoff. No GitHub reply posted.
@@ -746,6 +763,9 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p03 gate Gate-L1 · Low · Hoisted installed docs packages are not found by the app-only package-drift helper; returns safe unverified, no command. Deferred to final integrated helper review: define ancestor search boundary and add a real hoisted-layout regression before changing resolution. Source: gate f11cc34a-2996-48df-9555-2577c6f79eaa, package-drift.mjs:78, Outcome 5.
+- p03 gate Gate-L2 · Low · Shim fallback uses command -v, oat --version, sed, test and npm root -g beyond analyze's narrow grants. Deferred to final integrated skill contract review after remaining analyze edits: add narrow grants or rewrite through Read/node and verify the documented commands. Read-only discovery can require explicit permission meanwhile; no bypass. Source: same gate, oat-docs-analyze/SKILL.md:516, p01 E13.
 
 ## Deviations from Plan / Design
 
