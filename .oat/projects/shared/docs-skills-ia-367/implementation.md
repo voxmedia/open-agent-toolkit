@@ -1256,6 +1256,18 @@ One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-
 
 **Commit:** 4a6eb7c68bc3619986fd57b88273e000a13b849e
 
+### Task p05-t04: Propagate CLI-owned scaffold guidance
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-prose-20261023 / cont-docs367-p05-prose-after-recovery01 (same implementer continuation)
+**Intent:** Finish approved public prose propagation against the canonical bootstrap skill, preserving valid setup/capability/verification/approval behavior and documenting older-CLI analyze/manual upgrade advice.
+**Files:** apps/oat-docs/docs/docs-tooling/commands.md, apps/oat-docs/docs/docs-tooling/workflows.md, apps/oat-docs/docs/getting-started/tool-packs.md.
+**Proof command:** file-scoped oxfmt; existing docs check (Markdown lint/format, links/nav/catalog); conservation diff; ordered repository gates1–8 after commit. Evidence: ignored analysis/p05/prose/.
+
+**Commit:** d9ce83669aaa4865ce9a6e112386c57876e7f7c9
+**Verification:** Existing docs check executed exit0 (format, Markdown lint, source links/anchors, committed nav and catalog). Conservation against canonical bootstrap Steps3–7 preserves setup inputs, Markdown/adoption, valid capability/build/config/walkthrough behavior, approval boundaries, all headings and Markdown links. Only the three authorized pages changed; source search found no other retired post-patch/AGENTS-bridge claims under the public docs. Evidence: ignored analysis/p05/prose/{conservation.md,product.diff,task-docs-check.log}. No new tests or recovery reservation.
+
 ### Recovery Event docs367-p05-recovery-01
 
 - Phase/task: p05 / p05-t02
