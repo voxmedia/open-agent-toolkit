@@ -55,7 +55,7 @@ oat_template: false
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 9/13 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
