@@ -1043,7 +1043,7 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 - R2-L1 (Low): the new generator allowEmpty call lacks a test protecting the existing empty-group G3 exception → fix task p04-t10. Reviewer independently bypassed the empty-group guard for allowEmpty callers and all137 tests still passed, despite production currently rejecting the bad input. Add one case to the existing malformed-Contents generator test and prove that exact bypass then fails. This protects an already accepted universal grammar guarantee; it adds no new production requirement or harness.
 
 **Design drift / artifact alignment notes:** None. No finding deferred or rejected. Root read the complete artifact, checked full anchors and current severities, and consumed exactly one not-attempted signal with no Review Orchestration section. Unchanged coverage is inherited from round1; scope/composition and prior closures were independently re-verified in round2.
-**Outcome:** fix queued p04-t10; final automated review round3 follows this bounded test-only correction. Phase remains in_progress; recovery3/10 pendingnull unchanged.
+**Outcome:** fixes_completed via p04-t10 test commit e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0 and journal/candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f. Root verified the exact seven-line existing-test extension and unchanged production, all ten closed records, explicit eight-gate exits and cache counts, and old-tests/M7 green → new-assertion/M7 red → restored-parser green evidence. Prior forced full execution remains inherited; fresh focused137 and gate3 CLI8911/docs85/direct suites are distinguished. Final independent round3 remains pending; this findings-bearing round2 event is not a passed event. Phase stays in_progress, recovery3/10 pendingnull unchanged.
 
 ### Task p04-t10: (review) Protect generator empty-group grammar with allowEmpty
 
@@ -1115,6 +1115,8 @@ All eight gates ran in order against the candidate, with explicit exit receipts.
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p04-fix-r2-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1,cont-docs367-p04-review-fix-r2 · observed=~ · match=~
 
 - run/v1 · request=docs367-p04-review-r2-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
