@@ -67,6 +67,165 @@ describe('scaffold integration', () => {
     createdRoots.length = 0;
   });
 
+  it.each([
+    ['fumadocs', false],
+    ['mkdocs', false],
+    ['fumadocs', true],
+    ['mkdocs', true],
+  ] as const)(
+    'fresh %s init and its build guard execute with source workspace=%s',
+    { timeout: 60_000 },
+    async (framework, sourceWorkspace) => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-fresh-build-'));
+      createdRoots.push(root);
+      const target = 'apps/docs site';
+      const appRoot = join(root, target);
+      const cli = `${JSON.stringify(join(REPO_ROOT, 'node_modules/.bin/tsx'))} --tsconfig ${JSON.stringify(join(REPO_ROOT, 'packages/cli/tsconfig.json'))} ${JSON.stringify(join(REPO_ROOT, 'packages/cli/src/index.ts'))}`;
+      await mkdir(join(root, '.oat'), { recursive: true });
+      await mkdir(join(root, 'old/docs'), { recursive: true });
+      await writeFile(
+        join(root, 'old/docs/meta.json'),
+        '{"pages":["authored"]}',
+      );
+      await writeFile(
+        join(root, '.oat/config.json'),
+        JSON.stringify({
+          version: 1,
+          documentation: {
+            root: 'old',
+            tooling: framework,
+            navOwner: 'hand-authored',
+            unknown: 'preserve',
+          },
+        }),
+      );
+      await writeFile(
+        join(root, 'package.json'),
+        JSON.stringify({
+          private: true,
+          scripts: { 'cli:source': cli },
+        }),
+      );
+      await writeFile(
+        join(root, 'pnpm-workspace.yaml'),
+        'packages:\n  - apps/*\n',
+      );
+      execFileSync('git', ['init', '-q', root]);
+      if (sourceWorkspace) {
+        for (const name of [
+          'cli',
+          'docs-config',
+          'docs-theme',
+          'docs-transforms',
+        ]) {
+          await mkdir(join(root, 'packages', name), { recursive: true });
+          await writeFile(join(root, 'packages', name, 'package.json'), '{}');
+        }
+      }
+      const capture = createLoggerCapture();
+      const program = new Command().addCommand(
+        createDocsInitCommand({
+          buildCommandContext: () => ({
+            scope: 'project',
+            cwd: root,
+            home: root,
+            interactive: false,
+            dryRun: false,
+            json: true,
+            verbose: false,
+            logger: capture.logger,
+          }),
+          resolveAssetsRoot: async () => assetsRoot,
+        }),
+      );
+      const priorExit = process.exitCode;
+      try {
+        process.exitCode = undefined;
+        await program.parseAsync(
+          [
+            'init',
+            '--framework',
+            framework,
+            '--target-dir',
+            target,
+            '--yes',
+            '--lint',
+            'none',
+            '--format',
+            'none',
+            '--no-root-patch',
+          ],
+          { from: 'user' },
+        );
+        expect(capture.jsonPayloads).toEqual([
+          expect.objectContaining({ status: 'ok' }),
+        ]);
+        expect(process.exitCode ?? 0).toBe(0);
+      } finally {
+        process.exitCode = priorExit;
+      }
+      const config = JSON.parse(
+        await readFile(join(root, '.oat/config.json'), 'utf8'),
+      );
+      expect(config.documentation).toMatchObject({
+        root: target,
+        navOwner: 'nav-sync',
+        unknown: 'preserve',
+      });
+      expect(await readFile(join(root, 'old/docs/meta.json'), 'utf8')).toBe(
+        '{"pages":["authored"]}',
+      );
+      if (framework === 'fumadocs') {
+        expect(
+          JSON.parse(await readFile(join(appRoot, 'docs/meta.json'), 'utf8'))
+            .pages,
+        ).toEqual(['index', 'getting-started', 'contributing']);
+      } else {
+        expect(
+          parseYaml(await readFile(join(appRoot, 'mkdocs.yml'), 'utf8')).nav,
+        ).toEqual([
+          { Home: 'index.md' },
+          { 'Getting Started': 'getting-started.md' },
+          { Contributing: 'contributing.md' },
+        ]);
+      }
+      const pkg = JSON.parse(
+        await readFile(join(appRoot, 'package.json'), 'utf8'),
+      );
+      const script =
+        pkg.scripts[framework === 'fumadocs' ? 'prebuild' : 'docs:build'];
+      const bin = join(root, 'bin');
+      await mkdir(bin);
+      for (const [name, body] of Object.entries({
+        oat: `exec ${cli} "$@"`,
+        'fumadocs-mdx': 'exit 0',
+        mkdocs: 'exit 0',
+      })) {
+        await writeFile(join(bin, name), `#!/bin/sh\n${body}\n`);
+        await chmod(join(bin, name), 0o755);
+      }
+      const runBuild = () =>
+        execFileSync('bash', ['-c', script], {
+          cwd: appRoot,
+          env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
+      expect(() => runBuild()).not.toThrow();
+      if (framework === 'fumadocs') {
+        await writeFile(join(appRoot, 'docs/meta.json'), '{"pages":[]}');
+      } else {
+        const yaml = await readFile(join(appRoot, 'mkdocs.yml'), 'utf8');
+        await writeFile(
+          join(appRoot, 'mkdocs.yml'),
+          yaml.replace('Getting Started:', 'Stale label:'),
+        );
+      }
+      expect(() => runBuild()).toThrow();
+    },
+  );
+
   it(
     'runs the rendered navigation command from the repository root for a nested app',
     { timeout: 30_000 },
@@ -470,7 +629,7 @@ describe('scaffold integration', () => {
         'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'oat docs nav sync --target-dir . --check && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
     },
   );

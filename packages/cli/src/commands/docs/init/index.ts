@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -5,6 +6,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { syncDocsNavigation } from '@commands/docs/nav/sync';
 import {
   type UpsertSectionResult,
   formatAgentsMdGuidanceResult,
@@ -26,6 +28,7 @@ import {
   writeOatConfig,
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
+import { atomicWriteJson, fileExists } from '@fs/io';
 import { Command, Option } from 'commander';
 
 import { buildDocsCommands } from './docs-commands';
@@ -265,7 +268,27 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
       ...config.documentation,
       ...result.documentationConfig,
     };
-    await writeOatConfig(context.cwd, config);
+    // Fresh app creation replaces only the seeded documentation keys. Keep
+    // unknown repository and documentation siblings for other consumers.
+    const configPath = join(context.cwd, '.oat/config.json');
+    const raw = (await fileExists(configPath))
+      ? (JSON.parse(await readFile(configPath, 'utf8')) as Record<
+          string,
+          unknown
+        >)
+      : config;
+    await atomicWriteJson(configPath, {
+      ...raw,
+      documentation: {
+        ...(raw.documentation as Record<string, unknown>),
+        ...result.documentationConfig,
+      },
+    });
+    await syncDocsNavigation({
+      appRoot: result.appRoot,
+      configuredTooling: options.framework,
+      nonReaderPaths: config.documentation.nonReaderPaths,
+    });
 
     if (!context.json) {
       context.logger.info(`Scaffolded docs app at ${options.targetDir}`);

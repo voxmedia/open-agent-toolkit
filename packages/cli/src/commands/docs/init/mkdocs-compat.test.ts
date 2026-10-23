@@ -105,7 +105,7 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
         join('app', '[[...slug]]', 'page.tsx'),
       );
 
-      // Verify package.json doesn't reference OAT packages
+      // MkDocs needs the CLI build guard, but no Fumadocs packages.
       const packageJson = await readFile(
         join(result.appRoot, 'package.json'),
         'utf8',
@@ -113,7 +113,9 @@ describe('MkDocs scaffold compatibility (FR8)', () => {
       expect(packageJson).not.toContain('@open-agent-toolkit/docs-config');
       expect(packageJson).not.toContain('@open-agent-toolkit/docs-theme');
       expect(packageJson).not.toContain('@open-agent-toolkit/docs-transforms');
-      expect(packageJson).not.toContain('@open-agent-toolkit/cli');
+      expect(
+        JSON.parse(packageJson).devDependencies['@open-agent-toolkit/cli'],
+      ).toMatch(/^\^/);
     },
   );
 });

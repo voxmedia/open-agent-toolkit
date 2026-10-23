@@ -214,23 +214,6 @@ export async function resolveOatDepContext(
   return { isOatRepo, localPackages, oatPackageVersions };
 }
 
-function buildDevDependencies(
-  lint: DocsLintMode,
-  format: DocsFormatMode,
-): string {
-  const entries: string[] = [];
-
-  if (lint === 'markdownlint-cli2') {
-    entries.push('    "markdownlint-cli2": "^0.13.0"');
-  }
-
-  if (format === 'oxfmt') {
-    entries.push('    "oxfmt": "^0.36.0"');
-  }
-
-  return entries.join(',\n');
-}
-
 function buildFumaDevDependencies(
   lint: DocsLintMode,
   format: DocsFormatMode,
@@ -252,9 +235,25 @@ function buildFumaDevDependencies(
   return `,\n${entries.join(',\n')}`;
 }
 
+function shellQuote(value: string): string {
+  return /^[a-zA-Z0-9_./-]+$/.test(value)
+    ? value
+    : `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+function jsonStringContent(value: string): string {
+  return JSON.stringify(value).slice(1, -1);
+}
+
+function buildNavSyncCheckCmd(isOatRepo: boolean, targetDir: string): string {
+  return isOatRepo
+    ? `pnpm -w run cli:source -- docs nav sync --target-dir ${shellQuote(targetDir)} --check`
+    : 'oat docs nav sync --target-dir . --check';
+}
+
 function buildGenerateIndexCmd(isOatRepo: boolean, targetDir: string): string {
   if (isOatRepo) {
-    return `pnpm -w run cli:source -- docs generate-index --docs-dir ${targetDir}/docs --output ${targetDir}/index.md`;
+    return `pnpm -w run cli:source -- docs generate-index --docs-dir ${shellQuote(`${targetDir}/docs`)} --output ${shellQuote(`${targetDir}/index.md`)}`;
   }
   return 'oat docs generate-index --docs-dir docs --output index.md';
 }
@@ -396,16 +395,21 @@ function renderTemplate(
       options.format === 'oxfmt'
         ? "oxfmt --check 'docs/**/*.md'"
         : "echo 'docs format check disabled'",
-    '{{DEV_DEPENDENCIES}}': buildDevDependencies(options.lint, options.format),
+    '{{DEV_DEPENDENCIES}}': buildFumaDevDependencies(
+      options.lint,
+      options.format,
+    ),
     '{{FUMA_DEV_DEPENDENCIES}}': buildFumaDevDependencies(
       options.lint,
       options.format,
     ),
     '{{REPO_NAME}}': repoName,
     '{{APP_DIR}}': options.targetDir,
-    '{{GENERATE_INDEX_CMD}}': buildGenerateIndexCmd(
-      depContext.isOatRepo,
-      options.targetDir,
+    '{{GENERATE_INDEX_CMD}}': jsonStringContent(
+      buildGenerateIndexCmd(depContext.isOatRepo, options.targetDir),
+    ),
+    '{{NAV_SYNC_CHECK_CMD}}': jsonStringContent(
+      buildNavSyncCheckCmd(depContext.isOatRepo, options.targetDir),
     ),
     '{{OAT_DOCS_CONFIG_DEP}}': oatDepVersion(depContext, 'docs-config'),
     '{{OAT_DOCS_THEME_DEP}}': oatDepVersion(depContext, 'docs-theme'),
@@ -443,6 +447,7 @@ export function buildDocumentationConfig(
     return {
       root: targetDir,
       tooling: 'fumadocs',
+      navOwner: 'nav-sync',
       index: join(targetDir, 'index.md'),
     };
   }
@@ -450,6 +455,7 @@ export function buildDocumentationConfig(
   return {
     root: targetDir,
     tooling: 'mkdocs',
+    navOwner: 'nav-sync',
     config: join(targetDir, 'mkdocs.yml'),
     index: join(targetDir, 'mkdocs.yml'),
   };
