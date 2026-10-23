@@ -14,6 +14,7 @@ const paths = [
   'oat-docs-analyze/SKILL.md',
   'oat-docs-bootstrap/SKILL.md',
   'oat-docs-apply/SKILL.md',
+  'oat-docs-authoring/SKILL.md',
 ];
 
 for (const path of paths) {
@@ -55,6 +56,21 @@ for (const path of paths) {
         'oat tools update --pack docs --scope <user|project>',
       ),
     );
+    if (path === 'oat-docs-authoring/SKILL.md') {
+      assert.doesNotMatch(normalized, /Load `authoring-docs`/i);
+      assert.equal(
+        normalized.match(/load `\$\{AUTHORING_DOCS_ROOT\}\/SKILL\.md`/g)
+          ?.length,
+        1,
+        'one bound load before authoring references',
+      );
+      assert.ok(
+        normalized.indexOf('Bind the first matching') <
+          normalized.indexOf(
+            '`${AUTHORING_DOCS_ROOT}/references/guidance-sources.md`',
+          ),
+      );
+    }
     assert.doesNotMatch(
       normalized,
       /(?:from installed scope \(user then project\)|from installed user scope then project scope)/,
