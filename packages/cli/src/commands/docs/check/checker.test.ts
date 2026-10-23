@@ -375,6 +375,167 @@ describe('calibrated reader rules through real files and config', () => {
   });
 });
 
+describe('independent syntax policy and body diagnostics', () => {
+  it('retains syntax and body findings across description/accessibility exceptions', async () => {
+    const f = await fixture();
+    await f.write(
+      'guide.md',
+      '---\ndescription: [broken\n---\n\n# First\n# Second\n\n[Broken](missing.md)\n',
+    );
+    await f.write(
+      'diagram.md',
+      page('# Diagram\n\n```mermaid\nflowchart TD\nA[invalid\n```\n'),
+    );
+    await f.config({
+      exceptions: [
+        {
+          path: 'guide.md',
+          rule: 'description',
+          reason: 'Metadata review is tracked separately.',
+        },
+        {
+          path: 'diagram.md',
+          rule: 'diagram-accessibility',
+          reason: 'Accessible names are being authored.',
+        },
+      ],
+    });
+    const findings = await f.run();
+    expect(
+      findings
+        .filter((v) =>
+          ['frontmatter', 'h1', 'links', 'mermaid'].includes(v.ruleId),
+        )
+        .map(({ ruleId, severity, path, line }) => ({
+          ruleId,
+          severity,
+          path,
+          line,
+        })),
+    ).toEqual([
+      { ruleId: 'mermaid', severity: 'error', path: 'diagram.md', line: 8 },
+      { ruleId: 'frontmatter', severity: 'error', path: 'guide.md', line: 1 },
+      { ruleId: 'h1', severity: 'error', path: 'guide.md', line: 6 },
+      { ruleId: 'links', severity: 'error', path: 'guide.md', line: 8 },
+    ]);
+    expect(findings.find((v) => v.ruleId === 'frontmatter')?.message).toMatch(
+      /^Invalid YAML frontmatter:/,
+    );
+    expect(findings.find((v) => v.ruleId === 'h1')?.message).toBe(
+      'Expected one real H1; found 2.',
+    );
+    expect(findings.find((v) => v.ruleId === 'links')?.message).toBe(
+      'Unresolved in-root link "missing.md".',
+    );
+    await f.write('guide.md', page());
+    await f.write(
+      'diagram.md',
+      page(
+        '# Diagram\n\n```mermaid\nflowchart TD\naccTitle: Reading\naccDescr: A reader opens a guide.\nA[Start] --> B[Guide]\n```\n',
+      ),
+    );
+    expect(
+      await f.run(
+        'frontmatter',
+        'h1',
+        'links',
+        'mermaid',
+        'diagram-accessibility',
+      ),
+    ).toEqual([]);
+  });
+  it('separates mapping errors and accessible-name warnings from Mermaid syntax', async () => {
+    const f = await fixture();
+    await f.write(
+      'guide.md',
+      '---\n- not a mapping\n---\n\n# Guide\n\n```mermaid\nflowchart TD\nA --> B\n```\n',
+    );
+    expect(await f.run('frontmatter')).toEqual([
+      {
+        ruleId: 'frontmatter',
+        severity: 'error',
+        path: 'guide.md',
+        line: 1,
+        message: 'Frontmatter must be a YAML mapping',
+      },
+    ]);
+    expect(await f.run('mermaid')).toEqual([]);
+    expect(await f.run('diagram-accessibility')).toEqual([
+      {
+        ruleId: 'diagram-accessibility',
+        severity: 'warn',
+        path: 'guide.md',
+        line: 7,
+        message: 'Mermaid needs accTitle and accDescr for accessibility.',
+      },
+    ]);
+  });
+  it.each(['warn', 'off'] as const)(
+    'honors intentional syntax %s through rule settings, exceptions and filters',
+    async (severity) => {
+      const f = await fixture();
+      await f.write(
+        'guide.md',
+        '---\n- not a mapping\n---\n\n# First\n# Second\n\n```mermaid\nflowchart TD\nA[invalid\n```\n',
+      );
+      for (const policy of [
+        { rules: { frontmatter: severity, mermaid: severity } },
+        {
+          exceptions: [
+            {
+              path: 'guide.md',
+              rule: 'frontmatter' as const,
+              severity,
+              reason: 'Intentional syntax policy for this page.',
+            },
+            {
+              path: 'guide.md',
+              rule: 'mermaid' as const,
+              severity,
+              reason: 'Intentional syntax policy for this page.',
+            },
+          ],
+        },
+      ]) {
+        await f.config(policy);
+        const result = await checkDocs({
+          cwd: f.root,
+          rules: ['frontmatter', 'mermaid'],
+        });
+        expect(result.summary).toEqual({
+          errors: 0,
+          warnings: severity === 'warn' ? 2 : 0,
+        });
+        expect(
+          result.findings.map(({ ruleId, severity: findingSeverity }) => [
+            ruleId,
+            findingSeverity,
+          ]),
+        ).toEqual(
+          severity === 'warn'
+            ? [
+                ['frontmatter', 'warn'],
+                ['mermaid', 'warn'],
+              ]
+            : [],
+        );
+        expect(await f.run('h1')).toEqual([
+          {
+            ruleId: 'h1',
+            severity: 'error',
+            path: 'guide.md',
+            line: 6,
+            message: 'Expected one real H1; found 2.',
+          },
+        ]);
+        expect((await f.run('frontmatter')).length).toBe(
+          severity === 'warn' ? 1 : 0,
+        );
+      }
+    },
+  );
+});
+
 describe('real framework navigation boundaries', () => {
   it.each(['hand-authored', undefined] as const)(
     '%s skips missing optional Fumadocs meta and still reports later drift',
@@ -632,7 +793,9 @@ describe('installed Mermaid parser, actual SVG files and Git changes', () => {
       ),
     ).toBe(true);
     await f.write('guide.md', diagram('flowchart TD\n A --> B'));
-    expect((await f.run('mermaid')).map((v) => v.severity)).toEqual(['warn']);
+    expect(
+      (await f.run('diagram-accessibility')).map((v) => v.severity),
+    ).toEqual(['warn']);
   });
   it('validates pair membership, SVG accessibility and leaves logos alone', async () => {
     const f = await pairedFixture();

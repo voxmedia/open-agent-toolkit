@@ -76,6 +76,7 @@ recursive tabs participate.
 | `folder-size`           | Direct reader pages including index warn above `folderWarn: 12`, error above `folderError: 20`, unless the index has real groups.                                                                                                    |
 | `depth`                 | Content root is depth0; warn at `depthWarn: 4`, error at `depthError: 5`.                                                                                                                                                            |
 | `page-length`           | Warn above `pageLines: 500` physical source lines. Explicit `type: reference` or `reference`/`references` path segments use `referenceLines: 1000` and warn above `referenceH3: 40` real H3 headings. No default length error limit. |
+| `frontmatter`           | Invalid YAML or a non-mapping frontmatter document errors; masked metadata preserves physical positions and independent body checks continue.                                                                                        |
 | `description`           | Missing/empty frontmatter description errors; character lengths below `descriptionMin: 40` or above `descriptionMax: 160` warn.                                                                                                      |
 | `h1`                    | Error unless each page has exactly one real H1.                                                                                                                                                                                      |
 | `links`                 | Error for unresolved in-root source links/anchors. No network checking. Ordinary escaping links are provenance warnings and their targets are not read. Contents links retain stricter local-map rules.                              |
@@ -84,9 +85,9 @@ recursive tabs participate.
 | `contents-separator`    | Warn when Contents descriptions mix separators in a tree.                                                                                                                                                                            |
 | `navigation`            | Error for drift using the declared ownership semantics; Markdown skips it.                                                                                                                                                           |
 | `commands`              | Error for missing literal pnpm scripts/npm run scripts in contributor pages; unresolved package context errors; echo scripts warn.                                                                                                   |
-| `mermaid`               | Parse every real Mermaid fence using the pinned Mermaid parser. Invalid syntax errors; missing `accTitle`/`accDescr` warns.                                                                                                          |
+| `mermaid`               | Parse every real Mermaid fence using the pinned Mermaid parser. Invalid syntax errors.                                                                                                                                               |
 | `diagram-pairs`         | Diagram light/dark SVG siblings and both page references are required. Conventional diagram paths and explicit paired references participate; ordinary logos are not diagrams.                                                       |
-| `diagram-accessibility` | SVGs require `role="img"`, nonempty title/desc. Rendered diagrams without page-visible explanatory text or an associated long description warn.                                                                                      |
+| `diagram-accessibility` | Mermaid missing `accTitle`/`accDescr` warns. SVGs require `role="img"`, nonempty title/desc. Rendered diagrams without page-visible explanatory text or an associated long description warn.                                         |
 | `diagram-freshness`     | Warn when changed Mermaid lacks both associated SVG changes; association follows the actual section/tab group. Missing usable Git comparison is explicitly unverified.                                                               |
 | `image-alt`             | Warn for empty, filename/slug-like or longer than `altMax: 155` image alt text.                                                                                                                                                      |
 | `provenance`            | Warn for planning/backlog/home paths, configured ticket/milestone patterns and ordinary links escaping the root. Legitimate reader docs remain visible.                                                                              |
@@ -125,7 +126,10 @@ manifest was explicitly configured.
 
 `documentation.check` is a shared repository object preserved by real config
 commands. Rule values are `error`, `warn` or `off`; `--rule` selects checks without
-changing policy. Exceptions use the same bounded path matcher, a stable rule ID
+changing policy. `frontmatter` and `mermaid` govern syntax independently from
+`description` and `diagram-accessibility`; metadata/accessibility exceptions do
+not suppress syntax or body findings. Explicit `warn`/`off` settings or exceptions
+for the syntax rule itself remain supported. Exceptions use the same bounded path matcher, a stable rule ID
 and a mandatory nonempty reason; omitted exception severity means `off`.
 
 ```bash

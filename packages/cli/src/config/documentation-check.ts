@@ -7,6 +7,7 @@ export const DOCS_CHECK_RULES = [
   'folder-size',
   'depth',
   'page-length',
+  'frontmatter',
   'description',
   'h1',
   'links',

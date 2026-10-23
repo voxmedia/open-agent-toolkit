@@ -195,7 +195,7 @@ export async function checkDiagrams(
         !/^\s*accDescr\s*(?::|\{)/m.test(node.value ?? '')
       )
         report(
-          'mermaid',
+          'diagram-accessibility',
           'warn',
           page.path,
           'Mermaid needs accTitle and accDescr for accessibility.',

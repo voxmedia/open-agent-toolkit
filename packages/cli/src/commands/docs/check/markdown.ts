@@ -34,6 +34,7 @@ export interface ParsedPage {
   source: string;
   body: string;
   frontmatter: Record<string, unknown>;
+  frontmatterError?: string;
   nodes: MarkdownNode[];
   anchors: Set<string>;
   links: PageLink[];
@@ -66,19 +67,26 @@ export function attributes(node: HtmlNode): Record<string, string> {
 export function parsePage(path: string, source: string): ParsedPage {
   let body = source;
   let frontmatter: Record<string, unknown> = {};
+  let frontmatterError: string | undefined;
   const match = /^(?:\uFEFF)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(
     source,
   );
   if (match) {
-    const doc = YAML.parseDocument(match[1]!);
-    if (doc.errors.length)
-      throw new Error(`Invalid YAML frontmatter: ${doc.errors[0]!.message}`);
-    const data: unknown = doc.toJS();
-    if (typeof data !== 'object' || data === null || Array.isArray(data))
-      throw new Error('Frontmatter must be a YAML mapping');
-    frontmatter = data as Record<string, unknown>;
     // Preserve physical positions for both AST and Contents diagnostics.
     body = match[0].replace(/[^\r\n]/g, ' ') + source.slice(match[0].length);
+    try {
+      const doc = YAML.parseDocument(match[1]!);
+      if (doc.errors.length)
+        frontmatterError = `Invalid YAML frontmatter: ${doc.errors[0]!.message}`;
+      else {
+        const data: unknown = doc.toJS();
+        if (typeof data !== 'object' || data === null || Array.isArray(data))
+          frontmatterError = 'Frontmatter must be a YAML mapping';
+        else frontmatter = data as Record<string, unknown>;
+      }
+    } catch (error) {
+      frontmatterError = `Invalid YAML frontmatter: ${(error as Error).message}`;
+    }
   }
   const processor = unified().use(remarkParse).use(remarkGfm).use(remarkTabs);
   const tree = processor.runSync(processor.parse(body), {
@@ -147,6 +155,7 @@ export function parsePage(path: string, source: string): ParsedPage {
     source,
     body,
     frontmatter,
+    ...(frontmatterError ? { frontmatterError } : {}),
     nodes,
     anchors,
     links,

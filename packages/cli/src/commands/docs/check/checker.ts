@@ -54,7 +54,10 @@ export async function checkDocs(options: {
   const pages: ParsedPage[] = [];
   for (const path of await readerFiles(target)) {
     try {
-      pages.push(await readPage(target, path));
+      const page = await readPage(target, path);
+      pages.push(page);
+      if (page.frontmatterError)
+        report('frontmatter', 'error', path, page.frontmatterError, 1);
     } catch (error) {
       report('description', 'error', path, (error as Error).message, 1);
     }

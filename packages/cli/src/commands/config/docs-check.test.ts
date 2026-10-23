@@ -78,7 +78,12 @@ async function fixture() {
 }
 
 const policy = {
-  rules: { provenance: 'off', 'root-width': 'warn' },
+  rules: {
+    provenance: 'off',
+    'root-width': 'warn',
+    frontmatter: 'warn',
+    mermaid: 'off',
+  },
   thresholds: { rootWarn: 11, rootError: 16 },
   exceptions: [
     {
