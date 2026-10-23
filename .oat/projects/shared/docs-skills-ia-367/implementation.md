@@ -1402,7 +1402,7 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Status:** completed
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 **Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
-**Source review:** PR373 discussions4357536051 (M1),4357563290 (H1); root remote receive and bounded inventory authorization.
+**Source review:** reviews/archived/remote-pr-373-review-2026-10-23T082550Z.md (M1, discussion4357536051) and remote-pr-373-review-2026-10-23T083002Z.md (H1, discussion4357563290); root remote receive and bounded inventory authorization.
 **Intent:** Use the configured content root and effective filtered reader inventory for both source and target collision routing, preserving context-free fallback and live membership changes.
 **Files:** packages/docs-transforms/src/remark-links.ts; packages/docs-config/src/{source-config.ts,source-config.test.ts}; both package READMEs; docs-config/package.json and minimal pnpm-lock.yaml importer update.
 **Scope reconciliation:** Outcome7/p05 source-relative links and conserved G2 reader membership require these corrections. Root authorizes tinyglobby0.2.17, already used by the pinned emitter; collectionFiles remains the only exclusion grammar. No new routing/config locator or permanent inventory cache.
@@ -1416,13 +1416,23 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Status:** completed
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 **Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
-**Source review:** PR373 discussion4357563312 (H2); root expanded remote receive.
+**Source review:** reviews/archived/remote-pr-373-review-2026-10-23T083002Z.md (H2, discussion4357563312); root expanded remote receive.
 **Intent:** Preserve precise source identity for local/owning collision placement while retaining unrelated authored links as labeled fragment-bearing URLs, avoiding pinned-loader global page deduplication.
 **Files:** packages/cli/src/commands/docs/nav/{fumadocs.ts,fumadocs-loader.test.ts}.
 **Proof command:** Existing real-source nav sync/check + core16.10.2 loader regression with both child maps, red/fixed/valid controls; focused nav/init suites and CLI check/type/build pre/post; ordered DoD gates at handoff.
 
 **Commit:** 2312f633086acb61b22df311ca2d76a7c32d4d4a
 **Verification:** Pre-fix sync emits ../section.md in both maps; actual core16.10.2 drops the unrelated Elsewhere contract link while --check considers its source reachable. Fixed real-loader regression preserves section.md source identity in its owning map and Elsewhere contract at /section#contract in the unrelated map; the existing Section landing URL stays /section/index. Removing owning placement still reports section.md unlisted despite the unrelated URL link, retaining strict reachability. Focused nav/init156 tests execute pre/post with isolated HOME, CLI check/type/build exit0. Evidence: ignored analysis/p05/remote-fix/t10-{red-full,pre-_,post-_}.log, exact p05-t10-files.json. No unrelated behavior, frozen anchor or recovery-ledger edits.
+
+### Remote correctness verification and handoff
+
+All three converted remote findings close in p05-t09 (M1 configured root + H1 filtered source/target collision ownership) and p05-t10 (H2 owning placement versus unrelated authored URL). Tested candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45 contains product bc979197ef3b4f2d309b8b2ff2cb55c318c23a12 / journal0e171c801e0a529edaef206ff70bf5cf86b1267c and product2312f633086acb61b22df311ca2d76a7c32d4d4a / journale197f3f8c4f4b76d5e9837508d543933e3ec5b45. This final journal changes no tested product bytes. Exactly nine authorized product paths plus p05-local tracking changed; Base, historical Head, phase in_progress and all root-owned records remain untouched. No later phase started.
+
+All8 ordered DoD gates exit0. Turbo cached/total by gate:4/11,7/11,7/12,5/5,direct,direct,direct,6/6; fetch before6 exits0 with no owned-path drift. Gate3 freshly executes CLI8916/config22/transforms38/docs93 (9069 tests), the actual flagship Next build and direct smoke165/skills712/scripts1. Control-plane289/theme20 tests and five dependency builds replay; gates4/8 replay build caches. Prior forced12fresh/9374 and9376 evidence remains inherited; no new forced campaign. Focused pre/post suites and scoped check/type/build execute directly as recorded above. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+Fresh standalone static export from packed committed packages retains pinned Next16.1.6/core16.10.2/MDX14.3.2/TS5.9.3. With ancestor and nested docs folders, served /docs/docs/guide/ resolves its link to /docs/contributing/index/; excluded section.md leaves section/index.md at /docs/section/ with a working /docs/section/toolchain/ link. All return200; obsolete /docs/section/index/ and its Markdown endpoint404. Correct /docs/llms/section/content.md and nested guide endpoint preserve exact raw source. Installed dist hashes equal branch outputs. This fixture retains a hand-authored sidebar; current real canonical nav/init156 and actual two-map loader tests provide the separate nav evidence. No new browser, Windows or next-dev proof is claimed; unchanged prior browser/MkDocs/endpoint controls remain inherited.
+
+Evidence: ignored analysis/p05/remote-fix/README.md; exact p05-t09/t10-files.json; red-full/pre/post logs and JSON; next-versions.json, next-build.log, export-proof.py/json; gates.json/gate1–8.log and fetch/main-paths.log. Review-scope p05 journal check exits0/statusok with only the expected root-owned live-run warning. Recovery1/10,9remaining,pendingnull; no postcommit defect, reservation, infrastructure retry or route retry. Exact target codex_codex_proxy/gpt-6.1-sol/high/priority and original request docs367-p05-impl-20261023 are unchanged. Root owns run terminalization, independent round3, phase markers/acceptance and PR delivery.
 
 ### Fix round1 verification and handoff
 
