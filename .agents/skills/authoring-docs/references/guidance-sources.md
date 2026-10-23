@@ -25,14 +25,21 @@ Require the key in `oat config describe documentation.guidance` before use;
 if the installed CLI lacks it, report the needed update. Do not mistake an
 unsupported-key error for an unset value.
 
-Independently probe each exact `authoring-docs/SKILL.md` in order:
-`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
-containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
-`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
-once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
-that same root for every authoring-docs reference and script, never ambient
-discovery. If none is found, name `authoring-docs`, stop this handoff, and give
-the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+Reuse an already validated `AUTHORING_DOCS_ROOT` for every authoring-docs
+reference and script. Do not reload the skill or re-run discovery for that binding.
+When `authoring-docs` itself is the loaded skill and no root is bound, validate
+`${SKILL_DIR}/SKILL.md` as `authoring-docs`, then bind `${SKILL_DIR}` once as
+`AUTHORING_DOCS_ROOT` and continue without reloading it. If that validation fails,
+stop this guidance resolution and give the intended-scope recovery commands below.
+
+Only for an unbound consumer, independently probe each exact
+`authoring-docs/SKILL.md` in order: `${SKILL_DIR}/..` from the loaded skill
+(`SKILL_DIR` is the absolute directory containing that loaded `SKILL.md`),
+`${HOME}/.agents/skills`, then `<repo-root>/.agents/skills`. Bind the first matching
+`authoring-docs` directory once as `AUTHORING_DOCS_ROOT`; use that same root for
+every authoring-docs reference and script, never ambient discovery. If none is
+found, name `authoring-docs`, stop this guidance resolution, and give the
+intended-scope recovery command: `oat tools install docs --scope <user|project>`
 or `oat tools update --pack docs --scope <user|project>`.
 
 For example, pipe the successful config-get JSON into:

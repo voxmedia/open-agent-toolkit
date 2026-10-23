@@ -39,14 +39,43 @@ for (const path of paths) {
       normalized,
       /Bind the first matching `authoring-docs` directory once as `AUTHORING_DOCS_ROOT`/,
     );
-    assert.match(normalized, /load `\$\{AUTHORING_DOCS_ROOT\}\/SKILL\.md`/);
+    if (path === 'authoring-docs/references/guidance-sources.md') {
+      assert.match(
+        normalized,
+        /Reuse an already validated `AUTHORING_DOCS_ROOT`/,
+        'reuse validated binding before fallback',
+      );
+      assert.match(normalized, /Do not reload the skill or re-run discovery/);
+      assert.match(
+        normalized,
+        /When `authoring-docs` itself is the loaded skill and no root is bound, validate `\$\{SKILL_DIR\}\/SKILL\.md` as `authoring-docs`, then bind `\$\{SKILL_DIR\}` once as `AUTHORING_DOCS_ROOT`/,
+      );
+      assert.match(
+        normalized,
+        /If that validation fails, stop this guidance resolution/,
+      );
+      const fallback = normalized.indexOf('Only for an unbound consumer');
+      assert.ok(fallback > normalized.indexOf('Reuse an already validated'));
+      assert.ok(
+        fallback < tiers[0],
+        'fallback is reserved for an unbound consumer',
+      );
+      assert.doesNotMatch(
+        normalized,
+        /load `\$\{AUTHORING_DOCS_ROOT\}\/SKILL\.md`|stop this handoff/,
+      );
+    } else {
+      assert.match(normalized, /load `\$\{AUTHORING_DOCS_ROOT\}\/SKILL\.md`/);
+    }
     assert.match(
       normalized,
       /same root for every authoring-docs reference and script/,
     );
     assert.match(
       normalized,
-      /If none is found, name `authoring-docs`, stop this handoff/,
+      path === 'authoring-docs/references/guidance-sources.md'
+        ? /If none is found, name `authoring-docs`, stop this guidance resolution/
+        : /If none is found, name `authoring-docs`, stop this handoff/,
     );
     assert.ok(
       normalized.includes('oat tools install docs --scope <user|project>'),
