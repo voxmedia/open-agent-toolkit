@@ -1863,7 +1863,7 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-remote-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=review · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-remote-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=review · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -2008,6 +2008,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### P06 remote cap assessment received; operator disposition pending
+
+2026-10-23; standard review cap remains 3/3. Opus5.5/high returned the read-only complexity report verbatim at reviews/archived/complexity-p06-2026-10-23T201609Z.md; exactly one reconnaissance not-attempted signal, no probes or writes claimed. Verdict Partially compliant; central checker retained. Recommendation corrective revision: one bounded five-finding batch with focused confirmation, retaining unchanged packaging/framework evidence. Two High exit/config defects and three Medium findings remain open. Operator must choose the disposition and settle P22 script-versus-binary interpretation and whether absent hand-authored pages may skip comparison instead of reproducing implicit loader order. No disposition, task, code correction or fourth full review was created. Prior acceptance remains suspended at 9/13; recovery1/10,pendingnull unchanged.
+
+Root also received Cursor discussion4363778896 at remote head22c580b2f15d475e2fcd7b0b17018ef96e697973: a blank line split the append-only Reviews table. Corrected by removing only the two separating blank lines; all event cells and historical row order are preserved. This is root-owned bookkeeping, separate from the capped product findings. Current-head CI and release dry-run are successful; Bugbot completed with this Medium ledger finding rather than no issues. Warp discussion4363775900 confirms the prior gate9 instruction fix. No landing or publication is implied by these checks.
 
 ### Remote Review Received: PR #374 Warp findings at cap
 
