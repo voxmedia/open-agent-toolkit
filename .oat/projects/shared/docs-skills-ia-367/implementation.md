@@ -1209,6 +1209,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 **Status:** in_progress
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
+**Head:** 49572b8dad6cb838521d9c90121f42e8230eb3dd
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 
 One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
@@ -1254,6 +1255,50 @@ One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-
 **Phase-gate finding:** Ordered gates1/2 pass; gate3 fails only the preexisting public-package export assertion after t02 added the required docs-config/llms subpath. This committed t02 omission is not folded into t03; after committing this independently verified scaffold record, reserve the bounded recovery on a clean tree. Gate4 onward have not yet run. No recovery usage yet (0/10,pendingnull).
 
 **Commit:** 4a6eb7c68bc3619986fd57b88273e000a13b849e
+
+### Recovery Event docs367-p05-recovery-01
+
+- Phase/task: p05 / p05-t02
+- Original request: docs367-p05-impl-20261023
+- Original commit: 4f3a03118a46f3988a0304a35c063ceaba86926b
+- Defect class: test
+- Discovered by: isolated-HOME `pnpm test` (ordered gate3)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: 49572b8dad6cb838521d9c90121f42e8230eb3dd
+- Verification: focused release-contract29 tests pre/post exit0; all ordered gates1–8 pre-candidate exit0; immediate postcommit isolated-HOME pnpm test exit0 (12cached package tasks, direct suites execute), followed by forced isolated12/12 fresh tasks,9374 tests,0cached. Direct smoke165/skills712/scripts1, validation, lint/format and isolated sentences1087 also exit0.
+- Reason: The existing exact release assertion still permitted only the root export after the agreed narrow docs-config/llms subpath shipped in t02. The correction adds that exact subpath only for docs-config, preserving all other exact manifest assertions. No runtime/public requirement/architecture change. Eligibility and clean-tree reconciliation recorded before edit; reservation b8e7b80a0686926f18c8d9bd060299443b9b3993 durably changed only p05's ledger. Original t02 remains immutable. The committed completed marker remains for root validation/clearance;9 attempts remain and no second reservation occurred.
+
+### Phase p05 verification and handoff
+
+**Tested candidate:** 49572b8dad6cb838521d9c90121f42e8230eb3dd. Three opened execution records are completed. This phase remains in_progress for root independent review, recovery settlement and acceptance. Final handoff is DONE_WITH_CONCERNS because the public prose propagation gap below needs a separate correction after root clears the completed marker. No nested dispatch, reviewer, GitHub operation, push, merge, history rewrite or infrastructure retry.
+
+| Task    | Product commit                           | Separate task journal                    |
+| ------- | ---------------------------------------- | ---------------------------------------- |
+| p05-t01 | 003d2d09329f0d3a1b7989bb65930f31186891ed | 215f75eb11b9081460acd7e5dda1de642ceb2813 |
+| p05-t02 | 4f3a03118a46f3988a0304a35c063ceaba86926b | 304a600e3f87c8db5609065472b68039310fc75d |
+| p05-t03 | 4a6eb7c68bc3619986fd57b88273e000a13b849e | 9bc52036afec02b62b4b4a912a2a756b8c35d407 |
+
+| Ordered gate | Command                     | Exit | Turbo cached / total |
+| ------------ | --------------------------- | ---- | -------------------- |
+| 1            | pnpm check                  | 0    | 8/11                 |
+| 2            | pnpm type-check             | 0    | 9/11                 |
+| 3            | isolated-HOME pnpm test     | 0    | 9/12                 |
+| 4            | pnpm build                  | 0    | 5/5                  |
+| 5            | pnpm run check:skill-bumps  | 0    | direct               |
+| 6            | pnpm release:check-versions | 0    | direct               |
+| 7            | pnpm release:validate       | 0    | direct               |
+| 8            | pnpm build:docs             | 0    | 6/6                  |
+
+All eight run in order with explicit exits after the correction; origin/main fetch before gate6 exits0 and no owned-path advancement is found. Cached logs are replays. Separate forced isolated-HOME `pnpm exec turbo run test --force` executes12/12 tasks freshly,0cached: CLI8916,control-plane289,docs-config18,theme20,transforms38,docs93 =9374 tests, including real dependency/flagship Next builds. Separate direct smoke165/skills712/scripts1, skill validation, lint, format and isolated shared/validation sentences1087 pass. All public/bundled packages0.3.27; bootstrap1.4.3 and analyze1.7.2 version gates pass. Initial gate3's stale export-contract failure is preserved under analysis/p05/initial-gates; precommit fixture/setup/prose corrections and the accidentally dirty preflight are disclosed in the task records, with no route/infrastructure retry.
+
+**Exit evidence:** Final HTTP probes preserve raw authored bytes for89 flagship readers,5 original real-fixture readers (including a loaded page outside hand-authored sidebar plus MDX/non-reader controls) and5 final canonical-layout readers. Final layout exports `/contributing/` and `/contributing/index/`, distinct corresponding Markdown endpoints, root/nested content.md, canonical basePath once/trailingSlash,9 reader/contributor hrefs, missing404s and nav-check0. T3 browser displays both contributor pages and clicking Authoring Contract reaches the actual contributor entry. Seeded exact runtime parity red1/restored0, actual pinned-loader collision red1/fixed0, real-source .md/.mdx link red1/fixed0, GFM/nested-tabs/fenced Syntax controls and bounded Mermaid JSX/newline evidence are retained. No Python installation/build/upgrade or diagram-validation claim. Every non-p05 implementation byte and all state outside p05's ledger are conserved; plan, root state pointers, project log, other phase anchors and Reviews are unchanged.
+
+**Remaining public-prose concern:** Final source review finds retired bootstrap post-patch/AGENTS-bridge claims in apps/oat-docs/docs/docs-tooling/commands.md:43, workflows.md:34/99/299/309–312 and getting-started/tool-packs.md:980. These three files were not corrected or reserved under a second attempt. The canonical bootstrap skill and its capability/result/walkthrough/summary consumers are corrected, but these public descriptions still require the same approved p05 propagation. Root must validate/clear recovery01's committed completed marker before a separate bounded correction; no new architecture or requirement is requested. Exact excerpts and paths are in ignored analysis/p05/remaining-public-prose-drift.{log,json}. Root owns the combined scope-judgment project-log entry and independent review/acceptance.
+
+**Proof index:** ignored analysis/p05/README.md, task-owned file manifests p05-t01–t03-files.json, t01/t02/t03 logs and real fixture scripts, t03-manual-evidence.md, gates.json plus initial-gates/, post-checks.json, final-test-counts.json, final-http-all.log and t03-final-export-proof.json, recovery-01-eligibility.json and focused pre/post logs. Machine baselines remain ignored; this journal keeps concise results. This verification-only journal changes no tested product bytes. Writes stop at handoff.
 
 ---
 
