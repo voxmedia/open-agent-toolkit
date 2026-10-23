@@ -1756,12 +1756,18 @@ Proof: Compact public-boundary regressions for invalid YAML/no false description
 
 ### Task p06-t10: (review) Correct remaining p06 prose spacing
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** c445fe7a814f5683a1e40545c3134e649addb5b4
 **Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L3)
 
 Intent: Insert missing spaces around in 2.2.0, pnpm 10+ (including 12), confirm 2.1.2 and resolved 2.1.2 while conserving every non-whitespace character and all setup/approval boundaries.
 Files: `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`, `.agents/skills/oat-docs-bootstrap/SKILL.md`.
 Proof: Whitespace conservation diff, file-scoped formatting, applicable lint/format and isolated skill sentence contracts; no new prose tests or negative controls. After all fixes, run ordered DoD gates 1–8 with explicit exits/cache truth and committed-candidate verification; retain inherited unchanged framework/install-root evidence rather than claiming new builds.
+
+**Commit:** 51805606436331598597d8ee7174fd251773ff0f
+**Verification:** Both prose files preserve every non-whitespace character after formatting; setup, claims and approvals unchanged. Skill sentences1087 fresh isolated-HOME tests, lint/format exit0. All eight ordered precommit gates exit0; package/app tests9480 fresh, direct smoke165/skills712/scripts1, dependency cache disclosed. Exact conservation and exits under analysis/p06/fix-r2. Fresh packed CLI controls for combined fixes pass actual Node22.17/26.11 with13 shipped path comparisons; optional line-field probe oracle corrected without product edits.
 
 ## Phase p07: Page templates and presets
 
