@@ -1933,7 +1933,7 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-remote-fix-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-remote-fix-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-remote-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=review · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -2080,6 +2080,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### P06 approved remote correction received
+
+2026-10-23; original implementer completed p06-t12–t16 at clean27382a66a0790f3a63e9aaff89432114159986bb, tested product1429c5a735599cfc40af65dff13cc15a592cde44. W-H1 severity strings, W-H2 canonical configured roots, W-M1 installed pnpm binaries, W-M2 approved absent-pages skip and W-M3 real-base association proof are corrected within seven authorized product files. Root verified every final SHA256/blob, each of five bounded product commits and separate journal commits, and the final journal-only tail; read the complete production/test delta, focused/control receipts and all nine gate exits0. No scope/dependency/setup/skill/framework changes. Intentional implicit-order and system-PATH deferrals remain approved and documented.
+
+Producer evidence: focused135/public16, fresh9487package/app tests and smoke165/skills712/scripts1; five intended neutralizations, including old association-test vacuity versus replacement rejection. Gates cached/executed0/11,5/6,5/7,5/0,direct,direct,direct,6/0; gate9 generation/diff direct0/0. Root inspected these receipts rather than rerunning the producer's campaign. Unchanged packed minimum-Node/framework/install-root proof remains inherited. Exact evidence analysis/p06/remote-fix/PROOF-INDEX.md and final-manifest.json. All sixteen task records closed; recovery1/10,pendingnull and historical Base/Head/gate conserved. Remote event fixes_completed; p06 remains in_progress, 9/13 accepted pending the single operator-approved focused independent confirmation. No publication, thread resolution or acceptance yet.
 
 ### P06 remote cap disposition: corrective revision approved
 

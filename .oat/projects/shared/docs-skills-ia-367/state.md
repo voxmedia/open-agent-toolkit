@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-P06 reopened for five Warp findings: three new, two repeated deferrals. At standard review cap3/3, operator approved Opus's bounded corrective revision and scope choices on 2026-10-23. Resume original implementer, then one focused independent confirmation. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
+P06 reopened for five Warp findings: three new, two repeated deferrals. At standard review cap3/3, operator approved Opus's bounded corrective revision and scope choices on 2026-10-23. Correction records p06-t12–t16 are complete; one focused independent confirmation remains. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
 
 ## Artifacts
 
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Implement the approved bounded PR374 correction, then focused independent confirmation. Approval includes installed local pnpm binaries and skipping absent hand-authored pages comparison, explicitly deferring implicit ordering and system-PATH support. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
+Run the approved focused independent confirmation of the completed seven-file PR374 correction at27382a66a0790f3a63e9aaff89432114159986bb. Approval includes installed local pnpm binaries and skipping absent hand-authored pages comparison, explicitly deferring implicit ordering and system-PATH support. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
