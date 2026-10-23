@@ -148,7 +148,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev4 corrects two newly reported PR372 regressions; p04 accepted anchors/history preserved.
+Implement — p-rev4 corrects four newly reported PR372 regressions; p04 accepted anchors/history preserved.
 
 ## Artifacts
 
@@ -162,4 +162,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; finish its complexity lens, then land when current-head CI/Bugbot clear and continue provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; fresh independent revision review and current-head CI/Bugbot reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.

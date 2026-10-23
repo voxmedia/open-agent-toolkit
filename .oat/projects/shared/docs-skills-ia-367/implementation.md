@@ -1111,7 +1111,7 @@ https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/d
 **Executor:** phase-implementer:docs367-prev4-impl-20261023
 **Corrects:** p04
 
-One phase implementer in the existing root worktree owns the correction commits, continuing the accepted p04 implementer conversation at the same exact codex_codex_proxy/gpt-6.1-sol/high/priority target. No parallel group is declared; both corrections share generator tests/build output and journal, so root fan-out fails independence. Root retains receive judgment, review, acceptance and PR publication. Main fetched; no index-generation path advancement. New external correction scope preserves accepted p04 anchors and three-round history. Recovery policy10 attempts, used0,pendingnull; separate from settled p04 usage3/10.
+One phase implementer in the existing root worktree owns the correction commits, continuing the accepted p04 implementer conversation at the same exact codex_codex_proxy/gpt-6.1-sol/high/priority target. No parallel group is declared; the four corrections share tests/build output and journal, so root fan-out fails independence. Root retains receive judgment, review, acceptance and PR publication. Main fetched; no index-generation path advancement. New external correction scope preserves accepted p04 anchors and three-round history. Recovery policy10 attempts, used0,pendingnull; separate from settled p04 usage3/10.
 
 ### Task prev4-t01: Recognize the released generated-manifest header
 
@@ -1321,7 +1321,15 @@ run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role
 
 run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
+
 ## Reviews and Gates
+
+### Remote Review Received: PR #372, second event and verified handoff
+
+Source Warp review5624216218 at commit06c160aa3204d6c8397d42e38d8456a8ffa8a19c; counts0C/1H/1M/0L. Local artifact reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md has no OAT provenance marker; ledger Reviewed Head/Invocation/Gate Target stay unknown. H2 discussion4356366295 → prev4-t03 restores directory-only collection parity; M2 discussion4356366304 → prev4-t04 ignores fenced Contents examples. Root independently reproduced both before explicitly steering the same accepted implementer request with the four added paths. No new requirement was introduced. Root deferred tracked plan/state/receipt writes until ownership returned, and now aligns the eight-file/four-task scope.
+
+Both remote events are fixes_completed, pending fresh p-rev4 independent review; none deferred or dismissed. Root verified clean handoff c15f9c403e76385ba7fe7d7079e849d784eecfe2, Base ancestry, exactly eight owned product paths, current source hashes against the handoff, four separate product/journal commits and journal-only tail after candidate ba253ba359a03d2f40410e2431e38ca6effd629b. All eight gate exits are0; cache replays are disclosed. Fresh forced proof9356 tests/12tasks/0cached and direct165/712/1/skill validation are recorded separately; Windows proof is win32 semantics over macOS IO. Immutable pre-fix/fixed/valid controls exist for all four findings, plus retained M7 red/restored guard. No product rerun is implied by this bookkeeping; independent reviewer will verify load-bearing boundaries. Recovery0/10,pendingnull; p04 anchors and recovery3/10 remain frozen. Phase stays in_progress. PR372 remains blocked on review/publication/current-head checks.
 
 ### Remote Review Received: PR #372
 
