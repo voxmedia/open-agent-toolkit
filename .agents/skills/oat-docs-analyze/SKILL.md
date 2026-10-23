@@ -88,10 +88,19 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 ### Shared authoring method and optional IA proposal
 
-Always load `authoring-docs` from installed scope (user then project) for the
-quality pass: its landing-page contract, section entries and one-purpose-per-page
-rule apply even without `--ia`. Resolve its own root independently. For IA work,
-read its `references/guidance-sources.md` and use the source-aware config-get
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
+Always use its landing-page contract, section entries and one-purpose-per-page
+rule for the quality pass even without `--ia`. For IA work, read
+`${AUTHORING_DOCS_ROOT}/references/guidance-sources.md` and use the source-aware config-get
 interface/helper: explicit `--ia-guidance` or conversation → repo → user →
 built-in. Preserve selected source order and cite locators/provenance in the
 analysis artifact. External Markdown packs require `index.md` and `## Contents`;

@@ -25,8 +25,16 @@ Require the key in `oat config describe documentation.guidance` before use;
 if the installed CLI lacks it, report the needed update. Do not mistake an
 unsupported-key error for an unset value.
 
-Resolve `authoring-docs` from installed scope (user then project); bind its root
-as `AUTHORING_DOCS_ROOT` and use that root for every reference and script.
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
 For example, pipe the successful config-get JSON into:
 
 ```bash
