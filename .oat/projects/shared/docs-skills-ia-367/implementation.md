@@ -54,7 +54,7 @@ oat_template: false
 | p08    | pending     | 1     | 0/1      |
 | p09    | pending     | 1     | 0/1      |
 
-**Total:** 5/11 phases accepted
+**Total:** 5/12 phases accepted
 
 ---
 
@@ -769,6 +769,16 @@ The unchanged `agents-md.test.ts` focused run passed all 71 tests (exit 0), incl
 
 Warp review 5623152090 (CHANGES_REQUESTED), source head 130f8c0521e3e03704680fb3237898a46335cfac, was read fully by root: one important finding discussion_r4355461672 independently confirms Cursor L1; no additional findings. Disposition: fixed by prev3-t01, pending independent verification and publication; no new task or requirement. Root will reply on both original threads after publication. Cursor M1's event cells were preserved byte-for-byte apart from formatting, and CLI status now reads both p-rev2 events plus 5/12 accepted phases. Remote review provenance remains unknown.
 
+### Review Received: p-rev3 (round 1)
+
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-10-23T023450Z.md
+**Reviewed Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Root read the complete artifact and consumed exactly one `**Reconnaissance:** not-attempted` signal before validating scope/anchors; no Review Orchestration section or orchestration log entry applies. The review independently confirms G2 path correction, meaningful real-command regressions, old/new guard controls, valid padded round-trip, ledger conservation and unchanged product tails. The 23/23 focused tests ran freshly; full gates were inspected, not rerun. No new canonicalization guarantee is required: interior-space path components remain literal names under the accepted scope.
+
+L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, matching the 12-row table, state and CLI; no product change or new test is warranted for that one-line correction. Historical review event is fixes_completed, preserving that it found L1; verdict passed and all dispositions settled. No repeated full review is needed for the ledger correction. No external phase gate is selected for p-rev3 (brief selects p03 and p06 only). Local verification/review are complete; phase remains in_progress only until its explicit PR #371 CI/Bugbot delivery condition clears. Prior phase anchors remain frozen, recovery 0/10 pending null. Final PR remains held until project completion.
+
 ### Task prev3-t01: Reject traversal after IA path trimming
 
 **Status:** completed
@@ -818,6 +828,8 @@ Warp review 5623152090 (CHANGES_REQUESTED), source head 130f8c0521e3e03704680fb3
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-prev3-review-r1-20261023 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-prev3-impl-20261023 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
