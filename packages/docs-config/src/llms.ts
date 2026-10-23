@@ -29,16 +29,11 @@ export function createLlmsRoutes(
 ): LlmsRoutes {
   const base = (options.basePath ?? '').replace(/\/$/, '');
   const pages = source.getPages().filter((page) => page.path.endsWith('.md'));
-  const withBase = (path: string) =>
-    base && path !== base && !path.startsWith(`${base}/`)
-      ? `${base}${path}`
-      : path;
+  const withBase = (path: string) => (base ? `${base}${path}` : path);
   const renderedUrl = (page: MarkdownPage) =>
     withBase(`${page.url.replace(/\/$/, '')}/`);
   const markdownUrl = (page: MarkdownPage) =>
-    withBase(
-      `/llms/${[...page.slugs.map(encodeURIComponent), 'content.md'].join('/')}`,
-    );
+    withBase(`/llms/${[...page.slugs, 'content.md'].join('/')}`);
   const header = [
     '# Documentation for agents',
     '',
@@ -77,7 +72,9 @@ export function createLlmsRoutes(
       const page = pages.find(
         (candidate) =>
           candidate.slugs.length === slugs.length &&
-          candidate.slugs.every((value, index) => value === slugs[index]),
+          candidate.slugs.every(
+            (value, index) => decodeURI(value) === slugs[index],
+          ),
       );
       if (!page) return text('Not found\n', false, 404);
       return text(
@@ -86,6 +83,10 @@ export function createLlmsRoutes(
       );
     },
     generateStaticParams: () =>
-      pages.map((page) => ({ slug: [...page.slugs, 'content.md'] })),
+      // The pinned loader encodes slugs; Next encodes static params and
+      // supplies decoded route params, so cross that boundary exactly once.
+      pages.map((page) => ({
+        slug: [...page.slugs.map(decodeURI), 'content.md'],
+      })),
   };
 }
