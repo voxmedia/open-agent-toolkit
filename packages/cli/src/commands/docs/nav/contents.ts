@@ -11,6 +11,9 @@ import { dirExists, fileExists } from '@fs/io';
 export interface DocsContentsEntry {
   title: string;
   href: string;
+  line?: number;
+  description?: string;
+  separator?: string;
   group?: { title: string; line: number };
 }
 
@@ -50,7 +53,7 @@ export function hasIndexContents(markdown: string): boolean {
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
-  options: { allowEmpty?: boolean } = {},
+  options: { allowEmpty?: boolean; locations?: boolean } = {},
 ): DocsContentsEntry[] {
   const lines = unfencedLines(markdown);
   const headingIndex = contentsHeadingIndex(lines);
@@ -90,6 +93,16 @@ export function parseIndexContents(
         title: match[1]!.trim(),
         href: match[2]!.trim(),
         ...(group ? { group } : {}),
+        ...(options.locations
+          ? {
+              line: i + 1,
+              description: line
+                .slice(match[0].length)
+                .replace(/^\s*[-–—:]\s*/, '')
+                .trim(),
+              separator: /^\s*([-–—:])/.exec(line.slice(match[0].length))?.[1],
+            }
+          : {}),
       });
       groupEntries += 1;
     }

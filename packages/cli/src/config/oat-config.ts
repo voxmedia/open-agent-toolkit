@@ -10,6 +10,10 @@ import {
   normalizeDispatchMatrix,
   type WorkflowDispatchProviderValue,
 } from './dispatch-matrix';
+import {
+  normalizeDocumentationCheck,
+  type DocumentationCheckConfig,
+} from './documentation-check';
 import { parseJsonConfig } from './json';
 import { resolveUserSyncConfig } from './user-sync-config';
 
@@ -82,6 +86,7 @@ export interface OatDocumentationIa {
 }
 
 export interface OatDocumentationConfig {
+  check?: DocumentationCheckConfig;
   /** Repository-only mirror; the authored decision and local guidance own IA. */
   ia?: OatDocumentationIa;
   /** Content-root-relative globs excluded from reader navigation and manifests. */
@@ -1873,6 +1878,8 @@ function normalizeOatConfig(
 
   if (isRecord(parsed.documentation)) {
     const doc: OatDocumentationConfig = {};
+    const check = normalizeDocumentationCheck(parsed.documentation.check);
+    if (check !== undefined) doc.check = check;
     const ia = normalizeDocumentationIa(parsed.documentation.ia, configPath);
     if (ia !== undefined) doc.ia = ia;
     const navOwner = normalizeDocumentationNavOwner(

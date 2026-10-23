@@ -28,6 +28,7 @@ import {
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
 } from '@config/dispatch-policy-options';
+import { normalizeDocumentationCheck } from '@config/documentation-check';
 import { parseJsonConfig } from '@config/json';
 import {
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
@@ -142,6 +143,7 @@ type ConfigKey =
   | 'archive.wrapUpExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
+  | 'documentation.check'
   | 'documentation.ia'
   | 'documentation.nonReaderPaths'
   | 'documentation.navOwner'
@@ -329,6 +331,7 @@ const KEY_ORDER: ConfigKey[] = [
   'archive.awsRegion',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
+  'documentation.check',
   'documentation.ia',
   'documentation.nonReaderPaths',
   'documentation.navOwner',
@@ -513,6 +516,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     description:
       'Deprecated compatibility alias for workflow.autoReviewAtHillCheckpoints. Prefer `oat config set workflow.autoReviewAtHillCheckpoints <true|false>`.',
     deprecated: { supersededBy: 'workflow.autoReviewAtHillCheckpoints' },
+  },
+  {
+    key: 'documentation.check',
+    group: 'Shared Repo (.oat/config.json)',
+    scope: 'shared repo',
+    file: '.oat/config.json',
+    type: 'JSON object',
+    defaultValue: 'null (portable checker defaults)',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.check <JSON>',
+    description:
+      'Portable docs rule severities, named thresholds, reason-bearing path exceptions, provenance patterns and diagram base ref.',
   },
   {
     key: 'documentation.ia',
@@ -2460,6 +2475,7 @@ async function setConfigValue(
   if (
     key === 'documentation.nonReaderPaths' ||
     key === 'documentation.guidance' ||
+    key === 'documentation.check' ||
     key === 'documentation.ia' ||
     key === 'documentation.navOwner'
   ) {
@@ -2471,7 +2487,11 @@ async function setConfigValue(
     const trimmed = rawValue.trim();
     let value: unknown;
     try {
-      if (key === 'documentation.nonReaderPaths') {
+      if (key === 'documentation.check') {
+        const parsed: unknown = JSON.parse(trimmed);
+        if (parsed === null) throw new Error('Expected a checker JSON object.');
+        value = normalizeDocumentationCheck(parsed);
+      } else if (key === 'documentation.nonReaderPaths') {
         const paths = parseDocumentationExcludes(rawValue);
         value = paths.length > 0 ? paths : undefined;
       } else if (key === 'documentation.ia') {
@@ -2488,9 +2508,11 @@ async function setConfigValue(
                 effectiveSurface === 'user' ? 'user' : 'shared',
               );
       }
-    } catch {
+    } catch (error) {
+      if (key === 'documentation.check') throw error;
       throw new Error(
         `Invalid ${key} value: ${key === 'documentation.ia' ? 'expected IA JSON with preset, repo-relative decision, optional tracks and verification' : key === 'documentation.navOwner' ? 'expected nav-sync or hand-authored' : 'expected a non-empty path/URL string or ordered non-empty string array'}.`,
+        { cause: error },
       );
     }
     let raw: Record<string, unknown> = { version: 1 };
@@ -3257,6 +3279,7 @@ async function removeFromSurface(
   if (
     key === 'documentation.nonReaderPaths' ||
     key === 'documentation.guidance' ||
+    key === 'documentation.check' ||
     key === 'documentation.ia' ||
     key === 'documentation.navOwner'
   ) {
@@ -3428,6 +3451,17 @@ async function removeConfigPathOnDisk(
     return null;
   }
 
+  // Checker null is malformed rather than an inherited unset sentinel.
+  if (
+    path.join('.') === 'documentation.check' &&
+    isRecord(parsed.documentation) &&
+    Object.hasOwn(parsed.documentation, 'check')
+  ) {
+    return {
+      ...parsed,
+      documentation: withoutOwnKey(parsed.documentation, 'check'),
+    };
+  }
   const { next, removed } = removeConfigPath(parsed, path);
   return removed ? next : null;
 }
