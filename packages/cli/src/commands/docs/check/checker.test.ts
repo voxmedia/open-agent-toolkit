@@ -806,6 +806,22 @@ describe('real framework navigation boundaries', () => {
 describe('contributing commands resolve actual literal package contexts', () => {
   it('accepts installed pnpm shorthand binaries while explicit run remains script-only', async () => {
     const f = await fixture();
+    const { packageManager } = JSON.parse(
+      await readFile(
+        fileURLToPath(
+          new URL('../../../../../../package.json', import.meta.url),
+        ),
+        'utf8',
+      ),
+    ) as { packageManager: string };
+    const manifest = JSON.parse(
+      await readFile(join(f.root, 'package.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    // Corepack would otherwise pick its own pnpm for a temp root outside the repo.
+    await f.put(
+      'package.json',
+      JSON.stringify({ ...manifest, packageManager }),
+    );
     await f.put('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
     await f.put(
       'packages/member/package.json',
@@ -819,7 +835,7 @@ describe('contributing commands resolve actual literal package contexts', () => 
       await symlink(binary, join(f.root, base, 'node_modules/.bin/tsc'));
     }
     expect(
-      (await exec('pnpm', ['--dir', f.root, 'tsc', '--version'])).stdout,
+      (await exec('pnpm', ['tsc', '--version'], { cwd: f.root })).stdout,
     ).toMatch(/^Version /);
     await f.write(
       'contributing.md',
