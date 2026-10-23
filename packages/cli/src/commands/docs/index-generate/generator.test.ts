@@ -75,6 +75,54 @@ describe('generateIndex', () => {
     },
   );
 
+  it.each([
+    ['```markdown', '``', '~~~', '````'],
+    ['~~~~markdown', '~~~', '```', '~~~~~'],
+  ])(
+    'ignores fenced Contents examples (%s)',
+    async (opening, shortClose, otherMarker, closing) => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-index-fenced-'));
+      createdDirs.push(dir);
+      await writeFile(join(dir, 'a.md'), '# A');
+      await writeFile(join(dir, 'z.md'), '# Z');
+      const example = [
+        opening,
+        shortClose,
+        otherMarker,
+        '## Contents',
+        '* [Example](example.md)',
+        '### Empty',
+        closing,
+      ].join('\n');
+      await writeFile(join(dir, 'index.md'), `# Home\n${example}\n`);
+      expect(
+        (await generateIndex(dir)).map((entry) => [
+          entry.path,
+          entry.unlisted ?? false,
+        ]),
+      ).toEqual([
+        ['index.md', false],
+        ['a.md', false],
+        ['z.md', false],
+      ]);
+
+      await writeFile(
+        join(dir, 'index.md'),
+        `# Home\n${example}\n## Contents\n- [Z](z.md)\n- [A](a.md)\n`,
+      );
+      expect(
+        (await generateIndex(dir)).map((entry) => [
+          entry.path,
+          entry.unlisted ?? false,
+        ]),
+      ).toEqual([
+        ['index.md', false],
+        ['z.md', false],
+        ['a.md', false],
+      ]);
+    },
+  );
+
   it('uses H1 then directory slug titles and rejects malformed present Contents', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oat-index-title-'));
     createdDirs.push(dir);

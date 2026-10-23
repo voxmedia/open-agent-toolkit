@@ -14,17 +14,48 @@ export interface DocsContentsEntry {
   group?: { title: string; line: number };
 }
 
+/** Mask fenced examples without changing authored source line numbers. */
+function unfencedLines(markdown: string): string[] {
+  let fence: { marker: string; length: number } | undefined;
+  return markdown.split(/\r?\n/).map((line) => {
+    if (fence) {
+      const closing = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (
+        closing &&
+        closing[1]![0] === fence.marker &&
+        closing[1]!.length >= fence.length
+      ) {
+        fence = undefined;
+      }
+      return '';
+    }
+    const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (opening && (opening[1]![0] === '~' || !opening[2]!.includes('`'))) {
+      fence = { marker: opening[1]![0]!, length: opening[1]!.length };
+      return '';
+    }
+    return line;
+  });
+}
+
+function contentsHeadingIndex(lines: string[]): number {
+  return lines.findIndex((line) => /^##\s+Contents\s*$/.test(line.trim()));
+}
+
+/** Shared discovery lets inventory generation retain its no-map fallback. */
+export function hasIndexContents(markdown: string): boolean {
+  return contentsHeadingIndex(unfencedLines(markdown)) >= 0;
+}
+
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
   options: { allowEmpty?: boolean } = {},
 ): DocsContentsEntry[] {
-  const lines = markdown.split(/\r?\n/);
-  const contentsHeadingIndex = lines.findIndex((line) =>
-    /^##\s+Contents\s*$/.test(line.trim()),
-  );
+  const lines = unfencedLines(markdown);
+  const headingIndex = contentsHeadingIndex(lines);
 
-  if (contentsHeadingIndex < 0) {
+  if (headingIndex < 0) {
     throw new Error(`Missing required ## Contents section in ${sourcePath}`);
   }
 
@@ -38,7 +69,7 @@ export function parseIndexContents(
       );
     }
   };
-  for (let i = contentsHeadingIndex + 1; i < lines.length; i += 1) {
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
     const line = lines[i]!;
     if (/^##\s+/.test(line.trim())) break;
     const heading = line.match(/^###\s+(.+?)\s*$/);

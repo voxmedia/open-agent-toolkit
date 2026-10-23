@@ -115,6 +115,14 @@ Intro paragraph.
 ## Contents
 
 - [Getting Started](getting-started.md) - setup guide
+
+~~~markdown
+### Empty example group
+* [Example](example.md)
+## Example end heading
+- [Also example](also-example.md)
+~~~~
+
 - [Reference](reference/index.md)
 
 ## Notes
@@ -131,13 +139,13 @@ Intro paragraph.
   it('preserves pre-group entries and group identity in authored order', () => {
     expect(
       parseIndexContents(
-        '## Contents\n- [Intro](intro.md)\n### Guides\n- [Start](start.md)\n### Guides\n- [More](more.md)',
+        '```markdown\n## Contents\n* [Example](example.md)\n```\n## Contents\n- [Intro](intro.md)\n### Guides\n- [Start](start.md)\n### Guides\n- [More](more.md)',
         'docs/index.md',
       ),
     ).toEqual([
       { title: 'Intro', href: 'intro.md' },
-      { title: 'Start', href: 'start.md', group: { title: 'Guides', line: 3 } },
-      { title: 'More', href: 'more.md', group: { title: 'Guides', line: 5 } },
+      { title: 'Start', href: 'start.md', group: { title: 'Guides', line: 7 } },
+      { title: 'More', href: 'more.md', group: { title: 'Guides', line: 9 } },
     ]);
   });
 
@@ -162,8 +170,11 @@ Intro paragraph.
     },
   );
 
-  it('throws when the reserved contents section is missing', () => {
-    expect(() => parseIndexContents('# Docs\n', 'docs/index.md')).toThrow(
+  it.each([
+    '# Docs\n',
+    '# Docs\n```markdown\n## Contents\n* [Example](example.md)\n```\n',
+  ])('throws when the authored contents section is missing', (markdown) => {
+    expect(() => parseIndexContents(markdown, 'docs/index.md')).toThrow(
       'Missing required ## Contents section in docs/index.md',
     );
   });

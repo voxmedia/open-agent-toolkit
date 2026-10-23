@@ -1,7 +1,10 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
-import { parseIndexContents } from '@commands/docs/nav/contents';
+import {
+  hasIndexContents,
+  parseIndexContents,
+} from '@commands/docs/nav/contents';
 import { resolveFolderTitle } from '@commands/docs/nav/fumadocs';
 import {
   createExclusionMatcher,
@@ -163,7 +166,7 @@ async function collectEntries(
   }
 
   const fallback = sortEntries(entries);
-  if (indexMarkdown === undefined || !/^##\s+Contents\s*$/m.test(indexMarkdown))
+  if (indexMarkdown === undefined || !hasIndexContents(indexMarkdown))
     return fallback;
   const contents = parseIndexContents(
     indexMarkdown,
