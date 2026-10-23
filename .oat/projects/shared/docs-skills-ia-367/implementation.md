@@ -1226,6 +1226,19 @@ One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-
 **Verification:** transforms 36 tests and docs-config 16 tests executed (no Turbo); check/type-check and scoped builds exit0. Baseline composition red exit1 (4/5 failures), restored green exit0; separate source-config order control red1/fixed0. Real flagship Syntax examples preserved and nested Rendered tabs transformed; Mermaid proof concerns JSX/newlines only. All public/bundled versions0.3.27. Logs: ignored analysis/p05/t01-\*.
 **Prevention:** corrected dependency/test lint and indented-code detection before commit; no recovery reservation. Worktree validation accidentally invoked during preflight replayed cached suites and failed on newly opened record dirt; excluded from phase evidence.
 
+### Task p05-t02: Export loaded Markdown for agents and guard runtime parity
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-impl-20261023 (same accepted run)
+**Intent:** Share pinned-loader/raw-source llms endpoints between canonical scaffold and flagship, enumerating static paths without rewrites, and enforce the explicit runtime parity boundary.
+**Files:** packages/docs-config/src/{llms.ts,llms.test.ts,index.ts}, packages/docs-config/README.md, both Fumadocs lib/source.ts files and three new route handlers per app, CLI scaffold allowlist and seeded scaffold fixture, apps/oat-docs/tests/template-parity.test.ts. Mechanical parity additions: docs-config/package.json narrow llms export, flagship app/branding.css and layout import conserve existing branding; all other shared runtime bytes match. Actual fresh export proof in ignored analysis/p05.
+**Proof command:** docs-config check/type-check/build, CLI init suites, seeded parity fail/restored pass, real fresh scaffold and flagship Next static export with body/path/membership probes.
+
+**Commit:** 4f3a03118a46f3988a0304a35c063ceaba86926b
+**Verification:** docs-config18 tests (real pinned loader/server raw methods), CLI init116 tests, parity8 tests all executed; scoped config/CLI checks, config/docs types and config build exit0. Seeded owned-route parity red1/restored0. Real flagship Next build passes (4/6 dependency tasks cached; docs build executed); fresh scaffold Next16.1.6/MDX14.3.2/core16.10.2 export executed from locally packed branch packages with standalone dependencies and scaffold-compatible TypeScript5.9.3. HTTP proves root/nested/missing paths, full/index/per-page membership5 fresh/89 flagship, raw authored-source retention, basePath once/trailingSlash and MDX/non-reader404. T3 preview opened, clicked Rendered and observed nested pnpm/npm tabs with pnpm install. Branding extraction byte conservation passes.
+**Proof index:** ignored analysis/p05/t02-\*, export-proof.py, install-fresh.py, pin-fresh.mjs, inspect-export.py, http-proof.py. Fixture's explicit hand-authored nav/prebuild customization tests loaded readers outside sidebar. Initial dependency-symlink setup failed (pnpm bin path, then Turbopack external-root restriction); replaced with offline local package install. Attempted inherited TypeScript6 failed CSS import checking; restored scaffold's supported5.x. All were precommit prevention; no recovery. t01 config test count correction:17, not16.
+
 ---
 
 ## Phase p06: oat docs check
