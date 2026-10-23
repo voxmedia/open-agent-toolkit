@@ -531,6 +531,8 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 
 | p06 | code | fixes_completed | 2026-10-23 | reviews/archived/remote-pr-374-review-2026-10-23T200139Z.md | - | - | - |
 
+| p06 | code | received | 2026-10-23 | reviews/archived/remote-pr-374-review-2026-10-23T201000Z.md | - | - | - |
+
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
 Writers must preserve every existing row and every unknown trailing cell.

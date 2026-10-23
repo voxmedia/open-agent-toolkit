@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p07
+oat_current_task_id: p06
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | completed | 1     | 1/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | in_progress | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 9/13 phases accepted
 
 ---
 
@@ -1520,7 +1520,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 **Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 
@@ -2006,6 +2006,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #374 Warp findings at cap
+
+2026-10-23; review5633800637 at b952a158fa5b3c72554a89ef4e33aec36ea90073 requests changes. Root triages 0 Critical/2 High/3 Medium/0 Low: W-H1 severity arrays silently pass errors (4363730370); W-H2 symlinked configured root loses policy (4363730381); W-M1 bare pnpm binaries (4363730389, existing Gate-M1); W-M2 implicit Fuma pages (4363730396, existing Gate-M2); W-M3 diagram test exits at missing Git base (4363730402). Root independently reproduced H1/H2 through real built-CLI fixtures and inspected the ineffective M3 assertion. All concern accepted contracts. Proposed narrow corrections; repeated deferrals need fresh disposition because the remote reviewer objects to landing.
+
+Standard scope cap3/3 is exhausted; prior override approved then-known residuals and cannot silently cover new findings. New review postdates the archived complexity report, requiring a fresh read-only assessment under references/docs/complexity-review-fallback.md before operator choice. Event artifact reviews/archived/remote-pr-374-review-2026-10-23T201000Z.md; no OAT markers, ledger provenance unknown. P06 acceptance suspended (9/13); historical anchors/gate and prior decisions preserved. No new fix task or code correction. PR374-M1 instruction correction is published at9ebc2bea8, reply4363770104 and source thread resolved. New review and five threads block landing. Recovery1/10,pendingnull unchanged.
 
 ### Remote Review Received: PR #374
 

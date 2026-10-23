@@ -1,5 +1,5 @@
 ---
-oat_current_task: p07
+oat_current_task: p06
 oat_last_commit: 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 oat_blockers: []
 associated_issues: [
@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
@@ -154,12 +154,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p06 accepted; PR374-M1 instruction correction completed and root-verified. 10/13 phase-units accepted. Historical candidate, passing gate and cap dispositions preserved. P07 remains provisional and unstarted; PR374 current-head CI/Bugbot clearance and landing pending.
+P06 reopened for five Warp findings: three new, two repeated deferrals. Standard review cap3/3 reached; fresh complexity assessment then explicit operator disposition pending. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 and p06 accepted, 10/13 phases accepted.
+- **Implementation:** `implementation.md` — p01–p05 and four revisions accepted; p06 reopened for remote findings, 9/13 phase-units accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Deliver open PR374 (https://github.com/voxmedia/open-agent-toolkit/pull/374) with current-head CI/Bugbot clearance and expected-head merge. Plain land mode and standing intermediate merge authority retained; review-stage complete. P06 frozen Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8. Selected gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passed at high threshold; its two Medium and two Low findings are deferred to final via the configured passing-gate sweep. Operator-approved standard R3-L1/R3-L2 deferrals and configurable source-read policy stand. Recovery1/10,pendingnull. After delivery, align provisional p07 before implementation; no p07/P24, npm publication or final project PR now.
+Receive the fresh complexity assessment, then obtain explicit disposition for the new PR374 findings before further code repair. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Prior cap decisions remain historical; repeated Gate-M1/M2 now face a live reviewer objection to landing. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
