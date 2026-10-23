@@ -902,6 +902,23 @@ Protects against: pinned external schema rejecting accepted roots and collection
 - Verification: focused Markdown lint and full pnpm check exit 0 before commit and immediately against committed HEAD; postcommit results authoritative.
 - Reason: Equivalent wording removes MD038; clean immutable original history, matching ledger reservation before edit and unchanged exact target; no behavior/scope change. Completed marker remains for root validation/settlement.
 
+**Phase verification stop:** On cb491cd47e0368c3433bc2f81402c3e7dc55a4a7, ordered `pnpm check` exits 0 (11/11 Turbo tasks replayed), `pnpm type-check` exits 0 (5/11 cached), then isolated-HOME `pnpm test` exits 1 (5/11 tasks cached) in its docs-build dependency: `lib/source.ts:6:16`, `Property 'toFumadocsSource' does not exist on type 'never'`. The installed fumadocs-mdx 14.3.2 server conditional requires metadata output extending fumadocs-core 16.10.2 MetaData, whose declared root remains boolean-only; t04's widened boolean|string output therefore collapses the generated collection type. Runtime schema/loader checks passed, but did not cover this generated TypeScript composition. No product edit, reservation or retry was made for this independent failure. The existing completed attempt-2 marker cannot be cleared/overwritten by this implementer; root must validate/settle it before another bounded reservation. Gates 4–8, forced tests and direct supplemental suites have not run. Phase stays in_progress; no Head or phase-verification success. Exact logs/exits and diagnosis: ignored `analysis/p04/{phase-final-*,source-type-stop.json}`. Original t04/t06 history and Base preserved; no route fallback.
+
+### Recovery Event docs367-p04-t04-source-type-stop
+
+- Phase/task: p04 / p04-t04
+- Original request: docs367-p04-impl-20261023
+- Original commit: 9712fcba8ac65355f78edeb813303c1c0592c8d8
+- Defect class: composition
+- Discovered by: isolated-HOME pnpm test (oat-docs build dependency)
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 2/10 (no new reservation)
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: -
+- Verification: check/type-check exit 0; isolated-HOME test exits 1 at generated Fumadocs collection TypeScript boundary; remaining gates unrun.
+- Reason: Separate deterministic metadata-type composition failure; no edit or new attempt. Prior event docs367-p04-t06-markdownlint still owns the matching completed pending marker. Root-only settlement is required before an independent reservation; marker and monotonic usage remain unchanged.
+
 ---
 
 ## Phase p05: Reader-first starter app
