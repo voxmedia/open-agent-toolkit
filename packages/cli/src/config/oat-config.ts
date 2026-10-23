@@ -84,9 +84,9 @@ export interface OatDocumentationIa {
 export interface OatDocumentationConfig {
   /** Repository-only mirror; the authored decision and local guidance own IA. */
   ia?: OatDocumentationIa;
-  /** Absent is undeclared. Markdown ignores sidebar ownership. */
   /** Content-root-relative globs excluded from reader navigation and manifests. */
   nonReaderPaths?: string[];
+  /** Absent is undeclared. Markdown ignores sidebar ownership. */
   navOwner?: 'nav-sync' | 'hand-authored';
   /** Ordered advisory IA source paths/URLs; selected as a layer, never merged. */
   guidance?: string | string[];
