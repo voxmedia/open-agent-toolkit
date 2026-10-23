@@ -1383,6 +1383,20 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 8f2c69c866fda3df157bc39e7851f8a8a3ce8ff1
 **Verification:** Existing real-file .md/.mdx collision tests red1 on both source and target root routes after an outside-root sibling is added; fixed transforms38 tests execute pre/post exit0. Pinned-loader inventory remains rooted in docs; all prior nested contributor collision, no-collision, query/fragment/trailing-slash and context-free controls pass. Reviewer probe against actual built transform changes with-sibling ../guide/ to ./guide/ while ordinary ./guide/ stays valid. Transforms check/type/build and flagship docs validation exit0. Evidence: ignored analysis/p05/fix-r1/t07-\*. No recovery usage or scope expansion.
 
+### Task p05-t08: (review) Remove remaining bridge prose and clarify nav comment
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — M2, L3.
+**Intent:** Correct the public older-CLI sentence and describe the precise source-file collision exception in the existing nav docstring, without changing nav behavior.
+**Files:** apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md, packages/cli/src/commands/docs/nav/fumadocs.ts (docstring only).
+**Proof command:** conservation diff, existing docs check and CLI check/type-check; no new prose tests or receipt package.
+**Correction to prior evidence:** T04's no-residue source-search claim was too broad: it missed the remaining AGENTS bridge sentence on add-docs-to-a-repo.md. This record closes that specific residue; historical records remain intact.
+
+**Commit:** 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214
+**Verification:** Existing docs check executes pre/post exit0 (format/Markdown lint/source links/anchors/nav/catalog); CLI check/type-check exit0. Conservation diff preserves every page heading/link and all valid setup/approval/preservation behavior; nav delta is comment-only and retains strict unlisted handling. No new automated test or prose receipt package. Evidence: ignored analysis/p05/fix-r1/t08-\*.
+
 ### Review Received: p05
 
 **Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
