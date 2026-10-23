@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
@@ -139,7 +139,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T08:15:03.651154Z'
+oat_project_state_updated: '2026-10-23T08:25:50.877509Z'
 oat_generated: false
 ---
 
@@ -151,12 +151,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 reader-first starter is accepted; intermediate PR delivery is next.
+Implement — p05 reopened for the confirmed PR373 nested-docs link-routing finding.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 and p05 accepted; 9/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 reopened, 8/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Deliver draft PR #373 (https://github.com/voxmedia/open-agent-toolkit/pull/373) from docs/docs-skills-ia-367-p05 after current-head CI and Bugbot clearance (all PR self-review lenses covered); use land-pr. Merge mode remains plain land with existing independent code/test/docs coverage; squash follows the established intermediate-PR policy. No merge is authorized while review or checks remain pending. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.
+Correct PR373 M1 nested-docs routing within p05, then independent round3 re-review. Historical accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 and its reviews remain preserved; current acceptance is suspended. Next execution record is p05-t09 when implementation starts. Recovery1/10,pendingnull remains settled. PR373 is open and watched; merge waits for corrected-head verification, review, CI and Bugbot clearance. Use authorized plain land-pr with established squash policy. Then align provisional p06. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold final PR until project completion.

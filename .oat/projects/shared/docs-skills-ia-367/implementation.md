@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | in_progress | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 9/13 phases accepted
+**Total:** 8/13 phases accepted
 
 ---
 
@@ -1207,7 +1207,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 ## Phase p05: Reader-first starter app
 
-**Status:** completed
+**Status:** in_progress
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
 **Head:** 04d5361060ed597fb59431ea4e98ee1d0d30f853
 **Executor:** phase-implementer:docs367-p05-impl-20261023
@@ -1584,6 +1584,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #373 nested-docs routing
+
+2026-10-23; cursor[bot] review5625689511 at source commit35bfd2f5411f1557f35a7203d05169b4ec58a8d1. Counts Critical0/High0/Medium1/Low0. M1: [discussion4357536051](https://github.com/voxmedia/open-agent-toolkit/pull/373#discussion_r4357536051), last /docs/ marker misidentifies nested content folders. **Convert** against accepted p05 Outcome7 source-relative/collision routing: real-file built-transform probe yields ../contributing/ instead of ../../contributing/index/ from docs/docs/guide.md. Preexisting heuristic now leaves the new collision contract incomplete. No new requirement, deferral or dismissal. Next record p05-t09 opens when execution starts. Artifact reviews/archived/remote-pr-373-review-2026-10-23T082550Z.md; no OAT provenance marker, so ledger provenance stays unknown. This is the first p05 remote receive, after two independent internal rounds; next internal round is3/3.
+
+P05 reopens in place because no later phase Base exists. Frozen Base d02e20521f336aa45beab84a5f5e2df7b9541f79 and prior accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 remain historical anchors; prior acceptance/review receipts are preserved. Current acceptance is suspended pending bounded correction and independent re-review. Recovery1/10,pendingnull is unchanged; this review fix is not a recovery reservation. Original implementer continues, root owns tracking/review/GitHub. All current-head CI checks passed but Bugbot's actionable finding blocks merge. No reply posted yet.
 
 - 2026-10-23: PR373 self-review complete through product candidate04d536106 and tracking tail2f624dd9d. Correctness/testing/documentation covered by fresh independent p05 rounds1–2 (explicit deliberate-testing brief); complexity-only audit docs367-p05-complexity-20261023 reports deletion-rule compliant, zero blocking findings, at reviews/p05-complexity-20261023.md. All product machinery retained. Optional root re-export simplification declined: the package deliberately supports its ordinary barrel import as well as the documented narrow /llms runtime path; both export the same implementation and the small API cost is accepted consistently with the other package helpers. Optional local pruning is scheduled after landing: retain export trees while CI/Bugbot may still need reproduction, then prune only generated node_modules/.next/out from the two identified ignored scratch repos; preserve scripts/tarballs/logs/probe reports. No product delta or extra code-review round. Plain land-pr remains authorized after fresh exact-head CI/Bugbot and no open actionable threads; no admin/early-auto merge or branch/worktree deletion.
 
