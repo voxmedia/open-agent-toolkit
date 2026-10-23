@@ -97,12 +97,12 @@ function sortEntries(entries: IndexEntry[]): IndexEntry[] {
 function prefixEntryPath(entry: IndexEntry, prefix: string): IndexEntry {
   return {
     ...entry,
-    path: join(prefix, entry.path),
+    path: relativeKey(prefix, entry.path),
     children: entry.children?.map((child) => prefixEntryPath(child, prefix)),
   };
 }
 
-/** Docs-root-relative POSIX path used for matching, never for reading files. */
+/** Relative POSIX path used for matching and manifests, never for file IO. */
 function relativeKey(base: string, name: string): string {
   return base ? `${base}/${name}` : name;
 }
