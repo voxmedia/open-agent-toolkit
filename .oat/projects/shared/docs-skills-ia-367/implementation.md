@@ -1741,12 +1741,18 @@ Proof: Extend existing public checkDocs command-context cases; reproduce the pre
 
 ### Task p06-t09: (review) Attribute source and navigation failures accurately
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** 4b46165b73475cee4ca94e25b5987b788268c2fb
 **Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L1, R2-L2)
 
 Intent: Invalid frontmatter must not produce a false description error; source-read failures use the existing configurable frontmatter rule with a relative actionable diagnostic, and malformed hand-authored metadata reports its own file while later comparisons continue. Preserve body checks, intentional overrides, optional-artifact behavior and nav-sync strictness.
 Files: `packages/cli/src/commands/docs/check/checker.ts`, `packages/cli/src/commands/docs/check/reader-rules.ts`, `packages/cli/src/commands/docs/check/navigation.ts`, existing checker/navigation test files, and the covering rule description in `apps/oat-docs/docs/docs-tooling/check.md` or `packages/cli/README.md` only if needed.
 Proof: Compact public-boundary regressions for invalid YAML/no false description/body checks, unreadable source/relative diagnostic/description exception independence, and malformed aa/meta.json plus later zz/meta.json drift. Pre-fix red, fixed and valid controls; preserve explicit frontmatter warn/off behavior. Reuse existing suites and real files, no own-module mocks or new production test hooks.
+
+**Commit:** bfb49d35202c2396feef640c4390fb0fca54500d
+**Verification:** Four intended failures on immutable pre-fix code; final fixed/valid checker, config, navigation and init suites177 fresh isolated-HOME tests, exit0. Corrected fixture ordering and implicit Fumadocs landing expectations before commit; authoritative red t09-red-final and fixed t09-final-tests retained. Invalid YAML skips only description metadata; body checks and explicit frontmatter policy survive. Real EACCES reports relative configurable frontmatter; malformed hand metadata reports its file and preserves later drift. CLI check/types/build, docs lint and format exit0. Exact proof under analysis/p06/fix-r2.
 
 ### Task p06-t10: (review) Correct remaining p06 prose spacing
 
