@@ -184,6 +184,10 @@ docs367-p06-recovery01-settle-20261023: Recovery98edd0f32 accepted, immutable or
 
 docs367-p06-compat-disposition-20261023: Verified published handler-attention incompatibility independently of OAT; authorize exact transitive2.1.2 at effective pnpm install roots with safe new-app scaffolding and approval-owned workspace edits. Preserve framework APIs/content and33 t03 product paths; require real setup resolution/build controls before acceptance.
 
+### 2026-10-23 · structural · oat-project-implement · p06-review-cap
+
+docs367-p06-cap-approved-20261023: operator approved proceed with override at standard review cap 3/3; R3-L1/R3-L2 deferred, configurable source-read policy retained, no partial-navigation requirement; selected phase gate pending. See implementation.md and reviews/archived/complexity-p06-2026-10-23T185754Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

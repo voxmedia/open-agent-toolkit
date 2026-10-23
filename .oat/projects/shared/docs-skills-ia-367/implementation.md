@@ -1795,6 +1795,17 @@ All four round2 findings are independently closed; round1's six remain closed. R
 
 **Outcome:** received at the three-cycle governance cap with two residual Lows, disposition pending. Follow review-receive Step8 and complexity-review-fallback: one new read-only complexity review at the resolved reviewer ceiling, then present its report and concrete operator options. Agents do not select the cap disposition. Phase stays in_progress; acceptance, selected phase gate and intermediate delivery remain future root duties. Frozen Base/candidate, recovery1/10pendingnull and historical evidence are conserved.
 
+### Operator disposition: p06 review cap
+
+**Date:** 2026-10-23
+**Approval:** Operator said "approve" to the root's concrete recommended disposition.
+**Scope and exhaustion:** p06; standard code review cycle 3/3; 0 Critical, 0 High, 0 Medium, 2 Low.
+**Complexity verdict:** Partially compliant; product machinery justified, repeated per-site review/proof process disproportionate.
+**Report (local-only):** reviews/archived/complexity-p06-2026-10-23T185754Z.md
+**Disposition:** Proceed with override. Defer R3-L1 diagnostic attribution/raw-path accuracy and R3-L2 structural inventory accuracy; retain configurable frontmatter read errors. Continuing navigation comparisons after an unreadable page is not added as a requirement. No fourth standard correctness review or new fix task is authorized by this disposition. Selected p06 phase gate remains required before acceptance and intermediate PR delivery.
+
+Root read the full inline Opus report and verified the relevant reader inventory, source-read handling and navigation outer catch. The report's assertion that both findings require unreadable files is too broad: malformed mkdocs.yml is possible in an ordinary checkout. The approved deferral includes that diagnostic-attribution case explicitly. Every reproduced bad case still exits 1; false structural diagnostics under intentional frontmatter warn/off remain a known accepted accuracy gap. Future correction should preserve discovered reader membership, skip content-dependent conclusions for unreadable pages, attribute YAML errors to mkdocs.yml and use safe relative messages, without a partial-navigation engine. Keep existing configurable source-read policy. Proof for an unchanged-dependency correction should use focused coverage and required CI gates, inheriting unchanged install/framework/packed-runtime proof.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1959,6 +1970,8 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+2026-10-23 · p06 · review cap 3/3 · verdict Partially compliant · operator approved proceed with override ("approve"); defer R3-L1/R3-L2, retain configurable frontmatter errors, add no partial-navigation requirement; report reviews/archived/complexity-p06-2026-10-23T185754Z.md; selected phase gate remains pending.
+
 P05 delivery complete: PR https://github.com/voxmedia/open-agent-toolkit/pull/373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 on 2026-10-23T15:45:53Z, using the established merge-commit method and expected head 56df695efebe806920188d7994d54de39630dee9. Final paginated sweep found all three current-head checks successful, Bugbot explicitly completed with no issues, all three Warp fix confirmations, previous Warp rejection dismissed, zero unresolved threads/reviewer requests and unchanged base/head. No quota exception, admin/auto merge, force push or branch deletion; watcher stopped. Approved generated cleanup pruned eleven ignored node_modules/.next/out directories under analysis/p05 while retaining scripts, source, packed tarballs, controls and logs. Root switched this existing T3 worktree to docs/docs-skills-ia-367-p06 from merged origin/main and ran worktree:init; its only tracked side effect was the generated manifest version field, restored. P06 remains provisional and unstarted while bounded readiness reconnaissance maps the approved G5/P20–P23/P25 contracts. Final project PR remains held.
 
 Operator disposition, 2026-10-23: "Sounds good. Proceed" approves proceeding with override using reviews/archived/complexity-p05-2026-10-23T090105Z.md: correct R3-L1 wording only, defer R3-L2 named type export until a consumer needs it, retain all product machinery, and continue acceptance/delivery without a fourth review cycle. Current-head CI/Bugbot and plain land-pr with the established merge-commit method and expected-head guard remain required.
@@ -2035,6 +2048,9 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
+
+- p06 R3-L1 · Low · Malformed mkdocs.yml is attributed to index.md; unreadable Fumadocs sources can yield raw absolute navigation errors. Operator approved deferral at the three-cycle cap on 2026-10-23 ("approve"); reproduced bad inputs still exit 1 and only diagnostic accuracy is deferred. Continuing other navigation comparisons after a source-read failure is not required. Revisit at final review or when a real repository reports this class; any wrong exit or hidden required error triggers correction. Minimal fix: YAML-local attribution and safe relative error messages; no partial-navigation engine. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
+- p06 R3-L2 · Low · Unreadable reader paths are absent from parsed-page structural inventory, causing false directory-index errors/leaf-size warnings, including under intentional frontmatter warn/off. Operator approved deferral at the cap on 2026-10-23 ("approve"); preserve configurable frontmatter policy. Revisit at final review or when actual use encounters these false findings; any wrong exit or hidden required error triggers correction. Minimal fix preserves discovered membership and skips content-dependent conclusions for unreadable pages. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
 
 - p05 R3-L2 · Low · Named RemarkLinksOptions barrel export deferred by operator approval ("Sounds good. Proceed") of the cap report reviews/archived/complexity-p05-2026-10-23T090105Z.md. Inline options remain typed; no consumer requires the additional public symbol. Revisit when a consumer or typed wrapper needs to name the type; no runtime guarantee deferred.
 
