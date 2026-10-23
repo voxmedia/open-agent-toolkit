@@ -797,7 +797,7 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 **Status:** in_progress
 **Base:** 56e05597392dfb4951679d5236b960afb296f951
-**Head:** 3bbe2a49326835a44c839a24de609335a119baa6
+**Head:** 3f99348b589cbd750bdfd088e02e4c10a5848e2f
 **Executor:** phase-implementer:docs367-p04-impl-20261023
 
 Phase start: approved brief p04 made concrete after bounded read-only reconnaissance. One committing phase implementer owns this checkout, with no nested dispatch or parallel group: Contents parsing, reader-path matching, init defaults and index order share producer/consumer contracts and must compose before review. Root retains scope judgment, independent review, acceptance and delivery. Main fetched before phase concretization; no changes in planned paths beyond merged P03 already in the branch. Worktree init passed with SKIP_S3_ARCHIVE_SYNC=1; only its generated manifest version refresh was restored. Recovery 0/10, pending null. Prior phase anchors preserved.
@@ -1060,6 +1060,27 @@ Proof: new case passes current production; temp/immutable copy mutation that byp
 **Verification:** Precommit file-scoped oxfmt write/check, oxlint and fresh isolated-HOME nav/index suites all exit0; committed-hook bytes re-read, clean tree confirmed, then focused oxlint/format and all137 nav/index tests rerun freshly against e7b00cd42, all exit0. Exact commands/logs/exits: ignored analysis/p04/fix-r2/t10-pre-exits.json and t10-post-exits.json.
 
 **Negative and valid controls:** Reproducible probe.py archives immutable launch0029f754c into a temporary copy and applies only M7 (`!options.allowEmpty` on checkGroup). Old tests+M7 pass137/137 (exit0); new assertion+M7 fails exactly the intended promise-resolved-instead-of-rejecting case (exit1;136passed/1failed); restoring original copied parser gives137/137 (exit0). Production checkout parser remains byte-identical by SHA256; source-conservation.json, mutation-exits.json and three full logs preserve proof. This closes accepted R2-L1's test gap without inventing a pre-fix product defect. Recovery3/10,pendingnull unchanged; elevated recovery-volume warning remains durable from prior attempts. Root owns review completion/acceptance.
+
+### Round2 test-fix verification and handoff
+
+**Tested candidate:** 3f99348b589cbd750bdfd088e02e4c10a5848e2f (t10 journal), containing test product e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0. Accepted R2-L1 is covered by the existing generator test's empty-group assertion. All ten task records are completed; phase remains in_progress for root round3 review, fixes_completed bookkeeping and acceptance. Prior round1 closures, root t09 literals/Provisional marker, Base56e05597392dfb4951679d5236b960afb296f951 and original history remain intact.
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 8/11                 |
+| 2            | `pnpm type-check`             | 0    | 9/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 9/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All eight gates ran in order against the candidate, with explicit exit receipts. Fetch origin main exits0 before gate6; no advancement in scoped p04 paths. Lockstep0.3.26 release archives validate. Cache replays are gate results, not fresh execution. Gate3 freshly executes CLI8,911tests/425files, docs-app85tests and the actual docs build (including generated collections/TypeScript), then its root-script direct smoke165/skills712/scripts1 suites. Supporting-package tests and dependency builds are replayed. Prior forced9350-test/12-task/0cached evidence, independent lint/format/validation and sentence1087 contracts are inherited evidence for unchanged production; no extra forced or supplemental run is claimed for this seven-line test-only change.
+
+**Focused proof:** All137 nav/index tests pass freshly before and after the product commit; scoped lint/format exit0. In an immutable-launch temporary copy only, old tests+M7 pass137/137; new assertion+M7 fails exactly once (promise resolved instead of rejecting); restoring original parser yields137/137. Existing fallback/strict-nav/order/exclusion controls stay green. No production file changed; only generator.test.ts and this p04 journal differ from launch0029f754c. Root plan/state/root receipts, other phases, version/skill bytes and all earlier failure evidence are preserved. No test hooks, new harness, delegation, GitHub action, infrastructure retry or new recovery event. Recovery3/10,pendingnull remains unchanged (7 capacity remaining); prior three-event elevated recovery-volume warning remains disclosed.
+
+**Evidence:** ignored analysis/p04/fix-r2/README.md indexes probe.py, mutation logs/exits, source-conservation.json, changed-paths.json, focused pre/post receipts, ordered gate logs/exits, phase-summary.json and fetch/main-movement.json. Journal review-boundary validation and final owned-scope conservation are captured with the handoff receipts. This final verification journal changes no tested product bytes; root owns final review and acceptance.
 
 ---
 
