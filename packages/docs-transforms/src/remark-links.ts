@@ -33,8 +33,26 @@ function normalizeFsPath(raw: string): string {
   return raw.replaceAll('\\', '/');
 }
 
-function docsRelativeFilePath(filePath: string): string | null {
+export interface RemarkLinksOptions {
+  /** Absolute content directory. Omit to retain legacy /docs/ path inference. */
+  contentRoot?: string;
+  /** Effective content-root-relative reader paths; refreshed lazily per document. */
+  getReaderFiles?: () => Iterable<string>;
+}
+
+function docsRelativeFilePath(
+  filePath: string,
+  contentRoot?: string,
+): string | null {
   const normalized = normalizeFsPath(filePath);
+  if (contentRoot) {
+    const relative = path.relative(normalizeFsPath(contentRoot), normalized);
+    return relative === '..' ||
+      relative.startsWith('../') ||
+      path.isAbsolute(relative)
+      ? null
+      : relative;
+  }
   const marker = '/docs/';
   const index = normalized.lastIndexOf(marker);
   if (index === -1) return null;
@@ -45,17 +63,22 @@ function docsRelativeFilePath(filePath: string): string | null {
 function routePathFromDocsFile(
   filePath: string,
   docsRoot: string,
+  isReaderFile?: (file: string) => boolean,
 ): string | null {
   // core16.10.2 keeps /index when a same-name .md/.mdx page owns the
-  // folder URL. Check actual source files for both ends of the link. With
-  // no filesystem context the existing deterministic collapse is unchanged.
+  // folder URL. Configured collections use their effective reader inventory;
+  // standalone callers retain filesystem detection and context-free fallback.
   const absolutePath = path.join(docsRoot, filePath);
   const isIndex = /^index\.mdx?$/.test(path.basename(filePath));
   const folderPath = path.dirname(absolutePath);
   const keepIndex =
     isIndex &&
     path.dirname(filePath) !== '.' &&
-    ['.md', '.mdx'].some((extension) => existsSync(folderPath + extension));
+    ['.md', '.mdx'].some((extension) =>
+      isReaderFile
+        ? isReaderFile(path.dirname(filePath) + extension)
+        : existsSync(folderPath + extension),
+    );
   const cleaned = cleanMdPath(filePath, keepIndex);
   if (cleaned === null) return null;
   if (cleaned === '.') return '/';
@@ -91,8 +114,13 @@ function appendTrailingSlash(url: string): string {
 function resolveRelativeDocsLink(
   sourceFilePath: string,
   targetPath: string,
+  options: RemarkLinksOptions,
+  isReaderFile?: (file: string) => boolean,
 ): string | null {
-  const sourceDocsFile = docsRelativeFilePath(sourceFilePath);
+  const sourceDocsFile = docsRelativeFilePath(
+    sourceFilePath,
+    options.contentRoot,
+  );
   if (!sourceDocsFile) return null;
 
   const targetDocsFile = path
@@ -104,8 +132,16 @@ function resolveRelativeDocsLink(
     0,
     normalizedSource.length - sourceDocsFile.length,
   );
-  const currentRoute = routePathFromDocsFile(sourceDocsFile, docsRoot);
-  const targetRoute = routePathFromDocsFile(targetDocsFile, docsRoot);
+  const currentRoute = routePathFromDocsFile(
+    sourceDocsFile,
+    docsRoot,
+    isReaderFile,
+  );
+  const targetRoute = routePathFromDocsFile(
+    targetDocsFile,
+    docsRoot,
+    isReaderFile,
+  );
   if (!currentRoute || !targetRoute) return null;
 
   const relativeRoute = path.relative(currentRoute, targetRoute) || '.';
@@ -131,47 +167,62 @@ function resolveRelativeDocsLink(
  *   is stripped from the display text too, keeping the raw markdown AI-navigable
  *   while rendering clean labels on the web.
  */
-export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
-  return (tree: Root, file?: { path?: string }) => {
-    visit(tree, 'link', (node: Link) => {
-      const { url } = node;
+export const remarkLinks: Plugin<[options?: RemarkLinksOptions], Root> =
+  function remarkLinks(options = {}) {
+    return (tree: Root, file?: { path?: string }) => {
+      // Resolve only if a collision is inspected, once per document rather than
+      // once per processor: newly added/removed readers remain visible in dev.
+      let readerFiles: Set<string> | undefined;
+      const isReaderFile = options.getReaderFiles
+        ? (relativePath: string) => {
+            readerFiles ??= new Set(options.getReaderFiles!());
+            return readerFiles.has(relativePath);
+          }
+        : undefined;
+      visit(tree, 'link', (node: Link) => {
+        const { url } = node;
 
-      // Skip absolute URLs, protocol links, and pure anchors
-      if (/^[a-z]+:/i.test(url) || url.startsWith('#')) {
-        return;
-      }
+        // Skip absolute URLs, protocol links, and pure anchors
+        if (/^[a-z]+:/i.test(url) || url.startsWith('#')) {
+          return;
+        }
 
-      // Split off any anchor fragment or query string
-      const suffixIndex = url.search(/[#?]/);
-      const urlPath = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
-      const fragment = suffixIndex >= 0 ? url.slice(suffixIndex) : '';
+        // Split off any anchor fragment or query string
+        const suffixIndex = url.search(/[#?]/);
+        const urlPath = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
+        const fragment = suffixIndex >= 0 ? url.slice(suffixIndex) : '';
 
-      const cleaned = cleanMdPath(urlPath);
+        const cleaned = cleanMdPath(urlPath);
 
-      if (cleaned !== null) {
-        const rewrittenPath =
-          typeof file?.path === 'string'
-            ? (resolveRelativeDocsLink(file.path, urlPath) ?? cleaned)
-            : cleaned;
+        if (cleaned !== null) {
+          const rewrittenPath =
+            typeof file?.path === 'string'
+              ? (resolveRelativeDocsLink(
+                  file.path,
+                  urlPath,
+                  options,
+                  isReaderFile,
+                ) ?? cleaned)
+              : cleaned;
 
-        const prefix =
-          rewrittenPath.startsWith('.') || rewrittenPath.startsWith('/')
-            ? ''
-            : './';
-        node.url = prefix + rewrittenPath + fragment;
+          const prefix =
+            rewrittenPath.startsWith('.') || rewrittenPath.startsWith('/')
+              ? ''
+              : './';
+          node.url = prefix + rewrittenPath + fragment;
 
-        // Clean display text when it's a single inlineCode child with a .md path
-        const firstChild = node.children[0];
-        if (node.children.length === 1 && firstChild?.type === 'inlineCode') {
-          const code = firstChild as InlineCode;
-          const cleanedText = cleanMdPath(code.value);
-          if (cleanedText !== null) {
-            code.value = cleanedText;
+          // Clean display text when it's a single inlineCode child with a .md path
+          const firstChild = node.children[0];
+          if (node.children.length === 1 && firstChild?.type === 'inlineCode') {
+            const code = firstChild as InlineCode;
+            const cleanedText = cleanMdPath(code.value);
+            if (cleanedText !== null) {
+              code.value = cleanedText;
+            }
           }
         }
-      }
 
-      node.url = appendTrailingSlash(node.url);
-    });
+        node.url = appendTrailingSlash(node.url);
+      });
+    };
   };
-};

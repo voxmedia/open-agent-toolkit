@@ -50,6 +50,7 @@
     "@open-agent-toolkit/docs-transforms": "workspace:*",
     "flexsearch": "^0.8.212",
     "remark-github-blockquote-alert": "^2.0.1",
+    "tinyglobby": "^0.2.17",
     "unified": "^11.0.5",
     "zod": "^4.3.6"
   },

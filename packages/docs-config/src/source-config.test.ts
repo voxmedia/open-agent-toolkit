@@ -98,6 +98,177 @@ describe('createSourceConfig', () => {
 // schema, Next collection emitter and its tinyglobby; fumadocs-core 16.10.2 loader.
 // Expectations are literals and OAT's existing CLI matcher, not a permissive schema.
 describe('pinned Fumadocs reader boundaries', () => {
+  it.each(['md', 'mdx'])(
+    'routes links against the live filtered collection under ancestor and content docs folders (.%s)',
+    async (extension) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-reader-links-'));
+      // Neither the first nor last /docs/ marker identifies this content root.
+      const appRoot = join(root, 'docs', 'workspace', 'app');
+      const content = join(appRoot, 'docs');
+      try {
+        await mkdir(join(root, '.oat'));
+        const configFile = join(root, '.oat/config.json');
+        await writeFile(
+          configFile,
+          JSON.stringify({
+            documentation: {
+              root: 'docs/workspace/app',
+              nonReaderPaths: [`section.${extension}`, 'plus+.md', 'guide.md/'],
+            },
+          }),
+        );
+        const bodies: Record<string, string> = {
+          'index.md':
+            '[Guides](contributing/index.md?v=1#guides)\n\n[Section](section/index.md)\n\n[Literal](plus+/index.md)\n\n[File](guide.md)',
+          'docs/guide.md': '[Guides](../contributing/index.md?v=1#guides)',
+          'contributing/index.md': `[Contract](../contributing.${extension}?v=1#contract)`,
+          'contributing/toolchain.md': `[Entry](../contributing.${extension})\n\n[Guides](index.md)`,
+          [`section.${extension}`]: '# Excluded physical collision',
+          'section/index.md': '[Toolchain](toolchain.md?v=1#tools)',
+          'section/toolchain.md': '# Toolchain',
+          'plus+.md': '# Excluded literal metacharacter',
+          'plus+/index.md': '# Literal folder',
+          'guide.md': '# A trailing-slash pattern must not exclude this file',
+        };
+        for (const [file, body] of Object.entries(bodies)) {
+          await mkdir(dirname(join(content, file)), { recursive: true });
+          await writeFile(join(content, file), body);
+        }
+        await writeFile(join(appRoot, `docs.${extension}`), '# Outside root');
+        const source = createSourceConfig({
+          oatConfigFile: configFile,
+          appRoot,
+        });
+        const processor = unified().use(remarkParse).use(source.remarkPlugins);
+        const links = async (file: string) => {
+          const tree = await processor.run(processor.parse(bodies[file]!), {
+            path: join(content, file),
+            value: bodies[file],
+          });
+          return tree.children.flatMap((node) =>
+            node.type === 'paragraph'
+              ? node.children.flatMap((child) =>
+                  child.type === 'link' ? [child.url] : [],
+                )
+              : [],
+          );
+        };
+        // Ordinary no-collision control, before a reader page is created.
+        expect
+          .soft(await links('index.md'))
+          .toEqual([
+            './contributing/?v=1#guides',
+            './section/',
+            './plus+/',
+            './guide/',
+          ]);
+        await writeFile(
+          join(content, `contributing.${extension}`),
+          '# Contract',
+        );
+        // Reuse the SAME processor/config: development additions must be seen.
+        expect
+          .soft(await links('index.md'))
+          .toEqual([
+            './contributing/index/?v=1#guides',
+            './section/',
+            './plus+/',
+            './guide/',
+          ]);
+        expect
+          .soft(await links('docs/guide.md'))
+          .toEqual(['../../contributing/index/?v=1#guides']);
+        expect
+          .soft(await links('contributing/index.md'))
+          .toEqual(['../?v=1#contract']);
+        expect
+          .soft(await links('contributing/toolchain.md'))
+          .toEqual(['../', '../index/']);
+        expect
+          .soft(await links('section/index.md'))
+          .toEqual(['./toolchain/?v=1#tools']);
+        // Actual emitter discovery + actual pinned compiler + loader oracle.
+        const require = createRequire(import.meta.url);
+        const mdxRequire = createRequire(
+          await realpath(require.resolve('fumadocs-mdx/package.json')),
+        );
+        const { glob } = mdxRequire('tinyglobby');
+        const files: string[] = await glob(source.docs.files, { cwd: content });
+        expect(files).not.toContain(`section.${extension}`);
+        expect(files).not.toContain('plus+.md');
+        expect(files).toContain('guide.md');
+        const { defineDocs, defineConfig } =
+          await import('fumadocs-mdx/config');
+        const { dynamic } = await import('fumadocs-mdx/runtime/dynamic');
+        const { loader } = await import('fumadocs-core/source');
+        const collection = defineDocs({
+          dir: content,
+          docs: source.docs,
+          meta: source.meta,
+        });
+        const compiler = await dynamic(
+          {
+            docs: collection,
+            default: defineConfig({
+              mdxOptions: {
+                remarkPlugins: source.remarkPlugins,
+                remarkImageOptions: false,
+              },
+            }),
+          },
+          {
+            environment: 'runtime',
+            configPath: join(appRoot, 'source.config.ts'),
+            outDir: join(appRoot, '.source'),
+          },
+        );
+        const compiled = await compiler.docs(
+          'docs',
+          content,
+          {},
+          files.map((file) => ({
+            info: { path: file, fullPath: join(content, file) },
+            data: { title: file },
+          })),
+        );
+        const loaded = loader({
+          baseUrl: '/',
+          source: compiled.toFumadocsSource(),
+        });
+        expect(
+          loaded.getPages().find((page) => page.path === 'section/index.md')
+            ?.url,
+        ).toBe('/section');
+        expect(
+          loaded
+            .getPages()
+            .find((page) => page.path === 'contributing/index.md')?.url,
+        ).toBe('/contributing/index');
+        const { renderToStaticMarkup } = await import('react-dom/server');
+        for (const [file, hrefs] of [
+          ['docs/guide.md', ['../../contributing/index/?v=1#guides']],
+          ['section/index.md', ['./toolchain/?v=1#tools']],
+          ['contributing/index.md', ['../?v=1#contract']],
+        ] as const) {
+          const entry = compiled.docs.find((page) => page.info.path === file)!;
+          const { body } = await entry.load();
+          const html = renderToStaticMarkup(body({}));
+          for (const href of hrefs) expect(html).toContain(`href="${href}"`);
+        }
+        await rm(join(content, `contributing.${extension}`));
+        expect
+          .soft(await links('index.md'))
+          .toEqual([
+            './contributing/?v=1#guides',
+            './section/',
+            './plus+/',
+            './guide/',
+          ]);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
   it('validates named roots through the collection schema before loading the landing page', async () => {
     const { defineDocs } = await import('fumadocs-mdx/config');
     const { metaSchema } = await import('fumadocs-core/source/schema');

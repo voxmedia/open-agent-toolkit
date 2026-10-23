@@ -218,6 +218,9 @@ importers:
       remark-github-blockquote-alert:
         specifier: ^2.0.1
         version: 2.0.1
+      tinyglobby:
+        specifier: ^0.2.17
+        version: 0.2.17
       unified:
         specifier: ^11.0.5
         version: 11.0.5

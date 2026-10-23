@@ -8,15 +8,12 @@ import {
   remarkTabs,
 } from '@open-agent-toolkit/docs-transforms';
 import { metaSchema } from 'fumadocs-core/source/schema';
-import type { Root } from 'mdast';
 import { remarkAlert } from 'remark-github-blockquote-alert';
-import type { Plugin } from 'unified';
+import { globSync } from 'tinyglobby';
+import type { PluggableList } from 'unified';
 
 import { collectionFiles } from './reader-paths.js';
 import { createSearchConfig, type SearchConfig } from './search-config.js';
-
-// oxlint-disable-next-line typescript-eslint/no-explicit-any -- unified Plugin generics are covariant but typed invariantly
-type RemarkPlugin = Plugin<any[], Root>;
 
 // Accept named-root inputs while keeping output compatible with fumadocs-mdx
 // 14.3.2's generated server.docs conditional and core 16.10.2's MetaData.
@@ -41,7 +38,7 @@ export interface SourceConfigOptions {
 }
 
 export interface SourceConfigResult {
-  remarkPlugins: RemarkPlugin[];
+  remarkPlugins: PluggableList;
   contentDir: string;
   search: SearchConfig;
   docs: { files: string[] };
@@ -89,11 +86,28 @@ export function createSourceConfig(
   options: SourceConfigOptions = {},
 ): SourceConfigResult {
   const patterns = nonReaderPaths(options);
+  const files = collectionFiles(patterns, ['md', 'mdx']);
+  const appRoot =
+    options.appRoot instanceof URL
+      ? fileURLToPath(options.appRoot)
+      : (options.appRoot ?? '.');
+  const contentRoot = resolve(appRoot, 'docs');
   return {
-    remarkPlugins: [remarkTabs, remarkLinks, remarkAlert, remarkMermaid],
+    remarkPlugins: [
+      remarkTabs,
+      [
+        remarkLinks,
+        {
+          contentRoot,
+          getReaderFiles: () => globSync(files, { cwd: contentRoot }),
+        },
+      ],
+      remarkAlert,
+      remarkMermaid,
+    ],
     contentDir: './docs',
     search: createSearchConfig(),
-    docs: { files: collectionFiles(patterns, ['md', 'mdx']) },
+    docs: { files },
     meta: {
       files: collectionFiles(patterns, ['json', 'yaml']),
       schema: docsMetaSchema,
