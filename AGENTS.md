@@ -62,6 +62,15 @@ Every change runs the checks CI gates on, in this order:
 6. `pnpm release:check-versions` (fetch `origin/main` first: the gate also requires every lockstep version to be strictly greater than current `origin/main`)
 7. `pnpm release:validate`
 8. `pnpm build:docs`
+9. Check generated docs manifest freshness by running these commands sequentially:
+
+   ```bash
+   pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+   git diff --exit-code -- apps/oat-docs/index.md
+   ```
+
+Run step 9 directly even when Turborepo replays a cached `pnpm build:docs`
+result. A docs-build cache hit does not check the current generated manifest.
 
 This list mirrors CI's gate steps exactly, in CI's order, so that running it
 locally implies CI green. Steps 5 and 6 are the two version-lockstep gates;
