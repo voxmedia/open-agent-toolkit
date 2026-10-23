@@ -25,6 +25,8 @@ export const customRemarkPlugins = [remarkTabs, remarkLinks, remarkMermaid];
 
 Tabs must run before link rewriting so links in tab bodies are rewritten too. Tab bodies are reparsed with GFM support, including tables and task lists; nested tab groups are supported. Fenced Syntax examples remain literal code. `remarkMermaid` emits the theme component JSX and converts literal `\n` label escapes to `<br/>`; it does not validate diagram syntax.
 
+With actual source-file context, Markdown links preserve `/index` when a same-name `.md` or `.mdx` page owns the folder URL (for example, `contributing.md` and `contributing/index.md`). Both the current and target routes follow the pinned loader's collision behavior. Without filesystem context, ordinary index collapse remains the fallback.
+
 ## Exports
 
 - `defaultTransforms`

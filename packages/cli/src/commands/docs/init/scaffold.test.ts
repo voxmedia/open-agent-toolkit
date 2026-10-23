@@ -8,6 +8,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { PNPM_FALLBACK, scaffoldDocsApp } from './scaffold';
 
 const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
+  'AGENTS.md': '# AGENTS\n',
+  'docs/contributing/index.md': '# Contributor Guides\n',
+  'docs/contributing/docs-toolchain.md': '# Toolchain\n',
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# MkDocs build output\nsite/\n\n# Python virtual environment\n.venv/\n',
   'mkdocs.yml': 'site_name: {{SITE_NAME}}\n',
@@ -36,6 +39,9 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
 };
 
 const FUMA_TEMPLATE_FILES: Record<string, string> = {
+  'AGENTS.md': '# AGENTS\n',
+  'docs/contributing/index.md': '# Contributor Guides\n',
+  'docs/contributing/docs-toolchain.md': '# Toolchain\n',
   'app/llms.txt/route.ts': 'export const dynamic = "force-static";\n',
   'app/llms-full.txt/route.ts': 'export const dynamic = "force-static";\n',
   'app/llms/[...slug]/route.ts': 'export const dynamicParams = false;\n',

@@ -1,3 +1,9 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
 import type { Link, Root } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
@@ -37,6 +43,94 @@ function urls(links: LinkResult[]): string[] {
 }
 
 describe('remarkLinks — URL rewriting', () => {
+  it.each(['md', 'mdx'])(
+    'uses real source files and pinned loader slugs for a same-name .%s page and index',
+    async (extension) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-link-collision-'));
+      const docs = join(root, 'docs');
+      try {
+        await mkdir(join(docs, 'contributing'), { recursive: true });
+        for (const page of [
+          'index.md',
+          `contributing.${extension}`,
+          'contributing/index.md',
+          'contributing/docs-toolchain.md',
+        ]) {
+          await writeFile(join(docs, page), `# ${page}\n`);
+        }
+        // Independent oracle: the actually installed core16.10.2 loader, not a
+        // second implementation of its collision-slug rules.
+        const require = createRequire(
+          new URL('../../docs-config/package.json', import.meta.url),
+        );
+        const { loader } = await import(
+          pathToFileURL(require.resolve('fumadocs-core/source')).href
+        );
+        const source = loader({
+          baseUrl: '/',
+          source: {
+            files: [
+              {
+                type: 'page',
+                path: `contributing.${extension}`,
+                data: { title: 'Contract' },
+              },
+              {
+                type: 'page',
+                path: 'contributing/index.md',
+                data: { title: 'Guides' },
+              },
+            ],
+          },
+        });
+        expect(
+          source
+            .getPages()
+            .map((page: { path: string; url: string }) => [page.path, page.url])
+            .sort(),
+        ).toEqual([
+          [`contributing.${extension}`, '/contributing'],
+          ['contributing/index.md', '/contributing/index'],
+        ]);
+        for (const [from, href, expected] of [
+          [
+            'index.md',
+            'contributing/index.md?v=1#guides',
+            './contributing/index/?v=1#guides',
+          ],
+          [
+            'contributing/index.md',
+            `../contributing.${extension}?v=1#contract`,
+            '../?v=1#contract',
+          ],
+          ['contributing/index.md', 'docs-toolchain.md', '../docs-toolchain/'],
+          [`contributing.${extension}`, 'contributing/index.md', './index/'],
+          [
+            'contributing/docs-toolchain.md',
+            `../contributing.${extension}`,
+            '../',
+          ],
+          ['contributing/docs-toolchain.md', 'index.md', '../index/'],
+        ]) {
+          expect(
+            urls(await transformLinks(`[Guide](${href})`, join(docs, from))),
+          ).toEqual([expected]);
+        }
+        await rm(join(docs, `contributing.${extension}`));
+        expect(
+          urls(
+            await transformLinks(
+              '[Guides](contributing/index.md)',
+              join(docs, 'index.md'),
+            ),
+          ),
+        ).toEqual(['./contributing/']);
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
+    },
+  );
+
   it('strips .md extension and appends trailing slash on relative links', async () => {
     const links = await transformLinks('[Quickstart](quickstart.md)');
     expect(urls(links)).toEqual(['./quickstart/']);

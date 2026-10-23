@@ -41,6 +41,12 @@ Additional useful entry points:
 - `oat repo archive sync`
 - `oat doctor`
 
+## Docs scaffolding
+
+`oat docs init --framework fumadocs --app-name my-docs` creates a docs app with app-root `AGENTS.md`, a reader-first Getting Started stub and contributor/toolchain guides. The CLI owns these templates for both Fumadocs and legacy MkDocs; the bootstrap skill guides inspection and setup. Existing files and plain Markdown adoption are preserved.
+
+Fumadocs static exports include `llms.txt`, `llms-full.txt` and `llms/<page-slugs>/content.md` (root `llms/content.md`) for loaded `.md` readers. These retain authored Markdown and source-relative-link guidance; configured non-readers and MDX are excluded. Use authored Contents maps and `oat docs nav sync`, followed by `--check`, for navigation changes.
+
 ## Update Notifications
 
 On ordinary interactive command runs, OAT may print a passive notice when npm's stable `latest` CLI version is newer than the installed version. The cache normally limits checks to once every 24 hours and same-version notices to once every 72 hours; overlapping CLI processes can each perform a check or print a notice.

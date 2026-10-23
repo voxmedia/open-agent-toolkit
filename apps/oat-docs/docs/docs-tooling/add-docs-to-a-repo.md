@@ -63,13 +63,14 @@ Choose Markdown files or a framework app, using the guided skill or direct CLI.
 
 The docs-bootstrap skill offers Markdown, Fumadocs, and MkDocs. Configured tooling is authoritative; framework evidence is checked before plain-directory evidence. A root README alone does not trigger adoption, and an empty selected target stays fresh setup. Markdown uses file checks and an adopt/audit handoff, with no app questions, dependencies, framework patches, docs-root AGENTS, or site build.
 
-For framework apps, it wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, labeled post-patches for open CLI gaps, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
+For framework apps, it wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, CLI-owned scaffold inspection, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
 
 What the framework path adds over the raw CLI:
 
 - **Preflight + conflict resolution.** Detects existing `documentation` config / docs app dir / root `AGENTS.md` section and walks a deliberate resolution choice (replace, abort, repair, or deferred second-app) before any mutation.
 - **Richer inputs.** Asks for a **site name** separate from the package name, so layout branding and page metadata converge on the same display title. `createDocsConfig()` handles runtime configuration, not titles.
-- **AGENTS.md bridge.** FP-15 writes a task-framed `<appRoot>/AGENTS.md` only when the CLI does not scaffold it and no file already exists. Template content, metadata, command context, Node requirements, Contents links and generated-files guidance are CLI-owned. For nested-standalone repos only, the Fumadocs template passes an ESM-safe Turbopack root through `createDocsConfig` while preserving static export settings. Monorepo and single-package scaffolds use Next.js root discovery. Older scaffold shapes become analyze findings rather than post-patches.
+- **CLI-owned guidance.** Fresh Fumadocs and MkDocs apps include app-root `AGENTS.md`, a reader-first Getting Started stub, a human contributor entry and `docs/contributing/docs-toolchain.md`. Commands state their working directory. Bootstrap observes this output; older CLIs missing it get analyze/manual CLI-template upgrade advice, rather than a second template owner. Existing and Markdown surfaces are preserved. Nested-standalone Fumadocs still uses the ESM-safe Turbopack root while monorepo and single-package apps use Next root discovery.
+- **Agent Markdown.** Fumadocs exports `/llms.txt`, `/llms-full.txt` and `/llms/<page-slugs>/content.md` (root `/llms/content.md`) from loaded `.md` readers. MDX and configured non-readers are excluded. Source headers identify how to resolve authored relative links; rendered and Markdown URLs include the deployment base path once.
 - **Build verification.** Runs install + build, classifies failures against known patterns, stops on unknown errors rather than guessing.
 - **Config inspection.** Reads `.oat/config.json` back, verifies paths exist on disk, handles the nested-standalone dual-config case, and collects the `requireForProjectCompletion` opt-in explicitly.
 - **Root-build explanation.** When the CLI safely patches a compatible Turbo root `build` script, the walkthrough explains why the filter was added, shows the diff shape, and documents how to adjust or revert it. When the CLI skips the patch, the walkthrough relays the recommended manual snippet.
@@ -105,7 +106,7 @@ oat docs init --app-name my-docs --framework fumadocs --yes
 oat docs init --app-name my-docs --framework mkdocs --yes
 ```
 
-Use 3b when you want a fully headless scaffold (CI, automation) and can accept the raw CLI output without the guided post-patches.
+Use 3b when you want a fully headless scaffold (CI, automation) and can accept the raw CLI output without the guided walkthrough.
 
 For compatible Turbo monorepos, the CLI also patches the repo-root
 `package.json` by default so root `pnpm build` excludes the new docs app and a
@@ -298,11 +299,11 @@ Important:
 three kinds of documentation. In all three, each folder's `index.md` has a
 `## Contents` list of its pages.
 
-| Framework      | Choose it when                                                       | What you give up                                                                                                       |
-| -------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Plain Markdown | People and agents read the docs in the repository; no site is needed | A rendered site and search. You keep each `## Contents` list up to date by hand                                        |
-| Fumadocs       | A Node/pnpm repository wants a hosted docs site                      | An app with dependencies and a build. A page missing from its folder's `## Contents` list is hidden from the sidebar   |
-| MkDocs         | The team already uses Python and MkDocs Material                     | Python setup (`setup-docs.sh` runs `pip install`). `oat docs nav sync` rewrites the whole `nav:` block of `mkdocs.yml` |
+| Framework       | Choose it when                                                       | What you give up                                                                                                       |
+| --------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Plain Markdown  | People and agents read the docs in the repository; no site is needed | A rendered site and search. You keep each `## Contents` list up to date by hand                                        |
+| Fumadocs        | A Node/pnpm repository wants a hosted docs site                      | An app with dependencies and a build. A page missing from its folder's `## Contents` list is hidden from the sidebar   |
+| MkDocs (legacy) | The team already uses Python and MkDocs Material                     | Python setup (`setup-docs.sh` runs `pip install`). `oat docs nav sync` rewrites the whole `nav:` block of `mkdocs.yml` |
 
 When nothing chooses for it (a non-interactive run or `--yes`), `oat docs init`
 uses Fumadocs. That is only a default; pick the smallest option your readers
@@ -323,3 +324,5 @@ need.
   existing MkDocs site with `oat init --setup` instead of `oat docs init`. When
   moving an MkDocs site to Fumadocs, `oat docs migrate` converts MkDocs syntax
   and frontmatter; it only previews changes until you pass `--apply`.
+
+MkDocs/Material scaffolding is **legacy**; its existing Python pins remain unchanged. [Material's changelog](https://squidfunk.github.io/mkdocs-material/changelog/) says Material receives critical/security fixes through May 5, 2027 and names Zensical as its successor. That lifecycle belongs to Material, not MkDocs core, and does not promise that the scaffold's older pins contain the latest fixes. Pinned MkDocs 1.4.2 still renders configured non-reader routes even though OAT omits them from navigation and manifests.

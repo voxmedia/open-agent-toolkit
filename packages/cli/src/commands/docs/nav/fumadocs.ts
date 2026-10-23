@@ -168,7 +168,10 @@ export function resolveFolderTitle(markdown: string): string | undefined {
  * slugs plugin with the scaffolded `baseUrl: '/'`: group folders are dropped,
  * segments are URI-encoded, and an `index` file maps to its folder.
  */
-function pageUrl(pagePath: string): string {
+function pageUrl(
+  pagePath: string,
+  nonIndexUrls: ReadonlySet<string> = new Set(),
+): string {
   const slugs = parentDir(pagePath)
     .split('/')
     .filter((segment) => segment.length > 0 && segment !== '.')
@@ -178,7 +181,12 @@ function pageUrl(pagePath: string): string {
   if (name !== 'index') {
     slugs.push(encodeURI(name));
   }
-  return `/${slugs.join('/')}`;
+  const url = `/${slugs.join('/')}`;
+  // core16.10.2 defers index slugs and appends /index when a non-index
+  // page has already claimed the folder URL.
+  return name === 'index' && nonIndexUrls.has(url)
+    ? `${url.replace(/\/$/, '')}/index`
+    : url;
 }
 
 /** Whether the Fumadocs page-tree builder reads `item` as a directive, not a path. */
@@ -244,6 +252,8 @@ async function buildFolderPages(
   markdown: string,
   implicitIndex: boolean,
   matcher: ExclusionMatcher,
+  inventory: DocsInventory,
+  nonIndexUrls: ReadonlySet<string>,
 ): Promise<string[]> {
   const indexPath = join(docsRoot, relativeDir, 'index.md');
   const entries = parseIndexContents(markdown, indexPath);
@@ -267,7 +277,17 @@ async function buildFolderPages(
     const targetDir = parentDir(target.path);
     let item: string;
 
-    if (target.kind === 'section' && targetDir === relativeDir) {
+    if (
+      target.kind === 'page' &&
+      inventory.directories.includes(
+        target.path.slice(0, -extname(target.path).length),
+      )
+    ) {
+      // An extensionless reference selects the same-name folder first.
+      // A precise source-file reference selects the actual page, even from
+      // the child map (e.g. ../contributing.md).
+      item = toFumadocsPageItem(posix.relative(relativeDir, target.path));
+    } else if (target.kind === 'section' && targetDir === relativeDir) {
       continue;
     } else if (
       target.kind === 'section' &&
@@ -277,7 +297,7 @@ async function buildFolderPages(
     } else if (target.kind === 'page' && targetDir === relativeDir) {
       item = toFumadocsPageItem(basename(target.path, extname(target.path)));
     } else {
-      item = `[${entry.title}](${pageUrl(target.path)}${hrefFragment(entry.href)})`;
+      item = `[${entry.title}](${pageUrl(target.path, nonIndexUrls)}${hrefFragment(entry.href)})`;
     }
 
     if (!pages.includes(item)) {
@@ -331,6 +351,7 @@ function collectUnlisted(
   metas: Map<string, FumadocsMeta>,
   implicitIndexDirs: ReadonlySet<string>,
 ): string[] {
+  const pagePaths = new Set(inventory.pages);
   const reachableDirs = new Set<string>();
   const reachablePages = new Set<string>();
   const pagesByFlattenPath = new Map(
@@ -363,7 +384,9 @@ function collectUnlisted(
         visit(itemPath);
         continue;
       }
-      const page = pagesByFlattenPath.get(itemPath);
+      const page = pagePaths.has(itemPath)
+        ? itemPath
+        : pagesByFlattenPath.get(itemPath);
       if (page) {
         reachablePages.add(page);
       }
@@ -410,6 +433,11 @@ export async function syncFumadocsNavigation(options: {
   const { docsRoot } = options;
   const matcher = createExclusionMatcher(options.nonReaderPaths ?? []);
   const inventory = await inventoryDocs(docsRoot, matcher);
+  const nonIndexUrls = new Set(
+    inventory.pages
+      .filter((page) => basename(page, extname(page)) !== 'index')
+      .map((page) => pageUrl(page)),
+  );
   const metas = new Map<string, FumadocsMeta>();
   const existingMetas = new Map<string, Record<string, unknown> | null>();
   const implicitIndexDirs = new Set<string>();
@@ -442,6 +470,8 @@ export async function syncFumadocsNavigation(options: {
         markdown,
         implicitIndex,
         matcher,
+        inventory,
+        nonIndexUrls,
       ),
     });
   }

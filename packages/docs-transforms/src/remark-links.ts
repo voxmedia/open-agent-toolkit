@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { posix as path } from 'node:path';
 
 import type { InlineCode, Link, Root } from 'mdast';
@@ -8,7 +9,7 @@ import { visit } from 'unist-util-visit';
  * Strip markdown extension and collapse `/index` from a relative path.
  * Returns null if the path is not a markdown link that should be rewritten.
  */
-function cleanMdPath(raw: string): string | null {
+function cleanMdPath(raw: string, keepIndex = false): string | null {
   const extension = raw.endsWith('.mdx')
     ? '.mdx'
     : raw.endsWith('.md')
@@ -18,10 +19,10 @@ function cleanMdPath(raw: string): string | null {
 
   let cleaned = raw.slice(0, -extension.length);
 
-  if (cleaned.endsWith('/index')) {
+  if (!keepIndex && cleaned.endsWith('/index')) {
     cleaned = cleaned.slice(0, -'/index'.length) || '.';
   }
-  if (cleaned === 'index') {
+  if (!keepIndex && cleaned === 'index') {
     cleaned = '.';
   }
 
@@ -41,8 +42,20 @@ function docsRelativeFilePath(filePath: string): string | null {
   return normalized.slice(index + marker.length);
 }
 
-function routePathFromDocsFile(filePath: string): string | null {
-  const cleaned = cleanMdPath(filePath);
+function routePathFromDocsFile(
+  filePath: string,
+  docsRoot: string,
+): string | null {
+  // core16.10.2 keeps /index when a same-name .md/.mdx page owns the
+  // folder URL. Check actual source files for both ends of the link. With
+  // no filesystem context the existing deterministic collapse is unchanged.
+  const absolutePath = path.join(docsRoot, filePath);
+  const isIndex = /^index\.mdx?$/.test(path.basename(filePath));
+  const folderPath = path.dirname(absolutePath);
+  const keepIndex =
+    isIndex &&
+    ['.md', '.mdx'].some((extension) => existsSync(folderPath + extension));
+  const cleaned = cleanMdPath(filePath, keepIndex);
   if (cleaned === null) return null;
   if (cleaned === '.') return '/';
 
@@ -85,8 +98,13 @@ function resolveRelativeDocsLink(
     .normalize(path.join('/', path.dirname(sourceDocsFile), targetPath))
     .slice(1);
 
-  const currentRoute = routePathFromDocsFile(sourceDocsFile);
-  const targetRoute = routePathFromDocsFile(targetDocsFile);
+  const normalizedSource = normalizeFsPath(sourceFilePath);
+  const docsRoot = normalizedSource.slice(
+    0,
+    normalizedSource.length - sourceDocsFile.length,
+  );
+  const currentRoute = routePathFromDocsFile(sourceDocsFile, docsRoot);
+  const targetRoute = routePathFromDocsFile(targetDocsFile, docsRoot);
   if (!currentRoute || !targetRoute) return null;
 
   const relativeRoute = path.relative(currentRoute, targetRoute) || '.';
