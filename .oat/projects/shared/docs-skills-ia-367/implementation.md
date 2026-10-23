@@ -797,6 +797,7 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 **Status:** in_progress
 **Base:** 56e05597392dfb4951679d5236b960afb296f951
+**Head:** 905b048de4f64c836c3fce0797f4469dd790e145
 **Executor:** phase-implementer:docs367-p04-impl-20261023
 
 Phase start: approved brief p04 made concrete after bounded read-only reconnaissance. One committing phase implementer owns this checkout, with no nested dispatch or parallel group: Contents parsing, reader-path matching, init defaults and index order share producer/consumer contracts and must compose before review. Root retains scope judgment, independent review, acceptance and delivery. Main fetched before phase concretization; no changes in planned paths beyond merged P03 already in the branch. Worktree init passed with SKIP_S3_ARCHIVE_SYNC=1; only its generated manifest version refresh was restored. Recovery 0/10, pending null. Prior phase anchors preserved.
@@ -842,7 +843,7 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 ### Task p04-t04: Adapt pinned Fumadocs schema and collection discovery
 
 **Status:** completed
-**Original execution outcome:** failed at 9712fcba8ac65355f78edeb813303c1c0592c8d8; original failure and direction-required stop are preserved below. Recovered by the separate append-only commit documented in the recovery receipt.
+**Original execution outcome:** failed at 9712fcba8ac65355f78edeb813303c1c0592c8d8; original failure and direction-required stop are preserved below. Recovered through append-only lint correction 395a89777cf5da9a738363ccbe0a175ddf23793c and generated-type correction bfbe0002c6a977c201277e3d760cfef8000cb717; both original failures and recovery receipts remain below.
 **Executor:** phase-implementer:docs367-p04-impl-20261023
 **Handle:** current implementation thread
 **Intent:** Narrowly accept named roots in the installed metadata schema and exclude non-readers from Fumadocs collections with bounded-glob parity, explicit config location and matching-app applicability.
@@ -930,6 +931,27 @@ Protects against: pinned external schema rejecting accepted roots and collection
 **Recovery proof:** Reconciled exact clean base 3029ae27eccc1b17734c49d20635bc3e75ed754e, full marker, original commit and unchanged parent 849bdd59125d1de2ec85559676a03938ee82eb2e before edits; no artifact supplied/applied. Installed fumadocs-mdx 14.3.2 emitter/server conditional and fumadocs-core 16.10.2 metadata types are the actual boundary. The new generated-consumer test fails against immutable t04 source solely with toFumadocsSource on never, then passes after schema normalization. Initial test setup failures (compiler alias and explicit Node types) remain preserved, separate from authoritative checks. String root inputs normalize to true; true/false/undefined controls retain values, blank/type/unrelated metadata errors still reject, and the actual loader retains explicit landing/leaf pages. The former string-output expectation is superseded by root's supported boolean-normalization direction, not dropped silently. No casts, dependency patch/upgrade, authored metadata changes or unrelated validation relaxation.
 
 **Verification:** Eight direct pre-commit and eight immediate authoritative committed-HEAD commands all exit 0: generated-type regression; docs-config check/lint/type-check/test (14 tests)/build; actual oat-docs build; copied real app Next build with authored padded string root. Both named-root builds emit reader routes and preserve the authored string bytes. No Turbo cache replay in these direct checks. Exact argv, HEAD, logs/exits, immutable baseline and named-app fixture script: ignored analysis/p04/recovery03/. Protects against generated schema output collapsing the installed server.docs export to never; runtime schema/loader checks cannot catch that compile-composition failure. Separate remaining phase verification now resumes under root authorization; phase stays in_progress, frozen Base unchanged, no acceptance implied.
+
+**Phase verification candidate:** 905b048de4f64c836c3fce0797f4469dd790e145. All six execution records are closed; phase remains in_progress for root's independent review and acceptance. Fresh ordered DoD sequence completed on this candidate, separately from the preserved earlier failed sequences:
+
+| Gate | Exact command                 | Exit | Turbo cached / total |
+| ---- | ----------------------------- | ---- | -------------------- |
+| 1    | `pnpm check`                  | 0    | 8/11                 |
+| 2    | `pnpm type-check`             | 0    | 9/11                 |
+| 3    | isolated-HOME `pnpm test`     | 0    | 8/12                 |
+| 4    | `pnpm build`                  | 0    | 5/5                  |
+| 5    | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6    | `pnpm release:check-versions` | 0    | direct               |
+| 7    | `pnpm release:validate`       | 0    | direct               |
+| 8    | `pnpm build:docs`             | 0    | 6/6                  |
+
+`git fetch origin main` exits 0 immediately before gate6; the scoped advancement check finds no newer main changes in p04 paths. Five public archives validate at 0.3.26. Cache replays above are passing gate results, not claims of fresh execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` exits 0 with all12 tasks executed, 0 cached: CLI8,903, control-plane289, docs-config14, docs-theme20, docs-transforms31 and docs-app85, total9,342 tests plus actual docs build. Direct isolated-HOME `pnpm test:smoke`165, `pnpm test:skills`712 and `pnpm test:scripts`1 all pass; `pnpm oat:validate-skills` exits0. Full `pnpm lint` and `pnpm format` exit0 (each5/10 tasks cached; root checks execute), and isolated-HOME CLI Vitest `src/commands/init/tools/shared src/validation` executes1,087 tests across26 files, exit0. No infrastructure retry used. Earlier MD038 and generated-type gate failures remain failed in their original logs; no green replay substitutes for execution.
+
+**Conservation and controls:** P12/G3 groups, grammar diagnostics, separators and landing pages map to t01; actual fresh-init ownership and quoted external/source build guards map to t05. P13/G3 named-root source acceptance maps to t04 plus recovery03's installed generated-type and actual normal/named-root builds. P14 authored manifest order, child-index titles, unlisted fallback and nonduplication map to t03 and CLI-generated app index in t06. G2 bounded reader matching, matching-app applicability, manifest-only excludes and no excluded metadata writes map to t02/t04; actual installed collection-pattern parity and negative controls remain reproducible. Four existing-app refusal controls preserve undeclared/hand-authored owners; Markdown/dry controls remain green. t06 prose conservation preserves headings, generated manifest targets, approval and ownership prohibitions; this is prose evidence, not agent execution. No instruction changes needed; no p05/p06/p07 product, generic config locator or framework upgrade. Pinned MkDocs1.4.2 rendering limitation remains an explicit accepted limitation.
+
+**Journal validation:** Precommit `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p04 --json` exits 0, status ok, no reasons or warnings (handoff-pre-journal.log).
+
+**Evidence and ownership handoff:** Exact argv/HEAD/exits/cache summaries are ignored under analysis/p04/: phase-verified-exits-combined.json, supplemental-verified-exits.json, fresh-test-counts.json, phase-extras-verified-exits.json and their raw logs. INDEX.md maps P12/P13/P14/G2/G3; recovery03/ retains eligibility, immutable baseline, generated/named-root fixture scripts and16 zero pre/post exits. Frozen Base and all prior anchors/history preserved. Recovery usage3/10,7 remain; matching attempt3 marker stays completed for root settlement, with elevated third-recovery-volume warning. No open task record or new product concern. Root retains state/plan/review/acceptance/GitHub ownership; implementer stops writing after clean final journal validation/handoff.
 
 ---
 
