@@ -10,6 +10,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import { syncDocsNavigation } from '@commands/docs/nav/sync';
@@ -786,6 +787,86 @@ describe('real framework navigation boundaries', () => {
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {
+  it('accepts installed pnpm shorthand binaries while explicit run remains script-only', async () => {
+    const f = await fixture();
+    await f.put('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
+    await f.put(
+      'packages/member/package.json',
+      JSON.stringify({ name: 'member' }),
+    );
+    const binary = fileURLToPath(
+      new URL('./bin/tsc', import.meta.resolve('typescript-7/package.json')),
+    );
+    for (const base of ['', 'packages/member/']) {
+      await mkdir(join(f.root, base, 'node_modules/.bin'), { recursive: true });
+      await symlink(binary, join(f.root, base, 'node_modules/.bin/tsc'));
+    }
+    expect(
+      (await exec('pnpm', ['--dir', f.root, 'tsc', '--version'])).stdout,
+    ).toMatch(/^Version /);
+    await f.write(
+      'contributing.md',
+      page(
+        '# Contributing\n\n```bash\npnpm tsc --version\npnpm --filter member tsc --version\ncd packages/member\npnpm tsc --version\n```\n',
+      ),
+    );
+    expect(await f.run('commands')).toEqual([]);
+    // Workspace-root bins remain available to a member without its own bin.
+    await rm(join(f.root, 'packages/member/node_modules/.bin/tsc'));
+    expect(await f.run('commands')).toEqual([]);
+    await f.write(
+      'contributing.md',
+      page(
+        '# Contributing\n\n```bash\npnpm run tsc\nnpm run tsc\npnpm missing-tool\npnpm --filter member run tsc\n```\n',
+      ),
+    );
+    expect(await f.run('commands')).toEqual([
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 9,
+        message: 'Script "tsc" does not exist in package.json.',
+      },
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 10,
+        message: 'Script "tsc" does not exist in package.json.',
+      },
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 11,
+        message: 'Script "missing-tool" does not exist in package.json.',
+      },
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 12,
+        message: 'Script "tsc" does not exist in packages/member/package.json.',
+      },
+    ]);
+    await f.write(
+      'contributing.md',
+      page(
+        '# Contributing\n\n```bash\npnpm --filter member tsc --version\n```\n',
+      ),
+    );
+    await rm(join(f.root, 'node_modules/.bin/tsc'));
+    expect(await f.run('commands')).toEqual([
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 9,
+        message: 'Script "tsc" does not exist in packages/member/package.json.',
+      },
+    ]);
+  });
   it.each([
     ['apps/*', 'apps/manual', 'manual'],
     ['apps/*', 'apps/site', 'site'],

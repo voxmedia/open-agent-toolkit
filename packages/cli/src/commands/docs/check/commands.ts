@@ -214,7 +214,8 @@ export async function checkCommands(
             script !== 'start'
           )
             continue;
-          if (script === 'run' || script === 'run-script') {
+          const explicitRun = script === 'run' || script === 'run-script';
+          if (explicitRun) {
             index++;
             while (words[index]?.startsWith('-')) index++;
             script = words[index];
@@ -255,15 +256,31 @@ export async function checkCommands(
               `Cannot resolve package context for ${kind} ${script}${filter ? ` (--filter ${filter})` : ''}; use literal cd, -w or --filter.`,
               line,
             );
-          else if (!Object.hasOwn(pkg.scripts ?? {}, script))
-            report(
-              'commands',
-              'error',
-              p.path,
-              `Script "${script}" does not exist in ${posix(relative(target.repoRoot, join(pkg.root, 'package.json'))) || 'package.json'}.`,
-              line,
-            );
-          else if (/^\s*echo(?:\s|$)/.test(pkg.scripts![script]!))
+          else if (!Object.hasOwn(pkg.scripts ?? {}, script)) {
+            // pnpm shorthand can invoke an installed local binary. Explicit run
+            // remains script-only; never execute a binary or search system PATH.
+            const installedBinary =
+              kind === 'pnpm' &&
+              !explicitRun &&
+              !/[\\/]/.test(script) &&
+              script !== '.' &&
+              script !== '..' &&
+              (
+                await Promise.all(
+                  [pkg.root, target.repoRoot].map((binRoot) =>
+                    present(join(binRoot, 'node_modules/.bin', script)),
+                  ),
+                )
+              ).some(Boolean);
+            if (!installedBinary)
+              report(
+                'commands',
+                'error',
+                p.path,
+                `Script "${script}" does not exist in ${posix(relative(target.repoRoot, join(pkg.root, 'package.json'))) || 'package.json'}.`,
+                line,
+              );
+          } else if (/^\s*echo(?:\s|$)/.test(pkg.scripts![script]!))
             report(
               'commands',
               'warn',

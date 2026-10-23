@@ -84,7 +84,7 @@ recursive tabs participate.
 | `overview`              | Warn below `overviewWords: 10` before Contents.                                                                                                                                                                                                  |
 | `contents-separator`    | Warn when Contents descriptions mix separators in a tree.                                                                                                                                                                                        |
 | `navigation`            | Error for drift using the declared ownership semantics; Markdown skips it.                                                                                                                                                                       |
-| `commands`              | Error for missing literal pnpm scripts/npm run scripts in contributor pages; unresolved package context errors; echo scripts warn.                                                                                                               |
+| `commands`              | Error for missing literal contributor scripts; implicit pnpm shorthand also accepts installed package/workspace `.bin` entries. Explicit pnpm run/npm run stays script-only; unresolved context errors; echo scripts warn.                       |
 | `mermaid`               | Parse every real Mermaid fence using the pinned Mermaid parser. Invalid syntax errors.                                                                                                                                                           |
 | `diagram-pairs`         | Diagram light/dark SVG siblings and both page references are required. Conventional diagram paths and explicit paired references participate; ordinary logos are not diagrams.                                                                   |
 | `diagram-accessibility` | Mermaid missing `accTitle`/`accDescr` warns. SVGs require `role="img"`, nonempty title/desc. Rendered diagrams without page-visible explanatory text or an associated long description warn.                                                     |
@@ -105,6 +105,12 @@ at the repository root. Use executable `cd`, `-w`/`--workspace-root`, `--dir` or
 literal `--filter` selection to establish another context. Prose such as “from
 the app directory” alone does not change it. Built-in package-manager commands
 and illustrative placeholders are recognized; commands are never run.
+
+Implicit pnpm shorthand (for example, `pnpm tsc`) may use an installed entry in
+that package's or the workspace root's `node_modules/.bin`. Only its presence is
+checked. Explicit `pnpm run tsc` and `npm run tsc` still require a package script.
+System PATH lookup is outside this check; before dependencies are installed, a
+binary shorthand may be reported missing. Use `pnpm exec` for explicit binary examples.
 
 ## Diagram comparison and limits
 
