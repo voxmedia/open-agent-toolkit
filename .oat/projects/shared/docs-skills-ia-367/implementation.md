@@ -1641,12 +1641,18 @@ Root fresh-install disposition: intelligent recon confirmed a pre-existing pinne
 
 ### Task p06-t04: (review) Compare optional hand-authored navigation semantically
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 2e067ec020738fc0b96d5a9c937868aca6e9fc13
 **Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M1, M2)
 
 Intent: Skip absent optional Fumadocs meta files and absent MkDocs nav in hand-authored/undeclared mode, while continuing comparisons of every existing artifact; nav-sync still requires generated freshness. Compare labeled or bare MkDocs landing entries by page membership/order while preserving explicit group semantics. No raw absolute-path diagnostic for missing optional artifacts.
 Files: packages/cli/src/commands/docs/check/navigation.ts; existing checker.test.ts.
 Proof: Extend existing real-file checker navigation cases with missing root/subfolder meta plus a later real mismatch; absent MkDocs nav; labeled landing versus valid relabel and dropped/reordered page controls, both ownership modes. New regressions fail on immutable pre-fix source for the intended reason and pass fixed; retain nav-sync strictness and group/collision controls. Public boundary is checkDocs/CLI navigation diagnostics; no helper-only mirrors, mocks or new hooks.
+
+**Commit:** 0cf4a8914d9ad3b3510518f204f9907c11cd547a
+**Verification:** M1/M2: six real-file regressions fail on immutable pre-fix navigation for missing optional meta/nav and labeled landings. Fixed checker/navigation103 tests pass freshly with isolated HOME, including both ownership modes, later drift, generated strictness, groups and collision controls. CLI check/type/build exit0; initial two test-style lint errors corrected before commit. Exact logs: analysis/p06/fix-r1/t04-\*. Recovery1/10,pendingnull unchanged.
 
 ### Task p06-t05: (review) Resolve declared workspace command contexts and physical fence lines
 
