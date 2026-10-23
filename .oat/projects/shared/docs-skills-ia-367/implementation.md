@@ -1047,12 +1047,19 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 
 ### Task p04-t10: (review) Protect generator empty-group grammar with allowEmpty
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0
 **Source review:** reviews/archived/p04-review-2026-10-23T043436Z.md (R2-L1)
 
 Intent: Extend the existing malformed-Contents generator test with an authored empty ### group followed by a populated group; assert the existing file/line group error through generateIndex's allowEmpty path. Production behavior is already correct; no production change.
 Files: packages/cli/src/commands/docs/index-generate/generator.test.ts only; own journal receipt and ignored proof.
 Proof: new case passes current production; temp/immutable copy mutation that bypasses the empty-group guard only for allowEmpty callers fails this test for the intended missing rejection. Existing empty/prose fallback and strict-nav controls stay green. Run focused nav/index suites freshly and required ordered gates; preserve prior broad fresh proof for unchanged production rather than needlessly repeating all supplemental suites.
+
+**Execution receipt:** Extended the existing malformed-Contents generator test with the literal empty `### Empty` group followed by populated `### Real`; asserts `index.md:3: Contents group "Empty" has no entries` through generateIndex's allowEmpty path. Existing H1/slug controls and dash error remain. No production source, other test, version or skill changed.
+
+**Verification:** Precommit file-scoped oxfmt write/check, oxlint and fresh isolated-HOME nav/index suites all exit0; committed-hook bytes re-read, clean tree confirmed, then focused oxlint/format and all137 nav/index tests rerun freshly against e7b00cd42, all exit0. Exact commands/logs/exits: ignored analysis/p04/fix-r2/t10-pre-exits.json and t10-post-exits.json.
+
+**Negative and valid controls:** Reproducible probe.py archives immutable launch0029f754c into a temporary copy and applies only M7 (`!options.allowEmpty` on checkGroup). Old tests+M7 pass137/137 (exit0); new assertion+M7 fails exactly the intended promise-resolved-instead-of-rejecting case (exit1;136passed/1failed); restoring original copied parser gives137/137 (exit0). Production checkout parser remains byte-identical by SHA256; source-conservation.json, mutation-exits.json and three full logs preserve proof. This closes accepted R2-L1's test gap without inventing a pre-fix product defect. Recovery3/10,pendingnull unchanged; elevated recovery-volume warning remains durable from prior attempts. Root owns review completion/acceptance.
 
 ---
 
