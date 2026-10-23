@@ -168,6 +168,10 @@ docs367-p05-landed-20261023: p05 accepted after three independent rounds and ope
 
 docs367-p06-concrete-20261023: completed bounded readiness recon; made p06 concrete within Outcome8 and G5/P20-P23/P25, recording counting/config/parser/nav/diagram/CI choices in plan.md. No outcome, authority or endpoint change; no P24/p07 scope. Phase remains unstarted until committed start markers and exact-target dispatch.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-dom-alignment-20261023: NEEDS_CONTEXT reconciled; t01 committed and t02 edits preserved. Real Mermaid Node failure requires DOM; authorize pinned jsdom29.1.1/compatible typings within P23, verified valid/invalid controls on Node22.17 and26, same-target continuation, recovery0/10.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

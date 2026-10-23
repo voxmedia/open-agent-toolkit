@@ -1528,6 +1528,8 @@ Execution shape: one phase implementer, the sole product-committing owner in /Us
 
 Root readiness reconciliation: completed intelligent recon maps existing root/config resolution, Contents grammar, reader exclusions, real navigation adapters and flagship Markdown helpers. Root verified the cited G5/P20–P23/P25 source clauses, config reconstruction gap and already-resolved parser versions. No checker exists yet; the recon's lexical inventory and SVG inspections do not prove rule compliance. Phase-local choices are concretized in plan.md without changing Outcomes, G5 flags/JSON, authority or the agreed Approach. No up-front tasks, generic validator/plugin system, framework upgrade, consumer rollout or P24/p07 scope is introduced. Parser dependencies are bounded to existing resolved engines; direct imports must declare ownership, including production use in the packed CLI.
 
+Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 product2d225cd708a5e82850febb60a074d74f9760e61d/journalaf2ddcc03f2f4997b930754b7f2d084ce502bcb3; t02 has no product commit and stays open. Its exact product edits are preserved per ignored analysis/p06/handoff-manifest.json. Root reproduced the DOMPurify failure and approved jsdom29.1.1 plus compatible development typings solely as the Node DOM host for unchanged Mermaid11.12.3. Root scratch controls accept real flowchart/class/sequence and HTML labels, reject invalid syntax, on Node26.11.1 and minimum22.17.0. jsdom30 requires a higher Node22 floor, so29.1.1 is pinned. Default jsdom has no script execution or resource loading; no browser rendering, sanitizer stub, parser bypass or engine-floor change is authorized. Continue the same implementer/target and open record; recovery remains0/10,pendingnull. Scope clarification is phase-local runtime support for the accepted P23 guarantee, not a changed Outcome/Approach.
+
 ### Task p06-t01: Preserve validated checker policy through config commands
 
 **Status:** completed
@@ -1540,6 +1542,18 @@ Root readiness reconciliation: completed intelligent recon maps existing root/co
 
 **Commit:** 2d225cd708a5e82850febb60a074d74f9760e61d
 **Verification:** 45 focused real-file/config tests passed; CLI lint, type-check and build exits0. No cached Turbo task used. Early null-repair and lint defects corrected before commit.
+
+### Task p06-t02: Implement portable reader, navigation, command and diagram checks
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (accepted T3 delegated task)
+**Start HEAD:** af2ddcc03f2f4997b930754b7f2d084ce502bcb3
+**Intent:** Implement the G5 command and calibrated rules over real reader files, shared navigation and installed parsers; expose deterministic diagnostics and preserve tab locations.
+**Files:** packages/cli/src/commands/docs/check/** (exact produced paths retained in ignored analysis/p06/t02.paths); packages/cli/src/commands/docs/index.ts; packages/docs-transforms/src/remark-tabs.ts and adjacent tests; five public package.json files; pnpm-lock.yaml.
+**Proof:\*\* production-boundary checker/config/nav/transform tests, CLI lint/type-check/build and packed CLI probes; quantitative boundary and Git fixture controls.
+
+**Pre-commit boundary:** Paused for root direction: actual Mermaid11.12.3 in Node requires DOMPurify.sanitize/addHook backed by a DOM even with loose security. Allowed dependency list provides no DOM host. No new dependency/adapter or parser bypass introduced. Product remains uncommitted; 57/60 new focused tests pass, with Mermaid runtime and tab-associated accessibility/freshness failures still under prevention. CLI type-check and docs-transforms build pass; the new CLI build has not run. Lint has seven new test-style errors pending correction. Recovery0/10,pendingnull. Reproduce with ignored analysis/p06/mermaid-node-probe.mjs; t02.paths is the exact provisional write manifest.
 
 ---
 
@@ -1563,7 +1577,7 @@ Root readiness reconciliation: completed intelligent recon maps existing root/co
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-impl-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-impl-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=NEEDS_CONTEXT · terminal=no · class=live · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-readiness-20261023 · scope=p06-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p06-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
