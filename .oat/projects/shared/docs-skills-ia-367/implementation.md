@@ -647,6 +647,18 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+### Review Received: p-rev2 (round 2)
+
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-10-23T013602Z.md
+**Reviewed Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` completion signal before validation; the artifact has no Review Orchestration section. Full original Base/Head anchors and auto invocation match. Round 2 closes M1 (the fifth p02 load site, wrapper binding) and L1 (validated-root reuse and self-root handling without reload). All five p02 load sites bind loaded sibling → user → repository; two older ambient mentions predate p02 and require no p02 asset, so the reviewer correctly excludes them from this correction. No new findings or requirement changes.
+
+Independent reviewer executed current/candidate guards, immutable prior-head and intermediate controls, seven distinct mutations, a valid reflow control, and eleven manual shell cases. These support prose contracts and manual behavior only, not automated agent/provider discovery. Earlier unchanged coverage is inherited explicitly; ordered gates were inspected, with the six integration timeouts, no-edit retry and forced 12/12 uncached run disclosed. Root accepts the review result with no fix tasks or new deferrals. Round-1 event remains fixes_completed; round 2 is a separate passed event. One fix continuation, two review rounds; recovery 0/10 pending null.
+
+**Delivery condition:** phase remains in_progress until the reviewed product corrections are composed into PR #369, integrated gates pass and CI/Bugbot clear. Root will cherry-pick only the three product commits into the isolated p02 checkout, preserving accepted P03 changes and all original anchors. Intermediate delivery uses land-pr; final PR stays held until project completion.
+
 **Root fix handoff validation:** Verified 8c39b5c6b40032281a6cebde72a93ff95a70be60 clean handoff; exact three-path product boundary, two bounded product commits with separate journal commits, journal-only tail and original Base unchanged. Root reran five prose guards and manual wrapper/reuse/self-root/fallback controls. All successful gates have explicit zero exits; initial six integration timeouts and unchanged passing retry are preserved, with forced 12/12 uncached proof. M1/L1 task records completed; no new guarantee or version change. Recovery 0/10, pending null. Re-review pending.
 
 **Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
@@ -759,7 +771,7 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-prev2-review-r2-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-prev2-review-r2-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev2-fix-r1-20261023 · scope=p-rev2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
