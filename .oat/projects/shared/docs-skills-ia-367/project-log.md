@@ -160,6 +160,10 @@ docs367-p05-handoff-20261023: recovery01 validated and settled at1/10,pendingnul
 
 docs367-p05-accepted-20261023: p05 accepted at04d536106 after round2 closed six findings and root corrected stale resume text; all eight gates passed, recovery1/10,pendingnull, one fix cycle; see implementation.md and archived p05-review-2026-10-23T080358Z.md.
 
+### 2026-10-23 · structural · oat-project-implement · p05
+
+docs367-p05-landed-20261023: p05 accepted after three independent rounds and operator cap disposition; PR373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 after exact-head CI/Bugbot and Warp confirmations; see implementation.md. Proceed to provisional p06 readiness.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

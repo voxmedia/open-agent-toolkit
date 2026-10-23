@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05
+oat_current_task: p06
 oat_last_commit: bf50ec5ef9823afa082da6463833adf6ce7e6157
 oat_blockers: []
 associated_issues: [
@@ -135,7 +135,7 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open
+oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
@@ -151,7 +151,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 accepted after external corrections and operator cap disposition; PR373 delivery pending current-head CI/Bugbot.
+Implement — p05 accepted and delivered through merged PR373; p06 readiness alignment in progress, implementation unstarted.
 
 ## Artifacts
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-Publish the accepted p05 correction and approved README wording, respond to the three fixed remote findings, and require fresh exact-head CI/Bugbot clearance before plain land-pr with the established merge-commit method and expected-head guard. Operator approved proceeding with override at the three-review cap, deferring the optional named type export until a consumer needs it; no fourth review is authorized. Reviewed runtime candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45; accepted docs tail bf50ec5ef9823afa082da6463833adf6ce7e6157, all eight gates pass. All11 task records closed, recovery1/10,pendingnull. PR373 remains open; p06 remains provisional and unstarted. After landing, align p06 and prune generated evidence trees while preserving controls/logs. Final project PR remains held until completion.
+P05 delivered at merge5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0; all current-head checks/Bugbot and external fix confirmations cleared. Watcher stopped, generated evidence trees pruned. On docs/docs-skills-ia-367-p06, map approved G5/P20–P23/P25 against existing helpers and scaffold/CI surfaces before making provisional p06 concrete. No p06 execution record or product change yet. Preserve p05 anchors, review history and approved type-export deferral. Final project PR remains held until completion.
