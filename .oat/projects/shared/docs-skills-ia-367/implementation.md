@@ -1033,6 +1033,27 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 
 **Root fix-round1 validation:** Accepted clean handoff23b0fcedef3e34c5aea435e910a966e0e76def99, inspected the complete small production fix diff and explicit zero exits for all8 ordered gates, fresh9350-test proof, supplemental and focused pre/post checks. t07 removes strict target IO from inventory ordering, explicitly allows empty maps only for generator and leaves nav strict; t08 only moves JSDoc. Root t09 exact literals/marker retained. Tested candidate3bbe2a49326835a44c839a24de609335a119baa6 differs from final handoff only in p04 journal; no new recovery/infra retry, usage3/10 pendingnull. Findings-bearing round1 event is fixes_completed, not passed; fresh independent round2 will verify closures/composition before acceptance. Original Base retained.
 
+### Review Received: p04 (round 2)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-23T043436Z.md
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- Round1 H1/L1/L2: independently confirmed closed; retain the original findings-bearing event as fixes_completed. Tolerant generator ordering, strict nav, restored fixtures, root brief literals and comment placement compose correctly.
+- R2-L1 (Low): the new generator allowEmpty call lacks a test protecting the existing empty-group G3 exception → fix task p04-t10. Reviewer independently bypassed the empty-group guard for allowEmpty callers and all137 tests still passed, despite production currently rejecting the bad input. Add one case to the existing malformed-Contents generator test and prove that exact bypass then fails. This protects an already accepted universal grammar guarantee; it adds no new production requirement or harness.
+
+**Design drift / artifact alignment notes:** None. No finding deferred or rejected. Root read the complete artifact, checked full anchors and current severities, and consumed exactly one not-attempted signal with no Review Orchestration section. Unchanged coverage is inherited from round1; scope/composition and prior closures were independently re-verified in round2.
+**Outcome:** fix queued p04-t10; final automated review round3 follows this bounded test-only correction. Phase remains in_progress; recovery3/10 pendingnull unchanged.
+
+### Task p04-t10: (review) Protect generator empty-group grammar with allowEmpty
+
+**Status:** in_progress
+**Source review:** reviews/archived/p04-review-2026-10-23T043436Z.md (R2-L1)
+
+Intent: Extend the existing malformed-Contents generator test with an authored empty ### group followed by a populated group; assert the existing file/line group error through generateIndex's allowEmpty path. Production behavior is already correct; no production change.
+Files: packages/cli/src/commands/docs/index-generate/generator.test.ts only; own journal receipt and ignored proof.
+Proof: new case passes current production; temp/immutable copy mutation that bypasses the empty-group guard only for allowEmpty callers fails this test for the intended missing rejection. Existing empty/prose fallback and strict-nav controls stay green. Run focused nav/index suites freshly and required ordered gates; preserve prior broad fresh proof for unchanged production rather than needlessly repeating all supplemental suites.
+
 ---
 
 ## Phase p05: Reader-first starter app
@@ -1067,7 +1088,7 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p04-review-r2-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p04-review-r2-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p04-fix-r1-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1 · observed=~ · match=~
 
