@@ -654,6 +654,22 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 Execution shape: one phase implementer owns commits in the existing root worktree on docs/docs-skills-ia-367-p03. No parallel group is declared; the four prose bindings and their shared regression contract are one semantic correction and share evidence/build output, so they fail the independent-slice test. Root retains delivery integration into PR #369, review, acceptance and landing. Main fetched before start; no planned-path changes since the branch base. P03 is accepted with frozen anchors; p-rev2 starts after it, preserving sequential continuity.
 
+### Task prev2-t01: Preserve the loaded authoring-docs binding
+
+**Status:** completed
+**Commit:** b7a82ef1eeadec1bf3d289caca76721548faba18
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-impl-20261023 (current implementation session)
+**Intent:** Probe each exact authoring-docs/SKILL.md loaded sibling → user → repository, bind the first skill directory once, and preserve guidance precedence and accepted P03 behavior.
+**Files:** `.agents/skills/authoring-docs/references/guidance-sources.md`, `.agents/skills/oat-docs-analyze/SKILL.md`, `.agents/skills/oat-docs-bootstrap/SKILL.md`, `.agents/skills/oat-docs-apply/SKILL.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** `node --test .agents/skills/authoring-docs/tests/skill-binding.test.mjs`; immutable pre-fix text control and temporary mixed-scope manual/prose walkthrough; ordered repository gates and fresh supplemental coverage.
+**Launch base:** d94a537a88ecf5285123080657706f397229dec2 (release marker verified against clean HEAD).
+**Recovery:** 0/10 used, 10 remaining, pending null.
+
+**Task verification:** Four shipped-prose binding contracts pass before and immediately after commit; the same guard fails all four immutable anchor files specifically for the missing loaded-sibling tier (exit 1). A temporary mixed-scope manual/prose fixture reproduces the older user skill's missing new reference/helper and confirms loaded selection plus complete user/repo fallback controls and the no-match stop. This is not automated agent execution. Byte conservation outside the four binding paragraphs preserves guidance-source precedence and P03 approval/restructure/drift clauses. The product commit is exactly one commit after launch HEAD, owns only the five declared paths, and matches pre-commit tested bytes after hooks. No helper runtime, version changes or mechanical scope expansion.
+
+**Phase verification:** Ordered DoD 1–8 all exit 0: check, type-check, isolated-HOME test, build, skill-bumps, fetch origin main then release version check, public archive validation, docs build. Turbo cached/executed counts: check 5/6 (11 total), types 5/6 (11), test 5/7 (12), build 5/0 (5), docs build 6/0 (6); replay is not execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` freshly executes all 12 tasks with 0 cached, including docs build: 9,229 package tests plus 85 docs tests pass. Direct isolated smoke 165, skill 711 and script 1 tests pass; skill validation, lint and format exit 0. Isolated shared/validation sentence contracts pass before and after commit (1,087 tests each). Initial lint executes 10 tasks; initial format executes 5 and replays 5; committed lint/format replay 10 tasks each while their root checks run. No unexpected failures or flake retries; recovery 0/10, 10 remaining, pending null. Exact commands/exits, cache accounting, immutable controls, manual fixture, conservation and committed-byte proof live in ignored `analysis/p-rev2/README.md`, `results.jsonl`, `verification-summary.json` and `committed-bytes.json`. P-rev2 remains in_progress for root independent review, integration, delivery and acceptance.
+
 ## Phase p04: Navigation follows Contents
 
 **Status:** pending
