@@ -984,12 +984,16 @@ Proof: pre-fix real-command regressions fail for intended errors; fixed valid Fu
 
 ### Task p04-t08: (review) Attach sidebar ownership documentation to navOwner
 
-**Status:** in_progress
+**Status:** completed
 **Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L2)
 
 Intent: Move the existing navOwner JSDoc immediately above navOwner and retain nonReaderPaths documentation.
 Files: packages/cli/src/config/oat-config.ts only.
 Proof: scoped format/lint and declaration diff; no behavior test needed for comment relocation.
+
+**Commit:** aa53c9d20bec4447a3ea03068f293ef365c16a28
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Evidence:** Moved only the existing sidebar-ownership JSDoc directly above navOwner; retained nonReaderPaths documentation and every declaration unchanged. Scoped oxlint/oxfmt checks exit0 before and against committed bytes; post-hook declaration read confirms exact placement. No behavior test needed for comment relocation and no unrelated test replay at this task boundary. Exact commands/exits: ignored analysis/p04/fix-r1/t08-{pre,post}-\*. Recovery3/10,pending null, original task/history and root t09 preserved.
 
 ### Task p04-t09: (review) Correct brief phase marker and literal grammar
 
