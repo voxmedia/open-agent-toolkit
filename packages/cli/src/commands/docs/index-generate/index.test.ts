@@ -382,7 +382,8 @@ describe('createDocsGenerateIndexCommand', () => {
 
   describe('scaffold-derived safety', () => {
     it('leaves the authored Fumadocs docs/index.md untouched and records the manifest transition', async () => {
-      const authored = '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n';
+      const authored =
+        '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n- [Guide](guide.md)\n';
       const config = fumadocsScaffoldConfig();
       // Pre-fix seed: documentation.index still points at the authored page.
       config.documentation!.index = 'apps/docs/docs/index.md';
@@ -922,7 +923,8 @@ describe('createDocsGenerateIndexCommand', () => {
         'utf8',
       );
 
-      const authored = '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n';
+      const authored =
+        '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n- [Guide](guide.md)\n';
       await writeFile(join(appRoot, 'docs', 'index.md'), authored, 'utf8');
       await writeFile(
         join(appRoot, 'docs', 'guide.md'),
@@ -968,6 +970,9 @@ describe('createDocsGenerateIndexCommand', () => {
       const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
       expect(manifest.startsWith(GENERATED_INDEX_WARNING)).toBe(true);
       expect(manifest.split(GENERATED_INDEX_WARNING)).toHaveLength(2);
+      expect(manifest).toContain(
+        'Fresh Fumadocs apps regenerate this manifest in predev/prebuild',
+      );
       expect(manifest).toContain('Guide');
 
       // Real bytes on disk, not a harness Map entry.
@@ -1010,6 +1015,8 @@ describe('createDocsGenerateIndexCommand', () => {
         join(repo.repoRoot, 'manifest.md'),
         'utf8',
       );
+      expect(manifest).toContain('Markdown has no automatic manifest hooks');
+      expect(manifest).not.toContain('predev/prebuild');
       expect(manifest).toContain('[Handbook](index.md)');
       expect(manifest).toContain('[Guide](docs/guide.md)');
       await expect(

@@ -17,6 +17,63 @@ describe('generateIndex', () => {
     createdDirs.length = 0;
   });
 
+  it('orders direct entries by Contents, derives directory titles and flags unlisted fallback without cross-directory duplication', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-index-authored-'));
+    createdDirs.push(dir);
+    await mkdir(join(dir, 'section'));
+    await writeFile(
+      join(dir, 'index.md'),
+      '# Home\n## Contents\n- [Z first](z.md)\n### Read\n- [Deep link](section/deep.md)\n- [Same section](section/index.md)\n- [A last](a.md)',
+    );
+    await writeFile(join(dir, 'z.md'), '# Z');
+    await writeFile(join(dir, 'a.md'), '# A');
+    await writeFile(join(dir, 'unlisted.md'), '# Unlisted');
+    await writeFile(
+      join(dir, 'section/index.md'),
+      '---\ntitle: Actual section title\n---\n# Other heading\n## Contents\n- [Deep](deep.md)\n- [Other directory](../a.md)',
+    );
+    await writeFile(join(dir, 'section/deep.md'), '# Deep');
+    const entries = await generateIndex(dir);
+    expect(entries.map((e) => [e.path, e.unlisted ?? false])).toEqual([
+      ['index.md', false],
+      ['z.md', false],
+      ['section', false],
+      ['a.md', false],
+      ['unlisted.md', true],
+    ]);
+    expect(entries[2]!.title).toBe('Actual section title');
+    expect(entries[2]!.children!.map((e) => e.path)).toEqual([
+      'section/index.md',
+      'section/deep.md',
+    ]);
+    const text = renderIndex(entries);
+    expect(text.match(/\]\(a.md\)/g)).toHaveLength(1);
+    expect(text).toContain('[Unlisted](unlisted.md) [unlisted in Contents]');
+  });
+
+  it('uses H1 then directory slug titles and rejects malformed present Contents', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-index-title-'));
+    createdDirs.push(dir);
+    for (const [name, source] of [
+      ['h1-section', '# Heading title'],
+      ['slug-section', 'No title'],
+    ]) {
+      await mkdir(join(dir, name!));
+      await writeFile(join(dir, name!, 'index.md'), source!);
+    }
+    expect((await generateIndex(dir)).map((e) => e.title)).toEqual([
+      'Heading title',
+      'Slug Section',
+    ]);
+    await writeFile(
+      join(dir, 'index.md'),
+      '# Home\n## Contents\n* [Bad](bad.md)',
+    );
+    await expect(generateIndex(dir)).rejects.toThrow(
+      `${join(dir, 'index.md')}:3: Contents links must use a dash`,
+    );
+  });
+
   it('generates entries from flat directory', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'oat-index-flat-'));
     createdDirs.push(dir);
@@ -78,7 +135,7 @@ describe('generateIndex', () => {
     expect(authEntry).toBeDefined();
     expect(authEntry!.path).toBe(join('api', 'auth.md'));
     const nestedEntry = entries[1]!.children!.find(
-      (child) => child.title === 'Nested',
+      (child) => child.title === 'Nested API',
     );
     expect(nestedEntry).toBeDefined();
     expect(nestedEntry!.path).toBe(join('api', 'nested'));

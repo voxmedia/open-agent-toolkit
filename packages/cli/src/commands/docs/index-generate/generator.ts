@@ -1,6 +1,11 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 
+import {
+  parseIndexContents,
+  resolveEntryTarget,
+} from '@commands/docs/nav/contents';
+import { resolveFolderTitle } from '@commands/docs/nav/fumadocs';
 import {
   createExclusionMatcher,
   type ExclusionMatcher,
@@ -13,6 +18,8 @@ export interface IndexEntry {
   description?: string;
   path: string;
   children?: IndexEntry[];
+  /** Present Contents did not list this direct reader entry. */
+  unlisted?: boolean;
 }
 
 export interface GenerateIndexOptions {
@@ -107,9 +114,11 @@ async function collectEntries(
   docsDir: string,
   relativeBase: string,
   matcher: ExclusionMatcher,
+  docsRoot: string,
 ): Promise<IndexEntry[]> {
   const entries: IndexEntry[] = [];
   const subdirs: string[] = [];
+  let indexMarkdown: string | undefined;
 
   const dirEntries = await readdir(docsDir, { withFileTypes: true });
 
@@ -125,6 +134,7 @@ async function collectEntries(
       }
       const filePath = join(docsDir, entry.name);
       const content = await readFile(filePath, 'utf8');
+      if (entry.name === 'index.md') indexMarkdown = content;
       const { title, description } = resolveTitle(content, entry.name);
       entries.push({
         title,
@@ -139,20 +149,55 @@ async function collectEntries(
       join(docsDir, subdir),
       relativeKey(relativeBase, subdir),
       matcher,
+      docsRoot,
     );
     // A directory with no surviving children emits no heading. This already
     // pruned genuinely empty directories; exclusion simply empties more of
     // them, and it composes upward through the recursion.
     if (children.length > 0) {
       entries.push({
-        title: fileNameToTitle(subdir),
+        title: children.find((child) => child.path === 'index.md')
+          ? (resolveFolderTitle(
+              await readFile(join(docsDir, subdir, 'index.md'), 'utf8'),
+            ) ?? fileNameToTitle(subdir))
+          : fileNameToTitle(subdir),
         path: subdir,
         children: children.map((child) => prefixEntryPath(child, subdir)),
       });
     }
   }
 
-  return sortEntries(entries);
+  const fallback = sortEntries(entries);
+  if (indexMarkdown === undefined || !/^##\s+Contents\s*$/m.test(indexMarkdown))
+    return fallback;
+  const contents = parseIndexContents(indexMarkdown, join(docsDir, 'index.md'));
+  const ordered: IndexEntry[] = [];
+  const add = (entry: IndexEntry | undefined): void => {
+    if (entry && !ordered.includes(entry)) ordered.push(entry);
+  };
+  add(entries.find((entry) => entry.path === 'index.md'));
+  for (const entry of contents) {
+    const target = await resolveEntryTarget(
+      docsRoot,
+      docsDir,
+      relativeBase,
+      entry,
+      ['.md'],
+      matcher,
+    );
+    if (target.kind === 'excluded') continue;
+    const local = relative(docsDir, resolve(docsRoot, target.path)).replaceAll(
+      '\\',
+      '/',
+    );
+    if (local === '..' || local.startsWith('../')) continue;
+    const direct = local.split('/')[0];
+    add(entries.find((candidate) => candidate.path === direct));
+  }
+  for (const entry of fallback) {
+    if (!ordered.includes(entry)) ordered.push({ ...entry, unlisted: true });
+  }
+  return ordered;
 }
 
 export async function generateIndex(
@@ -163,6 +208,7 @@ export async function generateIndex(
     docsDir,
     '',
     createExclusionMatcher(options.excludes ?? []),
+    docsDir,
   );
 }
 
@@ -172,11 +218,15 @@ function renderEntries(entries: IndexEntry[], indent: number): string[] {
 
   for (const entry of entries) {
     if (entry.children) {
-      lines.push(`${prefix}- ${entry.title}`);
+      lines.push(
+        `${prefix}- ${entry.title}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
+      );
       lines.push(...renderEntries(entry.children, indent + 1));
     } else {
       const desc = entry.description ? ` — ${entry.description}` : '';
-      lines.push(`${prefix}- [${entry.title}](${entry.path})${desc}`);
+      lines.push(
+        `${prefix}- [${entry.title}](${entry.path})${desc}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
+      );
     }
   }
 
