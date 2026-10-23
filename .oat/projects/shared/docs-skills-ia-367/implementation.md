@@ -1656,12 +1656,18 @@ Proof: Extend existing real-file checker navigation cases with missing root/subf
 
 ### Task p06-t05: (review) Resolve declared workspace command contexts and physical fence lines
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** a4348bc89312d6dda0ed77b722ecb949a5668828
 **Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M3, L1)
 
 Intent: Remove directory-name assumptions that hide declared site/out/dist workspace members; preserve workspace inclusion/exclusion patterns, node_modules/hidden scope and literal cd/filter semantics. Fix physical line reporting for language-less fences while retaining labeled/indented/inline forms.
 Files: packages/cli/src/commands/docs/check/commands.ts; existing checker.test.ts.
 Proof: Extend existing command-context fixture with declared site/out/dist members and exact valid cd/filter versus missing-script diagnostics. Add literal expected physical lines for language-less versus labeled/indented code at the same public checker boundary. Pre-fix red/fixed/valid proof, no duplicate layer or fixture framework.
+
+**Commit:** 043342982e8287b4c92cda98e56fa8f0e65c9cb9
+**Verification:** M3/L1: immutable pre-fix source gives4 intended failures for site/out/dist membership and unlabeled-fence position; manual-member and excluded/hidden/node_modules controls pass. Fixed checker/navigation108 tests pass freshly with exact physical lines9/13/16/18 and member-local missing-script diagnostics. CLI check/type/build exit0; formatter-triggered ASI lint false-positive avoided with an explicit openingLine variable before commit. Exact logs: analysis/p06/fix-r1/t05-\*. Recovery1/10,pendingnull unchanged.
 
 ### Task p06-t06: (review) Separate syntax diagnostics from metadata and accessibility exceptions
 
