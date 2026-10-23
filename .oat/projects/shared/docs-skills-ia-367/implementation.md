@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | in_progress | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 9/13 phases accepted
 
@@ -1520,7 +1520,11 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+
+Execution shape: one phase implementer, the sole product-committing owner in /Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367. No declared parallel group applies. Root fan-out fails independence because config/parser contracts, lockfile, scaffold/CI files, fixtures and build outputs are shared and sequentially composed. Root retains plan/state/review/log/acceptance and GitHub ownership. Phase recovery limit10 (default), used0, pendingnull; phase-standing bounded append-only recovery only.
 
 Root readiness reconciliation: completed intelligent recon maps existing root/config resolution, Contents grammar, reader exclusions, real navigation adapters and flagship Markdown helpers. Root verified the cited G5/P20–P23/P25 source clauses, config reconstruction gap and already-resolved parser versions. No checker exists yet; the recon's lexical inventory and SVG inspections do not prove rule compliance. Phase-local choices are concretized in plan.md without changing Outcomes, G5 flags/JSON, authority or the agreed Approach. No up-front tasks, generic validator/plugin system, framework upgrade, consumer rollout or P24/p07 scope is introduced. Parser dependencies are bounded to existing resolved engines; direct imports must declare ownership, including production use in the packed CLI.
 

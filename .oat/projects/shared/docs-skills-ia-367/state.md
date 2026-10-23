@@ -1,6 +1,6 @@
 ---
 oat_current_task: p06
-oat_last_commit: bf50ec5ef9823afa082da6463833adf6ce7e6157
+oat_last_commit: 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -45,6 +45,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p05:
       used_attempts: 1
+      pending_attempt: null
+    p06:
+      used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -139,7 +142,7 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T15:35:54.938454Z'
+oat_project_state_updated: '2026-10-23T16:01:13.680659Z'
 oat_generated: false
 ---
 
@@ -151,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 accepted and delivered through merged PR373; p06 readiness alignment in progress, implementation unstarted.
+Implement — p05 accepted and delivered through merged PR373; p06 concrete and starting delegated implementation.
 
 ## Artifacts
 
@@ -165,4 +168,4 @@ None.
 
 ## Next Milestone
 
-P05 delivered at merge5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0; all current-head checks/Bugbot and external fix confirmations cleared. Watcher stopped, generated evidence trees pruned. On docs/docs-skills-ia-367-p06, map approved G5/P20–P23/P25 against existing helpers and scaffold/CI surfaces before making provisional p06 concrete. No p06 execution record or product change yet. Preserve p05 anchors, review history and approved type-export deferral. Final project PR remains held until completion.
+Implement concrete p06 G5/P20–P23/P25 through the pinned phase implementer, then independently review the anchored candidate and deliver its intermediate PR after current-head checks. P05 delivered at merge5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0; prior anchors/history and type-export deferral remain conserved. No p07/P24, consumer changes or npm publication. Final project PR remains held until completion.
