@@ -1,7 +1,7 @@
 ---
 oat_current_task: p05
-oat_last_commit: b48c6e3e9be92ed16b5da945bf811c145880ab46
-oat_blockers: [operator disposition at the p05 three-review cap]
+oat_last_commit: bf50ec5ef9823afa082da6463833adf6ce7e6157
+oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
     { type: backlog, ref: 'BL-261002-correct-docs-bootstrap-docs' },
@@ -139,7 +139,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T09:01:37.651480Z'
+oat_project_state_updated: '2026-10-23T15:35:54.938454Z'
 oat_generated: false
 ---
 
@@ -151,12 +151,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 reopened for the confirmed PR373 nested-docs, filtered collision and nonlocal navigation findings.
+Implement — p05 accepted after external corrections and operator cap disposition; PR373 delivery pending current-head CI/Bugbot.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 reopened, 8/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 accepted, 9/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-Round3 independently confirms all3 PR373 behavior fixes at candidatee197f3f8c4f4b76d5e9837508d543933e3ec5b45; two Low documentation/export notes remain. Complexity check is Deletion-rule compliant and recommends proceeding; report .oat/projects/shared/docs-skills-ia-367/reviews/archived/complexity-p05-2026-10-23T090105Z.md. Operator choice pending: recommended one-sentence README correction and unchanged type surface, or accept both residual notes, or explicitly authorize more cycles. Record that choice before further action. No fourth review or public API expansion is authorized automatically. All10 task records closed/all8 gates pass; recovery1/10,pendingnull remains settled. P05 acceptance is suspended pending this disposition. PR373 stays open and held from merge; unwatch before operator handoff; final PR remains held until project completion. After disposition, publish correction, require exact-head CI/Bugbot and use authorized land-pr, then align p06.
+Publish the accepted p05 correction and approved README wording, respond to the three fixed remote findings, and require fresh exact-head CI/Bugbot clearance before plain land-pr with the established merge-commit method and expected-head guard. Operator approved proceeding with override at the three-review cap, deferring the optional named type export until a consumer needs it; no fourth review is authorized. Reviewed runtime candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45; accepted docs tail bf50ec5ef9823afa082da6463833adf6ce7e6157, all eight gates pass. All11 task records closed, recovery1/10,pendingnull. PR373 remains open; p06 remains provisional and unstarted. After landing, align p06 and prune generated evidence trees while preserving controls/logs. Final project PR remains held until completion.

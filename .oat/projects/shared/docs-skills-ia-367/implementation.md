@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | in_progress | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 8/13 phases accepted
+**Total:** 9/13 phases accepted
 
 ---
 
@@ -1207,9 +1207,9 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 ## Phase p05: Reader-first starter app
 
-**Status:** in_progress
+**Status:** completed
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
-**Head:** e197f3f8c4f4b76d5e9837508d543933e3ec5b45
+**Head:** bf50ec5ef9823afa082da6463833adf6ce7e6157
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 
 One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
@@ -1424,6 +1424,16 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 2312f633086acb61b22df311ca2d76a7c32d4d4a
 **Verification:** Pre-fix sync emits ../section.md in both maps; actual core16.10.2 drops the unrelated Elsewhere contract link while --check considers its source reachable. Fixed real-loader regression preserves section.md source identity in its owning map and Elsewhere contract at /section#contract in the unrelated map; the existing Section landing URL stays /section/index. Removing owning placement still reports section.md unlisted despite the unrelated URL link, retaining strict reachability. Focused nav/init156 tests execute pre/post with isolated HOME, CLI check/type/build exit0. Evidence: ignored analysis/p05/remote-fix/t10-{red-full,pre-_,post-_}.log, exact p05-t10-files.json. No unrelated behavior, frozen anchor or recovery-ledger edits.
 
+### Task p05-t11: (review) Describe reader discovery semantics accurately
+
+**Status:** completed
+**Executor:** inline:operator-approved-docs-only
+**Source review:** p05 round3 R3-L1; complexity-p05-2026-10-23T090105Z.md; operator approved the recommended disposition ("Sounds good. Proceed").
+**Intent:** Replace only the overbroad discovery-error sentence in packages/docs-config/README.md; preserve the public type surface and all runtime behavior.
+**Files:** packages/docs-config/README.md.
+**Commit:** bf50ec5ef9823afa082da6463833adf6ce7e6157
+**Verification:** Conservation diff confirms exactly the approved sentence replacement, with all surrounding guidance unchanged; scoped oxfmt passes. All eight ordered delivery gates exit 0; see the final acceptance note below. No new tests, negative controls or fourth independent review cycle.
+
 ### Remote correctness verification and handoff
 
 All three converted remote findings close in p05-t09 (M1 configured root + H1 filtered source/target collision ownership) and p05-t10 (H2 owning placement versus unrelated authored URL). Tested candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45 contains product bc979197ef3b4f2d309b8b2ff2cb55c318c23a12 / journal0e171c801e0a529edaef206ff70bf5cf86b1267c and product2312f633086acb61b22df311ca2d76a7c32d4d4a / journale197f3f8c4f4b76d5e9837508d543933e3ec5b45. This final journal changes no tested product bytes. Exactly nine authorized product paths plus p05-local tracking changed; Base, historical Head, phase in_progress and all root-owned records remain untouched. No later phase started.
@@ -1499,6 +1509,14 @@ All10 records closed; no later phase started. Advance p05 Head to the tested can
 R3-L1: docs-config README says Discovery errors propagate, but engine itself skips unreadable directories; OAT adds no catch and membership agrees with emitter. Task Scope: Negligible, factual wording correction proposed. R3-L2: public options are inferable inline, but RemarkLinksOptions is not re-exported from barrel; convenience-only, no accepted runtime guarantee requires a named type export. Task Scope: Negligible; root proposes retaining minimal current type surface with explicit rationale. Neither note blocks correctness. No fix task or public API addition is created before operator choice at cap.
 
 **Outcome:** received; three-cycle cap reached with two residual Low notes. Per oat-project-review-receive Step8 and complexity-review-fallback, dispatch a new read-only complexity check because the earlier p05 audit predates round3 and this delta; save its inline report locally and show the operator concrete choices. No fourth code review or automatic disposition. P05 remains in_progress, current acceptance suspended; recovery1/10,pendingnull and prior historical acceptance stay preserved. Root must record operator choice before proceeding; no PR push/reply/merge performed.
+
+### P05 operator disposition, final wording and restored acceptance
+
+Operator approved the recommended cap disposition ("Sounds good. Proceed"): proceed with override, correct R3-L1 only and defer the optional R3-L2 type export until a consumer needs it. Task p05-t11 commits the exact README sentence in bf50ec5ef9823afa082da6463833adf6ce7e6157; conservation diff and scoped oxfmt pass. No runtime, test or public export changed after independently reviewed candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45. The docs-only tail is root-verified under the operator's disposition, not a fourth independent review.
+
+All eight ordered gates exit 0 at bf50ec5ef9823afa082da6463833adf6ce7e6157: check, type-check, isolated-HOME test, build, skill bumps, fetched-main version check, release validation and docs build. Turbo cached/total: 8/11, 9/11, 9/12, 5/5, direct, direct, direct, 6/6. Gate3 freshly executes docs-config tests and the flagship build/tests; other package suites replay cached evidence. The earlier remote-fix pre/post controls and independent probes remain inherited. No new forced broad run is claimed. All eleven task records are closed; journal validation passes without warnings. Root restores p05 acceptance (9/13). Frozen Base and previous acceptance/review history remain intact; recovery1/10,pendingnull unchanged. No instruction changes needed for the sentence correction.
+
+Delivery mode remains plain land-pr using the established merge-commit method with an expected-head guard. Push, factual replies, supported thread resolution and fresh exact-head CI/Bugbot clearance precede merge. PR373 remains open until those gates clear; final project PR remains held. No later phase has started.
 
 ## Phase p06: oat docs check
 
@@ -1646,6 +1664,8 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+Operator disposition, 2026-10-23: "Sounds good. Proceed" approves proceeding with override using reviews/archived/complexity-p05-2026-10-23T090105Z.md: correct R3-L1 wording only, defer R3-L2 named type export until a consumer needs it, retain all product machinery, and continue acceptance/delivery without a fourth review cycle. Current-head CI/Bugbot and plain land-pr with the established merge-commit method and expected-head guard remain required.
+
 ### P05 review-cap complexity report
 
 2026-10-23; standard receive cap reached at3 code rounds, with Critical0/High0/Medium0/Low2. Independent complexity report saved verbatim at.oat/projects/shared/docs-skills-ia-367/reviews/archived/complexity-p05-2026-10-23T090105Z.md; verdict Deletion-rule compliant; recommends proceed with override. Keep all product machinery. L1 is factual README wording only; L2 named type export is optional new-hardening, add later only when a consumer needs it. Proposed concrete path: replace Discovery errors propagate. with OAT adds no error fallback; traversal follows the emitter's tinyglobby semantics, including skipped unreadable directories. Leave current type exports unchanged, then continue acceptance/delivery under existing current-head CI/Bugbot and land-pr rules. These are proposals, not an operator decision. Required operator choice remains pending under receive Step8; no fourth review, product edit, acceptance or push performed. P05 remains in_progress; recovery1/10,pendingnull unchanged.
@@ -1718,6 +1738,8 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
+
+- p05 R3-L2 · Low · Named RemarkLinksOptions barrel export deferred by operator approval ("Sounds good. Proceed") of the cap report reviews/archived/complexity-p05-2026-10-23T090105Z.md. Inline options remain typed; no consumer requires the additional public symbol. Revisit when a consumer or typed wrapper needs to name the type; no runtime guarantee deferred.
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
