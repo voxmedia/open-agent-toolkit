@@ -647,6 +647,14 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+**Continuation:** optional supplemental forced run remains in exec session 67873, launched by `/tmp/oat-docs367-p02-delivery-gates.py` in the p02 checkout. On wake, read its `analysis/p-rev2/p02-delivery/results.jsonl` and logs; do not duplicate it or credit pending output. All required integrated gates and direct checks already passed. Resume the same plain land-pr cycle with a full new-head comment/thread/check sweep.
+
+**P02 delivery integration:** Root created bounded checkout `/private/tmp/oat-docs367-p02-binding-fix` on `docs/docs-skills-ia-367-p02`; worktree initialization completed with a warning after optional archive sync was interrupted, and its generated-only manifest version refresh was reverted. Three product cherry-picks map b7a82ef1 → b308375ac, a12e8edf → 17a4935a2, 3b96afe3 → ba778e0e9. All applied cleanly. Root inspected the exact six-path correction diff: P03 content was not copied, source precedence is conserved, guard/reference bytes equal the independently reviewed candidate, and all original anchors remain frozen. No version bump beyond existing PR-scoped five skills/public 0.3.24 is required.
+
+Integrated gates 1–8, lint, format, five binding guards and 1,087 isolated-HOME sentence contracts pass with explicit zero exits and no retries. Gate 3 executes every package/docs test suite fresh (8,862 CLI and 351 supporting-package tests); its five cached tasks are dependency builds. Cache/executed counts: check 0/11, types 5/6, test 5/7, build 5/0, docs-build 6/0, lint 5/5, format 5/5. Old five-site text fails (exit 1), manual eleven-case fixture passes (exit 0); this is prose/manual evidence. Supplemental forced run is pending and is not credited here. Evidence is in the p02 checkout's ignored `analysis/p-rev2/p02-delivery/`. Main advancement #370 touches only AGENTS.md; root inspected its instructions and confirmed no correction-path overlap.
+
+Normal push published PR #369 head `823590911f8b6709a44d3c29e8e78f96db29c821`; bookkeeping commit 823590911 records the correction without backporting P03 tracking. Root replied to original Bugbot discussion_r4354277626 with published commits and test limits (reply discussion_r4355350794), then resolved that supported thread. CI, release dry-run and Bugbot started for the new head. Phase remains in_progress until external delivery clears. Landing ledger: mode=land; independent stage=complete via lifecycle reviews (no added review-and-land loop); expected CI/release/Bugbot; method=merge commit, matching #368; head guard required; no open finding after supported closure, fresh sweep still required. Final PR held until project completion.
+
 ### Review Received: p-rev2 (round 2)
 
 **Review artifact (local-only):** reviews/archived/p-rev2-review-2026-10-23T013602Z.md

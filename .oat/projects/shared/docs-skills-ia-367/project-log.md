@@ -79,6 +79,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,l
 
 docs367-p03-accept-20261023: p03 accepted after three standard rounds and two fix continuations; external gate f11cc34a passed with two Low findings deferred to final. Recovery 0/10; next p-rev2. See implementation.md passing-gate receipt.
 
+### 2026-10-23 · structural · oat-project-implement · p-rev2
+
+docs367-prev2-pr369-wait-8235909: clean independent re-review and integrated gates passed; correction published to PR #369 at 823590911f8b6709a44d3c29e8e78f96db29c821; waiting for current-head CI, release dry-run and Bugbot under standing land-pr authority; phase remains in_progress and final PR remains held.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -139,7 +139,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev2: loaded-sibling portability correction for p02.
+Implement — p-rev2: correction reviewed and published to PR #369; awaiting current-head CI/Bugbot.
 
 ## Artifacts
 
@@ -153,4 +153,4 @@ None.
 
 ## Next Milestone
 
-P03 accepted after standard review and external gate; implement and review p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
+P03 accepted after standard review and external gate; p-rev2 standard re-review passed with no findings, correction published on PR #369 at 823590911f8b6709a44d3c29e8e78f96db29c821; await current-head CI/Bugbot, then land via land-pr and deliver P03. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
