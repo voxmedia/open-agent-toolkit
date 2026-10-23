@@ -932,7 +932,7 @@ Agent guidance:
 Build:
   - Install: {ok | known-issue: ...}
   - Build:   {ok | known-issue: ...}
-  - Install policy: {effective-root YAML + resolved2.1.2 | manual/conflict/pending; constrained install}
+  - Install policy: {effective-root YAML + resolved 2.1.2 | manual/conflict/pending; constrained install}
   - PR CI: {approved workflow path + checker/build/freshness exits | declined | pending}
   - Known issues (from Verification Result.knownIssues): {list or 'none'}
 
