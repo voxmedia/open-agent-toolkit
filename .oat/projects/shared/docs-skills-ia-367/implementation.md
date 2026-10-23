@@ -620,6 +620,16 @@ Proof: prose conservation and existing helper/sentence contracts; no new copy-on
 
 Root round-2 fix validation: verified the three product paths, bounded task commits and journal-only final tip `103e41f31b74651277641d8f395494b4ae323453`. Null rejection is confined to set input; stored-read semantics are unchanged. Reviewed pre-fix failure, fixed controls, all raw gate exits, retained PJM cleanup failure/no-edit rerun, and forced 12-task execution with zero cache replays. Both round-2 findings are fixes_completed; candidate Head `28887537aa3498293340bbc86f3f85772b4a9f09`. Final standard independent review round 3/3 and external p03 gate remain pending. Phase in_progress, recovery 0/10 pending null.
 
+### Review Received: p03 (round 3)
+
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-23T000325Z.md
+**Reviewed Head:** 28887537aa3498293340bbc86f3f85772b4a9f09
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before validation; no Review Orchestration section. Exact phase anchors, narrowed provenance and severity sources agree. Independent reviewer closed R2-L1 (set null rejected with bytes preserved; stored-null reads and unset preserved) and R2-L2 (ahead represented, only older drift recommends an upgrade). The reviewer executed 654 config tests, helper/approval tests, 1,087 sentence contracts and changed-file format checks, and independently probed invalid inputs, unchanged bytes and stored absence. Other full-phase coverage is explicitly inherited from rounds 1–2. The retained gate-3 cleanup failure and successful no-edit rerun are disclosed; fresh proof is the forced 12-task run, 9,229 package tests, zero cache replays.
+
+**Outcome:** standard review passed, no new fixes or deferrals. Three standard review rounds consumed, two fix continuations; recovery 0/10 pending null. P03 remains in_progress until the configured external phase gate passes and its findings are dispositioned. P-rev2/PR #369 correction follows acceptance. Intermediate PRs use land-pr when clear; final PR held until project completion.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -717,7 +727,7 @@ run/v1 · request=docs367-p03-review-r2-20261022 · scope=p03 · action=review �
 
 run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
