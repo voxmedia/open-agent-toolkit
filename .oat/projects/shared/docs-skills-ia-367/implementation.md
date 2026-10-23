@@ -703,12 +703,18 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ### Task prev2-t03: (review) Reuse an established authoring root in the guidance reference
 
-**Status:** pending
+**Status:** completed
+**Commit:** 3b96afe3647c3650b9b719d2dbc1df30b05081d1
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-fix-r1-20261023 (same implementation continuation)
+**Task base:** f63eed037713be1396731a5bc3e874a4063e5158
 **Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (L1)
 
 **Intent:** Make the guidance reference reuse a validated authoring-docs binding, including when authoring-docs is the loaded skill, and reserve the fallback/stop wording for unbound consumers. Preserve lookup order and guidance selection.
 **Files:** `.agents/skills/authoring-docs/references/guidance-sources.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
 **Proof command:** Prose contract and manual bound-root/self-root controls; unchanged fallback and source-precedence controls.
+
+**Verification:** Five prose guards pass with a distinct reuse/self-root contract for this reference and unchanged exact-probe/order/root-reuse/no-match coverage for unbound consumers. The pre-fix reference fails specifically for missing validated-root reuse; immutable four-site and wrapper controls plus meaningful tier mutations still fail. The actual temporary manual/prose fixture accesses assets through an established root without rebinding, validates/binds the loaded authoring-docs self root without reload, stops on failed self validation, and preserves wrapper/loaded/user/repo/no-match controls. This is shell transcription, not agent execution or verified provider discovery. Lint/format and isolated sentence contracts (1,087) pass before commit; immediate committed guard/controls/manual checks pass, with exact two-path tested bytes preserved by hooks. Byte conservation preserves IA guidance selection, helper invocation and all surrounding clauses; analyze/bootstrap/apply remain entirely unchanged. No runtime, versions, recovery or unexpected failure. Evidence: ignored `analysis/p-rev2/fix-r1/`, prefixed `t03-` logs and `prev2-t03-committed-bytes.json`.
 
 ## Phase p04: Navigation follows Contents
 
