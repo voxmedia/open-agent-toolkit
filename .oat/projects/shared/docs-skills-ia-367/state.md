@@ -1,6 +1,6 @@
 ---
-oat_current_task: p-rev3
-oat_last_commit: 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+oat_current_task: p04
+oat_last_commit: 57c17239f0cffa1ba8891bef054f688ccc376ec6
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -126,7 +126,7 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/371' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
@@ -142,12 +142,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev3 corrects PR #371 findings before landing P03; p04 remains pending.
+Implement — PR #371 merged, p-rev3 accepted; concretize and start p04.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03 and p-rev2 accepted; 5/12 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 accepted; 6/12 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -156,4 +156,4 @@ None.
 
 ## Next Milestone
 
-PR #369 merged at ec1261f44f93d07bbc2926aa5680b7bfd777089e after current-head CI/Bugbot clear; p-rev2 accepted. P03 PR #371 is open against main after integrated verification; land it when CI/Bugbot clear, then concretize p04. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. Concretize and execute p04, navigation follows Contents. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.

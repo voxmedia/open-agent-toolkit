@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p-rev3
+oat_current_task_id: p04
 oat_generated: false
 oat_template: false
 ---
@@ -39,22 +39,22 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | in_progress | 1     | 0/1      |
-| p04    | pending     | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | pending   | 1     | 0/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 5/12 phases accepted
+**Total:** 6/12 phases accepted
 
 ---
 
@@ -747,11 +747,13 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ## Phase p-rev3: Validate normalized IA paths
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 130f8c0521e3e03704680fb3237898a46335cfac
 **Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
 **Executor:** phase-implementer:docs367-prev3-impl-20261023
 **Corrects:** p03
+
+**Acceptance and delivery:** Root accepts p-rev3 after the independent review passed, its one Low ledger total was corrected, and all required verification passed. Fresh remote sweep at 57c17239f0cffa1ba8891bef054f688ccc376ec6 confirmed CI/release/Bugbot SUCCESS, Bugbot output explicitly no issues, Warp replies 4355580563/4355580687/4355580799 confirming every fix, all three threads resolved, zero pending review requests and no branch protection/rules requiring approval. Head/base stayed unchanged. Plain land-pr used merge method with --match-head-commit; no admin/auto/delete or review dismissal by root. GitHub confirms PR #371 MERGED at 2026-10-23T02:46:48Z, merge eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2; watch stopped. The path fix is independently reviewed; final ledger-only total correction is verified without another product review. Recovery 0/10 pending null. Frozen prior anchors unchanged. Next p04, final PR held until project completion.
 
 Phase start: one committing phase implementer, shared existing checkout; no nested dispatch or parallel group. The two paths share one guard and regression boundary, so independent implementation lanes would overlap. Root owns ledger repair, review receipt, acceptance and PR landing. Main fetched at phase start; no main advancement in the two product paths. Preserve p03/p-rev2 anchors. Recovery 0/10, pending null.
 
