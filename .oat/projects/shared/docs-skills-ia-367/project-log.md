@@ -111,6 +111,10 @@ docs367-p04-recovery-reserved-20261023: p04 stopped after a committed prefer-tem
 
 docs367-p04-recovery-settled-20261023: validated recovery 395a89777 and fourteen passing pre/post check receipts against the unchanged original history and exact target. Completed marker cleared with usage preserved at 1/10; resume remaining approved p04 work in the same implementer.
 
+### 2026-10-23 · structural · oat-project-implement · p04-recovery02
+
+docs367-p04-recovery02-settled-20261023: validated completed prose-lint recovery and cleared its marker with usage2/10 preserved. A separate generated collection type failure requires bounded schema-output normalization, generated-consumer regression and real docs-build verification; third recovery-event warning recorded.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

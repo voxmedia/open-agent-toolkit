@@ -919,6 +919,8 @@ Protects against: pinned external schema rejecting accepted roots and collection
 - Verification: check/type-check exit 0; isolated-HOME test exits 1 at generated Fumadocs collection TypeScript boundary; remaining gates unrun.
 - Reason: Separate deterministic metadata-type composition failure; no edit or new attempt. Prior event docs367-p04-t06-markdownlint still owns the matching completed pending marker. Root-only settlement is required before an independent reservation; marker and monotonic usage remain unchanged.
 
+**Root recovery02 settlement and composition disposition:** Validated canonical recovered event docs367-p04-t06-markdownlint, matching completed attempt2 marker, reservation76b4b91088c8687f12403d6581f5471ce19b67c5, immutable original50a82e98b719729241169b159b183c4762d5e66e, exact unchanged codex_codex_proxy/gpt-6.1-sol/high/priority controls and one-line equivalent prose correction57db87362ef16dd6f3cdfdc822ff769bb719d0a9. Both focused/full-check pre/post receipts exit0; cached full-check results are disclosed. Clear only that completed marker; usage2/10 stays consumed. A separate generated-type composition failure is genuine: the recorded Next build reports toFumadocsSource on never, and root independently inspected installed fumadocs-mdx14.3.2 conditional plus fumadocs-core16.10.2 boolean metadata type and loader truthiness. Accepted G3 requires string inputs to act as roots, not exposing strings through generated metadata. Normalize valid non-empty string inputs to true at the existing schema boundary, keeping booleans and unrelated validation unchanged; no casts, framework upgrades or dependency patches. This is bounded composition recovery within p04, requiring a generated-consumer type regression and real docs builds pre/post candidate. Root will reserve a distinct attempt before edits. Elevated recovery-volume warning: this is the third p04 recovery event; require composition evidence and retain every prior failure rather than relying on isolated runtime tests.
+
 ---
 
 ## Phase p05: Reader-first starter app
@@ -952,6 +954,8 @@ Protects against: pinned external schema rejecting accepted roots and collection
 ---
 
 ## Orchestration Runs
+
+run/v1 · request=docs367-p04-resume-after-recovery-20261023 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery · observed=~ · match=~
 
 run/v1 · request=docs367-p04-recovery01-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1 · observed=~ · match=~
 
