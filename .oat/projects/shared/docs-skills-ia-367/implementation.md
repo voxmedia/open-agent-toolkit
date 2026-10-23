@@ -1857,6 +1857,20 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 **Commit:** 8d94fef16863ffa4fb28b1ac9916144b36b45096
 **Verification:** Pre-fix and string-guard-neutralized config suite exit1 with four intended failures; fixed suite17 fresh passes. Real stored policy rejects arrays and supports repair; built CLI rejects rule/exception arrays with actionable configuration errors while string error remains exit1. CLI check/type/build and scoped formatting pass; exact restored bytes committed. Root pre-repro retained; symlink finding continues in next record. Evidence: ignored analysis/p06/remote-fix. Review correction, recovery1/10,pendingnull unchanged.
 
+### Task p06-t13: Preserve checker policy across root aliases
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 077c875dda1804c64f00d5f421423832d2d6d03a
+**Source review:** W-H2, discussion4363730381.
+**Intent:** Canonicalize existing configured app/content and requested root identities consistently, preserving missing roots and unrelated-target isolation.
+**Files:** packages/cli/src/commands/docs/check/files.ts; packages/cli/src/commands/docs/check/checker.test.ts.
+**Proof:** Real symlink public checker fixtures retain policy/exclusions/ownership and tooling; root built-CLI reproduction; canonicalization neutralization; scoped CLI checks/build.
+
+**Commit:** b2005489bb5c952b505464777aaf4d581eec486f
+**Verification:** Real Markdown/framework app and content aliases retain policy, nonreader exclusions, explicit tooling and generated ownership; unrelated target stays isolated. Pre-fix and canonicalization-neutralized regressions fail both intended cases; fixed checker/config102 fresh tests pass. Built CLI root reproduction now gives identical empty exit0 results through real and symlink roots; both malformed severity controls remain rejected. CLI check/type/build and scoped formatting pass; restored production bytes committed. Missing-path behavior is unchanged. Evidence: ignored analysis/p06/remote-fix; recovery1/10,pendingnull.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
