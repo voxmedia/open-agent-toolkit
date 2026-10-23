@@ -54,6 +54,7 @@ function routePathFromDocsFile(
   const folderPath = path.dirname(absolutePath);
   const keepIndex =
     isIndex &&
+    path.dirname(filePath) !== '.' &&
     ['.md', '.mdx'].some((extension) => existsSync(folderPath + extension));
   const cleaned = cleanMdPath(filePath, keepIndex);
   if (cleaned === null) return null;

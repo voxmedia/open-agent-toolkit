@@ -52,12 +52,40 @@ describe('remarkLinks — URL rewriting', () => {
         await mkdir(join(docs, 'contributing'), { recursive: true });
         for (const page of [
           'index.md',
+          'guide.md',
           `contributing.${extension}`,
           'contributing/index.md',
           'contributing/docs-toolchain.md',
         ]) {
           await writeFile(join(docs, page), `# ${page}\n`);
         }
+        const rootLinks = async () => [
+          ...urls(
+            await transformLinks(
+              '[Guide](guide.md?v=1#guide)',
+              join(docs, 'index.md'),
+            ),
+          ),
+          ...urls(
+            await transformLinks(
+              '[Home](index.md?v=1#home)',
+              join(docs, 'guide.md'),
+            ),
+          ),
+        ];
+        expect(await rootLinks()).toEqual([
+          './guide/?v=1#guide',
+          '../?v=1#home',
+        ]);
+        // This file is outside the content root and never enters the loader.
+        await writeFile(
+          join(root, `docs.${extension}`),
+          '# Unrelated app file\n',
+        );
+        expect(await rootLinks()).toEqual([
+          './guide/?v=1#guide',
+          '../?v=1#home',
+        ]);
         // Independent oracle: the actually installed core16.10.2 loader, not a
         // second implementation of its collision-slug rules.
         const require = createRequire(
@@ -70,6 +98,8 @@ describe('remarkLinks — URL rewriting', () => {
           baseUrl: '/',
           source: {
             files: [
+              { type: 'page', path: 'index.md', data: { title: 'Home' } },
+              { type: 'page', path: 'guide.md', data: { title: 'Guide' } },
               {
                 type: 'page',
                 path: `contributing.${extension}`,
@@ -91,6 +121,8 @@ describe('remarkLinks — URL rewriting', () => {
         ).toEqual([
           [`contributing.${extension}`, '/contributing'],
           ['contributing/index.md', '/contributing/index'],
+          ['guide.md', '/guide'],
+          ['index.md', '/'],
         ]);
         for (const [from, href, expected] of [
           [
