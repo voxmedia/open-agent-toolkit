@@ -58,17 +58,27 @@ export async function checkNavigation(
         let stale = file.changed;
         if (!generated) {
           if (!(await present(join(target.contentRoot, file.path)))) continue;
-          const actual = JSON.parse(
-            await readFile(join(target.contentRoot, file.path), 'utf8'),
-          ) as { pages?: unknown };
-          stale =
-            !Array.isArray(actual.pages) ||
-            !isDeepStrictEqual(
-              actual.pages.map((p) =>
-                typeof p === 'string' ? pageIdentity(p) : p,
-              ),
-              file.meta.pages.map(pageIdentity),
+          try {
+            const actual = JSON.parse(
+              await readFile(join(target.contentRoot, file.path), 'utf8'),
+            ) as { pages?: unknown };
+            stale =
+              !Array.isArray(actual.pages) ||
+              !isDeepStrictEqual(
+                actual.pages.map((p) =>
+                  typeof p === 'string' ? pageIdentity(p) : p,
+                ),
+                file.meta.pages.map(pageIdentity),
+              );
+          } catch {
+            report(
+              'navigation',
+              'error',
+              file.path,
+              'Cannot read or parse meta.json; check file permissions and JSON syntax.',
             );
+            continue;
+          }
         }
         if (stale)
           report(

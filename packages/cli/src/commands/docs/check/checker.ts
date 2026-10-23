@@ -59,7 +59,18 @@ export async function checkDocs(options: {
       if (page.frontmatterError)
         report('frontmatter', 'error', path, page.frontmatterError, 1);
     } catch (error) {
-      report('description', 'error', path, (error as Error).message, 1);
+      const code = (error as NodeJS.ErrnoException)?.code;
+      const safeCode =
+        typeof code === 'string' && /^[A-Z][A-Z0-9_]*$/.test(code)
+          ? code
+          : 'UNKNOWN';
+      report(
+        'frontmatter',
+        'error',
+        path,
+        `Cannot read documentation source (${safeCode}); check file permissions and readability.`,
+        1,
+      );
     }
   }
   await checkReaders(target, pages, report);

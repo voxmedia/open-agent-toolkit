@@ -221,26 +221,28 @@ export async function checkReaders(
         line,
       );
   for (const p of pages) {
-    const desc = p.frontmatter.description;
-    if (typeof desc !== 'string' || !desc.trim())
-      report(
-        'description',
-        'error',
-        p.path,
-        'Frontmatter description is required and must be nonempty.',
-        1,
-      );
-    else if (
-      desc.trim().length < t.descriptionMin ||
-      desc.trim().length > t.descriptionMax
-    )
-      report(
-        'description',
-        'warn',
-        p.path,
-        `Description has ${desc.trim().length} characters; expected ${t.descriptionMin}–${t.descriptionMax}.`,
-        1,
-      );
+    if (!p.frontmatterError) {
+      const desc = p.frontmatter.description;
+      if (typeof desc !== 'string' || !desc.trim())
+        report(
+          'description',
+          'error',
+          p.path,
+          'Frontmatter description is required and must be nonempty.',
+          1,
+        );
+      else if (
+        desc.trim().length < t.descriptionMin ||
+        desc.trim().length > t.descriptionMax
+      )
+        report(
+          'description',
+          'warn',
+          p.path,
+          `Description has ${desc.trim().length} characters; expected ${t.descriptionMin}–${t.descriptionMax}.`,
+          1,
+        );
+    }
     const h1 = p.nodes.filter((n) => n.type === 'heading' && n.depth === 1);
     if (h1.length !== 1)
       report(

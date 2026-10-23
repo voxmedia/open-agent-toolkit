@@ -1,5 +1,12 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -380,7 +387,7 @@ describe('independent syntax policy and body diagnostics', () => {
     const f = await fixture();
     await f.write(
       'guide.md',
-      '---\ndescription: [broken\n---\n\n# First\n# Second\n\n[Broken](missing.md)\n',
+      '---\ndescription: An existing complete description remains valid when another YAML field is malformed.\nbroken: [\n---\n\n# First\n# Second\n\n[Broken](missing.md)\n',
     );
     await f.write(
       'diagram.md',
@@ -415,8 +422,8 @@ describe('independent syntax policy and body diagnostics', () => {
     ).toEqual([
       { ruleId: 'mermaid', severity: 'error', path: 'diagram.md', line: 8 },
       { ruleId: 'frontmatter', severity: 'error', path: 'guide.md', line: 1 },
-      { ruleId: 'h1', severity: 'error', path: 'guide.md', line: 6 },
-      { ruleId: 'links', severity: 'error', path: 'guide.md', line: 8 },
+      { ruleId: 'h1', severity: 'error', path: 'guide.md', line: 7 },
+      { ruleId: 'links', severity: 'error', path: 'guide.md', line: 9 },
     ]);
     expect(findings.find((v) => v.ruleId === 'frontmatter')?.message).toMatch(
       /^Invalid YAML frontmatter:/,
@@ -427,6 +434,14 @@ describe('independent syntax policy and body diagnostics', () => {
     expect(findings.find((v) => v.ruleId === 'links')?.message).toBe(
       'Unresolved in-root link "missing.md".',
     );
+    await f.config({ rules: { frontmatter: 'off' } });
+    expect(await f.run('frontmatter', 'description')).toEqual([]);
+    expect(
+      (await f.run('h1', 'links')).map(({ ruleId, line }) => [ruleId, line]),
+    ).toEqual([
+      ['h1', 7],
+      ['links', 9],
+    ]);
     await f.write('guide.md', page());
     await f.write(
       'diagram.md',
@@ -443,6 +458,44 @@ describe('independent syntax policy and body diagnostics', () => {
         'diagram-accessibility',
       ),
     ).toEqual([]);
+  });
+  it('reports unreadable source independently with relative configurable diagnostics', async () => {
+    const f = await fixture();
+    const path = join(f.content, 'guide.md');
+    await chmod(path, 0o000);
+    try {
+      for (const severity of ['error', 'warn', 'off'] as const) {
+        await f.config({
+          rules: { frontmatter: severity },
+          exceptions: [
+            {
+              path: 'guide.md',
+              rule: 'description',
+              reason: 'Metadata exception cannot hide source-read failures.',
+            },
+          ],
+        });
+        expect(await f.run('frontmatter', 'description')).toEqual(
+          severity === 'off'
+            ? []
+            : [
+                {
+                  ruleId: 'frontmatter',
+                  severity,
+                  path: 'guide.md',
+                  line: 1,
+                  message:
+                    'Cannot read documentation source (EACCES); check file permissions and readability.',
+                },
+              ],
+        );
+        expect(await f.run('description')).toEqual([]);
+      }
+    } finally {
+      await chmod(path, 0o644);
+    }
+    await f.config();
+    expect(await f.run('frontmatter', 'description')).toEqual([]);
   });
   it('separates mapping errors and accessible-name warnings from Mermaid syntax', async () => {
     const f = await fixture();
@@ -538,29 +591,29 @@ describe('independent syntax policy and body diagnostics', () => {
 
 describe('real framework navigation boundaries', () => {
   it.each(['hand-authored', undefined] as const)(
-    '%s skips missing optional Fumadocs meta and still reports later drift',
+    '%s skips optional Fumadocs meta and reports malformed files without hiding later drift',
     async (navOwner) => {
       const f = await fixture('fumadocs');
       await f.config({}, { navOwner });
       await f.write(
         'index.md',
-        `${index()}\n- [Absent](absent/index.md)\n- [Later](later/index.md)\n`,
+        `${index()}\n- [Absent](aa/index.md)\n- [Later](zz/index.md)\n`,
       );
-      for (const section of ['absent', 'later']) {
+      for (const section of ['aa', 'zz']) {
         await f.write(`${section}/index.md`, index());
         await f.write(`${section}/guide.md`, page());
       }
       await syncDocsNavigation({ appRoot: f.app });
       expect(await f.run('navigation')).toEqual([]);
       await rm(join(f.content, 'meta.json'));
-      await rm(join(f.content, 'absent/meta.json'));
+      await rm(join(f.content, 'aa/meta.json'));
       expect(await f.run('navigation')).toEqual([]);
-      await f.write('later/meta.json', '{"pages":["index"]}');
+      await f.write('zz/meta.json', '{"pages":["index"]}');
       expect(await f.run('navigation')).toEqual([
         {
           ruleId: 'navigation',
           severity: 'error',
-          path: 'later/meta.json',
+          path: 'zz/meta.json',
           message:
             'Navigation membership/order differs from authored Contents; update pages or Contents.',
         },
@@ -570,15 +623,38 @@ describe('real framework navigation boundaries', () => {
         (await f.run('navigation')).map(({ path, message }) => [path, message]),
       ).toEqual([
         [
-          'absent/meta.json',
-          'Generated navigation is stale; run oat docs nav sync.',
-        ],
-        [
-          'later/meta.json',
+          'aa/meta.json',
           'Generated navigation is stale; run oat docs nav sync.',
         ],
         ['meta.json', 'Generated navigation is stale; run oat docs nav sync.'],
+        [
+          'zz/meta.json',
+          'Generated navigation is stale; run oat docs nav sync.',
+        ],
       ]);
+      await f.config({}, { navOwner });
+      await f.write('aa/meta.json', '{broken');
+      const drift = {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'zz/meta.json',
+        message:
+          'Navigation membership/order differs from authored Contents; update pages or Contents.',
+      };
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'aa/meta.json',
+          message:
+            'Cannot read or parse meta.json; check file permissions and JSON syntax.',
+        },
+        drift,
+      ]);
+      await f.write('aa/meta.json', '{"pages":["guide"]}');
+      expect(await f.run('navigation')).toEqual([drift]);
+      await f.write('zz/meta.json', '{"pages":["guide"]}');
+      expect(await f.run('navigation')).toEqual([]);
     },
   );
   it.each(['hand-authored', undefined] as const)(
