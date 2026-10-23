@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: 13d07784d15e696bacf9d62bfa34b488860a7cb2
+oat_last_commit: d5c5c620d6b11ddbf6ebf5e022e9de4cbb16d523
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -139,7 +139,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T07:32:03.325929Z'
+oat_project_state_updated: '2026-10-23T07:55:45.730708Z'
 oat_generated: false
 ---
 
