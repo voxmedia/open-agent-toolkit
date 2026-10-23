@@ -647,6 +647,8 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+**Root fix handoff validation:** Verified 8c39b5c6b40032281a6cebde72a93ff95a70be60 clean handoff; exact three-path product boundary, two bounded product commits with separate journal commits, journal-only tail and original Base unchanged. Root reran five prose guards and manual wrapper/reuse/self-root/fallback controls. All successful gates have explicit zero exits; initial six integration timeouts and unchanged passing retry are preserved, with forced 12/12 uncached proof. M1/L1 task records completed; no new guarantee or version change. Recovery 0/10, pending null. Re-review pending.
+
 **Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
 
 **Status:** in_progress
@@ -687,7 +689,7 @@ Execution shape: one phase implementer owns commits in the existing root worktre
 
 Exactly one `**Reconnaissance:** not-attempted` signal was consumed before validation; no Review Orchestration section exists. Artifact anchors match the committed phase range. Reviewer independently reproduced guard failures against immutable prose, tier-swap/drop mutations and the manual fixture; full gates inspected, not rerun. Provider ambient precedence was not verified and is not needed for the accepted explicit-binding contract.
 
-**Outcome:** fixes queued: prev2-t02, prev2-t03. P-rev2 remains in_progress; original Base unchanged. Round 1/3 consumed; recovery remains 0/10, pending null.
+**Outcome:** fixes completed: prev2-t02, prev2-t03; independent re-review pending. P-rev2 remains in_progress; original Base unchanged. Round 1/3 consumed; recovery remains 0/10, pending null.
 
 ### Task prev2-t02: (review) Bind the authoring wrapper to its loaded sibling
 
@@ -757,7 +759,7 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-prev2-fix-r1-20261023 · scope=p-rev2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-prev2-fix-r1-20261023 · scope=p-rev2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev2-review-r1-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
