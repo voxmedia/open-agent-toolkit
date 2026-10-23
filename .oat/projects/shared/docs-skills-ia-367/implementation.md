@@ -2096,6 +2096,12 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+### PR374 CI recovery pending: p06-t14 installed-binary test
+
+2026-10-23; current published head8d2ec9b8528bda0666d321d315ec7616331f3ddf fails declared gate3 in CI run40033430596, job120687017216. Exactly one CLI test fails: checker.test.ts "accepts installed pnpm shorthand binaries while explicit run remains script-only", at real pnpm --dir /tmp/oat-check-2yegN8 tsc --version. CLI9024other tests pass; release dry-run and Bugbot checks succeed, but reviewer clearance is still pending. The log does not include the subprocess stderr, so root makes no platform/permission diagnosis. Evidence: ignored analysis/p06/recovery02/ci-failed.log.
+
+Original task p06-t14 and product42ea66a51abb4c1754d0a009474c218d865832dd remain immutable. Resume the original implementer at exact codex_codex_proxy/gpt-6.1-sol/high/priority to diagnose; only a proven mechanical fixture correction may consume a phase-standing recovery attempt. Existing usage1/10,pendingnull until the implementer establishes eligibility and reserves. No product semantic change, test removal, weakened assertion, retry-only green claim, new task ID or expanded review campaign. Historical acceptance/review coverage is preserved; intermediate delivery is blocked by this failing current-head check.
+
 ### P06 approved remote correction received
 
 2026-10-23; original implementer completed p06-t12–t16 at clean27382a66a0790f3a63e9aaff89432114159986bb, tested product1429c5a735599cfc40af65dff13cc15a592cde44. W-H1 severity strings, W-H2 canonical configured roots, W-M1 installed pnpm binaries, W-M2 approved absent-pages skip and W-M3 real-base association proof are corrected within seven authorized product files. Root verified every final SHA256/blob, each of five bounded product commits and separate journal commits, and the final journal-only tail; read the complete production/test delta, focused/control receipts and all nine gate exits0. No scope/dependency/setup/skill/framework changes. Intentional implicit-order and system-PATH deferrals remain approved and documented.
