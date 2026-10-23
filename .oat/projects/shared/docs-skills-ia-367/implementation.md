@@ -803,6 +803,18 @@ Phase start: approved brief p04 made concrete after bounded read-only reconnaiss
 
 Recon verified parser/nav/init/index paths and pinned schema/runtime differences. Root inspected shared parser, both consumers, index matcher/order, init/scaffold command wiring, installed Fumadocs schema/loader and human source contracts before selecting the bounded interpretations recorded in p04 Intent. String-root schema adaptation fulfills the existing G3 requirement; MkDocs rendering limitation is covered by G2's where-supported qualifier, without a new dependency upgrade. Existing ownership/config guarantees are preserved. Source title/order fallback follows P14; no preset, checks engine or new approval guarantee is added.
 
+### Task p04-t01: Preserve authored Contents groups and root landing pages
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current T3 implementation thread (provider session ID unavailable)
+**Intent:** Extend the shared parser and both nav consumers with ordered groups and actionable grammar errors; retain string-root landing pages.
+**Files:** `packages/cli/src/commands/docs/nav/{contents,fumadocs,sync.test,fumadocs-loader.test}.ts`.
+**Proof command:** isolated-HOME CLI Vitest `src/commands/docs/nav`; CLI type-check and scoped formatter/lint.
+
+**Commit:** c8c37d7dcbfe39119212a9e9bc160695c5aca67d
+**Evidence:** nav tests pass (including real fumadocs-core 16.10.2 separator/landing consumer); new grammar cases fail on baseline. CLI type-check and scoped oxlint exit 0. Logs: ignored `analysis/p04/t01-*.log`.
+
 ---
 
 ## Phase p05: Reader-first starter app
