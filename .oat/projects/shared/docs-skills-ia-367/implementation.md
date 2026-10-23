@@ -1526,7 +1526,7 @@ R3-L1: docs-config README says Discovery errors propagate, but engine itself ski
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-cap-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p05-cap-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-review-r3-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -1645,6 +1645,10 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### P05 review-cap complexity report
+
+2026-10-23; standard receive cap reached at3 code rounds, with Critical0/High0/Medium0/Low2. Independent complexity report saved verbatim at.oat/projects/shared/docs-skills-ia-367/reviews/archived/complexity-p05-2026-10-23T090105Z.md; verdict Deletion-rule compliant; recommends proceed with override. Keep all product machinery. L1 is factual README wording only; L2 named type export is optional new-hardening, add later only when a consumer needs it. Proposed concrete path: replace Discovery errors propagate. with OAT adds no error fallback; traversal follows the emitter's tinyglobby semantics, including skipped unreadable directories. Leave current type exports unchanged, then continue acceptance/delivery under existing current-head CI/Bugbot and land-pr rules. These are proposals, not an operator decision. Required operator choice remains pending under receive Step8; no fourth review, product edit, acceptance or push performed. P05 remains in_progress; recovery1/10,pendingnull unchanged.
 
 ### PR373 bounded dependency authorization
 
