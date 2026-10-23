@@ -129,11 +129,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/371' # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T05:03:59Z
+oat_project_state_updated: 2026-10-23T05:05:27Z
 oat_generated: false
 ---
 
@@ -159,4 +159,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. Deliver p04 PR, then continue provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; finish its complexity lens, then land when current-head CI/Bugbot clear and continue provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.

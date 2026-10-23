@@ -1092,6 +1092,10 @@ All R1 findings are independently closed in R2; R2-L1 is independently closed in
 
 ---
 
+### Delivery: p04 PR #372
+
+https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/docs-skills-ia-367-p04, opened as draft after phase acceptance. Mode land, standing user merge authority, established merge-commit method with expected-head guard; no auto/admin/delete. Current-head CI/release and Cursor Bugbot completion plus all actionable findings/thread dispositions are required before landing. Phase review rounds1–3 cover correctness/testing/documentation; R1's inline complexity judgment explicitly lacked the installed complexity-review standard, so PR self-review fills only that lens with a fresh reader. Draft remains until that lens clears; no repeated phase review. MkDocs rendering limitation and inherited/fresh verification are disclosed in the PR body. P03 final-scope deferred dependency-discovery/tool-grant findings remain in Deferred Findings and are not part of this delivery.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
