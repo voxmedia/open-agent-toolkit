@@ -1107,6 +1107,7 @@ https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/d
 
 **Status:** in_progress
 **Base:** 06c160aa3204d6c8397d42e38d8456a8ffa8a19c
+**Head:** ba253ba359a03d2f40410e2431e38ca6effd629b
 **Executor:** phase-implementer:docs367-prev4-impl-20261023
 **Corrects:** p04
 
@@ -1167,6 +1168,36 @@ Files: packages/cli/src/commands/docs/nav/contents.ts, nav/sync.test.ts, index-g
 Proof: Generator real filesystem cases cover fenced-only fallback and examples preceding a real ordered map; existing parser tests cover examples inside a true map, strict missing-map behavior and preserved authored group line numbers. Preserve pre-fix red and valid controls; fresh scoped nav/index/lint/format/types/build precommit and committed bytes afterwards; temporary-copy M7 must still fail the generator empty-group assertion. No Markdown dependency, generic parser engine or test-only export.
 
 **Execution/evidence:** Shared production hasIndexContents discovery and parseIndexContents mask ordinary backtick/tilde fences using the same implementation; source arrays retain original indices. Closing fences require matching markers, sufficient length and whitespace-only tails; short/mismatched markers remain examples. Generator retains deterministic unflagged inventory fallback when no authored map exists. Original source produces five intended regression failures (two generator fence cases, parser inner example/pre-map example and fenced-only missing-map case), while true no-map control passes. Fixed precommit format/lint/check, fresh isolated141 nav/index tests, CLI type-check/build all exit0; committed bytes re-read and focused lint/format/141tests exit0. Real built CLI pre/post probes give fallback0, strict-nav missing-map1 without metadata writes, actual-map nav0 and authored-order generation0. Actual dash/empty-group errors remain green; a temporary-copy-only M7 guard bypass still fails the existing generator empty-group assertion (exit1, promise resolved instead of rejecting); restored copy passes (exit0). No production mutation for probes or new dependency/test-only hook. Exact baseline, t04 pre/post, built CLI and m7-probe.py/logs/exits are ignored analysis/p-rev4. Recovery0/10,pendingnull unchanged; phase remains in_progress pending integrated verification/root review.
+
+### Integrated verification and clean handoff
+
+**Tested candidate:** ba253ba359a03d2f40410e2431e38ca6effd629b. Four coherent execution records are completed; this revision remains in_progress for root independent review and acceptance. Accepted p04 Base/Head/status/reviews and all other phase anchors are frozen. Root-authorized H2/M2 amendment is recorded above; root alone aligns plan/state/remote receive bookkeeping after handoff.
+
+| Task           | Product commit                           | Separate task journal                    |
+| -------------- | ---------------------------------------- | ---------------------------------------- |
+| prev4-t01 (H1) | 3eabcde7e0b2f0b58fc66d3489d18c99faeb6ebb | cc8d1b9edf3060302a4b1a77cc347c7b7c80da21 |
+| prev4-t02 (M1) | d093a003ea83ad8f0aa8205bf4e1a0f5944bc44a | 248978bf543423f72014f5f12f24e30c9a1a185f |
+| prev4-t03 (H2) | ac0f7c4ce99d0f608928d3e3f35c77f032811304 | dae8449808ec5d4e5fd46966bc13e38d17bb421e |
+| prev4-t04 (M2) | d9c65e4973c4eadf80a154279779f1dad167ba61 | ba253ba359a03d2f40410e2431e38ca6effd629b |
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 6/11                 |
+| 2            | `pnpm type-check`             | 0    | 8/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 8/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All eight gates ran in order against the candidate with explicit exits. Fetch origin main exits0 before gate6; no scoped advancement. Public0.3.26 archives and existing PR-scoped bootstrap1.4.2 bump validate. Cached gate logs are disclosed as replays. Gate3 freshly executes CLI8,915, docs-config16, docs-app85 and the actual docs build, then chained smoke165/skills712/scripts1. Separate isolated-HOME `pnpm exec turbo run test --force` exits0 with12/12 tasks freshly executed,0cached: CLI8,915/control-plane289/docs-config16/theme20/transforms31/docs85 =9,356tests, plus actual dependency/Next docs builds. Separate isolated direct smoke165/skills712/scripts1 and skill validation each exit0. Prior p04 broad proof is inherited context only; all production-change evidence credited here is fresh. No skill prose changed, so no redundant sentence-contract suite; applicable scoped lint/format/check/type/build coverage passes. No instruction/docs change is needed because these fixes restore already documented compatibility.
+
+**Regression/valid controls:** All four failures are preserved against immutable launch product bytes with exact source hashes and reproduction scripts. H1 accepts the exact released literal but refuses arbitrary AUTOGENERATED text and conserves refused/authored bytes; repeated generation has one current tooling-aware header. M1's real win32.join-backed portable test fails pre-fix for section order/unlisted mismatch while host control passes; fixed nested paths/rendered links are POSIX. Absolute IO remains on the macOS host; this is not a Windows-host or drive/UNC end-to-end claim. H2 parity uses installed fumadocs-mdx14.3.2, fumadocs-core16.10.2 and tinyglobby0.2.17, actual CLI matcher, metadata patterns and actual Next emitter; `guide.md/` keeps the root file and `**/` keeps root readers while actual directories are pruned. M2 generator/parser share fence discovery: only examples give unflagged fallback, examples before/inside real Contents are ignored, strict nav still rejects missing maps, authored ordering/group line numbers survive. Actual dash/empty-group grammar remains protected: M7 bypass fails the existing generator assertion for missing rejection, then restored copied source passes. No checkout production mutation occurred during probes. Final focused nav/index141 and docs-config16 suites pass freshly before/after relevant commits.
+
+**Scope and ownership:** Only the eight authorized product paths plus this phase-local journal changed; no source schema/type normalization, framework dependency, version, skill, instruction, human docs, plan/state/root receipt/Orchestration Run, other-phase or p04 acceptance bytes were edited. No nested dispatch, GitHub actions, infrastructure retry or postcommit recovery. Revision recovery0/10,pendingnull (10 remaining); original p04 usage3 stays frozen. Frozen revision Base06c160aa3204d6c8397d42e38d8456a8ffa8a19c remains an ancestor. Root owns review/acceptance, remote bookkeeping, publication/replies and PR372 current-head CI/Bugbot landing. Writes stop at the clean handoff.
+
+**Evidence:** ignored analysis/p-rev4/README.md indexes every baseline, immutable source/hash probe, M7/control script, built CLI receipt, t01–t04 pre/post check, ordered gate and supplemental log/exit. phase-summary.json and fresh-test-counts.json preserve cache/execution counts; installed-provenance.json identifies actual external package files. Final journal validation and exact ownership conservation are captured in handoff receipts. This verification-only journal commit changes no tested product bytes.
 
 ## Phase p05: Reader-first starter app
 
