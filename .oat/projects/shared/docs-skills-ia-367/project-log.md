@@ -123,6 +123,15 @@ docs367-p04-pre-review-20261023: accepted clean implementation handoff and settl
 
 docs367-p04-accepted-r3-20261023: p04 accepted after three independent rounds and two review-fix continuations, all findings closed; eight gates passed at 3f99348b589cbd750bdfd088e02e4c10a5848e2f with inherited/fresh proof distinguished in implementation.md. Recovery3/10 pendingnull; delivery PR next.
 
+### 2026-10-23 · project · friction · recovery-receipt-proportionality
+
+**Category:** efficiency
+**Source:** docs367-p04-complexity-process-20261023
+**Origin:** pr-self-review
+**Recorded:** 2026-10-23T05:11:27Z
+
+docs367-p04-complexity-process-20261023: independent complexity review found all p04 product mechanisms proportionate but repeated narrative around the one-line prose recovery added reading cost. For future prose/lint-only recoveries keep the mandatory Recovery Event and ledger transitions plus one exits line; retain substantive diagnosis for behavior/composition recoveries and preserve existing history.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
