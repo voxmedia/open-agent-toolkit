@@ -647,6 +647,8 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+**Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
+
 **Status:** in_progress
 **Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
 **Head:** 88fd7be1ff6041f56eab4e74c6b5ff7b7f482327
@@ -709,7 +711,7 @@ Execution shape: one phase implementer owns commits in the existing root worktre
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-prev2-impl-20261023 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-prev2-impl-20261023 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-p02-review-r3-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
