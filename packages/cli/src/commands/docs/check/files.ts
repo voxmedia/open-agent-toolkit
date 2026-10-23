@@ -41,6 +41,10 @@ export async function present(path: string): Promise<boolean> {
     throw error;
   }
 }
+// Preserve the lexical missing-path diagnostic, but compare existing aliases by identity.
+async function canonicalPath(path: string): Promise<string> {
+  return (await present(path)) ? realpath(path) : path;
+}
 export interface CheckTarget {
   repoRoot: string;
   appRoot: string;
@@ -62,14 +66,14 @@ export async function resolveCheckTarget(
   repoRoot = await realpath(repoRoot);
   const config = await readOatConfig(repoRoot);
   const doc = config.documentation ?? {};
-  const configured = doc.root ? resolve(repoRoot, doc.root) : undefined;
+  const configured = doc.root
+    ? await canonicalPath(resolve(repoRoot, doc.root))
+    : undefined;
   const requested = resolve(
     cwd,
     targetDir ?? configured ?? join(repoRoot, 'docs'),
   );
-  const appRoot = (await present(requested))
-    ? await realpath(requested)
-    : requested;
+  const appRoot = await canonicalPath(requested);
   const matching = configured === appRoot;
   const framework =
     matching && doc.tooling === 'markdown'
@@ -93,9 +97,12 @@ export async function resolveCheckTarget(
     repoRoot,
     config,
   );
+  const configuredContentPath = configuredContent
+    ? await canonicalPath(resolve(repoRoot, configuredContent))
+    : undefined;
   const contentRoot =
-    matching && configuredContent
-      ? resolve(repoRoot, configuredContent)
+    matching && configuredContentPath
+      ? configuredContentPath
       : framework === 'markdown'
         ? appRoot
         : join(appRoot, 'docs');
@@ -104,8 +111,7 @@ export async function resolveCheckTarget(
       `Docs content directory does not exist: ${contentRoot}. Set documentation.root or pass --target-dir.`,
     );
   const matchesContent =
-    configuredContent !== null &&
-    resolve(repoRoot, configuredContent) === appRoot;
+    configuredContentPath !== undefined && configuredContentPath === appRoot;
   const documentation = matching || matchesContent ? doc : {};
   return {
     repoRoot,

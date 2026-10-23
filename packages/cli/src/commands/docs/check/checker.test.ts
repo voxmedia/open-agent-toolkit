@@ -5,6 +5,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -363,6 +364,85 @@ describe('calibrated reader rules through real files and config', () => {
       ).summary.errors,
     ).toBe(1);
   });
+  it.each(['markdown', 'fumadocs'] as const)(
+    'preserves %s config identity across real app/content symlink aliases',
+    async (framework) => {
+      const f = await fixture(framework);
+      await symlink('site', join(f.root, 'alias'), 'dir');
+      await f.write('guide.md', '# Guide\n');
+      await f.write('draft/bad.md', '# Draft\n# Duplicate\n');
+      if (framework === 'markdown') {
+        // An explicit Markdown root must stay literal even with framework-looking children.
+        await f.put('site/source.config.ts', '// marker only');
+        await f.write('docs/bad.md', '# Nested\n# Duplicate\n');
+      }
+      for (const root of ['site', 'alias']) {
+        await f.config(
+          { rules: { description: 'off' } },
+          { root, navOwner: 'nav-sync', nonReaderPaths: ['draft/', 'docs/'] },
+        );
+        for (const targetDir of framework === 'fumadocs'
+          ? [undefined, 'site', 'alias', 'site/docs', 'alias/docs']
+          : [undefined, 'site', 'alias']) {
+          expect(
+            (
+              await checkDocs({
+                cwd: f.root,
+                targetDir,
+                rules: ['description', 'h1'],
+              })
+            ).findings,
+          ).toEqual([]);
+        }
+        if (framework === 'fumadocs') {
+          await syncDocsNavigation({
+            appRoot: f.app,
+            nonReaderPaths: ['draft/', 'docs/'],
+          });
+          const metaPath = join(f.content, 'meta.json');
+          const meta = JSON.parse(await readFile(metaPath, 'utf8'));
+          await writeFile(
+            metaPath,
+            JSON.stringify({ ...meta, title: 'Custom title' }),
+          );
+          expect(
+            (
+              await checkDocs({
+                cwd: f.root,
+                targetDir: 'alias',
+                rules: ['navigation'],
+              })
+            ).findings,
+          ).toEqual([
+            {
+              ruleId: 'navigation',
+              severity: 'error',
+              path: 'meta.json',
+              message: 'Generated navigation is stale; run oat docs nav sync.',
+            },
+          ]);
+        }
+      }
+      await f.put('other/index.md', '# Other\n');
+      expect(
+        (
+          await checkDocs({
+            cwd: f.root,
+            targetDir: 'other',
+            rules: ['description'],
+          })
+        ).findings,
+      ).toEqual([
+        {
+          ruleId: 'description',
+          severity: 'error',
+          path: 'index.md',
+          line: 1,
+          message: 'Frontmatter description is required and must be nonempty.',
+        },
+      ]);
+    },
+  );
   it('validates configurable ticket/milestone expressions and numeric overrides through config', async () => {
     const f = await fixture();
     await f.config({
