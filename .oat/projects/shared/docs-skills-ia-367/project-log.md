@@ -204,6 +204,10 @@ docs367-pr374-m1-complete-20261023: PR374-M1 instruction correction p06-t11 pass
 
 docs367-p06-remote-confirm-received-20261023: approved five-finding correction independently passed with zero findings and39 public probes; p06 restored accepted10/13, remote publication and clearance pending. See implementation.md and reviews/archived/p06-review-2026-10-23T221841Z.md.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-concurrent-fix-reconciled-20261023: CI fixture recovery stopped before attempt consumption because Warp pushed overlapping test-only fixbcf9d83; root merged without conflict and will verify. Recovery1/10,pendingnull; see implementation.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

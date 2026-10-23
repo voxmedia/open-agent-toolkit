@@ -1926,6 +1926,23 @@ Nine gates, 9487 fresh package/app tests, direct165/712/1, flagship0errors/756wa
 
 **Outcome:** passed; root restores p06 acceptance (10/13 units). Historical frozen Base/Head and selected passing external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved, with correction coverage supplied by this authorized focused confirmation. Recovery1/10,pendingnull unchanged. Publication, remote thread reconciliation and current-head CI/Bugbot/reviewer clearance precede intermediate merge-commit delivery; p07 remains provisional and final project PR held.
 
+### Recovery Event docs367-p06-recovery-02
+
+- Phase/task: p06 / p06-t14
+- Original request: docs367-p06-impl-20261023
+- Original commit: 42ea66a51abb4c1754d0a009474c218d865832dd
+- Defect class: test
+- Discovered by: pnpm test (CI gate3, run40033430596)
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 1/10 (unchanged; attempt2 not consumed)
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: -
+- Verification: no edit, reservation, probe, test rerun or commit; clean handoff0cbe22fb9c76c8f07aff4825f4838991b67e6073, pendingnull.
+- Reason: concurrent Warp fixbcf9d83aff2fe635b578ba8702c8a00097f05e83 overlaps the sole authorized file; root reconciliation required. Original implementer stopped before edit. No local cause was established from stderr-free CI output.
+
+Root reconciled the external change by a normal conflict-free merge preserving both histories. Warp's test-only patch pins the temporary manifest to the repository's pnpm version and runs pnpm from the fixture cwd. Existing real binary and checker assertions are conserved; no production/dependency/CI changes. This receives external work rather than consuming or disguising a phase recovery attempt. Verify the committed merged test and gates before publication; report Corepack/Linux attribution only to the extent independently supported. Operator-approved scope choices and prior clean independent product review remain unchanged.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1946,7 +1963,7 @@ Nine gates, 9487 fresh package/app tests, direct165/712/1, flagship0errors/756wa
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-recovery02-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-recovery02-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-recovery02-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-recovery02-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-remote-review-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
