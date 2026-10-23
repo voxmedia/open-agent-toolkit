@@ -72,6 +72,13 @@ describe('generateIndex', () => {
     await expect(generateIndex(dir)).rejects.toThrow(
       `${join(dir, 'index.md')}:3: Contents links must use a dash`,
     );
+    await writeFile(
+      join(dir, 'index.md'),
+      '# Home\n## Contents\n### Empty\n### Real\n- [A](a.md)',
+    );
+    await expect(generateIndex(dir)).rejects.toThrow(
+      `${join(dir, 'index.md')}:3: Contents group "Empty" has no entries`,
+    );
   });
 
   it('generates entries from flat directory', async () => {
