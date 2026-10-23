@@ -1397,6 +1397,23 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214
 **Verification:** Existing docs check executes pre/post exit0 (format/Markdown lint/source links/anchors/nav/catalog); CLI check/type-check exit0. Conservation diff preserves every page heading/link and all valid setup/approval/preservation behavior; nav delta is comment-only and retains strict unlisted handling. No new automated test or prose receipt package. Evidence: ignored analysis/p05/fix-r1/t08-\*.
 
+### Fix round1 verification and handoff
+
+All six accepted findings are fixed in completed records t05/H1, t06/M1+L1, t07/L2 and t08/M2+L3. Tested fix candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 is the last task-journal commit; this final verification journal changes no tested product bytes. Root-owned phase Head remains95a2cef6610eb3a65c18544ffcdd51f9abb4b212 as instructed; Base and prior history are frozen, phase remains in_progress for independent round2. Eleven authorized product files plus p05-local records changed; no plan/state/log/Reviews/GitHub/acceptance writes, nested dispatch or target change.
+
+| Record  | Product commit                           | Separate task journal                    |
+| ------- | ---------------------------------------- | ---------------------------------------- |
+| p05-t05 | 552ca40c021a7e39e18b856c55e55309b8469294 | e22a354b0f9510954eaf5d0cd0e32916530b6d27 |
+| p05-t06 | 9b259c828a83c6af4539f3cc2dffbfbb3b28b162 | 4b420876faae11ccdabb44b1746a4865c3b9ae75 |
+| p05-t07 | 8f2c69c866fda3df157bc39e7851f8a8a3ce8ff1 | 5195c5f07bee0403e6fb44cb9f44b518a139c80a |
+| p05-t08 | 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214 | 04d5361060ed597fb59431ea4e98ee1d0d30f853 |
+
+All ordered DoD gates1–8 exit0; successful fetch before6 finds no owned-path advancement. Turbo cached/total by gate:0/11,5/11,5/12,5/5,direct,direct,direct,6/6. Gate3 executes all six package test suites freshly (8916CLI+289control-plane+20config+20theme+38transforms+93docs=9376tests) and the actual flagship Next build, plus direct smoke165/skills712/scripts1; five dependency builds replay. Gates4/8 replay caches rather than independently build. No force run is repeated; earlier forced12fresh/9374tests, unchanged browser/HTTP coverage and unaffected round1 review coverage remain inherited. Focused pre/post suites, scoped check/type/build, specific real MkDocs/Next builds and served URL proofs are fresh as recorded above. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+Real H1 red/fixed/valid proof shows pinned MkDocs1.4.2 distinct contributing.html and contributing/index.html bodies/nav/links and ordinary getting-started.html, all HTTP200. It uses the default mkdocs theme, not Material/full plugin configuration. M1/L1's actual pinned Next export changes once-encoded spaced rendered/Markdown URLs from404 to200, double-encoded endpoint to404, preserves all8 reader raw bodies and canonical /docs/docs/guide/, root/nested/exclusion controls. Exact template/flagship page parity is retained. L2's real source/target root controls reject outside-root sibling influence while retaining nested collisions. T08's conservation and explicit correction of t04's overbroad search claim close M2/L3; no prose tests added.
+
+Recovery remains1/10,9remaining,pendingnull; these review fixes consume no recovery attempts, with no postcommit defect, infrastructure rerun or route retry. Precommit test-variable lint/fixture-order corrections and isolated offline metadata miss are disclosed in their records; no speculative repair. Target codex_codex_proxy/gpt-6.1-sol/high/priority and continuation cont-docs367-p05-fix-r1 remain unchanged. Evidence index: ignored analysis/p05/fix-r1/README.md, exact p05-t05–t08-files.json, t05–t08 logs/scripts and raw HTTP reports, gates.json/gate1–8.log, fetch.log/main-paths.log and journal-check.json. Review-scope p05 journal check exits0/statusok with only the expected root-owned unresolved fix-run warning. Root retains continuation-run terminalization and fresh review authority.
+
 ### Review Received: p05
 
 **Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
