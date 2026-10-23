@@ -1,4 +1,5 @@
 import type { Code, Paragraph, Root, RootContent } from 'mdast';
+import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import type { Plugin } from 'unified';
 import { unified } from 'unified';
@@ -20,7 +21,8 @@ function extractTabTitle(node: RootContent): string | null {
 }
 
 function reparseContent(value: string): RootContent[] {
-  const tree = unified().use(remarkParse).parse(value);
+  const tree = unified().use(remarkParse).use(remarkGfm).parse(value);
+  transformChildren(tree, value);
   return tree.children;
 }
 
@@ -40,7 +42,10 @@ function createTabsElement(tabs: TabEntry[]): RootContent {
   } as unknown as RootContent;
 }
 
-export const remarkTabs: Plugin<[], Root> = () => (tree: Root) => {
+function transformChildren(
+  tree: { children: RootContent[] },
+  source?: string,
+): void {
   const newChildren: RootContent[] = [];
   let i = 0;
 
@@ -49,6 +54,12 @@ export const remarkTabs: Plugin<[], Root> = () => (tree: Root) => {
     const title = extractTabTitle(node);
 
     if (title === null) {
+      if ('children' in node) {
+        transformChildren(
+          node as unknown as { children: RootContent[] },
+          source,
+        );
+      }
       newChildren.push(node);
       i++;
       continue;
@@ -67,7 +78,14 @@ export const remarkTabs: Plugin<[], Root> = () => (tree: Root) => {
 
       // Check if next node is an indented code block (tab content)
       const content: RootContent[] = [];
-      if (i < tree.children.length && tree.children[i]!.type === 'code') {
+      if (
+        i < tree.children.length &&
+        tree.children[i]!.type === 'code' &&
+        (tree.children[i] as Code).lang == null &&
+        !/^ {0,3}(`{3,}|~{3,})/.test(
+          source?.slice(tree.children[i]!.position?.start.offset ?? 0) ?? '',
+        )
+      ) {
         const codeBlock = tree.children[i] as Code;
         // Re-parse the code block value as markdown to restore original structure
         content.push(...reparseContent(codeBlock.value));
@@ -81,4 +99,8 @@ export const remarkTabs: Plugin<[], Root> = () => (tree: Root) => {
   }
 
   tree.children = newChildren;
+}
+
+export const remarkTabs: Plugin<[], Root> = () => (tree, file) => {
+  transformChildren(tree, file.value ? String(file.value) : undefined);
 };

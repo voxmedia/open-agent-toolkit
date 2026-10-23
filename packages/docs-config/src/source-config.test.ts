@@ -12,11 +12,43 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 
 import { createSourceConfig } from './source-config.js';
 
 describe('createSourceConfig', () => {
+  it('composes source plugins so tabbed links reach link rewriting', async () => {
+    // This guards the separate source-config entry point, not parser behavior.
+    const processor = unified()
+      .use(remarkParse)
+      .use(createSourceConfig().remarkPlugins);
+    const markdown = '=== "Guide"\n\n    [Read](guide.md)';
+    const tree = await processor.run(processor.parse(markdown), {
+      path: '/repo/docs/index.md',
+      value: markdown,
+    });
+    expect(tree).toMatchObject({
+      children: [
+        {
+          name: 'Tabs',
+          children: [
+            {
+              name: 'Tab',
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [{ type: 'link', url: './guide/' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
   it('should include remarkTabs in remarkPlugins', () => {
     const config = createSourceConfig();
 

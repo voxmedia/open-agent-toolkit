@@ -10,7 +10,7 @@ export { remarkMermaid } from './remark-mermaid.js';
 export { remarkTabs } from './remark-tabs.js';
 
 export const defaultTransforms: Plugin<[], Root>[] = [
-  remarkLinks,
   remarkTabs,
+  remarkLinks,
   remarkMermaid,
 ];

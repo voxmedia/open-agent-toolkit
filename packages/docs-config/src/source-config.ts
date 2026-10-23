@@ -90,7 +90,7 @@ export function createSourceConfig(
 ): SourceConfigResult {
   const patterns = nonReaderPaths(options);
   return {
-    remarkPlugins: [remarkLinks, remarkTabs, remarkAlert, remarkMermaid],
+    remarkPlugins: [remarkTabs, remarkLinks, remarkAlert, remarkMermaid],
     contentDir: './docs',
     search: createSearchConfig(),
     docs: { files: collectionFiles(patterns, ['md', 'mdx']) },

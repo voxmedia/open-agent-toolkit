@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-config",
-  "version": "0.3.26",
+  "version": "0.3.27",
   "private": false,
   "description": "Configuration factories for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-config",
@@ -57,6 +57,7 @@
     "next": "^16.1.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "remark-parse": "^11.0.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
     "vitest": "^4.0.18"
