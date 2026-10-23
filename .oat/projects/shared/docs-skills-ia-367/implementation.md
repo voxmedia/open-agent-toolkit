@@ -1899,6 +1899,20 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 **Commit:** 14587af7fe6de55c1205674271bd244abaaa9154
 **Verification:** Title-only root/subfolder metadata passes for hand-authored and undeclared ownership; absent-pages skip still allows later explicit drift and malformed-file diagnostics. Present null pages errors; nav-sync missing/title-only artifacts stay stale. Pre-fix and skip-neutralized controls fail both ownership cases; restored controls pass and combined checker/nav118 fresh tests pass. CLI check/type/build and docs check pass; flagship0errors/756visible warnings. Guidance accurately states absent optional meta/pages/nav behavior and no implicit-order comparison. Recovery1/10,pendingnull unchanged.
 
+### Task p06-t16: Prove diagram associations against a usable Git base
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 07248de56504fcb4a3fd65e8c788fc478a31473e
+**Source review:** W-M3, discussion4363730402.
+**Intent:** Replace vacuous cross-tab unverified assertion with a real committed base and two complete groups; unrelated pair changes must warn, correct pair changes pass. Preserve missing-base coverage and production diagram bytes.
+**Files:** packages/cli/src/commands/docs/check/checker.test.ts only.
+**Proof:** Old test accepts association-neutralized production; revised test rejects it and passes restored production with usable Git comparisons. Focused existing suites, scoped checks and integrated ordered gates1–9 before commit; final committed-byte/public CLI controls.
+
+**Commit:** 1429c5a735599cfc40af65dff13cc15a592cde44
+**Verification:** A real committed comparison base now holds two complete groups: changing A source with unrelated B SVGs emits the exact line19 association warning; changing A with its own pair is clean. Missing-base coverage remains. Old test accepts the association-neutralized guard; rewritten test fails it and restored production passes135 fresh checker/config/nav tests. Diagram production bytes are unchanged. All nine integrated gates pass before commit: Turbo cached/executed0/11,5/6,5/7,5/0,direct,direct,direct,6/0, then direct manifest generate/diff0/0. Gate3 executes9487 package/app tests fresh plus smoke165/skills712/scripts1 under isolated HOME. Fetch before gate6 passes with no scoped main drift. Committed-candidate focused135, public built-CLI16 and root warp repro pass; all seven gated product hashes match committed bytes. Final flagship0errors/756visible warnings and specialized validators remain intact. Initial probe omitted explicit root index; corrected fixture expectation only, failure retained. Unchanged packed Node22/26, Mermaid/jsdom, constrained framework/install-root/scaffold evidence remains inherited. Exact commands, failures, neutralizations, hashes and cleanup: ignored analysis/p06/remote-fix. Historical Base/Head and all root tracking conserved; recovery1/10,pendingnull unchanged. Root owns focused confirmation and acceptance.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
