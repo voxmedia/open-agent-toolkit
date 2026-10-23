@@ -1843,6 +1843,20 @@ The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and r
 
 Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, selected passing phase gate, all review/cap decisions and six deferred findings are conserved. This is a root-reviewed documentation-only tail, as with p05-t11, not a fourth full-code review or new behavior. P07 has no Base and remains provisional. Recovery1/10,pendingnull unchanged. Publish the fix, reply on its source thread, resolve after verifying published code, then await fresh current-head CI/Bugbot. No final project PR or later-phase implementation.
 
+### Task p06-t12: Reject non-string checker severities
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023
+**Start HEAD:** 596fd8b970995467e3c7951837683ec67709163a
+**Source review:** W-H1, discussion4363730370; approved corrective revision.
+**Intent:** Reject array-coerced rule/exception severities through real normalization and config storage without weakening valid policy.
+**Files:** packages/cli/src/config/documentation-check.ts; packages/cli/src/commands/config/docs-check.test.ts.
+**Proof:** Existing config command/storage regressions, built CLI root reproduction, string-guard neutralization, scoped format/check/type/build. No new dependency or test API.
+
+**Commit:** 8d94fef16863ffa4fb28b1ac9916144b36b45096
+**Verification:** Pre-fix and string-guard-neutralized config suite exit1 with four intended failures; fixed suite17 fresh passes. Real stored policy rejects arrays and supports repair; built CLI rejects rule/exception arrays with actionable configuration errors while string error remains exit1. CLI check/type/build and scoped formatting pass; exact restored bytes committed. Root pre-repro retained; symlink finding continues in next record. Evidence: ignored analysis/p06/remote-fix. Review correction, recovery1/10,pendingnull unchanged.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
