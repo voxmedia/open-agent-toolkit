@@ -1771,6 +1771,14 @@ Proof: Whitespace conservation diff, file-scoped formatting, applicable lint/for
 **Commit:** 51805606436331598597d8ee7174fd251773ff0f
 **Verification:** Both prose files preserve every non-whitespace character after formatting; setup, claims and approvals unchanged. Skill sentences1087 fresh isolated-HOME tests, lint/format exit0. All eight ordered precommit gates exit0; package/app tests9480 fresh, direct smoke165/skills712/scripts1, dependency cache disclosed. Exact conservation and exits under analysis/p06/fix-r2. Fresh packed CLI controls for combined fixes pass actual Node22.17/26.11 with13 shipped path comparisons; optional line-field probe oracle corrected without product edits.
 
+### Root fix-round2 validation
+
+Accepted clean DONE handoff 80366b5d2a8cea89fe52b42b7d4d8302bef53bae; tested candidate 9e19dd89657e18386cb3cdffcb58e753d66a68a8. Root verified all historical task/recovery ancestors, exact product commit boundaries and current SHA256 hashes across the full71 product paths plus ledger. Exact eight R2 product paths match the assigned scope. Candidate tail changes only implementation.md. Read all production/test/prose deltas: prefix descent reuses the existing matcher; description is skipped only for invalid metadata; source-read findings use configurable frontmatter with safe relative diagnostics; malformed hand-authored meta reports itself and comparisons continue; two prose surfaces conserve non-whitespace content. No dependency/setup/framework policy change.
+
+Read authoritative t08-red/t09-red-final categorical failures, fixed/valid controls and proof index, including disclosed corrected test oracles and the superseded overlapping probe. Root did not rerun producer suites. Both ordered gate sequences have eight exit0 results. Precommit cached/fresh5/6,5/6,5/7,5/0,direct,direct,direct,6/0 with9480fresh package/app tests; candidate11/0,11/0,12/0,5/0,direct,direct,direct,6/0 replays package results. Direct165/712/1, sentence1087, focused177/committed128, packed Node22.17.0/26.11.1 and final flagship0errors/756visible warnings pass in the retained evidence. Scoped journal check is ok with only root's then-live run warning. Prior constrained framework/install-root and forced12-task/zero-cache evidence remains inherited. Proof index and final manifest at analysis/p06/fix-r2 retain exact commands, hashes, failures, cleanup and limits.
+
+All ten records are closed; round2's exact review event moves to fixes_completed, not passed. Frozen Base and previous review history remain unchanged. Recovery settled1/10,pendingnull; no new event. Next is fresh independent full-range round3 (cycle3/3) with both prior reviews/dispositions; selected p06 gate still precedes acceptance and intermediate delivery. Root retains all disposition/acceptance/GitHub ownership; no p07/P24 or publication.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1791,7 +1799,7 @@ Proof: Whitespace conservation diff, file-scoped formatting, applicable lint/for
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-fix-r2-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-fix-r2-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-review-r2-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
