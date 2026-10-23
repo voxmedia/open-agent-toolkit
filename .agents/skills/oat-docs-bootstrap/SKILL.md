@@ -363,9 +363,17 @@ Run for fresh Markdown, Fumadocs and MkDocs setup, and explicit adoption, before
 any scaffold invocation. An existing surface routed to repair takes this stage
 through `oat-docs-analyze --ia`; it does not return to scaffold afterward.
 
-1. Resolve and load `authoring-docs` from installed user scope then project scope;
-   bind that skill root separately from this bootstrap root. Read its
-   `references/guidance-sources.md` and `references/information-architecture.md`.
+1. Independently probe each exact `authoring-docs/SKILL.md` in order:
+   `${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+   containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+   `<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+   once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+   that same root for every authoring-docs reference and script, never ambient
+   discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+   the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+   or `oat tools update --pack docs --scope <user|project>`.
+   Read `${AUTHORING_DOCS_ROOT}/references/guidance-sources.md` and
+   `${AUTHORING_DOCS_ROOT}/references/information-architecture.md`.
    Resolve explicit `--ia-guidance`/conversation → repo → user → built-in and
    retain ordered locators/provenance. These are skill inputs, not new CLI flags.
 2. Read repo signals: manifests, UI navigators and journeys, CLI `bin`, routers,

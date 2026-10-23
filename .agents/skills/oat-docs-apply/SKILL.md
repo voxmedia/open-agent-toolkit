@@ -200,9 +200,18 @@ If branch creation fails because of unrelated local changes, ask the user to res
 
 ### Step 4: Apply Approved Changes
 
-Load `authoring-docs` from installed user scope then project scope before content
-actions. Use its page-purpose, landing, placement and five-axis IA method within
-the approved recommendation scope. Carry the analysis artifact's ordered guidance
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
+Before content actions, use its page-purpose, landing, placement and five-axis IA
+method within the approved recommendation scope. Carry the analysis artifact's ordered guidance
 locators/provenance into the apply plan; do not silently re-resolve different
 sources. Verify cited inputs still exist and remain read-only outside the repo.
 Local AGENTS/contributing rules stay authoritative; a conflict is `ask_user`
