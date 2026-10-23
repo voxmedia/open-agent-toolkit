@@ -1370,6 +1370,19 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 9b259c828a83c6af4539f3cc2dffbfbb3b28b162
 **Verification:** Real-loader regression red1 for matching /docs base and double encoding; fixed config20 tests execute pre/post exit0 with /site and empty-base controls, decoded static/request params and real raw-source reads. Runtime parity8 pre/post, config check/type/build exit0. Fresh canonical Next export (core16.10.2/MDX14.3.2/Next16.1.6/TS5.9.3) reproduces once-encoded HTTP404/literal-percent directories, then packed branch helper + matching page route emit actual-space directories. /docs/llms/my%20guide/content.md and /docs/my%20guide/ return200; double-encoded endpoint404. All8 loaded Markdown readers retain exact raw bytes and served canonical pages; /docs/docs/guide/ and /docs/docs/ prove matching base, root/nested and missing/non-reader/MDX endpoint404 controls pass. Installed package/route hashes match committed export inputs. Initial offline install lacked metadata in isolated HOME; ordinary install succeeded with exact pinned runtime versions preserved. An incidental fixture param-order assertion was corrected before commit. No recovery attempt. Evidence: ignored analysis/p05/fix-r1/t06-_, next-proof-_.py and next-http-proof.py; sidebar deliberately hand-authored to retain out-of-sidebar loaded readers, not a new production behavior.
 
+### Task p05-t07: (review) Keep root-index routing inside the content root
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — L2.
+**Intent:** Ignore app-root docs.md/docs.mdx for root-index source/target routing while retaining nested same-name contributor collisions and existing fallback behavior.
+**Files:** packages/docs-transforms/src/remark-links.ts, packages/docs-transforms/src/remark-links.test.ts.
+**Proof command:** bounded real-file/pinned-loader test extension red/fixed/ordinary controls; transforms suite/check/type/build pre/post and final docs validation/build.
+
+**Commit:** 8f2c69c866fda3df157bc39e7851f8a8a3ce8ff1
+**Verification:** Existing real-file .md/.mdx collision tests red1 on both source and target root routes after an outside-root sibling is added; fixed transforms38 tests execute pre/post exit0. Pinned-loader inventory remains rooted in docs; all prior nested contributor collision, no-collision, query/fragment/trailing-slash and context-free controls pass. Reviewer probe against actual built transform changes with-sibling ../guide/ to ./guide/ while ordinary ./guide/ stays valid. Transforms check/type/build and flagship docs validation exit0. Evidence: ignored analysis/p05/fix-r1/t07-\*. No recovery usage or scope expansion.
+
 ### Review Received: p05
 
 **Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
