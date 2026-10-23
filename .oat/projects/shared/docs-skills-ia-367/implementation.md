@@ -758,6 +758,16 @@ Root remote-review receipt (PR #371 review 5623136468, reviewed head 130f8c0521e
 
 CI run 39888000833 failed independently at agents-md.test.ts: two real processes returned appended/blocked rather than appended/no-change. Neither that module nor test changed in this PR. Preserve the failed run; inspect/rerun the existing focused test during verification, without changing unrelated code or timeouts. Final-head CI must pass before landing.
 
+### Task prev3-t01: Reject traversal after IA path trimming
+
+**Status:** completed
+**Commit:** 05b5043cdf0de2b43fa99135e23c218f91b650c3
+**Executor:** phase-implementer:docs367-prev3-impl-20261023
+**Intent:** Apply every existing repository-relative path check to the trimmed decision and track path; preserve G2 behavior outside this validation correction.
+**Files:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/ia.test.ts`.
+**Proof:** Isolated-HOME focused config command/config suites, pre-fix failing command regression and valid padded control, branch-built CLI probe, and ordered DoD gates 1–8 with explicit exits and cache disclosure.
+**Handle:** docs367-prev3-impl-20261023; exact target codex_codex_proxy/gpt-6.1-sol/medium/priority. Recovery 0/10, pending null; root owns lifecycle transitions.
+
 ---
 
 ## Phase p04: Navigation follows Contents
