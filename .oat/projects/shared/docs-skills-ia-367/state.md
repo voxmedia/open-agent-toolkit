@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-P06 reopened for five Warp findings: three new, two repeated deferrals. Standard review cap3/3 reached; fresh complexity assessment then explicit operator disposition pending. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
+P06 reopened for five Warp findings: three new, two repeated deferrals. At standard review cap3/3, operator approved Opus's bounded corrective revision and scope choices on 2026-10-23. Resume original implementer, then one focused independent confirmation. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
 
 ## Artifacts
 
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Receive the fresh complexity assessment, then obtain explicit disposition for the new PR374 findings before further code repair. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Prior cap decisions remain historical; repeated Gate-M1/M2 now face a live reviewer objection to landing. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
+Implement the approved bounded PR374 correction, then focused independent confirmation. Approval includes installed local pnpm binaries and skipping absent hand-authored pages comparison, explicitly deferring implicit ordering and system-PATH support. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
