@@ -1562,13 +1562,18 @@ Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 pr
 
 ### Task p06-t03: Wire portable checks into scaffolds, bootstrap CI and reader guidance
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:docs367-p06-impl-20261023
 **Handle:** docs367-p06-impl-20261023 (same accepted T3 delegated task)
 **Start HEAD:** b4ec258d7e2846631b2708a86fd31058cf7283e5
 **Intent:** Make shipped starters and flagship run the checker, preserve specialized validators, supply an actually used bootstrap PR CI recipe and explicit configured-manifest freshness, and document rule/config/repair behavior.
 **Files:** Exact producer-owned paths retained in ignored analysis/p06/t03.paths: canonical framework templates and scaffold substitutions/tests; flagship package/instructions/docs; bootstrap and directly affected guidance; CI and applicable READMEs.
 **Proof:** Generated starter integration and real framework builds; executed bootstrap CI recipe with seeded checker/stale-manifest controls; Markdown no-build/no-default-manifest; all ordered gates and forced isolated-HOME/direct suites before product commit.
+
+T03 finish continuation starts at c6cbca905ace9d98e3207f1a90c8472a2d45a664 after authorized root-only artifact descendants and settled recovery01 (used1/10,pendingnull). Add the approved effective-install-root Markdown serializer compatibility policy, conditional independent-app YAML template and concrete manual/approval setup guidance. Mechanically added paths are recorded in analysis/p06/t03.paths; preserve authored content and framework APIs. Real pnpm10/12 root/member controls and a new fresh Next build precede the product commit. Packed Node22 init exposed omitted dotfile templates before commit: preserve bytes under package-safe gitignore.template sources and enroll those plus the policy in existing release packed-path guards; actual packed reruns provide the transport proof. Resolve real workspace ancestors to preserve membership through aliases. These are t03 prevention corrections, not new recovery attempts.
+
+**Commit:** ea24bcdebeb2a88e208873b3c0c63d14a18bea1e
+**Verification:** All eight ordered gates exit0 before commit; final Turbo cache hits/executions are11/0,11/0,12/0,5/0,direct,direct,direct,6/0, with fresh gate3 smoke165/skills712/scripts1. Separate isolated-HOME forced package run executes12/12tasks,0cached,9,463tests; separate fresh direct smoke165/skills712/scripts1 and validation68skills pass. Focused init/release150 and skill sentences1,087 pass; lint/format pass. Real pnpm10.13.1/12.11.2 effective-root resolution/compilation controls pass with ignored-member/conflicting-policy failures. Shipped2.1.2 policy gives a constrained fresh Next16.4.3 build/export and real bootstrap recipe, including seeded checker/stale-manifest rejection; actual MkDocs and Markdown/no-build proofs pass. Final packed CLI passes on Node22.17.0/26.11.1, including both framework inits and labeled/tabbed Mermaid acceptance/rejection. Flagship0errors/756visible warnings; original validators retained. Exact commands, exits, cache counts,42producer paths and content-conservation hashes: ignored analysis/p06/PROOF-INDEX.md and associated logs. Hook preserves all product bytes. Recovery1/10,pendingnull; no new attempt.
 
 ### Recovery Event docs367-p06-t02-gate3
 
