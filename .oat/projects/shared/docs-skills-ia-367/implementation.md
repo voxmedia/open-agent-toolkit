@@ -1708,6 +1708,49 @@ Accepted clean DONE handoff f6f8d73e5a14c6122b3ef2e72901e6900b19dcbc. Root indep
 
 All8 ordered precommit/candidate gates exit0; candidate Turbo cached/fresh11/0,11/0,12/0,5/0,direct,direct,direct,6/0 disclosed. Precommit9477 package/app tests ran freshly, focused174 and skill sentences1087 fresh; direct165/712/1, validation68, final packed Node22.17.0/26.11.1 and flagship0errors/756visible warnings pass. Prior real framework/install policy proofs remain inherited. Exact controls, retained red logs, exits and cleanup are indexed in analysis/p06/fix-r1/PROOF-INDEX.md. No new recovery event or reservation; settled1/10,pendingnull preserved. Round1 findings-bearing event remains fixes_completed; phase stays in_progress and next review uses full original Base..updated candidate, with prior findings/dispositions supplied. No phase acceptance or GitHub action.
 
+### Review Received: p06 (round 2)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T181410Z.md
+**Reviewed range:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa..43da5b19d2b025dd9caaa21adf51b1c345fea060; auto code, full p06 anchors.
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- R2-M1 (Medium): declared recursive/multi-level workspace patterns miss nested packages → fix p06-t08. P22 and the concrete p06 Intent require literal filter/cd context to match declared members; the current prefix string test stops too early. Preserve the existing membership grammar, explicit exclusions, hidden/node_modules skips and site/out/dist controls. Task Scope: Moderate.
+- R2-L1 (Low): invalid YAML adds a false description finding and source-read errors still use description with raw absolute paths → fix p06-t09. G5 requires accurate relative diagnostics and independent configurable rules. Skip only metadata-dependent description validation when frontmatter is invalid; retain body checks. Attribute unreadable source to the existing frontmatter rule with a relative actionable message and safe error code, documenting source-read ownership without adding a new rule or unsuppressible error. Task Scope: Minor.
+- R2-L2 (Low): malformed hand-authored meta.json points at index.md and aborts later comparisons → fix p06-t09. Report the specific metadata path and continue comparing remaining files, preserving optional-artifact semantics and generated strictness. Task Scope: Minor.
+- R2-L3 (Low): joined version/package-manager tokens remain in two p06 prose surfaces → fix p06-t10. Whitespace-only conservation correction; existing PR-scoped skill version remains sufficient. Task Scope: Negligible.
+
+**Root analysis:** Read the entire artifact, consumed exactly one not-attempted reconnaissance signal and confirmed no Review Orchestration section. Full anchors, provenance and current severity vocabulary are valid. Source inspection corroborates all four accepted-contract defects; no new requirement, dependency, parser grammar or scope is added. The read-only reviewer made no tracking edits, so root establishes this artifact-bound Reviews event and converts it here. Independent round2 closes all six round1 findings; round1 remains fixes_completed, not passed. Reviewer rebuilt sources and ran 125 focused tests, real pnpm12.11.2 membership controls and CLI/config probes; full ordered/forced/packed/framework evidence remains inherited as disclosed.
+
+**Outcome:** fixes queued p06-t08–t10; all four findings converted, none deferred. Review cycle 2 of 3. Phase remains in_progress with frozen Base and current historical Head unchanged until verified fix handoff. Recovery remains settled 1/10, pending null; review fixes are not recovery attempts. Fresh independent full-range round3 and the selected phase gate precede acceptance/delivery. No p07/P24, GitHub mutation or npm publication.
+
+### Task p06-t08: (review) Discover recursively declared workspace command contexts
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-M1)
+
+Intent: Let workspace patterns determine descent as well as membership without adding another glob engine or dependency. Resolve nested libs/\*_ and packages/_/\* members for literal --filter/cd; preserve exclusions and existing context behavior.
+Files: `packages/cli/src/commands/docs/check/commands.ts`, `packages/cli/src/commands/docs/check/checker.test.ts`.
+Proof: Extend existing public checkDocs command-context cases; reproduce the pre-fix missing member, then prove nested filter/cd resolves to the member manifest and missing scripts report there. Retain excluded/hidden/node_modules and site/out/dist controls. Compare against real pnpm membership using the existing reviewer fixture; no subprocess execution in product code or test-only API.
+
+### Task p06-t09: (review) Attribute source and navigation failures accurately
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L1, R2-L2)
+
+Intent: Invalid frontmatter must not produce a false description error; source-read failures use the existing configurable frontmatter rule with a relative actionable diagnostic, and malformed hand-authored metadata reports its own file while later comparisons continue. Preserve body checks, intentional overrides, optional-artifact behavior and nav-sync strictness.
+Files: `packages/cli/src/commands/docs/check/checker.ts`, `packages/cli/src/commands/docs/check/reader-rules.ts`, `packages/cli/src/commands/docs/check/navigation.ts`, existing checker/navigation test files, and the covering rule description in `apps/oat-docs/docs/docs-tooling/check.md` or `packages/cli/README.md` only if needed.
+Proof: Compact public-boundary regressions for invalid YAML/no false description/body checks, unreadable source/relative diagnostic/description exception independence, and malformed aa/meta.json plus later zz/meta.json drift. Pre-fix red, fixed and valid controls; preserve explicit frontmatter warn/off behavior. Reuse existing suites and real files, no own-module mocks or new production test hooks.
+
+### Task p06-t10: (review) Correct remaining p06 prose spacing
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L3)
+
+Intent: Insert missing spaces around in 2.2.0, pnpm 10+ (including 12), confirm 2.1.2 and resolved 2.1.2 while conserving every non-whitespace character and all setup/approval boundaries.
+Files: `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`, `.agents/skills/oat-docs-bootstrap/SKILL.md`.
+Proof: Whitespace conservation diff, file-scoped formatting, applicable lint/format and isolated skill sentence contracts; no new prose tests or negative controls. After all fixes, run ordered DoD gates 1–8 with explicit exits/cache truth and committed-candidate verification; retain inherited unchanged framework/install-root evidence rather than claiming new builds.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1728,7 +1771,7 @@ All8 ordered precommit/candidate gates exit0; candidate Turbo cached/fresh11/0,1
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-review-r2-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-review-r2-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-fix-r1-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
