@@ -1522,6 +1522,8 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 **Status:** pending
 
+Root readiness reconciliation: completed intelligent recon maps existing root/config resolution, Contents grammar, reader exclusions, real navigation adapters and flagship Markdown helpers. Root verified the cited G5/P20–P23/P25 source clauses, config reconstruction gap and already-resolved parser versions. No checker exists yet; the recon's lexical inventory and SVG inspections do not prove rule compliance. Phase-local choices are concretized in plan.md without changing Outcomes, G5 flags/JSON, authority or the agreed Approach. No up-front tasks, generic validator/plugin system, framework upgrade, consumer rollout or P24/p07 scope is introduced. Parser dependencies are bounded to existing resolved engines; direct imports must declare ownership, including production use in the packed CLI.
+
 ---
 
 ## Phase p07: Page templates and presets
@@ -1544,7 +1546,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-readiness-20261023 · scope=p06-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p06-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-readiness-20261023 · scope=p06-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p06-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-cap-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

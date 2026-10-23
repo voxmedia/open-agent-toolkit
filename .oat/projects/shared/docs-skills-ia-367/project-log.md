@@ -164,6 +164,10 @@ docs367-p05-accepted-20261023: p05 accepted at04d536106 after round2 closed six 
 
 docs367-p05-landed-20261023: p05 accepted after three independent rounds and operator cap disposition; PR373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 after exact-head CI/Bugbot and Warp confirmations; see implementation.md. Proceed to provisional p06 readiness.
 
+### 2026-10-23 · structural · oat-project-implement · p06-alignment
+
+docs367-p06-concrete-20261023: completed bounded readiness recon; made p06 concrete within Outcome8 and G5/P20-P23/P25, recording counting/config/parser/nav/diagram/CI choices in plan.md. No outcome, authority or endpoint change; no P24/p07 scope. Phase remains unstarted until committed start markers and exact-target dispatch.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
