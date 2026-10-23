@@ -54,7 +54,7 @@ oat_phase_recovery_policy:
         discovered_by: 'isolated-HOME pnpm test (ordered gate3)'
         dispatch_target: 'codex_codex_proxy/gpt-6.1-sol/high/priority'
         reservation_head: '9bc52036afec02b62b4b4a912a2a756b8c35d407'
-        status: 'reserved'
+        status: 'completed'
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
