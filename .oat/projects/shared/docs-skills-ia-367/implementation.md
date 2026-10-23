@@ -1825,13 +1825,17 @@ The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and r
 
 ### Task p06-t11: (remote review) Include manifest freshness in root Definition of Done
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:docs367-p06-impl-20261023
 **Handle:** docs367-p06-impl-20261023; original same-target continuation
+**Start HEAD:** f7b8eff9c76c621e8b56b171272a46343224bdb2
 **Source review:** PR374-M1, cursor discussion_r4363691671
 **Intent:** Add the exact manifest regeneration and scoped diff CI commands as gate 9 after build:docs; explain that the direct check runs despite a Turbo docs-build cache hit. Preserve all eight existing commands and other instructions.
 **Files:** AGENTS.md only.
 **Proof:** Conservation diff, exact workflow-command/order comparison, scoped oxfmt, ordered DoD gates including direct freshness. No new tests, fixtures, negative controls, dependency or version change; unchanged runtime evidence remains inherited.
+
+**Commit:** 9ebc2bea8eeec925eb1b315aab457e06a4280742
+**Verification:** AGENTS-only conservation diff preserves every other instruction byte and the first eight gate commands/order. Both step9 commands exactly match CI and run sequentially, directly despite docs-build cache replay. Scoped oxfmt/diff checks pass. Ordered gates1–8 exit0; step9 regeneration/diff exit0/0. Turbo cached/executed: check11/0, types11/0, test12/0, build5/0, skill/version/release direct, docs-build6/0; cached package/runtime evidence is inherited. Gate3 direct smoke165/skills712/scripts1 run fresh and pass under isolated HOME. Fetch before version gate exits0; no AGENTS/workflow main drift. Verified product committed bytes match the tested source. No new tests, runtime/dependency/version edits, installs, review dispatch or recovery event. Recovery remains1/10,pendingnull; historical anchors, deferrals and root acceptance unchanged. Exact commands/exits/diff: ignored analysis/p06/remote-pr374-m1.
 
 ## Phase p07: Page templates and presets
 
