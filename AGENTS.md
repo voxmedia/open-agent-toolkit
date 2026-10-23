@@ -181,8 +181,7 @@ Instructions are code: keep them accurate as the repository changes.
 
 ### Instruction index
 
-Read the relevant app/package `AGENTS.md` before editing; the workspace layout
-routes to those components. There are currently no canonical rules.
+Read the `AGENTS.md` in each app, package, or `.oat/repo/` directory you change. There are currently no canonical rules.
 List each new `.agents/rules/` rule here with its exact `globs` and read it
 before editing matching files.
 
