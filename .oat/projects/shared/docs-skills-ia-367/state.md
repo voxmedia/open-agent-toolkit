@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: ba253ba359a03d2f40410e2431e38ca6effd629b
+oat_last_commit: bf50ec5ef9823afa082da6463833adf6ce7e6157
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -42,6 +42,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p-rev4:
       used_attempts: 0
+      pending_attempt: null
+    p05:
+      used_attempts: 1
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -132,11 +135,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T05:48:37Z
+oat_project_state_updated: '2026-10-23T15:35:54.938454Z'
 oat_generated: false
 ---
 
@@ -144,16 +147,16 @@ oat_generated: false
 
 **Status:** Implementation
 **Started:** 2026-10-22
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-23
 
 ## Current Phase
 
-Implement — p-rev4 accepted; deliver PR372 once current-head checks and bot findings clear, then concretize p05.
+Implement — p05 accepted after external corrections and operator cap disposition; PR373 delivery pending current-head CI/Bugbot.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; 8/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 accepted, 9/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -162,4 +165,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; independent revision review passed with zero findings. Publication and current-head CI/Bugbot/Warp reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+Publish the accepted p05 correction and approved README wording, respond to the three fixed remote findings, and require fresh exact-head CI/Bugbot clearance before plain land-pr with the established merge-commit method and expected-head guard. Operator approved proceeding with override at the three-review cap, deferring the optional named type export until a consumer needs it; no fourth review is authorized. Reviewed runtime candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45; accepted docs tail bf50ec5ef9823afa082da6463833adf6ce7e6157, all eight gates pass. All11 task records closed, recovery1/10,pendingnull. PR373 remains open; p06 remains provisional and unstarted. After landing, align p06 and prune generated evidence trees while preserving controls/logs. Final project PR remains held until completion.

@@ -15,9 +15,43 @@ Documentation should ship with the code it explains. This page covers the core d
 - Use `.md`-suffixed relative links in `## Contents`: `[Page](page.md)` for leaf pages and `[Section](subdir/index.md)` for child directories.
 - Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
 
+Within Contents, use dash-only link bullets with optional descriptions. A `### Label` introduces a group containing at least one authored entry; entries before the first group stay ungrouped. `*`/`+` link bullets and empty groups produce file/line errors. The map ends at the next level-two heading, and fenced examples are ignored. A self-index link retains landing-page behavior. Missing Contents retains deterministic manifest fallback, while strict nav still requires maps and reports unlisted reader pages.
+
+```markdown
+## Contents
+
+- [Reader guide](guide.md) - Reach a useful result.
+
+### More detail
+
+- [Reference](reference/index.md) - Local reference map.
+```
+
+| Surface                                            | Authored or generated                                       |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| `docs/**/*.md`, including directory indexes        | Authored reader content and local maps                      |
+| App `AGENTS.md`, config, source loader and scripts | Authored working rules and tooling                          |
+| `docs/**/meta.json`                                | Committed derived sidebar; regenerate with nav sync         |
+| App-root `index.md`                                | Generated Markdown inventory; predev/prebuild regenerate it |
+| `.source/`, `.next/`, `out/`                       | Generated collection/build/export; never edit               |
+
+`documentation.navOwner: nav-sync` authorizes navigation generation. Agree ownership before changing hand-authored or undeclared navigation. `documentation.nonReaderPaths` excludes non-reader content from nav, manifests and the Fumadocs collection; explicit Contents links do not override it. `documentation.excludes` affects only the manifest. Do not use exclusions to conceal an unlisted reader page.
+
+To add a page, choose its scope from the nearest map, add title/description frontmatter and one H1, then update Contents. To move or rename, update both maps and inbound links in the same commit, and agree how old published URLs will resolve (redirect or static recovery page). Add a child `index.md` when adding a directory. Use `.md`-suffixed source links; the link transform produces rendered routes.
+
+## Supported features and diagrams
+
+Use **Markdown → existing transform → MDX** in that order. Tables, task lists, fenced code, callouts, nested tabs and Mermaid are configured. MDX is for actual JSX/component needs and is excluded from the Markdown manifest and agent endpoints. See [Markdown Features](markdown-features.md) for paired Syntax/Rendered examples.
+
+Not configured: executable notebooks, API playgrounds, diagram syntax validation or screenshot testing. A successful build or Mermaid transform test does not prove diagram validity. Keep language labels on code fences and use `bash` for shell commands.
+
+Mermaid is diagram source. Important or phone-sized diagrams also get matching light/dark SVGs under `public/diagrams/`, linked as `/diagrams/name-light.svg` and `/diagrams/name-dark.svg`; the theme adds the base path, selects the theme and supports zoom. Update source and both SVGs in the same commit. Use descriptive SVG `<title>`/`<desc>` with `role="img"` and `aria-labelledby`, readable labels and concise meaningful image alt text (about 155 characters or less).
+
 ## Local workflow
 
-1. Start the dev server from the repo root:
+All commands below run from the **repository root**. Contributor setup is in [Code Contributions](code.md).
+
+1. Start the dev server:
 
    ```bash
    pnpm dev:docs
@@ -47,6 +81,7 @@ Documentation should ship with the code it explains. This page covers the core d
 
    ```bash
    pnpm --filter oat-docs docs:format
+   pnpm --filter oat-docs docs:format:check
    ```
 
 ## Authoring Expectations
@@ -70,16 +105,14 @@ Documentation should ship with the code it explains. This page covers the core d
 
   ```bash
   pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs
+  pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs --check
+  pnpm docs:validate
   ```
 
 - In MkDocs apps, the same `oat docs nav sync` command refreshes the `nav:` block in `mkdocs.yml` instead.
 - Use [Markdown Features](markdown-features.md) for supported syntax and examples.
 
-## Agent guidance
-
-- Treat `index.md` plus its `## Contents` section as the local discovery source of truth.
-- Prefer linking to source files and commands explicitly when documenting behavior.
-- Regenerate or freshness-check the docs surface index after adding, removing, renaming, or reordering pages.
+Agent working rules: `../../AGENTS.md` (app-root source file).
 
 ## Related Guides
 

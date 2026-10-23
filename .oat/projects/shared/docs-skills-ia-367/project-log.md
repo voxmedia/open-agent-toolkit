@@ -140,6 +140,26 @@ docs367-prev4-start-20261023: add a bounded revision correcting accepted p04 for
 
 docs367-prev4-accepted-20261023: p-rev4 accepted at ba253ba359a03d2f40410e2431e38ca6effd629b; all four external compatibility fixes verified, independent review0C0H0M0L, gates1–8 pass; implementation.md carries evidence and limitations; PR372 delivery awaits current-head checks.
 
+### 2026-10-23 · structural · oat-project-implement · p04-delivery
+
+docs367-pr372-landed-20261023: PR372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 through land-pr after exact-head CI/Bugbot and four Warp confirmations; watcher stopped; p05 readiness proceeds from merged main.
+
+### 2026-10-23 · structural · oat-project-implement · p05-concrete
+
+docs367-p05-concrete-20261023: Outcome7 phase concretized after read-only recon and root API verification: CLI owns AGENTS; contributing entry plus child map/toolchain; static filtered-md raw llms endpoints with explicit basePath; small runtime parity list; recursive GFM tabs; mark Material legacy without Python upgrades. No Outcome/Constraint/Decision changed; p06 owns docs-check wiring.
+
+### 2026-10-23 · project · friction · p05-integration
+
+Required p05 contributor entry plus child index exposed the pinned loader collision that OAT nav and remarkLinks previously flattened. Root authorized only the minimum adapter/link corrections with real-loader, source-file and static-export evidence; prior-phase anchors and strict reachability remain preserved. docs367-p05-collision-judgment-20261023
+
+### 2026-10-23 · structural · oat-project-implement · p05-recovery01
+
+docs367-p05-handoff-20261023: recovery01 validated and settled at1/10,pendingnull; DONE_WITH_CONCERNS requires the agreed three-page prose propagation before independent review (fix-loop0).
+
+### 2026-10-23 · structural · oat-project-implement · p05
+
+docs367-p05-accepted-20261023: p05 accepted at04d536106 after round2 closed six findings and root corrected stale resume text; all eight gates passed, recovery1/10,pendingnull, one fix cycle; see implementation.md and archived p05-review-2026-10-23T080358Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

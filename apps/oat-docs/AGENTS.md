@@ -1,16 +1,24 @@
 # AGENTS — OAT Documentation
 
-This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. It is not bootstrap documentation. If you're looking for how this app was scaffolded, see `docs/getting-started/quickstart.md` or the root-level `AGENTS.md`.
+This file tells agents how to work inside `apps/oat-docs`, the documentation app for `open-agent-toolkit`. For contributor setup, see `docs/contributing/code.md` and `docs/contributing/documentation.md`. Product readers start at `docs/getting-started/quickstart.md`.
 
 ## Purpose and scope
 
 `apps/oat-docs` is the documentation surface for `open-agent-toolkit`. Humans read the rendered site; agents read the Markdown source and the navigation structure. This file tells agents the conventions that keep both audiences served, and points at the tooling that enforces those conventions. Everything here is about ongoing work inside the docs app — adding, restructuring, auditing, and bulk-editing content.
 
+## Information architecture and agent use
+
+Start at `docs/index.md` and follow authored `## Contents` maps to the narrowest topic. Read source Markdown and linked code before changing claims. Prefer `.md`; use the existing transforms for tabs, callouts and Mermaid, and MDX only when actual JSX is necessary. Product reader onboarding and contributor toolchain setup have different entry points.
+
+The authored surfaces are `docs/**/*.md`, app configuration and this file. Committed `docs/**/meta.json` comes from nav sync; app-root `index.md` is a generated machine inventory. `.source/`, `.next/` and `out/` are generated. `documentation.nonReaderPaths` excludes non-reader content from navigation, manifests and the Fumadocs collection; `documentation.excludes` affects only the manifest. Do not hide an unlisted reader page with an exclusion.
+
+Agent HTTP entry points are `/open-agent-toolkit/llms.txt`, `/open-agent-toolkit/llms-full.txt`, and `/open-agent-toolkit/llms/<page-slugs>/content.md` (root `/open-agent-toolkit/llms/content.md`). They share the loaded `.md` reader set, including pages absent from a customized sidebar; MDX is excluded. Bodies preserve authored Markdown. Resolve relative links against the listed source path and use the canonical rendered URL for the site.
+
 ## When you need to add a new page
 
 1. Create the Markdown file under `docs/` at the directory that best matches the page's topic. Every content directory is an `index.md` map — find the right one before picking a path. **Prefer `.md`** for plain content pages; reach for `.mdx` only when the page actually needs embedded JSX (a custom component, an interactive widget, a specialized layout). Plain `.md` is the default because agents, linters, and grep rules all handle it more reliably than `.mdx`.
 2. Add frontmatter with at minimum `title:` and `description:`. The title drives nav display and page `<title>`; the description drives search previews, social cards, and sibling summaries. Empty descriptions hurt all three.
-3. Update the nearest `index.md`'s `## Contents` section to include a link to the new page. Use `.md`-suffixed relative links: `[Title](page.md)` for leaf pages, `[Section](subdir/index.md)` for subdirectories. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these for Fumadocs routing at build time (strips `.md`, collapses `dir/index.md` → `dir`), so the suffixed form renders correctly **and** lets agents follow links to the target file without path inference. The `## Contents` section is the machine-readable local map — anything not listed there is effectively invisible to the navigation tooling.
+3. Update the nearest `index.md`'s `## Contents` section to include a link to the new page. Use `.md`-suffixed relative links: `[Title](page.md)` for leaf pages, `[Section](subdir/index.md)` for subdirectories. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these for Fumadocs routing at build time (strips `.md`, collapses `dir/index.md` → `dir`), so the suffixed form renders correctly **and** lets agents follow links to the target file without path inference. The `## Contents` section is the machine-readable local map — strict nav checks report unlisted reader pages. The generated manifest has deterministic fallback when a Contents map is absent; that fallback does not repair authored navigation.
 4. If the new page introduces a new subdirectory, create an `index.md` in that subdirectory with its own `## Contents` section. Every content directory must have an `index.md`.
 5. Run `pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs` to regenerate any derived navigation artifacts. Derived artifacts never replace the authored `## Contents`; they're generated from it.
 
@@ -22,7 +30,7 @@ The supported-skill catalog is committed source in `docs/skills/index.md` and bu
 
 1. Write the diagram as a fenced `mermaid` block. Mermaid is the source of truth; readers can click it to enlarge it.
 2. When a diagram must read well on a phone, or is central to a page, also draw a light and a dark SVG in `public/diagrams/<name>-light.svg` and `<name>-dark.svg`. Use the site palette, keep the viewBox 600 to 760 wide where possible, and never set text below 12px. Put both images in a `=== "Diagram"` tab and the Mermaid block in a `=== "Mermaid source"` tab (see `docs/contributing/markdown-features.md`).
-3. When you change a Mermaid block that has SVGs, update both SVGs in the same commit so they show the same nodes, edges and labels.
+3. When you change a Mermaid block that has SVGs, update both SVGs in the same commit so they show the same nodes, edges and labels. Give each SVG `role="img"`, descriptive `<title>` and `<desc>` elements connected through `aria-labelledby`, and readable labels. Keep Markdown alt text concise (about 155 characters or less), describing the diagram without adding unsupported claims.
 4. Every Markdown image is zoomable and gets the base path added; link public images with root-relative paths such as `/diagrams/name.svg`.
 
 ## When you need to restructure navigation
@@ -65,7 +73,7 @@ The supported-skill catalog is committed source in `docs/skills/index.md` and bu
 
 ## Reference
 
-- `docs/getting-started/quickstart.md` — first-run setup instructions for contributors joining this docs app.
+- `docs/contributing/code.md` — repository setup for contributors; `docs/contributing/documentation.md` covers docs commands from the repository root.
 - `docs/contributing/` — authoring conventions, Markdown features (code blocks, mermaid, GFM alerts), skill conventions. The `index.md` in this directory is the entry point; its `## Contents` lists the per-topic pages.
 - Root `AGENTS.md` in `open-agent-toolkit` — repo-wide pointer and shared conventions. For scaffolded docs apps, this file typically includes a `## Documentation` section listing docs root, framework, and index file; add one if it's missing.
 - `oat-docs-analyze` — read-only audit command.

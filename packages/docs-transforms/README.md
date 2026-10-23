@@ -20,8 +20,14 @@ import {
 
 export const remarkPlugins = defaultTransforms;
 
-export const customRemarkPlugins = [remarkLinks, remarkTabs, remarkMermaid];
+export const customRemarkPlugins = [remarkTabs, remarkLinks, remarkMermaid];
 ```
+
+Tabs must run before link rewriting so links in tab bodies are rewritten too. Tab bodies are reparsed with GFM support, including tables and task lists; nested tab groups are supported. Fenced Syntax examples remain literal code. `remarkMermaid` emits the theme component JSX and converts literal `\n` label escapes to `<br/>`; it does not validate diagram syntax.
+
+`remarkLinks` accepts `{ contentRoot, getReaderFiles }`: an absolute content directory and a function returning its effective content-relative reader paths. `createSourceConfig` wires these from the app root and filtered collection patterns. Reader discovery is lazy per transformed document; failures propagate. Without these options, source-file context retains legacy `/docs/` inference and physical-file collision checks.
+
+With actual source-file context, Markdown links preserve `/index` when a same-name `.md` or `.mdx` page owns the folder URL (for example, `contributing.md` and `contributing/index.md`). Both the current and target routes follow the pinned loader's collision behavior. Without filesystem context, ordinary index collapse remains the fallback.
 
 ## Exports
 

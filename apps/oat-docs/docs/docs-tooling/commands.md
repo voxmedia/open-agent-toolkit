@@ -40,7 +40,7 @@ explicit external output and retain the authored config index. Both frameworks k
 
 Use `oat docs init` to bootstrap Markdown documentation or scaffold a framework app.
 
-> **Consider the `oat-docs-bootstrap` skill instead.** The skill wraps `oat docs init` with preflight detection, richer input gathering (site name distinct from package name), capability-gated post-patches that close open CLI gaps (site-title metadata, Turbopack root, template-content fixes, docs-app `AGENTS.md` bridge, `## Contents` link extensions, `contributing.md` three-surfaces cleanup), build verification, config inspection, and a seven-section educational walkthrough. See [Add Docs to a Repo §3a](add-docs-to-a-repo.md#3a-preferred-the-oat-docs-bootstrap-skill-guided) for the full flow. The CLI documented here remains the authoritative surface for flags and is the right choice when you need a deterministic, non-interactive scaffold (CI, automation).
+> **Consider the `oat-docs-bootstrap` skill instead.** The skill wraps `oat docs init` with preflight detection, richer input gathering (site name distinct from package name), capability probing and verification of CLI-owned scaffolds (including framework app-root `AGENTS.md`), build verification, config inspection, and a seven-section educational walkthrough. Missing capabilities or older scaffold gaps lead to CLI update advice or an analyze handoff with manual CLI/template upgrade recommendations. See [Add Docs to a Repo §3a](add-docs-to-a-repo.md#3a-preferred-the-oat-docs-bootstrap-skill-guided) for the full flow. The CLI documented here remains the authoritative surface for flags and is the right choice when you need a deterministic, non-interactive scaffold (CI, automation).
 
 Key behavior:
 

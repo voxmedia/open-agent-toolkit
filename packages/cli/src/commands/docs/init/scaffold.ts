@@ -12,7 +12,7 @@ import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
 import { OAT_VERSION } from '@shared/oat-version';
 
-import { buildDocsCommands } from './docs-commands';
+import { buildDocsCommands, shellQuote } from './docs-commands';
 import { applyMarkdownDocsPlan, planMarkdownDocs } from './markdown';
 import type {
   DocsFormatMode,
@@ -28,6 +28,11 @@ interface TemplateFile {
 }
 
 const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
+  { source: 'AGENTS.md', destination: 'AGENTS.md' },
+  ...['index.md', 'docs-toolchain.md'].map((name) => ({
+    source: join('docs', 'contributing', name),
+    destination: join('docs', 'contributing', name),
+  })),
   { source: '.gitignore', destination: '.gitignore' },
   { source: 'mkdocs.yml', destination: 'mkdocs.yml' },
   { source: 'package.json.template', destination: 'package.json' },
@@ -45,6 +50,15 @@ const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
 ];
 
 const FUMA_TEMPLATE_FILES: TemplateFile[] = [
+  { source: 'AGENTS.md', destination: 'AGENTS.md' },
+  ...['index.md', 'docs-toolchain.md'].map((name) => ({
+    source: join('docs', 'contributing', name),
+    destination: join('docs', 'contributing', name),
+  })),
+  ...['llms.txt', 'llms-full.txt', 'llms/[...slug]'].map((route) => ({
+    source: join('app', route, 'route.ts'),
+    destination: join('app', route, 'route.ts'),
+  })),
   { source: '.gitignore', destination: '.gitignore' },
   { source: 'next.config.js', destination: 'next.config.js' },
   { source: 'postcss.config.mjs', destination: 'postcss.config.mjs' },
@@ -235,12 +249,6 @@ function buildFumaDevDependencies(
   return `,\n${entries.join(',\n')}`;
 }
 
-function shellQuote(value: string): string {
-  return /^[a-zA-Z0-9_./-]+$/.test(value)
-    ? value
-    : `'${value.replaceAll("'", "'\\''")}'`;
-}
-
 function jsonStringContent(value: string): string {
   return JSON.stringify(value).slice(1, -1);
 }
@@ -350,6 +358,7 @@ function renderTemplate(
   depContext: OatDepContext,
   packageManagerField: string,
   nodeRequirement: string,
+  packageJson: boolean,
 ): string {
   const repoName = basename(options.repoRoot);
   const commands = buildDocsCommands(
@@ -357,6 +366,7 @@ function renderTemplate(
     options.targetDir,
     options.appName,
   );
+  const command = packageJson ? jsonStringContent : (value: string) => value;
   const replacements: Record<string, string> = {
     '// {{TURBOPACK_ROOT_IMPORTS}}\n':
       options.repoShape === 'nested-standalone'
@@ -405,10 +415,21 @@ function renderTemplate(
     ),
     '{{REPO_NAME}}': repoName,
     '{{APP_DIR}}': options.targetDir,
-    '{{GENERATE_INDEX_CMD}}': jsonStringContent(
+    '{{APP_CWD}}': shellQuote(options.targetDir),
+    '{{LINT_STATUS}}':
+      options.lint === 'none' ? 'disabled' : 'enabled (markdownlint-cli2)',
+    '{{FORMAT_STATUS}}':
+      options.format === 'none' ? 'disabled' : 'enabled (oxfmt)',
+    '{{NAV_SYNC_CMD}}': command(
+      buildNavSyncCheckCmd(depContext.isOatRepo, options.targetDir).replace(
+        / --check$/,
+        '',
+      ),
+    ),
+    '{{GENERATE_INDEX_CMD}}': command(
       buildGenerateIndexCmd(depContext.isOatRepo, options.targetDir),
     ),
-    '{{NAV_SYNC_CHECK_CMD}}': jsonStringContent(
+    '{{NAV_SYNC_CHECK_CMD}}': command(
       buildNavSyncCheckCmd(depContext.isOatRepo, options.targetDir),
     ),
     '{{OAT_DOCS_CONFIG_DEP}}': oatDepVersion(depContext, 'docs-config'),
@@ -549,6 +570,7 @@ export async function scaffoldDocsApp(
       depContext,
       packageManagerField,
       nodeRequirement,
+      templateFile.destination === 'package.json',
     );
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');

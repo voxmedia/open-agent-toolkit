@@ -1,28 +1,10 @@
+---
+title: Getting Started
+description: 'Reach the first safe reader result with {{SITE_NAME}}.'
+---
+
 # Getting Started
 
-Use this guide to set up your local environment and preview {{SITE_NAME}}.
+Start with the [documentation map](index.md), choose the guide for your task, and confirm its prerequisites before changing anything. Your first safe result is to identify the right procedure and its expected outcome.
 
-## Prerequisites
-
-- Node.js 22+
-- pnpm 10+
-- Python 3.11+ for MkDocs tooling
-
-## Install documentation tooling
-
-```bash
-pnpm docs:setup
-```
-
-## Run the docs locally
-
-```bash
-pnpm docs:dev
-```
-
-## Editing workflow
-
-1. Update Markdown files under `docs/`.
-2. Check the preview site for formatting and navigation.
-3. Run the formatter and linter before committing.
-4. Keep every directory discoverable through its `index.md` file.
+Replace this starter paragraph with one concrete, low-risk reader task for your product: the input, the command or action, and the result the reader can verify. Keep contributor setup in the [docs toolchain guide](contributing/docs-toolchain.md).

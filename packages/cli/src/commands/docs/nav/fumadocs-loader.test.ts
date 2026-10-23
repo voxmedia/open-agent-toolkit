@@ -30,12 +30,14 @@ interface PageTreeNode {
   $ref?: string;
   index?: PageTreeNode;
   children?: PageTreeNode[];
+  name?: string;
+  url?: string;
 }
 
 type FumadocsLoader = (options: {
   baseUrl: string;
   source: { files: Array<Record<string, unknown>> };
-}) => { pageTree: PageTreeNode };
+}) => { pageTree: PageTreeNode; getPages(): { path: string; url: string }[] };
 
 async function importFumadocsLoader(): Promise<FumadocsLoader> {
   const require = createRequire(docsAppPackageJson);
@@ -58,8 +60,9 @@ async function listFiles(root: string, dir = '.'): Promise<string[]> {
   return files;
 }
 
-/** Docs-relative paths of every page the real loader puts in the tree. */
-async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
+async function sourceFiles(
+  docsRoot: string,
+): Promise<Array<Record<string, unknown>>> {
   const files: Array<Record<string, unknown>> = [];
   for (const path of await listFiles(docsRoot)) {
     if (path.endsWith('meta.json')) {
@@ -72,7 +75,12 @@ async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
       files.push({ type: 'page', path, data: { title: path } });
     }
   }
-  return pagesInTreeOf(files);
+  return files;
+}
+
+/** Docs-relative paths of every page the real loader puts in the tree. */
+async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
+  return pagesInTreeOf(await sourceFiles(docsRoot));
 }
 
 async function pagesInTreeOf(
@@ -135,6 +143,112 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
     roots.push(root);
     return root;
   }
+
+  it('keeps a same-name page and folder index reachable at their installed-loader URLs', async () => {
+    // Reproduces the p05 contributing.md + contributing/index.md scaffold,
+    // using fumadocs-core 16.10.2's real file-reference and slug behavior.
+    const appRoot = await writeApp(await scratch(), null);
+    const docsRoot = join(appRoot, 'docs');
+    await mkdir(join(docsRoot, 'other'));
+    await writeFile(join(docsRoot, 'section.md'), '# Authoring contract\n');
+    await writeFile(join(docsRoot, 'widget.mdx'), '# Widget\n');
+    await writeFile(join(docsRoot, 'hidden.md'), '# Unlisted control\n');
+    await writeFile(
+      join(docsRoot, 'index.md'),
+      '# Home\n\n## Contents\n- [Section](section/index.md)\n- [Other](other/index.md)\n- [Widget](widget.mdx)\n',
+    );
+    await writeFile(
+      join(docsRoot, 'section/index.md'),
+      '# Section\n\n## Contents\n- [Authoring contract](../section.md#contract)\n- [Leaf](leaf.md)\n',
+    );
+    await writeFile(
+      join(docsRoot, 'other/index.md'),
+      '# Other\n\n## Contents\n- [Section landing](../section/index.md)\n- [Elsewhere contract](../section.md#contract)\n',
+    );
+    const result = await syncDocsNavigation({ appRoot });
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual(['hidden.md']);
+    const expected = [
+      ...ALL_PAGES,
+      'section.md',
+      'other/index.md',
+      'widget.mdx',
+    ].sort();
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual(expected);
+    const sectionMeta = JSON.parse(
+      await readFile(join(docsRoot, 'section/meta.json'), 'utf8'),
+    );
+    expect(sectionMeta.pages).toEqual(['../section.md', 'leaf']);
+    const otherMeta = JSON.parse(
+      await readFile(join(docsRoot, 'other/meta.json'), 'utf8'),
+    );
+    expect
+      .soft(otherMeta.pages)
+      .toEqual([
+        '[Section landing](/section/index)',
+        '[Elsewhere contract](/section#contract)',
+      ]);
+    const loader = await importFumadocsLoader();
+    // Consume actual synchronized files. The installed loader globally dedups
+    // source references, but an unrelated authored URL must remain a link.
+    const tree = loader({
+      baseUrl: '/',
+      source: { files: await sourceFiles(docsRoot) },
+    }).pageTree;
+    expect
+      .soft(tree.children?.find((node) => node.name === 'Other'))
+      .toMatchObject({
+        children: [
+          { type: 'page', name: 'Section landing', url: '/section/index' },
+          {
+            type: 'page',
+            name: 'Elsewhere contract',
+            url: '/section#contract',
+          },
+        ],
+      });
+    expect(
+      tree.children?.find((node) => node.name === 'Section'),
+    ).toMatchObject({
+      children: [
+        { type: 'page', $ref: 'section.md', url: '/section' },
+        { type: 'page', $ref: 'section/leaf.md', url: '/section/leaf' },
+      ],
+    });
+    const loaded = loader({
+      baseUrl: '/',
+      source: {
+        files: [
+          { type: 'page', path: 'section.md', data: { title: 'Contract' } },
+          { type: 'page', path: 'section/index.md', data: { title: 'Guides' } },
+        ],
+      },
+    });
+    expect(
+      loaded
+        .getPages()
+        .map((page) => [page.path, page.url])
+        .sort(),
+    ).toEqual([
+      ['section.md', '/section'],
+      ['section/index.md', '/section/index'],
+    ]);
+    const check = await syncDocsNavigation({ appRoot, check: true });
+    if (check.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(check.stale).toEqual([]);
+    expect(check.unlisted).toEqual(['hidden.md']);
+    // A URL link alone never claims an unlisted source page as reachable.
+    await writeFile(
+      join(docsRoot, 'section/index.md'),
+      '# Section\n\n## Contents\n- [Leaf](leaf.md)\n',
+    );
+    const removed = await syncDocsNavigation({ appRoot });
+    if (removed.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(removed.unlisted).toEqual(['hidden.md', 'section.md']);
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual(
+      expected.filter((path) => path !== 'section.md'),
+    );
+  });
 
   it('keeps an ordinary folder landing page implicit and in the tree', async () => {
     const appRoot = await writeApp(await scratch(), null);

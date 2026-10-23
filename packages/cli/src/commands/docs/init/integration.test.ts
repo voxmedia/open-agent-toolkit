@@ -4,6 +4,7 @@ import {
   mkdir,
   mkdtemp,
   readdir,
+  realpath,
   readFile,
   readlink,
   rm,
@@ -182,14 +183,65 @@ describe('scaffold integration', () => {
             .pages,
         ).toEqual(['index', 'getting-started', 'contributing']);
       } else {
-        expect(
-          parseYaml(await readFile(join(appRoot, 'mkdocs.yml'), 'utf8')).nav,
-        ).toEqual([
+        const mkdocs = parseYaml(
+          await readFile(join(appRoot, 'mkdocs.yml'), 'utf8'),
+        );
+        expect(mkdocs.nav).toEqual([
           { Home: 'index.md' },
           { 'Getting Started': 'getting-started.md' },
-          { Contributing: 'contributing.md' },
+          {
+            Contributing: [
+              'contributing/index.md',
+              { 'Authoring Contract': 'contributing.md' },
+              { 'Docs Toolchain': 'contributing/docs-toolchain.md' },
+            ],
+          },
         ]);
+        const contributorNav = mkdocs.nav[2].Contributing;
+        const sourcePaths: string[] = [
+          contributorNav[0],
+          contributorNav[1]['Authoring Contract'],
+          contributorNav[2]['Docs Toolchain'],
+        ];
+        // MkDocs 1.4.2 files.py destination mapping, independently confirmed
+        // with its real default-theme build. Default directory URLs overwrite
+        // the authoring contract with the child index; .html URLs keep both.
+        const destinations = sourcePaths.map((source) => {
+          if (mkdocs.use_directory_urls === false)
+            return source.replace(/\.md$/, '.html');
+          return source
+            .replace(/\.md$/, '/index.html')
+            .replace(/\/index\/index\.html$/, '/index.html');
+        });
+        expect(destinations).toEqual([
+          'contributing/index.html',
+          'contributing.html',
+          'contributing/docs-toolchain.html',
+        ]);
+        expect(new Set(destinations).size).toBe(3);
       }
+      const appAgents = await readFile(join(appRoot, 'AGENTS.md'), 'utf8');
+      expect(appAgents).toContain("cd 'apps/docs site'");
+      expect(appAgents).toContain('## Information architecture');
+      expect(appAgents).toContain('## How agents should use these docs');
+      expect(appAgents).not.toMatch(/\{\{[A-Z_]+\}\}/);
+      expect(appAgents).not.toContain('\\"');
+      expect(appAgents).toContain(
+        framework === 'fumadocs' ? 'docs/**/meta.json' : 'MkDocs 1.4.2',
+      );
+      if (framework === 'mkdocs')
+        expect(appAgents).not.toContain('fumadocs-mdx');
+      const contributor = await readFile(
+        join(appRoot, 'docs/contributing.md'),
+        'utf8',
+      );
+      expect(contributor).toContain('`../AGENTS.md`');
+      expect(
+        await readFile(join(appRoot, 'docs/getting-started.md'), 'utf8'),
+      ).not.toContain('pnpm install');
+      expect(
+        await readFile(join(appRoot, 'docs/contributing/index.md'), 'utf8'),
+      ).toContain('(docs-toolchain.md)');
       const pkg = JSON.parse(
         await readFile(join(appRoot, 'package.json'), 'utf8'),
       );
@@ -227,7 +279,7 @@ describe('scaffold integration', () => {
   );
 
   it(
-    'runs the rendered navigation command from the repository root for a nested app',
+    'runs the documented app-cwd navigation command for a quoted nested target',
     { timeout: 30_000 },
     async () => {
       assetsRoot = await bundleAssets();
@@ -242,7 +294,7 @@ describe('scaffold integration', () => {
         framework: 'fumadocs',
         appName: 'docs',
         siteName: 'Docs',
-        targetDir: 'docs-site',
+        targetDir: 'apps/docs "site',
         siteDescription: 'Documentation',
         lint: 'none',
         format: 'none',
@@ -252,14 +304,27 @@ describe('scaffold integration', () => {
         join(root, '.oat/config.json'),
         JSON.stringify({
           version: 1,
-          documentation: { root: 'docs-site', tooling: 'fumadocs' },
+          documentation: { root: 'apps/docs "site', tooling: 'fumadocs' },
         }),
       );
       const contributing = await readFile(
-        join(result.appRoot, 'docs/contributing.md'),
+        join(result.appRoot, 'docs/contributing/docs-toolchain.md'),
         'utf8',
       );
-      const command = contributing.match(/`(oat docs nav sync[^`]*)`/)?.[1];
+      const command = contributing.match(/^(oat docs nav sync[^\n]*)$/m)?.[1];
+      const cd = contributing.match(/^cd (.+)$/m)?.[0];
+      expect(cd).toBeDefined();
+      expect(contributing).not.toContain('\\"');
+      expect(
+        execFileSync('bash', ['-c', `${cd} && pwd`], {
+          cwd: root,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(await realpath(result.appRoot));
+      const pkg = JSON.parse(
+        await readFile(join(result.appRoot, 'package.json'), 'utf8'),
+      );
+      expect(pkg.scripts.prebuild).toContain('oat docs nav sync');
       expect(command).toBeDefined();
       const args = execFileSync('bash', ['-c', `printf "%s\\0" ${command}`], {
         cwd: root,
@@ -282,7 +347,7 @@ describe('scaffold integration', () => {
               dryRun: false,
               verbose: false,
               json: true,
-              cwd: root,
+              cwd: result.appRoot,
               home: root,
               interactive: false,
               logger: capture.logger,
@@ -428,7 +493,10 @@ describe('scaffold integration', () => {
       expect(nextConfig).toContain('NEXT_PUBLIC_BASE_PATH');
 
       expect(
-        await readFile(join(result.appRoot, 'docs/getting-started.md'), 'utf8'),
+        await readFile(
+          join(result.appRoot, 'docs/contributing/docs-toolchain.md'),
+          'utf8',
+        ),
       ).toContain('- Node.js 24.4.1');
 
       // Verify layout has Next metadata and branding
@@ -493,25 +561,27 @@ describe('scaffold integration', () => {
         'utf8',
       );
       expect(gettingStarted).toContain(
-        "description: 'Set up the local docs toolchain and preview the site.'",
+        "description: 'Reach the first safe reader result with Test Docs.'",
       );
-      expect(gettingStarted).toContain('pnpm install');
-      expect(gettingStarted).toContain('pnpm --filter test-docs dev');
-      expect(gettingStarted).toContain('pnpm --filter test-docs build');
+      expect(gettingStarted).not.toContain('pnpm install');
+      const toolchain = await readFile(
+        join(result.appRoot, 'docs/contributing/docs-toolchain.md'),
+        'utf8',
+      );
+      expect(toolchain).toContain('pnpm install');
+      expect(toolchain).toContain('pnpm dev');
+      expect(toolchain).toContain('pnpm build');
 
       const contributing = await readFile(
         join(result.appRoot, 'docs', 'contributing.md'),
         'utf8',
       );
       expect(contributing).toContain(
-        "description: 'Authoring conventions and navigation rules.'",
+        "description: 'Authoring contract, generated files, supported syntax and validation.'",
       );
-      expect(contributing).toContain('pnpm install');
-      expect(contributing).toContain('pnpm --filter test-docs dev');
-      expect(contributing).toContain(
-        'Run Markdown formatting as configured for this docs app.',
-      );
-      expect(contributing).not.toContain('formatting and linting');
+      expect(contributing).toContain('`../AGENTS.md`');
+      expect(contributing).toContain('formatting is enabled (oxfmt)');
+      expect(contributing).toContain('lint is disabled');
 
       // Verify package.json is valid JSON with OAT workspace deps
       const packageJson = JSON.parse(
@@ -714,9 +784,7 @@ describe('scaffold integration', () => {
         join(result.appRoot, 'docs', 'contributing.md'),
         'utf8',
       );
-      expect(contributing).toContain(
-        'Run Markdown formatting and linting as configured for this docs app.',
-      );
+      expect(contributing).toContain('lint is enabled (markdownlint-cli2)');
     },
   );
 });

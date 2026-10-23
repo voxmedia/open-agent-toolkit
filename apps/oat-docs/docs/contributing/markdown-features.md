@@ -79,7 +79,7 @@ theme.
 
 A diagram that needs to read well, especially on a phone, gets a hand-drawn SVG
 pair next to its Mermaid source. Mermaid stays the source of truth: when you
-change the Mermaid, update both SVGs in the same change.
+change the Mermaid, update both SVGs in the same commit, preserving nodes, edges and labels. Give each SVG `role="img"` and descriptive `<title>`/`<desc>` elements connected by `aria-labelledby`; keep labels readable and Markdown alt text concise (about 155 characters or less).
 
 === "Syntax"
 
@@ -150,8 +150,20 @@ Use a language identifier on every opening fence. In this docs app, use `bash` f
 
 ## Authoring Reminder
 
-After adding or reorganizing docs pages, refresh the generated docs surface:
+After adding, moving or renaming pages, update both authored maps and inbound links. From the **repository root**, refresh and validate the generated surfaces:
 
 ```bash
 pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 ```
+
+```bash
+pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs
+pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs --check
+pnpm --filter oat-docs docs:format
+pnpm --filter oat-docs docs:format:check
+pnpm --filter oat-docs docs:lint
+pnpm docs:validate
+pnpm build:docs
+```
+
+These checks cover navigation, source contracts, formatting and build output. Inspect rendered tabs and diagrams too; they do not validate Mermaid syntax or accessibility automatically. Agent rules live in `../../AGENTS.md` (app-root source file).

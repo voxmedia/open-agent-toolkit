@@ -670,6 +670,14 @@ describe('getPublicPackageContracts', () => {
           types: './dist/index.d.ts',
           import: './dist/index.js',
         },
+        ...(contract.publicName === '@open-agent-toolkit/docs-config'
+          ? {
+              './llms': {
+                types: './dist/llms.d.ts',
+                import: './dist/llms.js',
+              },
+            }
+          : {}),
       });
     }
 

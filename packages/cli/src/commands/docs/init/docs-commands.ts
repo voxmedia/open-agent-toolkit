@@ -8,6 +8,12 @@ export interface DocsCommands {
   build: string;
 }
 
+export function shellQuote(value: string): string {
+  return /^[a-zA-Z0-9_./-]+$/.test(value)
+    ? value
+    : `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 function isRootTarget(targetDir: string): boolean {
   return targetDir.trim() === '' || normalize(targetDir) === '.';
 }
@@ -34,8 +40,8 @@ export function buildDocsCommands(
   }
 
   return {
-    install: `cd ${targetDir} && pnpm install`,
-    dev: `cd ${targetDir} && pnpm dev`,
-    build: `cd ${targetDir} && pnpm build`,
+    install: `cd ${shellQuote(targetDir)} && pnpm install`,
+    dev: `cd ${shellQuote(targetDir)} && pnpm dev`,
+    build: `cd ${shellQuote(targetDir)} && pnpm build`,
   };
 }

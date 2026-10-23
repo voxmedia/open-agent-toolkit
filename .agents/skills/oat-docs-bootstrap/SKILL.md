@@ -1,17 +1,17 @@
 ---
 name: oat-docs-bootstrap
-description: Use when bootstrapping or adopting an OAT documentation surface in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, `oat docs init` invocation with gated post-patches for open CLI gaps, build verification, post-scaffold config inspection, and an educational walkthrough. Supports plain Markdown (file-level path), Fumadocs (full path), and MkDocs (lean path with defined minimum contract).
+description: Use when bootstrapping or adopting an OAT documentation surface in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, CLI-owned `oat docs init` scaffolding, build verification, post-scaffold config inspection, and an educational walkthrough. Supports plain Markdown (file-level path), Fumadocs (full path), and MkDocs (lean path with defined minimum contract).
 argument-hint: '<optional-target-dir> [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.2'
+  version: '1.4.3'
 ---
 
 # Docs Bootstrap
 
-Bootstrap or adopt documentation in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, the gated FP-15 docs-app AGENTS.md bridge, build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
+Bootstrap or adopt documentation in this repo and guide the user through understanding how it works. Wraps `oat docs init` with preflight detection, richer input gathering, CLI-owned docs-app AGENTS.md scaffolding, build verification, post-scaffold config inspection, and an educational walkthrough covering the `index.md` + `## Contents` navigation contract, scaffolded agent-instruction surfaces, and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 
 ## Prerequisites
 
@@ -23,12 +23,12 @@ Bootstrap or adopt documentation in this repo and guide the user through underst
 
 **OAT MODE: Docs Bootstrap**
 
-**Purpose:** Turn `oat docs init` scaffolding into a support-rich onboarding experience — preflight, inputs, CLI invocation with gated post-patches, build verification, config inspection, educational walkthrough, and optional content kickoff. Three paths: Markdown (authored content without an app), Fumadocs (full), and MkDocs (lean with defined minimum contract).
+**Purpose:** Turn `oat docs init` scaffolding into a support-rich onboarding experience — preflight, inputs, CLI-owned scaffold invocation, build verification, config inspection, educational walkthrough, and optional content kickoff. Three paths: Markdown (authored content without an app), Fumadocs (full), and MkDocs (lean with defined minimum contract).
 
 **BLOCKED Activities:**
 
 - No reimplementing CLI scaffold logic (the CLI remains the source of truth for template rendering, version resolution, and configuration writes)
-- No fabricating files the CLI does not create, with one documented exception: the FP-15 bridge AGENTS.md, which is written only when the CLI has not scaffolded one and whose content is migrated upstream when the CLI fix lands
+- No fabricating scaffold files the CLI does not create; report older CLI output through analyze and recommend a manual CLI/template upgrade
 - No expanding scope into content authoring (that's `oat-docs-analyze` / `oat-docs-apply` / `oat-project-document`)
 - No silent failures — every error has a surfaced remediation
 
@@ -37,7 +37,7 @@ Bootstrap or adopt documentation in this repo and guide the user through underst
 - Inspecting repo state read-only before any mutation
 - Prompting the user for richer inputs than the CLI asks for (notably a site name separate from the package/app name)
 - Invoking `oat docs init` non-interactively with collected flags
-- Applying gated, idempotent post-patches for open CLI gaps (FP-15) only when capability detection shows the CLI has not addressed them
+- Inspecting native scaffold capabilities and reporting missing current-template guidance without rewriting it
 - Running install + build and classifying failures against known patterns
 - Reading `.oat/config.json` back to verify paths and prompting for `requireForProjectCompletion`
 - Narrating the scaffolded output as a chunked educational walkthrough
@@ -49,7 +49,7 @@ If you catch yourself:
 - Writing scaffold-template content directly instead of calling the CLI → STOP (the CLI owns templates; you own the surrounding experience)
 - Narrating AGENTS.md content word-for-word in the Walkthrough → STOP (the Walkthrough points at AGENTS.md; it does not read it aloud)
 - Expanding into full content generation → STOP (delegate to analyze/apply)
-- Applying a post-patch without running capability detection first → STOP (patches must be gated on deterministic probes and file-shape checks)
+- Recreating missing CLI scaffold content from the skill → STOP (report a missing capability and manual upgrade instead)
 
 **Recovery:**
 
@@ -112,13 +112,13 @@ OAT ▸ DOCS BOOTSTRAP
 
 ### Markdown path through the seven steps
 
-The detailed framework procedures below apply to Fumadocs/MkDocs. When the selected tooling is `markdown`, use this path for Steps 2–7 instead; never run framework post-patches, the FP-15 AGENTS bridge, dependency discovery/install, package/Turbo patches, or a site build. Step 1 remains the shared read-only detector.
+The detailed framework procedures below apply to Fumadocs/MkDocs. When the selected tooling is `markdown`, use this path for Steps 2–7 instead; never run framework scaffold repairs, docs-root AGENTS creation, dependency discovery/install, package/Turbo patches, or a site build. Step 1 remains the shared read-only detector.
 
 1. **Preflight and routing:** Read `documentation.tooling` as a non-empty string. A non-string value (including a legacy object with a `framework` field) is invalid/undeclared tooling in the CLI; surface it for a user decision before proceeding, without silently clearing or retagging it. Declared tooling is authoritative: configured Markdown uses `documentation.root` literally, including when it contains a child named `docs`; declared frameworks or unknown stacks are not plain-doc adoption candidates. With no declared tooling, check framework evidence first (`mkdocs.yml`, Fumadocs/Next config and docs-app package scripts/dependencies), then inspect the chosen dedicated content directory for authored `.md`/`.mdx` pages. A repository-root README alone is insufficient; an empty selected directory is fresh setup. For a populated plain tree, default to `oat-docs-analyze` then `oat-docs-apply` for approved repairs and exit without scaffolding. Offer **adopt and audit**, **audit only**, or **abort** when adoption is explicitly requested. Audit only delegates read-only to `oat-docs-analyze` and exits. Adoption requires the explicit user choice and CLI `--adopt`; `--yes` alone never authorizes it. An incompatible declared root/index/tooling requires a user decision, with no silent clearing or retagging. Keep the existing explicitly authorized framework replacement path when a framework is selected.
 2. **Gather inputs:** Offer “Markdown (plain files), Fumadocs, or MkDocs?” Collect documentation title (`--site-name`), dedicated relative target directory (default `docs` in every repo shape), and optional description. Reuse an existing compatible configured Markdown root. Ask no app/package name, package-manager, site-runtime, or dependency questions. Lint and format default to `none`; describe selected existing repository tools only, without installing them. Validate a nonempty title and a dedicated in-repository target, excluding the repository root and escaping symlinks. Confirm fresh setup or additive adoption, title, root, and audit handoff. `appName` is absent and `conflictResolution` is `adopt`, `audit`, `abort`, or null for this path.
    Before Markdown CLI invocation, run **Step 2.5** for fresh setup and explicitly selected adoption; it is not bypassed by this condensed path.
 
-3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without post-patches. For success, read config back to resolve the actual content root and authored index.
+3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without template repairs. For success, read config back to resolve the actual content root and authored index.
 4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run already documented lint/link/format checks when applicable; otherwise inspect files/links directly. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
 5. **Inspect config:** `documentation.tooling` is the string `markdown`; `root` is the literal content directory; `index` is its authored entrypoint, normally `<root>/index.md`. Markdown introduces no `documentation.config`. Preserve unrelated config/excludes/completion settings. Verify deterministic managed root Documentation guidance names that root, Markdown tooling, authored index, and `<root>/contributing.md`; preserve manual/local guidance and surface unresolved disposition. The Step 5e completion opt-in remains available using the docs root rather than an app name, without silently changing an existing value. No nested app-config reconciliation or framework patch inspection applies.
 6. **Walkthrough:** In short chunks, show actual config and `<root>/index.md`: useful context plus the Contents map, title/description metadata, sibling `page.md` and child `section/index.md` links, exclusions and asset-only exceptions. Explain adding a page/section and updating the nearest authored map without overwriting existing context. Root AGENTS Documentation guidance and `<root>/contributing.md` establish agent/human conventions; a preexisting local AGENTS file remains authoritative, but bootstrap creates none. Authored indexes are edited directly. Optional generated inventories require explicit external output, e.g. `$CLI_CMD docs generate-index --docs-dir <root> --output .oat/docs-manifest.md`; output must stay outside the full configured content root and cannot overwrite the configured authored index even with a narrowed `--docs-dir`. Generation does not repoint `documentation.index`. Markdown bootstrap never generates a manifest automatically. Skip framework deep dives and preview-server/build commands.
@@ -204,7 +204,7 @@ Preflight Result:
 
 ### Step 2: Input Gatherer
 
-Collect the inputs needed to invoke `oat docs init` and apply post-scaffold patches. The skill asks for richer inputs than the CLI prompts for — most importantly, a **site name** separate from the package/app name. Ask one question at a time, surfacing defaults from the Preflight Result, and end with a coherence check before scaffold.
+Collect the inputs needed to invoke `oat docs init` and inspect its CLI-owned output. The skill asks for richer inputs than the CLI prompts for — most importantly, a **site name** separate from the package/app name. Ask one question at a time, surfacing defaults from the Preflight Result, and end with a coherence check before scaffold.
 
 Print `[2/7] Gathering inputs…` at the start of this step.
 
@@ -309,7 +309,7 @@ Resolution options:
 - **`abort`** — Stop the flow without any mutation.
   - **Allowed mutations:** None.
   - **Preserved state:** Everything.
-  - **Stop conditions:** Print a compact summary of what was detected and exit immediately. No CLI invocation, no post-patches, no Walkthrough. Example summary:
+  - **Stop conditions:** Print a compact summary of what was detected and exit immediately. No CLI invocation, no template repairs, no Walkthrough. Example summary:
 
     ```
     Aborting docs bootstrap. Nothing was changed.
@@ -404,9 +404,11 @@ through `oat-docs-analyze --ia`; it does not return to scaffold afterward.
    remains undeclared, Markdown ignores it, and no automatic nav generation is
    authorized by IA approval alone.
 
+For MkDocs/Material, disclose the legacy support status before scaffold: [Material upstream](https://squidfunk.github.io/mkdocs-material/changelog/) promises critical fixes/security updates through May 5, 2027, then maintenance ends, and identifies [Zensical](https://zensical.org/) as its successor. This is Material's window, not MkDocs core EOL or a promise that the retained old Python pins receive every fix. No implicit Python upgrade is authorized.
+
 ### Step 3: Scaffold Runner
 
-Invoke `oat docs init` with the collected inputs and then apply gated post-patches for any CLI gaps the Capability Detection sub-procedure reports as still-open. The Scaffold Runner probes CLI capabilities, invokes the CLI, and applies the AGENTS.md bridge if still needed. Template content is CLI-owned; report old-scaffold shapes through `oat-docs-analyze`.
+Invoke `oat docs init` with the collected inputs. The Scaffold Runner probes capabilities, invokes the CLI and verifies its output. The CLI owns framework app-root AGENTS.md and all template content; report missing capabilities and older scaffold shapes through `oat-docs-analyze` with a manual CLI/template upgrade recommendation. Never create a second template owner in this skill.
 
 Print `[3/7] Scaffolding…` at the start of this step.
 
@@ -442,12 +444,12 @@ Do not pass flags the CLI doesn't advertise. Never assume a flag exists because 
 Before CLI invocation, run `$CLI_CMD docs init --help` once. Record:
 
 - `siteNameFlag`: whether `--site-name` is advertised.
-- `agentsMdScaffoldFlag`: whether help or the installed template file list confirms native `AGENTS.md` scaffolding.
+- `agentsMdScaffold`: whether the installed framework template file list confirms native app-root `AGENTS.md` scaffolding; if unavailable, record unknown and verify actual output after invocation. Do not infer a CLI flag from this capability.
 - `noRootPatchFlag`: whether `--no-root-patch` is advertised.
 
 If the probe fails or returns no help, stop with the verbatim error and recommend updating or repairing the CLI. Never guess capabilities.
 
-After scaffolding, inspect `<appRoot>/AGENTS.md`: absent permits the FP-15 bridge; any existing file is preserved. Check template output against the current scaffold contract. Older output with missing metadata, unresolved Node-version advice, missing generated-files guidance, extension-less Contents links, duplicated agent instructions, or a Fumadocs wrapper that loses static export settings becomes a finding under `oat-docs-analyze`'s legacy scaffold checks (load that skill from installed scope and resolve `references/legacy-scaffold-checks.md` from its own directory). Record the observed path and evidence, then offer analyze; do not reinstate template patches. Ambiguous or user-authored shapes are reported for review, never overwritten.
+After scaffolding, inspect `<appRoot>/AGENTS.md`: absence is a missing-capability finding with analyze/manual upgrade advice; any existing file is preserved. No missing-file bridge is permitted. Check template output against the current scaffold contract. Older output with missing metadata, unresolved Node-version advice, missing generated-files guidance, extension-less Contents links, duplicated agent instructions, or a Fumadocs wrapper that loses static export settings becomes a finding under `oat-docs-analyze`'s legacy scaffold checks (load that skill from installed scope and resolve `references/legacy-scaffold-checks.md` from its own directory). Record the observed path and evidence, then offer analyze; do not reinstate template patches. Ambiguous or user-authored shapes are reported for review, never overwritten.
 
 **3c. Invoke the CLI.**
 
@@ -463,7 +465,7 @@ Capture both stdout and stderr. **Do not** stream output directly to the user; t
 
 - Surface the CLI's stderr **verbatim** to the user (no re-wording — the user needs to see exactly what the CLI said).
 - Print the exit code and the exact flag list that was passed.
-- **Stop the flow.** Do not apply any post-patches. Do not proceed to Build Verifier. A failed scaffold produces an undefined state; guessing at recovery is worse than letting the user diagnose.
+- **Stop the flow.** Do not repair scaffold output. Do not proceed to Build Verifier. A failed scaffold produces an undefined state; guessing at recovery is worse than letting the user diagnose.
 - Example surfaced error:
 
   ```
@@ -493,42 +495,18 @@ Capture both stdout and stderr. **Do not** stream output directly to the user; t
     capabilities: { siteNameFlag: boolean, ... } // from Capability Detection (3b)
     cliLogs: { stdout: string, stderr: string }  // retained for Walkthrough
     rootBuildPatch: { status, reason?, diff?, manualSnippet? } | null // parsed from CLI output when available
-    patchesApplied: []               // populated by the FP-15 bridge in 3d
+    appAgents: { status: cli-scaffolded | preserved | missing, path, suggestedFix? } // from 3d
   ```
 
 The Walkthrough (Step 6) and Post-Scaffold Inspector (Step 5) both consume `Scaffold Result`; keep it structured and avoid shell-side ephemeral state.
 
-**3d. Apply the remaining bridge.**
+**3d. Verify CLI-owned agent guidance.**
 
-FP-15 is the only post-scaffold patch. It is gated by detected capability and file absence, is idempotent, and appends `{ id, status: 'applied' | 'skipped', reason? }` to `Scaffold Result.patchesApplied`. All other scaffold content comes from the CLI template.
+Inspect the actual app-root AGENTS.md and compare createdFiles with the preflight snapshot. Record `Scaffold Result.appAgents` as `cli-scaffolded`, `preserved`, or `missing`, including the path and missing-capability/manual upgrade advice. A missing file on older CLI output becomes an analyze finding; recommend updating the CLI and reviewing the current canonical framework template manually. Do not copy an asset, create a replacement file or overwrite user content. The skill ships no AGENTS template.
 
-**FP-15: AGENTS.md write-if-missing (Fumadocs/MkDocs only).**
+Check that Getting Started serves readers, contributor setup lives under `docs/contributing/`, and contributing points one level up to app-root AGENTS.md. Verify framework-specific authored/generated rules, IA/agent-use guidance and commands with explicit working directories. Record observed gaps rather than fixing them during bootstrap.
 
-Never apply this bridge to Markdown: its root is the content directory and bootstrap must not create a docs-root AGENTS file.
-
-Gate: run **only if** `capabilities.agentsMdScaffoldFlag === false` AND `<appRoot>/AGENTS.md` does not exist on disk.
-
-- If the CLI scaffolded `AGENTS.md` itself, skip with `status: 'skipped', reason: 'CLI scaffolds AGENTS.md'`.
-- If the file already exists (user hand-authored, or a previous skill run wrote it), **never overwrite**. Skip with `status: 'skipped', reason: 'AGENTS.md already present — not overwriting'`.
-
-Procedure when gate passes:
-
-1. Read the template from `.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template`.
-2. Substitute placeholders:
-   - `{{SITE_NAME}}` → `{siteName}` (Input Result)
-   - `{{APP_DIR}}` → `{targetDir}` (Input Result; the scaffolded app path relative to repo root)
-   - `{{REPO_NAME}}` → `{repoName}` (Preflight Result)
-   - `{{GENERATE_INDEX_CMD}}` → derive from the scaffolded `<appRoot>/package.json`:
-     1. Parse JSON and inspect `scripts.predev` first, then `scripts.prebuild`.
-     2. Find the `fumadocs-mdx &&` segment and use the trimmed command that follows it.
-     3. If neither script contains that segment, fall back by repo shape: monorepo uses `pnpm -w run cli -- docs generate-index --docs-dir {appDir}/docs --output {appDir}/index.md`; nested-standalone and single-package use `oat docs generate-index --docs-dir docs --output index.md` from the app root.
-3. Write the rendered content to `<appRoot>/AGENTS.md`.
-4. Wrap the entire file in an HTML comment banner at the top — not for idempotency (file existence is the idempotency check), but so the user knows this file was written by the skill and can be regenerated: `<!-- Generated by oat-docs-bootstrap (FP-15 bridge). Safe to hand-edit after generation. -->`.
-5. Record `{ id: 'FP-15', status: 'applied', target: '<appRoot>/AGENTS.md' }` in `patchesApplied`.
-
-When the CLI eventually scaffolds `AGENTS.md` natively and `agentsMdScaffoldFlag` becomes `true`, the bridge template in this skill can be retired (or folded back into the skill as a reference for how the CLI's template evolved).
-
-**Design discipline:** CLI errors stop the flow. Preserve existing files, report legacy output through analyze, and apply only the absent-file AGENTS bridge. Template upgrades belong to the CLI rather than bootstrap rewrites.
+**Design discipline:** CLI errors stop the flow. Preserve existing files and report legacy output through analyze/manual upgrade. Template rendering and upgrades remain CLI-owned.
 
 ### Step 4: Build Verifier
 
@@ -648,7 +626,7 @@ If `repoShape === 'nested-standalone'`, the docs app may have its own `.oat/conf
 
 The parent config describes the repo's docs; the nested config (when present) scopes OAT operations executed from inside the docs app. Do **not** try to reconcile the two or rewrite one to match the other — they serve different scopes by design. Surface what you found; let the user decide.
 
-**5d. Drift detection (config ↔ filesystem ↔ patches).**
+**5d. Drift detection (config ↔ filesystem ↔ scaffold).**
 
 Beyond basic path existence, check for drift between the config and what the Scaffold Runner actually did:
 
@@ -676,7 +654,7 @@ If user opts in (`yes`), write `documentation.requireForProjectCompletion: true`
 
 If user opts out (default), record the decision in `InspectionState.issues` as `{ severity: 'info', detail: 'requireForProjectCompletion remains false (not opted in)' }` and move on; do not write to the config.
 
-**Write-once discipline:** 5e is the only point in this skill where `.oat/config.json` is mutated outside of the CLI's own writes. Preflight is read-only (Step 1). Input Gatherer is read-only (Step 2). Scaffold Runner's writes flow through the CLI (Step 3c). Post-patches (Step 3d) mutate scaffold output files, not the config. If you find yourself about to write `.oat/config.json` anywhere else, stop — it belongs here.
+**Write-once discipline:** 5e is the only point in this skill where `.oat/config.json` is mutated outside of the CLI's own writes. Preflight is read-only (Step 1). Input Gatherer is read-only (Step 2). Scaffold Runner's writes flow through the CLI (Step 3c). Step 3d inspects scaffold output without writing files. If you find yourself about to write `.oat/config.json` anywhere else, stop — it belongs here.
 
 **5f. Emit the Inspection Result.**
 
@@ -702,7 +680,7 @@ Skip this step if `Verification Result.buildSucceeded !== true` OR `Inspection R
 
 **Format discipline.** Each section below is a short spoken-style chunk (3–6 short paragraphs), references concrete paths from the `Scaffold Result` / `Inspection Result`, and ends with a single-sentence "what this means for you" takeaway. After each section, pause and check the user wants to continue: `Ready for the next section? (yes / skip to summary)`. If the user says `skip to summary`, jump directly to Step 7's Exit summary.
 
-**Audience discipline.** The Walkthrough is a **setup-time** narration — it runs once, now. The docs-app `AGENTS.md` (FP-15 bridge or CLI-scaffolded) is the **runtime** reference future agents will read when working inside the docs app. These are different audiences at different times; the Walkthrough does not duplicate the AGENTS.md content. If you find yourself reading AGENTS.md content aloud, stop — point the user at the file path instead.
+**Audience discipline.** The Walkthrough is a **setup-time** narration — it runs once, now. The docs-app `AGENTS.md` (CLI-scaffolded or existing authored) is the **runtime** reference future agents will read when working inside the docs app. These are different audiences at different times; the Walkthrough does not duplicate the AGENTS.md content. If you find yourself reading AGENTS.md content aloud, stop — point the user at the file path instead.
 
 #### Section A (both frameworks) — Your OAT documentation config
 
@@ -768,7 +746,7 @@ The docs app is surrounded by three separate places agents and humans are expect
 Narrate the three surfaces with audience + time discipline:
 
 1. **Root `AGENTS.md` `## Documentation` section** — the repo-wide pointer. A 4-line breadcrumb every agent working anywhere in the repo reads first. Written/updated by `oat docs init` (or `oat-docs-apply`). Purpose: "docs live here; here's the framework; here's the config path." Not a tutorial — a signpost.
-2. **Docs-app `AGENTS.md`** at `<appRoot>/AGENTS.md` — the ongoing reference for agents who are **working inside the docs app**, not setting it up. This is the FP-15 bridge file (or CLI-scaffolded equivalent if `capabilities.agentsMdScaffoldFlag === true`). Task-framed sections: "When you need to add a new page", "When you need to restructure navigation", "When you need to audit or bulk-edit docs". **Audience discipline:** this file exists for the agent working on docs content **six months from now**, not for the agent running this skill today. Everything in it should still be useful at that time. If content would only matter at setup time, it belongs in this Walkthrough, not in `AGENTS.md`.
+2. **Docs-app `AGENTS.md`** at `<appRoot>/AGENTS.md` — the ongoing reference for agents who are **working inside the docs app**, not setting it up. The CLI scaffolds it for both frameworks; older output without it receives analyze/manual upgrade advice, never a skill-created replacement. Task-framed sections: "When you need to add a new page", "When you need to restructure navigation", "When you need to audit or bulk-edit docs". **Audience discipline:** this file exists for the agent working on docs content **six months from now**, not for the agent running this skill today. Everything in it should still be useful at that time. If content would only matter at setup time, it belongs in this Walkthrough, not in `AGENTS.md`.
 3. **`docs/contributing.md`** — human-authoring conventions. Markdown feature reference (code blocks, mermaid, GFM alerts), frontmatter requirements, linting/formatting commands (if enabled). Not agent instructions — human reference. Agents working with docs content may read it for the Markdown feature list, but its primary audience is a human contributor.
 
 End with: "Three surfaces, three audiences, three lifetimes. Root `AGENTS.md` = repo-wide pointer. Docs-app `AGENTS.md` = future agents working inside the docs app. `contributing.md` = humans. Keeping them separate keeps each one useful."
@@ -782,6 +760,7 @@ Narrate how the Fumadocs scaffold actually works, grounded in files the user can
 - **`app/layout.tsx` — `DocsLayout` renders the chrome.** The `<DocsLayout>` component from `@open-agent-toolkit/docs-theme` wraps every docs page with the top nav, sidebar, and search UI. It accepts a `branding` prop with `title`, `logo`, etc. **Runtime insight (worth knowing):** the compiled theme bundle only forwards `branding.title` into the nav header chrome — it doesn't use it for page metadata, social cards, or browser tab titles. The CLI template also includes `export const metadata = { title, description }` in `layout.tsx`: the chrome title and the document title are two separate concerns, and both surfaces must be configured. **Anti-pattern to avoid:** passing `title` / `description` to `createDocsConfig()` in `next.config.js` is a no-op — the wrapper accepts `basePath` and `turbopack`, not metadata. If your HTML `<head>` comes back empty (no `<title>`, no meta description, no Open Graph), the `export const metadata` in `layout.tsx` is missing.
 - **`next.config.js` — `createMDX()` picks up `docs/`.** The Fumadocs MDX pipeline uses `@open-agent-toolkit/docs-config`'s `createDocsConfig()` wrapper, which under the hood calls `createMDX()` with the docs directory hardcoded to `docs/`. Both `.md` and `.mdx` files are compiled at build time; frontmatter becomes typed metadata accessible from layouts and listings. **Default to `.md`** for plain content pages — agents, linters, grep rules, and the `remark-links` plugin all handle `.md` more predictably than `.mdx`. Reach for `.mdx` only when a page actually needs a JSX component inline (an embedded `<Callout>`, an interactive widget, a custom layout). FlexSearch indexes them identically.
 - **FlexSearch static indexing.** Search is client-side — on build, Fumadocs scans every `.md`/`.mdx` file under `docs/` and emits a precomputed FlexSearch index that loads alongside the first route. No server; no search API call. That's also why renaming a page without a redirect loses deep links silently: the old index entry stops existing at the next build, and the new one doesn't know the old slug.
+- **Page metadata and agent Markdown.** The page route reads loaded title/description in `generateMetadata`; layout metadata supplies site defaults. Equivalent valid customized Next metadata arrangements are allowed. Static `/llms.txt`, `/llms-full.txt`, and `/llms/<page-slugs>/content.md` (root `/llms/content.md`) enumerate the same loaded reader `.md` set, including readers outside a hand-authored sidebar. Raw links remain source-relative; use each entry's source path and canonical rendered URL. MDX and configured non-readers are excluded.
 - **`@open-agent-toolkit/docs-theme` branding.** The theme package centralizes the nav/sidebar/footer look and forwards only a small surface of props. Don't expect `branding` to influence metadata; use the Next.js `metadata` export for that.
 - **Turbopack app root.** For `nested-standalone` only, the template passes `dirname(fileURLToPath(import.meta.url))` through `createDocsConfig({ turbopack: { root } })`. Monorepo and single-package scaffolds leave root discovery to Next.js so workspace dependencies remain reachable. This works in ESM and retains static export, trailing slashes, unoptimized images, and base-path settings. Report older wrappers to analyze instead of replacing them.
 
@@ -897,8 +876,9 @@ Config:      {configPath} (documentation section)
 Created:
   - <count> files (see `git status` or `git log -1` for the full list)
 
-Patches applied:
-  - FP-15 docs-app AGENTS.md: {applied | skipped}
+Agent guidance:
+  - App-root AGENTS.md: {cli-scaffolded | preserved | missing}
+  - Missing capability/manual upgrade advice: {path + remedy or none}
 
 Build:
   - Install: {ok | known-issue: ...}
@@ -929,7 +909,7 @@ Reminder: the docs-app AGENTS.md at {appRoot}/AGENTS.md tells future agents how
 to work inside this docs app. Read it before making non-trivial doc changes.
 ```
 
-Substitute every `{placeholder}` with the actual value from `Scaffold Result`, `Verification Result`, or `Inspection Result`. If a patch was `skipped` because the CLI already handled it (e.g., `agentsMdScaffoldFlag === true`), say so explicitly rather than printing `n/a` — the user should know when the CLI has caught up with the skill.
+Substitute every `{placeholder}` with the actual value from `Scaffold Result`, `Verification Result`, or `Inspection Result`. Report whether app guidance came from the CLI, was preserved, or is missing; never print a successful scaffold capability that was not observed.
 
 For the "Next" section's `<framework-specific dev command>`, render:
 
@@ -957,20 +937,20 @@ A successful `oat-docs-bootstrap` run satisfies every invariant below. Any failu
 - Input Gatherer collected the full Input Result (framework, siteName, appName, targetDir, siteDescription, lint, format) plus any `conflictResolution` required by Preflight conflicts; all inputs validated before scaffold.
 - Conflict Resolution Contract's "Allowed mutations" completed for the chosen resolution; pre-scaffold invariant satisfied before `oat docs init` ran.
 - Scaffold Runner invoked `oat docs init` non-interactively with capability-gated flags; CLI exited zero; `Scaffold Result.appRoot` resolved from `.oat/config.json` (not from input alone).
-- Capability Detection produced a deterministic `capabilities` record before scaffold (for flag gating) and classified each patch target after scaffold (scaffold-shape / patched-shape / drift).
-- Every applied post-patch is idempotent and file-type aware: code-file patches use syntactically valid code comments when markers are useful, while rendered Markdown patches rely on content-shape checks instead of hidden FP comments. No patch ran without passing both its capability gate and its file-shape check.
+- Capability Detection produced a deterministic `capabilities` record before scaffold (for flag gating) and verified actual CLI output after scaffold (current / preserved / missing capability).
+- All scaffold files came from the CLI; missing current-template capabilities were reported with paths and analyze/manual upgrade advice, preserving existing bytes.
 - Build Verifier ran install + build with commands matching `repoShape`; failures classified against known patterns; unknown errors halted the flow before Inspector/Walkthrough.
 - Post-Scaffold Inspector verified every `documentation.*` path against disk; drift findings recorded with `suggestedFix`; nested-standalone dual-config surfaced without reconciliation.
 - `requireForProjectCompletion` decision collected from user; written to `.oat/config.json` only on opt-in; never silently default-true.
 - Walkthrough narrated setup-time context, not AGENTS.md runtime content; skipped framework-irrelevant sections; paused between sections with a `skip to summary` escape.
 - Optional Content Kickoff delegated to `oat-docs-analyze` + `oat-docs-apply` on accept; handed off with specific commands on decline.
-- Exit summary printed with actual values (not placeholders) for app, framework, patches applied, build status, inspection findings, and next-step commands.
+- Exit summary printed with actual values (not placeholders) for app, framework, agent-guidance capability, build status, inspection findings, and next-step commands.
 
-**Ratcheting invariants:**
+**Single-owner invariants:**
 
-- When a CLI capability is detected as present (`capabilities.{flag} === true`), the corresponding post-patch is **skipped** — not applied redundantly. The skill self-ratchets as CLI fixes land.
-- Every patch's `status` is recorded in `Scaffold Result.patchesApplied` as `applied` / `skipped` with a `reason`. The Exit summary surfaces this so the user sees which CLI gaps the skill had to cover vs. which the CLI handled directly.
-- When `capabilities.agentsMdScaffoldFlag === true` (CLI has added native AGENTS.md scaffolding), the FP-15 bridge in this skill is skipped and can be retired from the assets directory.
+- CLI templates own both framework app-root AGENTS files. Bootstrap never writes a replacement or rewrites current scaffold content.
+- `Scaffold Result.appAgents` records observed CLI-created/preserved/missing status with a path and remedy; capability and exit-summary claims match the actual files.
+- Older CLI output routes to analyze/manual upgrade guidance while existing Markdown behavior remains unchanged.
 
 **Stop-on-broken-state invariants:**
 
@@ -981,5 +961,5 @@ A successful `oat-docs-bootstrap` run satisfies every invariant below. Any failu
 **Audience-discipline invariants:**
 
 - The Walkthrough narrates setup-time concepts; it does not recite the docs-app AGENTS.md word-for-word.
-- The docs-app AGENTS.md (FP-15 bridge or CLI-native) contains only guidance that would still be useful six months after scaffold — no "how this was set up" content.
+- The docs-app AGENTS.md (CLI-scaffolded or existing authored) contains only guidance that would still be useful six months after scaffold — no "how this was set up" content.
 - The three agent-instruction surfaces (root `AGENTS.md` `## Documentation`, docs-app `AGENTS.md`, `docs/contributing.md`) are kept distinct by audience + lifetime; the Walkthrough's Section D makes this explicit to the user.

@@ -49,13 +49,13 @@ oat_template: false
 | p-rev3 | completed | 1     | 1/1      |
 | p04    | completed | 1     | 1/1      |
 | p-rev4 | completed | 1     | 1/1      |
-| p05    | pending   | 1     | 0/1      |
+| p05    | completed | 1     | 1/1      |
 | p06    | pending   | 1     | 0/1      |
 | p07    | pending   | 1     | 0/1      |
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 8/13 phases accepted
+**Total:** 9/13 phases accepted
 
 ---
 
@@ -1207,9 +1207,316 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 ## Phase p05: Reader-first starter app
 
-**Status:** pending
+**Status:** completed
+**Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
+**Head:** bf50ec5ef9823afa082da6463833adf6ce7e6157
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+
+One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
+
+### Task p05-t01: Compose recursive tabs before links
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-impl-20261023 (same accepted run)
+**Intent:** Preserve nested Markdown, GFM and fenced examples through both public transform pipelines; bound Mermaid evidence to emitted JSX/newlines. Advance the phase's public lockstep versions.
+**Files:** packages/docs-transforms/src/{remark-tabs.ts,index.ts,composition.test.ts}, packages/docs-transforms/{README.md,package.json}, packages/docs-config/src/{source-config.ts,source-config.test.ts}, five public package.json files, packages/cli/assets/public-package-versions.json, pnpm-lock.yaml.
+**Proof command:** focused transforms/config Vitest; package check/type-check/build; pre-fix red and fixed controls under analysis/p05.
+
+**Commit:** 003d2d09329f0d3a1b7989bb65930f31186891ed
+**Verification:** transforms 36 tests and docs-config 16 tests executed (no Turbo); check/type-check and scoped builds exit0. Baseline composition red exit1 (4/5 failures), restored green exit0; separate source-config order control red1/fixed0. Real flagship Syntax examples preserved and nested Rendered tabs transformed; Mermaid proof concerns JSX/newlines only. All public/bundled versions0.3.27. Logs: ignored analysis/p05/t01-\*.
+**Prevention:** corrected dependency/test lint and indented-code detection before commit; no recovery reservation. Worktree validation accidentally invoked during preflight replayed cached suites and failed on newly opened record dirt; excluded from phase evidence.
+
+### Task p05-t02: Export loaded Markdown for agents and guard runtime parity
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-impl-20261023 (same accepted run)
+**Intent:** Share pinned-loader/raw-source llms endpoints between canonical scaffold and flagship, enumerating static paths without rewrites, and enforce the explicit runtime parity boundary.
+**Files:** packages/docs-config/src/{llms.ts,llms.test.ts,index.ts}, packages/docs-config/README.md, both Fumadocs lib/source.ts files and three new route handlers per app, CLI scaffold allowlist and seeded scaffold fixture, apps/oat-docs/tests/template-parity.test.ts. Mechanical parity additions: docs-config/package.json narrow llms export, flagship app/branding.css and layout import conserve existing branding; all other shared runtime bytes match. Actual fresh export proof in ignored analysis/p05.
+**Proof command:** docs-config check/type-check/build, CLI init suites, seeded parity fail/restored pass, real fresh scaffold and flagship Next static export with body/path/membership probes.
+
+**Commit:** 4f3a03118a46f3988a0304a35c063ceaba86926b
+**Verification:** docs-config18 tests (real pinned loader/server raw methods), CLI init116 tests, parity8 tests all executed; scoped config/CLI checks, config/docs types and config build exit0. Seeded owned-route parity red1/restored0. Real flagship Next build passes (4/6 dependency tasks cached; docs build executed); fresh scaffold Next16.1.6/MDX14.3.2/core16.10.2 export executed from locally packed branch packages with standalone dependencies and scaffold-compatible TypeScript5.9.3. HTTP proves root/nested/missing paths, full/index/per-page membership5 fresh/89 flagship, raw authored-source retention, basePath once/trailingSlash and MDX/non-reader404. T3 preview opened, clicked Rendered and observed nested pnpm/npm tabs with pnpm install. Branding extraction byte conservation passes.
+**Proof index:** ignored analysis/p05/t02-\*, export-proof.py, install-fresh.py, pin-fresh.mjs, inspect-export.py, http-proof.py. Fixture's explicit hand-authored nav/prebuild customization tests loaded readers outside sidebar. Initial dependency-symlink setup failed (pnpm bin path, then Turbopack external-root restriction); replaced with offline local package install. Attempted inherited TypeScript6 failed CSS import checking; restored scaffold's supported5.x. All were precommit prevention; no recovery. t01 config test count correction:17, not16.
+
+### Task p05-t03: Scaffold reader and contributor guidance under one CLI owner
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-impl-20261023 (same accepted run)
+**Intent:** CLI-scaffold framework AGENTS and full portable contributor guidance, move toolchain out of reader Getting Started, retire bootstrap's duplicate template across all consumers, add metadata analysis guidance, and mark Material support legacy without changing Python pins.
+**Files:** canonical docs-app-{fuma,mkdocs} AGENTS/docs pages; CLI init scaffold/commands and existing integration/unit fixtures; bootstrap skill and retired asset; analyze skill legacy reference; flagship AGENTS/contributing docs/docs-tooling public usage; package README usage. Exact producer file inventory retained in ignored analysis/p05/p05-t03-files.json.
+**Proof command:** real canonical init integration (both frameworks, spaced nested path, preserved existing/Markdown controls); command execution/JSON escape controls; skill sentence contracts; scoped checks/builds; source conservation and sourced Material statement. No Python installation/build.
+
+**Scope reconciliation:** Root authorized the minimum Fumadocs nav adapter/real-loader-test correction for the required contributing.md + contributing/index.md combination (p05 Intent: retain both paths with coherent fresh nav). Precise source-file refs preserve strict reachability; collision index URLs follow installed core16.10.2. Root additionally authorized the minimal remark-links correction and focused real-source/pinned-loader tests for the same collision, covering source and target routes and final exported hrefs. Prior-phase anchors/history stay frozen. This is uncommitted integration prevention, not recovery.
+
+**Verification:** Scoped CLI/config/transforms check/type/build pass; nav+init156, transforms38, isolated skill sentences/validation1087 execute successfully. Flagship docs check passes. Final real canonical Fumadocs scaffold export passes with normal nav-sync/build scripts, both contributor URLs and Markdown endpoints, raw source retention, nine reader/contributor hrefs, basePath/trailingSlash, missing routes404 and nav-check0; T3 browser confirms both contributor pages in the sidebar. Real MkDocs init/nav/commands and preserved existing/Markdown controls pass; Python pins unchanged and no Python build claimed. Collision regression red1/fixed0 and strict/no-collision/.mdx valid controls retained. Bootstrap capability/result/walkthrough/summary ownership conservation and manual metadata-guidance evaluation are in ignored analysis/p05/t03-manual-evidence.md; this is prose evidence, not automated agent behavior. Source-only AGENTS pointers remain explicit inline relative paths rather than fictitious rendered reader routes.
+**Phase-gate finding:** Ordered gates1/2 pass; gate3 fails only the preexisting public-package export assertion after t02 added the required docs-config/llms subpath. This committed t02 omission is not folded into t03; after committing this independently verified scaffold record, reserve the bounded recovery on a clean tree. Gate4 onward have not yet run. No recovery usage yet (0/10,pendingnull).
+
+**Commit:** 4a6eb7c68bc3619986fd57b88273e000a13b849e
+
+### Task p05-t04: Propagate CLI-owned scaffold guidance
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-prose-20261023 / cont-docs367-p05-prose-after-recovery01 (same implementer continuation)
+**Intent:** Finish approved public prose propagation against the canonical bootstrap skill, preserving valid setup/capability/verification/approval behavior and documenting older-CLI analyze/manual upgrade advice.
+**Files:** apps/oat-docs/docs/docs-tooling/commands.md, apps/oat-docs/docs/docs-tooling/workflows.md, apps/oat-docs/docs/getting-started/tool-packs.md.
+**Proof command:** file-scoped oxfmt; existing docs check (Markdown lint/format, links/nav/catalog); conservation diff; ordered repository gates1–8 after commit. Evidence: ignored analysis/p05/prose/.
+
+**Commit:** d9ce83669aaa4865ce9a6e112386c57876e7f7c9
+**Verification:** Existing docs check executed exit0 (format, Markdown lint, source links/anchors, committed nav and catalog). Conservation against canonical bootstrap Steps3–7 preserves setup inputs, Markdown/adoption, valid capability/build/config/walkthrough behavior, approval boundaries, all headings and Markdown links. Only the three authorized pages changed; source search found no other retired post-patch/AGENTS-bridge claims under the public docs. Evidence: ignored analysis/p05/prose/{conservation.md,product.diff,task-docs-check.log}. No new tests or recovery reservation.
+
+### Recovery Event docs367-p05-recovery-01
+
+- Phase/task: p05 / p05-t02
+- Original request: docs367-p05-impl-20261023
+- Original commit: 4f3a03118a46f3988a0304a35c063ceaba86926b
+- Defect class: test
+- Discovered by: isolated-HOME `pnpm test` (ordered gate3)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: 49572b8dad6cb838521d9c90121f42e8230eb3dd
+- Verification: focused release-contract29 tests pre/post exit0; all ordered gates1–8 pre-candidate exit0; immediate postcommit isolated-HOME pnpm test exit0 (12cached package tasks, direct suites execute), followed by forced isolated12/12 fresh tasks,9374 tests,0cached. Direct smoke165/skills712/scripts1, validation, lint/format and isolated sentences1087 also exit0.
+- Reason: The existing exact release assertion still permitted only the root export after the agreed narrow docs-config/llms subpath shipped in t02. The correction adds that exact subpath only for docs-config, preserving all other exact manifest assertions. No runtime/public requirement/architecture change. Eligibility and clean-tree reconciliation recorded before edit; reservation b8e7b80a0686926f18c8d9bd060299443b9b3993 durably changed only p05's ledger. Original t02 remains immutable. The committed completed marker remains for root validation/clearance;9 attempts remain and no second reservation occurred.
+
+### Phase p05 verification and handoff
+
+**Tested candidate:** 49572b8dad6cb838521d9c90121f42e8230eb3dd. Three opened execution records are completed. This phase remains in_progress for root independent review, recovery settlement and acceptance. Final handoff is DONE_WITH_CONCERNS because the public prose propagation gap below needs a separate correction after root clears the completed marker. No nested dispatch, reviewer, GitHub operation, push, merge, history rewrite or infrastructure retry.
+
+| Task    | Product commit                           | Separate task journal                    |
+| ------- | ---------------------------------------- | ---------------------------------------- |
+| p05-t01 | 003d2d09329f0d3a1b7989bb65930f31186891ed | 215f75eb11b9081460acd7e5dda1de642ceb2813 |
+| p05-t02 | 4f3a03118a46f3988a0304a35c063ceaba86926b | 304a600e3f87c8db5609065472b68039310fc75d |
+| p05-t03 | 4a6eb7c68bc3619986fd57b88273e000a13b849e | 9bc52036afec02b62b4b4a912a2a756b8c35d407 |
+
+| Ordered gate | Command                     | Exit | Turbo cached / total |
+| ------------ | --------------------------- | ---- | -------------------- |
+| 1            | pnpm check                  | 0    | 8/11                 |
+| 2            | pnpm type-check             | 0    | 9/11                 |
+| 3            | isolated-HOME pnpm test     | 0    | 9/12                 |
+| 4            | pnpm build                  | 0    | 5/5                  |
+| 5            | pnpm run check:skill-bumps  | 0    | direct               |
+| 6            | pnpm release:check-versions | 0    | direct               |
+| 7            | pnpm release:validate       | 0    | direct               |
+| 8            | pnpm build:docs             | 0    | 6/6                  |
+
+All eight run in order with explicit exits after the correction; origin/main fetch before gate6 exits0 and no owned-path advancement is found. Cached logs are replays. Separate forced isolated-HOME `pnpm exec turbo run test --force` executes12/12 tasks freshly,0cached: CLI8916,control-plane289,docs-config18,theme20,transforms38,docs93 =9374 tests, including real dependency/flagship Next builds. Separate direct smoke165/skills712/scripts1, skill validation, lint, format and isolated shared/validation sentences1087 pass. All public/bundled packages0.3.27; bootstrap1.4.3 and analyze1.7.2 version gates pass. Initial gate3's stale export-contract failure is preserved under analysis/p05/initial-gates; precommit fixture/setup/prose corrections and the accidentally dirty preflight are disclosed in the task records, with no route/infrastructure retry.
+
+**Exit evidence:** Final HTTP probes preserve raw authored bytes for89 flagship readers,5 original real-fixture readers (including a loaded page outside hand-authored sidebar plus MDX/non-reader controls) and5 final canonical-layout readers. Final layout exports `/contributing/` and `/contributing/index/`, distinct corresponding Markdown endpoints, root/nested content.md, canonical basePath once/trailingSlash,9 reader/contributor hrefs, missing404s and nav-check0. T3 browser displays both contributor pages and clicking Authoring Contract reaches the actual contributor entry. Seeded exact runtime parity red1/restored0, actual pinned-loader collision red1/fixed0, real-source .md/.mdx link red1/fixed0, GFM/nested-tabs/fenced Syntax controls and bounded Mermaid JSX/newline evidence are retained. No Python installation/build/upgrade or diagram-validation claim. Every non-p05 implementation byte and all state outside p05's ledger are conserved; plan, root state pointers, project log, other phase anchors and Reviews are unchanged.
+
+**Remaining public-prose concern:** Final source review finds retired bootstrap post-patch/AGENTS-bridge claims in apps/oat-docs/docs/docs-tooling/commands.md:43, workflows.md:34/99/299/309–312 and getting-started/tool-packs.md:980. These three files were not corrected or reserved under a second attempt. The canonical bootstrap skill and its capability/result/walkthrough/summary consumers are corrected, but these public descriptions still require the same approved p05 propagation. Root must validate/clear recovery01's committed completed marker before a separate bounded correction; no new architecture or requirement is requested. Exact excerpts and paths are in ignored analysis/p05/remaining-public-prose-drift.{log,json}. Root owns the combined scope-judgment project-log entry and independent review/acceptance.
+
+**Proof index:** ignored analysis/p05/README.md, task-owned file manifests p05-t01–t03-files.json, t01/t02/t03 logs and real fixture scripts, t03-manual-evidence.md, gates.json plus initial-gates/, post-checks.json, final-test-counts.json, final-http-all.log and t03-final-export-proof.json, recovery-01-eligibility.json and focused pre/post logs. Machine baselines remain ignored; this journal keeps concise results. This verification-only journal changes no tested product bytes. Writes stop at handoff.
+
+### Root recovery01 settlement and continuation
+
+Root validated request docs367-p05-impl-20261023 and its DONE_WITH_CONCERNS handoff at a7a46982cac6fd4e163ecc57895f127792da9872. Reservation b8e7b80a0 precedes the bounded correction49572b8da; the original t02 commit/parent remain immutable. Only the release assertion and matching terminal marker changed in the recovery candidate. Eligibility, original identities, exact high/priority target, monotonic accounting and focused pre/post plus postcommit phase exits reconcile. Root clears only the completed pending marker and preserves usage1/10 (9remain); prior-phase ledgers/anchors stay frozen. All three records are closed, all eight ordered gates pass and the supplemental forced run executes12fresh tasks/9374tests. Root inspected records, diffs and exits rather than rerunning broad gates. The phase remains in_progress for the existing three-page prose correction, independent review and acceptance. The nav/link collision scope reconciliations fulfill the concrete p05 layout and introduce no additional requirement.
+
+### Continuation verification and handoff
+
+Request docs367-p05-prose-20261023 continues the same implementer after root settlement, with accepted launch3febb6d35640bd9c4c271bfc300d90e1409bc060. T04 product d9ce83669aaa4865ce9a6e112386c57876e7f7c9 and separate journal95a2cef6610eb3a65c18544ffcdd51f9abb4b212 close the remaining approved propagation in exactly three public pages. All four records are completed. Candidate Head is95a2cef6610eb3a65c18544ffcdd51f9abb4b212; this verification-only journal changes no tested product bytes. Phase remains in_progress for root independent review and acceptance.
+
+Conservation: canonical bootstrap ownership/capability/result/walkthrough/summary behavior now agrees with the three pages; setup inputs, Markdown/adoption, valid capability/build/config/walkthrough behavior, explicit approval boundaries and every heading/link are retained. No other obsolete public post-patch/AGENTS-bridge claim was found by the bounded source search. Existing docs check executes exit0 before product commit; no new automated tests or negative controls. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+| Ordered gate             | Exit                      | Turbo cached / total |
+| ------------------------ | ------------------------- | -------------------- |
+| 1 check                  | 0                         | 0/11                 |
+| 2 type-check             | 0                         | 5/11                 |
+| 3 isolated-HOME test     | 0 after one no-edit retry | 11/12 on retry       |
+| 4 build                  | 0                         | 5/5                  |
+| 5 check:skill-bumps      | 0                         | direct               |
+| 6 release:check-versions | 0                         | direct               |
+| 7 release:validate       | 0                         | direct               |
+| 8 build:docs             | 0                         | 6/6                  |
+
+All gates run in order, with origin/main fetch exit0 before6 and no owned-path advancement. Initial gate3 exits1 on visual-companion server-start timeout (8915CLI tests pass,1fails); one disclosed no-edit infrastructure retry passes that test and all8916CLI tests freshly, with11/12 Turbo tasks replayed. Root smoke165/skills712/scripts1 execute and pass on that successful gate. This is an infrastructure rerun, not a code correction or recovery reservation. Forced12fresh/9374tests, direct lint/format/sentence contracts, real exports/browser/HTTP and prior behavioral controls remain inherited from the earlier unchanged-product proof; no forced rerun or visual/export repetition was done for prose. Recovery remains1/10,9remaining,pendingnull; no new recovery event or route retry. Exact target codex_codex_proxy/gpt-6.1-sol/high/priority is unchanged. No nested dispatch, independent review, GitHub operation or root-owned tracking edit.
+
+Review-scope p05 journal check exits0/statusok; its sole warning is the root-owned continuation run still running, which root terminalizes at handoff.
+
+Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, task-docs-check.log, gates.json/gate1–3.log, infrastructure-retry.md and gates-retry.json/gate3–8-retry.log, fetch.log/main-paths.log and journal-check.json. Earlier proof index analysis/p05/README.md is historical; recovery01 was settled by root at c59e30557b79a8680a4541b2b9cdc0bca8fcdc0d, and the public-prose concern recorded there is now closed by t04.
+
+### Root pre-review ledger validation
+
+Root validated all four closed p05 records and the final prose scope at13d07784d; only implementation.md follows candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212. Three-page headings/link conservation and explicit ordered gate exits reconcile, including the disclosed single no-edit server-timeout retry; the prior forced9374tests and real-export/browser evidence remain inherited. Recovery01 stays settled at1/10,pendingnull. Base and candidate Head are valid ancestor anchors. Root review is pending; no p05 acceptance or later-phase start is recorded.
+
+### Task p05-t05: (review) Preserve distinct MkDocs contributor destinations
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — H1.
+**Intent:** Apply root-selected fresh-template use_directory_urls:false, retain both approved contributor source paths and document .html URLs. Existing apps and Python pins are unchanged.
+**Files:** .oat/templates/docs-app-mkdocs/mkdocs.yml, .oat/templates/docs-app-mkdocs/docs/contributing.md, packages/cli/src/commands/docs/init/integration.test.ts.
+**Proof command:** real canonical init regression red/fixed/valid; pinned MkDocs1.4.2 default-theme build and rendered nav/source-link proof; focused init/nav suites and scoped check/type-check.
+
+**Commit:** 552ca40c021a7e39e18b856c55e55309b8469294
+**Verification:** Existing real-init regression red1 on duplicated destination, fixed0; isolated init/nav156 tests pre/post execute exit0. CLI check/type-check exit0; initial test-variable lint issue corrected before commit. Real canonical CLI scaffold plus reviewer-installed MkDocs1.4.2 default-theme build reproduces silent overwrite, then emits contributing.html and contributing/index.html distinctly with the correct bodies/nav links; all checked rendered source-page hrefs resolve, ordinary getting-started.html passes, and all four URLs return HTTP200. Material and full plugin/theme build are not claimed. Exact config/provenance/logs in ignored analysis/p05/fix-r1/t05-\* and mkdocs-proof.py. Python pins, existing consumer configs, frozen anchors and recovery1/10,pendingnull unchanged.
+
+### Task p05-t06: (review) Reconcile llms base paths and encoded slugs
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — M1, L1.
+**Intent:** Prefix loader-rooted URLs once and reconcile encoded loader slugs with decoded Next params and raw Markdown endpoints, using a real spaced-filename static export.
+**Files:** packages/docs-config/src/{llms.ts,llms.test.ts}, .oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx, apps/oat-docs/app/[[...slug]]/page.tsx.
+**Scope evidence:** Pre-fix actual Next export emits literal my%20guide directories for both rendered and Markdown routes; once-encoded served URLs404. The authorized minimal page-route adaptation decodes generated params and re-encodes only at pinned-loader lookup, in identical template/flagship bytes. No llms route handler changes or generic routing layer.
+**Proof command:** existing real-loader tests red/fixed/ordinary-base controls; actual fresh Next export and served spaced endpoint/raw bytes/root/nested/exclusion404 proof; config check/type/build and relevant runtime parity tests pre/post.
+
+**Commit:** 9b259c828a83c6af4539f3cc2dffbfbb3b28b162
+**Verification:** Real-loader regression red1 for matching /docs base and double encoding; fixed config20 tests execute pre/post exit0 with /site and empty-base controls, decoded static/request params and real raw-source reads. Runtime parity8 pre/post, config check/type/build exit0. Fresh canonical Next export (core16.10.2/MDX14.3.2/Next16.1.6/TS5.9.3) reproduces once-encoded HTTP404/literal-percent directories, then packed branch helper + matching page route emit actual-space directories. /docs/llms/my%20guide/content.md and /docs/my%20guide/ return200; double-encoded endpoint404. All8 loaded Markdown readers retain exact raw bytes and served canonical pages; /docs/docs/guide/ and /docs/docs/ prove matching base, root/nested and missing/non-reader/MDX endpoint404 controls pass. Installed package/route hashes match committed export inputs. Initial offline install lacked metadata in isolated HOME; ordinary install succeeded with exact pinned runtime versions preserved. An incidental fixture param-order assertion was corrected before commit. No recovery attempt. Evidence: ignored analysis/p05/fix-r1/t06-_, next-proof-_.py and next-http-proof.py; sidebar deliberately hand-authored to retain out-of-sidebar loaded readers, not a new production behavior.
+
+### Task p05-t07: (review) Keep root-index routing inside the content root
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — L2.
+**Intent:** Ignore app-root docs.md/docs.mdx for root-index source/target routing while retaining nested same-name contributor collisions and existing fallback behavior.
+**Files:** packages/docs-transforms/src/remark-links.ts, packages/docs-transforms/src/remark-links.test.ts.
+**Proof command:** bounded real-file/pinned-loader test extension red/fixed/ordinary controls; transforms suite/check/type/build pre/post and final docs validation/build.
+
+**Commit:** 8f2c69c866fda3df157bc39e7851f8a8a3ce8ff1
+**Verification:** Existing real-file .md/.mdx collision tests red1 on both source and target root routes after an outside-root sibling is added; fixed transforms38 tests execute pre/post exit0. Pinned-loader inventory remains rooted in docs; all prior nested contributor collision, no-collision, query/fragment/trailing-slash and context-free controls pass. Reviewer probe against actual built transform changes with-sibling ../guide/ to ./guide/ while ordinary ./guide/ stays valid. Transforms check/type/build and flagship docs validation exit0. Evidence: ignored analysis/p05/fix-r1/t07-\*. No recovery usage or scope expansion.
+
+### Task p05-t08: (review) Remove remaining bridge prose and clarify nav comment
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — M2, L3.
+**Intent:** Correct the public older-CLI sentence and describe the precise source-file collision exception in the existing nav docstring, without changing nav behavior.
+**Files:** apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md, packages/cli/src/commands/docs/nav/fumadocs.ts (docstring only).
+**Proof command:** conservation diff, existing docs check and CLI check/type-check; no new prose tests or receipt package.
+**Correction to prior evidence:** T04's no-residue source-search claim was too broad: it missed the remaining AGENTS bridge sentence on add-docs-to-a-repo.md. This record closes that specific residue; historical records remain intact.
+
+**Commit:** 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214
+**Verification:** Existing docs check executes pre/post exit0 (format/Markdown lint/source links/anchors/nav/catalog); CLI check/type-check exit0. Conservation diff preserves every page heading/link and all valid setup/approval/preservation behavior; nav delta is comment-only and retains strict unlisted handling. No new automated test or prose receipt package. Evidence: ignored analysis/p05/fix-r1/t08-\*.
+
+### Task p05-t09: (review) Resolve links from the configured reader collection
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
+**Source review:** reviews/archived/remote-pr-373-review-2026-10-23T082550Z.md (M1, discussion4357536051) and remote-pr-373-review-2026-10-23T083002Z.md (H1, discussion4357563290); root remote receive and bounded inventory authorization.
+**Intent:** Use the configured content root and effective filtered reader inventory for both source and target collision routing, preserving context-free fallback and live membership changes.
+**Files:** packages/docs-transforms/src/remark-links.ts; packages/docs-config/src/{source-config.ts,source-config.test.ts}; both package READMEs; docs-config/package.json and minimal pnpm-lock.yaml importer update.
+**Scope reconciliation:** Outcome7/p05 source-relative links and conserved G2 reader membership require these corrections. Root authorizes tinyglobby0.2.17, already used by the pinned emitter; collectionFiles remains the only exclusion grammar. No new routing/config locator or permanent inventory cache.
+**Proof command:** Real temporary files through createSourceConfig and pinned MDX14.3.2 compilation/core16.10.2 filtered loader, red/fixed/valid controls; focused transforms/config tests and scoped check/type/build pre/post; ordered DoD gates at handoff.
+
+**Commit:** bc979197ef3b4f2d309b8b2ff2cb55c318c23a12
+**Verification:** Original source/config built at launch reproduces both reports: nested docs/guide emits ../contributing/ instead of ../../contributing/index/; filtered physical section/plus+ siblings incorrectly preserve /index and shift source backlinks. Fixed transforms38/config22 tests execute pre/post exit0; both scoped check/type/build pass. Real temporary .md/.mdx fixtures use actual tinyglobby collection discovery, pinned MDX14.3.2 compilation and core16.10.2 loader URLs; rendered hrefs agree. Same processor sees reader creation/removal, filtered source/target collisions collapse, literal + and directory-only file controls pass. Existing root-outside-sibling, no-context, ordinary/query/fragment controls remain green. Dependency install initially selected one unrelated Vite snapshot; removed that incidental lockfile change before commit, leaving only the authorized importer addition. No app/template source wiring changes required. Evidence: ignored analysis/p05/remote-fix/t09-{red-full,pre-_,post-_}.log and exact p05-t09-files.json; no recovery usage.
+
+### Task p05-t10: (review) Keep nonlocal collision links out of loader deduplication
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
+**Source review:** reviews/archived/remote-pr-373-review-2026-10-23T083002Z.md (H2, discussion4357563312); root expanded remote receive.
+**Intent:** Preserve precise source identity for local/owning collision placement while retaining unrelated authored links as labeled fragment-bearing URLs, avoiding pinned-loader global page deduplication.
+**Files:** packages/cli/src/commands/docs/nav/{fumadocs.ts,fumadocs-loader.test.ts}.
+**Proof command:** Existing real-source nav sync/check + core16.10.2 loader regression with both child maps, red/fixed/valid controls; focused nav/init suites and CLI check/type/build pre/post; ordered DoD gates at handoff.
+
+**Commit:** 2312f633086acb61b22df311ca2d76a7c32d4d4a
+**Verification:** Pre-fix sync emits ../section.md in both maps; actual core16.10.2 drops the unrelated Elsewhere contract link while --check considers its source reachable. Fixed real-loader regression preserves section.md source identity in its owning map and Elsewhere contract at /section#contract in the unrelated map; the existing Section landing URL stays /section/index. Removing owning placement still reports section.md unlisted despite the unrelated URL link, retaining strict reachability. Focused nav/init156 tests execute pre/post with isolated HOME, CLI check/type/build exit0. Evidence: ignored analysis/p05/remote-fix/t10-{red-full,pre-_,post-_}.log, exact p05-t10-files.json. No unrelated behavior, frozen anchor or recovery-ledger edits.
+
+### Task p05-t11: (review) Describe reader discovery semantics accurately
+
+**Status:** completed
+**Executor:** inline:operator-approved-docs-only
+**Source review:** p05 round3 R3-L1; complexity-p05-2026-10-23T090105Z.md; operator approved the recommended disposition ("Sounds good. Proceed").
+**Intent:** Replace only the overbroad discovery-error sentence in packages/docs-config/README.md; preserve the public type surface and all runtime behavior.
+**Files:** packages/docs-config/README.md.
+**Commit:** bf50ec5ef9823afa082da6463833adf6ce7e6157
+**Verification:** Conservation diff confirms exactly the approved sentence replacement, with all surrounding guidance unchanged; scoped oxfmt passes. All eight ordered delivery gates exit 0; see the final acceptance note below. No new tests, negative controls or fourth independent review cycle.
+
+### Remote correctness verification and handoff
+
+All three converted remote findings close in p05-t09 (M1 configured root + H1 filtered source/target collision ownership) and p05-t10 (H2 owning placement versus unrelated authored URL). Tested candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45 contains product bc979197ef3b4f2d309b8b2ff2cb55c318c23a12 / journal0e171c801e0a529edaef206ff70bf5cf86b1267c and product2312f633086acb61b22df311ca2d76a7c32d4d4a / journale197f3f8c4f4b76d5e9837508d543933e3ec5b45. This final journal changes no tested product bytes. Exactly nine authorized product paths plus p05-local tracking changed; Base, historical Head, phase in_progress and all root-owned records remain untouched. No later phase started.
+
+All8 ordered DoD gates exit0. Turbo cached/total by gate:4/11,7/11,7/12,5/5,direct,direct,direct,6/6; fetch before6 exits0 with no owned-path drift. Gate3 freshly executes CLI8916/config22/transforms38/docs93 (9069 tests), the actual flagship Next build and direct smoke165/skills712/scripts1. Control-plane289/theme20 tests and five dependency builds replay; gates4/8 replay build caches. Prior forced12fresh/9374 and9376 evidence remains inherited; no new forced campaign. Focused pre/post suites and scoped check/type/build execute directly as recorded above. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+Fresh standalone static export from packed committed packages retains pinned Next16.1.6/core16.10.2/MDX14.3.2/TS5.9.3. With ancestor and nested docs folders, served /docs/docs/guide/ resolves its link to /docs/contributing/index/; excluded section.md leaves section/index.md at /docs/section/ with a working /docs/section/toolchain/ link. All return200; obsolete /docs/section/index/ and its Markdown endpoint404. Correct /docs/llms/section/content.md and nested guide endpoint preserve exact raw source. Installed dist hashes equal branch outputs. This fixture retains a hand-authored sidebar; current real canonical nav/init156 and actual two-map loader tests provide the separate nav evidence. No new browser, Windows or next-dev proof is claimed; unchanged prior browser/MkDocs/endpoint controls remain inherited.
+
+Evidence: ignored analysis/p05/remote-fix/README.md; exact p05-t09/t10-files.json; red-full/pre/post logs and JSON; next-versions.json, next-build.log, export-proof.py/json; gates.json/gate1–8.log and fetch/main-paths.log. Review-scope p05 journal check exits0/statusok with only the expected root-owned live-run warning. Recovery1/10,9remaining,pendingnull; no postcommit defect, reservation, infrastructure retry or route retry. Exact target codex_codex_proxy/gpt-6.1-sol/high/priority and original request docs367-p05-impl-20261023 are unchanged. Root owns run terminalization, independent round3, phase markers/acceptance and PR delivery.
+
+### Fix round1 verification and handoff
+
+All six accepted findings are fixed in completed records t05/H1, t06/M1+L1, t07/L2 and t08/M2+L3. Tested fix candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 is the last task-journal commit; this final verification journal changes no tested product bytes. Root-owned phase Head remains95a2cef6610eb3a65c18544ffcdd51f9abb4b212 as instructed; Base and prior history are frozen, phase remains in_progress for independent round2. Eleven authorized product files plus p05-local records changed; no plan/state/log/Reviews/GitHub/acceptance writes, nested dispatch or target change.
+
+| Record  | Product commit                           | Separate task journal                    |
+| ------- | ---------------------------------------- | ---------------------------------------- |
+| p05-t05 | 552ca40c021a7e39e18b856c55e55309b8469294 | e22a354b0f9510954eaf5d0cd0e32916530b6d27 |
+| p05-t06 | 9b259c828a83c6af4539f3cc2dffbfbb3b28b162 | 4b420876faae11ccdabb44b1746a4865c3b9ae75 |
+| p05-t07 | 8f2c69c866fda3df157bc39e7851f8a8a3ce8ff1 | 5195c5f07bee0403e6fb44cb9f44b518a139c80a |
+| p05-t08 | 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214 | 04d5361060ed597fb59431ea4e98ee1d0d30f853 |
+
+All ordered DoD gates1–8 exit0; successful fetch before6 finds no owned-path advancement. Turbo cached/total by gate:0/11,5/11,5/12,5/5,direct,direct,direct,6/6. Gate3 executes all six package test suites freshly (8916CLI+289control-plane+20config+20theme+38transforms+93docs=9376tests) and the actual flagship Next build, plus direct smoke165/skills712/scripts1; five dependency builds replay. Gates4/8 replay caches rather than independently build. No force run is repeated; earlier forced12fresh/9374tests, unchanged browser/HTTP coverage and unaffected round1 review coverage remain inherited. Focused pre/post suites, scoped check/type/build, specific real MkDocs/Next builds and served URL proofs are fresh as recorded above. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+Real H1 red/fixed/valid proof shows pinned MkDocs1.4.2 distinct contributing.html and contributing/index.html bodies/nav/links and ordinary getting-started.html, all HTTP200. It uses the default mkdocs theme, not Material/full plugin configuration. M1/L1's actual pinned Next export changes once-encoded spaced rendered/Markdown URLs from404 to200, double-encoded endpoint to404, preserves all8 reader raw bodies and canonical /docs/docs/guide/, root/nested/exclusion controls. Exact template/flagship page parity is retained. L2's real source/target root controls reject outside-root sibling influence while retaining nested collisions. T08's conservation and explicit correction of t04's overbroad search claim close M2/L3; no prose tests added.
+
+Recovery remains1/10,9remaining,pendingnull; these review fixes consume no recovery attempts, with no postcommit defect, infrastructure rerun or route retry. Precommit test-variable lint/fixture-order corrections and isolated offline metadata miss are disclosed in their records; no speculative repair. Target codex_codex_proxy/gpt-6.1-sol/high/priority and continuation cont-docs367-p05-fix-r1 remain unchanged. Evidence index: ignored analysis/p05/fix-r1/README.md, exact p05-t05–t08-files.json, t05–t08 logs/scripts and raw HTTP reports, gates.json/gate1–8.log, fetch.log/main-paths.log and journal-check.json. Review-scope p05 journal check exits0/statusok with only the expected root-owned unresolved fix-run warning. Root retains continuation-run terminalization and fresh review authority.
+
+### Review Received: p05
+
+**Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
+**Scope:** p05; code; auto; round1/3; anchored d02e20521f336aa45beab84a5f5e2df7b9541f79..95a2cef6610eb3a65c18544ffcdd51f9abb4b212.
+**Findings:** Critical0 · High1 · Medium2 · Low3. The reviewer terminal handoff explicitly confirms Reconnaissance not-attempted; the artifact contains no orchestration section (the signal itself is in the handoff, not the file). Root read the entire artifact and dispositions all six against Outcome7 and the concrete p05 Intent/Exit. No new requirement or approved deferral.
+
+- H1 (High): MkDocs silently overwrites contributing.md with contributing/index.md. Task Scope: Moderate. Convert → p05-t05. Both approved paths must render distinctly. Root selects use_directory_urls:false only in the new MkDocs template: source paths remain authoritative, no contract pins directory URLs, and existing consumer configs are untouched. Document fresh-scaffold .html URLs and verify nav/source-link compatibility with pinned1.4.2 build evidence. No Python dependency upgrade or generic routing layer.
+- M1 (Medium): llms basePath prefix can be omitted when the first content segment matches it. Task Scope: Minor. Convert → p05-t06; loader baseUrl remains '/', so prefix the configured base exactly once per source URL and retain ordinary-base controls.
+- M2 (Medium): public add-docs page still describes the retired AGENTS bridge. Task Scope: Negligible. Convert → p05-t08; align with older-CLI missing-capability/analyze/manual advice. This corrects the overbroad t04 no-residue claim; preserve headings, links and valid behavior.
+- L1 (Low): Markdown endpoint links double-encode loader slugs. Task Scope: Minor. Convert → p05-t06; reconcile emitted URLs, static params and request params using a real spaced-filename export and served URL, rather than assuming a unit-only encoding fix suffices.
+- L2 (Low): app-root docs.md incorrectly changes docs/index.md link routing. Task Scope: Minor. Convert → p05-t07; root index has no same-name sibling inside the content root; preserve nested collision behavior and real-file controls.
+- L3 (Low): nav docstring omits the precise source-file collision exception. Task Scope: Negligible. Convert → p05-t08; comment-only alignment with the implemented loader contract.
+
+**Outcome:** fixes completed p05-t05–p05-t08; round2 confirms every original finding closed; phase remains in_progress, Base frozen, no acceptance. Same implementer resumes bounded fix mode; next independent review narrows to the fix delta and inherits unaffected round1 coverage. Recovery remains1/10,pendingnull; review fixes do not reserve a recovery attempt.
+
+**Queued execution records (open on start):**
+
+- p05-t05 — preserve both MkDocs contributor pages with fresh-template URL setting, guidance and one bounded existing regression; pinned build red/fixed/valid proof.
+- p05-t06 — correct llms basePath and encoding against real loader/static export; extend existing tests and serve spaced-file endpoints.
+- p05-t07 — isolate root-index routing from app-root siblings; extend existing real-file collision coverage.
+- p05-t08 — conserve and correct the remaining public bridge sentence and nav docstring; docs check, no new prose tests.
 
 ---
+
+### Root round2 ledger validation
+
+Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98ee1d0d30f853: four append-only product commits and four separate task journals close H1/M1/M2/L1/L2/L3. Exactly eleven authorized product files and p05-local journal changed; final tail is journal-only. Root inspected diffs, gates.json (eight explicit0 exits), focused/probe receipts and real MkDocs/Next export outcomes rather than rerunning broad gates. MkDocs proof uses default theme, not Material/plugins; fresh Next proof covers decoded params and once-encoded served URLs. Gate3 executes9376 package tests plus smoke/skills/scripts; cached builds remain cache evidence. Base remains frozen; no later phase has started, so Head advances to the tested fix candidate. Recovery usage1/10,pendingnull is unchanged; no new recovery event. Phase stays in_progress for fresh independent round2, narrowed to95a2cef6610eb3a65c18544ffcdd51f9abb4b212..04d5361060ed597fb59431ea4e98ee1d0d30f853, with unaffected round1 coverage inherited.
+
+### Review Received: p05 round2 and acceptance
+
+**Review:** reviews/archived/p05-review-2026-10-23T080358Z.md; code; auto; round2/3; narrowed95a2cef6610eb3a65c18544ffcdd51f9abb4b212..04d5361060ed597fb59431ea4e98ee1d0d30f853, full phase Base d02e20521f336aa45beab84a5f5e2df7b9541f79 unchanged.
+**Findings:** Critical0 · High0 · Medium0 · Low1. Exactly one not-attempted reconnaissance signal and no orchestration section. Root read the complete artifact and validated scope/provenance, closure evidence and unchanged-product journal tail.
+**Disposition:** R2-L1, stale Next Milestone text naming the old candidate, Task Scope: Negligible → corrected by root in this review-outcome bookkeeping. State now names the accepted candidate and progress-PR delivery. This is the lifecycle resume-text update the review requests, not a product fix or new guarantee; no execution task, new tests or third product review is needed.
+**Outcome:** passed. Independent pinned-runtime probes close all six original findings; focused config20/transforms38/init-nav156/docs93 and docs/changed-file checks pass. Reviewer independently served the existing pinned Next export and built default-theme MkDocs red/fixed scaffolds; broad gates, fresh Next build, browser, Material/plugins, next-dev and Windows remain unrun by that reviewer. Unaffected round1 coverage inherited. All8 execution records closed, all8 ordered gates0, no deferred finding or selected optional phase-review gate remains. Root accepts p05 at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853. Recovery1/10,pendingnull preserved; one product fix cycle, two independent rounds. Intermediate PR delivery follows before p06; final PR held.
+
+### Root PR373 correction handoff validation
+
+Clean handoff50f8b2d1441beb69f0b4df3eb96ff44d4ab5d7ab; authoritative tested candidatee197f3f8c4f4b76d5e9837508d543933e3ec5b45. Root inspected all product diffs, exact9-file scope, the minimal tinyglobby importer addition, gates.json/all8 explicit0 exits, focused pre/post exits, pre-fix failure categories and export-proof.json/installed hashes. T09 productbc979197ef3b4f2d309b8b2ff2cb55c318c23a12 with journal0e171c801e0a529edaef206ff70bf5cf86b1267c addresses external M1/H1; t10 product2312f633086acb61b22df311ca2d76a7c32d4d4a with journale197f3f8c4f4b76d5e9837508d543933e3ec5b45 addresses H2. No app/template wiring change needed. Root has not rerun those suites; independent third review will reproduce the load-bearing boundaries. Gates use cache4/11,7/11,7/12,5/5,direct,direct,direct,6/6; gate3 fresh9069package tests,replayed309 plus fresh smoke165/skills712/scripts1 and flagship build. Fresh packed Next export checks nested-docs routes, filtered section route, raw bodies and obsolete404; hand-authored sidebar means this is not a new fresh-init nav proof. Browser/MkDocs/Windows/next-dev and forced broad suites remain inherited or unrun as disclosed.
+
+All10 records closed; no later phase started. Advance p05 Head to the tested candidate for narrowed third review04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45 with unchanged Base and preserved historical acceptance/reviews. Prior round2 coverage is inherited for unchanged code. Remote findings are implemented, independent confirmation pending; current p05 acceptance remains suspended and PR373 is held. Recovery1/10,pendingnull unchanged. No product edit or extra gate run by root.
+
+### Review Received: p05 round3, behavioral confirmation and cycle boundary
+
+**Review:** reviews/archived/p05-review-2026-10-23T085345Z.md; auto code, round3/3; narrowed04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45, same frozen Base. Root read the complete artifact and verified its provenance/anchors; confirmation has exactly one not-attempted reconnaissance signal and no orchestration section. Counts Critical0/High0/Medium0/Low2. All3 external M1/H1/H2 are independently confirmed fixed: actual pinned compilation/loader probes plus transforms38/config22/nav40 tests. Fresh emit matches dist; original red failures, export hash equality and8gate exits were inspected by reviewer; unaffected prior coverage is inherited.
+
+R3-L1: docs-config README says Discovery errors propagate, but engine itself skips unreadable directories; OAT adds no catch and membership agrees with emitter. Task Scope: Negligible, factual wording correction proposed. R3-L2: public options are inferable inline, but RemarkLinksOptions is not re-exported from barrel; convenience-only, no accepted runtime guarantee requires a named type export. Task Scope: Negligible; root proposes retaining minimal current type surface with explicit rationale. Neither note blocks correctness. No fix task or public API addition is created before operator choice at cap.
+
+**Outcome:** received; three-cycle cap reached with two residual Low notes. Per oat-project-review-receive Step8 and complexity-review-fallback, dispatch a new read-only complexity check because the earlier p05 audit predates round3 and this delta; save its inline report locally and show the operator concrete choices. No fourth code review or automatic disposition. P05 remains in_progress, current acceptance suspended; recovery1/10,pendingnull and prior historical acceptance stay preserved. Root must record operator choice before proceeding; no PR push/reply/merge performed.
+
+### P05 operator disposition, final wording and restored acceptance
+
+Operator approved the recommended cap disposition ("Sounds good. Proceed"): proceed with override, correct R3-L1 only and defer the optional R3-L2 type export until a consumer needs it. Task p05-t11 commits the exact README sentence in bf50ec5ef9823afa082da6463833adf6ce7e6157; conservation diff and scoped oxfmt pass. No runtime, test or public export changed after independently reviewed candidate e197f3f8c4f4b76d5e9837508d543933e3ec5b45. The docs-only tail is root-verified under the operator's disposition, not a fourth independent review.
+
+All eight ordered gates exit 0 at bf50ec5ef9823afa082da6463833adf6ce7e6157: check, type-check, isolated-HOME test, build, skill bumps, fetched-main version check, release validation and docs build. Turbo cached/total: 8/11, 9/11, 9/12, 5/5, direct, direct, direct, 6/6. Gate3 freshly executes docs-config tests and the flagship build/tests; other package suites replay cached evidence. The earlier remote-fix pre/post controls and independent probes remain inherited. No new forced broad run is claimed. All eleven task records are closed; journal validation passes without warnings. Root restores p05 acceptance (9/13). Frozen Base and previous acceptance/review history remain intact; recovery1/10,pendingnull unchanged. No instruction changes needed for the sentence correction.
+
+Delivery mode remains plain land-pr using the established merge-commit method with an expected-head guard. Push, factual replies, supported thread resolution and fresh exact-head CI/Bugbot clearance precede merge. PR373 remains open until those gates clear; final project PR remains held. No later phase has started.
 
 ## Phase p06: oat docs check
 
@@ -1236,6 +1543,30 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p05-cap-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-review-r3-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-remote-inventory-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-inventory · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-remote-fix-expanded-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-fix-expanded · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-remote-fix-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-fix · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-review-r2-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-fix-r1-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-fix-r1 · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-review-r1-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-prose-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-prose-after-recovery01 · observed=~ · match=~
+
+- run/v1 · request=docs367-p05-impl-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p05-readiness-20261023 · scope=p05-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev4-review-r1-20261023 · scope=p-rev4 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev4 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -1333,6 +1664,34 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+Operator disposition, 2026-10-23: "Sounds good. Proceed" approves proceeding with override using reviews/archived/complexity-p05-2026-10-23T090105Z.md: correct R3-L1 wording only, defer R3-L2 named type export until a consumer needs it, retain all product machinery, and continue acceptance/delivery without a fourth review cycle. Current-head CI/Bugbot and plain land-pr with the established merge-commit method and expected-head guard remain required.
+
+### P05 review-cap complexity report
+
+2026-10-23; standard receive cap reached at3 code rounds, with Critical0/High0/Medium0/Low2. Independent complexity report saved verbatim at.oat/projects/shared/docs-skills-ia-367/reviews/archived/complexity-p05-2026-10-23T090105Z.md; verdict Deletion-rule compliant; recommends proceed with override. Keep all product machinery. L1 is factual README wording only; L2 named type export is optional new-hardening, add later only when a consumer needs it. Proposed concrete path: replace Discovery errors propagate. with OAT adds no error fallback; traversal follows the emitter's tinyglobby semantics, including skipped unreadable directories. Leave current type exports unchanged, then continue acceptance/delivery under existing current-head CI/Bugbot and land-pr rules. These are proposals, not an operator decision. Required operator choice remains pending under receive Step8; no fourth review, product edit, acceptance or push performed. P05 remains in_progress; recovery1/10,pendingnull unchanged.
+
+### PR373 bounded dependency authorization
+
+Root accepts the clean no-edit design handoff at b5a69c844cbae09f65f4fb0b7797fedbc50ab04c. Pinned fumadocs-mdx14.3.2 buildMDX initializes VFile with path/cwd/frontmatter/compiler helpers, without filtered reader inventory; collection emission uses tinyglobby0.2.17 over collectionFiles patterns. Authorize tinyglobby as a direct docs-config runtime dependency at the already-resolved compatible0.2.17 and the corresponding pnpm-lock.yaml importer update, plus the existing bounded product paths. createSourceConfig may supply its explicit content root and lazily evaluate the same existing collection patterns; remarkLinks keeps no-context fallback. Use actual filtered inventory for both source and target collisions. Do not cache reader membership permanently across transformations in dev or silently fall back to physical files after inventory errors. This is implementation of accepted G2/p05 routing, not a new requirement or framework upgrade. Minimal composed pipeline controls must cover configured root, filtered membership, and later membership changes; use deliberate-testing. No arbitrary discovery, second glob grammar, broad dependency refresh or test-only API. Root retains independent review/acceptance; recovery1/10,pendingnull and frozen history are unchanged.
+
+### Remote Review Received: PR #373 filtered collisions and nonlocal navigation
+
+2026-10-23; warp-factories review5625725017 at source commit35bfd2f5411f1557f35a7203d05169b4ec58a8d1. Counts Critical0/High2 (source Important)/Medium0/Low0. Event-local H1: [discussion4357563290](https://github.com/voxmedia/open-agent-toolkit/pull/373#discussion_r4357563290), physical excluded page still claims a collision in remark-links; **convert** against accepted G2 non-reader collection parity and p05 source-relative/collision routes. Root actual createSourceConfig transform emits ./section/index/ despite the pinned filtered loader assigning section/index.md /section. H2: [discussion4357563312](https://github.com/voxmedia/open-agent-toolkit/pull/373#discussion_r4357563312), unrelated cross-folder reference is serialized as source identity and globally deduplicated; **convert** against accepted p05 contributor collision placement with conserved p04 Contents links/labels/fragments. Root actual nav sync emits ../section.md in section and other maps; pinned core16.10.2 leaves other.children empty while --check reports stale[]/unlisted[]. No new guarantees, deferrals or dismissals. No OAT source provenance marker; ledger lineage stays unknown. Artifact reviews/archived/remote-pr-373-review-2026-10-23T083002Z.md is local-only; this receipt carries the findings and reproducible outcomes.
+
+The same implementer yielded clean at a17444587b215ef43f1ddf9919d4eaaaea9a56ae without product/journal/evidence writes or opening p05-t09. Root expands the bounded fix to all three confirmed external findings, with source/root/membership corrections grouped only where they share implementation and a separate nav correction record. Next records open at execution; no planned task list is added to this brief. Original p05 Base/Head/history and recovery1/10,pendingnull remain preserved; current acceptance remains suspended. Extend product ownership only to CLI nav/fumadocs.ts and its existing sync/real-loader tests, plus necessary bounded source-config/reader-pattern wiring and documentation within the previously named transforms/config surfaces. Require intended red/fixed/valid source and target exclusion controls and two-map real-loader label/fragment retention. Preserve owning collision placement. One fresh third independent review covers the complete new delta and inherits unaffected prior coverage; all current-head checks and Bugbot must clear before land-pr. No reply posted yet.
+
+### Remote Review Received: PR #373 nested-docs routing
+
+2026-10-23; cursor[bot] review5625689511 at source commit35bfd2f5411f1557f35a7203d05169b4ec58a8d1. Counts Critical0/High0/Medium1/Low0. M1: [discussion4357536051](https://github.com/voxmedia/open-agent-toolkit/pull/373#discussion_r4357536051), last /docs/ marker misidentifies nested content folders. **Convert** against accepted p05 Outcome7 source-relative/collision routing: real-file built-transform probe yields ../contributing/ instead of ../../contributing/index/ from docs/docs/guide.md. Preexisting heuristic now leaves the new collision contract incomplete. No new requirement, deferral or dismissal. Next record p05-t09 opens when execution starts. Artifact reviews/archived/remote-pr-373-review-2026-10-23T082550Z.md; no OAT provenance marker, so ledger provenance stays unknown. This is the first p05 remote receive, after two independent internal rounds; next internal round is3/3.
+
+P05 reopens in place because no later phase Base exists. Frozen Base d02e20521f336aa45beab84a5f5e2df7b9541f79 and prior accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 remain historical anchors; prior acceptance/review receipts are preserved. Current acceptance is suspended pending bounded correction and independent re-review. Recovery1/10,pendingnull is unchanged; this review fix is not a recovery reservation. Original implementer continues, root owns tracking/review/GitHub. All current-head CI checks passed but Bugbot's actionable finding blocks merge. No reply posted yet.
+
+- 2026-10-23: PR373 self-review complete through product candidate04d536106 and tracking tail2f624dd9d. Correctness/testing/documentation covered by fresh independent p05 rounds1–2 (explicit deliberate-testing brief); complexity-only audit docs367-p05-complexity-20261023 reports deletion-rule compliant, zero blocking findings, at reviews/p05-complexity-20261023.md. All product machinery retained. Optional root re-export simplification declined: the package deliberately supports its ordinary barrel import as well as the documented narrow /llms runtime path; both export the same implementation and the small API cost is accepted consistently with the other package helpers. Optional local pruning is scheduled after landing: retain export trees while CI/Bugbot may still need reproduction, then prune only generated node_modules/.next/out from the two identified ignored scratch repos; preserve scripts/tarballs/logs/probe reports. No product delta or extra code-review round. Plain land-pr remains authorized after fresh exact-head CI/Bugbot and no open actionable threads; no admin/early-auto merge or branch/worktree deletion.
+
+- 2026-10-23: Progress PR https://github.com/voxmedia/open-agent-toolkit/pull/373 opened as draft for accepted p05; correctness/testing/docs covered by independent rounds1–2 through candidate04d536106, later tail is tracking only. PR self-review lenses now covered; plain land-pr after current-head CI/Bugbot and all findings clear.
+
+- PR #372 landed through land-pr with merge method at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 (2026-10-23T05:59:39Z), guarded by exact head e31568fa35e81746ddecef900808fb0600345d41. Fresh paginated final sweep found current-head CI/release dry-run/Bugbot success, Bugbot completion explicitly no issues, all four Warp fix confirmations, prior Warp rejection dismissed, zero unresolved threads or reviewer requests, no new actionable comments and unchanged base/head. No quota waiver, admin/auto merge, history rewrite or branch deletion. Watcher stopped; local final evidence remains ignored analysis/p04/final-landing. P04 and p-rev4 delivery complete. Root switched this existing worktree to docs/docs-skills-ia-367-p05 from fetched merged main and ran worktree:init successfully; only its version-only sync-manifest side effect was restored. P05 remains provisional with no Base while bounded intelligent readiness recon runs; final PR remains held until project completion.
+
 ### Remote Review Received: PR #372, second event and verified handoff
 
 Source Warp review5624216218 at commit06c160aa3204d6c8397d42e38d8456a8ffa8a19c; counts0C/1H/1M/0L. Local artifact reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md has no OAT provenance marker; ledger Reviewed Head/Invocation/Gate Target stay unknown. H2 discussion4356366295 → prev4-t03 restores directory-only collection parity; M2 discussion4356366304 → prev4-t04 ignores fenced Contents examples. Root independently reproduced both before explicitly steering the same accepted implementer request with the four added paths. No new requirement was introduced. Root deferred tracked plan/state/receipt writes until ownership returned, and now aligns the eight-file/four-task scope.
@@ -1379,6 +1738,8 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
+
+- p05 R3-L2 · Low · Named RemarkLinksOptions barrel export deferred by operator approval ("Sounds good. Proceed") of the cap report reviews/archived/complexity-p05-2026-10-23T090105Z.md. Inline options remain typed; no consumer requires the additional public symbol. Revisit when a consumer or typed wrapper needs to name the type; no runtime guarantee deferred.
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
