@@ -72,6 +72,7 @@ interface DocsInitExecutionResult {
   createdFiles: string[];
   appRoot: string;
   rootPackagePatch?: RootPackagePatchResult;
+  installationAdvice?: string[];
   dryRun?: boolean;
   plannedFiles?: string[];
   preservedFiles?: string[];
@@ -298,11 +299,16 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
       context.logger.info(`  Lint: ${options.lint}`);
       context.logger.info(`  Format: ${options.format}`);
       if (rootPackagePatch) logRootPackagePatch(context, rootPackagePatch);
+      for (const advice of result.installationAdvice ?? [])
+        context.logger.info(advice);
     }
     return {
       createdFiles: result.createdFiles,
       appRoot: result.appRoot,
       rootPackagePatch,
+      ...(result.installationAdvice
+        ? { installationAdvice: result.installationAdvice }
+        : {}),
     };
   },
   upsertAgentsMdSection,
@@ -556,6 +562,9 @@ async function runDocsInitCommand(
             framework: resolved.framework,
           },
           guidance: sectionResult,
+          ...(scaffold?.installationAdvice
+            ? { installationAdvice: scaffold.installationAdvice }
+            : {}),
         });
       } else {
         context.logger.warn(

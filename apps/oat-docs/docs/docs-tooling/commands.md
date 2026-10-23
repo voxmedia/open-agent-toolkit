@@ -13,18 +13,23 @@ or **MkDocs Material**.
 
 - What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs or Fumadocs navigation.
 - When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
-- Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`
+- Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`, `oat docs check`
 
 ## Command surface
 
-| Command                   | Purpose                                                                   |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `oat docs init`           | Set up Markdown files or a docs app; additively adopt Markdown.           |
-| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.        |
-| `oat docs generate-index` | Generate a manifest from Markdown files, outside authored content.        |
-| `oat docs nav sync`       | Regenerate `mkdocs.yml` nav or Fumadocs `meta.json` from `index.md` maps. |
-| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.         |
-| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.           |
+| Command                   | Purpose                                                                               |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| `oat docs init`           | Set up Markdown files or a docs app; additively adopt Markdown.                       |
+| `oat docs migrate`        | Convert MkDocs admonitions to GFM callouts and inject frontmatter.                    |
+| `oat docs generate-index` | Generate a manifest from Markdown files, outside authored content.                    |
+| `oat docs nav sync`       | Regenerate `mkdocs.yml` nav or Fumadocs `meta.json` from `index.md` maps.             |
+| `oat docs check`          | Read-only reader, navigation, command and diagram checks; errors fail, warnings pass. |
+| `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.                     |
+| `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.                       |
+
+## `oat docs check`
+
+Run `oat docs check [--target-dir <dir>] [--rule <id>...] [--json]` before committing. It resolves the configured root, validates real reader files without a site build, and emits deterministic findings. Errors exit1; warning-only exits0. See [Check Documentation](check.md) for stable rule IDs, counting, narrow policy/exception settings and the exact JSON contract.
 
 ## Which Generation Command To Run
 

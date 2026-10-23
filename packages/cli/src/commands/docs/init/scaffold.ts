@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -33,7 +33,7 @@ const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
     source: join('docs', 'contributing', name),
     destination: join('docs', 'contributing', name),
   })),
-  { source: '.gitignore', destination: '.gitignore' },
+  { source: 'gitignore.template', destination: '.gitignore' },
   { source: 'mkdocs.yml', destination: 'mkdocs.yml' },
   { source: 'package.json.template', destination: 'package.json' },
   { source: 'requirements.txt', destination: 'requirements.txt' },
@@ -59,7 +59,8 @@ const FUMA_TEMPLATE_FILES: TemplateFile[] = [
     source: join('app', route, 'route.ts'),
     destination: join('app', route, 'route.ts'),
   })),
-  { source: '.gitignore', destination: '.gitignore' },
+  { source: 'gitignore.template', destination: '.gitignore' },
+  { source: 'pnpm-workspace.yaml', destination: 'pnpm-workspace.yaml' },
   { source: 'next.config.js', destination: 'next.config.js' },
   { source: 'postcss.config.mjs', destination: 'postcss.config.mjs' },
   { source: 'source.config.ts', destination: 'source.config.ts' },
@@ -127,6 +128,7 @@ export interface ScaffoldDocsAppResult {
   appRoot: string;
   createdFiles: string[];
   documentationConfig: OatDocumentationConfig;
+  installationAdvice?: string[];
 }
 
 export interface OatDepContext {
@@ -385,6 +387,10 @@ function renderTemplate(
     '{{PACKAGE_NAME}}': options.appName,
     '{{SITE_NAME}}': options.siteName,
     '{{SITE_DESCRIPTION}}': options.siteDescription,
+    '{{PAGE_DESCRIPTION}}': (
+      options.siteDescription.trim() ||
+      `Reader guides and contributor information for ${options.siteName}.`
+    ).replaceAll("'", "''"),
     '{{INSTALL_CMD}}': commands.install,
     '{{DEV_CMD}}': commands.dev,
     '{{BUILD_CMD}}': commands.build,
@@ -420,6 +426,11 @@ function renderTemplate(
       options.lint === 'none' ? 'disabled' : 'enabled (markdownlint-cli2)',
     '{{FORMAT_STATUS}}':
       options.format === 'none' ? 'disabled' : 'enabled (oxfmt)',
+    '{{DOCS_CHECK_CMD}}': command(
+      depContext.isOatRepo
+        ? `pnpm -w run cli:source -- docs check --target-dir ${shellQuote(options.targetDir)}`
+        : 'oat docs check --target-dir .',
+    ),
     '{{NAV_SYNC_CMD}}': command(
       buildNavSyncCheckCmd(depContext.isOatRepo, options.targetDir).replace(
         / --check$/,
@@ -514,6 +525,18 @@ async function detectNodeRequirement(repoRoot: string): Promise<string> {
   return '>=22.17.0';
 }
 
+// Any enclosing pnpm root makes a local boundary unsafe, even when the
+// requested repo shape was detected from a directory inside that workspace.
+async function hasAncestorPnpmWorkspace(appRoot: string): Promise<boolean> {
+  let current = dirname(await realpath(appRoot));
+  while (true) {
+    if (await fileExists(join(current, 'pnpm-workspace.yaml'))) return true;
+    const parent = dirname(current);
+    if (parent === current) return false;
+    current = parent;
+  }
+}
+
 async function ensureTargetWritable(appRoot: string): Promise<void> {
   if (!(await dirExists(appRoot))) {
     return;
@@ -559,8 +582,16 @@ export async function scaffoldDocsApp(
   );
 
   const nodeRequirement = await detectNodeRequirement(options.repoRoot);
+  const independentPnpmRoot =
+    options.repoShape !== 'monorepo' &&
+    !(await hasAncestorPnpmWorkspace(appRoot));
 
   for (const templateFile of frameworkConfig.templateFiles) {
+    if (
+      templateFile.destination === 'pnpm-workspace.yaml' &&
+      !independentPnpmRoot
+    )
+      continue;
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
     const template = await readFile(source, 'utf8');
@@ -580,6 +611,16 @@ export async function scaffoldDocsApp(
   return {
     appRoot,
     createdFiles,
+    ...(options.framework === 'fumadocs'
+      ? {
+          installationAdvice: [
+            independentPnpmRoot
+              ? 'Created app-install-root pnpm-workspace.yaml with mdast-util-to-markdown: 2.1.2 for Fumadocs Markdown compatibility; retain this policy and the generated lockfile.'
+              : 'Before installing, approve or manually set overrides.mdast-util-to-markdown to "2.1.2" in the effective install-root pnpm-workspace.yaml, preserving existing settings. No local workspace boundary or root dependency-policy edit was made.',
+            `Read ${join(options.targetDir, 'docs/contributing/docs-toolchain.md')} for exact setup and conflict/skip guidance. --no-root-patch controls root scripts only.`,
+          ],
+        }
+      : {}),
     documentationConfig: buildDocumentationConfig(
       options.framework,
       options.targetDir,

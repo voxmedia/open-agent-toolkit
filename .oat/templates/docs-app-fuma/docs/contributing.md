@@ -66,6 +66,7 @@ Tables, task lists, fenced code, callouts, Mermaid and `=== "Title"` tabs are su
         | Reader links | Resolve |
 
         ```bash
+        cd {{APP_CWD}}
         pnpm docs:lint
         ```
     ````
@@ -82,12 +83,15 @@ Tables, task lists, fenced code, callouts, Mermaid and `=== "Title"` tabs are su
         | Reader links | Resolve |
 
         ```bash
+        cd {{APP_CWD}}
         pnpm docs:lint
         ```
 
-Not configured: arbitrary custom components, executable notebooks, API playgrounds, diagram syntax validation or screenshot testing. Do not describe those as supported without an approved configuration and a working example. Check the actual package scripts: lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; disabled scripts only print a message.
+Not configured: arbitrary custom components, executable notebooks, API playgrounds or screenshot testing. Do not describe those as supported without an approved configuration and a working example. Check the actual package scripts: lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; disabled scripts only print a message.
 
 ## Diagrams and accessibility
+
+Run the app’s docs:check script (from the repository root: `cd {{APP_CWD}} && pnpm docs:check`) before committing. It checks reader metadata/maps/links, navigation, contributor commands and real Mermaid syntax without building the site. Errors fail; warnings prompt review. Fix authored sources, then explicitly sync owned navigation and retry.
 
 Mermaid is the diagram source of truth. Important or phone-sized diagrams also get matching `<name>-light.svg` and `<name>-dark.svg` assets. Change the Mermaid and both SVGs in the same commit, preserving nodes, edges and labels. Each SVG uses `role="img"`, a descriptive `<title>` and `<desc>` (connected with `aria-labelledby`), a legible viewBox and readable labels. Keep image alt text concise, about 155 characters or less, and describe the diagram's meaning without inventing claims.
 
@@ -106,6 +110,8 @@ Mermaid is the diagram source of truth. Important or phone-sized diagrams also g
 
     ```mermaid
     flowchart LR
+      accTitle: Documentation edit
+      accDescr: Read the local map before making a focused edit.
       A[Read local map] --> B[Make a focused edit]
     ```
 

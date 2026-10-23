@@ -7,9 +7,10 @@
   "scripts": {
     "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "{{NAV_SYNC_CHECK_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "prebuild": "{{DOCS_CHECK_CMD}} && {{NAV_SYNC_CHECK_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "start": "next start",
+    "docs:check": "{{DOCS_CHECK_CMD}}",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
     "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"

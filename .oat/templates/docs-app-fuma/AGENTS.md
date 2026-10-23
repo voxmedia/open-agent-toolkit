@@ -22,6 +22,10 @@ Edit `docs/**/*.md` and their Contents, not generated app-root `index.md`, `.sou
 
 Mermaid is source. Important/mobile diagrams get matching light/dark SVG pairs, updated with the Mermaid in the same commit. Require meaningful alt text (about155 characters maximum), `role="img"`, `<title>`, `<desc>` and `aria-labelledby`, readable labels and useful viewBox. Inspect rendered diagrams in both themes; transforms do not validate diagram correctness. See the contributor contract for framework-specific asset paths and image behavior.
 
+## Install-root compatibility
+
+Before installing, follow the toolchain guide's exact `mdast-util-to-markdown: 2.1.2` policy. A new independent app gets app-root `pnpm-workspace.yaml`; a workspace member must use the existing root policy with explicit approval. Preserve settings/conflicts and never create a member-local workspace boundary. `--no-root-patch` changes only root-script handling. Verify actual resolution and keep the policy/lockfile; do not remove bold/italic content to avoid the Fumadocs handler defect.
+
 ## Commands and working directories
 
 From the **repository root**, enter this app:
@@ -30,20 +34,23 @@ From the **repository root**, enter this app:
 cd {{APP_CWD}}
 ```
 
-From the **app directory**, after edits:
+From the **repository root**, enter the app and validate after edits:
 
 ```bash
+cd {{APP_CWD}}
 pnpm docs:format
 pnpm docs:format:check
 pnpm docs:lint
 {{NAV_SYNC_CMD}}
 {{NAV_SYNC_CHECK_CMD}}
+pnpm docs:check
 pnpm build
 ```
 
-Lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; a disabled echo does not validate. From the **app directory**, regenerate the machine inventory with:
+Lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; a disabled echo does not validate. From the **repository root**, enter the app and regenerate the machine inventory with:
 
 ```bash
+cd {{APP_CWD}}
 {{GENERATE_INDEX_CMD}}
 ```
 

@@ -30,15 +30,17 @@ pnpm docs:dev
 
 ## Validate before committing
 
-From the **app directory**, in this order:
+From the **repository root**, enter the app and validate in this order:
 
 ```bash
+cd {{APP_CWD}}
 pnpm docs:format
 pnpm docs:format:check
 pnpm docs:lint
 {{NAV_SYNC_CMD}}
 {{NAV_SYNC_CHECK_CMD}}
+pnpm docs:check
 pnpm docs:build
 ```
 
-Lint is {{LINT_STATUS}}; formatting is {{FORMAT_STATUS}}. Disabled scripts print a message and are not validation. Nav sync writes only approved, owned navigation; the read-only check fails on navigation drift. Inspect the rendered site for navigation, links, tabs and diagrams. The existing MkDocs `test` echo is not a validation check.
+Lint is {{LINT_STATUS}}; formatting is {{FORMAT_STATUS}}. Disabled scripts print a message and are not validation. Nav sync writes only approved, owned navigation; the read-only check fails on navigation drift. Inspect the rendered site for navigation, links, tabs and diagrams. The MkDocs test script also runs the portable docs checker.

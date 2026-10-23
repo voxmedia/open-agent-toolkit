@@ -6,12 +6,13 @@
   "description": "MkDocs Material documentation for {{SITE_NAME}}.",
   "scripts": {
     "docs:dev": "mkdocs serve",
-    "docs:build": "{{NAV_SYNC_CHECK_CMD}} && mkdocs build",
+    "docs:build": "{{DOCS_CHECK_CMD}} && {{NAV_SYNC_CHECK_CMD}} && mkdocs build",
     "docs:setup": "sh ./setup-docs.sh",
+    "docs:check": "{{DOCS_CHECK_CMD}}",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",
     "docs:format": "{{DOCS_FORMAT_SCRIPT}}",
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}",
-    "test": "echo 'Documentation tests complete'"
+    "test": "{{DOCS_CHECK_CMD}}"
   },
   "devDependencies": {
     "@open-agent-toolkit/cli": "{{OAT_CLI_DEP}}"{{DEV_DEPENDENCIES}}

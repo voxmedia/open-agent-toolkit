@@ -43,9 +43,9 @@ To add a page, choose its scope from the nearest map, add title/description fron
 
 Use **Markdown → existing transform → MDX** in that order. Tables, task lists, fenced code, callouts, nested tabs and Mermaid are configured. MDX is for actual JSX/component needs and is excluded from the Markdown manifest and agent endpoints. See [Markdown Features](markdown-features.md) for paired Syntax/Rendered examples.
 
-Not configured: executable notebooks, API playgrounds, diagram syntax validation or screenshot testing. A successful build or Mermaid transform test does not prove diagram validity. Keep language labels on code fences and use `bash` for shell commands.
+Not configured: executable notebooks, API playgrounds, screenshot testing. The portable checker validates Mermaid syntax with the installed parser; a successful build alone does not prove diagram validity or visual correctness. Keep language labels on code fences and use `bash` for shell commands.
 
-Mermaid is diagram source. Important or phone-sized diagrams also get matching light/dark SVGs under `public/diagrams/`, linked as `/diagrams/name-light.svg` and `/diagrams/name-dark.svg`; the theme adds the base path, selects the theme and supports zoom. Update source and both SVGs in the same commit. Use descriptive SVG `<title>`/`<desc>` with `role="img"` and `aria-labelledby`, readable labels and concise meaningful image alt text (about 155 characters or less).
+Mermaid is diagram source; include `accTitle` and `accDescr`. Important or phone-sized diagrams also get matching light/dark SVGs under `public/diagrams/`, linked as `/diagrams/name-light.svg` and `/diagrams/name-dark.svg`; the theme adds the base path, selects the theme and supports zoom. Update source and both SVGs in the same commit. Use descriptive SVG `<title>`/`<desc>` with `role="img"` and `aria-labelledby`, readable labels and concise meaningful image alt text (about 155 characters or less).
 
 ## Local workflow
 
@@ -83,6 +83,15 @@ All commands below run from the **repository root**. Contributor setup is in [Co
    pnpm --filter oat-docs docs:format
    pnpm --filter oat-docs docs:format:check
    ```
+
+Run portable validation from the repository root before committing:
+
+```bash
+pnpm --filter oat-docs docs:check
+pnpm docs:validate
+```
+
+The first command checks reader structure/metadata/links, contributor commands, navigation and diagrams without a build. Errors fail; warnings prompt review. The second retains flagship hosted README/catalog/live-consumer checks too. See [Check Documentation](../docs-tooling/check.md) for policy, counting and repair guidance.
 
 ## Authoring Expectations
 

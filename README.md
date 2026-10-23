@@ -9,7 +9,7 @@ Start with the part that solves your problem; combine others when useful:
 1. **Keep coding tools aligned.** Maintain canonical skills, agents, and rules; sync provider views and inspect drift instead of maintaining separate copies. Start with [Provider Sync](https://voxmedia.github.io/open-agent-toolkit/provider-sync).
 2. **Use skills for a task.** Research a decision or review code without adopting a tracked project lifecycle. Choose a [skill](https://voxmedia.github.io/open-agent-toolkit/skills).
 3. **Make longer work resumable.** Use plans, implementation records, reviews, and human checkpoints when you need a tracked workflow. [Choose a Workflow](https://voxmedia.github.io/open-agent-toolkit/workflows/choose-workflow) that fits the work.
-4. **Make documentation easier to maintain.** Bootstrap plain Markdown or a docs site, then analyze and apply improvements with [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
+4. **Make documentation easier to maintain.** Bootstrap plain Markdown or a docs site, run read-only `oat docs check` for reader/link/navigation/diagram errors, then analyze and apply improvements with [Docs Tooling](https://voxmedia.github.io/open-agent-toolkit/docs-tooling).
 
 Provider sync does not require project workflows. Standalone skills do not require an active OAT project; project-specific skills state their prerequisites in their guides.
 

@@ -1,0 +1,5 @@
+# Keep this policy at the actual pnpm install root, never only in a member.
+# Fumadocs currently loses Markdown handler properties introduced in 2.2.0.
+packages: []
+overrides:
+  mdast-util-to-markdown: 2.1.2

@@ -1,6 +1,6 @@
 ---
 title: '{{SITE_NAME}}'
-description: '{{SITE_DESCRIPTION}}'
+description: '{{PAGE_DESCRIPTION}}'
 ---
 
 # {{SITE_NAME}}
