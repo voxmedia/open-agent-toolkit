@@ -1312,16 +1312,64 @@ describe('parser/runtime and boundary composition', () => {
   });
   it('does not allow another diagram tab group to satisfy changed Mermaid pairs', async () => {
     const f = await pairedFixture();
-    const first = diagram();
+    const second = diagram(
+      validMermaid.replace('A[Start] --> B[Finish]', 'X[Start] --> Y[Finish]'),
+    )
+      .slice(diagram().indexOf('## Journey'))
+      .replace('## Journey', '## Separate diagram')
+      .replaceAll('journey-', 'other-');
+    await f.write('guide.md', `${diagram()}\n${second}`);
+    for (const theme of ['light', 'dark'])
+      await f.put(`site/public/diagrams/other-${theme}.svg`, svg);
+    const git = async (...args: string[]) =>
+      exec('git', ['-C', f.root, ...args], {
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: 'Fixture',
+          GIT_AUTHOR_EMAIL: 'fixture@example.test',
+          GIT_COMMITTER_NAME: 'Fixture',
+          GIT_COMMITTER_EMAIL: 'fixture@example.test',
+        },
+      });
+    await f.config({ diagramBaseRef: 'comparison-base' });
+    await git('add', '.');
+    await git(
+      '-c',
+      'core.hooksPath=/dev/null',
+      'commit',
+      '--quiet',
+      '-m',
+      'two complete diagram groups',
+    );
+    await git('branch', 'comparison-base');
+    expect(await f.run('diagram-freshness')).toEqual([]);
     await f.write(
       'guide.md',
-      `${first}\n## Separate diagram\n\n=== "Source"\n\n    \`\`\`mermaid\n    flowchart TD\n    X --> Y\n    \`\`\`\n`,
+      `${diagram(validMermaid.replace('Finish', 'Done'))}\n${second}`,
     );
-    // The separate source has no associated SVG pair and cannot make the first group stale.
-    expect(
-      (await f.run('diagram-freshness')).filter((v) =>
-        v.message.includes('unverified'),
-      ).length,
-    ).toBe(1);
+    for (const theme of ['light', 'dark'])
+      await f.put(
+        `site/public/diagrams/other-${theme}.svg`,
+        svg.replace('finish', 'done'),
+      );
+    expect(await f.run('diagram-freshness')).toEqual([
+      {
+        ruleId: 'diagram-freshness',
+        severity: 'warn',
+        path: 'guide.md',
+        line: 19,
+        message:
+          'Mermaid source changed without both associated SVGs in the same committed/working-tree change.',
+      },
+    ]);
+    // Only the matching pair can satisfy A; restore unrelated B to its base bytes.
+    for (const theme of ['light', 'dark']) {
+      await f.put(`site/public/diagrams/other-${theme}.svg`, svg);
+      await f.put(
+        `site/public/diagrams/journey-${theme}.svg`,
+        svg.replace('finish', 'done'),
+      );
+    }
+    expect(await f.run('diagram-freshness')).toEqual([]);
   });
 });
