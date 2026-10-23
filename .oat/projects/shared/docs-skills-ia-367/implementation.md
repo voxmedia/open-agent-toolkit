@@ -1411,6 +1411,19 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** bc979197ef3b4f2d309b8b2ff2cb55c318c23a12
 **Verification:** Original source/config built at launch reproduces both reports: nested docs/guide emits ../contributing/ instead of ../../contributing/index/; filtered physical section/plus+ siblings incorrectly preserve /index and shift source backlinks. Fixed transforms38/config22 tests execute pre/post exit0; both scoped check/type/build pass. Real temporary .md/.mdx fixtures use actual tinyglobby collection discovery, pinned MDX14.3.2 compilation and core16.10.2 loader URLs; rendered hrefs agree. Same processor sees reader creation/removal, filtered source/target collisions collapse, literal + and directory-only file controls pass. Existing root-outside-sibling, no-context, ordinary/query/fragment controls remain green. Dependency install initially selected one unrelated Vite snapshot; removed that incidental lockfile change before commit, leaving only the authorized importer addition. No app/template source wiring changes required. Evidence: ignored analysis/p05/remote-fix/t09-{red-full,pre-_,post-_}.log and exact p05-t09-files.json; no recovery usage.
 
+### Task p05-t10: (review) Keep nonlocal collision links out of loader deduplication
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
+**Source review:** PR373 discussion4357563312 (H2); root expanded remote receive.
+**Intent:** Preserve precise source identity for local/owning collision placement while retaining unrelated authored links as labeled fragment-bearing URLs, avoiding pinned-loader global page deduplication.
+**Files:** packages/cli/src/commands/docs/nav/{fumadocs.ts,fumadocs-loader.test.ts}.
+**Proof command:** Existing real-source nav sync/check + core16.10.2 loader regression with both child maps, red/fixed/valid controls; focused nav/init suites and CLI check/type/build pre/post; ordered DoD gates at handoff.
+
+**Commit:** 2312f633086acb61b22df311ca2d76a7c32d4d4a
+**Verification:** Pre-fix sync emits ../section.md in both maps; actual core16.10.2 drops the unrelated Elsewhere contract link while --check considers its source reachable. Fixed real-loader regression preserves section.md source identity in its owning map and Elsewhere contract at /section#contract in the unrelated map; the existing Section landing URL stays /section/index. Removing owning placement still reports section.md unlisted despite the unrelated URL link, retaining strict reachability. Focused nav/init156 tests execute pre/post with isolated HOME, CLI check/type/build exit0. Evidence: ignored analysis/p05/remote-fix/t10-{red-full,pre-_,post-_}.log, exact p05-t10-files.json. No unrelated behavior, frozen anchor or recovery-ledger edits.
+
 ### Fix round1 verification and handoff
 
 All six accepted findings are fixed in completed records t05/H1, t06/M1+L1, t07/L2 and t08/M2+L3. Tested fix candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 is the last task-journal commit; this final verification journal changes no tested product bytes. Root-owned phase Head remains95a2cef6610eb3a65c18544ffcdd51f9abb4b212 as instructed; Base and prior history are frozen, phase remains in_progress for independent round2. Eleven authorized product files plus p05-local records changed; no plan/state/log/Reviews/GitHub/acceptance writes, nested dispatch or target change.
