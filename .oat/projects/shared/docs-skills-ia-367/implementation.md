@@ -1779,6 +1779,22 @@ Read authoritative t08-red/t09-red-final categorical failures, fixed/valid contr
 
 All ten records are closed; round2's exact review event moves to fixes_completed, not passed. Frozen Base and previous review history remain unchanged. Recovery settled1/10,pendingnull; no new event. Next is fresh independent full-range round3 (cycle3/3) with both prior reviews/dispositions; selected p06 gate still precedes acceptance and intermediate delivery. Root retains all disposition/acceptance/GitHub ownership; no p07/P24 or publication.
 
+### Review Received: p06 round3 and cycle boundary
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T185005Z.md
+**Reviewed range:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa..9e19dd89657e18386cb3cdffcb58e753d66a68a8; full anchored p06, auto code, cycle3/3.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+All four round2 findings are independently closed; round1's six remain closed. Reviewer rebuilt sources, repeated all earlier probes, independently checked actual pnpm12.11.2 membership and real read-failure/config/navigation cases on Node26.11.1/22.23.3, and ran249focused tests fresh. Flagship0errors/756visible warnings without suppressions; versions0.3.28 and skill-bump gate hold. Broad gates9480tests, packed exact22.17, forced all12tasks0cache, framework/install-root and skill-sentence evidence remain inherited, not freshly rerun.
+
+- R3-L1 (Low): remaining navigation outer catch misattributes malformed mkdocs.yml to index.md; an unreadable Fumadocs reader leaks an absolute path and aborts later comparisons. Root source inspection corroborates the raw outer catch and independent probe; accepted G5 relative diagnostics/P21 attribution, not a new guarantee. Task Scope: Minor. A small precise error boundary/degradation is proposed for operator disposition; no new navigation inventory engine authorized.
+- R3-L2 (Low): unreadable reader paths disappear from structural membership, causing false missing-index errors and leaf-size warnings even under intentional frontmatter policy. Root verified parsed-page-only inventory and counts; this is an accepted G5/P20 accuracy gap, not hardening. Task Scope: Minor. Proposed bounded correction preserves discovered membership while suppressing conclusions needing unavailable content; operator disposition pending.
+
+**Root receive:** Read the full artifact, consumed exactly one not-attempted reconnaissance signal and confirmed no Review Orchestration section. Full anchors/provenance/severity vocabulary are valid. Neither residual issue hides CI failure; every reproduced bad input exits1. No new execution record or automatic fourth review is created at the cap. Root establishes the exact received Reviews event; rounds1–2 remain fixes_completed, not passed.
+
+**Outcome:** received at the three-cycle governance cap with two residual Lows, disposition pending. Follow review-receive Step8 and complexity-review-fallback: one new read-only complexity review at the resolved reviewer ceiling, then present its report and concrete operator options. Agents do not select the cap disposition. Phase stays in_progress; acceptance, selected phase gate and intermediate delivery remain future root duties. Frozen Base/candidate, recovery1/10pendingnull and historical evidence are conserved.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1799,7 +1815,7 @@ All ten records are closed; round2's exact review event moves to fixes_completed
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-review-r3-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-review-r3-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-fix-r2-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
