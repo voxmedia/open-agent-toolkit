@@ -79,6 +79,7 @@
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for Markdown and docs app setup, docs commands, and docs maintenance workflows.
   - [Add or Adopt Docs in a Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding or adopting OAT-managed documentation to a repository.
   - [Documentation Commands](docs-tooling/commands.md) — Markdown bootstrap/adoption, framework scaffolding, external manifests, and navigation helpers for both frameworks.
+  - [Check Documentation](docs-tooling/check.md) — Validate reader structure, links, navigation, contributor commands and accessible diagram sources without building a site.
   - [Docs Workflows](docs-tooling/workflows.md) — Docs CLI helpers and skills for analysis and controlled documentation updates.
   - [Improve Agent Instructions](docs-tooling/agent-instructions.md) — Audit instruction coverage and accuracy, then apply approved recommendations without inventing repository conventions.
 - Reference

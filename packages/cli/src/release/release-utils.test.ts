@@ -119,7 +119,11 @@ describe('findChangedWorkspaceDirsFromPaths with the real dependency map', () =>
     ).resolves.toEqual(['packages/cli', 'packages/control-plane']);
     await expect(
       changedDirs(['packages/docs-transforms/src/index.ts']),
-    ).resolves.toEqual(['packages/docs-config', 'packages/docs-transforms']);
+    ).resolves.toEqual([
+      'packages/cli',
+      'packages/docs-config',
+      'packages/docs-transforms',
+    ]);
   });
 });
 
@@ -132,6 +136,7 @@ describe('findVersionPolicyDependencyRootsByWorkspaceDir', () => {
 
     expect(dependencyRoots.get('packages/cli')).toEqual([
       'packages/control-plane',
+      'packages/docs-transforms',
     ]);
     expect(dependencyRoots.get('packages/docs-config')).toEqual([
       'packages/docs-transforms',

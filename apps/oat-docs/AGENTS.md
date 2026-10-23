@@ -22,13 +22,13 @@ Agent HTTP entry points are `/open-agent-toolkit/llms.txt`, `/open-agent-toolkit
 4. If the new page introduces a new subdirectory, create an `index.md` in that subdirectory with its own `## Contents` section. Every content directory must have an `index.md`.
 5. Run `pnpm -w run cli:source -- docs nav sync --target-dir apps/oat-docs` to regenerate any derived navigation artifacts. Derived artifacts never replace the authored `## Contents`; they're generated from it.
 
-Use real Markdown links for reader-facing guide pointers. The app checker validates relative inline-code `.md` references beginning with `./` or `../`; bare names such as `project-log.md` may be project artifacts. Run `pnpm docs:validate` for committed navigation freshness plus source route/anchor and live-consumer checks, and `pnpm docs:test` for self-contained fixtures.
+Use real Markdown links for reader-facing guide pointers. The app checker validates relative inline-code `.md` references beginning with `./` or `../`; bare names such as `project-log.md` may be project artifacts. From the repository root, run `pnpm --filter oat-docs docs:check` for portable reader/map/link, contributor-command, Mermaid/SVG and navigation checks. Errors fail; warnings need review. The checker is read-only and does not build. Run `pnpm docs:validate` for that portable check plus committed navigation freshness, source route/anchor and live-consumer checks, and `pnpm docs:test` for self-contained fixtures.
 
 The supported-skill catalog is committed source in `docs/skills/index.md` and bundled with the CLI. `skill-docs.json` assigns each shipped user-facing skill its canonical family anchor and verified project applicability; descriptions and visibility come from canonical skill metadata. Each mapped section includes a concrete `**Example scenario:**`. After changing those inputs, run `pnpm docs:skills:generate`, then nav sync and `pnpm docs:validate`. Check/dev/build validate catalog parity without silently rewriting it. Catalog tooling is repository-specific, not a public `oat` command or scaffold requirement.
 
 ## When you add or change a diagram
 
-1. Write the diagram as a fenced `mermaid` block. Mermaid is the source of truth; readers can click it to enlarge it.
+1. Write the diagram as a fenced `mermaid` block with `accTitle` and `accDescr`. Mermaid is the source of truth; readers can click it to enlarge it.
 2. When a diagram must read well on a phone, or is central to a page, also draw a light and a dark SVG in `public/diagrams/<name>-light.svg` and `<name>-dark.svg`. Use the site palette, keep the viewBox 600 to 760 wide where possible, and never set text below 12px. Put both images in a `=== "Diagram"` tab and the Mermaid block in a `=== "Mermaid source"` tab (see `docs/contributing/markdown-features.md`).
 3. When you change a Mermaid block that has SVGs, update both SVGs in the same commit so they show the same nodes, edges and labels. Give each SVG `role="img"`, descriptive `<title>` and `<desc>` elements connected through `aria-labelledby`, and readable labels. Keep Markdown alt text concise (about 155 characters or less), describing the diagram without adding unsupported claims.
 4. Every Markdown image is zoomable and gets the base path added; link public images with root-relative paths such as `/diagrams/name.svg`.
@@ -36,7 +36,7 @@ The supported-skill catalog is committed source in `docs/skills/index.md` and bu
 ## When you need to restructure navigation
 
 1. Make changes in the authored `## Contents` sections of each affected `index.md`. That is the authoritative local map.
-2. Do **not** hand-edit generated navigation artifacts. The root-level `index.md` (if present for this framework) is rewritten on every build. Fumadocs `docs/**/meta.json` files and `mkdocs.yml` `nav:` (for MkDocs) are committed and rewritten only by `oat docs nav sync`; `prebuild` runs `oat docs nav sync --check` and fails the build when they are stale or a page is unlisted.
+2. Do **not** hand-edit generated navigation artifacts. The root-level `index.md` (if present for this framework) is rewritten on every build. Fumadocs `docs/**/meta.json` files and `mkdocs.yml` `nav:` (for MkDocs) are committed and rewritten only by `oat docs nav sync`; `prebuild` runs the portable checker and `oat docs nav sync --check` and fails the build when they are stale or a page is unlisted.
 3. After editing `## Contents`, run the framework's nav sync command to regenerate derived artifacts.
 4. If you're moving pages between directories, update both source and destination `index.md` `## Contents` entries in the same commit so the site isn't broken mid-way through history.
 5. If you're reparenting an entire subtree, consider whether the moved directory's own `index.md` needs a revised "scope" paragraph.

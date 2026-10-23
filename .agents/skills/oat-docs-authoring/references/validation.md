@@ -45,6 +45,10 @@ When navigation, file placement, or `## Contents` changes:
 If generated output is ignored, absent by policy, or cannot be produced in the
 current environment, record the exact reason in the handoff.
 
+## Portable checker
+
+Run the installed `oat docs check --target-dir <resolved-root> --json` when available, or the repository’s documented source/local CLI equivalent. It is read-only and needs no site build. Keep findings and exit: errors fail, warning-only passes. Review warnings, repair authored metadata/maps/links and explicitly sync owned navigation; never add blanket exclusions to pass. Missing CLI capability is unverified, not a successful check. Preserve existing app-specific validators. See the installed checker command docs for stable rule IDs and narrow reason-bearing `documentation.check` exceptions.
+
 ## Local Contract Checks
 
 Before finishing:

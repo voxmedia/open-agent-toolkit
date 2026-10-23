@@ -50,3 +50,8 @@ jobs:
 
       - name: Build docs
         run: pnpm build:docs
+
+      - name: Check generated docs manifest freshness
+        run: |
+          pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+          git diff --exit-code -- apps/oat-docs/index.md

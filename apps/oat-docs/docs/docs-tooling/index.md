@@ -13,6 +13,7 @@ Use this section when you are adopting the docs app workflow in a repo, maintain
 
 - [Add or Adopt Docs in a Repo](add-docs-to-a-repo.md) - Set up Markdown or a docs app and safely adopt existing Markdown.
 - [Documentation Commands](commands.md) - Docs CLI surface for init, migration, index generation, and nav sync.
+- [Check Documentation](check.md) - Portable reader, navigation, command and diagram validation.
 - [Docs Workflows](workflows.md) - How the docs CLI helpers pair with analyze/apply workflows.
 - [Improve Agent Instructions](agent-instructions.md) - Analyze instruction gaps and apply approved evidence-backed changes.
 

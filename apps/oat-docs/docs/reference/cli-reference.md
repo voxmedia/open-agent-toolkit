@@ -78,6 +78,8 @@ Git retries include prior outputs only with HEAD ownership evidence, while
 no-Git retries report current-pass mutations. See [Backlog
 Lifecycle](../workflows/backlog-and-planning/backlog-lifecycle.md).
 
+`oat docs check [--target-dir <dir>] [--rule <id>...] [--json]` validates reader structure, links, navigation, contributor commands and diagrams without a site build. Errors exit 1; warning-only exits 0. See [Check Documentation](../docs-tooling/check.md) for rules/config and JSON.
+
 ## Command Groups
 
 | Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                                   |

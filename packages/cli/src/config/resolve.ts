@@ -577,6 +577,7 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
 function isAtomicConfigLeaf(key: string, value: unknown): boolean {
   return (
     key === 'documentation.ia' ||
+    key === 'documentation.check' ||
     isWorkflowDispatchCandidateLadder(value) ||
     (key === 'workflow.postImplementSequence' &&
       isWorkflowPostImplementStructuredSequence(value))

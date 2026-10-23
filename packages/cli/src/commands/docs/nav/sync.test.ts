@@ -107,6 +107,25 @@ async function readMeta(docsRoot: string, folder: string): Promise<unknown> {
 }
 
 describe('parseIndexContents', () => {
+  it('exposes optional physical source locations and descriptions from the same strict grammar', () => {
+    expect(
+      parseIndexContents(
+        '## Contents\n\n### Readers\n- [Guide](guide.md) — A complete reader description.\n',
+        'index.md',
+        { locations: true },
+      ),
+    ).toEqual([
+      {
+        title: 'Guide',
+        href: 'guide.md',
+        group: { title: 'Readers', line: 3 },
+        line: 4,
+        description: 'A complete reader description.',
+        separator: '—',
+      },
+    ]);
+  });
+
   it('parses machine-readable links from the reserved contents section only', () => {
     const markdown = `# Docs
 

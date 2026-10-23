@@ -326,3 +326,13 @@ need.
   and frontmatter; it only previews changes until you pass `--apply`.
 
 MkDocs/Material scaffolding is **legacy**; its existing Python pins remain unchanged. [Material's changelog](https://squidfunk.github.io/mkdocs-material/changelog/) says Material receives critical/security fixes through May 5, 2027 and names Zensical as its successor. That lifecycle belongs to Material, not MkDocs core, and does not promise that the scaffold's older pins contain the latest fixes. Pinned MkDocs 1.4.2 still renders configured non-reader routes even though OAT omits them from navigation and manifests.
+
+## Verify the scaffold in PR CI
+
+Current framework starters run `docs:check` before build and MkDocs `test` runs the same checker. Bootstrap presents concrete CI edits after inspecting config: checker, actual framework build, then regeneration and Git diff of a configured generated Markdown inventory. It preserves existing workflow content and writes only the approved diff. Use full-history checkout/fetch for diagram comparisons. Markdown gets checker-only wiring unless an external manifest was separately configured. See [Check Documentation](check.md) for diagnostics and repair.
+
+## Fumadocs install-root compatibility
+
+Current Fumadocs needs exact `mdast-util-to-markdown: 2.1.2` to avoid the upstream bold/italic handler recursion in 2.2.0. CLI init creates a small `pnpm-workspace.yaml` only for a new independent app that is its own installation root. A real workspace member gets no local boundary: bootstrap presents the exact root YAML override for approval, preserving package globs, unrelated settings and conflicting pins. Declined/skipped edits remain manual and build verification stays pending. `--no-root-patch` controls root build scripts only.
+
+Use effective-root `pnpm-workspace.yaml` for pnpm 10+ (including 12, which ignores `package.json`'s `pnpm.overrides`); member-only policy is ineffective. After installing from the actual root, inspect `pnpm why mdast-util-to-markdown`, confirm 2.1.2 and retain root config/lockfile. Run the checker and real build with all authored content preserved. This is a constrained fresh-install policy, not a framework upgrade or an unconstrained resolution claim.

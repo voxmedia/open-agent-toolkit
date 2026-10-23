@@ -32,15 +32,17 @@ From the **repository root**, enter this app:
 cd {{APP_CWD}}
 ```
 
-From the **app directory**, after edits:
+From the **repository root**, enter the app and validate after edits:
 
 ```bash
+cd {{APP_CWD}}
 pnpm docs:format
 pnpm docs:format:check
 pnpm docs:lint
 {{NAV_SYNC_CMD}}
 {{NAV_SYNC_CHECK_CMD}}
+pnpm docs:check
 pnpm docs:build
 ```
 
-Lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; a disabled echo does not validate. The existing test echo is not a check. Setup/preview details and legacy support are in the toolchain guide.
+Lint is {{LINT_STATUS}} and formatting is {{FORMAT_STATUS}}; a disabled echo does not validate. The test script runs the portable docs checker. Setup/preview details and legacy support are in the toolchain guide.

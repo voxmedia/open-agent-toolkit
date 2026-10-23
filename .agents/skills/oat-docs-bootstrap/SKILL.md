@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.3'
+  version: '1.4.4'
 ---
 
 # Docs Bootstrap
@@ -40,6 +40,8 @@ Bootstrap or adopt documentation in this repo and guide the user through underst
 - Inspecting native scaffold capabilities and reporting missing current-template guidance without rewriting it
 - Running install + build and classifying failures against known patterns
 - Reading `.oat/config.json` back to verify paths and prompting for `requireForProjectCompletion`
+- Presenting concrete PR CI edits from `references/pr-ci.md`, writing only the approved diff while preserving existing workflows
+- Presenting the exact effective-install-root compatibility policy below and writing only that approved root-policy edit while preserving existing settings/conflicts
 - Narrating the scaffolded output as a chunked educational walkthrough
 - Delegating optional initial content population to `oat-docs-analyze` + `oat-docs-apply`
 
@@ -119,7 +121,7 @@ The detailed framework procedures below apply to Fumadocs/MkDocs. When the selec
    Before Markdown CLI invocation, run **Step 2.5** for fresh setup and explicitly selected adoption; it is not bypassed by this condensed path.
 
 3. **Invoke CLI:** Probe `$CLI_CMD docs init --help` and require advertised Markdown/`--adopt` support before invocation; if missing, report the needed CLI update rather than fabricating scaffold files. Run `$CLI_CMD docs init --framework markdown --target-dir <root> --site-name <title> --description <description> --lint none --format none --yes`, adding `--adopt` only for explicit adoption. Pass the selected lint/format values when using existing tools. Never pass app-only flags. An optional `--dry-run` previews file/config/guidance changes without writes; it does not count as a completed bootstrap. Capture terminal/JSON results, exact exit, created/preserved files, config changes, guidance action, and audit advice. `partial`/exit 1 with manual-required or blocked guidance means unresolved guidance; real runs may have created files, whereas dry-runs have only planned files. Report actual state and stop before claiming completion. Other refusals also stop without template repairs. For success, read config back to resolve the actual content root and authored index.
-4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run already documented lint/link/format checks when applicable; otherwise inspect files/links directly. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
+4. **Verify files:** Print `[4/7] Verifying files…`. Check config root/index, baseline file existence, nonempty `title`/`description`, useful audience/scope context and populated `## Contents` links resolving to actual sibling pages or child `index.md`s. Honor excludes and asset-only exceptions; preserve local AGENTS instructions. Fresh setup creates only authored `index.md` and `contributing.md` in the target; verify no docs-root AGENTS, app package, framework config, dependencies, or root build changes. Run `$CLI_CMD docs check --target-dir <literal-root>` and already documented lint/link/format checks when applicable. Errors block conformance; warnings remain review items. Use `references/pr-ci.md` to present checker-only PR wiring with empty build/manifest inputs unless a generated external manifest was separately configured; apply only the approved workflow diff. Adoption preserves existing bytes and may leave missing child indexes, metadata, context, or links: record these as audit gaps for analyze/apply rather than repairing them or calling the tree fully conformant. Distinguish successful setup verification from content-conformance findings.
 5. **Inspect config:** `documentation.tooling` is the string `markdown`; `root` is the literal content directory; `index` is its authored entrypoint, normally `<root>/index.md`. Markdown introduces no `documentation.config`. Preserve unrelated config/excludes/completion settings. Verify deterministic managed root Documentation guidance names that root, Markdown tooling, authored index, and `<root>/contributing.md`; preserve manual/local guidance and surface unresolved disposition. The Step 5e completion opt-in remains available using the docs root rather than an app name, without silently changing an existing value. No nested app-config reconciliation or framework patch inspection applies.
 6. **Walkthrough:** In short chunks, show actual config and `<root>/index.md`: useful context plus the Contents map, title/description metadata, sibling `page.md` and child `section/index.md` links, exclusions and asset-only exceptions. Explain adding a page/section and updating the nearest authored map without overwriting existing context. Root AGENTS Documentation guidance and `<root>/contributing.md` establish agent/human conventions; a preexisting local AGENTS file remains authoritative, but bootstrap creates none. Authored indexes are edited directly. Optional generated inventories require explicit external output, e.g. `$CLI_CMD docs generate-index --docs-dir <root> --output .oat/docs-manifest.md`; output must stay outside the full configured content root and cannot overwrite the configured authored index even with a narrowed `--docs-dir`. Generation does not repoint `documentation.index`. Markdown bootstrap never generates a manifest automatically. Skip framework deep dives and preview-server/build commands.
 7. **Audit handoff and summary:** Offer `oat-docs-analyze` against the literal configured root, followed by `oat-docs-apply` only for approved repairs. An adopted incomplete tree needs that audit; config/guidance alone prove no full conformance. Explain `oat-project-document` for source-backed project deltas. Summarize tooling, actual root/authored index, created/preserved files, guidance/config disposition, ordered IA guidance locators/provenance and proposal recommendation/conflicts, file-check outcomes, unresolved audit gaps, optional manifest ownership, and exact skill handoff. For dry-run/partial/refusal, label the outcome accordingly rather than printing BOOTSTRAP COMPLETE. No app, install, build, patch, or dev-command fields apply.
@@ -416,7 +418,7 @@ Print `[3/7] Scaffolding…` at the start of this step.
 
 For an explicitly fresh Fumadocs/MkDocs app, current CLI init writes `documentation.navOwner: nav-sync` and generates navigation after successful scaffold/config. An explicitly selected new app in a repository with prior docs config is fresh creation; preserve the old app's authored files. This does not authorize regeneration of an existing app: keep undeclared/hand-authored ownership untouched and use the existing analyze/apply handoff. IA approval alone never authorizes navigation writes. Markdown and dry runs run no nav sync.
 
-Inspect the generated package scripts rather than adding a duplicate patch: Fumadocs `prebuild` and MkDocs `docs:build` run `nav sync --check`, using external `oat` from the app directory with `--target-dir .`, or source-workspace CLI with the explicit quoted repo-relative app. A stale navigation check requires fixing authored Contents and explicitly syncing owned navigation before retrying, not deleting the check or silently regenerating an undeclared owner.
+Inspect the generated package scripts rather than adding a duplicate patch: `docs:check` runs the portable checker and MkDocs `test` runs the same real check. Framework builds run the checker before navigation/build. Fumadocs `prebuild` and MkDocs `docs:build` run `nav sync --check`, using external `oat` from the app directory with `--target-dir .`, or source-workspace CLI with the explicit quoted repo-relative app. A stale navigation check requires fixing authored Contents and explicitly syncing owned navigation before retrying, not deleting the check or silently regenerating an undeclared owner.
 
 **3a. Assemble CLI flags.**
 
@@ -516,6 +518,40 @@ Print `[4/7] Verifying build…` at the start of this step.
 
 Skip this step entirely if `Scaffold Result.scaffoldSucceeded !== true` — a failed scaffold produces an undefined state; installing and building on top of it makes things worse.
 
+**4a prerequisite: inspect and approve Fumadocs install-root policy.**
+
+Before running install, read the CLI's `installationAdvice` and the generated
+toolchain guide. Locate the actual pnpm installation root, including any enclosing
+`pnpm-workspace.yaml`; a workspace member's package is not that root. Current
+Fumadocs loses handler properties added by `mdast-util-to-markdown` 2.2.0, so valid
+bold/italic content can fail compilation. Preserve all content and framework APIs.
+The required compatibility constraint is exactly 2.1.2 in the effective root's
+`pnpm-workspace.yaml`:
+
+```yaml
+overrides:
+  mdast-util-to-markdown: 2.1.2
+```
+
+A newly scaffolded independent app has its own root YAML (`packages: []` plus
+this override); inspect it and install there. The CLI never creates this boundary
+in monorepo mode or under an enclosing pnpm workspace. For an existing workspace
+root, PRESENT the exact concrete YAML diff and obtain explicit approval before
+writing it. Preserve package globs and all unrelated settings; add the entry to
+an existing `overrides` map, never duplicate the map or replace the file. A
+conflicting existing pin requires the owner's decision; a declined/skipped edit
+stays a manual setup requirement and verification remains pending. Do not create
+a local boundary that splits a workspace member. Do not implement a policy merger
+or silently extend CLI root-package patching: it changes build scripts only,
+and `--no-root-patch` neither sets nor approves dependency policy.
+
+Honor the selected manager (pnpm 10+); effective-root YAML works in pnpm 10 and 12.
+A member-only override is ignored in 10, and 12 also ignores `package.json`'s
+`pnpm.overrides`. After install, inspect actual `pnpm why mdast-util-to-markdown`
+from that root, confirm 2.1.2, retain the root config/lockfile, then run checker and
+build. Label this a constrained fresh install; do not promise unconstrained
+resolution, change user-scope pnpm, or delete bold/italic to avoid the failure.
+
 **4a. Install dependencies.**
 
 Command varies by repo shape (from Preflight Result) and framework (Fumadocs only uses pnpm; MkDocs uses Python tooling — handled in the MkDocs Minimum Contract, Step 6):
@@ -525,6 +561,8 @@ Command varies by repo shape (from Preflight Result) and framework (Fumadocs onl
 - `nested-standalone`: run `pnpm install` inside `<appRoot>` (`cd <appRoot> && pnpm install`). The nested lockfile means install must happen at the app root, not repo root.
 
 For Fumadocs, capture both stdout and stderr. Print a start line (`Installing dependencies…`) and a completion line with duration.
+
+Before building, run `$CLI_CMD docs check --target-dir <configured-root>` from the repo root. Keep its JSON/findings and exit; metadata/maps/links, contributor commands and real Mermaid syntax are checked without executing page code. Errors stop verification; review warnings and route content repairs through analyze/apply. Never add blanket suppressions to pass bootstrap.
 
 **4b. Build.**
 
@@ -572,6 +610,7 @@ Record internally for the Post-Scaffold Inspector and Walkthrough:
 
 ```
 Verification Result:
+  installRootPolicy: { path, disposition: 'scaffolded' | 'approved' | 'manual' | 'conflict', resolvedVersion } | null
   installSucceeded: boolean
   buildSucceeded: boolean
   knownIssues: Array<{ pattern, severity: 'benign' | 'flagged' | 'surface-only' | 'auto-fixed', detail }>
@@ -669,6 +708,16 @@ Inspection Result:
 ```
 
 The Walkthrough's Section D (Configuration readback) references `issues[]` verbatim — format it so it reads cleanly when printed to the user.
+
+**PR CI wiring (after config inspection):** Load `references/pr-ci.md` now.
+Resolve its concrete inputs from the inspected config/scripts, present the exact
+workflow diff, and write only after approval. Preserve existing workflow content
+and use full-history checkout/fetch for the applicable diagram base. Execute its
+checker, real framework build and configured-manifest freshness commands locally;
+record exits and unverified portions. Markdown follows the same recipe with no
+build/default manifest. Include the approved workflow path or declined/pending
+status in the exit summary. This is bootstrap setup authority, not permission to
+rewrite an existing app or introduce deployment.
 
 ### Step 6: Educational Walkthrough
 
@@ -883,6 +932,8 @@ Agent guidance:
 Build:
   - Install: {ok | known-issue: ...}
   - Build:   {ok | known-issue: ...}
+  - Install policy: {effective-root YAML + resolved 2.1.2 | manual/conflict/pending; constrained install}
+  - PR CI: {approved workflow path + checker/build/freshness exits | declined | pending}
   - Known issues (from Verification Result.knownIssues): {list or 'none'}
 
 Inspection:

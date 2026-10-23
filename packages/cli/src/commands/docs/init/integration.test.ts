@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { checkDocs } from '@commands/docs/check/checker';
 import { createDocsNavSyncCommand } from '@commands/docs/nav/sync';
 import { resolveAssetsRoot } from '@fs/assets';
 import { OAT_VERSION } from '@shared/oat-version';
@@ -155,7 +156,7 @@ describe('scaffold integration', () => {
             'none',
             '--format',
             'none',
-            '--no-root-patch',
+            ...(sourceWorkspace ? [] : ['--no-root-patch']),
           ],
           { from: 'user' },
         );
@@ -178,6 +179,25 @@ describe('scaffold integration', () => {
         '{"pages":["authored"]}',
       );
       if (framework === 'fumadocs') {
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          rootPackagePatch: sourceWorkspace
+            ? { status: 'skipped', reason: 'no-build-script' }
+            : { status: 'disabled' },
+          installationAdvice: [
+            expect.stringContaining(
+              'effective install-root pnpm-workspace.yaml',
+            ),
+            expect.stringContaining(
+              '--no-root-patch controls root scripts only',
+            ),
+          ],
+        });
+        await expect(
+          readFile(join(appRoot, 'pnpm-workspace.yaml'), 'utf8'),
+        ).rejects.toThrow();
+        expect(await readFile(join(root, 'pnpm-workspace.yaml'), 'utf8')).toBe(
+          'packages:\n  - apps/*\n',
+        );
         expect(
           JSON.parse(await readFile(join(appRoot, 'docs/meta.json'), 'utf8'))
             .pages,
@@ -265,6 +285,26 @@ describe('scaffold integration', () => {
           stdio: 'pipe',
         });
       expect(() => runBuild()).not.toThrow();
+      expect(
+        (await checkDocs({ cwd: root, targetDir: 'apps/docs site' })).summary
+          .errors,
+      ).toBe(0);
+      const source = await readFile(join(appRoot, 'docs/index.md'), 'utf8');
+      await writeFile(
+        join(appRoot, 'docs/index.md'),
+        source.replace(/^description:.*$/m, ''),
+      );
+      expect(
+        (await checkDocs({ cwd: root, targetDir: 'apps/docs site' })).findings,
+      ).toContainEqual({
+        ruleId: 'description',
+        severity: 'error',
+        path: 'index.md',
+        line: 1,
+        message: 'Frontmatter description is required and must be nonempty.',
+      });
+      expect(() => runBuild()).toThrow();
+      await writeFile(join(appRoot, 'docs/index.md'), source);
       if (framework === 'fumadocs') {
         await writeFile(join(appRoot, 'docs/meta.json'), '{"pages":[]}');
       } else {
@@ -369,6 +409,64 @@ describe('scaffold integration', () => {
         ).toEqual(['index', 'getting-started', 'contributing']);
       } finally {
         process.exitCode = priorExitCode;
+      }
+    },
+  );
+
+  it.each([
+    ['standalone root', '.', false, false],
+    ['nested standalone', 'docs', false, false],
+    ['workspace member', 'apps/docs', true, false],
+    ['enclosing workspace', 'docs', true, true],
+    ['enclosing workspace through alias', 'docs', true, true],
+  ] as const)(
+    'keeps serializer policy at the effective install root: %s',
+    { timeout: 30_000 },
+    async (_name, targetDir, workspace, nestedRepo) => {
+      assetsRoot = await bundleAssets();
+      const root = await mkdtemp(join(tmpdir(), 'oat-install-root-'));
+      createdRoots.push(root);
+      const policy =
+        'packages:\n  - apps/*\n  - nested/*\nonlyBuiltDependencies: [sharp]\noverrides:\n  mdast-util-to-markdown: 2.2.0\n  unrelated: 1.0.0\n';
+      if (workspace) await writeFile(join(root, 'pnpm-workspace.yaml'), policy);
+      let repoRoot = nestedRepo ? join(root, 'nested') : root;
+      if (nestedRepo) await mkdir(repoRoot);
+      if (_name.includes('alias')) {
+        const aliasRoot = await mkdtemp(join(tmpdir(), 'oat-workspace-alias-'));
+        createdRoots.push(aliasRoot);
+        await symlink(repoRoot, join(aliasRoot, 'repo'));
+        repoRoot = join(aliasRoot, 'repo');
+      }
+      const result = await scaffoldDocsApp({
+        assetsRoot,
+        repoRoot,
+        repoShape: workspace && !nestedRepo ? 'monorepo' : 'single-package',
+        framework: 'fumadocs',
+        appName: 'docs',
+        siteName: 'Docs',
+        targetDir,
+        siteDescription: 'Documentation',
+        lint: 'none',
+        format: 'none',
+        rootPatch: false,
+      });
+      const appPolicy = join(result.appRoot, 'pnpm-workspace.yaml');
+      if (workspace) {
+        await expect(readFile(appPolicy, 'utf8')).rejects.toThrow();
+        expect(result.createdFiles).not.toContain('pnpm-workspace.yaml');
+        expect(await readFile(join(root, 'pnpm-workspace.yaml'), 'utf8')).toBe(
+          policy,
+        );
+        expect(result.installationAdvice?.[0]).toContain('approve or manually');
+      } else {
+        expect(parseYaml(await readFile(appPolicy, 'utf8'))).toEqual({
+          packages: [],
+          overrides: { 'mdast-util-to-markdown': '2.1.2' },
+        });
+        expect(result.createdFiles).toContain('pnpm-workspace.yaml');
+        expect(result.installationAdvice?.[0]).toContain(
+          'Created app-install-root',
+        );
       }
     },
   );
@@ -699,7 +797,7 @@ describe('scaffold integration', () => {
         'fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
       expect(packageJson.scripts['prebuild']).toBe(
-        'oat docs nav sync --target-dir . --check && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
+        'oat docs check --target-dir . && oat docs nav sync --target-dir . --check && fumadocs-mdx && oat docs generate-index --docs-dir docs --output index.md',
       );
     },
   );

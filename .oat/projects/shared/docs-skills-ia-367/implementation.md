@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p05
+oat_current_task_id: p06
 oat_generated: false
 oat_template: false
 ---
@@ -50,12 +50,12 @@ oat_template: false
 | p04    | completed | 1     | 1/1      |
 | p-rev4 | completed | 1     | 1/1      |
 | p05    | completed | 1     | 1/1      |
-| p06    | pending   | 1     | 0/1      |
+| p06    | completed | 1     | 1/1      |
 | p07    | pending   | 1     | 0/1      |
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 9/13 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
@@ -1520,9 +1520,436 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** pending
+**Status:** completed
+**Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
+**Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
+
+**Review-fix round 2 verification:** All four accepted findings are corrected in p06-t08–t10; all ten phase records are completed. Candidate `9e19dd89657e18386cb3cdffcb58e753d66a68a8` preserves frozen Base and historical product/recovery commits. Immutable pre-fix controls fail for intended nested-context, metadata/source-read and per-file navigation defects; fixed/valid public tests pass, including 177 fresh checker/config/nav/init tests and 1,087 fresh skill sentence contracts. All eight ordered gates pass before and against the committed candidate. Precommit cache/fresh counts: 5/6, 5/6, 5/7, 5/0, direct, direct, direct, 6/0; 9,480 package/app tests execute fresh, plus smoke165/skills712/scripts1. Candidate counts: 11/0, 11/0, 12/0, 5/0, direct, direct, direct, 6/0; cached results are inherited and direct suites execute again. Both version-gate fetches pass with no scoped main drift. Applicable lint/format pass; t10 conserves every non-whitespace character. Fresh packed CLI JSON/exits/filters, nested command contexts and relative configurable diagnostics pass actual Node22.17.0 and26.11.1; 13 shipped paths match final bytes. Flagship specialized validation and explicit CI manifest freshness pass with 0errors/756visible warnings, category totals unchanged. Original constrained framework/install-root and forced full-run proof remains inherited; setup policy/dependencies are unchanged. Exact manifests/hashes, failed/fixed/valid controls, commands/exits/cache counts and cleanup: ignored `analysis/p06/fix-r2/PROOF-INDEX.md` and `final-manifest.json`. Scoped review journal passes with only root live-run warning. Recovery remains settled 1/10 used, 9 remaining, pending null; no new event. Phase remains in_progress for root independent round3 and acceptance.
+
+**Review-fix round 1 verification:** All six accepted findings are corrected in p06-t04–t07, with four bounded product commits and four separate journal commits; all seven phase records are completed. Frozen Base and historical candidate `237f50659d7ef6478662e38370e39a094eb9c57c` remain preserved. Pre-fix controls fail at the intended public boundaries; committed scoped checker/config/nav/init tests pass 174 fresh, skill sentence contracts pass 1,087 fresh. All eight ordered gates pass before and against the combined candidate. Precommit gate cache/fresh counts: 0/11, 5/6, 5/7, 5/0, direct, direct, direct, 6/0; all 9,477 package/app tests execute fresh, plus smoke 165, skills 712 and scripts 1. Candidate counts: 11/0, 11/0, 12/0, 5/0, direct, direct, direct, 6/0; cached results are inherited and direct suites execute fresh again. Both version-gate fetches and phase-path drift checks pass. Applicable lint/format pass. Packed final CLI JSON/exits/filters and independent syntax policy pass on actual Node 22.17.0 and 26.11.1; shipped-byte comparisons pass. Flagship specialized validators and explicit CI manifest freshness pass: 0 errors, 756 visible warnings; 23 Mermaid accessible-name warnings move to diagram-accessibility (25 total there). Original framework/install-root proof is inherited; setup policy and dependencies are unchanged. Exact commands, failures, hashes, file manifest and cleanup are retained in ignored `analysis/p06/fix-r1/PROOF-INDEX.md`. Scoped review journal validation passes with only the root-owned live-run warning. Recovery remains settled 1/10 used, 9 remaining, pending null. Phase remains in_progress for root independent review.
+
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+
+Candidate proof: all three execution records are closed. Ordered gates1–8 pass against237f50659d7ef6478662e38370e39a094eb9c57c; Turbo cache hits/executions11/0,11/0,12/0,5/0,direct,direct,direct,6/0 are disclosed. Separate forced isolated-HOME package run passes9,463tests with12/12tasks fresh,0cached; direct smoke165/skills712/scripts1/validation68 and skill sentences1,087 pass. Fresh final flagship validation has0errors/756visible warnings and retains specialized validators; explicit CI manifest generation/diff exits0. Real pnpm10/12 effective-root positive/negative controls, shipped-policy constrained fresh Next build, MkDocs and Markdown recipe controls, and final packed Node22.17/26 probes pass. Exact files, hashes, commands, exits and limits: ignored analysis/p06/PROOF-INDEX.md and final-product-manifest.json. Recovery1/10used,9remaining,pendingnull; no new event. Phase remains in_progress for root independent review and acceptance.
+
+**Root handoff validation:** DONE accepted at97c0ec40fd598c146ea037a2909c06f9b4e6fa31 with clean index/worktree. Independently checked exact per-product commit boundaries, immutable ancestry, all71 product paths plus separate recovery ledger and every final SHA256/blob; no mismatch. Candidate237f50659d7ef6478662e38370e39a094eb9c57c tail is journal-only. All8 candidate gate exits and fresh9463/12tasks/0cached evidence are distinct. Recovery01 remains settled1/10,pendingnull; no new event. Original handle and finish continuation are terminalized through final DONE; prior context/blocked handoffs remain above. Phase stays in_progress; full independent p06 review and selected phase gate precede acceptance. Root-owned outcome/review bookkeeping is outside the candidate product range.
+
+Execution shape: one phase implementer, the sole product-committing owner in /Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367. No declared parallel group applies. Root fan-out fails independence because config/parser contracts, lockfile, scaffold/CI files, fixtures and build outputs are shared and sequentially composed. Root retains plan/state/review/log/acceptance and GitHub ownership. Phase recovery limit10 (default), used0, pendingnull; phase-standing bounded append-only recovery only.
+
+Root readiness reconciliation: completed intelligent recon maps existing root/config resolution, Contents grammar, reader exclusions, real navigation adapters and flagship Markdown helpers. Root verified the cited G5/P20–P23/P25 source clauses, config reconstruction gap and already-resolved parser versions. No checker exists yet; the recon's lexical inventory and SVG inspections do not prove rule compliance. Phase-local choices are concretized in plan.md without changing Outcomes, G5 flags/JSON, authority or the agreed Approach. No up-front tasks, generic validator/plugin system, framework upgrade, consumer rollout or P24/p07 scope is introduced. Parser dependencies are bounded to existing resolved engines; direct imports must declare ownership, including production use in the packed CLI.
+
+Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 product2d225cd708a5e82850febb60a074d74f9760e61d/journalaf2ddcc03f2f4997b930754b7f2d084ce502bcb3; t02 has no product commit and stays open. Its exact product edits are preserved per ignored analysis/p06/handoff-manifest.json. Root reproduced the DOMPurify failure and approved jsdom29.1.1 plus compatible development typings solely as the Node DOM host for unchanged Mermaid11.12.3. Root scratch controls accept real flowchart/class/sequence and HTML labels, reject invalid syntax, on Node26.11.1 and minimum22.17.0. jsdom30 requires a higher Node22 floor, so29.1.1 is pinned. Default jsdom has no script execution or resource loading; no browser rendering, sanitizer stub, parser bypass or engine-floor change is authorized. Continue the same implementer/target and open record; recovery remains0/10,pendingnull. Scope clarification is phase-local runtime support for the accepted P23 guarantee, not a changed Outcome/Approach.
+
+### Task p06-t01: Preserve validated checker policy through config commands
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (accepted T3 delegated task)
+**Start HEAD:** 407c3513b305db7480f828be87c30cf5ae8c8d69
+**Intent:** Define the bounded checker policy and shared Contents locations/descriptions without changing accepted navigation grammar.
+**Files:** packages/cli/src/config/documentation-check.ts; packages/cli/src/config/oat-config.ts; packages/cli/src/config/resolve.ts; packages/cli/src/commands/config/index.ts; packages/cli/src/commands/config/docs-check.test.ts; packages/cli/src/commands/docs/nav/contents.ts; packages/cli/src/commands/docs/nav/sync.test.ts.
+**Proof:** isolated-HOME vitest config/docs-check and nav/sync; CLI lint/type-check; scoped CLI build.
+
+**Commit:** 2d225cd708a5e82850febb60a074d74f9760e61d
+**Verification:** 45 focused real-file/config tests passed; CLI lint, type-check and build exits0. No cached Turbo task used. Early null-repair and lint defects corrected before commit.
+
+### Task p06-t02: Implement portable reader, navigation, command and diagram checks
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (accepted T3 delegated task)
+**Start HEAD:** af2ddcc03f2f4997b930754b7f2d084ce502bcb3
+**Intent:** Implement the G5 command and calibrated rules over real reader files, shared navigation and installed parsers; expose deterministic diagnostics and preserve tab locations.
+**Files:** packages/cli/src/commands/docs/check/** (exact produced paths retained in ignored analysis/p06/t02.paths); packages/cli/src/commands/docs/index.ts; packages/docs-transforms/src/remark-tabs.ts and adjacent tests; five public package.json files; generated packages/cli/assets/public-package-versions.json; pnpm-lock.yaml.
+**Proof:\*\* production-boundary checker/config/nav/transform tests, CLI lint/type-check/build and packed CLI probes; quantitative boundary and Git fixture controls.
+
+**Pre-commit boundary:** Paused for root direction: actual Mermaid11.12.3 in Node requires DOMPurify.sanitize/addHook backed by a DOM even with loose security. Allowed dependency list provides no DOM host. No new dependency/adapter or parser bypass introduced. Product remains uncommitted; 57/60 new focused tests pass, with Mermaid runtime and tab-associated accessibility/freshness failures still under prevention. CLI type-check and docs-transforms build pass; the new CLI build has not run. Lint has seven new test-style errors pending correction. Recovery0/10,pendingnull. Reproduce with ignored analysis/p06/mermaid-node-probe.mjs; t02.paths is the exact provisional write manifest.
+
+**Continuation:** cont-docs367-p06-dom-from-docs367-p06-impl-20261023 reconciled root-only commits1d4ca02ad and2dc1aa8ec; preserved exact t02 product dirt. Bounded jsdom29.1.1 support is authorized. Recovery remains0/10,pendingnull.
+
+**Commit:** d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+**Verification:** Fresh final focused checker/config/nav suite111 passed; wider docs/config suite1,022 passed; CLI lint/type-check/build and transforms check/tests exit0. Packed CLI host26.11.1 and actual minimum22.17.0 accept labeled flowchart/class/sequence/HTML diagrams in supported tabs, reject nested-tab invalid syntax, and prove exact G5 JSON, warning-only/filter/unknown-rule/malformed-config exits. Real Git and quantitative boundary controls are in the production-boundary suite. Flagship baseline0 errors/756 warnings. Logs/probes: ignored analysis/p06/t02-\*.log and packed/{probe.mjs,host-probe.log,node22-probe.log}. DOM/parser/association/lint corrections completed before product commit; recovery0/10,pendingnull. Effective continuation start2dc1aa8ec54fba6e42792c878f51b4531204f14f includes only authorized root artifact descendants; exactly one product commit follows.
+
+### Task p06-t03: Wire portable checks into scaffolds, bootstrap CI and reader guidance
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (same accepted T3 delegated task)
+**Start HEAD:** b4ec258d7e2846631b2708a86fd31058cf7283e5
+**Intent:** Make shipped starters and flagship run the checker, preserve specialized validators, supply an actually used bootstrap PR CI recipe and explicit configured-manifest freshness, and document rule/config/repair behavior.
+**Files:** Exact producer-owned paths retained in ignored analysis/p06/t03.paths: canonical framework templates and scaffold substitutions/tests; flagship package/instructions/docs; bootstrap and directly affected guidance; CI and applicable READMEs.
+**Proof:** Generated starter integration and real framework builds; executed bootstrap CI recipe with seeded checker/stale-manifest controls; Markdown no-build/no-default-manifest; all ordered gates and forced isolated-HOME/direct suites before product commit.
+
+T03 finish continuation starts at c6cbca905ace9d98e3207f1a90c8472a2d45a664 after authorized root-only artifact descendants and settled recovery01 (used1/10,pendingnull). Add the approved effective-install-root Markdown serializer compatibility policy, conditional independent-app YAML template and concrete manual/approval setup guidance. Mechanically added paths are recorded in analysis/p06/t03.paths; preserve authored content and framework APIs. Real pnpm10/12 root/member controls and a new fresh Next build precede the product commit. Packed Node22 init exposed omitted dotfile templates before commit: preserve bytes under package-safe gitignore.template sources and enroll those plus the policy in existing release packed-path guards; actual packed reruns provide the transport proof. Resolve real workspace ancestors to preserve membership through aliases. These are t03 prevention corrections, not new recovery attempts.
+
+**Commit:** ea24bcdebeb2a88e208873b3c0c63d14a18bea1e
+**Verification:** All eight ordered gates exit0 before commit; final Turbo cache hits/executions are11/0,11/0,12/0,5/0,direct,direct,direct,6/0, with fresh gate3 smoke165/skills712/scripts1. Separate isolated-HOME forced package run executes12/12tasks,0cached,9,463tests; separate fresh direct smoke165/skills712/scripts1 and validation68skills pass. Focused init/release150 and skill sentences1,087 pass; lint/format pass. Real pnpm10.13.1/12.11.2 effective-root resolution/compilation controls pass with ignored-member/conflicting-policy failures. Shipped2.1.2 policy gives a constrained fresh Next16.4.3 build/export and real bootstrap recipe, including seeded checker/stale-manifest rejection; actual MkDocs and Markdown/no-build proofs pass. Final packed CLI passes on Node22.17.0/26.11.1, including both framework inits and labeled/tabbed Mermaid acceptance/rejection. Flagship0errors/756visible warnings; original validators retained. Exact commands, exits, cache counts,42producer paths and content-conservation hashes: ignored analysis/p06/PROOF-INDEX.md and associated logs. Hook preserves all product bytes. Recovery1/10,pendingnull; no new attempt.
+
+### Recovery Event docs367-p06-t02-gate3
+
+- Phase/task: p06 / p06-t02
+- Original request: docs367-p06-impl-20261023
+- Original commit: d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+- Defect class: test
+- Discovered by: pnpm test
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: codex_codex_proxy / gpt-6.1-sol / reasoningEffort high / serviceTier priority
+- Recovery commit: -
+- Verification: Focused t02 checks pass; ordered gate3 fails docs-help snapshot and two real dependency-map expectations.
+- Reason: Root continuation's no-reservation instruction was overbroad; no reservation, correction or recovery commit occurred. Root validates this pre-attempt stop with usage0/pendingnull and restores the original standing bounded recovery authority. The restriction applied only to the earlier DOM clarification, not future committed defects.
+
+Root recovery scope: refresh only packages/cli/src/commands/help-snapshots.test.ts and packages/cli/src/release/release-utils.test.ts to reflect actual docs-check registration and the approved CLI dependency on docs-transforms. Root read gate3's literal expected/received diff and verified the manifest dependency. Preserve production behavior and test-only ignore controls. One mechanically related test correction from the same verification command is reserved as docs367-p06-recovery-01; this is not a t03 prevention edit. All34 handoff hashes matched before root bookkeeping; t03 product edits remain owned and unchanged. Same implementer and exact target continue. Focused verification covers both existing test files, and relevant phase verification is isolated-HOME pnpm test before and after the recovery commit. Return the completed marker for root validation/clearance before continuing t03.
+
+Open verification limit: the unlocked Fumadocs install selected mdast-util-to-markdown2.2.0 and failed; the successful real-build proof uses the repository lock's2.1.2. Preserve the reproduction and do not claim a clean unconstrained install or silently change dependency policy. This limit requires disposition before phase acceptance.
+
+### Recovery Event docs367-p06-recovery-01
+
+- Phase/task: p06 / p06-t02
+- Original request: docs367-p06-impl-20261023
+- Original commit: d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+- Defect class: test
+- Discovered by: pnpm test (ordered gate3)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: 98edd0f3276425b3194550ee28fbbdc335f4e2d4
+- Verification: Pre/post isolated-HOME focused Vitest exit0,96/96 fresh each; pre/post isolated-HOME pnpm test exit0. Pre Turbo12/12 successful,8 cached/4 executed (CLI8,996 and docs93 tests fresh); post Turbo12/12 cached. Both chained runs freshly pass smoke165,skills712,scripts1. CLI lint/type-check and bounded formatting exit0. Exact commands/logs: ignored analysis/p06/recovery01-results.json and recovery01-\*.log.
+- Reason: Mechanically stale help and real dependency-map expectations refreshed from independently read production registration and package manifest; synthetic dependency-map and test-only ignore controls retained, with no product behavior change. Root-reserved attempt1 continued without increment; all33 t03 product hashes preserved. Completed marker remains committed for root validation;9 attempts remain, and t03 is not resumed.
+
+Root recovery settlement: validated original ancestry, exact target/axes, canonical recovered event, recovery98edd0f3276425b3194550ee28fbbdc335f4e2d4, committed completed marker and focused/phase logs. Focused96 tests ran freshly before/after; post phase Turbo12/12 cache is inherited broad evidence, with direct smoke/skills/scripts fresh. All33 t03 hashes preserved and index empty. Clear pending marker, retain used1/10 and9 remaining; t03 stays open pending bounded fresh-install compatibility diagnosis.
+
+Root fresh-install disposition: intelligent recon confirmed a pre-existing pinned Fumadocs16.10.2/MDX14.3.2 incompatibility with mdast-util-to-markdown2.2.0 independently of OAT; valid bold/italic recurse when Fumadocs drops the new handler attention property. Root checked the installed wrapper and published2.2.0 strong handler source. Authorize exact transitive2.1.2 compatibility policy in the effective pnpm install root, retaining framework APIs and content. Constrained fresh installs must be named honestly. For new independent Fumadocs apps, a small pnpm-workspace.yaml policy template may be generated only when it is the actual install root and cannot overwrite existing policy or split a workspace member. For existing workspace/root policy, bootstrap presents the exact edit through its existing approval flow; CLI must preserve existing settings/conflicts and provide actionable manual setup rather than silently mutating root dependency policy. No generic policy merger, new init flag, framework upgrade, sanitizer/parser workaround, npm publication or user-scope package-manager mutation. Remain within p06-t03's scaffold/bootstrap integration, preserving all existing t03 edits; direct real pnpm resolution/compilation controls must cover standalone, nested standalone and workspace membership, including ignored member policy and skipped/conflicting root policy, with a fresh real Next build using the shipped setup instructions. Test the selected supported pnpm configuration, including10 and the observed12 syntax distinction where it affects generated guidance; keep the Node22.17 CLI floor. Later mechanical committed defects retain standing recovery authority (used1/10,pendingnull); no earlier no-reservation wording restricts that policy.
 
 ---
+
+### Review Received: p06 (round 1)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T174051Z.md
+**Findings:** Critical 0 · High 0 · Medium 4 · Low 2
+
+- M1 (Medium): optional hand-authored/undeclared navigation artifacts cause false drift and a raw absolute-path ENOENT abort → fix p06-t04. G5/P21 compare existing meta/nav; skip absent optional artifacts, continue checking later existing files, retain nav-sync strictness. Scope Moderate.
+- M2 (Medium): a labeled MkDocs landing page is misclassified as a group → fix p06-t04. Membership/order and explicit groups are contractual; page/section display labels are not. Scope Moderate.
+- M3 (Medium): directory-name skips hide declared site/out/dist workspace members → fix p06-t05. P22 requires real literal cd/filter package selection; workspace patterns decide membership. Scope Minor.
+- M4 (Medium): YAML parse errors share description exceptions and drop body checks; Mermaid accessibility and syntax share one rule → fix p06-t06. Separate parse diagnostics from metadata/accessibility exceptions and retain independent body checks. Preserve G5's explicit per-rule warn/off controls; do not invent unsuppressible errors. Scope Moderate.
+- L1 (Low): language-less fenced commands report the opening fence line → fix p06-t05. Detect fenced versus indented code from actual source, keeping physical positions accurate. Scope Minor.
+- L2 (Low): missing spaces in shipped package/docs/starter/bootstrap prose → fix p06-t07. Cosmetic edit only; conserve sections, links, claims and approval boundaries. Scope Negligible.
+
+**Root analysis:** Read the entire artifact and inspected navigation.ts, commands.ts, checker.ts, markdown.ts, diagrams.ts and the rule policy alongside G5 and concrete p06. Source and independent probe logs substantiate all six. Consumed exactly one not-attempted signal; artifact has no Review Orchestration section. Exact full anchors/provenance and current-tier counts are valid. The auto review is received autonomously under standing workflow authority. The root-owned review row is established here because the read-only reviewer was prohibited from tracking writes.
+
+**Design drift / artifact alignment notes:** No accepted design change. For M4, introduce a stable configurable frontmatter rule for YAML parse/mapping errors, retain the page body for independent checks, and move Mermaid accTitle/accDescr warnings to existing diagram-accessibility. Keep mermaid for syntax. Explicit syntax-rule overrides remain permitted by G5; only accidental cross-category suppression is corrected. Document the final stable IDs together.
+
+**Outcome:** fixes completed through p06-t04–t07 at candidate43da5b19d2b025dd9caaa21adf51b1c345fea060; round1 is fixes_completed, not passed. Fresh independent full-range round2 must confirm closure. Original Base and historical candidate Head remain frozen until the fix handoff. Recovery remains 1/10, pending null; review fixes do not consume recovery attempts. All prior evidence remains, including cache truth, constrained install policy and 756 visible warnings. No acceptance or p07 advancement.
+
+### Task p06-t04: (review) Compare optional hand-authored navigation semantically
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 2e067ec020738fc0b96d5a9c937868aca6e9fc13
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M1, M2)
+
+Intent: Skip absent optional Fumadocs meta files and absent MkDocs nav in hand-authored/undeclared mode, while continuing comparisons of every existing artifact; nav-sync still requires generated freshness. Compare labeled or bare MkDocs landing entries by page membership/order while preserving explicit group semantics. No raw absolute-path diagnostic for missing optional artifacts.
+Files: packages/cli/src/commands/docs/check/navigation.ts; existing checker.test.ts.
+Proof: Extend existing real-file checker navigation cases with missing root/subfolder meta plus a later real mismatch; absent MkDocs nav; labeled landing versus valid relabel and dropped/reordered page controls, both ownership modes. New regressions fail on immutable pre-fix source for the intended reason and pass fixed; retain nav-sync strictness and group/collision controls. Public boundary is checkDocs/CLI navigation diagnostics; no helper-only mirrors, mocks or new hooks.
+
+**Commit:** 0cf4a8914d9ad3b3510518f204f9907c11cd547a
+**Verification:** M1/M2: six real-file regressions fail on immutable pre-fix navigation for missing optional meta/nav and labeled landings. Fixed checker/navigation103 tests pass freshly with isolated HOME, including both ownership modes, later drift, generated strictness, groups and collision controls. CLI check/type/build exit0; initial two test-style lint errors corrected before commit. Exact logs: analysis/p06/fix-r1/t04-\*. Recovery1/10,pendingnull unchanged.
+
+### Task p06-t05: (review) Resolve declared workspace command contexts and physical fence lines
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** a4348bc89312d6dda0ed77b722ecb949a5668828
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M3, L1)
+
+Intent: Remove directory-name assumptions that hide declared site/out/dist workspace members; preserve workspace inclusion/exclusion patterns, node_modules/hidden scope and literal cd/filter semantics. Fix physical line reporting for language-less fences while retaining labeled/indented/inline forms.
+Files: packages/cli/src/commands/docs/check/commands.ts; existing checker.test.ts.
+Proof: Extend existing command-context fixture with declared site/out/dist members and exact valid cd/filter versus missing-script diagnostics. Add literal expected physical lines for language-less versus labeled/indented code at the same public checker boundary. Pre-fix red/fixed/valid proof, no duplicate layer or fixture framework.
+
+**Commit:** 043342982e8287b4c92cda98e56fa8f0e65c9cb9
+**Verification:** M3/L1: immutable pre-fix source gives4 intended failures for site/out/dist membership and unlabeled-fence position; manual-member and excluded/hidden/node_modules controls pass. Fixed checker/navigation108 tests pass freshly with exact physical lines9/13/16/18 and member-local missing-script diagnostics. CLI check/type/build exit0; formatter-triggered ASI lint false-positive avoided with an explicit openingLine variable before commit. Exact logs: analysis/p06/fix-r1/t05-\*. Recovery1/10,pendingnull unchanged.
+
+### Task p06-t06: (review) Separate syntax diagnostics from metadata and accessibility exceptions
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 7db0dbb78131ffdd12ddb15d171a0f4d09c43552
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M4)
+
+Intent: Add stable configurable frontmatter rule for invalid YAML/mapping; preserve masked frontmatter positions and parse independent body checks even when metadata is invalid. Move Mermaid accTitle/accDescr warnings to existing diagram-accessibility; keep Mermaid syntax under mermaid. Description/accessibility exceptions must not hide unrelated parse errors. Preserve explicit per-rule severity/filter/exception behavior, including intentional warn/off for the syntax rule itself. No generic exception machinery or unsuppressible-error policy.
+Files: packages/cli/src/commands/docs/check/checker.ts; markdown.ts; diagrams.ts; files.ts only if directly needed for read/parse composition; config/documentation-check.ts; existing checker.test.ts and config/docs-check.test.ts only for the public policy contract; apps/oat-docs/docs/docs-tooling/check.md; packages/cli/README.md only if its rule list needs alignment.
+Proof: Real malformed YAML with duplicate H1/broken link and independent Mermaid: description exception leaves frontmatter error plus applicable body findings; accessibility exception leaves syntax error; valid YAML/diagram controls pass; explicit syntax-rule override and rule-filter remain honored. Check actual CLI JSON/exits/config roundtrip for the final stable IDs, with minimal distinct coverage at owning boundaries. Preserve pre-fix red/fixed/valid controls, no test-only API or own-module mocks.
+
+**Commit:** bb95654a8c8ad9369fc8838718f1aad41d86df25
+**Verification:** Pre-fix four checker failures and config round-trip rejection reproduce M4. Fixed/valid controls plus checker/config/nav/init execute 174 tests fresh, isolated HOME, exit 0. Built CLI syntax-probe exits 0: exact G5 JSON/physical body positions; description/accessibility exceptions retain four syntax/body errors; frontmatter filters and intentional syntax warn/off via rules/exceptions honored; labeled HTML Mermaid valid. CLI check/type/build and docs lint exit 0; one shadowed test variable corrected precommit. Stable frontmatter ID documented; no dependency or policy bypass. Evidence: analysis/p06/fix-r1/t06-\* and syntax-probe.mjs.
+
+### Task p06-t07: (review) Correct spacing in shipped p06 prose
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 30481b4e52eb44830f879c410596eb1ea7a3fe9d
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (L2)
+
+Intent: Correct joined prose tokens such as exit1, pnpm10 and12, exactly2.1.2 and depth0 in the six named changed surfaces, conserving all claims, sections, links, setup behavior and approval boundaries. Keep already-required PR-scoped skill/public version bumps; no second edit-scoped bump.
+Files: packages/cli/README.md; apps/oat-docs/docs/docs-tooling/commands.md; apps/oat-docs/docs/reference/cli-reference.md; apps/oat-docs/docs/docs-tooling/check.md; .oat/templates/docs-app-fuma/docs/contributing/docs-toolchain.md; .agents/skills/oat-docs-bootstrap/SKILL.md. Exact pinned sentence expectations may be updated in existing skill contract tests only if required by those corrected literals, with original behavioral assertions retained.
+Proof: Conservation diff and file-scoped formatting; existing skill sentence contracts run freshly with isolated HOME. No new prose tests, snapshots, receipts or negative controls. Final combined fix candidate runs all eight ordered DoD gates, applicable lint/format and direct suites, preserving prior broad fresh evidence for unchanged boundaries.
+
+**Commit:** 3e149399e4c4276fb76bd8fb4e20b0fdab08d981
+**Verification:** All six surfaces conserve every non-whitespace character after formatting; setup/approval/claims/links and existing PR-scoped versions unchanged. Isolated sentence contracts 1,087/26 files fresh, exit 0, no expectation changes. Lint/format exit 0 (each 4 cached/6 fresh plus root passes). Ordered precommit gates 1–8 all exit 0: cache/fresh 0/11,5/6,5/7,5/0,direct,direct,direct,6/0. Gate3 freshly executes all 9,477 package/app tests plus direct smoke165/skills712/scripts1; cached tasks are builds. Fetch and full phase-path drift checks pass. Packed final CLI JSON/exits/filters/syntax/valid controls pass on actual Node22.17/26.11.1, only unpublished OAT dependency substitutions. Flagship 0 errors/756 visible warnings, 23 accessibility warnings reclassified into existing diagram-accessibility. Exact commands/exits/hashes in analysis/p06/fix-r1; combined committed-candidate gates follow before Head advances.
+
+### Root fix-round1 validation
+
+Accepted clean DONE handoff f6f8d73e5a14c6122b3ef2e72901e6900b19dcbc. Root independently verified exact per-product file bounds and ancestry for seven task commits plus settled recovery, all final hashes across71 product paths plus ledger, and candidate43da5b19d2b025dd9caaa21adf51b1c345fea060's journal-only tail. All14 fix paths are in assigned scope; no dependency/setup policy change. Read the complete production delta: optional hand navigation skips absent artifacts while generated mode remains strict; MkDocs identity follows Contents sections; workspace members no longer excluded by site/out/dist names; language-less fence offsets use source positions; frontmatter error is independent and body parsing retained; Mermaid accessibility moves to diagram-accessibility while explicit syntax overrides remain valid. Prose conservation preserves all non-whitespace characters.
+
+All8 ordered precommit/candidate gates exit0; candidate Turbo cached/fresh11/0,11/0,12/0,5/0,direct,direct,direct,6/0 disclosed. Precommit9477 package/app tests ran freshly, focused174 and skill sentences1087 fresh; direct165/712/1, validation68, final packed Node22.17.0/26.11.1 and flagship0errors/756visible warnings pass. Prior real framework/install policy proofs remain inherited. Exact controls, retained red logs, exits and cleanup are indexed in analysis/p06/fix-r1/PROOF-INDEX.md. No new recovery event or reservation; settled1/10,pendingnull preserved. Round1 findings-bearing event remains fixes_completed; phase stays in_progress and next review uses full original Base..updated candidate, with prior findings/dispositions supplied. No phase acceptance or GitHub action.
+
+### Review Received: p06 (round 2)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T181410Z.md
+**Reviewed range:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa..43da5b19d2b025dd9caaa21adf51b1c345fea060; auto code, full p06 anchors.
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 3
+
+- R2-M1 (Medium): declared recursive/multi-level workspace patterns miss nested packages → fix p06-t08. P22 and the concrete p06 Intent require literal filter/cd context to match declared members; the current prefix string test stops too early. Preserve the existing membership grammar, explicit exclusions, hidden/node_modules skips and site/out/dist controls. Task Scope: Moderate.
+- R2-L1 (Low): invalid YAML adds a false description finding and source-read errors still use description with raw absolute paths → fix p06-t09. G5 requires accurate relative diagnostics and independent configurable rules. Skip only metadata-dependent description validation when frontmatter is invalid; retain body checks. Attribute unreadable source to the existing frontmatter rule with a relative actionable message and safe error code, documenting source-read ownership without adding a new rule or unsuppressible error. Task Scope: Minor.
+- R2-L2 (Low): malformed hand-authored meta.json points at index.md and aborts later comparisons → fix p06-t09. Report the specific metadata path and continue comparing remaining files, preserving optional-artifact semantics and generated strictness. Task Scope: Minor.
+- R2-L3 (Low): joined version/package-manager tokens remain in two p06 prose surfaces → fix p06-t10. Whitespace-only conservation correction; existing PR-scoped skill version remains sufficient. Task Scope: Negligible.
+
+**Root analysis:** Read the entire artifact, consumed exactly one not-attempted reconnaissance signal and confirmed no Review Orchestration section. Full anchors, provenance and current severity vocabulary are valid. Source inspection corroborates all four accepted-contract defects; no new requirement, dependency, parser grammar or scope is added. The read-only reviewer made no tracking edits, so root establishes this artifact-bound Reviews event and converts it here. Independent round2 closes all six round1 findings; round1 remains fixes_completed, not passed. Reviewer rebuilt sources and ran 125 focused tests, real pnpm12.11.2 membership controls and CLI/config probes; full ordered/forced/packed/framework evidence remains inherited as disclosed.
+
+**Outcome:** fixes queued p06-t08–t10; all four findings converted, none deferred. Review cycle 2 of 3. Phase remains in_progress with frozen Base and current historical Head unchanged until verified fix handoff. Recovery remains settled 1/10, pending null; review fixes are not recovery attempts. Fresh independent full-range round3 and the selected phase gate precede acceptance/delivery. No p07/P24, GitHub mutation or npm publication.
+
+### Task p06-t08: (review) Discover recursively declared workspace command contexts
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** b8d94e3d4850c86aa41c9cb739aaae80970c443d
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-M1)
+
+Intent: Let workspace patterns determine descent as well as membership without adding another glob engine or dependency. Resolve nested libs/\*_ and packages/_/\* members for literal --filter/cd; preserve exclusions and existing context behavior.
+Files: `packages/cli/src/commands/docs/check/commands.ts`, `packages/cli/src/commands/docs/check/checker.test.ts`.
+Proof: Extend existing public checkDocs command-context cases; reproduce the pre-fix missing member, then prove nested filter/cd resolves to the member manifest and missing scripts report there. Retain excluded/hidden/node_modules and site/out/dist controls. Compare against real pnpm membership using the existing reviewer fixture; no subprocess execution in product code or test-only API.
+
+**Commit:** 14769e9a39c8ab3443f17448ffd42e7da924a7b2
+**Verification:** Pre-fix existing public context cases: two nested patterns fail for the intended missing member, four prior members pass. Fixed checker/navigation114 tests execute fresh, isolated HOME, exit0; exclusions/hidden/node_modules and site/out/dist controls retained. Real pnpm12.11.2 lists both recursive and two-level nested members and runs their literal filters; tool extraction entry-point typo corrected in ignored proof before product commit. Same existing matcher handles derived descent prefixes and membership, no dependency or second glob engine. CLI check/types/build exit0. Exact red/fixed/valid probes and oracle logs under analysis/p06/fix-r2.
+
+### Task p06-t09: (review) Attribute source and navigation failures accurately
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** 4b46165b73475cee4ca94e25b5987b788268c2fb
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L1, R2-L2)
+
+Intent: Invalid frontmatter must not produce a false description error; source-read failures use the existing configurable frontmatter rule with a relative actionable diagnostic, and malformed hand-authored metadata reports its own file while later comparisons continue. Preserve body checks, intentional overrides, optional-artifact behavior and nav-sync strictness.
+Files: `packages/cli/src/commands/docs/check/checker.ts`, `packages/cli/src/commands/docs/check/reader-rules.ts`, `packages/cli/src/commands/docs/check/navigation.ts`, existing checker/navigation test files, and the covering rule description in `apps/oat-docs/docs/docs-tooling/check.md` or `packages/cli/README.md` only if needed.
+Proof: Compact public-boundary regressions for invalid YAML/no false description/body checks, unreadable source/relative diagnostic/description exception independence, and malformed aa/meta.json plus later zz/meta.json drift. Pre-fix red, fixed and valid controls; preserve explicit frontmatter warn/off behavior. Reuse existing suites and real files, no own-module mocks or new production test hooks.
+
+**Commit:** bfb49d35202c2396feef640c4390fb0fca54500d
+**Verification:** Four intended failures on immutable pre-fix code; final fixed/valid checker, config, navigation and init suites177 fresh isolated-HOME tests, exit0. Corrected fixture ordering and implicit Fumadocs landing expectations before commit; authoritative red t09-red-final and fixed t09-final-tests retained. Invalid YAML skips only description metadata; body checks and explicit frontmatter policy survive. Real EACCES reports relative configurable frontmatter; malformed hand metadata reports its file and preserves later drift. CLI check/types/build, docs lint and format exit0. Exact proof under analysis/p06/fix-r2.
+
+### Task p06-t10: (review) Correct remaining p06 prose spacing
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** c445fe7a814f5683a1e40545c3134e649addb5b4
+**Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-L3)
+
+Intent: Insert missing spaces around in 2.2.0, pnpm 10+ (including 12), confirm 2.1.2 and resolved 2.1.2 while conserving every non-whitespace character and all setup/approval boundaries.
+Files: `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`, `.agents/skills/oat-docs-bootstrap/SKILL.md`.
+Proof: Whitespace conservation diff, file-scoped formatting, applicable lint/format and isolated skill sentence contracts; no new prose tests or negative controls. After all fixes, run ordered DoD gates 1–8 with explicit exits/cache truth and committed-candidate verification; retain inherited unchanged framework/install-root evidence rather than claiming new builds.
+
+**Commit:** 51805606436331598597d8ee7174fd251773ff0f
+**Verification:** Both prose files preserve every non-whitespace character after formatting; setup, claims and approvals unchanged. Skill sentences1087 fresh isolated-HOME tests, lint/format exit0. All eight ordered precommit gates exit0; package/app tests9480 fresh, direct smoke165/skills712/scripts1, dependency cache disclosed. Exact conservation and exits under analysis/p06/fix-r2. Fresh packed CLI controls for combined fixes pass actual Node22.17/26.11 with13 shipped path comparisons; optional line-field probe oracle corrected without product edits.
+
+### Root fix-round2 validation
+
+Accepted clean DONE handoff 80366b5d2a8cea89fe52b42b7d4d8302bef53bae; tested candidate 9e19dd89657e18386cb3cdffcb58e753d66a68a8. Root verified all historical task/recovery ancestors, exact product commit boundaries and current SHA256 hashes across the full71 product paths plus ledger. Exact eight R2 product paths match the assigned scope. Candidate tail changes only implementation.md. Read all production/test/prose deltas: prefix descent reuses the existing matcher; description is skipped only for invalid metadata; source-read findings use configurable frontmatter with safe relative diagnostics; malformed hand-authored meta reports itself and comparisons continue; two prose surfaces conserve non-whitespace content. No dependency/setup/framework policy change.
+
+Read authoritative t08-red/t09-red-final categorical failures, fixed/valid controls and proof index, including disclosed corrected test oracles and the superseded overlapping probe. Root did not rerun producer suites. Both ordered gate sequences have eight exit0 results. Precommit cached/fresh5/6,5/6,5/7,5/0,direct,direct,direct,6/0 with9480fresh package/app tests; candidate11/0,11/0,12/0,5/0,direct,direct,direct,6/0 replays package results. Direct165/712/1, sentence1087, focused177/committed128, packed Node22.17.0/26.11.1 and final flagship0errors/756visible warnings pass in the retained evidence. Scoped journal check is ok with only root's then-live run warning. Prior constrained framework/install-root and forced12-task/zero-cache evidence remains inherited. Proof index and final manifest at analysis/p06/fix-r2 retain exact commands, hashes, failures, cleanup and limits.
+
+All ten records are closed; round2's exact review event moves to fixes_completed, not passed. Frozen Base and previous review history remain unchanged. Recovery settled1/10,pendingnull; no new event. Next is fresh independent full-range round3 (cycle3/3) with both prior reviews/dispositions; selected p06 gate still precedes acceptance and intermediate delivery. Root retains all disposition/acceptance/GitHub ownership; no p07/P24 or publication.
+
+### Review Received: p06 round3 and cycle boundary
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T185005Z.md
+**Reviewed range:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa..9e19dd89657e18386cb3cdffcb58e753d66a68a8; full anchored p06, auto code, cycle3/3.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+All four round2 findings are independently closed; round1's six remain closed. Reviewer rebuilt sources, repeated all earlier probes, independently checked actual pnpm12.11.2 membership and real read-failure/config/navigation cases on Node26.11.1/22.23.3, and ran249focused tests fresh. Flagship0errors/756visible warnings without suppressions; versions0.3.28 and skill-bump gate hold. Broad gates9480tests, packed exact22.17, forced all12tasks0cache, framework/install-root and skill-sentence evidence remain inherited, not freshly rerun.
+
+- R3-L1 (Low): remaining navigation outer catch misattributes malformed mkdocs.yml to index.md; an unreadable Fumadocs reader leaks an absolute path and aborts later comparisons. Root source inspection corroborates the raw outer catch and independent probe; accepted G5 relative diagnostics/P21 attribution, not a new guarantee. Task Scope: Minor. A small precise error boundary/degradation is proposed for operator disposition; no new navigation inventory engine authorized.
+- R3-L2 (Low): unreadable reader paths disappear from structural membership, causing false missing-index errors and leaf-size warnings even under intentional frontmatter policy. Root verified parsed-page-only inventory and counts; this is an accepted G5/P20 accuracy gap, not hardening. Task Scope: Minor. Proposed bounded correction preserves discovered membership while suppressing conclusions needing unavailable content; operator disposition pending.
+
+**Root receive:** Read the full artifact, consumed exactly one not-attempted reconnaissance signal and confirmed no Review Orchestration section. Full anchors/provenance/severity vocabulary are valid. Neither residual issue hides CI failure; every reproduced bad input exits1. No new execution record or automatic fourth review is created at the cap. Root establishes the exact received Reviews event; rounds1–2 remain fixes_completed, not passed.
+
+**Outcome:** received at the three-cycle governance cap with two residual Lows, disposition pending. Follow review-receive Step8 and complexity-review-fallback: one new read-only complexity review at the resolved reviewer ceiling, then present its report and concrete operator options. Agents do not select the cap disposition. Phase stays in_progress; acceptance, selected phase gate and intermediate delivery remain future root duties. Frozen Base/candidate, recovery1/10pendingnull and historical evidence are conserved.
+
+### Operator disposition: p06 review cap
+
+**Date:** 2026-10-23
+**Approval:** Operator said "approve" to the root's concrete recommended disposition.
+**Scope and exhaustion:** p06; standard code review cycle 3/3; 0 Critical, 0 High, 0 Medium, 2 Low.
+**Complexity verdict:** Partially compliant; product machinery justified, repeated per-site review/proof process disproportionate.
+**Report (local-only):** reviews/archived/complexity-p06-2026-10-23T185754Z.md
+**Disposition:** Proceed with override. Defer R3-L1 diagnostic attribution/raw-path accuracy and R3-L2 structural inventory accuracy; retain configurable frontmatter read errors. Continuing navigation comparisons after an unreadable page is not added as a requirement. No fourth standard correctness review or new fix task is authorized by this disposition. Selected p06 phase gate remains required before acceptance and intermediate PR delivery.
+
+Root read the full inline Opus report and verified the relevant reader inventory, source-read handling and navigation outer catch. The report's assertion that both findings require unreadable files is too broad: malformed mkdocs.yml is possible in an ordinary checkout. The approved deferral includes that diagnostic-attribution case explicitly. Every reproduced bad case still exits 1; false structural diagnostics under intentional frontmatter warn/off remain a known accepted accuracy gap. Future correction should preserve discovered reader membership, skip content-dependent conclusions for unreadable pages, attribute YAML errors to mkdocs.yml and use safe relative messages, without a partial-navigation engine. Keep existing configurable source-read policy. Proof for an unchanged-dependency correction should use focused coverage and required CI gates, inheriting unchanged install/framework/packed-runtime proof.
+
+### Review Received: p06 external phase gate
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T194704Z.md
+**Gate:** 02598e6c-cf5d-48cc-8509-74aeb2362db2; configured claude-opus-5-5-high / Claude / claude-opus-5-5 / high; exact G5/p06 anchors 9b35decdc32c31e55d65e0138d49fc7de67bacfa..9e19dd89657e18386cb3cdffcb58e753d66a68a8.
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 2
+**Disposition mode:** Passing-gate non-pausing judgment sweep; no waiver. Threshold high; exit 0, status ok, receiveEligible true, handoff present and run/project/invocation corroboration matched. Producer identity was unknown in gate telemetry; independence is supported separately by the Codex implementation and configured Claude reviewer, not by a claimed runtime observation.
+
+- Gate-M1 (Medium): bare pnpm dependency-binary shorthand is treated as a missing package script → defer to final. Root corroborates commands.ts script-only resolution, while the reviewer ran real pnpm local binaries successfully. This is a valid false-positive boundary adjacent to P22's literal-script contract; resolve script-vs-binary semantics and minimal treatment at final review, without adding a generic dependency/binary inventory now. Explicit pnpm run/npm run stays strict; pnpm exec is an existing usable form.
+- Gate-M2 (Medium): title-only hand-authored/undeclared Fumadocs meta.json lacks pages and is reported as drift → defer to final. Root corroborates the unconditional array check in navigation.ts:65. P21's membership/order intent requires avoiding false drift for valid implicit metadata; preserve nav-sync strictness. Final correction must distinguish implicit ordering and explicit invalid pages, with actual pinned-loader evidence rather than simply weakening membership checks.
+- Gate-L1 (Low): default YAML parsing logs warnings for valid MkDocs Python tags → defer to final. Root corroborates default YAML.parse at navigation.ts:118 and the shipped tag; JSON stdout/results remain unaffected. Consider narrowly silencing unresolved-tag warnings while retaining malformed-YAML diagnostics, without a custom Python parser.
+- Gate-L2 (Low): unsupported glob/multi-package filters get an unhelpful instruction to use literal --filter → defer to final. Root corroborates exact-single-member selection and current diagnostic at commands.ts:250; multi-package support is not added. A later wording-only correction can state the required exact package name/path.
+
+The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and real CLI/pnpm/MkDocs probes. Existing forced/full/gate/framework/install/packed evidence remains inherited. Its original final confirmation omitted the exact reconnaissance signal; before validation or receive mutation, root resumed the same Claude session f220c9e0-626a-4328-ae28-362635c523a6 with tools disabled for reporting only and consumed exactly one corrected not-attempted signal. Runtime result reports zero subagents. No new review or product change occurred. No Review Orchestration section and no review-orchestration log append. Preserve gate-produced plan/log commits8f0205a3b/5938cb284; only tracking bytes changed after the reviewed candidate.
+
+**Outcome:** gate passed and consumed; all four sub-threshold findings deferred durably to final under the configured passing-gate policy. Standard review's operator-approved R3-L1/R3-L2 deferrals stand. All ten execution records closed, selected phase gate passed, every current disposition settled. Root accepts p06 at frozen Base/Head; recovery1/10,pendingnull unchanged. Delivery requires current-head CI/Bugbot and expected-head land-pr; p07 remains provisional/unstarted and the final project PR stays held.
+
+### Task p06-t11: (remote review) Include manifest freshness in root Definition of Done
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; original same-target continuation
+**Start HEAD:** f7b8eff9c76c621e8b56b171272a46343224bdb2
+**Source review:** PR374-M1, cursor discussion_r4363691671
+**Intent:** Add the exact manifest regeneration and scoped diff CI commands as gate 9 after build:docs; explain that the direct check runs despite a Turbo docs-build cache hit. Preserve all eight existing commands and other instructions.
+**Files:** AGENTS.md only.
+**Proof:** Conservation diff, exact workflow-command/order comparison, scoped oxfmt, ordered DoD gates including direct freshness. No new tests, fixtures, negative controls, dependency or version change; unchanged runtime evidence remains inherited.
+
+**Commit:** 9ebc2bea8eeec925eb1b315aab457e06a4280742
+**Verification:** AGENTS-only conservation diff preserves every other instruction byte and the first eight gate commands/order. Both step9 commands exactly match CI and run sequentially, directly despite docs-build cache replay. Scoped oxfmt/diff checks pass. Ordered gates1–8 exit0; step9 regeneration/diff exit0/0. Turbo cached/executed: check11/0, types11/0, test12/0, build5/0, skill/version/release direct, docs-build6/0; cached package/runtime evidence is inherited. Gate3 direct smoke165/skills712/scripts1 run fresh and pass under isolated HOME. Fetch before version gate exits0; no AGENTS/workflow main drift. Verified product committed bytes match the tested source. No new tests, runtime/dependency/version edits, installs, review dispatch or recovery event. Recovery remains1/10,pendingnull; historical anchors, deferrals and root acceptance unchanged. Exact commands/exits/diff: ignored analysis/p06/remote-pr374-m1.
+
+### Root PR374 instruction correction validation
+
+2026-10-23; original handle continuation docs367-p06-pr374-dod-20261023 completed at e16d66b9d2126eac1b620d0055e556e25e24f338, exact retained codex_codex_proxy/gpt-6.1-sol/high/priority. Root verified the sole authored path is AGENTS.md in product9ebc2bea8eeec925eb1b315aab457e06a4280742; the remaining tail is journal only. The nine-line addition preserves every prior instruction byte and first eight gates. Root independently compared both new commands and their order against actual CI. Formatting and journal check pass. Producer gates1–8 plus both gate9 commands exit0; Turbo cached/executed11/0,11/0,12/0,5/0,direct,direct,direct,6/0, then direct freshness. Smoke165/skills712/scripts1 ran freshly under isolated HOME; no new full-run claim. No failures or new tests. Evidence: analysis/p06/remote-pr374-m1.
+
+Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, selected passing phase gate, all review/cap decisions and six deferred findings are conserved. This is a root-reviewed documentation-only tail, as with p05-t11, not a fourth full-code review or new behavior. P07 has no Base and remains provisional. Recovery1/10,pendingnull unchanged. Publish the fix, reply on its source thread, resolve after verifying published code, then await fresh current-head CI/Bugbot. No final project PR or later-phase implementation.
+
+### Task p06-t12: Reject non-string checker severities
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023
+**Start HEAD:** 596fd8b970995467e3c7951837683ec67709163a
+**Source review:** W-H1, discussion4363730370; approved corrective revision.
+**Intent:** Reject array-coerced rule/exception severities through real normalization and config storage without weakening valid policy.
+**Files:** packages/cli/src/config/documentation-check.ts; packages/cli/src/commands/config/docs-check.test.ts.
+**Proof:** Existing config command/storage regressions, built CLI root reproduction, string-guard neutralization, scoped format/check/type/build. No new dependency or test API.
+
+**Commit:** 8d94fef16863ffa4fb28b1ac9916144b36b45096
+**Verification:** Pre-fix and string-guard-neutralized config suite exit1 with four intended failures; fixed suite17 fresh passes. Real stored policy rejects arrays and supports repair; built CLI rejects rule/exception arrays with actionable configuration errors while string error remains exit1. CLI check/type/build and scoped formatting pass; exact restored bytes committed. Root pre-repro retained; symlink finding continues in next record. Evidence: ignored analysis/p06/remote-fix. Review correction, recovery1/10,pendingnull unchanged.
+
+### Task p06-t13: Preserve checker policy across root aliases
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 077c875dda1804c64f00d5f421423832d2d6d03a
+**Source review:** W-H2, discussion4363730381.
+**Intent:** Canonicalize existing configured app/content and requested root identities consistently, preserving missing roots and unrelated-target isolation.
+**Files:** packages/cli/src/commands/docs/check/files.ts; packages/cli/src/commands/docs/check/checker.test.ts.
+**Proof:** Real symlink public checker fixtures retain policy/exclusions/ownership and tooling; root built-CLI reproduction; canonicalization neutralization; scoped CLI checks/build.
+
+**Commit:** b2005489bb5c952b505464777aaf4d581eec486f
+**Verification:** Real Markdown/framework app and content aliases retain policy, nonreader exclusions, explicit tooling and generated ownership; unrelated target stays isolated. Pre-fix and canonicalization-neutralized regressions fail both intended cases; fixed checker/config102 fresh tests pass. Built CLI root reproduction now gives identical empty exit0 results through real and symlink roots; both malformed severity controls remain rejected. CLI check/type/build and scoped formatting pass; restored production bytes committed. Missing-path behavior is unchanged. Evidence: ignored analysis/p06/remote-fix; recovery1/10,pendingnull.
+
+### Task p06-t14: Recognize installed pnpm shorthand binaries
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 28bfbdd7b260f7d08d9eaa57b6dcad7656a3a63d
+**Source review:** W-M1, discussion4363730389; approved script-versus-binary semantics.
+**Intent:** Accept implicit pnpm shorthand with an installed package/workspace .bin entry; retain explicit run and missing-script diagnostics without executing binaries or searching PATH.
+**Files:** packages/cli/src/commands/docs/check/commands.ts; packages/cli/src/commands/docs/check/checker.test.ts; apps/oat-docs/docs/docs-tooling/check.md.
+**Proof:** Existing real-file command fixture with the installed TypeScript executable, exact missing/explicit controls, allowance neutralization, scoped CLI checks/build and accurate docs.
+
+**Commit:** 42ea66a51abb4c1754d0a009474c218d865832dd
+**Verification:** Installed TypeScript executable is linked into actual package/workspace bin paths and pnpm executes its version control successfully; checker accepts root/member/filter shorthand and workspace fallback without executing commands. Explicit pnpm run/npm run, genuinely missing scripts and missing-install controls retain literal errors/lines. Pre-fix and bin-allowance-neutralized regression fail as intended; final checker86 fresh tests pass. An initial fixture subpath-export failure and one lint shadow error were corrected under prevention; logs retained. Final CLI check/type/build and docs check pass. Public guidance states presence-only local-bin scope and PATH/preinstall limits. Recovery1/10,pendingnull unchanged.
+
+### Task p06-t15: Skip absent optional hand-authored pages
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 88b1694a43f7626a39db6c060d4025fa311f6f29
+**Source review:** W-M2, discussion4363730396; operator-approved absent-pages comparison exception.
+**Intent:** Skip hand-authored/undeclared metadata objects without pages, continue explicit comparisons, reject non-array pages and preserve generated strictness; document deferred implicit order.
+**Files:** packages/cli/src/commands/docs/check/navigation.ts; packages/cli/src/commands/docs/check/checker.test.ts; apps/oat-docs/docs/docs-tooling/check.md.
+**Proof:** Extend existing real-file optional-meta fixture with title-only, invalid explicit pages, later drift and generated controls; skip neutralization; scoped checks/build.
+
+**Commit:** 14587af7fe6de55c1205674271bd244abaaa9154
+**Verification:** Title-only root/subfolder metadata passes for hand-authored and undeclared ownership; absent-pages skip still allows later explicit drift and malformed-file diagnostics. Present null pages errors; nav-sync missing/title-only artifacts stay stale. Pre-fix and skip-neutralized controls fail both ownership cases; restored controls pass and combined checker/nav118 fresh tests pass. CLI check/type/build and docs check pass; flagship0errors/756visible warnings. Guidance accurately states absent optional meta/pages/nav behavior and no implicit-order comparison. Recovery1/10,pendingnull unchanged.
+
+### Task p06-t16: Prove diagram associations against a usable Git base
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 07248de56504fcb4a3fd65e8c788fc478a31473e
+**Source review:** W-M3, discussion4363730402.
+**Intent:** Replace vacuous cross-tab unverified assertion with a real committed base and two complete groups; unrelated pair changes must warn, correct pair changes pass. Preserve missing-base coverage and production diagram bytes.
+**Files:** packages/cli/src/commands/docs/check/checker.test.ts only.
+**Proof:** Old test accepts association-neutralized production; revised test rejects it and passes restored production with usable Git comparisons. Focused existing suites, scoped checks and integrated ordered gates1–9 before commit; final committed-byte/public CLI controls.
+
+**Commit:** 1429c5a735599cfc40af65dff13cc15a592cde44
+**Verification:** A real committed comparison base now holds two complete groups: changing A source with unrelated B SVGs emits the exact line19 association warning; changing A with its own pair is clean. Missing-base coverage remains. Old test accepts the association-neutralized guard; rewritten test fails it and restored production passes135 fresh checker/config/nav tests. Diagram production bytes are unchanged. All nine integrated gates pass before commit: Turbo cached/executed0/11,5/6,5/7,5/0,direct,direct,direct,6/0, then direct manifest generate/diff0/0. Gate3 executes9487 package/app tests fresh plus smoke165/skills712/scripts1 under isolated HOME. Fetch before gate6 passes with no scoped main drift. Committed-candidate focused135, public built-CLI16 and root warp repro pass; all seven gated product hashes match committed bytes. Final flagship0errors/756visible warnings and specialized validators remain intact. Initial probe omitted explicit root index; corrected fixture expectation only, failure retained. Unchanged packed Node22/26, Mermaid/jsdom, constrained framework/install-root/scaffold evidence remains inherited. Exact commands, failures, neutralizations, hashes and cleanup: ignored analysis/p06/remote-fix. Historical Base/Head and all root tracking conserved; recovery1/10,pendingnull unchanged. Root owns focused confirmation and acceptance.
+
+### Review Received: p06 focused remote correction confirmation
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T221841Z.md
+**Reviewed head:** 27382a66a0790f3a63e9aaff89432114159986bb; auto code, narrowed 9e19dd89657e18386cb3cdffcb58e753d66a68a8..27382a66a0790f3a63e9aaff89432114159986bb, approved correction delta 596fd8b970995467e3c7951837683ec67709163a..27382a66a0790f3a63e9aaff89432114159986bb.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root read the complete artifact, validated full head/provenance/current severity vocabulary, and consumed exactly one not-attempted reconnaissance signal from the completion report. No Review Orchestration section or orchestration-log append. Configured reviewer claudeAgent_claude_proxy / claude-opus-5-5 / high / fastMode false independently confirmed all five approved corrections. Runtime model identity is not independently reported. Seven product blobs match the reviewed head, and its root tail is tracking only. Fresh CLI build and checker/config103 plus nav41 tests passed; 39 independent built-CLI probes passed on Node26.11.1/pnpm10.13.1. Invalid severities fail both real config boundaries; aliases preserve matching policy and unrelated-root isolation; installed package/workspace binary shorthand passes while explicit runs remain strict; absent optional pages skip while malformed/explicit/nav-sync cases stay strict. The reviewer inspected the real-base association test and producer old/new mutant evidence without mutating product code.
+
+Nine gates, 9487 fresh package/app tests, direct165/712/1, flagship0errors/756warnings, exact packed Node22.17/26.11 and unchanged Mermaid/jsdom/framework/install-root/scaffold evidence are inherited, not independently rerun. Root verified producer manifests/commits and all five neutralizations before dispatch. All16 execution records are closed; no new task or full-range fourth review is created. Gate-M1/W-M1 is corrected within the approved installed-local-binary boundary. Gate-M2/W-M2's false error is corrected by the operator-approved absent-pages skip, superseding the prior requested implicit-loader-order remedy. System-PATH binaries, pre-install shorthand, implicit Fumadocs order and earlier diagnostic Lows remain explicitly deferred.
+
+**Outcome:** passed; root restores p06 acceptance (10/13 units). Historical frozen Base/Head and selected passing external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved, with correction coverage supplied by this authorized focused confirmation. Recovery1/10,pendingnull unchanged. Publication, remote thread reconciliation and current-head CI/Bugbot/reviewer clearance precede intermediate merge-commit delivery; p07 remains provisional and final project PR held.
+
+### Recovery Event docs367-p06-recovery-02
+
+- Phase/task: p06 / p06-t14
+- Original request: docs367-p06-impl-20261023
+- Original commit: 42ea66a51abb4c1754d0a009474c218d865832dd
+- Defect class: test
+- Discovered by: pnpm test (CI gate3, run40033430596)
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 1/10 (unchanged; attempt2 not consumed)
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: -
+- Verification: no edit, reservation, probe, test rerun or commit; clean handoff0cbe22fb9c76c8f07aff4825f4838991b67e6073, pendingnull.
+- Reason: concurrent Warp fixbcf9d83aff2fe635b578ba8702c8a00097f05e83 overlaps the sole authorized file; root reconciliation required. Original implementer stopped before edit. No local cause was established from stderr-free CI output.
+
+Root reconciled the external change by a normal conflict-free merge preserving both histories. Warp's test-only patch pins the temporary manifest to the repository's pnpm version and runs pnpm from the fixture cwd. Existing real binary and checker assertions are conserved; no production/dependency/CI changes. This receives external work rather than consuming or disguising a phase recovery attempt. Verify the committed merged test and gates before publication; report Corepack/Linux attribution only to the extent independently supported. Operator-approved scope choices and prior clean independent product review remain unchanged.
+
+### External fixture correction verified
+
+2026-10-23; original implementer verified clean merged HEAD02800224ea81849c1a0df45d3c1a23a2fc965bc6. External test-only correctionbcf9d83aff2fe635b578ba8702c8a00097f05e83 is an ancestor, and checker.test.ts bytes match it exactly (SHA2560938794ad3e58c56d645fe8bef4af7be76d2583ad70e4a76f202524c1f21ed47). The fixture pins the repository pnpm version and executes from its own cwd; all checker assertions and real-pnpm coverage are conserved. Root verified ancestry, bytes, manifest exits and every log hash. Evidence: ignored analysis/p06/recovery02/external-verification/README.md and manifest.json.
+
+Fresh isolated-HOME focused suites pass144/144 on both exact Node22.17.0 and26.11.1; the installed-binary test separately passes on each. All nine ordered gates exit0. Turbo cached/executed: G1 8/3, G2 9/2, G3 9/3, G4 5/0, G8 6/0; remaining gates direct. G3 freshly executes CLI9025 and docs93, replaying369 other package results; direct smoke165/skills712/scripts1 pass fresh. G3 executes the docs build, G8 replays it, and both G9 manifest commands run directly and pass. No tracked edits, commits, installs or recovery reservation by the verifier. Recovery1/10,pendingnull remains unchanged; attempt2 was not consumed.
+
+Root separately observed Linux/Node22.17 CI run40034555611/job120690710620 succeed atbcf9d83, with release dry-run and Bugbot successful and Bugbot reporting no issues. Warp confirms all five fixes and accepts the documented navigation exception; original rejection dismissed, no unresolved threads or requested reviewers in the complete remote sweep. Corepack causality remains unproven because the original failure omitted subprocess stderr. Prior independent review and approved residual deferrals remain unchanged. P06 stays accepted (10/13 units); publish reconciled tracking and require fresh final-head CI/Bugbot before plain merge delivery. P07 remains provisional.
 
 ## Phase p07: Page templates and presets
 
@@ -1543,6 +1970,40 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p06-external-fix-verify-20261023 · scope=p06 · action=analysis · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-external-fix-verify-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-recovery02-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-recovery02-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-remote-review-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-remote-fix-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-remote-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=review · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-cap-complexity-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-review-r3-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-fix-r2-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-review-r2-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-fix-r1-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-review-r1-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-finish-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-finish-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-install-compat-20261023 · scope=p06-install-compat · action=analysis · role=bounded-install-compat-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p06-install-compat action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-recovery01-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-recovery01-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-dom-continue-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-dom-from-docs367-p06-impl-20261023 · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-impl-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p06-readiness-20261023 · scope=p06-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p06-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-cap-complexity-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -1664,6 +2125,58 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+### PR374 CI recovery pending: p06-t14 installed-binary test
+
+2026-10-23; current published head8d2ec9b8528bda0666d321d315ec7616331f3ddf fails declared gate3 in CI run40033430596, job120687017216. Exactly one CLI test fails: checker.test.ts "accepts installed pnpm shorthand binaries while explicit run remains script-only", at real pnpm --dir /tmp/oat-check-2yegN8 tsc --version. CLI9024other tests pass; release dry-run and Bugbot checks succeed, but reviewer clearance is still pending. The log does not include the subprocess stderr, so root makes no platform/permission diagnosis. Evidence: ignored analysis/p06/recovery02/ci-failed.log.
+
+Original task p06-t14 and product42ea66a51abb4c1754d0a009474c218d865832dd remain immutable. Resume the original implementer at exact codex_codex_proxy/gpt-6.1-sol/high/priority to diagnose; only a proven mechanical fixture correction may consume a phase-standing recovery attempt. Existing usage1/10,pendingnull until the implementer establishes eligibility and reserves. No product semantic change, test removal, weakened assertion, retry-only green claim, new task ID or expanded review campaign. Historical acceptance/review coverage is preserved; intermediate delivery is blocked by this failing current-head check.
+
+### P06 approved remote correction received
+
+2026-10-23; original implementer completed p06-t12–t16 at clean27382a66a0790f3a63e9aaff89432114159986bb, tested product1429c5a735599cfc40af65dff13cc15a592cde44. W-H1 severity strings, W-H2 canonical configured roots, W-M1 installed pnpm binaries, W-M2 approved absent-pages skip and W-M3 real-base association proof are corrected within seven authorized product files. Root verified every final SHA256/blob, each of five bounded product commits and separate journal commits, and the final journal-only tail; read the complete production/test delta, focused/control receipts and all nine gate exits0. No scope/dependency/setup/skill/framework changes. Intentional implicit-order and system-PATH deferrals remain approved and documented.
+
+Producer evidence: focused135/public16, fresh9487package/app tests and smoke165/skills712/scripts1; five intended neutralizations, including old association-test vacuity versus replacement rejection. Gates cached/executed0/11,5/6,5/7,5/0,direct,direct,direct,6/0; gate9 generation/diff direct0/0. Root inspected these receipts rather than rerunning the producer's campaign. Unchanged packed minimum-Node/framework/install-root proof remains inherited. Exact evidence analysis/p06/remote-fix/PROOF-INDEX.md and final-manifest.json. All sixteen task records closed; recovery1/10,pendingnull and historical Base/Head/gate conserved. Remote event fixes_completed; p06 remains in_progress, 9/13 accepted pending the single operator-approved focused independent confirmation. No publication, thread resolution or acceptance yet.
+
+### P06 remote cap disposition: corrective revision approved
+
+2026-10-23; operator "Proceed with rec" approves corrective revision past the exhausted 3/3 standard review cap, following reviews/archived/complexity-p06-2026-10-23T201609Z.md (verdict Partially compliant). One bounded five-finding batch returns to the original implementer, followed by one focused independent confirmation of its delta; no fourth full-range review or repeated unchanged packaging/framework proof. This approval covers the scope choices: P22 distinguishes strict explicit scripts from implicit installed local binaries, checking package/workspace node_modules/.bin by file presence without execution or PATH discovery; hand-authored/undeclared Fumadocs metadata without pages skips navigation comparison, matching existing absent-input handling. Explicit pages and nav-sync ownership retain their existing strict checks. Implicit order drift and system-PATH binary support are explicitly deferred, overriding the remote requested remedy for W-M2; these approved limits are now source of truth for this correction and must be documented in check.md. Remaining R3/Gate Low deferrals and historical anchors/gate remain unchanged.
+
+Approved production boundary: config/documentation-check.ts; docs/check/files.ts, commands.ts and navigation.ts; existing config/check tests; apps/oat-docs/docs/docs-tooling/check.md. Rewrite the ineffective association test in place with a real Git comparison base. No dependencies, packaging, setup, scaffold, skill, or framework changes. Require real built-CLI red/fixed/valid severity and symlink controls, focused suites, five guard-neutralization controls, and ordered gates1–9 with explicit exits/cache accounting. New observed scope/dependency needs return to root before edits. Root retains tracking/review/acceptance/GitHub; implementer opens the next execution records only as work starts. Recovery1/10,pendingnull unchanged. P06 remains in_progress at 9/13 accepted pending confirmation and delivery.
+
+### P06 remote cap assessment received; operator disposition pending
+
+2026-10-23; standard review cap remains 3/3. Opus5.5/high returned the read-only complexity report verbatim at reviews/archived/complexity-p06-2026-10-23T201609Z.md; exactly one reconnaissance not-attempted signal, no probes or writes claimed. Verdict Partially compliant; central checker retained. Recommendation corrective revision: one bounded five-finding batch with focused confirmation, retaining unchanged packaging/framework evidence. Two High exit/config defects and three Medium findings remain open. Operator must choose the disposition and settle P22 script-versus-binary interpretation and whether absent hand-authored pages may skip comparison instead of reproducing implicit loader order. No disposition, task, code correction or fourth full review was created. Prior acceptance remains suspended at 9/13; recovery1/10,pendingnull unchanged.
+
+Root also received Cursor discussion4363778896 at remote head22c580b2f15d475e2fcd7b0b17018ef96e697973: a blank line split the append-only Reviews table. Corrected by removing only the two separating blank lines; all event cells and historical row order are preserved. This is root-owned bookkeeping, separate from the capped product findings. Current-head CI and release dry-run are successful; Bugbot completed with this Medium ledger finding rather than no issues. Warp discussion4363775900 confirms the prior gate9 instruction fix. No landing or publication is implied by these checks.
+
+### Remote Review Received: PR #374 Warp findings at cap
+
+2026-10-23; review5633800637 at b952a158fa5b3c72554a89ef4e33aec36ea90073 requests changes. Root triages 0 Critical/2 High/3 Medium/0 Low: W-H1 severity arrays silently pass errors (4363730370); W-H2 symlinked configured root loses policy (4363730381); W-M1 bare pnpm binaries (4363730389, existing Gate-M1); W-M2 implicit Fuma pages (4363730396, existing Gate-M2); W-M3 diagram test exits at missing Git base (4363730402). Root independently reproduced H1/H2 through real built-CLI fixtures and inspected the ineffective M3 assertion. All concern accepted contracts. Proposed narrow corrections; repeated deferrals need fresh disposition because the remote reviewer objects to landing.
+
+Standard scope cap3/3 is exhausted; prior override approved then-known residuals and cannot silently cover new findings. New review postdates the archived complexity report, requiring a fresh read-only assessment under references/docs/complexity-review-fallback.md before operator choice. Event artifact reviews/archived/remote-pr-374-review-2026-10-23T201000Z.md; no OAT markers, ledger provenance unknown. P06 acceptance suspended (9/13); historical anchors/gate and prior decisions preserved. No new fix task or code correction. PR374-M1 instruction correction is published at9ebc2bea8, reply4363770104 and source thread resolved. New review and five threads block landing. Recovery1/10,pendingnull unchanged.
+
+### Remote Review Received: PR #374
+
+2026-10-23; Cursor review5633751204, source https://github.com/voxmedia/open-agent-toolkit/pull/374#discussion_r4363691671. Counts 0 Critical/0 High/1 Medium/0 Low. PR374-M1: root instructions omit the generated-manifest CI gate and overclaim exact parity; **convert** to p06-t11 under existing DoD instruction accuracy, no expanded guarantee. Root compared both files, fetched main and found no scoped drift. Source footer names b952a158fa5b3c72554a89ef4e33aec36ea90073; OAT marker provenance unknown, ledger remains '-'. Event artifact reviews/archived/remote-pr-374-review-2026-10-23T200139Z.md.
+
+Documentation-only remote receive cycle1; standard full-code review remains3/3, approved cap and six deferred findings unchanged. P06 temporarily reopens for this bounded instruction correction because p07 has no Base; prior accepted candidate/gate and all anchors stay historical and conserved. Root will review the correction by conservation and workflow parity, not request a fourth full review of unchanged code. Recovery1/10,pendingnull; review correction is not automatic recovery. Original implementer retains ownership. Current-head landing remains blocked until published fix, resolved finding and CI/Bugbot clearance.
+
+### P06 PR374 delivery and self-review
+
+2026-10-23; intermediate PR https://github.com/voxmedia/open-agent-toolkit/pull/374 opened as draft from docs/docs-skills-ia-367-p06 against main5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0, initial head43cc4e8be30f875b8078c04c7b841e8ba8cb07d9. Requirements and scope come from the approved brief's Outcome8 and frozen p06 anchors; the tail after candidate9e19dd89657e18386cb3cdffcb58e753d66a68a8 changes only four tracking files. The branch push hook passed release versions, skill bumps, types and formatting; cache replay was disclosed, not counted as new full verification.
+
+PR-self-review disclosures: approved lazy DOM host and effective-root serializer2.1.2 policy retained; all six residual findings are tracked under Deferred Findings and disclosed in the PR, including both gate Mediums and their usable pnpm exec/explicit pages forms. Flagship756warnings remain visible without suppressions. Windows/next dev and unconstrained serializer2.2.0 compatibility are not claimed. Full eight-gate and fresh9480-test evidence belongs to the producer candidate; no repeated broad run for root tracking changes.
+
+Independent lens inventory: correctness and deliberate-testing covered by R3 at candidate9e19dd8 (including249fresh tests and prior probe reruns); documentation explicitly covered by R3's instructions/human-docs row and prose conservation checks; complexity covered by the Opus cap assessment over the full anchored product range, verdict Partially compliant due process costs with all product machinery retained. The separate gate also rechecked128tests and flagship behavior. Later commits are tracking-only, including root disposition, phase acceptance, total and PR receipts; mechanical bookkeeping checks and scoped journal validation are proportionate. No duplicate lens review, new fix commit or additional user decision is outstanding for this phase. Likely human review focus: command shorthand and implicit navigation false positives, with exact ownership boundaries in commands.ts/navigation.ts.
+
+Delivery mode=land (plain), standing intermediate merge authorization retained; review-stage=complete, standard loop3/3 plus selected external passing gate, current phase fully accepted. PR will be ready after this disclosure pass; wait for successful current-head ci/release-dry-run and explicit Bugbot completion (or supported free/OSS quota exception), complete paginated comments/reviews/threads and unchanged base/head before established merge-commit landing with --match-head-commit. No admin/auto merge, force push or branch deletion; final project PR remains held. T3 links PR374; durable watcher to be registered after the post-push evidence sweep. P07 remains provisional until p06 delivery.
+
+2026-10-23 · p06 external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passed (exit0, high threshold):0Critical/0High/2Medium/2Low; all four deferred to final through passing-gate judgment sweep, no waiver. Exact configured Claude target/model/effort and validated anchors retained in the phase receipt. Root accepts p06;10/13 phase-units accepted; intermediate PR delivery pending.
+
+2026-10-23 · p06 · review cap 3/3 · verdict Partially compliant · operator approved proceed with override ("approve"); defer R3-L1/R3-L2, retain configurable frontmatter errors, add no partial-navigation requirement; report reviews/archived/complexity-p06-2026-10-23T185754Z.md; selected phase gate remains pending.
+
+P05 delivery complete: PR https://github.com/voxmedia/open-agent-toolkit/pull/373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 on 2026-10-23T15:45:53Z, using the established merge-commit method and expected head 56df695efebe806920188d7994d54de39630dee9. Final paginated sweep found all three current-head checks successful, Bugbot explicitly completed with no issues, all three Warp fix confirmations, previous Warp rejection dismissed, zero unresolved threads/reviewer requests and unchanged base/head. No quota exception, admin/auto merge, force push or branch deletion; watcher stopped. Approved generated cleanup pruned eleven ignored node_modules/.next/out directories under analysis/p05 while retaining scripts, source, packed tarballs, controls and logs. Root switched this existing T3 worktree to docs/docs-skills-ia-367-p06 from merged origin/main and ran worktree:init; its only tracked side effect was the generated manifest version field, restored. P06 remains provisional and unstarted while bounded readiness reconnaissance maps the approved G5/P20–P23/P25 contracts. Final project PR remains held.
+
 Operator disposition, 2026-10-23: "Sounds good. Proceed" approves proceeding with override using reviews/archived/complexity-p05-2026-10-23T090105Z.md: correct R3-L1 wording only, defer R3-L2 named type export until a consumer needs it, retain all product machinery, and continue acceptance/delivery without a fourth review cycle. Current-head CI/Bugbot and plain land-pr with the established merge-commit method and expected-head guard remain required.
 
 ### P05 review-cap complexity report
@@ -1738,6 +2251,14 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
+
+- p06 gate Gate-M1 / W-M1 · Medium · Installed package/workspace local-binary shorthand corrected in p06-t14 (42ea66a51abb4c1754d0a009474c218d865832dd), independently confirmed by reviews/archived/p06-review-2026-10-23T221841Z.md. Historical passing-gate deferral is superseded within this approved boundary. Residual limits: system-PATH-only binaries and shorthand before dependencies are installed remain deferred; revisit on a real repository report or final disposition. Explicit script runs remain strict; no binary is executed by the checker.
+- p06 gate Gate-M2 / W-M2 · Medium · Title-only hand-authored metadata false error corrected in p06-t15 (14587af7fe6de55c1205674271bd244abaaa9154), independently confirmed by reviews/archived/p06-review-2026-10-23T221841Z.md. Operator approved skipping absent optional pages, superseding the earlier requested pinned implicit-loader-order comparison. Implicit ordering may diverge from Contents and remains deferred; revisit when an actual repository reports confusing order or a framework dependency otherwise becomes justified. Explicit/malformed pages and nav-sync remain strict.
+- p06 gate Gate-L1 · Low · Valid MkDocs Python tags cause unresolved-tag YAML warnings on stderr; stdout JSON/results unaffected. Deferred to final through passing-gate sweep, same gate; narrow log handling may be considered without weakening syntax diagnostics. Source navigation.ts:118 and starter mkdocs.yml:33.
+- p06 gate Gate-L2 · Low · An unsupported glob/multi-package --filter gets a misleading suggestion to use literal --filter. Deferred to final through passing-gate sweep, same gate; improve exact-single-package wording when contributor-command diagnostics are next revised, without adding multi-package selector support. Source commands.ts:250.
+
+- p06 R3-L1 · Low · Malformed mkdocs.yml is attributed to index.md; unreadable Fumadocs sources can yield raw absolute navigation errors. Operator approved deferral at the three-cycle cap on 2026-10-23 ("approve"); reproduced bad inputs still exit 1 and only diagnostic accuracy is deferred. Continuing other navigation comparisons after a source-read failure is not required. Revisit at final review or when a real repository reports this class; any wrong exit or hidden required error triggers correction. Minimal fix: YAML-local attribution and safe relative error messages; no partial-navigation engine. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
+- p06 R3-L2 · Low · Unreadable reader paths are absent from parsed-page structural inventory, causing false directory-index errors/leaf-size warnings, including under intentional frontmatter warn/off. Operator approved deferral at the cap on 2026-10-23 ("approve"); preserve configurable frontmatter policy. Revisit at final review or when actual use encounters these false findings; any wrong exit or hidden required error triggers correction. Minimal fix preserves discovered membership and skips content-dependent conclusions for unreadable pages. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
 
 - p05 R3-L2 · Low · Named RemarkLinksOptions barrel export deferred by operator approval ("Sounds good. Proceed") of the cap report reviews/archived/complexity-p05-2026-10-23T090105Z.md. Inline options remain typed; no consumer requires the additional public symbol. Revisit when a consumer or typed wrapper needs to name the type; no runtime guarantee deferred.
 

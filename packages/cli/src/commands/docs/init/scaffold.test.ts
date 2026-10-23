@@ -11,7 +11,7 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
   'AGENTS.md': '# AGENTS\n',
   'docs/contributing/index.md': '# Contributor Guides\n',
   'docs/contributing/docs-toolchain.md': '# Toolchain\n',
-  '.gitignore':
+  'gitignore.template':
     '# Dependencies\nnode_modules/\n\n# MkDocs build output\nsite/\n\n# Python virtual environment\n.venv/\n',
   'mkdocs.yml': 'site_name: {{SITE_NAME}}\n',
   'package.json.template': `{
@@ -39,13 +39,15 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
 };
 
 const FUMA_TEMPLATE_FILES: Record<string, string> = {
+  'pnpm-workspace.yaml':
+    'packages: []\noverrides:\n  mdast-util-to-markdown: 2.1.2\n',
   'AGENTS.md': '# AGENTS\n',
   'docs/contributing/index.md': '# Contributor Guides\n',
   'docs/contributing/docs-toolchain.md': '# Toolchain\n',
   'app/llms.txt/route.ts': 'export const dynamic = "force-static";\n',
   'app/llms-full.txt/route.ts': 'export const dynamic = "force-static";\n',
   'app/llms/[...slug]/route.ts': 'export const dynamicParams = false;\n',
-  '.gitignore':
+  'gitignore.template':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':
     "import { createDocsConfig } from '@open-agent-toolkit/docs-config';\nconst basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;\nexport default createDocsConfig(basePath ? { basePath } : {});\n",

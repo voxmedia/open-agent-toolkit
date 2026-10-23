@@ -1,4 +1,10 @@
 {
   "title": "Docs Tooling",
-  "pages": ["add-docs-to-a-repo", "commands", "workflows", "agent-instructions"]
+  "pages": [
+    "add-docs-to-a-repo",
+    "commands",
+    "check",
+    "workflows",
+    "agent-instructions"
+  ]
 }

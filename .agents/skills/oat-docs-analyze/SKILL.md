@@ -4,9 +4,9 @@ description: Run when you need to evaluate documentation structure, navigation, 
 argument-hint: '[target] [--ia] [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.7.2'
+  version: '1.7.3'
 ---
 
 # Docs Analysis
@@ -456,6 +456,17 @@ The goal is not just to say "this page is thin," but to say what capability surf
 where the docs should live, and what specific subtopics the codebase shows should be documented.
 
 ### Step 6: Check Navigation and Drift
+
+Probe the installed `oat docs check --help`, then run its read-only
+`oat docs check --target-dir <resolved-root> --json` (or the repo’s documented
+source/local CLI equivalent). Retain exact findings and exit; errors fail while
+warning-only passes. Use stable rule IDs/locations as evidence for recommendations,
+including reader limits, contributor commands, Mermaid/SVG and provenance. It
+executes no page code or documented commands and needs no build. Missing capability
+or unusable Git diagram base is explicitly unverified. Preserve specialized local
+validators; portable success does not establish coverage or claim accuracy. Review
+narrow reason-bearing exceptions from actual config, never invent blanket
+suppressions or automatic navigation ownership.
 
 If a generated root index or manifest exists:
 

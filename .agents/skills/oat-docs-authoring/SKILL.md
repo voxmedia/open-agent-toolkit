@@ -6,7 +6,7 @@ disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: '1.2.0'
+  version: '1.2.1'
 ---
 
 # OAT Docs Authoring

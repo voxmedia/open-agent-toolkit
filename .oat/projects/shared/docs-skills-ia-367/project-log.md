@@ -160,6 +160,58 @@ docs367-p05-handoff-20261023: recovery01 validated and settled at1/10,pendingnul
 
 docs367-p05-accepted-20261023: p05 accepted at04d536106 after round2 closed six findings and root corrected stale resume text; all eight gates passed, recovery1/10,pendingnull, one fix cycle; see implementation.md and archived p05-review-2026-10-23T080358Z.md.
 
+### 2026-10-23 · structural · oat-project-implement · p05
+
+docs367-p05-landed-20261023: p05 accepted after three independent rounds and operator cap disposition; PR373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 after exact-head CI/Bugbot and Warp confirmations; see implementation.md. Proceed to provisional p06 readiness.
+
+### 2026-10-23 · structural · oat-project-implement · p06-alignment
+
+docs367-p06-concrete-20261023: completed bounded readiness recon; made p06 concrete within Outcome8 and G5/P20-P23/P25, recording counting/config/parser/nav/diagram/CI choices in plan.md. No outcome, authority or endpoint change; no P24/p07 scope. Phase remains unstarted until committed start markers and exact-target dispatch.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-dom-alignment-20261023: NEEDS_CONTEXT reconciled; t01 committed and t02 edits preserved. Real Mermaid Node failure requires DOM; authorize pinned jsdom29.1.1/compatible typings within P23, verified valid/invalid controls on Node22.17 and26, same-target continuation, recovery0/10.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-recovery01-direction-20261023: Validated pre-attempt direction-required stop; corrected root no-reservation wording and reserved1/10 for exactly two stale test-expectation files. Same handle/target, t03 dirty hashes conserved; unlocked Fumadocs dependency limitation remains explicit.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-recovery01-settle-20261023: Recovery98edd0f32 accepted, immutable original/exact target and focused/phase pre/post logs validated with cache limits disclosed;33 t03 hashes preserved. Clear completed marker and retain1/10. Fresh-install Fumadocs compatibility diagnosis precedes t03 continuation.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-compat-disposition-20261023: Verified published handler-attention incompatibility independently of OAT; authorize exact transitive2.1.2 at effective pnpm install roots with safe new-app scaffolding and approval-owned workspace edits. Preserve framework APIs/content and33 t03 product paths; require real setup resolution/build controls before acceptance.
+
+### 2026-10-23 · structural · oat-project-implement · p06-review-cap
+
+docs367-p06-cap-approved-20261023: operator approved proceed with override at standard review cap 3/3; R3-L1/R3-L2 deferred, configurable source-read policy retained, no partial-navigation requirement; selected phase gate pending. See implementation.md and reviews/archived/complexity-p06-2026-10-23T185754Z.md.
+
+### 2026-10-23 · structural · oat gate review · p06
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:2,low:2 exit=0 status=ok artifact=.oat/projects/shared/docs-skills-ia-367/reviews/p06-review-2026-10-23T194704Z.md run=02598e6c-cf5d-48cc-8509-74aeb2362db2
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-accepted-20261023: p06 accepted at standard review cycle3/3 plus external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passing high threshold; four gate findings deferred to final, two standard Lows operator-approved;10/13 phases accepted, intermediate delivery pending. See implementation.md.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-pr374-m1-complete-20261023: PR374-M1 instruction correction p06-t11 passed root conservation and CI-command parity review; gates1–9 exit0, standard full-code loop remains3/3, p06 acceptance restored and delivery pending current-head checks.
+
+### 2026-10-23 · structural · oat-project-review-receive · p06
+
+docs367-p06-remote-confirm-received-20261023: approved five-finding correction independently passed with zero findings and39 public probes; p06 restored accepted10/13, remote publication and clearance pending. See implementation.md and reviews/archived/p06-review-2026-10-23T221841Z.md.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-concurrent-fix-reconciled-20261023: CI fixture recovery stopped before attempt consumption because Warp pushed overlapping test-only fixbcf9d83; root merged without conflict and will verify. Recovery1/10,pendingnull; see implementation.md.
+
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-external-verification-received: External fixture-only correction verified at02800224e; focused144 each Node22.17/26.11 and nine gates pass; remote bcf9d83 CI/Bugbot/Warp clear. Publish reconciliation and await final-head checks; accepted10/13, review cap3/3 plus approved focused confirmation, recovery1/10 pendingnull.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

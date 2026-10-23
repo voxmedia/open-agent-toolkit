@@ -523,3 +523,7 @@ routes and package scripts remain manual required changes.
 - [Improve Agent Instructions](agent-instructions.md)
 - [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
 - [`../contributing/skills.md`](../contributing/skills.md)
+
+## Portable checks and PR CI
+
+Run `oat docs check` before proposing repairs. Its findings feed analysis and approved apply work; it does not rewrite sources or grant navigation ownership. Bootstrap uses its concrete PR CI recipe to propose checker, real framework build and configured generated-manifest freshness steps while preserving existing workflows. Approve the exact workflow diff before writes. Markdown has no build or default manifest step. Full Git history/fetch enables the diagram base comparison. See [Check Documentation](check.md).
