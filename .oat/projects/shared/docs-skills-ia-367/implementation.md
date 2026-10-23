@@ -1589,6 +1589,21 @@ Root recovery scope: refresh only packages/cli/src/commands/help-snapshots.test.
 
 Open verification limit: the unlocked Fumadocs install selected mdast-util-to-markdown2.2.0 and failed; the successful real-build proof uses the repository lock's2.1.2. Preserve the reproduction and do not claim a clean unconstrained install or silently change dependency policy. This limit requires disposition before phase acceptance.
 
+### Recovery Event docs367-p06-recovery-01
+
+- Phase/task: p06 / p06-t02
+- Original request: docs367-p06-impl-20261023
+- Original commit: d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+- Defect class: test
+- Discovered by: pnpm test (ordered gate3)
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: 98edd0f3276425b3194550ee28fbbdc335f4e2d4
+- Verification: Pre/post isolated-HOME focused Vitest exit0,96/96 fresh each; pre/post isolated-HOME pnpm test exit0. Pre Turbo12/12 successful,8 cached/4 executed (CLI8,996 and docs93 tests fresh); post Turbo12/12 cached. Both chained runs freshly pass smoke165,skills712,scripts1. CLI lint/type-check and bounded formatting exit0. Exact commands/logs: ignored analysis/p06/recovery01-results.json and recovery01-\*.log.
+- Reason: Mechanically stale help and real dependency-map expectations refreshed from independently read production registration and package manifest; synthetic dependency-map and test-only ignore controls retained, with no product behavior change. Root-reserved attempt1 continued without increment; all33 t03 product hashes preserved. Completed marker remains committed for root validation;9 attempts remain, and t03 is not resumed.
+
 ---
 
 ## Phase p07: Page templates and presets
