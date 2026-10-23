@@ -1,5 +1,5 @@
 ---
-oat_current_task: p06
+oat_current_task: p07
 oat_last_commit: 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 oat_blockers: []
 associated_issues: [
@@ -138,7 +138,7 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open
+oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/374'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-P06 accepted after the operator-approved bounded correction and clean focused independent confirmation (0 findings; 39 public probes). All16 records are closed; 10/13 phase-units accepted. The merged external test-only correction is verified on Node22.17/26.11 and all nine gates pass. Remote CI, release dry-run, Bugbot and Warp clearance are confirmed atbcf9d83. Publish reconciled tracking, then require fresh final-head checks before delivery. Recovery1/10,pendingnull is unchanged. P07 remains provisional and unstarted; historical anchors, gate and explicit residual deferrals are preserved.
+P06 is accepted and delivered through PR374, merged at eebe3f5645a62bdad23c560207962913cfb4fa2f after all three final-head checks passed and a complete review sweep found no blockers. Ten of thirteen phase-units are accepted. P07 page templates and presets is next, provisional and unstarted; tracking continues on docs/docs-skills-ia-367-p07 in the existing worktree. Historical anchors, gate, residual deferrals and recovery1/10,pendingnull are preserved.
 
 ## Artifacts
 
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Publish the verified reconciliation and obtain successful final-head checks before plain merge-commit delivery of PR374. Installed local pnpm binaries and absent-pages skip are operator-approved; implicit ordering and system-PATH support remain deferred. P06 historical anchors and gate are preserved. Recovery1/10,pendingnull. Align p07 only after p06 lands; no npm publication or final project PR.
+Make p07 concrete within approved Outcome9/P5/P26/P27 and P28 D9, then implement page templates and preset scaffolds with their checker/navigation evidence. P08–p09 remain provisional. No npm publication or final project PR. PR374 is merged and its watcher is stopped.
