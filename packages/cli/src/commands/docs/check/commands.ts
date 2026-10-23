@@ -105,7 +105,7 @@ async function packages(target: CheckTarget): Promise<Package[]> {
         if (
           !e.isDirectory() ||
           e.name.startsWith('.') ||
-          ['node_modules', 'dist', 'out', 'site'].includes(e.name)
+          e.name === 'node_modules'
         )
           continue;
         const dir = join(root, e.name);
@@ -145,13 +145,17 @@ export async function checkCommands(
       )
         continue;
       let cwd: string | undefined = target.repoRoot;
+      const start = node.position?.start;
+      const openingLine =
+        p.source.split(/\r?\n/).at((start?.line ?? 1) - 1) ?? '';
+      const fenced =
+        node.type === 'code' &&
+        /^(?:`{3,}|~{3,})/.test(openingLine.slice((start?.column ?? 1) - 1));
       for (const [lineIndex, original] of (node.value ?? '')
         .split('\n')
         .entries()) {
         const line =
-          (node.position?.start.line ?? 1) +
-          lineIndex +
-          (node.type === 'code' && node.lang ? 1 : 0);
+          (node.position?.start.line ?? 1) + lineIndex + (fenced ? 1 : 0);
         // Split shell command boundaries while retaining quoted arguments. No
         // subprocess is executed, and placeholders are never guessed.
         const segments =

@@ -469,42 +469,128 @@ describe('real framework navigation boundaries', () => {
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {
-  it('honors cd, -w, --dir, --filter, builtins and placeholders without running them', async () => {
-    const f = await fixture();
-    await f.put('pnpm-workspace.yaml', 'packages:\n  - apps/*\n');
-    await f.put(
-      'apps/manual/package.json',
-      JSON.stringify({
-        name: 'manual',
-        scripts: {
-          preview: 'node preview.mjs',
-          placeholder: 'echo not validation',
+  it.each(['manual', 'site', 'out', 'dist'])(
+    'resolves declared %s commands with cd/filter and retains missing-script diagnostics',
+    async (member) => {
+      const f = await fixture();
+      await f.put('pnpm-workspace.yaml', 'packages:\n  - apps/*\n');
+      await f.put(
+        `apps/${member}/package.json`,
+        JSON.stringify({
+          name: member,
+          scripts: {
+            preview: 'node preview.mjs',
+            placeholder: 'echo not validation',
+          },
+        }),
+      );
+      await f.write(
+        'contributing.md',
+        page(
+          '# Contributing\n\n```bash\ncd apps/MEMBER\npnpm preview\npnpm -w build\npnpm --filter MEMBER run preview\npnpm --dir ../../apps/MEMBER preview\npnpm install\npnpm exec made-up-tool\npnpm <script>\n```\n'.replaceAll(
+            'MEMBER',
+            member,
+          ),
+        ),
+      );
+      expect(await f.run('commands')).toEqual([]);
+      await f.write(
+        'contributing.md',
+        page(
+          '# Contributing\n\n```bash\ncd apps/MEMBER\npnpm preview\npnpm missing-in-app\npnpm --filter MEMBER preview\npnpm --filter MEMBER missing-in-app\n```\n'.replaceAll(
+            'MEMBER',
+            member,
+          ),
+        ),
+      );
+      expect(await f.run('commands')).toEqual([
+        {
+          ruleId: 'commands',
+          severity: 'error',
+          path: 'contributing.md',
+          line: 11,
+          message: `Script "missing-in-app" does not exist in apps/${member}/package.json.`,
         },
-      }),
+        {
+          ruleId: 'commands',
+          severity: 'error',
+          path: 'contributing.md',
+          line: 13,
+          message: `Script "missing-in-app" does not exist in apps/${member}/package.json.`,
+        },
+      ]);
+
+      await f.write(
+        'contributing.md',
+        page(
+          '# Contributing\n\n```bash\npnpm missing\nnpm run missing\npnpm echo\ncd "$UNRESOLVED"\npnpm build\n```\n',
+        ),
+      );
+      expect(
+        (await f.run('commands')).map((v) => [v.severity, v.message]),
+      ).toEqual([
+        ['error', 'Script "missing" does not exist in package.json.'],
+        ['error', 'Script "missing" does not exist in package.json.'],
+        ['warn', 'Script "echo" is an echo stub in package.json.'],
+        [
+          'error',
+          'Cannot resolve package context for pnpm build; use literal cd, -w or --filter.',
+        ],
+      ]);
+    },
+  );
+  it('keeps workspace exclusions, hidden directories and node_modules outside command contexts', async () => {
+    const f = await fixture();
+    await f.put(
+      'pnpm-workspace.yaml',
+      'packages:\n  - apps/*\n  - "!apps/excluded"\n',
     );
+    for (const member of ['excluded', '.hidden', 'node_modules'])
+      await f.put(
+        `apps/${member}/package.json`,
+        JSON.stringify({
+          name: member,
+          scripts: { preview: 'node preview.mjs' },
+        }),
+      );
     await f.write(
       'contributing.md',
       page(
-        '# Contributing\n\n```bash\ncd apps/manual\npnpm preview\npnpm -w build\npnpm --filter manual run preview\npnpm --dir ../../apps/manual preview\npnpm install\npnpm exec made-up-tool\npnpm <script>\n```\n',
-      ),
-    );
-    expect(await f.run('commands')).toEqual([]);
-    await f.write(
-      'contributing.md',
-      page(
-        '# Contributing\n\n```bash\npnpm missing\nnpm run missing\npnpm echo\ncd "$UNRESOLVED"\npnpm build\n```\n',
+        '# Contributing\n\n```bash\npnpm --filter excluded preview\npnpm --filter .hidden preview\npnpm --filter node_modules preview\n```\n',
       ),
     );
     expect(
-      (await f.run('commands')).map((v) => [v.severity, v.message]),
+      (await f.run('commands')).map(({ line, message }) => [line, message]),
     ).toEqual([
-      ['error', 'Script "missing" does not exist in package.json.'],
-      ['error', 'Script "missing" does not exist in package.json.'],
-      ['warn', 'Script "echo" is an echo stub in package.json.'],
       [
-        'error',
-        'Cannot resolve package context for pnpm build; use literal cd, -w or --filter.',
+        9,
+        'Cannot resolve package context for pnpm preview (--filter excluded); use literal cd, -w or --filter.',
       ],
+      [
+        10,
+        'Cannot resolve package context for pnpm preview (--filter .hidden); use literal cd, -w or --filter.',
+      ],
+      [
+        11,
+        'Cannot resolve package context for pnpm preview (--filter node_modules); use literal cd, -w or --filter.',
+      ],
+    ]);
+  });
+  it('reports physical lines for labeled and language-less fences, indented and inline commands', async () => {
+    const f = await fixture();
+    await f.write(
+      'contributing.md',
+      page(
+        '# Contributing\n\n```bash\npnpm missing-labeled\n```\n\n```\npnpm missing-unlabeled\n```\n\n    pnpm missing-indented\n\n`pnpm missing-inline`\n',
+      ),
+    );
+    expect(
+      (await f.run('commands')).map(({ line, message }) => [line, message]),
+    ).toEqual([
+      [9, 'Script "missing-labeled" does not exist in package.json.'],
+      [13, 'Script "missing-unlabeled" does not exist in package.json.'],
+      [16, 'Script "missing-indented" does not exist in package.json.'],
+      [18, 'Script "missing-inline" does not exist in package.json.'],
     ]);
   });
 });
