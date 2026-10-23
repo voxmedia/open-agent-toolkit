@@ -956,6 +956,8 @@ describe('help output snapshots', () => {
         --cwd <path>              Override working directory
 
       Commands:
+        check [options]           Read-only portable reader, navigation, command and
+                                  diagram validation
         analyze                   Show guidance for the oat-docs-analyze skill
         apply                     Show guidance for the oat-docs-apply skill
         generate-index [options]  Generate a docs index from markdown files
