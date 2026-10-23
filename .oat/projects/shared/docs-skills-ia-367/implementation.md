@@ -1871,6 +1871,20 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 **Commit:** b2005489bb5c952b505464777aaf4d581eec486f
 **Verification:** Real Markdown/framework app and content aliases retain policy, nonreader exclusions, explicit tooling and generated ownership; unrelated target stays isolated. Pre-fix and canonicalization-neutralized regressions fail both intended cases; fixed checker/config102 fresh tests pass. Built CLI root reproduction now gives identical empty exit0 results through real and symlink roots; both malformed severity controls remain rejected. CLI check/type/build and scoped formatting pass; restored production bytes committed. Missing-path behavior is unchanged. Evidence: ignored analysis/p06/remote-fix; recovery1/10,pendingnull.
 
+### Task p06-t14: Recognize installed pnpm shorthand binaries
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 28bfbdd7b260f7d08d9eaa57b6dcad7656a3a63d
+**Source review:** W-M1, discussion4363730389; approved script-versus-binary semantics.
+**Intent:** Accept implicit pnpm shorthand with an installed package/workspace .bin entry; retain explicit run and missing-script diagnostics without executing binaries or searching PATH.
+**Files:** packages/cli/src/commands/docs/check/commands.ts; packages/cli/src/commands/docs/check/checker.test.ts; apps/oat-docs/docs/docs-tooling/check.md.
+**Proof:** Existing real-file command fixture with the installed TypeScript executable, exact missing/explicit controls, allowance neutralization, scoped CLI checks/build and accurate docs.
+
+**Commit:** 42ea66a51abb4c1754d0a009474c218d865832dd
+**Verification:** Installed TypeScript executable is linked into actual package/workspace bin paths and pnpm executes its version control successfully; checker accepts root/member/filter shorthand and workspace fallback without executing commands. Explicit pnpm run/npm run, genuinely missing scripts and missing-install controls retain literal errors/lines. Pre-fix and bin-allowance-neutralized regression fail as intended; final checker86 fresh tests pass. An initial fixture subpath-export failure and one lint shadow error were corrected under prevention; logs retained. Final CLI check/type/build and docs check pass. Public guidance states presence-only local-bin scope and PATH/preinstall limits. Recovery1/10,pendingnull unchanged.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
