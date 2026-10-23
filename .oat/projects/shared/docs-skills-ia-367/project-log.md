@@ -200,6 +200,10 @@ docs367-p06-accepted-20261023: p06 accepted at standard review cycle3/3 plus ext
 
 docs367-pr374-m1-complete-20261023: PR374-M1 instruction correction p06-t11 passed root conservation and CI-command parity review; gates1–9 exit0, standard full-code loop remains3/3, p06 acceptance restored and delivery pending current-head checks.
 
+### 2026-10-23 · structural · oat-project-review-receive · p06
+
+docs367-p06-remote-confirm-received-20261023: approved five-finding correction independently passed with zero findings and39 public probes; p06 restored accepted10/13, remote publication and clearance pending. See implementation.md and reviews/archived/p06-review-2026-10-23T221841Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

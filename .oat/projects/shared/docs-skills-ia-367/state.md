@@ -142,7 +142,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/374'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T20:06:05.197290Z'
+oat_project_state_updated: '2026-10-23T22:23:23.007917+00:00'
 oat_generated: false
 ---
 
@@ -154,12 +154,12 @@ oat_generated: false
 
 ## Current Phase
 
-P06 reopened for five Warp findings: three new, two repeated deferrals. At standard review cap3/3, operator approved Opus's bounded corrective revision and scope choices on 2026-10-23. Correction records p06-t12–t16 are complete; one focused independent confirmation remains. PR374 is blocked by live changes requested. P07 remains provisional and unstarted; 9/13 phase-units accepted. Root instruction correction is complete and published. Historical candidate, gate and prior dispositions preserved.
+P06 accepted after the operator-approved bounded correction and clean focused independent confirmation (0 findings; 39 public probes). All16 records are closed; 10/13 phase-units accepted. PR374 awaits publication, remote reconciliation and current-head CI/Bugbot/reviewer clearance. P07 remains provisional and unstarted. Historical anchors, gate and explicit residual deferrals are preserved.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01–p05 and four revisions accepted; p06 reopened for remote findings, 9/13 phase-units accepted.
+- **Implementation:** `implementation.md` — p01–p05 and four revisions accepted; p06 accepted after focused confirmation, 10/13 phase-units accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Run the approved focused independent confirmation of the completed seven-file PR374 correction at27382a66a0790f3a63e9aaff89432114159986bb. Approval includes installed local pnpm binaries and skipping absent hand-authored pages comparison, explicitly deferring implicit ordering and system-PATH support. P06 historical Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8 and gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved. Recovery1/10,pendingnull. No p07/P24, npm publication or final project PR.
+Publish the reviewed PR374 correction at27382a66a0790f3a63e9aaff89432114159986bb and root bookkeeping; reconcile remote findings, then await successful current-head CI/Bugbot and reviewer clearance before plain merge-commit delivery. Installed local pnpm binaries and absent-pages skip are operator-approved; implicit ordering and system-PATH support remain deferred. P06 historical anchors and gate are preserved. Recovery1/10,pendingnull. Align p07 only after p06 lands; no npm publication or final project PR.

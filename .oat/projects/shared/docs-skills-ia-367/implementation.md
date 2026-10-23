@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | in_progress | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 9/13 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
@@ -1520,7 +1520,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 **Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 
@@ -1913,6 +1913,19 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 **Commit:** 1429c5a735599cfc40af65dff13cc15a592cde44
 **Verification:** A real committed comparison base now holds two complete groups: changing A source with unrelated B SVGs emits the exact line19 association warning; changing A with its own pair is clean. Missing-base coverage remains. Old test accepts the association-neutralized guard; rewritten test fails it and restored production passes135 fresh checker/config/nav tests. Diagram production bytes are unchanged. All nine integrated gates pass before commit: Turbo cached/executed0/11,5/6,5/7,5/0,direct,direct,direct,6/0, then direct manifest generate/diff0/0. Gate3 executes9487 package/app tests fresh plus smoke165/skills712/scripts1 under isolated HOME. Fetch before gate6 passes with no scoped main drift. Committed-candidate focused135, public built-CLI16 and root warp repro pass; all seven gated product hashes match committed bytes. Final flagship0errors/756visible warnings and specialized validators remain intact. Initial probe omitted explicit root index; corrected fixture expectation only, failure retained. Unchanged packed Node22/26, Mermaid/jsdom, constrained framework/install-root/scaffold evidence remains inherited. Exact commands, failures, neutralizations, hashes and cleanup: ignored analysis/p06/remote-fix. Historical Base/Head and all root tracking conserved; recovery1/10,pendingnull unchanged. Root owns focused confirmation and acceptance.
 
+### Review Received: p06 focused remote correction confirmation
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T221841Z.md
+**Reviewed head:** 27382a66a0790f3a63e9aaff89432114159986bb; auto code, narrowed 9e19dd89657e18386cb3cdffcb58e753d66a68a8..27382a66a0790f3a63e9aaff89432114159986bb, approved correction delta 596fd8b970995467e3c7951837683ec67709163a..27382a66a0790f3a63e9aaff89432114159986bb.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root read the complete artifact, validated full head/provenance/current severity vocabulary, and consumed exactly one not-attempted reconnaissance signal from the completion report. No Review Orchestration section or orchestration-log append. Configured reviewer claudeAgent_claude_proxy / claude-opus-5-5 / high / fastMode false independently confirmed all five approved corrections. Runtime model identity is not independently reported. Seven product blobs match the reviewed head, and its root tail is tracking only. Fresh CLI build and checker/config103 plus nav41 tests passed; 39 independent built-CLI probes passed on Node26.11.1/pnpm10.13.1. Invalid severities fail both real config boundaries; aliases preserve matching policy and unrelated-root isolation; installed package/workspace binary shorthand passes while explicit runs remain strict; absent optional pages skip while malformed/explicit/nav-sync cases stay strict. The reviewer inspected the real-base association test and producer old/new mutant evidence without mutating product code.
+
+Nine gates, 9487 fresh package/app tests, direct165/712/1, flagship0errors/756warnings, exact packed Node22.17/26.11 and unchanged Mermaid/jsdom/framework/install-root/scaffold evidence are inherited, not independently rerun. Root verified producer manifests/commits and all five neutralizations before dispatch. All16 execution records are closed; no new task or full-range fourth review is created. Gate-M1/W-M1 is corrected within the approved installed-local-binary boundary. Gate-M2/W-M2's false error is corrected by the operator-approved absent-pages skip, superseding the prior requested implicit-loader-order remedy. System-PATH binaries, pre-install shorthand, implicit Fumadocs order and earlier diagnostic Lows remain explicitly deferred.
+
+**Outcome:** passed; root restores p06 acceptance (10/13 units). Historical frozen Base/Head and selected passing external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 are preserved, with correction coverage supplied by this authorized focused confirmation. Recovery1/10,pendingnull unchanged. Publication, remote thread reconciliation and current-head CI/Bugbot/reviewer clearance precede intermediate merge-commit delivery; p07 remains provisional and final project PR held.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1933,7 +1946,7 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-remote-review-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-remote-review-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-remote-fix-20261023 · scope=p06 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-remote-fix-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
@@ -2204,8 +2217,8 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 
 ## Deferred Findings
 
-- p06 gate Gate-M1 · Medium · Bare pnpm local-dependency binaries (e.g. pnpm vitest/tsx) are falsely reported as missing scripts. Deferred to final by passing-gate judgment sweep, gate02598e6c-cf5d-48cc-8509-74aeb2362db2; no current phase fix loop for sub-threshold findings. Resolve P22 script-vs-binary semantics with real pnpm controls and minimal classification; preserve strict explicit run checks. Resurface for explicit final disposition before final review may pass. Source commands.ts:207,265; current pnpm exec form is usable.
-- p06 gate Gate-M2 · Medium · Valid title-only hand-authored/undeclared Fumadocs meta.json without pages is reported as drift. Deferred to final by passing-gate judgment sweep, same gate; current phase passes at high threshold. Reconcile implicit loader order with P21 Contents membership/order using the real pinned loader, retain nav-sync strictness and explicit invalid pages detection. Resurface for explicit final disposition. Source navigation.ts:65.
+- p06 gate Gate-M1 / W-M1 · Medium · Installed package/workspace local-binary shorthand corrected in p06-t14 (42ea66a51abb4c1754d0a009474c218d865832dd), independently confirmed by reviews/archived/p06-review-2026-10-23T221841Z.md. Historical passing-gate deferral is superseded within this approved boundary. Residual limits: system-PATH-only binaries and shorthand before dependencies are installed remain deferred; revisit on a real repository report or final disposition. Explicit script runs remain strict; no binary is executed by the checker.
+- p06 gate Gate-M2 / W-M2 · Medium · Title-only hand-authored metadata false error corrected in p06-t15 (14587af7fe6de55c1205674271bd244abaaa9154), independently confirmed by reviews/archived/p06-review-2026-10-23T221841Z.md. Operator approved skipping absent optional pages, superseding the earlier requested pinned implicit-loader-order comparison. Implicit ordering may diverge from Contents and remains deferred; revisit when an actual repository reports confusing order or a framework dependency otherwise becomes justified. Explicit/malformed pages and nav-sync remain strict.
 - p06 gate Gate-L1 · Low · Valid MkDocs Python tags cause unresolved-tag YAML warnings on stderr; stdout JSON/results unaffected. Deferred to final through passing-gate sweep, same gate; narrow log handling may be considered without weakening syntax diagnostics. Source navigation.ts:118 and starter mkdocs.yml:33.
 - p06 gate Gate-L2 · Low · An unsupported glob/multi-package --filter gets a misleading suggestion to use literal --filter. Deferred to final through passing-gate sweep, same gate; improve exact-single-package wording when contributor-command diagnostics are next revised, without adding multi-package selector support. Source commands.ts:250.
 
