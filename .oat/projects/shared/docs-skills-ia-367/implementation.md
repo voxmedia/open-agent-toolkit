@@ -1209,7 +1209,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 **Status:** in_progress
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
-**Head:** 04d5361060ed597fb59431ea4e98ee1d0d30f853
+**Head:** e197f3f8c4f4b76d5e9837508d543933e3ec5b45
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 
 One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
@@ -1486,6 +1486,12 @@ Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98
 **Disposition:** R2-L1, stale Next Milestone text naming the old candidate, Task Scope: Negligible → corrected by root in this review-outcome bookkeeping. State now names the accepted candidate and progress-PR delivery. This is the lifecycle resume-text update the review requests, not a product fix or new guarantee; no execution task, new tests or third product review is needed.
 **Outcome:** passed. Independent pinned-runtime probes close all six original findings; focused config20/transforms38/init-nav156/docs93 and docs/changed-file checks pass. Reviewer independently served the existing pinned Next export and built default-theme MkDocs red/fixed scaffolds; broad gates, fresh Next build, browser, Material/plugins, next-dev and Windows remain unrun by that reviewer. Unaffected round1 coverage inherited. All8 execution records closed, all8 ordered gates0, no deferred finding or selected optional phase-review gate remains. Root accepts p05 at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853. Recovery1/10,pendingnull preserved; one product fix cycle, two independent rounds. Intermediate PR delivery follows before p06; final PR held.
 
+### Root PR373 correction handoff validation
+
+Clean handoff50f8b2d1441beb69f0b4df3eb96ff44d4ab5d7ab; authoritative tested candidatee197f3f8c4f4b76d5e9837508d543933e3ec5b45. Root inspected all product diffs, exact9-file scope, the minimal tinyglobby importer addition, gates.json/all8 explicit0 exits, focused pre/post exits, pre-fix failure categories and export-proof.json/installed hashes. T09 productbc979197ef3b4f2d309b8b2ff2cb55c318c23a12 with journal0e171c801e0a529edaef206ff70bf5cf86b1267c addresses external M1/H1; t10 product2312f633086acb61b22df311ca2d76a7c32d4d4a with journale197f3f8c4f4b76d5e9837508d543933e3ec5b45 addresses H2. No app/template wiring change needed. Root has not rerun those suites; independent third review will reproduce the load-bearing boundaries. Gates use cache4/11,7/11,7/12,5/5,direct,direct,direct,6/6; gate3 fresh9069package tests,replayed309 plus fresh smoke165/skills712/scripts1 and flagship build. Fresh packed Next export checks nested-docs routes, filtered section route, raw bodies and obsolete404; hand-authored sidebar means this is not a new fresh-init nav proof. Browser/MkDocs/Windows/next-dev and forced broad suites remain inherited or unrun as disclosed.
+
+All10 records closed; no later phase started. Advance p05 Head to the tested candidate for narrowed third review04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45 with unchanged Base and preserved historical acceptance/reviews. Prior round2 coverage is inherited for unchanged code. Remote findings are implemented, independent confirmation pending; current p05 acceptance remains suspended and PR373 is held. Recovery1/10,pendingnull unchanged. No product edit or extra gate run by root.
+
 ## Phase p06: oat docs check
 
 **Status:** pending
@@ -1512,7 +1518,7 @@ Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-remote-inventory-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p05-remote-inventory · observed=~ · match=~
+- run/v1 · request=docs367-p05-remote-inventory-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-inventory · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-remote-fix-expanded-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-fix-expanded · observed=~ · match=~
 
