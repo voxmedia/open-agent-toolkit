@@ -673,6 +673,37 @@ Execution shape: one phase implementer owns commits in the existing root worktre
 
 **Phase verification:** Ordered DoD 1–8 all exit 0: check, type-check, isolated-HOME test, build, skill-bumps, fetch origin main then release version check, public archive validation, docs build. Turbo cached/executed counts: check 5/6 (11 total), types 5/6 (11), test 5/7 (12), build 5/0 (5), docs build 6/0 (6); replay is not execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` freshly executes all 12 tasks with 0 cached, including docs build: 9,229 package tests plus 85 docs tests pass. Direct isolated smoke 165, skill 711 and script 1 tests pass; skill validation, lint and format exit 0. Isolated shared/validation sentence contracts pass before and after commit (1,087 tests each). Initial lint executes 10 tasks; initial format executes 5 and replays 5; committed lint/format replay 10 tasks each while their root checks run. No unexpected failures or flake retries; recovery 0/10, 10 remaining, pending null. Exact commands/exits, cache accounting, immutable controls, manual fixture, conservation and committed-byte proof live in ignored `analysis/p-rev2/README.md`, `results.jsonl`, `verification-summary.json` and `committed-bytes.json`. P-rev2 remains in_progress for root independent review, integration, delivery and acceptance.
 
+### Review Received: p-rev2 (round 1)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-10-23T004632Z.md
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 1
+
+- M1 (Medium): oat-docs-authoring still loads authoring-docs ambiently, including the p02-only guidance reference → fix task prev2-t02. The approved phase Intent says all equivalent p02 call sites; the earlier four-site receipt was an incomplete inventory, not a scope restriction. The wrapper was changed and bumped by p02, so the same stale-copy failure is already in scope. No new guarantee or version bump is required.
+- L1 (Low): guidance-sources repeats a self-load and says handoff when authoring-docs itself is loaded → fix task prev2-t03. Reuse the already bound root (or the current authoring-docs root), preserving exact-file validation and fallback for unbound consumers.
+
+Exactly one `**Reconnaissance:** not-attempted` signal was consumed before validation; no Review Orchestration section exists. Artifact anchors match the committed phase range. Reviewer independently reproduced guard failures against immutable prose, tier-swap/drop mutations and the manual fixture; full gates inspected, not rerun. Provider ambient precedence was not verified and is not needed for the accepted explicit-binding contract.
+
+**Outcome:** fixes queued: prev2-t02, prev2-t03. P-rev2 remains in_progress; original Base unchanged. Round 1/3 consumed; recovery remains 0/10, pending null.
+
+### Task prev2-t02: (review) Bind the authoring wrapper to its loaded sibling
+
+**Status:** pending
+**Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (M1)
+
+**Intent:** Correct both ambient authoring-docs loads in the p02 wrapper using the existing exact loaded → user → repo binding and consistently bound guidance reference. Preserve targeted-authoring boundaries and guidance-source precedence.
+**Files:** `.agents/skills/oat-docs-authoring/SKILL.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** Expanded prose guard fails immutable pre-fix wrapper for the missing loaded tier and passes fixed; mixed-scope fixture and sentence contracts remain valid.
+
+### Task prev2-t03: (review) Reuse an established authoring root in the guidance reference
+
+**Status:** pending
+**Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (L1)
+
+**Intent:** Make the guidance reference reuse a validated authoring-docs binding, including when authoring-docs is the loaded skill, and reserve the fallback/stop wording for unbound consumers. Preserve lookup order and guidance selection.
+**Files:** `.agents/skills/authoring-docs/references/guidance-sources.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** Prose contract and manual bound-root/self-root controls; unchanged fallback and source-precedence controls.
+
 ## Phase p04: Navigation follows Contents
 
 **Status:** pending
@@ -711,7 +742,7 @@ Execution shape: one phase implementer owns commits in the existing root worktre
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-prev2-review-r1-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-prev2-review-r1-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev2-impl-20261023 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
