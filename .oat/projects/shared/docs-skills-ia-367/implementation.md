@@ -1213,6 +1213,19 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
 
+### Task p05-t01: Compose recursive tabs before links
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-impl-20261023 (same accepted run)
+**Intent:** Preserve nested Markdown, GFM and fenced examples through both public transform pipelines; bound Mermaid evidence to emitted JSX/newlines. Advance the phase's public lockstep versions.
+**Files:** packages/docs-transforms/src/{remark-tabs.ts,index.ts,composition.test.ts}, packages/docs-transforms/{README.md,package.json}, packages/docs-config/src/{source-config.ts,source-config.test.ts}, five public package.json files, packages/cli/assets/public-package-versions.json, pnpm-lock.yaml.
+**Proof command:** focused transforms/config Vitest; package check/type-check/build; pre-fix red and fixed controls under analysis/p05.
+
+**Commit:** 003d2d09329f0d3a1b7989bb65930f31186891ed
+**Verification:** transforms 36 tests and docs-config 16 tests executed (no Turbo); check/type-check and scoped builds exit0. Baseline composition red exit1 (4/5 failures), restored green exit0; separate source-config order control red1/fixed0. Real flagship Syntax examples preserved and nested Rendered tabs transformed; Mermaid proof concerns JSX/newlines only. All public/bundled versions0.3.27. Logs: ignored analysis/p05/t01-\*.
+**Prevention:** corrected dependency/test lint and indented-code detection before commit; no recovery reservation. Worktree validation accidentally invoked during preflight replayed cached suites and failed on newly opened record dirt; excluded from phase evidence.
+
 ---
 
 ## Phase p06: oat docs check
