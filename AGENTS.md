@@ -181,32 +181,10 @@ Instructions are code: keep them accurate as the repository changes.
 
 ### Instruction index
 
-Read each active instruction file before editing matching files; scopes below
-are repository-relative globs and inherit ancestor guidance. Any canonical rule
-added to this index must list its exact `globs` and be read before editing
-matching files. There are currently no `.agents/rules/*.md` files.
-
-| Active instruction file                   | Scope                              | Purpose                                    |
-| ----------------------------------------- | ---------------------------------- | ------------------------------------------ |
-| `AGENTS.md`                               | `**/*`                             | Repository commands and shared conventions |
-| `apps/oat-docs/AGENTS.md`                 | `apps/oat-docs/**`                 | Documentation authoring and navigation     |
-| `packages/cli/AGENTS.md`                  | `packages/cli/**`                  | CLI behavior and package checks            |
-| `packages/control-plane/AGENTS.md`        | `packages/control-plane/**`        | Read-only project inspection contracts     |
-| `packages/docs-config/AGENTS.md`          | `packages/docs-config/**`          | Shared docs configuration                  |
-| `packages/docs-theme/AGENTS.md`           | `packages/docs-theme/**`           | Shared docs components                     |
-| `packages/docs-transforms/AGENTS.md`      | `packages/docs-transforms/**`      | Shared Markdown transforms                 |
-| `.oat/repo/AGENTS.md`                     | `.oat/repo/**`                     | Repository planning and reference routing  |
-| `.oat/repo/pjm/AGENTS.md`                 | `.oat/repo/pjm/**`                 | Backlog lifecycle and kickoff handoffs     |
-| `.oat/repo/reference/AGENTS.md`           | `.oat/repo/reference/**`           | Durable reference ownership                |
-| `.oat/repo/reference/decisions/AGENTS.md` | `.oat/repo/reference/decisions/**` | Managed decision-record guidance           |
-
-`.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` and
-`.oat/templates/{repo,pjm,reference}-agents.md` are shipped templates, not active
-repository governance. Instruction examples embedded in skills, fixtures, and
-payloads likewise describe their target contexts. Provider skill/agent views in
-`.claude/`, `.cursor/`, and `.codex/` are generated views of canonical tools,
-not additional directory instructions. This repository uses `AGENTS.md` directly
-with no Claude shims.
+Read the relevant app/package `AGENTS.md` before editing; the workspace layout
+routes to those components. There are currently no canonical rules.
+List each new `.agents/rules/` rule here with its exact `globs` and read it
+before editing matching files.
 
 ### Development Workflow
 
