@@ -1671,12 +1671,18 @@ Proof: Extend existing command-context fixture with declared site/out/dist membe
 
 ### Task p06-t06: (review) Separate syntax diagnostics from metadata and accessibility exceptions
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 7db0dbb78131ffdd12ddb15d171a0f4d09c43552
 **Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M4)
 
 Intent: Add stable configurable frontmatter rule for invalid YAML/mapping; preserve masked frontmatter positions and parse independent body checks even when metadata is invalid. Move Mermaid accTitle/accDescr warnings to existing diagram-accessibility; keep Mermaid syntax under mermaid. Description/accessibility exceptions must not hide unrelated parse errors. Preserve explicit per-rule severity/filter/exception behavior, including intentional warn/off for the syntax rule itself. No generic exception machinery or unsuppressible-error policy.
 Files: packages/cli/src/commands/docs/check/checker.ts; markdown.ts; diagrams.ts; files.ts only if directly needed for read/parse composition; config/documentation-check.ts; existing checker.test.ts and config/docs-check.test.ts only for the public policy contract; apps/oat-docs/docs/docs-tooling/check.md; packages/cli/README.md only if its rule list needs alignment.
 Proof: Real malformed YAML with duplicate H1/broken link and independent Mermaid: description exception leaves frontmatter error plus applicable body findings; accessibility exception leaves syntax error; valid YAML/diagram controls pass; explicit syntax-rule override and rule-filter remain honored. Check actual CLI JSON/exits/config roundtrip for the final stable IDs, with minimal distinct coverage at owning boundaries. Preserve pre-fix red/fixed/valid controls, no test-only API or own-module mocks.
+
+**Commit:** bb95654a8c8ad9369fc8838718f1aad41d86df25
+**Verification:** Pre-fix four checker failures and config round-trip rejection reproduce M4. Fixed/valid controls plus checker/config/nav/init execute 174 tests fresh, isolated HOME, exit 0. Built CLI syntax-probe exits 0: exact G5 JSON/physical body positions; description/accessibility exceptions retain four syntax/body errors; frontmatter filters and intentional syntax warn/off via rules/exceptions honored; labeled HTML Mermaid valid. CLI check/type/build and docs lint exit 0; one shadowed test variable corrected precommit. Stable frontmatter ID documented; no dependency or policy bypass. Evidence: analysis/p06/fix-r1/t06-\* and syntax-probe.mjs.
 
 ### Task p06-t07: (review) Correct spacing in shipped p06 prose
 
