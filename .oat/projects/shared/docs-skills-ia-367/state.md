@@ -139,7 +139,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T08:08:57.746983Z'
+oat_project_state_updated: '2026-10-23T08:15:03.651154Z'
 oat_generated: false
 ---
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Deliver draft PR #373 (https://github.com/voxmedia/open-agent-toolkit/pull/373) from docs/docs-skills-ia-367-p05 after the remaining complexity lens, current-head CI and Bugbot clearance; use land-pr. Merge mode remains plain land with existing independent code/test/docs coverage; squash follows the established intermediate-PR policy. No merge is authorized while review or checks remain pending. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.
+P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Deliver draft PR #373 (https://github.com/voxmedia/open-agent-toolkit/pull/373) from docs/docs-skills-ia-367-p05 after current-head CI and Bugbot clearance (all PR self-review lenses covered); use land-pr. Merge mode remains plain land with existing independent code/test/docs coverage; squash follows the established intermediate-PR policy. No merge is authorized while review or checks remain pending. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.
