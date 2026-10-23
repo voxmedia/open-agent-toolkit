@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p04
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -39,22 +39,22 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | in_progress | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 6/12 phases accepted
+**Total:** 7/12 phases accepted
 
 ---
 
@@ -795,7 +795,7 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 ## Phase p04: Navigation follows Contents
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 56e05597392dfb4951679d5236b960afb296f951
 **Head:** 3f99348b589cbd750bdfd088e02e4c10a5848e2f
 **Executor:** phase-implementer:docs367-p04-impl-20261023
@@ -1084,6 +1084,14 @@ All eight gates ran in order against the candidate, with explicit exit receipts.
 
 ---
 
+### Root acceptance: p04 final review
+
+**Verdict:** accepted after independent round3 of3; 0 critical, 0 high, 0 medium, 0 low. Review artifact (local-only): reviews/archived/p04-review-2026-10-23T050209Z.md, anchored Base56e05597392dfb4951679d5236b960afb296f951..Head3f99348b589cbd750bdfd088e02e4c10a5848e2f, narrowed from prior3bbe2a49326835a44c839a24de609335a119baa6. Root read the complete artifact and validated exact provenance, counts and one not-attempted signal with no Review Orchestration section. No review-orchestration log entry applies.
+
+All R1 findings are independently closed in R2; R2-L1 is independently closed in R3. The reviewer reproduced old137 tests+M7 green, new assertion+M7 red (exact missing rejection), restored parser137green, and checkout137green; verified production unchanged and all ten records closed. Remaining p04 requirements inherit R1/R2 coverage. All eight candidate gates pass with cache counts8/11,9/11,9/12,5/5, direct5–7,6/6. Fresh candidate gate3 CLI8911/docs85/build/direct165/712/1 and prior forced9350/12tasks0cached are distinguished. No selected external p04 phase gate. No findings deferred, no fourth phase round, no unreviewed product delta. Phase acceptance is root-owned; intermediate delivery PR follows. Recovery usage remains3/10 pendingnull; earlier elevated-volume warning and failed logs remain preserved. MkDocs1.4.2 rendering exclusion remains a documented limitation.
+
+---
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
@@ -1116,7 +1124,7 @@ All eight gates ran in order against the candidate, with explicit exit receipts.
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p04-review-r3-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p04-review-r3-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p04-fix-r2-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1,cont-docs367-p04-review-fix-r2 · observed=~ · match=~
 

@@ -119,6 +119,10 @@ docs367-p04-recovery02-settled-20261023: validated completed prose-lint recovery
 
 docs367-p04-pre-review-20261023: accepted clean implementation handoff and settled completed recovery03 after generated-consumer regression, ordinary/named-root builds and ordered phase gates passed. Forced tests executed12 tasks without cache; phase remains in_progress for independent review, recovery3/10 pending null.
 
+### 2026-10-23 · structural · oat-project-implement · p04
+
+docs367-p04-accepted-r3-20261023: p04 accepted after three independent rounds and two review-fix continuations, all findings closed; eight gates passed at 3f99348b589cbd750bdfd088e02e4c10a5848e2f with inherited/fresh proof distinguished in implementation.md. Recovery3/10 pendingnull; delivery PR next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
