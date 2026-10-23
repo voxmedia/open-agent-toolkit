@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002
+oat_last_commit: a7a46982cac6fd4e163ecc57895f127792da9872
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -45,16 +45,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p05:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: 'docs367-p05-recovery-01'
-        original_request_id: 'docs367-p05-impl-20261023'
-        original_task_id: 'p05-t02'
-        original_commit: '4f3a03118a46f3988a0304a35c063ceaba86926b'
-        discovered_by: 'isolated-HOME pnpm test (ordered gate3)'
-        dispatch_target: 'codex_codex_proxy/gpt-6.1-sol/high/priority'
-        reservation_head: '9bc52036afec02b62b4b4a912a2a756b8c35d407'
-        status: 'completed'
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -148,7 +139,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T06:02:38Z
+oat_project_state_updated: 2026-10-23T07:01:31Z
 oat_generated: false
 ---
 
@@ -156,7 +147,7 @@ oat_generated: false
 
 **Status:** Implementation
 **Started:** 2026-10-22
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-23
 
 ## Current Phase
 
@@ -174,4 +165,4 @@ None.
 
 ## Next Milestone
 
-PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: readiness is complete and the concrete Intent/Exit is committed; implement, verify and independently review p05. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: three implementation records and verification are complete; recovery01 is settled at1/10,pendingnull. Finish the bounded three-page public prose propagation, then independently review p05 before acceptance. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.

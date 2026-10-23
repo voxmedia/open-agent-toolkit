@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | in_progress | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 8/13 phases accepted
 
@@ -1300,6 +1300,10 @@ All eight run in order with explicit exits after the correction; origin/main fet
 
 **Proof index:** ignored analysis/p05/README.md, task-owned file manifests p05-t01–t03-files.json, t01/t02/t03 logs and real fixture scripts, t03-manual-evidence.md, gates.json plus initial-gates/, post-checks.json, final-test-counts.json, final-http-all.log and t03-final-export-proof.json, recovery-01-eligibility.json and focused pre/post logs. Machine baselines remain ignored; this journal keeps concise results. This verification-only journal changes no tested product bytes. Writes stop at handoff.
 
+### Root recovery01 settlement and continuation
+
+Root validated request docs367-p05-impl-20261023 and its DONE_WITH_CONCERNS handoff at a7a46982cac6fd4e163ecc57895f127792da9872. Reservation b8e7b80a0 precedes the bounded correction49572b8da; the original t02 commit/parent remain immutable. Only the release assertion and matching terminal marker changed in the recovery candidate. Eligibility, original identities, exact high/priority target, monotonic accounting and focused pre/post plus postcommit phase exits reconcile. Root clears only the completed pending marker and preserves usage1/10 (9remain); prior-phase ledgers/anchors stay frozen. All three records are closed, all eight ordered gates pass and the supplemental forced run executes12fresh tasks/9374tests. Root inspected records, diffs and exits rather than rerunning broad gates. The phase remains in_progress for the existing three-page prose correction, independent review and acceptance. The nav/link collision scope reconciliations fulfill the concrete p05 layout and introduce no additional requirement.
+
 ---
 
 ## Phase p06: oat docs check
@@ -1328,7 +1332,7 @@ All eight run in order with explicit exits after the correction; origin/main fet
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-impl-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p05-impl-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-p05-readiness-20261023 · scope=p05-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
