@@ -1686,12 +1686,18 @@ Proof: Real malformed YAML with duplicate H1/broken link and independent Mermaid
 
 ### Task p06-t07: (review) Correct spacing in shipped p06 prose
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r1-from-docs367-p06-impl-20261023
+**Start HEAD:** 30481b4e52eb44830f879c410596eb1ea7a3fe9d
 **Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (L2)
 
 Intent: Correct joined prose tokens such as exit1, pnpm10 and12, exactly2.1.2 and depth0 in the six named changed surfaces, conserving all claims, sections, links, setup behavior and approval boundaries. Keep already-required PR-scoped skill/public version bumps; no second edit-scoped bump.
 Files: packages/cli/README.md; apps/oat-docs/docs/docs-tooling/commands.md; apps/oat-docs/docs/reference/cli-reference.md; apps/oat-docs/docs/docs-tooling/check.md; .oat/templates/docs-app-fuma/docs/contributing/docs-toolchain.md; .agents/skills/oat-docs-bootstrap/SKILL.md. Exact pinned sentence expectations may be updated in existing skill contract tests only if required by those corrected literals, with original behavioral assertions retained.
 Proof: Conservation diff and file-scoped formatting; existing skill sentence contracts run freshly with isolated HOME. No new prose tests, snapshots, receipts or negative controls. Final combined fix candidate runs all eight ordered DoD gates, applicable lint/format and direct suites, preserving prior broad fresh evidence for unchanged boundaries.
+
+**Commit:** 3e149399e4c4276fb76bd8fb4e20b0fdab08d981
+**Verification:** All six surfaces conserve every non-whitespace character after formatting; setup/approval/claims/links and existing PR-scoped versions unchanged. Isolated sentence contracts 1,087/26 files fresh, exit 0, no expectation changes. Lint/format exit 0 (each 4 cached/6 fresh plus root passes). Ordered precommit gates 1–8 all exit 0: cache/fresh 0/11,5/6,5/7,5/0,direct,direct,direct,6/0. Gate3 freshly executes all 9,477 package/app tests plus direct smoke165/skills712/scripts1; cached tasks are builds. Fetch and full phase-path drift checks pass. Packed final CLI JSON/exits/filters/syntax/valid controls pass on actual Node22.17/26.11.1, only unpublished OAT dependency substitutions. Flagship 0 errors/756 visible warnings, 23 accessibility warnings reclassified into existing diagram-accessibility. Exact commands/exits/hashes in analysis/p06/fix-r1; combined committed-candidate gates follow before Head advances.
 
 ## Phase p07: Page templates and presets
 
