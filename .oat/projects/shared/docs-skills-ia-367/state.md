@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
@@ -135,11 +135,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T08:07:17.864693Z'
+oat_project_state_updated: '2026-10-23T08:08:57.746983Z'
 oat_generated: false
 ---
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Open and deliver the p05 progress PR from docs/docs-skills-ia-367-p05 after PR self-review, current-head CI and Bugbot clearance; use land-pr. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.
+P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Deliver draft PR #373 (https://github.com/voxmedia/open-agent-toolkit/pull/373) from docs/docs-skills-ia-367-p05 after the remaining complexity lens, current-head CI and Bugbot clearance; use land-pr. Merge mode remains plain land with existing independent code/test/docs coverage; squash follows the established intermediate-PR policy. No merge is authorized while review or checks remain pending. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.
