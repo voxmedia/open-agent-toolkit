@@ -35,7 +35,7 @@ Use dash-prefixed Markdown links for sibling pages and child directories. Option
 Notes:
 
 - Links after `## Contents` can include short human-readable descriptions.
-- Groups start at `### <Label>` and end at the next group or the next `## ` heading. Links before the first group remain ungrouped. Fumadocs emits `---Label---` before the first retained entry; MkDocs emits a labeled nested list. Filtering a self-index or non-reader link never leaves an empty separator.
+- Groups start at `### <Label>` and end at the next group or the next second-level heading. Links before the first group remain ungrouped. Fumadocs emits `---Label---` before the first retained entry; MkDocs emits a labeled nested list. Filtering a self-index or non-reader link never leaves an empty separator.
 - A group with no authored entries is an error with its file and line; add a dash link or remove the empty heading. A `*` or `+` link bullet is also an error with file and line; replace it with `-`.
 - Child directories should link to their `index.md`.
 - Leaf pages should link to their `.md` filename.
