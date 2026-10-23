@@ -43,6 +43,9 @@ oat_phase_recovery_policy:
     p-rev4:
       used_attempts: 0
       pending_attempt: null
+    p05:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -148,7 +151,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p04/p-rev4 delivered in merged PR372; p05 readiness recon in progress before concretization.
+Implement — p05 reader-first starter is concrete and in progress.
 
 ## Artifacts
 
@@ -162,4 +165,4 @@ None.
 
 ## Next Milestone
 
-PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: receive bounded readiness recon, make its Intent/Exit concrete, then implement and independently review. P05 has no Base yet. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: readiness is complete and the concrete Intent/Exit is committed; implement, verify and independently review p05. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
