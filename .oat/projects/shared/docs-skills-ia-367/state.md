@@ -38,8 +38,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p04:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: docs367-p04-t04-lint-stop
+        original_request_id: docs367-p04-impl-20261023
+        original_task_id: p04-t04
+        original_commit: 9712fcba8ac65355f78edeb813303c1c0592c8d8
+        discovered_by: 'pnpm --filter @open-agent-toolkit/cli exec oxlint src/commands/docs/init/scaffold.ts'
+        dispatch_target: codex_codex_proxy/gpt-6.1-sol/high/priority
+        reservation_head: c2134bdff57c172901978867c46647ee176afeb6
+        status: reserved
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery

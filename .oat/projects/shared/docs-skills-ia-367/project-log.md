@@ -103,6 +103,10 @@ p-rev3 passed one independent review with its ledger-only Low fixed; PR #371 lan
 
 p04 concretized from approved G2/G3/P12-P14 after bounded recon; one committing owner, matching-root nonReaderPaths, pinned string-root schema adapter and documented MkDocs rendering limitation. docs367-p04-start-20261023
 
+### 2026-10-23 · structural · oat-project-implement · p04-recovery
+
+docs367-p04-recovery-reserved-20261023: p04 stopped after a committed prefer-template lint defect. Root reproduced it and reserved bounded recovery attempt 1/10 before product edits; same handle and exact target retained, with focused and relevant committed-head verification required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
