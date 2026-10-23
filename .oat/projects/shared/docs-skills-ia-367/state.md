@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: ba253ba359a03d2f40410e2431e38ca6effd629b
+oat_last_commit: 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -132,11 +132,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T05:48:37Z
+oat_project_state_updated: 2026-10-23T06:02:38Z
 oat_generated: false
 ---
 
@@ -148,7 +148,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev4 accepted; deliver PR372 once current-head checks and bot findings clear, then concretize p05.
+Implement — p04/p-rev4 delivered in merged PR372; p05 readiness recon in progress before concretization.
 
 ## Artifacts
 
@@ -162,4 +162,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; independent revision review passed with zero findings. Publication and current-head CI/Bugbot/Warp reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: receive bounded readiness recon, make its Intent/Exit concrete, then implement and independently review. P05 has no Base yet. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
