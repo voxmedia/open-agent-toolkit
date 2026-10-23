@@ -1,10 +1,15 @@
 import { createSourceConfig } from '@open-agent-toolkit/docs-config';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 
-const sourceConfig = createSourceConfig();
+const sourceConfig = createSourceConfig({
+  oatConfigFile: '{{OAT_CONFIG_RELATIVE_PATH}}',
+  appRoot: '.',
+});
 
 export const docs = defineDocs({
   dir: sourceConfig.contentDir,
+  docs: sourceConfig.docs,
+  meta: sourceConfig.meta,
 });
 
 export default defineConfig({

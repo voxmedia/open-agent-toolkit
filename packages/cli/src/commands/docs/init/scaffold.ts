@@ -367,6 +367,12 @@ function renderTemplate(
       options.repoShape === 'nested-standalone'
         ? '  turbopack: { root: dirname(fileURLToPath(import.meta.url)) },\n'
         : '',
+    '{{OAT_CONFIG_RELATIVE_PATH}}':
+      './' +
+      relative(
+        resolve(options.repoRoot, options.targetDir),
+        join(options.repoRoot, '.oat/config.json'),
+      ).replaceAll('\\', '/'),
     '{{APP_NAME}}': options.appName,
     '{{NODE_REQUIREMENT}}': nodeRequirement,
     '{{PACKAGE_NAME}}': options.appName,

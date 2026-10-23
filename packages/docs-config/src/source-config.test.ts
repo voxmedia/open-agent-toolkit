@@ -1,3 +1,17 @@
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import { createSourceConfig } from './source-config.js';
@@ -45,5 +59,195 @@ describe('createSourceConfig', () => {
     expect(config.search).toBeDefined();
     expect(config.search.engine).toBe('flexsearch');
     expect(config.search.type).toBe('static');
+  });
+});
+
+// External boundary provenance: installed fumadocs-mdx 14.3.2 defineDocs,
+// schema, Next collection emitter and its tinyglobby; fumadocs-core 16.10.2 loader.
+// Expectations are literals and OAT's existing CLI matcher, not a permissive schema.
+describe('pinned Fumadocs reader boundaries', () => {
+  it('validates named roots through the collection schema before loading the landing page', async () => {
+    const { defineDocs } = await import('fumadocs-mdx/config');
+    const { metaSchema } = await import('fumadocs-core/source/schema');
+    const { loader } = await import('fumadocs-core/source');
+    const data = {
+      root: ' Named root ',
+      pages: ['index', 'leaf'],
+      title: 'Section',
+    };
+    expect(metaSchema.safeParse(data).success).toBe(false);
+    const source = createSourceConfig();
+    const collection = defineDocs({ meta: source.meta, docs: source.docs });
+    const parsed = await collection.meta.schema['~standard'].validate(data);
+    expect(parsed.issues).toBeUndefined();
+    expect(parsed.value).toMatchObject({ root: 'Named root' });
+    for (const root of ['', '   ', 42, null]) {
+      expect(
+        (await collection.meta.schema['~standard'].validate({ root })).issues,
+      ).toBeDefined();
+    }
+    expect(
+      (await collection.meta.schema['~standard'].validate({ root: true }))
+        .issues,
+    ).toBeUndefined();
+    expect(
+      (
+        await collection.meta.schema['~standard'].validate({
+          root: true,
+          pages: [42],
+        })
+      ).issues,
+    ).toBeDefined();
+    const tree = loader({
+      baseUrl: '/',
+      source: {
+        files: [
+          { type: 'meta', path: 'meta.json', data: { pages: ['section'] } },
+          { type: 'meta', path: 'section/meta.json', data: parsed.value },
+          {
+            type: 'page',
+            path: 'section/index.md',
+            data: { title: 'Landing' },
+          },
+          { type: 'page', path: 'section/leaf.md', data: { title: 'Leaf' } },
+        ],
+      },
+    }).pageTree;
+    expect(tree.children[0]).toMatchObject({
+      type: 'folder',
+      children: [
+        { type: 'page', url: '/section' },
+        { type: 'page', url: '/section/leaf' },
+      ],
+    });
+  });
+  it('emits only readers with literal bounded-glob parity and an explicit matching app config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-collection-'));
+    try {
+      const appRoot = join(root, 'app');
+      const content = join(appRoot, 'docs');
+      await mkdir(join(root, '.oat'));
+      await mkdir(content, { recursive: true });
+      const configFile = join(root, '.oat/config.json');
+      const patterns = [
+        ' /root.md ',
+        'templates/',
+        '**/draft.md',
+        'a**b.md',
+        '[literal]?.md',
+        'plus+.md',
+        'brace{a,b}.md',
+        '(private)/',
+        'deep/**/skip*.md',
+      ];
+      await writeFile(
+        configFile,
+        JSON.stringify({
+          documentation: {
+            root: 'app',
+            nonReaderPaths: patterns,
+            excludes: ['kept.md'],
+          },
+        }),
+      );
+      const paths = [
+        'index.md',
+        'kept.md',
+        'root.md',
+        'nested/root.md',
+        'templates/index.md',
+        'templates/nested/leaf.md',
+        'draft.md',
+        'nested/draft.md',
+        'nested/deeper/draft.md',
+        'axb.md',
+        'a/deep/b.md',
+        '[literal]?.md',
+        'l.md',
+        'plus+.md',
+        'plus.md',
+        'brace{a,b}.md',
+        'bracea.md',
+        '(private)/index.md',
+        'deep/skip.md',
+        'deep/nested/skip-one.md',
+        'deep/nested/keep.md',
+      ];
+      for (const path of paths) {
+        await mkdir(dirname(join(content, path)), { recursive: true });
+        await writeFile(join(content, path), '# Page');
+      }
+      await writeFile(join(content, 'meta.json'), '{"pages":["index"]}');
+      await writeFile(
+        join(content, 'templates/meta.json'),
+        '{"pages":["private"]}',
+      );
+      const source = createSourceConfig({ oatConfigFile: configFile, appRoot });
+      const require = createRequire(import.meta.url);
+      const mdxRequire = createRequire(
+        await realpath(require.resolve('fumadocs-mdx/package.json')),
+      );
+      const { glob } = mdxRequire('tinyglobby');
+      const { createExclusionMatcher, isExcludedPath } = await import(
+        new URL(
+          '../../cli/src/commands/docs/shared/exclusions.ts',
+          import.meta.url,
+        ).href
+      );
+      const matcher = createExclusionMatcher(patterns);
+      const kept = await glob(source.docs.files, { cwd: content });
+      expect(kept.sort()).toEqual([
+        'a/deep/b.md',
+        'bracea.md',
+        'deep/nested/keep.md',
+        'index.md',
+        'kept.md',
+        'l.md',
+        'nested/root.md',
+        'plus.md',
+      ]);
+      expect(kept.sort()).toEqual(
+        paths.filter((path) => !isExcludedPath(matcher, path)).sort(),
+      );
+      expect(await glob(source.meta.files, { cwd: content })).toEqual([
+        'meta.json',
+      ]);
+      const unrelated = createSourceConfig({
+        oatConfigFile: configFile,
+        appRoot: join(root, 'other'),
+      });
+      expect(
+        (await glob(unrelated.docs.files, { cwd: content })).sort(),
+      ).toEqual(paths.sort());
+      // The actual Next emitter consumes these collection patterns, not a model of discovery.
+      await symlink(
+        fileURLToPath(new URL('../node_modules', import.meta.url)),
+        join(appRoot, 'node_modules'),
+      );
+      const helper = fileURLToPath(
+        new URL('./source-config.ts', import.meta.url),
+      );
+      const sourcePath = join(appRoot, 'source.config.ts');
+      await writeFile(
+        sourcePath,
+        `import {createSourceConfig} from ${JSON.stringify(helper)};\nimport {defineDocs} from 'fumadocs-mdx/config';\nconst source=createSourceConfig({oatConfigFile:${JSON.stringify(configFile)},appRoot:${JSON.stringify(appRoot)}});\nexport const docs=defineDocs({dir:${JSON.stringify(content)},docs:source.docs,meta:source.meta});`,
+      );
+      const { postInstall } = await import('fumadocs-mdx/next');
+      const outDir = join(appRoot, '.source');
+      await postInstall({ configPath: sourcePath, outDir });
+      const generated = await readFile(join(outDir, 'server.ts'), 'utf8');
+      expect(generated).toContain('kept.md');
+      expect(generated).not.toContain('templates/');
+      expect(generated).not.toContain('draft.md');
+      await writeFile(
+        configFile,
+        JSON.stringify({ documentation: { root: 'app', nonReaderPaths: 5 } }),
+      );
+      expect(() =>
+        createSourceConfig({ oatConfigFile: configFile, appRoot }),
+      ).toThrow('Invalid documentation.nonReaderPaths');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
