@@ -44,6 +44,14 @@ markdownlint over `docs/**/*.md`). One surface still sits outside
 
 ### Definition of Done
 
+- Agent instructions are still true: when a change adds, renames, or removes a
+  command, directory, convention, workflow, version pin, or known footgun, create
+  or update the covering instructions in the same PR. See
+  [Keeping instructions current](#keeping-instructions-current).
+- Update relevant human documentation describing changed behavior in the same PR:
+  `README.md`, the affected `packages/*/README.md`, and applicable pages under
+  `apps/oat-docs/docs/`.
+
 Every change runs the checks CI gates on, in this order:
 
 1. `pnpm check`
@@ -146,6 +154,37 @@ so an existing root-oxlint violation under `tools/smoke` or `.agents/skills`
 leaves it green (verified: a seeded `prefer-const` under `.agents/skills`
 does not turn it red). That is why the root pass stays ungated.
 
+### Keeping instructions current
+
+Instructions are code: keep them accurate as the repository changes.
+
+- Before editing, read root `AGENTS.md`, each changed directory's ancestor
+  `AGENTS.md` files, and any `.agents/rules/*.md` whose `globs` match the files.
+  Fix or delete false commands, paths, versions, flags, workflows, and owners.
+  Search for leftovers with
+  `git grep -n -F -e '<old-name>' -- '*AGENTS.md' '.agents/rules/'`.
+- Add a nested `AGENTS.md` only for distinct local commands, runtime behavior, or
+  footguns. Put cross-directory rules in `.agents/rules/<topic>.md` with exact
+  `globs`; keep repo-wide facts short in root `AGENTS.md`.
+
+  Maintain the [Instruction index](#instruction-index) when creating, renaming,
+  removing, or changing the globs of an instruction file.
+
+- Record durable facts, not task notes or guesses. In the PR description, list
+  created or updated instruction files, or state "No instruction changes needed".
+- Canonical rules live in `.agents/rules/`; generated provider views are derived
+  output. After rule changes, run
+  `npx @open-agent-toolkit/cli sync --scope project` and commit the canonical
+  rules, tracked generated views, and `.oat/sync/manifest.json` together. Preserve
+  ignored output policies. Codex has no generated rule views, so the index below
+  makes matching rule scopes discoverable.
+
+### Instruction index
+
+Read the `AGENTS.md` in each app, package, or `.oat/repo/` directory you change. There are currently no canonical rules.
+List each new `.agents/rules/` rule here with its exact `globs` and read it
+before editing matching files.
+
 ### Development Workflow
 
 - `pnpm dev` - Run workspace development tasks
@@ -221,6 +260,14 @@ does not turn it red). That is why the root pass stays ungated.
 - Clean builds with `pnpm clean` to remove all `dist/` directories
 
 ## Feature Planning Triage
+
+Before adding material complexity for a speculative failure mode or unconfirmed
+future need, explain the concrete problem, evidence that it matters, simpler
+alternatives, and the implementation and maintenance cost, then get the user's
+buy-in. This applies to production code, tests and fixtures, and operational
+safeguards. Do not silently expand scope for theoretical robustness, flexibility,
+or scale. Ordinary regression tests and required checks still apply, as do
+established correctness, security, and durability requirements.
 
 ### Workflow Mode Change Inventory
 
