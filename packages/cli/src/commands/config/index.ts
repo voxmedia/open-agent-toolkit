@@ -59,6 +59,8 @@ import {
   type WorkflowPostImplementSequence,
   normalizeWorkflowPostImplementSequence,
   normalizeDocumentationGuidance,
+  normalizeDocumentationIa,
+  normalizeDocumentationNavOwner,
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
@@ -140,6 +142,8 @@ type ConfigKey =
   | 'archive.wrapUpExportPath'
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
+  | 'documentation.ia'
+  | 'documentation.navOwner'
   | 'documentation.guidance'
   | 'documentation.config'
   | 'documentation.excludes'
@@ -324,6 +328,8 @@ const KEY_ORDER: ConfigKey[] = [
   'archive.awsRegion',
   'autoReviewAtCheckpoints',
   'lastPausedProject',
+  'documentation.ia',
+  'documentation.navOwner',
   'documentation.guidance',
   'documentation.root',
   'documentation.tooling',
@@ -505,6 +511,30 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     description:
       'Deprecated compatibility alias for workflow.autoReviewAtHillCheckpoints. Prefer `oat config set workflow.autoReviewAtHillCheckpoints <true|false>`.',
     deprecated: { supersededBy: 'workflow.autoReviewAtHillCheckpoints' },
+  },
+  {
+    key: 'documentation.ia',
+    group: 'Shared Repo (.oat/config.json)',
+    scope: 'shared repo',
+    file: '.oat/config.json',
+    type: 'JSON object',
+    defaultValue: 'null (no recorded IA)',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.ia <JSON>',
+    description:
+      'Repository mirror of authored IA: preset, repo-relative decision, optional tracks [{path, principle}] and verification (triad|agent-only|none). Authored records remain authoritative.',
+  },
+  {
+    key: 'documentation.navOwner',
+    group: 'Shared Repo (.oat/config.json)',
+    scope: 'shared repo',
+    file: '.oat/config.json',
+    type: 'nav-sync | hand-authored',
+    defaultValue: 'null (undeclared)',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.navOwner <value>',
+    description:
+      'Sidebar owner for framework docs only. Unset is undeclared and authorizes no automatic navigation generation. Markdown ignores this key.',
   },
   {
     key: 'documentation.guidance',
@@ -2412,22 +2442,36 @@ async function setConfigValue(
   const effectiveSurface: ConfigSurface =
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
 
-  if (key === 'documentation.guidance') {
+  if (
+    key === 'documentation.guidance' ||
+    key === 'documentation.ia' ||
+    key === 'documentation.navOwner'
+  ) {
     const configPath =
       effectiveSurface === 'user'
         ? join(userConfigDir, 'config.json')
         : join(repoRoot, '.oat', 'config.json');
+    const field = key.slice('documentation.'.length);
     const trimmed = rawValue.trim();
-    let guidance: string | string[] | undefined;
+    let value: unknown;
     try {
-      guidance = normalizeDocumentationGuidance(
-        trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
-        configPath,
-        effectiveSurface === 'user' ? 'user' : 'shared',
-      );
+      if (key === 'documentation.ia') {
+        const parsed: unknown = JSON.parse(trimmed);
+        if (parsed === null) throw new Error('Expected an IA JSON object.');
+        value = normalizeDocumentationIa(parsed, configPath);
+      } else {
+        value =
+          key === 'documentation.navOwner'
+            ? normalizeDocumentationNavOwner(trimmed, configPath)
+            : normalizeDocumentationGuidance(
+                trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed,
+                configPath,
+                effectiveSurface === 'user' ? 'user' : 'shared',
+              );
+      }
     } catch {
       throw new Error(
-        'Invalid documentation.guidance value: expected a non-empty path/URL string or ordered non-empty string array.',
+        `Invalid ${key} value: ${key === 'documentation.ia' ? 'expected IA JSON with preset, repo-relative decision, optional tracks and verification' : key === 'documentation.navOwner' ? 'expected nav-sync or hand-authored' : 'expected a non-empty path/URL string or ordered non-empty string array'}.`,
       );
     }
     let raw: Record<string, unknown> = { version: 1 };
@@ -2459,21 +2503,21 @@ async function setConfigValue(
     // Patch only the declared input; do not normalize away unrelated or future fields.
     if (
       !isDeepStrictEqual(
-        (documentation as Record<string, unknown> | undefined)?.guidance,
-        guidance,
+        (documentation as Record<string, unknown> | undefined)?.[field],
+        value,
       )
     ) {
       await dependencies.atomicWriteJson(configPath, {
         ...raw,
         documentation: {
           ...(documentation as Record<string, unknown>),
-          guidance,
+          [field]: value,
         },
       });
     }
     return {
       key,
-      value: guidance ?? null,
+      value: value ?? null,
       source: effectiveSurface as 'shared' | 'user',
     };
   }
@@ -3191,7 +3235,11 @@ async function removeFromSurface(
   path: string[],
   dependencies: ConfigCommandDependencies,
 ): Promise<boolean> {
-  if (key === 'documentation.guidance') {
+  if (
+    key === 'documentation.guidance' ||
+    key === 'documentation.ia' ||
+    key === 'documentation.navOwner'
+  ) {
     const configPath =
       effectiveSurface === 'user'
         ? join(userConfigDir, 'config.json')

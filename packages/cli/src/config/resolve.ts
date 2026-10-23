@@ -69,6 +69,8 @@ const DEFAULT_SHARED_CONFIG = {
   },
   documentation: {
     guidance: null,
+    ia: null,
+    navOwner: null,
     root: null,
     tooling: null,
     config: null,
@@ -573,6 +575,7 @@ function flattenConfig(value: unknown, prefix = ''): Record<string, unknown> {
 
 function isAtomicConfigLeaf(key: string, value: unknown): boolean {
   return (
+    key === 'documentation.ia' ||
     isWorkflowDispatchCandidateLadder(value) ||
     (key === 'workflow.postImplementSequence' &&
       isWorkflowPostImplementStructuredSequence(value))

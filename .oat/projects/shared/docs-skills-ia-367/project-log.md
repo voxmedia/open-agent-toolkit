@@ -63,6 +63,38 @@ docs367-p02-landing-authority-20261022: user authorized automatic bottom-up phas
 
 p02 passed final independent review with zero findings after two fix rounds; eight gates passed, recovery 0/10 pending null; next p03. docs367-p02-accepted-20261022
 
+### 2026-10-22 · structural · oat-project-implement · p03-concrete
+
+Made p03 concrete within approved Outcomes 4–5 and G2/G4: repository IA mirrors, authored decisions, IA-fit analysis, bounded restructure, explicit approval handoff and offline drift; p04 navigation and p07 templates remain deferred. docs367-p03-concrete-20261022
+
+### 2026-10-22 · structural · oat-project-implement · p03-handoff
+
+Verified clean p03 handoff with focused checks passed and full phase evidence pending; PR369 held for valid Bugbot M1; schedule p-rev2 after p03 to preserve anchors, then resume same p03 handle. docs367-p03-portability-handoff-20261022
+
+### 2026-10-23 · structural · oat gate review · p03
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:2 exit=0 status=ok artifact=.oat/projects/shared/docs-skills-ia-367/reviews/p03-review-2026-10-23T000851Z.md run=f11cc34a-2996-48df-9555-2577c6f79eaa
+
+### 2026-10-23 · structural · oat-project-implement · p03
+
+docs367-p03-accept-20261023: p03 accepted after three standard rounds and two fix continuations; external gate f11cc34a passed with two Low findings deferred to final. Recovery 0/10; next p-rev2. See implementation.md passing-gate receipt.
+
+### 2026-10-23 · structural · oat-project-implement · p-rev2
+
+docs367-prev2-pr369-wait-8235909: clean independent re-review and integrated gates passed; correction published to PR #369 at 823590911f8b6709a44d3c29e8e78f96db29c821; waiting for current-head CI, release dry-run and Bugbot under standing land-pr authority; phase remains in_progress and final PR remains held.
+
+### 2026-10-23 · structural · oat-project-implement · p-rev2
+
+docs367-prev2-accepted-ec1261f: p-rev2 passed, two review rounds and one fix continuation, recovery 0/10; PR #369 landed via land-pr after CI/Bugbot clear, merge ec1261f44f93d07bbc2926aa5680b7bfd777089e; final PR remains held.
+
+### 2026-10-23 · structural · oat-project-pr-progress · p03
+
+docs367-p03-pr371-open: opened https://github.com/voxmedia/open-agent-toolkit/pull/371 against main for accepted p03; integrated gates passed, all four independent product lenses covered, delivery awaits CI/Bugbot under land-pr authority; final PR held until project completion.
+
+### 2026-10-23 · structural · oat-project-implement · p-rev3
+
+PR #371 findings received; p-rev3 starts bounded G2 normalization correction, preserving prior anchors; Reviews table and accepted p-rev2 marker repaired. docs367-prev3-start-20261023
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

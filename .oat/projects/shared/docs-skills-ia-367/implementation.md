@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p03
+oat_current_task_id: p-rev3
 oat_generated: false
 oat_template: false
 ---
@@ -39,20 +39,22 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | pending   | 1     | 0/1      |
-| p04    | pending   | 1     | 0/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | in_progress | 1     | 0/1      |
+| p04    | pending     | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 3/10 phases accepted
+**Total:** 5/12 phases accepted
 
 ---
 
@@ -462,7 +464,330 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 
 ## Phase p03: Record and act on the IA
 
-**Status:** pending
+**Status:** completed
+**Base:** 63db688ca813ddfbbd01fcde7bf92b9b5a7e15ae
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+
+**Head:** 28887537aa3498293340bbc86f3f85772b4a9f09
+
+**Review-fix round 2 verification:** `docs367-p03-fix-r2-20261022` completed p03-t05/t06 sequentially, each with one bounded product commit, immediate committed-content checks and a separate task-journal commit. Null set input now rejects with a neutral diagnostic and declared bytes unchanged; stored-null IA/navOwner reads remain undeclared. The real-command regression fails pre-fix at accepted null (exit 1, 15 valid controls pass), then config suites pass before/after commit (654 tests). The round-1 ignored evidence has an explicit appended correction of its overbroad no-set-change claim. The analyze template now represents ahead and gives only older drift a package-upgrade command/stable explicit ID; all other sections are conserved. Helper/prose checks (6), isolated sentence contracts (1,087), scoped lint/types/build/format pass. Only three authorized product paths changed; normalizers, helper, versions, root receipts and p-rev2 remain untouched.
+
+**Review-fix round 2 gates:** Ordered gates 1/2 exit 0. Original gate 3 exits 1 on unrelated PJM temporary-HOME cleanup ENOTEMPTY (8,877 other CLI tests pass); its sole standing-protocol no-edit rerun under isolated HOME exits 0. Gates 4–8 then exit 0 in order, with fresh origin/main fetch before versions and all five 0.3.25 archives validated. Turbo cached counts: check 0/11, types 5/11, original test 5/12, successful test rerun 11/12, build 5/5, docs-build 6/6. Supplemental isolated-HOME `pnpm exec turbo run test --force` executes all 12 tasks (0 cached), including docs build; 9,229 package tests pass. Direct smoke 165, skill 707, script 1, validation, lint/format and p03 skill bumps against accepted p02 exit 0. Exact commands/exits, retained failure/rerun, regression patch, conservation and boundaries: ignored `analysis/p03/fix-r2/README.md` and `verification-summary.json`. No product recovery or reserved attempt: 0/10 used, 10 remaining, pending null. P03 stays in_progress for root re-review/external gate/acceptance.
+
+**Review-fix round 1 verification:** `docs367-p03-fix-r1-20261022` completed p03-t02/t03/t04 sequentially, each with one bounded product commit, immediate committed-content checks and a separate task-journal commit. The newer-installed helper and both stored-null regressions fail pre-fix for their intended status/read errors (exit 1) and pass fixed with valid/invalid/preservation controls. The real host shim fallback matches invoked oat/entry/manifest 0.3.22 and reads that installed bundle offline; newer app packages report ahead without a command. Bootstrap repair wording now names artifact plus approved IDs and individual explicit approval; its front door/stop conditions and root's L3 static-export settlement are preserved.
+
+**Review-fix gates:** Fresh ordered DoD 1–8, including fetch origin main before versions and all five 0.3.25 public archive validations, exit 0. Turbo cached counts: check 0/11, type-check 5/11, test 5/12, build 5/5, docs-build 6/6. Supplemental isolated-HOME `pnpm exec turbo run test --force` executes all 12 tasks with 0 cached, including docs build: 9,228 package tests pass. Direct smoke 165, skill 707, script 1, skill validation, full lint/format and the three p03 skill bumps against accepted p02 exit 0. Isolated sentence contracts pass before/after the prose commits (1,087 tests). Exact commands, exits, baseline probes and conservation notes: ignored `analysis/p03/fix-r1/README.md`, `commands.jsonl`, gate/supplemental manifests and `verification-summary.json`. Only seven authorized product files changed; existing versions are unchanged. Recovery stays 0/10, 10 remaining, pending null. P03 stays in_progress for root re-review/external gate/acceptance; p-rev2 portability is untouched.
+
+**Phase verification:** Same-handle continuation `docs367-p03-resume-verification-20261022` completed manual public synthetic Markdown/Fumadocs/MkDocs IA recording and no-record/misroute walkthroughs, both nav-owner restructure checks, inbound repair and exported old-URL stub recovery. Artifact-plus-ID blanket/unattended/individual outcomes were manually adjudicated from the shipped skill procedures; these are not automated agent tests. Raw-scaffold toolchain failures remain failed/manual; a separately prepared valid-toolchain fixture passes only G4's dependency update, supported migration and existing build verification, preserving protected config/routes/scripts. Real offline drift probes report old/current/unverified installed manifests. Source/conservation mapping and exact probes/exits are indexed in ignored `analysis/p03/README.md` and `manual-walkthrough.md`.
+
+**Ordered gates:** `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, fetch `origin main` then `pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs` all exit 0. Turbo cache counts respectively: 0/11, 5/11, 5/12, 5/5 and docs-build 6/6; cached output is not execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` executes all 12 tasks (0 cached), including docs build, and 9,226 package tests pass. Direct smoke 165, skill 707 and worktree script 1 tests; skill validation; full lint/format; and the p03 skill-bump check against accepted p02 all exit 0. `analysis/p03/verification-summary.json` and command manifests retain the exact checks, logs and explicit exits. Approval negative/valid controls remain prose guards, not execution guarantees.
+
+**Handoff for root review:** No new product edits, records, packaging bump or recovery attempt on resume; p03-t01/product `306ea28cbc450a8f97b356124a49f0e36b9107f1` and original Base remain fixed. Recovery 0/10 used, 10 remaining, pending null. P03 remains in_progress; independent phase review, external p03 gate and acceptance are root-owned. The inherited loaded-sibling portability finding remains pending in p-rev2 after p03 and was untouched.
+
+**Phase start:** Worktree `/Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367`, branch `docs/docs-skills-ia-367-p03`; the phase implementer is the sole committing owner after release. Precedence rung 3: no declared parallel group; root fan-out fails independence because config, shared skill/template contracts and verification outputs overlap. Scope is now concrete in the approved brief. Fresh main drift inspection found no changes in planned paths since branch base. P02 correctness, testing, documentation and supplemental complexity reviews are settled; remote CI/Bugbot remain monitored on PR #369. Public package version target 0.3.25, subject to main at verification. Recovery default/phase limit 10, durable usage 0, remaining 10, pending null. Root owns review/gates and PR landing.
+
+### Task p03-t01: Record IA and honor the analyze/apply contract
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-impl-20261022 (same accepted invocation)
+**Intent:** Compose G2 repository IA mirrors/authored authority with G4 approval handoff, bounded restructure and offline package drift; retain p04/p07 deferrals.
+**Files:** CLI config readers/resolver/config commands and relevant tests; docs analyze/apply/bootstrap skills, templates and production drift helper; three assigned public docs pages; five public package manifests and bundled version metadata.
+**Proof command:** Direct Vitest config/config-command suites and shared/validation sentence contracts under isolated HOME; node:test skill helper/prose contracts; CLI lint/type-check/build; changed-skill oxlint and changed-doc Markdown lint; file-scoped oxfmt. Manual walkthroughs and ordered repository gates are phase-wide evidence, pending root handoff/resume.
+**Recovery:** 0/10 used; 10 remaining; pending null. Effective dispatch base `9988b179788d9e29d7bce3703673291d04fab811`; original Base stays fixed.
+
+**Commit:** 306ea28cbc450a8f97b356124a49f0e36b9107f1
+
+**Outcome:** One 21-file product commit adds repository-only IA/navOwner read/write/repair and atomic resolution; authored-record/IA-fit/restructure/approval handoff instructions and templates; offline installed-package drift helper with a real analyze consumer; public docs; three PR-scoped skill bumps and lockstep 0.3.25 metadata/manifests. No authoring-method, nav engine, nonReaderPaths, scaffold defaults, page templates, lockfile or root authority changes.
+
+**Focused evidence:** `analysis/p03/README.md`, `owned-files.json` and `run-focused.py` index exact commands/logs/exits. Config/config-command 651 tests and shared/validation sentence contracts 1,087 tests pass, directly executed with isolated HOME (no Turbo cache). Helper/prose 6 tests, CLI lint/type-check/build, changed-skill oxlint, changed-doc Markdown lint and file-scoped format pass, all exit 0. Postcommit config/resolver 81 tests and helper/prose 6 tests pass (exit 0). Five independently neutralized approval clauses and pre-fix prose fail their text contract guards (exit 1); restored valid prose passes (exit 0). These guard shipped prose; no automated agent execution or fake apply engine is claimed. Precommit corrections consumed no recovery attempts.
+
+**Root handoff:** Root requested the next committed boundary for a separate p02 portability revision after Bugbot feedback. This task is committed; no task record remains open. Phase stays in_progress, original Base unchanged, no phase Head/acceptance recorded. Manual framework/Markdown IA, restructure/old-URL/owner and approval/tooling walkthroughs; ordered gates 1–8; forced whole-suite/tail execution; full lint/format; independent review and external p03 gate remain pending. Root owns the portability correction and will resume this same target/handle. Recovery 0/10, remaining 10, pending null. The ignored `analysis/p03/root-handoff-portability.json` marker transfers ownership; no further writer activity follows it.
+
+**Root handoff validation:** Verified p03-t01 product `306ea28cbc450a8f97b356124a49f0e36b9107f1` (21 owned paths), separate journal `8101e55402ae845ef1f5ece2683675dbfc8977d3`, clean tree and matching ownership marker. All focused/postcommit exit files reported 0; manual walkthroughs and full gates remain unverified. Recovery remains 0/10, pending null. The inherited p02 portability finding is recorded for the immediately following p-rev2; finish p03 verification first to preserve sequential anchors, then integrate the separately reviewed correction into PR #369.
+
+**Root pre-review validation:** Verified clean handoff d654e4934fe233addbbdf5c83aff9a8ecf58cd3b, Base-to-Head ancestry, exactly 21 owned product paths, and journal-only changes after candidate a8286fdc58dfd1e1d6f29f2207cf74737efd6927. All 17 explicit gate/supplemental exits are 0; raw Turbo summaries match the disclosed cache accounting, including 12/12 fresh forced tasks. Manual fixture and approval-prose limitations remain part of the review scope. P03-t01 is complete; p03 remains in_progress pending independent review and its configured external gate. Recovery stays 0/10, pending null.
+
+### Review Received: p03 (round 1)
+
+**Date:** 2026-10-22
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-22T231217Z.md
+**Reviewed Head:** a8286fdc58dfd1e1d6f29f2207cf74737efd6927
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 4
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before artifact validation; no Review Orchestration section is present. Anchors and severity schema match the requested p03 scope. All six findings stay within Outcomes 4–5, G2/G4 and p03 exit evidence; no later phase has a Base, so fixes advance p03 only. Independent correctness, test-value, docs-conservation, complexity and packaging lenses are covered by this review.
+
+- M1 (Medium): installed-newer packages are labeled drift with a downgrade command → fix p03-t02; Outcome 5 promises an upgrade, so numeric/version precedence must distinguish ahead from older and omit unsafe commands. Task Scope: Moderate.
+- M2 (Medium): stored null IA/navOwner blocks unrelated reads → fix p03-t03; G2 undeclared behavior and the non-opted-in constraint require null absence matching existing guidance behavior, while other invalid values remain rejected. Task Scope: Minor.
+- L1 (Low): pnpm oat shim defeats bundle lookup with an unusable fallback → fix p03-t02; give a verified running-install discovery path without registry lookup or a generic resolver. Task Scope: Minor.
+- L2 (Low): guidance docblock is attached above the IA normalizer → fix p03-t03; restore it to the guidance function. Task Scope: Negligible.
+- L3 (Low): static-export settlement lacks a tracked summary → addressed here as artifact alignment; the shipped stub strategy remains authoritative. Task Scope: Negligible.
+- L4 (Low): repair front door describes approval without artifact+IDs → fix p03-t04; state the existing G4 input and individual explicit approval locally. Task Scope: Minor.
+
+**Static-export settlement (L3):** Next static export does not apply next.config redirects/rewrites/headers (installed `apps/oat-docs/node_modules/next/dist/export/index.js:143-148`; public Next static-export unsupported-features reference cited in apply's restructure procedure). P4 therefore preserves old URLs through authored retained stubs/archive pointers and verifies their links and anchors under the real base path; host redirects are manual when app/host configuration is needed. No not-found.tsx mutation is allowed by the tooling carve-out. The manual exported stub/link control supports this answer; it does not prove host redirects.
+
+**Outcome:** fixes completed: p03-t02, p03-t03, p03-t04; independent re-review pending. Review-fix round 1; recovery remains 0/10, pending null. External p03 gate and acceptance remain pending. Inherited p02 portability remains queued in p-rev2 and PR #369 is held.
+
+### Task p03-t02: (review) Report safe package upgrades and locate shim bundles
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M1, L1)
+
+Intent: distinguish installed-newer from an actual upgrade without ever emitting a downgrade as an upgrade; update the analyze consumer and bounded apply wording if needed. Give shim users an actionable discovery path verified against the invoked CLI version, preserving offline metadata provenance and dependency section.
+Files: `.agents/skills/oat-docs-analyze/scripts/package-drift.mjs`, `.agents/skills/oat-docs-analyze/tests/package-drift.test.mjs`, `.agents/skills/oat-docs-analyze/SKILL.md`; `.agents/skills/oat-docs-apply/SKILL.md` only if the carve-out needs matching no-downgrade wording.
+Proof: real-helper newer/older/equal/missing regression and valid controls, pre-fix failure at the intended assertion, numeric ordering/prerelease ambiguity handled safely, documented shim-discovery command executed against this host's actual install. Keep tests at the public helper boundary with literal expected outcomes; no own-reader mocks or new resolver runtime.
+
+**Commit:** 30d58ef98da5038794b68bc913b8d1820337317d
+
+**Evidence:** `analysis/p03/fix-r1/t02-red` preserves the baseline regression failing at installed 0.3.26: drift versus literal ahead (exit 1); fixed and immediate postcommit real-helper/prose suites pass (6 tests, exit 0). Numeric 0.3.9/0.10.0, prerelease/unknown, older/equal/missing and dependency-section controls pass. Existing isolated sentence contracts (1,087), scoped oxlint and format pass. The documented offline shim fallback was executed against this host: invoked oat, inspected JavaScript target and manifest all 0.3.22; its actual bundle reports installed app packages 0.3.25 as ahead with null command. Analyze requests intended CLI selection/update; apply explicitly forbids downgrade. No resolver framework or registry lookup added.
+
+### Task p03-t03: (review) Preserve undeclared null mirrors and restore guidance comment
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (M2, L2)
+
+Intent: stored null ia/navOwner means undeclared; unrelated real reads succeed and mirrors return null/default. Preserve rejection and repair for all other invalid values and shared-only mirror scope. Move the guidance docblock back to its function.
+Files: `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/ia.test.ts`.
+Proof: real storage/config command regressions for both null keys fail on pre-fix code and pass after; invalid stored mirror and scope/unknown-field controls remain passing. No broader set/null semantics expansion is required.
+
+**Commit:** 36748f867a5adecc0b6def19cf993860f710e7d0
+
+**Evidence:** `analysis/p03/fix-r1/t03-red` fails both real null-key rows at unrelated config get (exit 1; 13 existing controls pass). Fixed and immediate postcommit config/config-command suites pass (653 tests, exit 0), preserving other valid mirrors, guidance/future bytes, invalid-value repair and shared-only behavior. CLI lint/type-check/build and scoped format exit 0. Only the two stored-value normalizers accept null as absence; the guidance docblock is restored.
+
+### Task p03-t04: (review) Name artifact and IDs at bootstrap repair handoff
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r1-20261022 (original accepted handle)
+**Source review:** reviews/archived/p03-review-2026-10-22T231217Z.md (L4)
+
+Intent: the repair bullet explicitly hands off an analysis artifact plus approved recommendation IDs, with explicit items individually approved, matching G4 and Step 7b.
+Files: `.agents/skills/oat-docs-bootstrap/SKILL.md`.
+Proof: conservation read and existing isolated-HOME skill sentence contracts; no new prose-change-only test required.
+**Commit:** d2d7e2fd61762c61448ea0258886992e0ea460a4
+
+**Evidence:** Conservation diff changes only the Allowed mutations bullet to the G4 artifact-plus-approved-IDs input, retaining the repair route, preserved state and both stop conditions. Existing isolated-HOME sentence contracts pass before and immediately after commit (1,087 tests, exit 0); scoped lint/format pass. No new prose-only test or version bump.
+
+**Root fix-report validation:** Verified clean handoff 00e5d9672ae6b2005b785183b7664739e6d2fc08, three bounded product commits and separate journals, seven authorized product paths, fixed Base ancestry and journal-only changes after candidate 366218ea358a908e5e5849c375df90bd2c53be94. Inspected all 17 explicit gate/supplemental exit files (0), raw cache summaries including 12/12 fresh forced tasks, and the pre-fix regression exits (1). Existing PR-scoped versions remain unchanged. P03 stays in_progress for re-review and external gate; recovery 0/10, pending null.
+
+### Review Received: p03 (round 2)
+
+**Date:** 2026-10-22
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-22T233634Z.md
+**Reviewed Head:** 366218ea358a908e5e5849c375df90bd2c53be94
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before artifact validation; no Review Orchestration section. Anchors/provenance and count sources match. The re-review closes all six round-1 findings, with full-phase coverage inherited from that event and changed-boundary probes recorded independently. Both new findings are narrow composition regressions within G2/G4, not new requirements. No later phase has a Base, so fixes remain in p03.
+
+- R2-L1 (Low): shared stored-read/set normalizer now accepts `config set documentation.ia null`, removes the mirror and misreports shared provenance → fix p03-t05; restore the original invalid-JSON-shape rejection and byte preservation at the set boundary, retaining stored-null-as-undeclared reads. Task Scope: Minor.
+- R2-L2 (Low): analysis artifact template omits ahead and implies every package has a tooling recommendation → fix p03-t06; align template statuses and conditional package commands/recommendation IDs with the existing helper and skill. Task Scope: Minor.
+
+**Evidence correction:** The p03-t03 claim that only stored-value behavior changed was too broad: the normalizer also serves `config set`. Round 2 reproduced that untested side effect. That earlier claim is superseded by this receipt and the p03-t05 set-boundary correction; preserve the historical pre-fix evidence and add the new command regression. `unset` remains the intended mirror-removal operation. No documentation of a new set-null behavior is authorized.
+
+**Outcome:** all round-1 findings closed; fixes queued: p03-t05, p03-t06. Review-fix round 2, with one standard independent review round remaining under the three-cycle cap. Recovery remains 0/10, pending null. External p03 gate and acceptance remain pending; p-rev2/PR #369 portability correction remains untouched.
+
+### Task p03-t05: (review) Reject null IA set without affecting stored absence
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r2-20261022 (original accepted handle)
+**Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L1)
+
+Intent: reject JSON null at the real documentation.ia set boundary with a neutral invalid-value diagnostic, preserving declared config bytes; keep stored null ia/navOwner undeclared and readable. Preserve unset, valid set, invalid repair, scope and unrelated fields. Correct the earlier overly broad no-set-change evidence by an explicit appended correction.
+Files: `packages/cli/src/commands/config/index.ts`, `packages/cli/src/commands/config/ia.test.ts`; ignored `analysis/p03/fix-r1/README.md` correction plus new `analysis/p03/fix-r2/` proofs.
+Proof: one real-command regression starts with a declared IA, set documentation.ia null is rejected with bytes unchanged; fails on immutable pre-fix code at the intended acceptance/removal error, then passes. Existing stored-null, valid set/unset/invalid repair controls remain passing.
+
+**Commit:** 65218cfd8d1b4aa3e4cdf7488e76667e38aea0ad
+
+**Evidence:** `analysis/p03/fix-r2/t05-red` fails at null set returning ok instead of a neutral invalid-value error (exit 1; 15 controls pass). Fixed and immediate committed-content config suites pass (654 tests, exit 0); byte preservation, valid set/unset, stored-null reads, repair and scope controls survive. CLI lint/types/build and focused format exit 0. The set validator alone rejects null; normalizers and navOwner behavior are unchanged. The ignored round-1 README now explicitly corrects the earlier no-set-change claim, preserving history.
+
+### Task p03-t06: (review) Align package-drift template with ahead results
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p03-impl-20261022
+**Handle:** docs367-p03-fix-r2-20261022 (original accepted handle)
+**Source review:** reviews/archived/p03-review-2026-10-22T233634Z.md (R2-L2)
+
+Intent: package status includes current/drift/ahead/unverified. Only actual older-package drift gets a package-upgrade recommendation ID and command; ahead asks to select/update the CLI before re-analysis and unverified needs manual verification. Current needs no tooling recommendation. Keep the existing stable IDs and explicit approval contract.
+Files: `.agents/skills/oat-docs-analyze/references/analysis-artifact-template.md`.
+Proof: prose conservation and existing helper/sentence contracts; no new copy-only test or resolver mechanism. The existing helper may report a current-version reinstall command, but this template need not recommend executing it.
+**Commit:** 83d893d3feb58befb4141b85c4321d29b3f6bf82
+
+**Evidence:** Conservation diff is confined to Offline Package Drift: ahead is representable; only older drift receives an upgrade command and stable explicit ID; current has no tooling recommendation; ahead selects/updates the intended CLI before re-analysis; unverified requires manual verification. Existing helper/prose checks (6 tests) and isolated sentence contracts (1,087) pass before and immediately after commit, all exit 0; scoped lint/format pass. No new copy-only test, helper edit or version bump.
+
+Root round-2 fix validation: verified the three product paths, bounded task commits and journal-only final tip `103e41f31b74651277641d8f395494b4ae323453`. Null rejection is confined to set input; stored-read semantics are unchanged. Reviewed pre-fix failure, fixed controls, all raw gate exits, retained PJM cleanup failure/no-edit rerun, and forced 12-task execution with zero cache replays. Both round-2 findings are fixes_completed; candidate Head `28887537aa3498293340bbc86f3f85772b4a9f09`. Final standard independent review round 3/3 and external p03 gate remain pending. Phase in_progress, recovery 0/10 pending null.
+
+### Review Received: p03 (round 3)
+
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-23T000325Z.md
+**Reviewed Head:** 28887537aa3498293340bbc86f3f85772b4a9f09
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` signal before validation; no Review Orchestration section. Exact phase anchors, narrowed provenance and severity sources agree. Independent reviewer closed R2-L1 (set null rejected with bytes preserved; stored-null reads and unset preserved) and R2-L2 (ahead represented, only older drift recommends an upgrade). The reviewer executed 654 config tests, helper/approval tests, 1,087 sentence contracts and changed-file format checks, and independently probed invalid inputs, unchanged bytes and stored absence. Other full-phase coverage is explicitly inherited from rounds 1–2. The retained gate-3 cleanup failure and successful no-edit rerun are disclosed; fresh proof is the forced 12-task run, 9,229 package tests, zero cache replays.
+
+**Outcome:** standard review passed, no new fixes or deferrals. Three standard review rounds consumed, two fix continuations; recovery 0/10 pending null. P03 remains in_progress until the configured external phase gate passes and its findings are dispositioned. P-rev2/PR #369 correction follows acceptance. Intermediate PRs use land-pr when clear; final PR held until project completion.
+
+### Review Received: p03 (passing external gate)
+
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-23T000851Z.md
+**Reviewed Head:** 28887537aa3498293340bbc86f3f85772b4a9f09
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Gate f11cc34a-2996-48df-9555-2577c6f79eaa exited 0, status ok, receiveEligible true and non-null handoff; configured claude-opus-5-5-high / Claude / high, source exec-target-config. Artifact invocation/run/project corroboration matched. The original completion used invalid reconnaissance wording; before validation or receive mutation, root resumed the same Claude session 008bf1f7-e1bb-4aca-b99d-c1e0d98e1c64 for reporting only, no tools/new review, and consumed exactly one corrected `**Reconnaissance:** not-attempted` signal. No Review Orchestration section. Gate-produced commits a42767835 and db1e07ed9 are preserved.
+
+Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and p01 E13:
+
+- Gate-L1 (Low), helper package-drift.mjs reads only app/node_modules, so hoisted workspace installs report unverified instead of drift: defer to final. Root confirmed the path; the failure emits no wrong upgrade. Ancestor resolution adds filesystem-search and precedence cases, so settle and validate it in final integrated helper review rather than extending this passing gate. No blocking task queued.
+- Gate-L2 (Low), shim-discovery commands are missing narrow allowed-tools grants: defer to final. Root confirmed the procedure and frontmatter mismatch; discovery is read-only and explicit operator permission remains available. Correct the grants or use existing Read/node tools in the final integrated skill contract pass, after remaining analyze edits; no new privilege or silent bypass is accepted. No blocking task queued.
+
+**Phase acceptance:** P03 accepted: three standard review rounds, two fix continuations, final standard review 0/0/0/0, configured external gate passed at high threshold, both sub-threshold findings durably deferred to final. All required verification evidence is recorded above with cache/flake limitations. Recovery 0/10, pending null. Original Base and final Head frozen. Next p-rev2 corrects p02 and unblocks PR #369; final PR remains held until project completion.
+
+## Phase p-rev2: Preserve loaded skill bindings
+
+**Status:** completed
+**Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
+**Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Corrects:** p02
+
+**Phase acceptance and landing:** p-rev2 accepted after two independent review rounds and one fix continuation, all findings closed, all integrated gates and forced verification passing. Final live sweep confirmed all three checks SUCCESS at 823590911f8b6709a44d3c29e8e78f96db29c821, Bugbot explicitly completed with no issues, no unresolved thread, no pending review request, and no branch protection/rules requiring approval. Base/head were unchanged through the sweep. Plain land-pr used the established merge-commit method with an atomic expected-head guard, no admin/auto/delete. GitHub confirms PR #369 MERGED at 2026-10-23T02:00:29Z, merge commit ec1261f44f93d07bbc2926aa5680b7bfd777089e. Watch stopped. Recovery remains 0/10 pending null; original Base/Head frozen. Next: integrate main, open/deliver accepted P03, then concretize p04. Final PR held until project completion.
+
+**Post-publication verification:** Supplemental integrated p02 forced run finished with exit 0, 12/12 Turbo tasks executed and zero cached; 8,862 CLI plus 351 supporting-package tests pass, alongside the docs suite. This supersedes the earlier pending status; exec session 67873 is finished. Raw integrated logs/results are copied into this worktree's ignored `analysis/p-rev2/p02-delivery/`. Current-head Bugbot SUCCESS and release dry-run SUCCESS are verified on 823590911; updated Cursor summary 6352792304 contains no new finding, and review 5623021473 is for the same head. CI remains IN_PROGRESS. No further PR edit, duplicate reply or merge is warranted until CI finishes.
+
+**Continuation:** optional supplemental forced run remains in exec session 67873, launched by `/tmp/oat-docs367-p02-delivery-gates.py` in the p02 checkout. On wake, read its `analysis/p-rev2/p02-delivery/results.jsonl` and logs; do not duplicate it or credit pending output. All required integrated gates and direct checks already passed. Resume the same plain land-pr cycle with a full new-head comment/thread/check sweep.
+
+**P02 delivery integration:** Root created bounded checkout `/private/tmp/oat-docs367-p02-binding-fix` on `docs/docs-skills-ia-367-p02`; worktree initialization completed with a warning after optional archive sync was interrupted, and its generated-only manifest version refresh was reverted. Three product cherry-picks map b7a82ef1 → b308375ac, a12e8edf → 17a4935a2, 3b96afe3 → ba778e0e9. All applied cleanly. Root inspected the exact six-path correction diff: P03 content was not copied, source precedence is conserved, guard/reference bytes equal the independently reviewed candidate, and all original anchors remain frozen. No version bump beyond existing PR-scoped five skills/public 0.3.24 is required.
+
+Integrated gates 1–8, lint, format, five binding guards and 1,087 isolated-HOME sentence contracts pass with explicit zero exits and no retries. Gate 3 executes every package/docs test suite fresh (8,862 CLI and 351 supporting-package tests); its five cached tasks are dependency builds. Cache/executed counts: check 0/11, types 5/6, test 5/7, build 5/0, docs-build 6/0, lint 5/5, format 5/5. Old five-site text fails (exit 1), manual eleven-case fixture passes (exit 0); this is prose/manual evidence. Supplemental forced run is pending and is not credited here. Evidence is in the p02 checkout's ignored `analysis/p-rev2/p02-delivery/`. Main advancement #370 touches only AGENTS.md; root inspected its instructions and confirmed no correction-path overlap.
+
+Normal push published PR #369 head `823590911f8b6709a44d3c29e8e78f96db29c821`; bookkeeping commit 823590911 records the correction without backporting P03 tracking. Root replied to original Bugbot discussion_r4354277626 with published commits and test limits (reply discussion_r4355350794), then resolved that supported thread. CI, release dry-run and Bugbot started for the new head. Phase remains in_progress until external delivery clears. Landing ledger: mode=land; independent stage=complete via lifecycle reviews (no added review-and-land loop); expected CI/release/Bugbot; method=merge commit, matching #368; head guard required; no open finding after supported closure, fresh sweep still required. Final PR held until project completion.
+
+### Review Received: p-rev2 (round 2)
+
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-10-23T013602Z.md
+**Reviewed Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Root consumed exactly one `**Reconnaissance:** not-attempted` completion signal before validation; the artifact has no Review Orchestration section. Full original Base/Head anchors and auto invocation match. Round 2 closes M1 (the fifth p02 load site, wrapper binding) and L1 (validated-root reuse and self-root handling without reload). All five p02 load sites bind loaded sibling → user → repository; two older ambient mentions predate p02 and require no p02 asset, so the reviewer correctly excludes them from this correction. No new findings or requirement changes.
+
+Independent reviewer executed current/candidate guards, immutable prior-head and intermediate controls, seven distinct mutations, a valid reflow control, and eleven manual shell cases. These support prose contracts and manual behavior only, not automated agent/provider discovery. Earlier unchanged coverage is inherited explicitly; ordered gates were inspected, with the six integration timeouts, no-edit retry and forced 12/12 uncached run disclosed. Root accepts the review result with no fix tasks or new deferrals. Round-1 event remains fixes_completed; round 2 is a separate passed event. One fix continuation, two review rounds; recovery 0/10 pending null.
+
+**Delivery condition:** phase remains in_progress until the reviewed product corrections are composed into PR #369, integrated gates pass and CI/Bugbot clear. Root will cherry-pick only the three product commits into the isolated p02 checkout, preserving accepted P03 changes and all original anchors. Intermediate delivery uses land-pr; final PR stays held until project completion.
+
+**Root fix handoff validation:** Verified 8c39b5c6b40032281a6cebde72a93ff95a70be60 clean handoff; exact three-path product boundary, two bounded product commits with separate journal commits, journal-only tail and original Base unchanged. Root reran five prose guards and manual wrapper/reuse/self-root/fallback controls. All successful gates have explicit zero exits; initial six integration timeouts and unchanged passing retry are preserved, with forced 12/12 uncached proof. M1/L1 task records completed; no new guarantee or version change. Recovery 0/10, pending null. Re-review pending.
+
+**Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
+
+**Fix round 1 verification:** Continuation `docs367-prev2-fix-r1-20261023` of `docs367-prev2-impl-20261023` completed queued prev2-t02/M1 and prev2-t03/L1 sequentially, each with a bounded product commit, immediate committed-byte/guard/controls/manual checks and a separate journal commit. The wrapper now binds its loaded sibling before authoring use; the reference reuses validated/self roots without recursive reload and reserves exact loaded → user → repo probing for unbound consumers. Five prose guards pass; immutable old wrapper/four-site controls, order mutations and pre-reuse reference controls fail for their intended reasons. The actual temporary walkthrough covers wrapper assets, established-root reuse, self-root validation/use/failure and unchanged fallbacks/no-match; this is manual/prose evidence, not agent execution or verified ambient provider discovery. Ordered DoD gates 1/2 pass; initial gate 3 exits 1 on six unrelated CLI integration timeouts (8,872 other CLI tests pass), then the single permitted no-edit isolated-HOME rerun exits 0 with all 8,878 CLI tests passing; gates 4–8 pass afterward, including a fresh origin/main fetch before version checks and five 0.3.25 archive validations. Turbo cached/executed counts: check 5/6, types 5/6, initial test 5/7 (failed), successful retry 11/1, build 5/0, docs-build 6/0. Supplemental isolated-HOME forced Turbo executes all 12 tasks with zero cached, including builds: 9,229 package tests and 85 docs tests pass. Direct isolated smoke 165, skill 712 and script 1 tests plus skill validation pass. Full lint/format pass before each product commit and at phase close; final workspace lint/format replay 10 tasks each while root passes execute. Isolated sentence contracts pass before each product commit and at close (1,087 each). Conservation preserves IA source precedence, P03 clauses and all other consumer bytes; only the three authorized product paths changed, with no runtime helper, version change or mechanical scope expansion. Original Base/earlier anchors, state/plan, root receipts and other phases are unchanged. One no-edit verification retry, no product recovery events; recovery 0/10, 10 remaining, pending null. Exact commands/exits, retained failure and retry, fresh/cache counts, immutable controls, conservation and committed-byte proof: ignored `analysis/p-rev2/fix-r1/README.md` and `results.jsonl`. Phase remains in_progress for root independent re-review, delivery and acceptance.
+
+Execution shape: one phase implementer owns commits in the existing root worktree on docs/docs-skills-ia-367-p03. No parallel group is declared; the four prose bindings and their shared regression contract are one semantic correction and share evidence/build output, so they fail the independent-slice test. Root retains delivery integration into PR #369, review, acceptance and landing. Main fetched before start; no planned-path changes since the branch base. P03 is accepted with frozen anchors; p-rev2 starts after it, preserving sequential continuity.
+
+### Task prev2-t01: Preserve the loaded authoring-docs binding
+
+**Status:** completed
+**Commit:** b7a82ef1eeadec1bf3d289caca76721548faba18
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-impl-20261023 (current implementation session)
+**Intent:** Probe each exact authoring-docs/SKILL.md loaded sibling → user → repository, bind the first skill directory once, and preserve guidance precedence and accepted P03 behavior.
+**Files:** `.agents/skills/authoring-docs/references/guidance-sources.md`, `.agents/skills/oat-docs-analyze/SKILL.md`, `.agents/skills/oat-docs-bootstrap/SKILL.md`, `.agents/skills/oat-docs-apply/SKILL.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** `node --test .agents/skills/authoring-docs/tests/skill-binding.test.mjs`; immutable pre-fix text control and temporary mixed-scope manual/prose walkthrough; ordered repository gates and fresh supplemental coverage.
+**Launch base:** d94a537a88ecf5285123080657706f397229dec2 (release marker verified against clean HEAD).
+**Recovery:** 0/10 used, 10 remaining, pending null.
+
+**Task verification:** Four shipped-prose binding contracts pass before and immediately after commit; the same guard fails all four immutable anchor files specifically for the missing loaded-sibling tier (exit 1). A temporary mixed-scope manual/prose fixture reproduces the older user skill's missing new reference/helper and confirms loaded selection plus complete user/repo fallback controls and the no-match stop. This is not automated agent execution. Byte conservation outside the four binding paragraphs preserves guidance-source precedence and P03 approval/restructure/drift clauses. The product commit is exactly one commit after launch HEAD, owns only the five declared paths, and matches pre-commit tested bytes after hooks. No helper runtime, version changes or mechanical scope expansion.
+
+**Phase verification:** Ordered DoD 1–8 all exit 0: check, type-check, isolated-HOME test, build, skill-bumps, fetch origin main then release version check, public archive validation, docs build. Turbo cached/executed counts: check 5/6 (11 total), types 5/6 (11), test 5/7 (12), build 5/0 (5), docs build 6/0 (6); replay is not execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` freshly executes all 12 tasks with 0 cached, including docs build: 9,229 package tests plus 85 docs tests pass. Direct isolated smoke 165, skill 711 and script 1 tests pass; skill validation, lint and format exit 0. Isolated shared/validation sentence contracts pass before and after commit (1,087 tests each). Initial lint executes 10 tasks; initial format executes 5 and replays 5; committed lint/format replay 10 tasks each while their root checks run. No unexpected failures or flake retries; recovery 0/10, 10 remaining, pending null. Exact commands/exits, cache accounting, immutable controls, manual fixture, conservation and committed-byte proof live in ignored `analysis/p-rev2/README.md`, `results.jsonl`, `verification-summary.json` and `committed-bytes.json`. P-rev2 remains in_progress for root independent review, integration, delivery and acceptance.
+
+### Review Received: p-rev2 (round 1)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p-rev2-review-2026-10-23T004632Z.md
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 1
+
+- M1 (Medium): oat-docs-authoring still loads authoring-docs ambiently, including the p02-only guidance reference → fix task prev2-t02. The approved phase Intent says all equivalent p02 call sites; the earlier four-site receipt was an incomplete inventory, not a scope restriction. The wrapper was changed and bumped by p02, so the same stale-copy failure is already in scope. No new guarantee or version bump is required.
+- L1 (Low): guidance-sources repeats a self-load and says handoff when authoring-docs itself is loaded → fix task prev2-t03. Reuse the already bound root (or the current authoring-docs root), preserving exact-file validation and fallback for unbound consumers.
+
+Exactly one `**Reconnaissance:** not-attempted` signal was consumed before validation; no Review Orchestration section exists. Artifact anchors match the committed phase range. Reviewer independently reproduced guard failures against immutable prose, tier-swap/drop mutations and the manual fixture; full gates inspected, not rerun. Provider ambient precedence was not verified and is not needed for the accepted explicit-binding contract.
+
+**Outcome:** fixes completed: prev2-t02, prev2-t03; independent re-review pending. P-rev2 remains in_progress; original Base unchanged. Round 1/3 consumed; recovery remains 0/10, pending null.
+
+### Task prev2-t02: (review) Bind the authoring wrapper to its loaded sibling
+
+**Status:** completed
+**Commit:** a12e8edf45ac99d0e0f7543f508b53205f89a1e3
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-fix-r1-20261023 (same implementation continuation)
+**Launch base:** a6a8cda7632bbb89980ad50cb1bcdb3ff3193672
+**Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (M1)
+
+**Intent:** Correct both ambient authoring-docs loads in the p02 wrapper using the existing exact loaded → user → repo binding and consistently bound guidance reference. Preserve targeted-authoring boundaries and guidance-source precedence.
+**Files:** `.agents/skills/oat-docs-authoring/SKILL.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** Expanded prose guard fails immutable pre-fix wrapper for the missing loaded tier and passes fixed; mixed-scope fixture and sentence contracts remain valid.
+
+**Verification:** Five shipped-prose guards pass; immutable old wrapper fails only for the missing loaded tier, original four immutable controls still fail, and tier-swap/repo-drop mutations fail for order. The temporary manual/prose fixture covers the wrapper's modeled stale-user outcome (not provider discovery) and successful loaded binding with both assets, plus existing loaded/user/repo/no-match controls. Full lint/format and isolated sentence contracts (1,087) pass before commit. Immediate committed guard/controls/manual checks pass, and exact two-path committed bytes equal tested bytes. Conservation leaves wrapper targeting, source precedence and all three previously fixed consumers unchanged. No runtime helper, version change, recovery attempt or failure. Evidence: ignored `analysis/p-rev2/fix-r1/`, prefixed `t02-` logs and `prev2-t02-committed-bytes.json`.
+
+### Task prev2-t03: (review) Reuse an established authoring root in the guidance reference
+
+**Status:** completed
+**Commit:** 3b96afe3647c3650b9b719d2dbc1df30b05081d1
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-fix-r1-20261023 (same implementation continuation)
+**Task base:** f63eed037713be1396731a5bc3e874a4063e5158
+**Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (L1)
+
+**Intent:** Make the guidance reference reuse a validated authoring-docs binding, including when authoring-docs is the loaded skill, and reserve the fallback/stop wording for unbound consumers. Preserve lookup order and guidance selection.
+**Files:** `.agents/skills/authoring-docs/references/guidance-sources.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
+**Proof command:** Prose contract and manual bound-root/self-root controls; unchanged fallback and source-precedence controls.
+
+**Verification:** Five prose guards pass with a distinct reuse/self-root contract for this reference and unchanged exact-probe/order/root-reuse/no-match coverage for unbound consumers. The pre-fix reference fails specifically for missing validated-root reuse; immutable four-site and wrapper controls plus meaningful tier mutations still fail. The actual temporary manual/prose fixture accesses assets through an established root without rebinding, validates/binds the loaded authoring-docs self root without reload, stops on failed self validation, and preserves wrapper/loaded/user/repo/no-match controls. This is shell transcription, not agent execution or verified provider discovery. Lint/format and isolated sentence contracts (1,087) pass before commit; immediate committed guard/controls/manual checks pass, with exact two-path tested bytes preserved by hooks. Byte conservation preserves IA guidance selection, helper invocation and all surrounding clauses; analyze/bootstrap/apply remain entirely unchanged. No runtime, versions, recovery or unexpected failure. Evidence: ignored `analysis/p-rev2/fix-r1/`, prefixed `t03-` logs and `prev2-t03-committed-bytes.json`.
+
+## Phase p-rev3: Validate normalized IA paths
+
+**Status:** in_progress
+**Base:** 130f8c0521e3e03704680fb3237898a46335cfac
+**Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
+**Executor:** phase-implementer:docs367-prev3-impl-20261023
+**Corrects:** p03
+
+Phase start: one committing phase implementer, shared existing checkout; no nested dispatch or parallel group. The two paths share one guard and regression boundary, so independent implementation lanes would overlap. Root owns ledger repair, review receipt, acceptance and PR landing. Main fetched at phase start; no main advancement in the two product paths. Preserve p03/p-rev2 anchors. Recovery 0/10, pending null.
+
+Root remote-review receipt (PR #371 review 5623136468, reviewed head 130f8c0521e3e03704680fb3237898a46335cfac): 0 Critical, 0 High, 1 Medium, 1 Low. M1 discussion_r4355448299 confirmed: blank line split p-rev2 event rows; removed it without altering any event cells. Status metadata also relocated directly under the p-rev2 heading so accepted status is readable, preserving its values and history. L1 discussion_r4355448304 confirmed against G2: raw traversal checks allowed leading-space escapes later trimmed into stored decision/track paths; queued as prev3-t01 within accepted contract. No new requirement or version increment. Remote review has no OAT provenance marker. Cursor summary is informational.
+
+CI run 39888000833 failed independently at agents-md.test.ts: two real processes returned appended/blocked rather than appended/no-change. Neither that module nor test changed in this PR. Preserve the failed run; inspect/rerun the existing focused test during verification, without changing unrelated code or timeouts. Final-head CI must pass before landing.
+
+**Verification:** Pre-fix real-command regression exited 1: all six padded traversal decision/track rows incorrectly returned ok; 17 existing/control cases passed, including valid padded paths. Post-fix focused config suites passed 661 tests (14 files, exit 0). CLI lint/build and the corrected branch-built CLI probe exited 0; six traversal inputs reject without changing config bytes, and valid padded paths store trimmed and read back successfully. The probe's first scratch setup omitted Git initialization and failed its valid control; corrected setup passed, both logs retained. No product correction was needed after the task commit.
+
+Ordered DoD gates 1–8 all exited 0, with isolated HOME and successful fetch before gate 6. Turbo cached/total: check 8/11, types 9/11, test 9/12, build 5/5, docs build 6/6. Gate 3 freshly ran 8,885 CLI tests and the docs suite; four supporting-package test suites replayed. Direct smoke 165, skill 712 and script 1 passed freshly. Supplemental isolated-HOME `pnpm exec turbo run test --force` exited 0, executing all 12 tasks with zero cached; 8,885 CLI plus 351 supporting-package tests and the docs suite passed freshly. No verification retry or recovery attempt was used.
+
+The unchanged `agents-md.test.ts` focused run passed all 71 tests (exit 0), including the two-process appended/no-change assertion; the earlier CI failure remains preserved history. No unrelated source or timeout edits. Existing PR-scoped 0.3.25 versions suffice; no instruction changes needed. Root relayed Warp review 5623152090 / discussion4355461672 as independent confirmation of the same G2 defect, without expanding scope. Exact probes, commands, explicit exits and raw logs are ignored under `analysis/p-rev3/`. Recovery remains 0/10, pending null. Phase remains in_progress for root's independent review and acceptance; no child PR action.
+
+**Root pre-review validation:** Clean handoff bab933fb0486684f89544ad222fb9279a12c7034 verified. Product 05b5043cdf0de2b43fa99135e23c218f91b650c3 changes exactly oat-config.ts and ia.test.ts; two following commits are p-rev3 journal only. Root read the complete product diff, controls, gate exit manifests and verification summary. Six decision/track rows exercise leading/trailing whitespace and slash/backslash traversal through the real config command, preserve exact declared bytes on error, and have a literal valid padded round-trip. The correction checks the trimmed string consistently with its stored value; no other contract expanded. All eight ordered gates have explicit exit 0; forced proof executes all 12 tasks with zero cached, while ordinary gate cache counts remain disclosed. Agents-md focused 71/71 passes; historical CI run remains failed. Independent review and final-head CI/Bugbot remain required.
+
+Warp review 5623152090 (CHANGES_REQUESTED), source head 130f8c0521e3e03704680fb3237898a46335cfac, was read fully by root: one important finding discussion_r4355461672 independently confirms Cursor L1; no additional findings. Disposition: fixed by prev3-t01, pending independent verification and publication; no new task or requirement. Root will reply on both original threads after publication. Cursor M1's event cells were preserved byte-for-byte apart from formatting, and CLI status now reads both p-rev2 events plus 5/12 accepted phases. Remote review provenance remains unknown.
+
+### Review Received: p-rev3 (round 1)
+
+**Review artifact (local-only):** reviews/archived/p-rev3-review-2026-10-23T023450Z.md
+**Reviewed Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+Root read the complete artifact and consumed exactly one `**Reconnaissance:** not-attempted` signal before validating scope/anchors; no Review Orchestration section or orchestration log entry applies. The review independently confirms G2 path correction, meaningful real-command regressions, old/new guard controls, valid padded round-trip, ledger conservation and unchanged product tails. The 23/23 focused tests ran freshly; full gates were inspected, not rerun. No new canonicalization guarantee is required: interior-space path components remain literal names under the accepted scope.
+
+L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, matching the 12-row table, state and CLI; no product change or new test is warranted for that one-line correction. Historical review event is fixes_completed, preserving that it found L1; verdict passed and all dispositions settled. No repeated full review is needed for the ledger correction. No external phase gate is selected for p-rev3 (brief selects p03 and p06 only). Local verification/review are complete; phase remains in_progress only until its explicit PR #371 CI/Bugbot delivery condition clears. Prior phase anchors remain frozen, recovery 0/10 pending null. Final PR remains held until project completion.
+
+### Task prev3-t01: Reject traversal after IA path trimming
+
+**Status:** completed
+**Commit:** 05b5043cdf0de2b43fa99135e23c218f91b650c3
+**Executor:** phase-implementer:docs367-prev3-impl-20261023
+**Intent:** Apply every existing repository-relative path check to the trimmed decision and track path; preserve G2 behavior outside this validation correction.
+**Files:** `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/ia.test.ts`.
+**Proof:** Isolated-HOME focused config command/config suites, pre-fix failing command regression and valid padded control, branch-built CLI probe, and ordered DoD gates 1–8 with explicit exits and cache disclosure.
+**Handle:** docs367-prev3-impl-20261023; exact target codex_codex_proxy/gpt-6.1-sol/medium/priority. Recovery 0/10, pending null; root owns lifecycle transitions.
 
 ---
 
@@ -503,6 +828,18 @@ Root final-fix validation: verified product `7f6ee861b5bee201f636d80dcae74b78711
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-prev3-review-r1-20261023 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-prev3-impl-20261023 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-prev2-review-r2-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-prev2-fix-r1-20261023 · scope=p-rev2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-prev2-review-r1-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-prev2-impl-20261023 · scope=p-rev2 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-p02-review-r3-20261022 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -546,7 +883,29 @@ run/v1 · request=docs367-p01-review-r1-20261022 · scope=p01 · action=review �
 
 run/v1 · request=docs367-p02-complexity-20261022 · scope=p02-complexity · action=review · role=oat-reviewer · target=oat-reviewer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p02-complexity action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+run/v1 · request=docs367-p03-impl-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-resume-verification-20261022 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-review-r1-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-fix-r1-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-review-r2-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 ## Reviews and Gates
+
+- PR https://github.com/voxmedia/open-agent-toolkit/pull/371 opened for accepted p03 against main on 2026-10-23, initial head cf3d17001b6bc1d06714d934748e981984974c8d, base ec1261f44f93d07bbc2926aa5680b7bfd777089e. Post-open pr-self-review inventories all four independent product lenses from P03 rounds 1–3 and p-rev2 rounds 1–2; no duplicate lens requested. Later authored delta is delivery bookkeeping only; merge changes no product bytes. Deferred hoisted lookup and shim grants stay explicitly tracked for final; prose/manual proof limits and cache/flake history are disclosed in the body. No outstanding operator decision or unreviewed product fix; mark draft ready after metadata push. Land-pr mode=land, standing intermediate merge authority, merge-commit method, final PR held.
+
+- P03 integrated delivery verification: all ordered gates 1–8 exit 0 after main merge, with fetch before release versions; 0.3.25 public archives and three PR-scoped skill bumps pass against 0.3.24 main. Turbo replayed check 11/11, types 11/11, tests 12/12, build 5/5, docs-build 6/6 and lint/format 10/10; these are not fresh executions. Direct isolated smoke 165, skill 712, script 1, five binding guards and 1,087 sentence contracts passed freshly; root skill lint/format checks ran. Accepted phase forced evidence remains 12/12 fresh tasks, 9,229 package tests, zero cached. No product byte changed during merge, no new retry. Raw commands/exits live in ignored analysis/p03/delivery.
+
+- P03 delivery preparation: merged landed main at bcd59cfde after PR #369; only AGENTS.md and the two additive journal receipts changed from the accepted local tree, with no product-byte conflict. Both journal insertions were preserved. Ordinary merge completion used Git merge continuation (the exact-path helper intentionally blocks MERGE_HEAD); hooks remained enabled. A commit-message type rejection was corrected before the merge committed. P03 Base/Head stay frozen and reviewed P03 product bytes are unchanged except the independently reviewed p-rev2 correction already in main. Integrated gates are running against 0.3.24 main; archived residual p02 complexity artifact references were conserved.
+
+- p03 external gate f11cc34a-2996-48df-9555-2577c6f79eaa: passed (exit 0, high threshold), 0 Critical/0 High/0 Medium/2 Low; both deferred to final in passing-gate judgment sweep, no waiver; received artifact reviews/archived/p03-review-2026-10-23T000851Z.md.
 
 ### PR #369 loaded-binding correction delivery
 
@@ -566,9 +925,16 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 
 - PR https://github.com/voxmedia/open-agent-toolkit/pull/369 opened for p02 on 2026-10-22; supplemental complexity review passed with zero findings; all four self-review lenses covered.
 
+### Remote Review Received: PR #369
+
+2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p03 gate Gate-L1 · Low · Hoisted installed docs packages are not found by the app-only package-drift helper; returns safe unverified, no command. Deferred to final integrated helper review: define ancestor search boundary and add a real hoisted-layout regression before changing resolution. Source: gate f11cc34a-2996-48df-9555-2577c6f79eaa, package-drift.mjs:78, Outcome 5.
+- p03 gate Gate-L2 · Low · Shim fallback uses command -v, oat --version, sed, test and npm root -g beyond analyze's narrow grants. Deferred to final integrated skill contract review after remaining analyze edits: add narrow grants or rewrite through Read/node and verify the documented commands. Read-only discovery can require explicit permission meanwhile; no bypass. Source: same gate, oat-docs-analyze/SKILL.md:516, p01 E13.
 
 ## Deviations from Plan / Design
 

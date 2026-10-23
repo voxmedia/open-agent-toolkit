@@ -364,8 +364,11 @@ method works without private guidance or copied exemplars.
 Existing docs default to analyze → apply of approved recommendations and exit
 before scaffolding. Replacement requires an explicit choice. A second app also
 requires an explicit choice and remains unsupported by the current CLI. This
-selection stage does not persist IA decisions, restructure trees or materialize
-preset scaffolds. Feature and QA validation page templates are a later delivery;
+proposal becomes durable only after approval: bootstrap/apply use `oat decision new`
+and an Information architecture section in the framework docs-app `AGENTS.md`
+or Markdown contributing page, plus the shared `documentation.ia` mirror.
+Authored records stay authoritative; missing/conflicting records become `ask_user`.
+Preset scaffolds and Feature/QA validation page templates are a later delivery;
 the IA Proposal template is available now.
 
 ## oat-docs-analyze
@@ -421,15 +424,16 @@ repair the analysis contract rather than asking apply to fill it in.
 ## oat-docs-apply
 
 **Invocation:** `/oat-docs-apply` after reviewing a docs analysis report.
-The skill loads the newest `.oat/repo/analysis/docs-*.md` report. You cannot
-select an older one, so rerun analysis if the newest report is not the one
-you reviewed. It then builds a recommendation plan and asks you to choose
+Supply the analysis artifact path and approved recommendation IDs. If no path
+is supplied, the skill offers the newest report for confirmation; it never
+silently changes the reviewed input. It builds a recommendation plan and asks you to choose
 `apply all`, `apply interactively` (approve, modify, or skip each item), or
 `discuss` before changing anything.
 
 **Prerequisites:** A recent, complete docs analysis artifact and an unchanged
 compatible target. Recommendations need evidence, confidence, disclosure,
-and concrete link targets where applicable. Apply also needs `jq` for
+stable unique IDs, `approval: explicit | default`, and concrete link targets
+where applicable. Apply also needs `jq` for
 tracking updates, and `gh` only if you want it to open the pull request. No
 active OAT project is required. Missing analysis or a changed target requires a fresh analysis,
 not conventions invented during apply.
@@ -442,9 +446,12 @@ execute those selected actions without broadening the work to every finding.
 
 **Expected output:** Approved changes committed on a new
 `oat/docs-<timestamp>` branch, relevant source/link checks, and declared
-navigation or generated-artifact refreshes. Markdown retains its authored
+navigation or generated-artifact refreshes, plus a structured result listing
+applied, skipped (ID/reason), and failed IDs. Markdown retains its authored
 index and needs no framework build or nav sync; Fumadocs sidebar metadata is
-regenerated from approved Contents changes, never hand-edited. The summary
+regenerated only with recorded `navOwner: nav-sync`. Hand-authored navigation
+gets approved edits and read-only Contents membership/order comparison;
+undeclared ownership becomes `ask_user`. The summary
 reports the applied plan and checks.
 
 **What it does without asking:** Nothing changes until you approve the plan.
@@ -466,6 +473,44 @@ updates `.oat/tracking.json`.
 pull request. Rerun analysis if you need a post-apply assessment, and treat
 unapproved recommendations as remaining decisions rather than completed
 work.
+
+## Approval, IA records and restructuring
+
+Every analyze recommendation has a stable ID and `approval: explicit | default`.
+`apply all` covers only non-blocked default content repairs. Docs-package updates,
+restructure blocks and work outside Markdown scope require individual approval
+by ID; unattended runs skip explicit items even when their IDs were supplied,
+with reason `explicit_requires_interactive_approval`. Kickoff consent is not
+approval of every finding. Bootstrap Step 7b uses this same artifact-plus-ID
+handoff, and apply reports unsupported scaffold work as `manual`.
+
+An approved IA record first checks target-repo PJM adoption with `oat pjm doctor
+--json`; absent/partial adoption needs initialization before `oat decision new`.
+The decision and authored section capture tracks, per-track organizing
+principles, placement and verification overlay. Config mirrors the accepted
+record without replacing it. Framework sidebar ownership is independent; Markdown
+creates no docs-root AGENTS file and runs no nav sync.
+
+A `restructure` block records source→destination mappings, both parent Contents
+changes, grep-derived inbound-link rewrites, and old-URL recovery, then lands as
+one exact-path commit per approved block. Retired pages retain a stub/archive
+pointer and parent map update. Next static export cannot use Next config
+redirects; choose an authored stub or verified host recovery, keeping unsupported
+app/host changes manual. Check rewritten relative links/anchors and the old route
+under the real base path; verify according to sidebar ownership and rerun analyze.
+
+Analyze also audits Information Architecture Fit and declared Product, QA,
+consumer and agent coverage. A top-level misroute is High when it blocks normal
+first success/verification, Medium when it causes material detours; cosmetic
+organization stays Low. Missing IA/owner raises `ask_user`.
+
+For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*` packages to the
+running CLI's bundled `public-package-versions.json`, never registry latest.
+Missing installations are unverified. The recommendation includes the exact
+upgrade command. Individual tooling approval permits only docs-app `@open-agent-toolkit/docs-*`
+dependency bumps (and resulting lockfile), the admonition/frontmatter conversions
+already supported by `oat docs migrate`, and build verification. App config,
+routes and package scripts remain manual required changes.
 
 ## Related docs
 
