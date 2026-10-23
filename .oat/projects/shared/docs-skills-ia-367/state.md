@@ -1,6 +1,6 @@
 ---
 oat_current_task: p-rev2
-oat_last_commit: 28887537aa3498293340bbc86f3f85772b4a9f09
+oat_last_commit: 63a9deabd440e26bca49f4128b79a2bfb7c1d800
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -150,4 +150,4 @@ None.
 
 ## Next Milestone
 
-P03 accepted after standard review and external gate; execute p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
+P03 accepted after standard review and external gate; implement and review p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.

@@ -647,8 +647,12 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
 **Corrects:** p02
+
+Execution shape: one phase implementer owns commits in the existing root worktree on docs/docs-skills-ia-367-p03. No parallel group is declared; the four prose bindings and their shared regression contract are one semantic correction and share evidence/build output, so they fail the independent-slice test. Root retains delivery integration into PR #369, review, acceptance and landing. Main fetched before start; no planned-path changes since the branch base. P03 is accepted with frozen anchors; p-rev2 starts after it, preserving sequential continuity.
 
 ## Phase p04: Navigation follows Contents
 
