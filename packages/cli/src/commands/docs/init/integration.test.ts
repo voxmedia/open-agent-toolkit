@@ -183,9 +183,10 @@ describe('scaffold integration', () => {
             .pages,
         ).toEqual(['index', 'getting-started', 'contributing']);
       } else {
-        expect(
-          parseYaml(await readFile(join(appRoot, 'mkdocs.yml'), 'utf8')).nav,
-        ).toEqual([
+        const mkdocs = parseYaml(
+          await readFile(join(appRoot, 'mkdocs.yml'), 'utf8'),
+        );
+        expect(mkdocs.nav).toEqual([
           { Home: 'index.md' },
           { 'Getting Started': 'getting-started.md' },
           {
@@ -196,6 +197,28 @@ describe('scaffold integration', () => {
             ],
           },
         ]);
+        const contributorNav = mkdocs.nav[2].Contributing;
+        const sourcePaths: string[] = [
+          contributorNav[0],
+          contributorNav[1]['Authoring Contract'],
+          contributorNav[2]['Docs Toolchain'],
+        ];
+        // MkDocs 1.4.2 files.py destination mapping, independently confirmed
+        // with its real default-theme build. Default directory URLs overwrite
+        // the authoring contract with the child index; .html URLs keep both.
+        const destinations = sourcePaths.map((source) => {
+          if (mkdocs.use_directory_urls === false)
+            return source.replace(/\.md$/, '.html');
+          return source
+            .replace(/\.md$/, '/index.html')
+            .replace(/\/index\/index\.html$/, '/index.html');
+        });
+        expect(destinations).toEqual([
+          'contributing/index.html',
+          'contributing.html',
+          'contributing/docs-toolchain.html',
+        ]);
+        expect(new Set(destinations).size).toBe(3);
       }
       const appAgents = await readFile(join(appRoot, 'AGENTS.md'), 'utf8');
       expect(appAgents).toContain("cd 'apps/docs site'");

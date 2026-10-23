@@ -26,6 +26,8 @@ This MkDocs/Material scaffold is **legacy**. [Material's upstream changelog](htt
 
 ## Navigation contract
 
+Fresh scaffolds set `use_directory_urls: false` in `mkdocs.yml`. Pages use `.html` URLs: `contributing.md` renders as `contributing.html`, and the local map `contributing/index.md` renders as `contributing/index.html`. Keep both source files and `.md`-suffixed authored links; MkDocs resolves them to the distinct rendered destinations. Changing this setting requires reviewing published URLs and inbound links.
+
 Every content directory has an authored `index.md` with a useful purpose paragraph and one `## Contents` local map. Prefer `.md` pages with nonempty `title` and `description` frontmatter and exactly one document H1. `overview.md` is deprecated.
 
 Within `## Contents`, use dash-only links to sibling pages or child indexes, optionally followed by a description. A `### Label` starts a group and must contain at least one authored entry before the next group/end. Entries before the first group are ungrouped. A `*` or `+` link bullet, or an empty authored group, is an error naming the file and line. The map ends at the next level-two heading; fenced examples are ignored. A self-index link retains the existing landing-page behavior. Optional Markdown inventories keep deterministic fallback when Contents is missing; MkDocs nav sync needs authored maps to construct navigation. The pinned MkDocs build can still render pages absent from its navigation.
