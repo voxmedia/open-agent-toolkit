@@ -24,6 +24,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./llms": {
+      "types": "./dist/llms.d.ts",
+      "import": "./dist/llms.js"
     }
   },
   "publishConfig": {

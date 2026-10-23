@@ -36,6 +36,9 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
 };
 
 const FUMA_TEMPLATE_FILES: Record<string, string> = {
+  'app/llms.txt/route.ts': 'export const dynamic = "force-static";\n',
+  'app/llms-full.txt/route.ts': 'export const dynamic = "force-static";\n',
+  'app/llms/[...slug]/route.ts': 'export const dynamicParams = false;\n',
   '.gitignore':
     '# Dependencies\nnode_modules/\n\n# Next.js build output\n.next/\nout/\n\n# fumadocs-mdx generated source\n.source/\n\n# Next.js generated types\nnext-env.d.ts\n',
   'next.config.js':

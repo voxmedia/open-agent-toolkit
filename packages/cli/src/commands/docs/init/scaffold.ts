@@ -45,6 +45,10 @@ const MKDOCS_TEMPLATE_FILES: TemplateFile[] = [
 ];
 
 const FUMA_TEMPLATE_FILES: TemplateFile[] = [
+  ...['llms.txt', 'llms-full.txt', 'llms/[...slug]'].map((route) => ({
+    source: join('app', route, 'route.ts'),
+    destination: join('app', route, 'route.ts'),
+  })),
   { source: '.gitignore', destination: '.gitignore' },
   { source: 'next.config.js', destination: 'next.config.js' },
   { source: 'postcss.config.mjs', destination: 'postcss.config.mjs' },

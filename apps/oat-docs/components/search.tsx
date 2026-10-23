@@ -16,8 +16,8 @@ import {
 // Static export has no search server, so the dialog runs a client-side static
 // index search. fumadocs-ui's DefaultSearchDialog is hardwired to the fetch
 // client, so we provide a custom dialog backed by the static client. `from`
-// carries the basePath since static search does not inherit Next.js basePath.
-const basePath = '/open-agent-toolkit';
+// mirrors the basePath-aware static index emitted by app/api/search.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
 export default function StaticSearchDialog(props: SharedProps) {
   const { search, setSearch, query } = useDocsSearch({
