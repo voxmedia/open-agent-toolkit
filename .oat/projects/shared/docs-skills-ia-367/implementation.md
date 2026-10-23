@@ -988,13 +988,16 @@ Proof: scoped format/lint and declaration diff; no behavior test needed for comm
 
 ### Task p04-t09: (review) Correct brief phase marker and literal grammar
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** root
 **Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L1)
 
 Intent: Restore exact Provisional marker and protect literal star/plus/glob syntax with code spans, without changing accepted p04 behavior.
 Files: project plan.md p04 Intent/Exit and Provisional only; own task receipt.
 Proof: committed marker/literal inspection and journal check; artifact-only change does not need product tests.
+
+**Commit:** 6ac9c55d68dd7404e17fd8c13cedb0c1d6f5db88
+**Evidence:** Committed exact Provisional marker and code-spanned star/plus/glob literals verified after formatter/hook. Accepted p04 behavior unchanged. Journal review-boundary refusal is expected while p04-t07/t08 remain open; final review validation waits for those fixes.
 
 ---
 
