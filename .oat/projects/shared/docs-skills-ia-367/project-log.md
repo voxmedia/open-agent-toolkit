@@ -87,6 +87,10 @@ docs367-prev2-pr369-wait-8235909: clean independent re-review and integrated gat
 
 docs367-prev2-accepted-ec1261f: p-rev2 passed, two review rounds and one fix continuation, recovery 0/10; PR #369 landed via land-pr after CI/Bugbot clear, merge ec1261f44f93d07bbc2926aa5680b7bfd777089e; final PR remains held.
 
+### 2026-10-23 · structural · oat-project-pr-progress · p03
+
+docs367-p03-pr371-open: opened https://github.com/voxmedia/open-agent-toolkit/pull/371 against main for accepted p03; integrated gates passed, all four independent product lenses covered, delivery awaits CI/Bugbot under land-pr authority; final PR held until project completion.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -123,11 +123,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/369' # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/371' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T01:31:56Z
+oat_project_state_updated: 2026-10-23T02:08:31Z
 oat_generated: false
 ---
 
@@ -139,7 +139,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev2 accepted and PR #369 merged; deliver accepted P03, then p04.
+Implement — p-rev2 accepted and PR #369 merged; P03 delivery PR #371 open, then p04.
 
 ## Artifacts
 
@@ -153,4 +153,4 @@ None.
 
 ## Next Milestone
 
-PR #369 merged at ec1261f44f93d07bbc2926aa5680b7bfd777089e after current-head CI/Bugbot clear; p-rev2 accepted. Integrate main and deliver accepted P03, then concretize p04. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
+PR #369 merged at ec1261f44f93d07bbc2926aa5680b7bfd777089e after current-head CI/Bugbot clear; p-rev2 accepted. P03 PR #371 is open against main after integrated verification; land it when CI/Bugbot clear, then concretize p04. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
