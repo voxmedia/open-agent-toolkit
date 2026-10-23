@@ -39,20 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | pending   | 1     | 0/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | in_progress | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 6/12 phases accepted
 
@@ -795,7 +795,13 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 ## Phase p04: Navigation follows Contents
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 56e05597392dfb4951679d5236b960afb296f951
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+
+Phase start: approved brief p04 made concrete after bounded read-only reconnaissance. One committing phase implementer owns this checkout, with no nested dispatch or parallel group: Contents parsing, reader-path matching, init defaults and index order share producer/consumer contracts and must compose before review. Root retains scope judgment, independent review, acceptance and delivery. Main fetched before phase concretization; no changes in planned paths beyond merged P03 already in the branch. Worktree init passed with SKIP_S3_ARCHIVE_SYNC=1; only its generated manifest version refresh was restored. Recovery 0/10, pending null. Prior phase anchors preserved.
+
+Recon verified parser/nav/init/index paths and pinned schema/runtime differences. Root inspected shared parser, both consumers, index matcher/order, init/scaffold command wiring, installed Fumadocs schema/loader and human source contracts before selecting the bounded interpretations recorded in p04 Intent. String-root schema adaptation fulfills the existing G3 requirement; MkDocs rendering limitation is covered by G2's where-supported qualifier, without a new dependency upgrade. Existing ownership/config guarantees are preserved. Source title/order fallback follows P14; no preset, checks engine or new approval guarantee is added.
 
 ---
 
@@ -830,6 +836,8 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p04-readiness-20261023 · scope=p04-readiness · action=implementation · role=recon-worker · target=research · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p04-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-prev3-review-r1-20261023 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

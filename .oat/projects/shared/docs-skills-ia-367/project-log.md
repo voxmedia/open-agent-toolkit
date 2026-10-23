@@ -99,6 +99,10 @@ PR #371 findings received; p-rev3 starts bounded G2 normalization correction, pr
 
 p-rev3 passed one independent review with its ledger-only Low fixed; PR #371 landed via land-pr after all three checks and Warp confirmations at 57c17239f, merge eebcf61cf, watch stopped. docs367-prev3-accepted-20261023
 
+### 2026-10-23 · structural · oat-project-implement · p04
+
+p04 concretized from approved G2/G3/P12-P14 after bounded recon; one committing owner, matching-root nonReaderPaths, pinned string-root schema adapter and documented MkDocs rendering limitation. docs367-p04-start-20261023
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

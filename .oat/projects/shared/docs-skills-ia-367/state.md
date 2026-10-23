@@ -37,6 +37,9 @@ oat_phase_recovery_policy:
     p-rev3:
       used_attempts: 0
       pending_attempt: null
+    p04:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -142,7 +145,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — PR #371 merged, p-rev3 accepted; concretize and start p04.
+Implement — PR #371 merged, p-rev3 accepted; p04 implementation in progress.
 
 ## Artifacts
 
@@ -156,4 +159,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. Concretize and execute p04, navigation follows Contents. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. Execute p04, navigation follows Contents. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
