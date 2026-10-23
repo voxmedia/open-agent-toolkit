@@ -139,7 +139,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T08:25:50.877509Z'
+oat_project_state_updated: '2026-10-23T08:30:02.583969Z'
 oat_generated: false
 ---
 
@@ -151,7 +151,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 reopened for the confirmed PR373 nested-docs link-routing finding.
+Implement — p05 reopened for the confirmed PR373 nested-docs, filtered collision and nonlocal navigation findings.
 
 ## Artifacts
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-Correct PR373 M1 nested-docs routing within p05, then independent round3 re-review. Historical accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 and its reviews remain preserved; current acceptance is suspended. Next execution record is p05-t09 when implementation starts. Recovery1/10,pendingnull remains settled. PR373 is open and watched; merge waits for corrected-head verification, review, CI and Bugbot clearance. Use authorized plain land-pr with established squash policy. Then align provisional p06. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold final PR until project completion.
+Correct PR373 M1 nested-docs routing, H1 filtered collisions and H2 nonlocal nav placement within p05, then independent round3 re-review. Historical accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 and its reviews remain preserved; current acceptance is suspended. Next execution record is p05-t09 when implementation starts. Recovery1/10,pendingnull remains settled. PR373 is open and watched; merge waits for corrected-head verification, review, CI and Bugbot clearance. Use authorized plain land-pr with established squash policy. Then align provisional p06. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold final PR until project completion.
