@@ -38,8 +38,17 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p04:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: docs367-p04-t06-markdownlint
+        original_request_id: docs367-p04-impl-20261023
+        original_task_id: p04-t06
+        original_commit: 50a82e98b719729241169b159b183c4762d5e66e
+        discovered_by: pnpm check
+        dispatch_target: codex_codex_proxy/gpt-6.1-sol/high/priority
+        reservation_head: 721079b5f88c9ff5aa93886e634f6396c7520f2d
+        status: reserved
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
