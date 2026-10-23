@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p06
+oat_current_task_id: p07
 oat_generated: false
 oat_template: false
 ---
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | in_progress | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
 **Total:** 9/13 phases accepted
 
@@ -1520,7 +1520,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 **Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 
@@ -1806,6 +1806,23 @@ All four round2 findings are independently closed; round1's six remain closed. R
 
 Root read the full inline Opus report and verified the relevant reader inventory, source-read handling and navigation outer catch. The report's assertion that both findings require unreadable files is too broad: malformed mkdocs.yml is possible in an ordinary checkout. The approved deferral includes that diagnostic-attribution case explicitly. Every reproduced bad case still exits 1; false structural diagnostics under intentional frontmatter warn/off remain a known accepted accuracy gap. Future correction should preserve discovered reader membership, skip content-dependent conclusions for unreadable pages, attribute YAML errors to mkdocs.yml and use safe relative messages, without a partial-navigation engine. Keep existing configurable source-read policy. Proof for an unchanged-dependency correction should use focused coverage and required CI gates, inheriting unchanged install/framework/packed-runtime proof.
 
+### Review Received: p06 external phase gate
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T194704Z.md
+**Gate:** 02598e6c-cf5d-48cc-8509-74aeb2362db2; configured claude-opus-5-5-high / Claude / claude-opus-5-5 / high; exact G5/p06 anchors 9b35decdc32c31e55d65e0138d49fc7de67bacfa..9e19dd89657e18386cb3cdffcb58e753d66a68a8.
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 2
+**Disposition mode:** Passing-gate non-pausing judgment sweep; no waiver. Threshold high; exit 0, status ok, receiveEligible true, handoff present and run/project/invocation corroboration matched. Producer identity was unknown in gate telemetry; independence is supported separately by the Codex implementation and configured Claude reviewer, not by a claimed runtime observation.
+
+- Gate-M1 (Medium): bare pnpm dependency-binary shorthand is treated as a missing package script → defer to final. Root corroborates commands.ts script-only resolution, while the reviewer ran real pnpm local binaries successfully. This is a valid false-positive boundary adjacent to P22's literal-script contract; resolve script-vs-binary semantics and minimal treatment at final review, without adding a generic dependency/binary inventory now. Explicit pnpm run/npm run stays strict; pnpm exec is an existing usable form.
+- Gate-M2 (Medium): title-only hand-authored/undeclared Fumadocs meta.json lacks pages and is reported as drift → defer to final. Root corroborates the unconditional array check in navigation.ts:65. P21's membership/order intent requires avoiding false drift for valid implicit metadata; preserve nav-sync strictness. Final correction must distinguish implicit ordering and explicit invalid pages, with actual pinned-loader evidence rather than simply weakening membership checks.
+- Gate-L1 (Low): default YAML parsing logs warnings for valid MkDocs Python tags → defer to final. Root corroborates default YAML.parse at navigation.ts:118 and the shipped tag; JSON stdout/results remain unaffected. Consider narrowly silencing unresolved-tag warnings while retaining malformed-YAML diagnostics, without a custom Python parser.
+- Gate-L2 (Low): unsupported glob/multi-package filters get an unhelpful instruction to use literal --filter → defer to final. Root corroborates exact-single-member selection and current diagnostic at commands.ts:250; multi-package support is not added. A later wording-only correction can state the required exact package name/path.
+
+The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and real CLI/pnpm/MkDocs probes. Existing forced/full/gate/framework/install/packed evidence remains inherited. Its original final confirmation omitted the exact reconnaissance signal; before validation or receive mutation, root resumed the same Claude session f220c9e0-626a-4328-ae28-362635c523a6 with tools disabled for reporting only and consumed exactly one corrected not-attempted signal. Runtime result reports zero subagents. No new review or product change occurred. No Review Orchestration section and no review-orchestration log append. Preserve gate-produced plan/log commits8f0205a3b/5938cb284; only tracking bytes changed after the reviewed candidate.
+
+**Outcome:** gate passed and consumed; all four sub-threshold findings deferred durably to final under the configured passing-gate policy. Standard review's operator-approved R3-L1/R3-L2 deferrals stand. All ten execution records closed, selected phase gate passed, every current disposition settled. Root accepts p06 at frozen Base/Head; recovery1/10,pendingnull unchanged. Delivery requires current-head CI/Bugbot and expected-head land-pr; p07 remains provisional/unstarted and the final project PR stays held.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1970,6 +1987,8 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+2026-10-23 · p06 external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passed (exit0, high threshold):0Critical/0High/2Medium/2Low; all four deferred to final through passing-gate judgment sweep, no waiver. Exact configured Claude target/model/effort and validated anchors retained in the phase receipt. Root accepts p06;10/13 phase-units accepted; intermediate PR delivery pending.
+
 2026-10-23 · p06 · review cap 3/3 · verdict Partially compliant · operator approved proceed with override ("approve"); defer R3-L1/R3-L2, retain configurable frontmatter errors, add no partial-navigation requirement; report reviews/archived/complexity-p06-2026-10-23T185754Z.md; selected phase gate remains pending.
 
 P05 delivery complete: PR https://github.com/voxmedia/open-agent-toolkit/pull/373 merged at 5cf5ecfd4880ebb97562fcf3b5fca2c3b2bb4ec0 on 2026-10-23T15:45:53Z, using the established merge-commit method and expected head 56df695efebe806920188d7994d54de39630dee9. Final paginated sweep found all three current-head checks successful, Bugbot explicitly completed with no issues, all three Warp fix confirmations, previous Warp rejection dismissed, zero unresolved threads/reviewer requests and unchanged base/head. No quota exception, admin/auto merge, force push or branch deletion; watcher stopped. Approved generated cleanup pruned eleven ignored node_modules/.next/out directories under analysis/p05 while retaining scripts, source, packed tarballs, controls and logs. Root switched this existing T3 worktree to docs/docs-skills-ia-367-p06 from merged origin/main and ran worktree:init; its only tracked side effect was the generated manifest version field, restored. P06 remains provisional and unstarted while bounded readiness reconnaissance maps the approved G5/P20–P23/P25 contracts. Final project PR remains held.
@@ -2048,6 +2067,11 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 2026-10-22: Bugbot review 5621749516 has 0 Critical, 0 High, 1 Medium, 0 Low. M1 (cursor, discussion_r4354277626): new authoring-docs bindings skip the loaded sibling and can select an older user copy without the new reference/helper. Converted to p-rev2, correcting existing p02 G1 coherent built-in source selection; no new requirement. Lookup must probe the loaded sibling SKILL.md, then user, then project, independently bind the first existing root and use it throughout. Audit the four p02 call sites for this same defect. All three checks passed at source review commit 136742ad0372bea054e8c06082f97df4ccddd90f; merge remains held for M1. Warp review 5621749923 reports zero findings and independently verifies focused config/contracts/build/lint. No PR reply or review dismissal sent. Remote review has no OAT provenance marker, so ledger provenance remains unknown.
 
 ## Deferred Findings
+
+- p06 gate Gate-M1 · Medium · Bare pnpm local-dependency binaries (e.g. pnpm vitest/tsx) are falsely reported as missing scripts. Deferred to final by passing-gate judgment sweep, gate02598e6c-cf5d-48cc-8509-74aeb2362db2; no current phase fix loop for sub-threshold findings. Resolve P22 script-vs-binary semantics with real pnpm controls and minimal classification; preserve strict explicit run checks. Resurface for explicit final disposition before final review may pass. Source commands.ts:207,265; current pnpm exec form is usable.
+- p06 gate Gate-M2 · Medium · Valid title-only hand-authored/undeclared Fumadocs meta.json without pages is reported as drift. Deferred to final by passing-gate judgment sweep, same gate; current phase passes at high threshold. Reconcile implicit loader order with P21 Contents membership/order using the real pinned loader, retain nav-sync strictness and explicit invalid pages detection. Resurface for explicit final disposition. Source navigation.ts:65.
+- p06 gate Gate-L1 · Low · Valid MkDocs Python tags cause unresolved-tag YAML warnings on stderr; stdout JSON/results unaffected. Deferred to final through passing-gate sweep, same gate; narrow log handling may be considered without weakening syntax diagnostics. Source navigation.ts:118 and starter mkdocs.yml:33.
+- p06 gate Gate-L2 · Low · An unsupported glob/multi-package --filter gets a misleading suggestion to use literal --filter. Deferred to final through passing-gate sweep, same gate; improve exact-single-package wording when contributor-command diagnostics are next revised, without adding multi-package selector support. Source commands.ts:250.
 
 - p06 R3-L1 · Low · Malformed mkdocs.yml is attributed to index.md; unreadable Fumadocs sources can yield raw absolute navigation errors. Operator approved deferral at the three-cycle cap on 2026-10-23 ("approve"); reproduced bad inputs still exit 1 and only diagnostic accuracy is deferred. Continuing other navigation comparisons after a source-read failure is not required. Revisit at final review or when a real repository reports this class; any wrong exit or hidden required error triggers correction. Minimal fix: YAML-local attribution and safe relative error messages; no partial-navigation engine. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
 - p06 R3-L2 · Low · Unreadable reader paths are absent from parsed-page structural inventory, causing false directory-index errors/leaf-size warnings, including under intentional frontmatter warn/off. Operator approved deferral at the cap on 2026-10-23 ("approve"); preserve configurable frontmatter policy. Revisit at final review or when actual use encounters these false findings; any wrong exit or hidden required error triggers correction. Minimal fix preserves discovered membership and skips content-dependent conclusions for unreadable pages. Report: reviews/archived/complexity-p06-2026-10-23T185754Z.md.
