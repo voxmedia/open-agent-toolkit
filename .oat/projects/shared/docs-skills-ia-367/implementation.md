@@ -1237,7 +1237,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-p05-readiness-20261023 · scope=p05-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p05-readiness-20261023 · scope=p05-readiness · action=analysis · role=bounded-readiness-recon · target=general · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev4-review-r1-20261023 · scope=p-rev4 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev4 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

@@ -144,6 +144,10 @@ docs367-prev4-accepted-20261023: p-rev4 accepted at ba253ba359a03d2f40410e2431e3
 
 docs367-pr372-landed-20261023: PR372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 through land-pr after exact-head CI/Bugbot and four Warp confirmations; watcher stopped; p05 readiness proceeds from merged main.
 
+### 2026-10-23 · structural · oat-project-implement · p05-concrete
+
+docs367-p05-concrete-20261023: Outcome7 phase concretized after read-only recon and root API verification: CLI owns AGENTS; contributing entry plus child map/toolchain; static filtered-md raw llms endpoints with explicit basePath; small runtime parity list; recursive GFM tabs; mark Material legacy without Python upgrades. No Outcome/Constraint/Decision changed; p06 owns docs-check wiring.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
