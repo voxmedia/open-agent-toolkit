@@ -1397,6 +1397,20 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 6f2e6f5b9106c8fc9ca8598f4c1677be98dea214
 **Verification:** Existing docs check executes pre/post exit0 (format/Markdown lint/source links/anchors/nav/catalog); CLI check/type-check exit0. Conservation diff preserves every page heading/link and all valid setup/approval/preservation behavior; nav delta is comment-only and retains strict unlisted handling. No new automated test or prose receipt package. Evidence: ignored analysis/p05/fix-r1/t08-\*.
 
+### Task p05-t09: (review) Resolve links from the configured reader collection
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-remote-inventory-20261023 / cont-docs367-p05-remote-inventory (same accepted implementer)
+**Source review:** PR373 discussions4357536051 (M1),4357563290 (H1); root remote receive and bounded inventory authorization.
+**Intent:** Use the configured content root and effective filtered reader inventory for both source and target collision routing, preserving context-free fallback and live membership changes.
+**Files:** packages/docs-transforms/src/remark-links.ts; packages/docs-config/src/{source-config.ts,source-config.test.ts}; both package READMEs; docs-config/package.json and minimal pnpm-lock.yaml importer update.
+**Scope reconciliation:** Outcome7/p05 source-relative links and conserved G2 reader membership require these corrections. Root authorizes tinyglobby0.2.17, already used by the pinned emitter; collectionFiles remains the only exclusion grammar. No new routing/config locator or permanent inventory cache.
+**Proof command:** Real temporary files through createSourceConfig and pinned MDX14.3.2 compilation/core16.10.2 filtered loader, red/fixed/valid controls; focused transforms/config tests and scoped check/type/build pre/post; ordered DoD gates at handoff.
+
+**Commit:** bc979197ef3b4f2d309b8b2ff2cb55c318c23a12
+**Verification:** Original source/config built at launch reproduces both reports: nested docs/guide emits ../contributing/ instead of ../../contributing/index/; filtered physical section/plus+ siblings incorrectly preserve /index and shift source backlinks. Fixed transforms38/config22 tests execute pre/post exit0; both scoped check/type/build pass. Real temporary .md/.mdx fixtures use actual tinyglobby collection discovery, pinned MDX14.3.2 compilation and core16.10.2 loader URLs; rendered hrefs agree. Same processor sees reader creation/removal, filtered source/target collisions collapse, literal + and directory-only file controls pass. Existing root-outside-sibling, no-context, ordinary/query/fragment controls remain green. Dependency install initially selected one unrelated Vite snapshot; removed that incidental lockfile change before commit, leaving only the authorized importer addition. No app/template source wiring changes required. Evidence: ignored analysis/p05/remote-fix/t09-{red-full,pre-_,post-_}.log and exact p05-t09-files.json; no recovery usage.
+
 ### Fix round1 verification and handoff
 
 All six accepted findings are fixed in completed records t05/H1, t06/M1+L1, t07/L2 and t08/M2+L3. Tested fix candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 is the last task-journal commit; this final verification journal changes no tested product bytes. Root-owned phase Head remains95a2cef6610eb3a65c18544ffcdd51f9abb4b212 as instructed; Base and prior history are frozen, phase remains in_progress for independent round2. Eleven authorized product files plus p05-local records changed; no plan/state/log/Reviews/GitHub/acceptance writes, nested dispatch or target change.
