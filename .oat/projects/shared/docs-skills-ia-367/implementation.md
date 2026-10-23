@@ -1356,6 +1356,20 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 **Commit:** 552ca40c021a7e39e18b856c55e55309b8469294
 **Verification:** Existing real-init regression red1 on duplicated destination, fixed0; isolated init/nav156 tests pre/post execute exit0. CLI check/type-check exit0; initial test-variable lint issue corrected before commit. Real canonical CLI scaffold plus reviewer-installed MkDocs1.4.2 default-theme build reproduces silent overwrite, then emits contributing.html and contributing/index.html distinctly with the correct bodies/nav links; all checked rendered source-page hrefs resolve, ordinary getting-started.html passes, and all four URLs return HTTP200. Material and full plugin/theme build are not claimed. Exact config/provenance/logs in ignored analysis/p05/fix-r1/t05-\* and mkdocs-proof.py. Python pins, existing consumer configs, frozen anchors and recovery1/10,pendingnull unchanged.
 
+### Task p05-t06: (review) Reconcile llms base paths and encoded slugs
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — M1, L1.
+**Intent:** Prefix loader-rooted URLs once and reconcile encoded loader slugs with decoded Next params and raw Markdown endpoints, using a real spaced-filename static export.
+**Files:** packages/docs-config/src/{llms.ts,llms.test.ts}, .oat/templates/docs-app-fuma/app/[[...slug]]/page.tsx, apps/oat-docs/app/[[...slug]]/page.tsx.
+**Scope evidence:** Pre-fix actual Next export emits literal my%20guide directories for both rendered and Markdown routes; once-encoded served URLs404. The authorized minimal page-route adaptation decodes generated params and re-encodes only at pinned-loader lookup, in identical template/flagship bytes. No llms route handler changes or generic routing layer.
+**Proof command:** existing real-loader tests red/fixed/ordinary-base controls; actual fresh Next export and served spaced endpoint/raw bytes/root/nested/exclusion404 proof; config check/type/build and relevant runtime parity tests pre/post.
+
+**Commit:** 9b259c828a83c6af4539f3cc2dffbfbb3b28b162
+**Verification:** Real-loader regression red1 for matching /docs base and double encoding; fixed config20 tests execute pre/post exit0 with /site and empty-base controls, decoded static/request params and real raw-source reads. Runtime parity8 pre/post, config check/type/build exit0. Fresh canonical Next export (core16.10.2/MDX14.3.2/Next16.1.6/TS5.9.3) reproduces once-encoded HTTP404/literal-percent directories, then packed branch helper + matching page route emit actual-space directories. /docs/llms/my%20guide/content.md and /docs/my%20guide/ return200; double-encoded endpoint404. All8 loaded Markdown readers retain exact raw bytes and served canonical pages; /docs/docs/guide/ and /docs/docs/ prove matching base, root/nested and missing/non-reader/MDX endpoint404 controls pass. Installed package/route hashes match committed export inputs. Initial offline install lacked metadata in isolated HOME; ordinary install succeeded with exact pinned runtime versions preserved. An incidental fixture param-order assertion was corrected before commit. No recovery attempt. Evidence: ignored analysis/p05/fix-r1/t06-_, next-proof-_.py and next-http-proof.py; sidebar deliberately hand-authored to retain out-of-sidebar loaded readers, not a new production behavior.
+
 ### Review Received: p05
 
 **Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
