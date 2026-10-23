@@ -180,6 +180,10 @@ docs367-p06-recovery01-direction-20261023: Validated pre-attempt direction-requi
 
 docs367-p06-recovery01-settle-20261023: Recovery98edd0f32 accepted, immutable original/exact target and focused/phase pre/post logs validated with cache limits disclosed;33 t03 hashes preserved. Clear completed marker and retain1/10. Fresh-install Fumadocs compatibility diagnosis precedes t03 continuation.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-compat-disposition-20261023: Verified published handler-attention incompatibility independently of OAT; authorize exact transitive2.1.2 at effective pnpm install roots with safe new-app scaffolding and approval-owned workspace edits. Preserve framework APIs/content and33 t03 product paths; require real setup resolution/build controls before acceptance.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
