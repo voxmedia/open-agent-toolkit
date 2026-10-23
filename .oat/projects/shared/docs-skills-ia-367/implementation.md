@@ -1343,6 +1343,19 @@ Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, t
 
 Root validated all four closed p05 records and the final prose scope at13d07784d; only implementation.md follows candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212. Three-page headings/link conservation and explicit ordered gate exits reconcile, including the disclosed single no-edit server-timeout retry; the prior forced9374tests and real-export/browser evidence remain inherited. Recovery01 stays settled at1/10,pendingnull. Base and candidate Head are valid ancestor anchors. Root review is pending; no p05 acceptance or later-phase start is recorded.
 
+### Task p05-t05: (review) Preserve distinct MkDocs contributor destinations
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p05-impl-20261023
+**Handle:** docs367-p05-fix-r1-20261023 / cont-docs367-p05-fix-r1
+**Source review:** reviews/archived/p05-review-2026-10-23T072438Z.md — H1.
+**Intent:** Apply root-selected fresh-template use_directory_urls:false, retain both approved contributor source paths and document .html URLs. Existing apps and Python pins are unchanged.
+**Files:** .oat/templates/docs-app-mkdocs/mkdocs.yml, .oat/templates/docs-app-mkdocs/docs/contributing.md, packages/cli/src/commands/docs/init/integration.test.ts.
+**Proof command:** real canonical init regression red/fixed/valid; pinned MkDocs1.4.2 default-theme build and rendered nav/source-link proof; focused init/nav suites and scoped check/type-check.
+
+**Commit:** 552ca40c021a7e39e18b856c55e55309b8469294
+**Verification:** Existing real-init regression red1 on duplicated destination, fixed0; isolated init/nav156 tests pre/post execute exit0. CLI check/type-check exit0; initial test-variable lint issue corrected before commit. Real canonical CLI scaffold plus reviewer-installed MkDocs1.4.2 default-theme build reproduces silent overwrite, then emits contributing.html and contributing/index.html distinctly with the correct bodies/nav links; all checked rendered source-page hrefs resolve, ordinary getting-started.html passes, and all four URLs return HTTP200. Material and full plugin/theme build are not claimed. Exact config/provenance/logs in ignored analysis/p05/fix-r1/t05-\* and mkdocs-proof.py. Python pins, existing consumer configs, frozen anchors and recovery1/10,pendingnull unchanged.
+
 ### Review Received: p05
 
 **Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
