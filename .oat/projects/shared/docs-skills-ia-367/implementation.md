@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p04
+oat_current_task_id: p-rev3
 oat_generated: false
 oat_template: false
 ---
@@ -39,19 +39,20 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p04    | pending   | 1     | 0/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | in_progress | 1     | 0/1      |
+| p04    | pending     | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 5/11 phases accepted
 
@@ -647,6 +648,12 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+**Status:** completed
+**Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
+**Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Corrects:** p02
+
 **Phase acceptance and landing:** p-rev2 accepted after two independent review rounds and one fix continuation, all findings closed, all integrated gates and forced verification passing. Final live sweep confirmed all three checks SUCCESS at 823590911f8b6709a44d3c29e8e78f96db29c821, Bugbot explicitly completed with no issues, no unresolved thread, no pending review request, and no branch protection/rules requiring approval. Base/head were unchanged through the sweep. Plain land-pr used the established merge-commit method with an atomic expected-head guard, no admin/auto/delete. GitHub confirms PR #369 MERGED at 2026-10-23T02:00:29Z, merge commit ec1261f44f93d07bbc2926aa5680b7bfd777089e. Watch stopped. Recovery remains 0/10 pending null; original Base/Head frozen. Next: integrate main, open/deliver accepted P03, then concretize p04. Final PR held until project completion.
 
 **Post-publication verification:** Supplemental integrated p02 forced run finished with exit 0, 12/12 Turbo tasks executed and zero cached; 8,862 CLI plus 351 supporting-package tests pass, alongside the docs suite. This supersedes the earlier pending status; exec session 67873 is finished. Raw integrated logs/results are copied into this worktree's ignored `analysis/p-rev2/p02-delivery/`. Current-head Bugbot SUCCESS and release dry-run SUCCESS are verified on 823590911; updated Cursor summary 6352792304 contains no new finding, and review 5623021473 is for the same head. CI remains IN_PROGRESS. No further PR edit, duplicate reply or merge is warranted until CI finishes.
@@ -675,14 +682,7 @@ Independent reviewer executed current/candidate guards, immutable prior-head and
 
 **Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
 
-**Status:** completed
-**Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
-**Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
-
 **Fix round 1 verification:** Continuation `docs367-prev2-fix-r1-20261023` of `docs367-prev2-impl-20261023` completed queued prev2-t02/M1 and prev2-t03/L1 sequentially, each with a bounded product commit, immediate committed-byte/guard/controls/manual checks and a separate journal commit. The wrapper now binds its loaded sibling before authoring use; the reference reuses validated/self roots without recursive reload and reserves exact loaded → user → repo probing for unbound consumers. Five prose guards pass; immutable old wrapper/four-site controls, order mutations and pre-reuse reference controls fail for their intended reasons. The actual temporary walkthrough covers wrapper assets, established-root reuse, self-root validation/use/failure and unchanged fallbacks/no-match; this is manual/prose evidence, not agent execution or verified ambient provider discovery. Ordered DoD gates 1/2 pass; initial gate 3 exits 1 on six unrelated CLI integration timeouts (8,872 other CLI tests pass), then the single permitted no-edit isolated-HOME rerun exits 0 with all 8,878 CLI tests passing; gates 4–8 pass afterward, including a fresh origin/main fetch before version checks and five 0.3.25 archive validations. Turbo cached/executed counts: check 5/6, types 5/6, initial test 5/7 (failed), successful retry 11/1, build 5/0, docs-build 6/0. Supplemental isolated-HOME forced Turbo executes all 12 tasks with zero cached, including builds: 9,229 package tests and 85 docs tests pass. Direct isolated smoke 165, skill 712 and script 1 tests plus skill validation pass. Full lint/format pass before each product commit and at phase close; final workspace lint/format replay 10 tasks each while root passes execute. Isolated sentence contracts pass before each product commit and at close (1,087 each). Conservation preserves IA source precedence, P03 clauses and all other consumer bytes; only the three authorized product paths changed, with no runtime helper, version change or mechanical scope expansion. Original Base/earlier anchors, state/plan, root receipts and other phases are unchanged. One no-edit verification retry, no product recovery events; recovery 0/10, 10 remaining, pending null. Exact commands/exits, retained failure and retry, fresh/cache counts, immutable controls, conservation and committed-byte proof: ignored `analysis/p-rev2/fix-r1/README.md` and `results.jsonl`. Phase remains in_progress for root independent re-review, delivery and acceptance.
-
-**Executor:** phase-implementer:docs367-prev2-impl-20261023
-**Corrects:** p02
 
 Execution shape: one phase implementer owns commits in the existing root worktree on docs/docs-skills-ia-367-p03. No parallel group is declared; the four prose bindings and their shared regression contract are one semantic correction and share evidence/build output, so they fail the independent-slice test. Root retains delivery integration into PR #369, review, acceptance and landing. Main fetched before start; no planned-path changes since the branch base. P03 is accepted with frozen anchors; p-rev2 starts after it, preserving sequential continuity.
 
@@ -744,6 +744,21 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 **Proof command:** Prose contract and manual bound-root/self-root controls; unchanged fallback and source-precedence controls.
 
 **Verification:** Five prose guards pass with a distinct reuse/self-root contract for this reference and unchanged exact-probe/order/root-reuse/no-match coverage for unbound consumers. The pre-fix reference fails specifically for missing validated-root reuse; immutable four-site and wrapper controls plus meaningful tier mutations still fail. The actual temporary manual/prose fixture accesses assets through an established root without rebinding, validates/binds the loaded authoring-docs self root without reload, stops on failed self validation, and preserves wrapper/loaded/user/repo/no-match controls. This is shell transcription, not agent execution or verified provider discovery. Lint/format and isolated sentence contracts (1,087) pass before commit; immediate committed guard/controls/manual checks pass, with exact two-path tested bytes preserved by hooks. Byte conservation preserves IA guidance selection, helper invocation and all surrounding clauses; analyze/bootstrap/apply remain entirely unchanged. No runtime, versions, recovery or unexpected failure. Evidence: ignored `analysis/p-rev2/fix-r1/`, prefixed `t03-` logs and `prev2-t03-committed-bytes.json`.
+
+## Phase p-rev3: Validate normalized IA paths
+
+**Status:** in_progress
+**Base:** 130f8c0521e3e03704680fb3237898a46335cfac
+**Executor:** phase-implementer:docs367-prev3-impl-20261023
+**Corrects:** p03
+
+Phase start: one committing phase implementer, shared existing checkout; no nested dispatch or parallel group. The two paths share one guard and regression boundary, so independent implementation lanes would overlap. Root owns ledger repair, review receipt, acceptance and PR landing. Main fetched at phase start; no main advancement in the two product paths. Preserve p03/p-rev2 anchors. Recovery 0/10, pending null.
+
+Root remote-review receipt (PR #371 review 5623136468, reviewed head 130f8c0521e3e03704680fb3237898a46335cfac): 0 Critical, 0 High, 1 Medium, 1 Low. M1 discussion_r4355448299 confirmed: blank line split p-rev2 event rows; removed it without altering any event cells. Status metadata also relocated directly under the p-rev2 heading so accepted status is readable, preserving its values and history. L1 discussion_r4355448304 confirmed against G2: raw traversal checks allowed leading-space escapes later trimmed into stored decision/track paths; queued as prev3-t01 within accepted contract. No new requirement or version increment. Remote review has no OAT provenance marker. Cursor summary is informational.
+
+CI run 39888000833 failed independently at agents-md.test.ts: two real processes returned appended/blocked rather than appended/no-change. Neither that module nor test changed in this PR. Preserve the failed run; inspect/rerun the existing focused test during verification, without changing unrelated code or timeouts. Final-head CI must pass before landing.
+
+---
 
 ## Phase p04: Navigation follows Contents
 

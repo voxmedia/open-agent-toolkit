@@ -91,6 +91,10 @@ docs367-prev2-accepted-ec1261f: p-rev2 passed, two review rounds and one fix con
 
 docs367-p03-pr371-open: opened https://github.com/voxmedia/open-agent-toolkit/pull/371 against main for accepted p03; integrated gates passed, all four independent product lenses covered, delivery awaits CI/Bugbot under land-pr authority; final PR held until project completion.
 
+### 2026-10-23 · structural · oat-project-implement · p-rev3
+
+PR #371 findings received; p-rev3 starts bounded G2 normalization correction, preserving prior anchors; Reviews table and accepted p-rev2 marker repaired. docs367-prev3-start-20261023
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

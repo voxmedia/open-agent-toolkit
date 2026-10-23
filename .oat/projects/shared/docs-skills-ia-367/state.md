@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04
+oat_current_task: p-rev3
 oat_last_commit: 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
 oat_blockers: []
 associated_issues: [
@@ -32,6 +32,9 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p-rev2:
+      used_attempts: 0
+      pending_attempt: null
+    p-rev3:
       used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -139,12 +142,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev2 accepted and PR #369 merged; P03 delivery PR #371 open, then p04.
+Implement — p-rev3 corrects PR #371 findings before landing P03; p04 remains pending.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03 and p-rev2 accepted; 5/11 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03 and p-rev2 accepted; 5/12 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers

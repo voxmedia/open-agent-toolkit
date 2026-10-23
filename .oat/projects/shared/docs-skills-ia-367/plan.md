@@ -411,6 +411,13 @@ procedure. Exemplars and repo evidence stay in external guidance.
 **Exit evidence:** A mixed-scope fixture demonstrates the old instruction choosing an older user skill lacking new assets while the loaded sibling contains them; the corrected prose probes the loaded sibling first, falls back user then repo, and consistently uses the bound root. Relevant text-contract protection fails on the old ordering and passes with valid fallback controls; no invented generic resolver runtime. Required gates and skill prose/lint/format checks pass with truthful cache reporting; an independent reviewer verifies the correction; PR #369 CI/Bugbot clear before landing. Existing p02 PR-scoped skill/public versions remain sufficient because the correction ships in that same PR; p03's 0.3.25 versions remain its delivery.
 **Provisional:** no
 
+## Phase p-rev3: Validate normalized IA paths
+
+**Intent:** Correct p03 G2's repository-relative IA validation for PR #371 discussion_r4355448304. Trim decision and track paths before every existing path check, rejecting traversal in the value that would be stored. Preserve accepted valid trimming, scope rules, stored-null behavior, existing versions and earlier phase anchors. Repair PR #371 discussion_r4355448299's split Reviews table without changing event identity or outcomes.
+**Exit evidence:** Existing real config-command tests reject whitespace-padded traversal in both decision and track paths without changing stored config bytes; a valid padded repository-relative control still round-trips. Regression fails against pre-fix code for the intended acceptance and passes after correction. Required gates pass with explicit exits and cache reporting, independent bounded review passes, and PR #371 current-head CI/Bugbot clear before land-pr. Reviews remain one contiguous table and the CLI reads the accepted p-rev2 status.
+**Provisional:** no
+**Corrects:** p03
+
 ## Phase p04: Navigation follows Contents
 
 **Intent:** Emit `---Label---` groups from `###` subheadings in Contents, accept a string `root`, and make non-dash bullets an error (P13, G3). Then run nav sync at the end of `oat docs init` and bootstrap and add `nav sync --check` to the template prebuild, writing `navOwner: nav-sync` on new Fumadocs and MkDocs scaffolds and leaving undeclared repos and Markdown mode untouched (P12). Add `documentation.nonReaderPaths` and make nav sync inventory, `--check` and `generate-index` honor it, keeping those paths out of the rendered app where the framework allows (prerequisite for p07's templates). Make `generate-index` follow Contents order and index titles with tooling-aware header text (P14). Update the Contents grammar docs.
@@ -489,8 +496,7 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 | p03    | code     | passed          | 2026-10-23 | reviews/archived/p03-review-2026-10-23T000325Z.md                | 28887537aa3498293340bbc86f3f85772b4a9f09 | auto                                                            | -                    |
 | p03    | code     | passed          | 2026-10-23 | reviews/archived/p03-review-2026-10-23T000851Z.md                | 28887537aa3498293340bbc86f3f85772b4a9f09 | gate                                                            | claude-opus-5-5-high |
 | p-rev2 | code     | fixes_completed | 2026-10-23 | reviews/archived/p-rev2-review-2026-10-23T004632Z.md             | 88fd7be1ff6041f56eab4e74c6b5ff7b7f482327 | auto                                                            | -                    |
-
-| p-rev2 | code | passed | 2026-10-23 | reviews/archived/p-rev2-review-2026-10-23T013602Z.md | 41e0ad2cbdc9f84a90b0a1a842091f41810b5246 | auto | - |
+| p-rev2 | code     | passed          | 2026-10-23 | reviews/archived/p-rev2-review-2026-10-23T013602Z.md             | 41e0ad2cbdc9f84a90b0a1a842091f41810b5246 | auto                                                            | -                    |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
