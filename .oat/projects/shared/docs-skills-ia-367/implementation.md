@@ -1209,7 +1209,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 **Status:** in_progress
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
-**Head:** 49572b8dad6cb838521d9c90121f42e8230eb3dd
+**Head:** 95a2cef6610eb3a65c18544ffcdd51f9abb4b212
 **Executor:** phase-implementer:docs367-p05-impl-20261023
 
 One phase implementer owns this existing T3 worktree on docs/docs-skills-ia-367-p05, directly executing the concrete Outcome7 phase. No parallel group is declared; independent root fan-out fails because scaffold lists/templates/bootstrap, docs-config/transforms, parity/export fixtures, lockfile and build/generated outputs share state. Root retains phase design, review, acceptance and GitHub authority. Scope is hard-reasoning at the selected high tier because pinned static-export APIs, source/schema/Next composition, recursive Markdown parsing and portable scaffold commands interact; size alone does not determine the route. Target codex_codex_proxy/gpt-6.1-sol/high/priority, no nested dispatch. Main fetched and no planned-path advancement. Recovery p05 starts0/10,pendingnull; prior phase usage stays frozen.
@@ -1315,6 +1315,29 @@ All eight run in order with explicit exits after the correction; origin/main fet
 ### Root recovery01 settlement and continuation
 
 Root validated request docs367-p05-impl-20261023 and its DONE_WITH_CONCERNS handoff at a7a46982cac6fd4e163ecc57895f127792da9872. Reservation b8e7b80a0 precedes the bounded correction49572b8da; the original t02 commit/parent remain immutable. Only the release assertion and matching terminal marker changed in the recovery candidate. Eligibility, original identities, exact high/priority target, monotonic accounting and focused pre/post plus postcommit phase exits reconcile. Root clears only the completed pending marker and preserves usage1/10 (9remain); prior-phase ledgers/anchors stay frozen. All three records are closed, all eight ordered gates pass and the supplemental forced run executes12fresh tasks/9374tests. Root inspected records, diffs and exits rather than rerunning broad gates. The phase remains in_progress for the existing three-page prose correction, independent review and acceptance. The nav/link collision scope reconciliations fulfill the concrete p05 layout and introduce no additional requirement.
+
+### Continuation verification and handoff
+
+Request docs367-p05-prose-20261023 continues the same implementer after root settlement, with accepted launch3febb6d35640bd9c4c271bfc300d90e1409bc060. T04 product d9ce83669aaa4865ce9a6e112386c57876e7f7c9 and separate journal95a2cef6610eb3a65c18544ffcdd51f9abb4b212 close the remaining approved propagation in exactly three public pages. All four records are completed. Candidate Head is95a2cef6610eb3a65c18544ffcdd51f9abb4b212; this verification-only journal changes no tested product bytes. Phase remains in_progress for root independent review and acceptance.
+
+Conservation: canonical bootstrap ownership/capability/result/walkthrough/summary behavior now agrees with the three pages; setup inputs, Markdown/adoption, valid capability/build/config/walkthrough behavior, explicit approval boundaries and every heading/link are retained. No other obsolete public post-patch/AGENTS-bridge claim was found by the bounded source search. Existing docs check executes exit0 before product commit; no new automated tests or negative controls. Public/bundled0.3.27 and existing skill bumps remain unchanged.
+
+| Ordered gate             | Exit                      | Turbo cached / total |
+| ------------------------ | ------------------------- | -------------------- |
+| 1 check                  | 0                         | 0/11                 |
+| 2 type-check             | 0                         | 5/11                 |
+| 3 isolated-HOME test     | 0 after one no-edit retry | 11/12 on retry       |
+| 4 build                  | 0                         | 5/5                  |
+| 5 check:skill-bumps      | 0                         | direct               |
+| 6 release:check-versions | 0                         | direct               |
+| 7 release:validate       | 0                         | direct               |
+| 8 build:docs             | 0                         | 6/6                  |
+
+All gates run in order, with origin/main fetch exit0 before6 and no owned-path advancement. Initial gate3 exits1 on visual-companion server-start timeout (8915CLI tests pass,1fails); one disclosed no-edit infrastructure retry passes that test and all8916CLI tests freshly, with11/12 Turbo tasks replayed. Root smoke165/skills712/scripts1 execute and pass on that successful gate. This is an infrastructure rerun, not a code correction or recovery reservation. Forced12fresh/9374tests, direct lint/format/sentence contracts, real exports/browser/HTTP and prior behavioral controls remain inherited from the earlier unchanged-product proof; no forced rerun or visual/export repetition was done for prose. Recovery remains1/10,9remaining,pendingnull; no new recovery event or route retry. Exact target codex_codex_proxy/gpt-6.1-sol/high/priority is unchanged. No nested dispatch, independent review, GitHub operation or root-owned tracking edit.
+
+Review-scope p05 journal check exits0/statusok; its sole warning is the root-owned continuation run still running, which root terminalizes at handoff.
+
+Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, task-docs-check.log, gates.json/gate1–3.log, infrastructure-retry.md and gates-retry.json/gate3–8-retry.log, fetch.log/main-paths.log and journal-check.json. Earlier proof index analysis/p05/README.md is historical; recovery01 was settled by root at c59e30557b79a8680a4541b2b9cdc0bca8fcdc0d, and the public-prose concern recorded there is now closed by t04.
 
 ---
 
