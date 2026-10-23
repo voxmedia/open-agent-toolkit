@@ -20,16 +20,36 @@ function extractTabTitle(node: RootContent): string | null {
   return match?.[1] ?? null;
 }
 
-function reparseContent(value: string): RootContent[] {
+function reparseContent(value: string, block?: Code): RootContent[] {
   const tree = unified().use(remarkParse).use(remarkGfm).parse(value);
   transformChildren(tree, value);
+  // Reparsed tab content still reports authored physical source locations.
+  const relocate = (node: {
+    position?: Code['position'];
+    children?: unknown[];
+  }): void => {
+    if (node.position && block?.position) {
+      for (const point of [node.position.start, node.position.end]) {
+        point.line += block.position.start.line - 1;
+        point.column += block.position.start.column - 1;
+        // Deindentation changes offsets; line/column remain authoritative.
+        delete point.offset;
+      }
+    }
+    node.children?.forEach((child) => relocate(child as typeof node));
+  };
+  tree.children.forEach(relocate);
   return tree.children;
 }
 
-function createTabsElement(tabs: TabEntry[]): RootContent {
+function createTabsElement(
+  tabs: TabEntry[],
+  position?: Code['position'],
+): RootContent {
   return {
     type: 'mdxJsxFlowElement',
     name: 'Tabs',
+    position,
     attributes: [],
     children: tabs.map((tab) => ({
       type: 'mdxJsxFlowElement',
@@ -67,6 +87,7 @@ function transformChildren(
 
     // Collect consecutive tabs into a group
     const tabs: TabEntry[] = [];
+    const start = node.position?.start;
 
     while (i < tree.children.length) {
       const current = tree.children[i]!;
@@ -88,14 +109,20 @@ function transformChildren(
       ) {
         const codeBlock = tree.children[i] as Code;
         // Re-parse the code block value as markdown to restore original structure
-        content.push(...reparseContent(codeBlock.value));
+        content.push(...reparseContent(codeBlock.value, codeBlock));
         i++;
       }
 
       tabs.push({ title: currentTitle, content });
     }
 
-    newChildren.push(createTabsElement(tabs));
+    const end = tree.children[i - 1]?.position?.end;
+    newChildren.push(
+      createTabsElement(
+        tabs,
+        start && end ? { start: { ...start }, end: { ...end } } : undefined,
+      ),
+    );
   }
 
   tree.children = newChildren;
