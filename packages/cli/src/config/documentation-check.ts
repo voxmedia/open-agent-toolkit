@@ -77,7 +77,7 @@ export function normalizeDocumentationCheck(
     return input;
   };
   const severity = (v: unknown): v is DocsCheckSeverity =>
-    ['error', 'warn', 'off'].includes(String(v));
+    typeof v === 'string' && ['error', 'warn', 'off'].includes(v);
   const root = object(
     value,
     ['rules', 'thresholds', 'exceptions', 'provenance', 'diagramBaseRef'],

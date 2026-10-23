@@ -125,6 +125,12 @@ describe('documentation.check through real config storage and commands', () => {
     { unknown: true },
     { rules: { typo: 'off' } },
     { rules: { links: 'warning' } },
+    { rules: { links: ['error'] } },
+    {
+      exceptions: [
+        { path: '**', rule: 'links', reason: 'Fixture', severity: ['error'] },
+      ],
+    },
     { thresholds: { rootWarn: -1 } },
     { thresholds: { typo: 3 } },
     { thresholds: { rootWarn: 20 } },
@@ -141,6 +147,32 @@ describe('documentation.check through real config storage and commands', () => {
       expect(
         await f.command('set', 'documentation.check', JSON.stringify(invalid)),
       ).toMatchObject({ status: 'error' });
+      expect((await readOatConfig(f.repo)).documentation?.check).toEqual(
+        policy,
+      );
+    },
+  );
+  it.each([
+    { rules: { links: ['error'] } },
+    {
+      exceptions: [
+        { path: '**', rule: 'links', reason: 'Fixture', severity: ['error'] },
+      ],
+    },
+  ])(
+    'rejects stored non-string severities and permits config repair: %j',
+    async (invalid) => {
+      const f = await fixture();
+      await writeFile(
+        f.repoPath,
+        JSON.stringify({ version: 1, documentation: { check: invalid } }),
+      );
+      await expect(readOatConfig(f.repo)).rejects.toThrow(
+        'severity must be error, warn or off',
+      );
+      expect(
+        await f.command('set', 'documentation.check', JSON.stringify(policy)),
+      ).toMatchObject({ status: 'ok' });
       expect((await readOatConfig(f.repo)).documentation?.check).toEqual(
         policy,
       );
