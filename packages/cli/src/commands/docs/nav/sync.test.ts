@@ -128,6 +128,40 @@ Intro paragraph.
     ]);
   });
 
+  it('preserves pre-group entries and group identity in authored order', () => {
+    expect(
+      parseIndexContents(
+        '## Contents\n- [Intro](intro.md)\n### Guides\n- [Start](start.md)\n### Guides\n- [More](more.md)',
+        'docs/index.md',
+      ),
+    ).toEqual([
+      { title: 'Intro', href: 'intro.md' },
+      { title: 'Start', href: 'start.md', group: { title: 'Guides', line: 3 } },
+      { title: 'More', href: 'more.md', group: { title: 'Guides', line: 5 } },
+    ]);
+  });
+
+  it.each(['*', '+'])(
+    'rejects %s link bullets with the source line',
+    (bullet) => {
+      expect(() =>
+        parseIndexContents(
+          `## Contents\n- [Valid](valid.md)\n${bullet} [Lost](lost.md)`,
+          'docs/index.md',
+        ),
+      ).toThrow('docs/index.md:3: Contents links must use a dash (-) bullet');
+    },
+  );
+
+  it.each(['### Empty\n### Next\n- [Start](start.md)', '### Empty\n## Notes'])(
+    'rejects an empty authored group',
+    (body) => {
+      expect(() =>
+        parseIndexContents(`## Contents\n${body}`, 'docs/index.md'),
+      ).toThrow('docs/index.md:2: Contents group "Empty" has no entries');
+    },
+  );
+
   it('throws when the reserved contents section is missing', () => {
     expect(() => parseIndexContents('# Docs\n', 'docs/index.md')).toThrow(
       'Missing required ## Contents section in docs/index.md',
@@ -155,6 +189,39 @@ describe('syncDocsNavigation', () => {
       }),
     );
     createdRoots.length = 0;
+  });
+
+  it('emits MkDocs groups as nested lists while retaining landing pages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-groups-'));
+    createdRoots.push(root);
+    await writeTree(root, {
+      'mkdocs.yml': 'site_name: Test\n',
+      'docs/index.md':
+        '# Home\n## Contents\n- [Intro](intro.md)\n### Learn\n- [Section](section/index.md)\n### Reference\n- [API](api.md)\n',
+      'docs/intro.md': '# Intro',
+      'docs/api.md': '# API',
+      'docs/section/index.md':
+        '# Section\n## Contents\n### Self only\n- [Self](index.md)\n### Tasks\n- [Task](task.md)',
+      'docs/section/task.md': '# Task',
+    });
+    await syncDocsNavigation({ appRoot: root });
+    expect(
+      YAML.parse(await readFile(join(root, 'mkdocs.yml'), 'utf8')).nav,
+    ).toEqual([
+      { Home: 'index.md' },
+      { Intro: 'intro.md' },
+      {
+        Learn: [
+          {
+            Section: [
+              'section/index.md',
+              { Tasks: [{ Task: 'section/task.md' }] },
+            ],
+          },
+        ],
+      },
+      { Reference: [{ API: 'api.md' }] },
+    ]);
   });
 
   it('builds nested navigation and preserves prose outside the contents section', async () => {

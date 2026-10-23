@@ -6,6 +6,7 @@ import { dirExists, fileExists } from '@fs/io';
 export interface DocsContentsEntry {
   title: string;
   href: string;
+  group?: { title: string; line: number };
 }
 
 export function parseIndexContents(
@@ -21,25 +22,42 @@ export function parseIndexContents(
     throw new Error(`Missing required ## Contents section in ${sourcePath}`);
   }
 
-  const sectionLines = lines.slice(contentsHeadingIndex + 1);
-  const nextHeadingIndex = sectionLines.findIndex((line) =>
-    /^##\s+/.test(line.trim()),
-  );
-  const contentsLines =
-    nextHeadingIndex >= 0
-      ? sectionLines.slice(0, nextHeadingIndex)
-      : sectionLines;
-
-  const entries = contentsLines
-    .map((line) => line.match(/^\s*-\s+\[([^\]]+)\]\(([^)]+)\)/))
-    .filter((match): match is RegExpMatchArray => match !== null)
-    .map((match) => {
-      const [, title = '', href = ''] = match;
-      return {
-        title: title.trim(),
-        href: href.trim(),
-      };
-    });
+  const entries: DocsContentsEntry[] = [];
+  let group: DocsContentsEntry['group'];
+  let groupEntries = 0;
+  const checkGroup = (): void => {
+    if (group && groupEntries === 0) {
+      throw new Error(
+        `${sourcePath}:${group.line}: Contents group "${group.title}" has no entries`,
+      );
+    }
+  };
+  for (let i = contentsHeadingIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i]!;
+    if (/^##\s+/.test(line.trim())) break;
+    const heading = line.match(/^###\s+(.+?)\s*$/);
+    if (heading) {
+      checkGroup();
+      group = { title: heading[1]!.trim(), line: i + 1 };
+      groupEntries = 0;
+      continue;
+    }
+    if (/^\s*[*+]\s+\[[^\]]+\]\([^)]+\)/.test(line)) {
+      throw new Error(
+        `${sourcePath}:${i + 1}: Contents links must use a dash (-) bullet`,
+      );
+    }
+    const match = line.match(/^\s*-\s+\[([^\]]+)\]\(([^)]+)\)/);
+    if (match) {
+      entries.push({
+        title: match[1]!.trim(),
+        href: match[2]!.trim(),
+        ...(group ? { group } : {}),
+      });
+      groupEntries += 1;
+    }
+  }
+  checkGroup();
 
   if (entries.length === 0) {
     throw new Error(
@@ -162,6 +180,8 @@ export async function buildDocsNavTree(
       ? [{ Home: 'index.md' }]
       : [toPosixPath(join(dirRelativePath, 'index.md'))];
 
+  let currentGroup: DocsContentsEntry['group'];
+  let groupNav: DocsNavTree = nav;
   for (const entry of contentsEntries) {
     const resolvedTarget = await resolveEntryTarget(
       options.docsRoot,
@@ -177,8 +197,13 @@ export async function buildDocsNavTree(
       continue;
     }
 
+    if (entry.group !== currentGroup) {
+      currentGroup = entry.group;
+      groupNav = [];
+      nav.push({ [currentGroup!.title]: groupNav });
+    }
     if (resolvedTarget.kind === 'page') {
-      nav.push({ [entry.title]: resolvedTarget.path });
+      groupNav.push({ [entry.title]: resolvedTarget.path });
       continue;
     }
 
@@ -195,7 +220,7 @@ export async function buildDocsNavTree(
 
     const childVisitedDirectories = new Set(visitedDirectories);
     childVisitedDirectories.add(childDirRelativePath);
-    nav.push({
+    groupNav.push({
       [entry.title]: await buildDocsNavTree({
         docsRoot: options.docsRoot,
         dirRelativePath: childDirRelativePath,

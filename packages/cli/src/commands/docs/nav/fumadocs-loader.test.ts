@@ -181,6 +181,58 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
     expect(check.unlisted).toEqual([]);
   });
 
+  it('renders ordered separators and retains a named root landing page', async () => {
+    const appRoot = await writeApp(await scratch(), {
+      root: ' Named section ',
+    });
+    const docsRoot = join(appRoot, 'docs');
+    await writeFile(
+      join(docsRoot, 'section', 'index.md'),
+      '# Section\n\n## Contents\n### Landing only\n- [Self](index.md)\n### [Literal] group\n- [Leaf](leaf.md)\n',
+    );
+    const result = await syncDocsNavigation({ appRoot });
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    const meta = JSON.parse(
+      await readFile(join(docsRoot, 'section', 'meta.json'), 'utf8'),
+    );
+    expect(meta).toEqual({
+      root: ' Named section ',
+      title: 'Section',
+      pages: ['index', '--- [Literal] group---', 'leaf'],
+    });
+    const require = createRequire(docsAppPackageJson);
+    const { loader } = await import(
+      pathToFileURL(require.resolve('fumadocs-core/source')).href
+    );
+    const tree = loader({
+      baseUrl: '/',
+      source: {
+        files: [
+          { type: 'meta', path: 'meta.json', data: { pages: ['section'] } },
+          { type: 'meta', path: 'section/meta.json', data: meta },
+          {
+            type: 'page',
+            path: 'section/index.md',
+            data: { title: 'Section' },
+          },
+          { type: 'page', path: 'section/leaf.md', data: { title: 'Leaf' } },
+        ],
+      },
+    }).pageTree;
+    expect(
+      tree.children[0].children.map((node: { type: string; name: string }) => [
+        node.type,
+        node.name,
+      ]),
+    ).toEqual([
+      ['page', 'Section'],
+      ['separator', ' [Literal] group'],
+      ['page', 'Leaf'],
+    ]);
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual(ALL_PAGES);
+  });
+
   it('--check flags a root: true folder whose meta.json drops the landing page', async () => {
     // What an earlier nav sync wrote: the loader hides section/index.md.
     const appRoot = await writeApp(await scratch(), {

@@ -8,7 +8,11 @@ import {
 } from '@commands/shared/frontmatter';
 import { fileExists } from '@fs/io';
 
-import { parseIndexContents, resolveEntryTarget } from './contents';
+import {
+  type DocsContentsEntry,
+  parseIndexContents,
+  resolveEntryTarget,
+} from './contents';
 
 /**
  * The `meta.json` keys nav sync owns. Every other key (`icon`, `defaultOpen`,
@@ -215,7 +219,11 @@ function hasImplicitIndex(
   relativeDir: string,
   existing: Record<string, unknown> | null,
 ): boolean {
-  if (relativeDir === '.' || existing?.root === true) {
+  if (
+    relativeDir === '.' ||
+    existing?.root === true ||
+    (typeof existing?.root === 'string' && existing.root.trim().length > 0)
+  ) {
     return false;
   }
   const pagesIndex = existing?.pagesIndex;
@@ -236,6 +244,7 @@ async function buildFolderPages(
   // implicit.
   const pages: string[] = implicitIndex ? [] : ['index'];
 
+  let currentGroup: DocsContentsEntry['group'];
   for (const entry of entries) {
     const target = await resolveEntryTarget(
       docsRoot,
@@ -261,6 +270,12 @@ async function buildFolderPages(
     }
 
     if (!pages.includes(item)) {
+      if (entry.group !== currentGroup) {
+        currentGroup = entry.group;
+        // A leading space prevents the loader treating a literal [label] as an icon.
+        const title = currentGroup!.title;
+        pages.push(`---${title.startsWith('[') ? ' ' : ''}${title}---`);
+      }
       pages.push(item);
     }
   }
