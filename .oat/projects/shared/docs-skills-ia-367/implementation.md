@@ -1528,6 +1528,19 @@ Execution shape: one phase implementer, the sole product-committing owner in /Us
 
 Root readiness reconciliation: completed intelligent recon maps existing root/config resolution, Contents grammar, reader exclusions, real navigation adapters and flagship Markdown helpers. Root verified the cited G5/P20–P23/P25 source clauses, config reconstruction gap and already-resolved parser versions. No checker exists yet; the recon's lexical inventory and SVG inspections do not prove rule compliance. Phase-local choices are concretized in plan.md without changing Outcomes, G5 flags/JSON, authority or the agreed Approach. No up-front tasks, generic validator/plugin system, framework upgrade, consumer rollout or P24/p07 scope is introduced. Parser dependencies are bounded to existing resolved engines; direct imports must declare ownership, including production use in the packed CLI.
 
+### Task p06-t01: Preserve validated checker policy through config commands
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (accepted T3 delegated task)
+**Start HEAD:** 407c3513b305db7480f828be87c30cf5ae8c8d69
+**Intent:** Define the bounded checker policy and shared Contents locations/descriptions without changing accepted navigation grammar.
+**Files:** packages/cli/src/config/documentation-check.ts; packages/cli/src/config/oat-config.ts; packages/cli/src/config/resolve.ts; packages/cli/src/commands/config/index.ts; packages/cli/src/commands/config/docs-check.test.ts; packages/cli/src/commands/docs/nav/contents.ts; packages/cli/src/commands/docs/nav/sync.test.ts.
+**Proof:** isolated-HOME vitest config/docs-check and nav/sync; CLI lint/type-check; scoped CLI build.
+
+**Commit:** 2d225cd708a5e82850febb60a074d74f9760e61d
+**Verification:** 45 focused real-file/config tests passed; CLI lint, type-check and build exits0. No cached Turbo task used. Early null-repair and lint defects corrected before commit.
+
 ---
 
 ## Phase p07: Page templates and presets
