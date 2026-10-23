@@ -970,12 +970,17 @@ Protects against: pinned external schema rejecting accepted roots and collection
 
 ### Task p04-t07: (review) Restore tolerant Contents ordering in generate-index
 
-**Status:** in_progress
+**Status:** completed
 **Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (H1)
 
 Intent: Keep shared dash-only/empty-group syntax errors, but let empty or prose-only Contents fall back and ignore unsupported, missing, external or out-of-root ordering hints. Use only surviving in-root inventory entries for ordering, with deterministic unlisted fallback. MDX links accepted by Fumadocs nav must not fail generate-index; preserve current inventory scope and strict nav sync behavior.
 Files: CLI index-generate generator and existing tests; smallest shared Contents parser option/helper plus related existing nav tests if required; affected human docs only if needed to state fallback truthfully.
 Proof: pre-fix real-command regressions fail for intended errors; fixed valid Fumadocs MDX nav+index and undeclared Markdown external/escape/missing/empty/prose fixtures pass; valid authored order, exclusions and malformed shared grammar controls remain; relevant suites and full ordered phase gates.
+
+**Commit:** f9a75274244347aff564bf8c49e0920c9be173df
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Files:** packages/cli/src/commands/docs/index-generate/{generator.ts,index.test.ts}; packages/cli/src/commands/docs/nav/contents.ts.
+**Evidence:** Contents now orders a captured surviving-inventory map without filesystem target resolution; external, escaping, missing, excluded and unsupported targets cannot add entries or trigger outside-root reads. Generator explicitly allows an empty parsed map; nav retains the strict default, shared dash/empty-group grammar and its unchanged strict target resolver. Existing hierarchical/title/order/nonduplication/exclusion controls remain. Restored both empty-Contents scaffold safety fixtures. On immutable reviewed905b048de generator/parser bytes, seven new real-command cases fail for the intended strict target/empty errors (one excluded valid control passes), and the full restored suite reports13 failures/62 passes; original logs retained. After correction,137 isolated-HOME nav/index tests pass before and against committed bytes, plus scoped lint/format, CLI type-check/build (all exit0, direct execution). The real MDX fixture nav sync/check writes index/fancy/guide successfully and generate-index emits only its historical Markdown inventory. Protects against command/config/filesystem composition rejecting tolerated ordering hints; existing valid-target generator tests did not cover this boundary. No own-module mocks, catch/message matching, new MDX inventory promise or docs change needed. Exact commands/fixtures/logs/exits: ignored analysis/p04/fix-r1/t07-\*. Recovery stays3/10,pending null; no postcommit correction or retry.
 
 ### Task p04-t08: (review) Attach sidebar ownership documentation to navOwner
 
