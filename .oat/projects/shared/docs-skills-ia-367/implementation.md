@@ -1142,6 +1142,19 @@ Proof: Reuse the real authored-order fixture in host and portable win32-relative
 
 Root steering on the same request docs367-prev4-impl-20261023 / continuation cont-docs367-p04-external-prev4 accepts external Warp review5624216218 at source06c160aa: H2 discussion_r4356366295 → prev4-t03 directory-only collection parity; M2 discussion_r4356366304 → prev4-t04 fenced Contents compatibility. Root independently reproduced both and explicitly approved adding reader-paths.ts/source-config.test.ts and nav/contents.ts/nav/sync.test.ts to the original four-path product boundary. These correct existing G2/G3/P14 contracts within this same revision phase; no new requirement, phase or automated p04 review round. Root will align plan/state/remote receipt after handoff to avoid concurrent tracked writes. Source artifact (local-only): reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md; root-directory-only-repro.json and root-fenced-contents-repro.json preserve evidence. Same target and recovery0/10,pendingnull; original p04 anchors/history/usage3 remain frozen. Integrated final gates follow all four tasks once.
 
+### Task prev4-t03: Preserve directory-only collection exclusion semantics
+
+**Status:** completed
+**Commit:** ac0f7c4ce99d0f608928d3e3f35c77f032811304
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356366295 (H2), root-authorized amendment above
+
+Intent: Translate directory-only negatives to require a descendant file segment; preserve literal/wildcard/root anchoring semantics, real-directory pruning and metadata exclusion without dependencies or a generic glob engine.
+Files: packages/docs-config/src/reader-paths.ts and source-config.test.ts.
+Proof: Extend existing actual pinned tinyglobby/CLI-matcher/Next-emitter parity fixture with guide.md/ and \*\*/ cases, preserving existing literal-glob and real-directory controls. Original adapter must lose routes incorrectly (red); corrected adapter keeps root files and omits actual subdirectory content and metadata. Scoped docs-config format/check/types/test/build precommit and committed-byte verification afterwards.
+
+**Execution/evidence:** Directory-only negatives now require an actual directory component and descendant file; an all-globstar directory path becomes the nonempty directory wildcard before descendant matching. Nondirectory translation is unchanged. Existing real collection fixture runs bounded literals plus guide.md/ and \*_/: original adapter loses guide.md in the first new case and all root files in the second (two intended red failures; bounded control green). Corrected actual pinned tinyglobby, CLI matcher, metadata and Next collection-emitter controls pass all16 docs-config tests before and after commit. Scoped format/check/type-check/test/build all exit0 precommit; committed bytes re-read, check/type-check/test/build all exit0 postcommit. Installed provenance remains fumadocs-mdx14.3.2/core16.10.2; actual emitter used, no fake glob/schema. Exact baseline failure and pre/post commands/logs/exits are ignored analysis/p-rev4/t03-_. Recovery0/10,pendingnull unchanged.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
