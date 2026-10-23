@@ -688,12 +688,18 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ### Task prev2-t02: (review) Bind the authoring wrapper to its loaded sibling
 
-**Status:** pending
+**Status:** completed
+**Commit:** a12e8edf45ac99d0e0f7543f508b53205f89a1e3
+**Executor:** phase-implementer:docs367-prev2-impl-20261023
+**Handle:** docs367-prev2-fix-r1-20261023 (same implementation continuation)
+**Launch base:** a6a8cda7632bbb89980ad50cb1bcdb3ff3193672
 **Source review:** reviews/archived/p-rev2-review-2026-10-23T004632Z.md (M1)
 
 **Intent:** Correct both ambient authoring-docs loads in the p02 wrapper using the existing exact loaded → user → repo binding and consistently bound guidance reference. Preserve targeted-authoring boundaries and guidance-source precedence.
 **Files:** `.agents/skills/oat-docs-authoring/SKILL.md`, `.agents/skills/authoring-docs/tests/skill-binding.test.mjs`.
 **Proof command:** Expanded prose guard fails immutable pre-fix wrapper for the missing loaded tier and passes fixed; mixed-scope fixture and sentence contracts remain valid.
+
+**Verification:** Five shipped-prose guards pass; immutable old wrapper fails only for the missing loaded tier, original four immutable controls still fail, and tier-swap/repo-drop mutations fail for order. The temporary manual/prose fixture covers the wrapper's modeled stale-user outcome (not provider discovery) and successful loaded binding with both assets, plus existing loaded/user/repo/no-match controls. Full lint/format and isolated sentence contracts (1,087) pass before commit. Immediate committed guard/controls/manual checks pass, and exact two-path committed bytes equal tested bytes. Conservation leaves wrapper targeting, source precedence and all three previously fixed consumers unchanged. No runtime helper, version change, recovery attempt or failure. Evidence: ignored `analysis/p-rev2/fix-r1/`, prefixed `t02-` logs and `prev2-t02-committed-bytes.json`.
 
 ### Task prev2-t03: (review) Reuse an established authoring root in the guidance reference
 
