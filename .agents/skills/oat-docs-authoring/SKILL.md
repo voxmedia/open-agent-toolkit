@@ -14,9 +14,8 @@ metadata:
 Use this skill for targeted documentation authoring and small structural edits
 inside an existing OAT Markdown surface or OAT/Fumadocs docs app.
 
-This is a thin wrapper over `authoring-docs`. Load `authoring-docs` for
-universal evidence gathering, page-type selection, writing style, templates,
-and review standards. Keep this wrapper focused on OAT Markdown/Fumadocs placement,
+This is a thin wrapper over `authoring-docs` for universal evidence gathering,
+page-type selection, writing style, templates, and review standards. Keep this wrapper focused on OAT Markdown/Fumadocs placement,
 navigation, generated artifacts, validation, and lifecycle boundaries.
 
 ## Prerequisites
@@ -111,9 +110,19 @@ Use `references/docs-root-resolution.md` before assuming any path. OAT docs apps
 commonly live outside `apps/oat-docs`, and `.oat/config.json` may describe the
 generated root index separately from the authored docs root.
 
-Load `authoring-docs` and use its reference map for evidence gathering, page
-type, writing style, templates and review rubric. For IA work use its five-axis
-method and `references/guidance-sources.md`: explicit `--ia-guidance` or
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
+Use the bound skill's reference map for evidence gathering, page type, writing
+style, templates and review rubric. For IA work use its five-axis method and
+`${AUTHORING_DOCS_ROOT}/references/guidance-sources.md`: explicit `--ia-guidance` or
 conversation → repo config → user config → built-in. Cite ordered source
 locators/provenance in the handoff; respect AGENTS/contributing authority,
 keep non-repo sources read-only and report conflicts as `ask_user`.
