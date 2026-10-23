@@ -815,6 +815,18 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 **Commit:** c8c37d7dcbfe39119212a9e9bc160695c5aca67d
 **Evidence:** nav tests pass (including real fumadocs-core 16.10.2 separator/landing consumer); new grammar cases fail on baseline. CLI type-check and scoped oxlint exit 0. Logs: ignored `analysis/p04/t01-*.log`.
 
+### Task p04-t02: Apply shared non-reader paths to navigation and manifest inventory
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Add repository nonReaderPaths with the existing bounded glob grammar; share its matcher across nav and index, apply only to matching content roots, and preserve manifest-only excludes.
+**Files:** CLI docs nav/shared/index-generate, config oat-config/resolve and config command with related tests.
+**Proof command:** isolated-HOME CLI Vitest docs/nav, docs/index-generate, config and commands/config; CLI type-check and scoped lint/format.
+
+**Commit:** c3555e995bdcb7c221b99813644705f95acce6e0
+**Evidence:** 689 focused tests pass; baseline targeted run fails the config, real command applicability, and excluded-subtree regressions. Type-check and scoped lint exit 0. Existing excludes remains manifest-only, including an unrelated explicit app target control. Logs/scripts: ignored `analysis/p04/t02-*`.
+
 ---
 
 ## Phase p05: Reader-first starter app
