@@ -150,4 +150,4 @@ None.
 
 ## Next Milestone
 
-P03 round-2 fixes verified; run final independent re-review, then run the external p03 gate and execute p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; automatically land each phase PR once CI, Bugbot and blocking findings are clear.
+P03 round-2 fixes verified; run final independent re-review, then run the external p03 gate and execute p-rev2 portability correction; PR #369 is held for Bugbot M1. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
