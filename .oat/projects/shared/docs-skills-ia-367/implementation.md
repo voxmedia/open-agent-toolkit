@@ -765,6 +765,10 @@ Ordered DoD gates 1–8 all exited 0, with isolated HOME and successful fetch be
 
 The unchanged `agents-md.test.ts` focused run passed all 71 tests (exit 0), including the two-process appended/no-change assertion; the earlier CI failure remains preserved history. No unrelated source or timeout edits. Existing PR-scoped 0.3.25 versions suffice; no instruction changes needed. Root relayed Warp review 5623152090 / discussion4355461672 as independent confirmation of the same G2 defect, without expanding scope. Exact probes, commands, explicit exits and raw logs are ignored under `analysis/p-rev3/`. Recovery remains 0/10, pending null. Phase remains in_progress for root's independent review and acceptance; no child PR action.
 
+**Root pre-review validation:** Clean handoff bab933fb0486684f89544ad222fb9279a12c7034 verified. Product 05b5043cdf0de2b43fa99135e23c218f91b650c3 changes exactly oat-config.ts and ia.test.ts; two following commits are p-rev3 journal only. Root read the complete product diff, controls, gate exit manifests and verification summary. Six decision/track rows exercise leading/trailing whitespace and slash/backslash traversal through the real config command, preserve exact declared bytes on error, and have a literal valid padded round-trip. The correction checks the trimmed string consistently with its stored value; no other contract expanded. All eight ordered gates have explicit exit 0; forced proof executes all 12 tasks with zero cached, while ordinary gate cache counts remain disclosed. Agents-md focused 71/71 passes; historical CI run remains failed. Independent review and final-head CI/Bugbot remain required.
+
+Warp review 5623152090 (CHANGES_REQUESTED), source head 130f8c0521e3e03704680fb3237898a46335cfac, was read fully by root: one important finding discussion_r4355461672 independently confirms Cursor L1; no additional findings. Disposition: fixed by prev3-t01, pending independent verification and publication; no new task or requirement. Root will reply on both original threads after publication. Cursor M1's event cells were preserved byte-for-byte apart from formatting, and CLI status now reads both p-rev2 events plus 5/12 accepted phases. Remote review provenance remains unknown.
+
 ### Task prev3-t01: Reject traversal after IA path trimming
 
 **Status:** completed
@@ -814,6 +818,8 @@ The unchanged `agents-md.test.ts` focused run passed all 71 tests (exit 0), incl
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-prev3-impl-20261023 · scope=p-rev3 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p-rev3 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-prev2-review-r2-20261023 · scope=p-rev2 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
