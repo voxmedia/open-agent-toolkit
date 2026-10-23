@@ -1522,7 +1522,10 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 **Status:** in_progress
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
+**Head:** 237f50659d7ef6478662e38370e39a094eb9c57c
 **Executor:** phase-implementer:docs367-p06-impl-20261023
+
+Candidate proof: all three execution records are closed. Ordered gates1–8 pass against237f50659d7ef6478662e38370e39a094eb9c57c; Turbo cache hits/executions11/0,11/0,12/0,5/0,direct,direct,direct,6/0 are disclosed. Separate forced isolated-HOME package run passes9,463tests with12/12tasks fresh,0cached; direct smoke165/skills712/scripts1/validation68 and skill sentences1,087 pass. Fresh final flagship validation has0errors/756visible warnings and retains specialized validators; explicit CI manifest generation/diff exits0. Real pnpm10/12 effective-root positive/negative controls, shipped-policy constrained fresh Next build, MkDocs and Markdown recipe controls, and final packed Node22.17/26 probes pass. Exact files, hashes, commands, exits and limits: ignored analysis/p06/PROOF-INDEX.md and final-product-manifest.json. Recovery1/10used,9remaining,pendingnull; no new event. Phase remains in_progress for root independent review and acceptance.
 
 Execution shape: one phase implementer, the sole product-committing owner in /Users/tstang/.t3/worktrees/open-agent-toolkit/docs-docs-skills-ia-367. No declared parallel group applies. Root fan-out fails independence because config/parser contracts, lockfile, scaffold/CI files, fixtures and build outputs are shared and sequentially composed. Root retains plan/state/review/log/acceptance and GitHub ownership. Phase recovery limit10 (default), used0, pendingnull; phase-standing bounded append-only recovery only.
 
