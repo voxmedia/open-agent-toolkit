@@ -285,8 +285,8 @@ differ from that point on.
 site runtime. The skill collects a title, a dedicated repository-relative
 root, and an optional description. It asks no app or package questions and
 never installs dependencies, patches packages, starts a preview server, or
-builds a site. An existing plain tree needs an explicit choice: adopt and
-audit, audit only, or abort. A non-interactive `--yes` alone is not
+builds a site. An existing plain tree defaults to analyze then apply, with no
+scaffold. Explicit adoption offers adopt and audit, audit only, or abort. A non-interactive `--yes` alone is not
 permission to adopt. Adoption keeps existing files byte for byte and adds
 only missing baseline files; a fresh setup creates an authored `index.md`
 and `contributing.md` in the root you chose. Missing content conformity
@@ -299,8 +299,8 @@ name are different inputs), probes which capabilities the installed CLI
 supports, runs the scaffold, and applies only the relevant post-patches (the
 skill's labeled fixes for known gaps in the CLI's scaffold output).
 Verification installs dependencies and runs a build. If a docs app already
-exists, you choose how to resolve the conflict, and one of the choices,
-`replace`, deletes the existing app.
+exists, the default repair route runs analyze then apply and exits. An explicit
+`replace` choice deletes the existing app; a second app remains unsupported.
 
 **What it does without asking:** After you confirm your inputs, bootstrap
 runs `oat docs init`, which writes the `documentation` section of
@@ -335,9 +335,43 @@ needs this audit. Use `oat-project-document` for updates derived from an OAT
 project. For later one-off pages, use
 [oat-docs-authoring](#oat-docs-authoring).
 
+## IA selection and guidance
+
+Bootstrap Step 2.5, `oat-docs-analyze --ia`, and authoring IA work share
+`authoring-docs`. Start with five axes: readers/work contexts, the entry key
+within each track, each page's one job, independent verification needs, and
+size. Page count controls depth; a UI alone does not justify a triad. Then name
+the nearest preset: Product/Engineering/QA, Consumer and Maintainer, Domain
+Engineering, Task Type, Toolkit and CLI, or Flat Small. Under about 15 reader
+pages, grouped headings in one flat index often suffice.
+
+For fresh Markdown/framework setup and explicit adoption, bootstrap proposes
+two plausible two-level trees with 5–8 representative page placements each,
+page jobs, nearest presets and tradeoffs. Analyze's `--ia` does the same in its
+existing analysis artifact and review loop. These are **skill arguments**;
+they do not add CLI bootstrap commands or flags to `oat docs init`.
+
+Resolve advisory sources in this order: explicit `--ia-guidance <path|url>` or
+conversation, repo `documentation.guidance`, user config, then the installed
+built-in IA reference. Config accepts a scalar or ordered string array through
+[the real config interface](../reference/configuration.md). Keep the winning
+layer's order and cite locators/provenance in the analysis, apply plan and
+bootstrap summary. External packs have a Markdown `index.md` with `## Contents`;
+keep non-repo inputs read-only and store only locators. Local AGENTS and
+contributing rules stay authoritative; conflicts become `ask_user`. The built-in
+method works without private guidance or copied exemplars.
+
+Existing docs default to analyze → apply of approved recommendations and exit
+before scaffolding. Replacement requires an explicit choice. A second app also
+requires an explicit choice and remains unsupported by the current CLI. This
+selection stage does not persist IA decisions, restructure trees or materialize
+preset scaffolds. Feature and QA validation page templates are a later delivery;
+the IA Proposal template is available now.
+
 ## oat-docs-analyze
 
-**Invocation:** `/oat-docs-analyze` (no arguments). The skill resolves the
+**Invocation:** `/oat-docs-analyze`, optionally `--ia` and repeated
+`--ia-guidance <path|url>` skill arguments. The skill resolves the
 docs surface itself: the configured `documentation.root` and `tooling` in
 `.oat/config.json` first, then framework evidence, then a generic `docs/`
 tree or root Markdown files. It does not rely on a guessed root when the

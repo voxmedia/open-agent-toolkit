@@ -1,11 +1,12 @@
 ---
 name: oat-docs-analyze
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT documentation contract. Produces a severity-rated analysis artifact for oat-docs-apply.
+argument-hint: '[target] [--ia] [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.6.3'
+  version: '1.7.0'
 ---
 
 # Docs Analysis
@@ -84,6 +85,38 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[10/10] Updating verified tracking + summary…`
 
 ## Process
+
+### Shared authoring method and optional IA proposal
+
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
+Always use its landing-page contract, section entries and one-purpose-per-page
+rule for the quality pass even without `--ia`. For IA work, read
+`${AUTHORING_DOCS_ROOT}/references/guidance-sources.md` and use the source-aware config-get
+interface/helper: explicit `--ia-guidance` or conversation → repo → user →
+built-in. Preserve selected source order and cite locators/provenance in the
+analysis artifact. External Markdown packs require `index.md` and `## Contents`;
+non-repo inputs stay read-only and private contents never enter the artifact.
+
+`--ia` is a skill argument, not a CLI docs command. It adds the shared IA Proposal
+to the **same analysis artifact and existing artifact-review loop**. Read manifests,
+UI navigators/journeys, CLI `bin`, routers, IaC, `e2e/`/`.maestro/`, existing docs
+and independent monorepo units. Ask only decision-changing questions about reader
+work contexts, independent verification, canonical facts and link survival.
+Use the five axes before presets and show two plausible two-level trees with
+5–8 representative page placements each, page jobs, nearest approved presets
+and tradeoffs. A UI alone does not justify Product/Engineering/QA; size chooses
+depth, not audience. For an existing tree respect AGENTS/contributing authority;
+conflicts are `ask_user`, with both source citations. Propose only: no IA
+persistence, restructure action or scaffold materialization in this stage.
 
 ### Step 0: Resolve Docs Target and Analysis Mode
 
@@ -267,8 +300,8 @@ For each evaluated page or directory:
    syntax intentionally shown inside inline code, fenced examples, or template
    snippets.
 4. Check Markdown hygiene: opening code fences need language identifiers; shell
-   examples should follow local fence conventions, defaulting to `sh` unless
-   local guidance uses `bash` or the block needs Bash-only syntax.
+   examples should follow local fence conventions, defaulting to `bash` unless
+   the example is POSIX-only (`sh`) or local guidance requires another fence.
 5. Flag empty headings, multiple document-level H1s outside intentional imported
    README contexts, overlong frontmatter descriptions when local guidance
    defines a limit, ellipsis-truncated descriptions, and README-copy metadata

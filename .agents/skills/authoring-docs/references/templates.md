@@ -547,3 +547,57 @@ docs/
 
 - <Explicitly out-of-scope docs>
 ```
+
+## IA Proposal
+
+Use for bootstrap or an existing-tree `--ia` analysis. This proposes structure;
+it neither persists an IA decision nor materializes a preset. Feature and QA
+validation page templates are not included; use the page-type guidance to
+plan their content.
+
+````markdown
+# IA Proposal: {surface}
+
+## Evidence and guidance
+
+- Resolved sources, in order: {path/URL, provenance: explicit/conversation/shared/user/builtin}
+- Local authority: {AGENTS/contributing paths and relevant rules}
+- Repo signals: {manifests, navigators, bin, routers, IaC, e2e, docs, units}
+- Readers and work contexts: {who must succeed at what}
+- Entry key per track: {task/domain/capability/unit/command/page type}
+- Page purposes: {one primary job per representative page}
+- Verification overlay: {triad/agent-only/none and evidence}
+- Size gate: {page count and amount of structure justified}
+- Canonical facts elsewhere and links to preserve: {paths/URLs}
+- Unresolved conflicts: {ask_user finding with source citations, or none}
+
+## Candidate A: {reader-facing name}
+
+Nearest preset: {approved label}. Choose when: {signals and tradeoffs}.
+
+```text
+{track-or-section}/
+  {page.md} — {page's one job}
+  {page.md} — {page's one job}
+{track-or-section}/
+  {page.md} — {page's one job}
+  {page.md} — {page's one job}
+  {page.md} — {page's one job}
+```
+
+Use a two-level tree and 5–8 representative page placements. For Flat Small,
+first-level labels are grouped headings in one index, not new directories.
+
+## Candidate B: {alternative reader-facing name}
+
+Nearest preset: {approved label}. Choose when: {different plausible signals}.
+
+{Second two-level tree with 5–8 representative page placements and page jobs.}
+
+## Recommendation and open decisions
+
+{Preferred candidate, evidence and tradeoffs. Ask only decision-changing
+questions. Record an explicit choice before replacement or a second app.
+Existing docs default to analyze → apply of approved recommendations.
+No private exemplar text, copied external contents or unapproved moves.}
+````

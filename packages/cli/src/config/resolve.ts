@@ -68,6 +68,7 @@ const DEFAULT_SHARED_CONFIG = {
     },
   },
   documentation: {
+    guidance: null,
     root: null,
     tooling: null,
     config: null,

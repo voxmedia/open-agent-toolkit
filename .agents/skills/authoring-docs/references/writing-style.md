@@ -93,7 +93,7 @@ Use notes for useful context, not ordinary tips.
 - Use one `#` heading per page.
 - Do not skip heading levels.
 - Use fenced code blocks with language identifiers.
-- Use `sh` for shell commands.
+- Use `bash` for shell commands unless the example is POSIX-only (`sh`) or local repository conventions require another fence.
 - Use `txt` for command output.
 - Do not include shell prompts unless the prompt itself matters.
 - Use angle brackets for placeholders, such as `<environment>`.

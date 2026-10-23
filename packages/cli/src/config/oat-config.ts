@@ -75,6 +75,8 @@ export function isInstructionSyncStrategy(
 }
 
 export interface OatDocumentationConfig {
+  /** Ordered advisory IA source paths/URLs; selected as a layer, never merged. */
+  guidance?: string | string[];
   root?: string;
   tooling?: string;
   config?: string;
@@ -1465,6 +1467,7 @@ export interface OatLocalConfig {
 
 export interface UserConfig {
   version: number;
+  documentation?: Pick<OatDocumentationConfig, 'guidance'>;
   activeIdea?: string | null;
   updateNotifications?: boolean;
   tools?: OatToolsConfig;
@@ -1856,6 +1859,11 @@ function normalizeOatConfig(
 
   if (isRecord(parsed.documentation)) {
     const doc: OatDocumentationConfig = {};
+    const guidance = normalizeDocumentationGuidance(
+      parsed.documentation.guidance,
+      configPath,
+    );
+    if (guidance !== undefined) doc.guidance = guidance;
     if (
       typeof parsed.documentation.root === 'string' &&
       parsed.documentation.root.trim()
@@ -2498,7 +2506,28 @@ const USER_CONFIG_OWNED_KEYS = new Set([
   'knownStrays',
 ]);
 
-function normalizeUserConfig(parsed: unknown): UserConfig {
+/** Validate guidance without reading, fetching or rewriting the referenced inputs. */
+export function normalizeDocumentationGuidance(
+  value: unknown,
+  configPath: string,
+  scope: 'shared' | 'user' = 'shared',
+): string | string[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (source) => typeof source === 'string' && source.trim().length > 0,
+    )
+  )
+    return value.map((source: string) => source.trim());
+  throw new Error(
+    `Invalid documentation.guidance in ${configPath}: expected a non-empty path/URL string or ordered non-empty string array. Run oat config unset documentation.guidance --${scope}.`,
+  );
+}
+
+function normalizeUserConfig(parsed: unknown, configPath: string): UserConfig {
   const next: UserConfig = { ...DEFAULT_USER_CONFIG };
   if (!isRecord(parsed)) {
     return next;
@@ -2509,6 +2538,15 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
+  }
+
+  if (isRecord(parsed.documentation)) {
+    const guidance = normalizeDocumentationGuidance(
+      parsed.documentation.guidance,
+      configPath,
+      'user',
+    );
+    if (guidance !== undefined) next.documentation = { guidance };
   }
 
   if (typeof parsed.updateNotifications === 'boolean') {
@@ -2567,7 +2605,7 @@ export async function readUserConfig(
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeUserConfig(parseJsonConfig(raw, configPath));
+    return normalizeUserConfig(parseJsonConfig(raw, configPath), configPath);
   } catch (error) {
     if (isMissingFileError(error)) {
       return { ...DEFAULT_USER_CONFIG };
@@ -2584,8 +2622,23 @@ export async function writeUserConfig(
   const configPath = getUserConfigPath(userConfigDir);
   await resolveUserSyncConfig(userConfigDir);
   const unknownFields = await readUnknownUserConfigFields(configPath);
-  const normalized = normalizeUserConfig(config);
-  await atomicWriteJson(configPath, { ...unknownFields, ...normalized });
+  const normalized = normalizeUserConfig(config, configPath);
+  // Only guidance is a supported user documentation key. Keep other stored
+  // fields intact without exposing them as effective user-level settings.
+  const { guidance: _oldGuidance, ...unrelatedDocumentation } = isRecord(
+    unknownFields.documentation,
+  )
+    ? unknownFields.documentation
+    : {};
+  const documentation = {
+    ...unrelatedDocumentation,
+    ...normalized.documentation,
+  };
+  const output = { ...unknownFields, ...normalized };
+  if (Object.keys(documentation).length > 0)
+    output.documentation = documentation;
+  else delete output.documentation;
+  await atomicWriteJson(configPath, output);
 }
 
 export async function resolveActiveIdea(

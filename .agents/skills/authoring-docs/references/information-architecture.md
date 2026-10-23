@@ -1,95 +1,130 @@
 ---
 title: Information Architecture
-description: Standard documentation structure, naming, navigation, and cross-linking.
+description: Reader-first axes, presets, placement, navigation, and cross-linking.
 ---
 
 # Information Architecture
 
-Documentation structure should feel predictable across repositories even when
-the systems differ. Consistency makes docs easier to browse, review, migrate,
-and use as agent context.
+Choose structure from reader work, not the source tree or a preset label. Use
+this generic method without an external playbook. Repository evidence and
+exemplars may inform a proposal; private examples never enter this baseline.
+Resolve advisory inputs with [Guidance sources](guidance-sources.md).
 
-## Standard Top-Level Model
+## Contents
 
-Use this conceptual model:
+- [Five axes](#five-axes) — Decide readers, entry keys, page jobs, verification and scale.
+- [Presets](#presets) — Name the nearest pattern after making those decisions.
+- [Standard section set per track](#standard-section-set-per-track) — Familiar sections within a chosen track.
+- [Placement and section entries](#placement-and-section-entries) — Keep facts canonical and routes useful.
+- [Landing page contract](#landing-page-contract) — Orient readers and route their next action.
+- [Specialized tracks](#specialized-tracks) — Agent, Product and QA reading contexts.
+- [Navigation principles](#navigation-principles) — Labels, naming and cross-links.
 
-```txt
-Start here
-How-to guides
-Reference
-Concepts
-Operations
-```
+## Five axes
 
-These labels map to reader needs:
+1. **Readers and work contexts:** Who must succeed, doing what? Separate using,
+   integrating, maintaining, operating and independently verifying only where
+   their entry paths differ. One person can occupy several contexts.
+2. **Organizing principle within each track:** What is the reader's entry key:
+   task, capability, domain, command, unit or page type? Choose per track rather
+   than forcing one principle across all readers.
+3. **Page purpose:** Give each page one job: tutorial, how-to, reference,
+   explanation, runbook, feature guide, validation matrix, solution or decision
+   record. Supporting content stays subordinate to that job.
+4. **Verification overlay:** Does someone outside the builders verify behavior
+   from these docs? Choose Product/Engineering/QA pairing only for independent
+   behavioral verification; otherwise use agent-only checks or none. A UI alone
+   does not justify three tracks.
+5. **Size gate:** Page count chooses how much structure to materialize, not
+   which audience or organizing principle to select. Under about 15 reader
+   pages, prefer one flat index with grouped headings. A tiny repo can keep a
+   single README covering purpose, setup, usage, configuration, tests and ownership.
 
-| Product Label | Documentation Type       | Reader Question                              |
-| ------------- | ------------------------ | -------------------------------------------- |
-| Start here    | Tutorial and orientation | What is this and how do I begin?             |
-| How-to guides | How-to                   | How do I complete this task?                 |
-| Reference     | Reference                | What are the exact facts?                    |
-| Concepts      | Explanation              | How does this work and why?                  |
-| Operations    | How-to plus reference    | How do I run, observe, fix, or recover this? |
+Read manifests, UI navigators/journeys, CLI `bin`, routers, IaC, `e2e/` or
+`.maestro/`, existing docs and independently consumed monorepo units. Ask only
+questions whose answers change a decision: reader work contexts, independent
+verification, facts canonical elsewhere and links that must survive. Do not ask
+for an archetype label. Show two plausible candidates using the
+[IA Proposal template](templates.md#ia-proposal).
 
-## Default Repo Structure
+## Presets
 
-```txt
-docs/
-├── index.md
-├── getting-started.md
-├── how-to/
-│   ├── local-development.md
-│   ├── testing.md
-│   ├── deployment.md
-│   └── troubleshooting.md
-├── reference/
-│   ├── configuration.md
-│   ├── environment-variables.md
-│   ├── commands.md
-│   ├── api.md
-│   └── errors.md
-├── concepts/
-│   ├── architecture.md
-│   ├── data-flow.md
-│   ├── auth.md
-│   └── caching.md
-└── operations/
-    ├── runbook.md
-    ├── observability.md
-    ├── alerts.md
-    └── rollback.md
-```
+Presets are names for decisions, not a mandatory directory generator. The six
+approved labels and choose-when signals are:
 
-Do not create empty pages for symmetry. Use the structure as a guide, not
-theater.
+| Preset                  | Choose when                                                                             | Typical entry key                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Product/Engineering/QA  | Product readers and independent verifiers need paired behavior and implementation views | Feature or journey in Product/QA; domain or implementation contract in Engineering |
+| Consumer and Maintainer | Using or integrating differs materially from changing and operating the system          | Consumer tasks; maintainer architecture and operations                             |
+| Domain Engineering      | Engineers arrive by subsystem, capability or repeated independently consumed unit       | Domain catalog, capability lanes or uniform unit catalog                           |
+| Task Type               | One shared reader track serves first success, tasks, lookup and understanding           | Page type: tutorial, how-to, reference, explanation                                |
+| Toolkit and CLI         | Users enter through tools, commands and reusable workflows                              | Tool or command family and its tasks/contracts                                     |
+| Flat Small              | Fewer than about 15 reader pages do not justify directory layers                        | Grouped headings in one index, preserving the chosen reader model                  |
 
-## Scale the Structure to the Repo
+The single-track, capability-lane, domain-catalog and unit-catalog shapes fit
+these presets; they are not additional labels. A unit catalog may follow
+implementation directories when every unit uses the same page set and readers
+recognize those units. Otherwise avoid organizing only by implementation path.
+Aim for about seven root entries; group beyond about 8–10. Do not create empty
+pages or parallel facts for symmetry. Re-evaluate materialized depth as content
+grows, without changing the audience solely because page count grew.
 
-Tiny repos can use a single `README.md` if it covers purpose, install or setup,
-usage, configuration, testing, and ownership.
+## Standard section set per track
 
-Small repos should separate overview, usage, and reference.
+The former top-level model is a reusable section set **within** each track.
+Choose only sections with useful content and use locally familiar labels.
 
-Medium repos should use the standard structure.
+| Section      | Observed labels             | Reader question                            |
+| ------------ | --------------------------- | ------------------------------------------ |
+| Start here   | Getting started, Tutorial   | What is this and how do I begin?           |
+| Tasks        | How-to, Workflows           | How do I complete this task?               |
+| Reference    | API, CLI, Configuration     | What are the exact facts?                  |
+| Explanation  | Architecture, Concepts      | How does this work and why?                |
+| Operations   | Delivery, Runbooks          | How do I run, observe, fix or recover it?  |
+| Contributing | Development, Docs authoring | How do I change this system or these docs? |
 
-Large repos or platforms can group by product area or audience, but should keep
-the same doc types recognizable. Avoid organizing only by implementation
-directory; readers usually do not arrive knowing the source tree.
+Docs-about-docs belongs under Contributing, never in a separate reader track.
+Small structures can use sections in an index rather than directories.
 
-## Landing Page Contract
+## Placement and section entries
 
-Every docs entry point should answer:
+- One canonical page per fact. Shared contracts live in one Reference and
+  other pages link to them. Routing pages own no facts beyond orientation.
+- Domain-specific runbooks live with their domain; shared Operations contains
+  deployment-wide procedures. Do not split recovery instructions from the
+  domain just to fill a standard section.
+- Planning artifacts, execution journals and raw evidence stay outside reader
+  docs. A durable decision record can explain an accepted design; it is not a
+  copy of a project plan.
+- Every section has an entry page with a purpose paragraph and one-line-described
+  links in its `## Contents` map. “Directory map for X” is not a useful description.
+- Preserve existing useful intent, canonical facts and inbound links when
+  proposing changes. List link survival constraints before moving anything.
 
-1. What is this?
-2. Why does it exist?
-3. Who is it for?
-4. What are the main capabilities?
-5. What are the boundaries and non-goals?
-6. How do I get started?
-7. What are the common tasks?
-8. Where is the reference material?
-9. How is it operated?
-10. Who owns it?
+## Landing page contract
+
+The root answers **what**, **why**, **who** and **where to start**. Route the
+rest by track, job, capability or page type instead of repeating every section.
+Keep capabilities and boundaries/non-goals clear; point to first success,
+common tasks, reference, operations and ownership. A route can answer a
+question by linking to its canonical page rather than duplicating facts.
+
+## Specialized tracks
+
+**Agent guides:** Organize around repeatable tasks and exact contracts. Link
+canonical human-readable facts rather than cloning them. Include inputs,
+constraints, source paths, validation and handoff; distinguish durable guides
+from transient prompts, plans and execution evidence.
+
+**Product and QA:** Product describes intended behavior, user concepts,
+journeys and boundaries; Engineering explains implementation contracts; QA
+states independently checkable scenarios and expected outcomes. For a triad,
+use filename/slug parity for paired features and reciprocal links. A Product
+feature must link to its QA validation and Engineering counterpart (and back).
+Quote exact UI literals only when verified against source; distinguish a user
+concept from literal screen text. Do not fabricate test IDs or independent
+verification needs. Feature and QA validation page templates are not included here;
+use the page-type guidance and IA Proposal template to plan their content.
 
 ## Navigation Principles
 

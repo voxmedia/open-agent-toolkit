@@ -1,12 +1,12 @@
 ---
 name: oat-docs-authoring
 description: Use when authoring or restructuring targeted content inside an existing OAT Markdown surface or OAT/Fumadocs docs app. Preserves OAT docs navigation, generated indexes, and validation boundaries.
-argument-hint: '[docs task or target path]'
+argument-hint: '[docs task or target path] [--ia-guidance <path|url>]'
 disable-model-invocation: false
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: '1.1.3'
+  version: '1.2.0'
 ---
 
 # OAT Docs Authoring
@@ -14,9 +14,8 @@ metadata:
 Use this skill for targeted documentation authoring and small structural edits
 inside an existing OAT Markdown surface or OAT/Fumadocs docs app.
 
-This is a thin wrapper over `authoring-docs`. Load `authoring-docs` for
-universal evidence gathering, page-type selection, writing style, templates,
-and review standards. Keep this wrapper focused on OAT Markdown/Fumadocs placement,
+This is a thin wrapper over `authoring-docs` for universal evidence gathering,
+page-type selection, writing style, templates, and review standards. Keep this wrapper focused on OAT Markdown/Fumadocs placement,
 navigation, generated artifacts, validation, and lifecycle boundaries.
 
 ## Prerequisites
@@ -111,9 +110,22 @@ Use `references/docs-root-resolution.md` before assuming any path. OAT docs apps
 commonly live outside `apps/oat-docs`, and `.oat/config.json` may describe the
 generated root index separately from the authored docs root.
 
-If the request needs universal documentation standards, load `authoring-docs`
-and use its reference map for evidence gathering, page type, writing style,
-templates, and review rubric.
+Independently probe each exact `authoring-docs/SKILL.md` in order:
+`${SKILL_DIR}/..` from the loaded skill (`SKILL_DIR` is the absolute directory
+containing that loaded `SKILL.md`), `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind the first matching `authoring-docs` directory
+once as `AUTHORING_DOCS_ROOT`; load `${AUTHORING_DOCS_ROOT}/SKILL.md` and use
+that same root for every authoring-docs reference and script, never ambient
+discovery. If none is found, name `authoring-docs`, stop this handoff, and give
+the intended-scope recovery command: `oat tools install docs --scope <user|project>`
+or `oat tools update --pack docs --scope <user|project>`.
+
+Use the bound skill's reference map for evidence gathering, page type, writing
+style, templates and review rubric. For IA work use its five-axis method and
+`${AUTHORING_DOCS_ROOT}/references/guidance-sources.md`: explicit `--ia-guidance` or
+conversation → repo config → user config → built-in. Cite ordered source
+locators/provenance in the handoff; respect AGENTS/contributing authority,
+keep non-repo sources read-only and report conflicts as `ask_user`.
 
 ### Step 2: Inspect Evidence and Local Maps
 

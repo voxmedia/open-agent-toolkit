@@ -53,18 +53,18 @@ Production runbooks should be especially strong on operational safety.
 Public-facing docs should be especially strong on examples, accuracy, and
 audience boundary.
 
-| Area                     | 0                           | 1                      | 2                           | 3                                                          |
-| ------------------------ | --------------------------- | ---------------------- | --------------------------- | ---------------------------------------------------------- |
-| Purpose                  | No clear reason page exists | Purpose is implied     | Purpose is stated           | Purpose, reader, and outcome are clear                     |
-| Accuracy                 | Incorrect or invented       | Partially accurate     | Mostly accurate             | Grounded and verified                                      |
-| Structure                | Hard to scan                | Some headings          | Clear sections              | Predictable IA and strong headings                         |
-| Task support             | Cannot complete task        | Can partially complete | Can complete with some gaps | Can complete safely with verification                      |
-| Reference quality        | Missing facts               | Facts scattered        | Most fields documented      | Types, defaults, constraints, examples, errors documented  |
-| Operational safety       | Risky or absent             | Mentions risk          | Includes basic verification | Includes verification, rollback, escalation, failure modes |
-| Agent usefulness         | Ambiguous                   | Some exact data        | Mostly explicit             | Exact commands, paths, constraints, and uncertainty        |
-| Maintainability          | Duplicated or stale         | Hard to update         | Mostly maintainable         | Clear source of truth and generated markers where needed   |
-| Public/internal boundary | Leaks or omits key context  | Boundary unclear       | Mostly appropriate          | Correct assumptions and safe content                       |
-| Links and navigation     | Broken or absent            | Sparse                 | Useful                      | Strong cross-links and clear next steps                    |
+| Area                     | 0                           | 1                      | 2                           | 3                                                                         |
+| ------------------------ | --------------------------- | ---------------------- | --------------------------- | ------------------------------------------------------------------------- |
+| Purpose                  | No clear reason page exists | Purpose is implied     | Purpose is stated           | Purpose, reader, and outcome are clear                                    |
+| Accuracy                 | Incorrect or invented       | Partially accurate     | Mostly accurate             | Grounded and verified                                                     |
+| Structure                | Hard to scan                | Some headings          | Clear sections              | Reader-first [IA method](information-architecture.md) and strong headings |
+| Task support             | Cannot complete task        | Can partially complete | Can complete with some gaps | Can complete safely with verification                                     |
+| Reference quality        | Missing facts               | Facts scattered        | Most fields documented      | Types, defaults, constraints, examples, errors documented                 |
+| Operational safety       | Risky or absent             | Mentions risk          | Includes basic verification | Includes verification, rollback, escalation, failure modes                |
+| Agent usefulness         | Ambiguous                   | Some exact data        | Mostly explicit             | Exact commands, paths, constraints, and uncertainty                       |
+| Maintainability          | Duplicated or stale         | Hard to update         | Mostly maintainable         | Clear source of truth and generated markers where needed                  |
+| Public/internal boundary | Leaks or omits key context  | Boundary unclear       | Mostly appropriate          | Correct assumptions and safe content                                      |
+| Links and navigation     | Broken or absent            | Sparse                 | Useful                      | Strong cross-links and clear next steps                                   |
 
 ## Minimum Acceptable Scores
 

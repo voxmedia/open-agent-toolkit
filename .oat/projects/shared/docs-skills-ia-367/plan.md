@@ -361,15 +361,20 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Delivery endpoint and authority
 
-- **Endpoint:** open — one PR per phase, stacked in phase order against
+- **Endpoint:** merged — one PR per phase, stacked in phase order against
   `main`, each passing the Definition of Done gates and its phase review.
-  "Delivered" means every phase PR is open and reviewed; the user merges.
-- **Authority:** The user approves this brief, any change to an Outcome,
-  Constraint, Decision or `### Design` contract, and every merge. The agent
-  decides phase-local design inside the pinned contracts, may add, split or
-  reorder phases and make provisional phases concrete (logging each change),
-  and may open and update PRs. The agent does not merge, publish packages,
-  change other repositories or change shared configuration.
+  Delivered means every phase PR has merged after CI, Bugbot and actionable
+  review findings are clear.
+- **Authority:** The user approves this brief and any change to an Outcome,
+  Constraint, Decision or `### Design` contract. The agent decides phase-local
+  design inside the pinned contracts, may add, split or reorder phases and
+  make provisional phases concrete (logging each change), and may open,
+  update and merge phase PRs bottom-up once CI, Bugbot and blocking findings
+  are clear. The agent does not publish packages, change other repositories
+  or change shared configuration.
+- **Landing amendment:** 2026-10-22, user: "I want you to go ahead and just land
+  these PRs as ci/bugbot review clears instead of waiting for me". This replaces
+  the original open-PR endpoint and user-owned merge requirement.
 - **Brief approved:** 2026-10-22 by user at e6a6a4f7bcce399a2bd33d1229de77026c787436
 
 ## Milestones
@@ -390,9 +395,9 @@ procedure. Exemplars and repo evidence stay in external guidance.
 
 ## Phase p02: IA method and guidance input
 
-**Intent:** Rewrite the `authoring-docs` IA reference to the axes method, presets, placement and landing rules, IA proposal template and companion edits (P28 D1–D9 and G6; D9's Feature and QA validation templates move to p07). Add `documentation.guidance` and its resolution order (P2, G1). Add bootstrap Step 2.5 IA discovery and proposal and `oat-docs-analyze --ia`, loading `authoring-docs` where #367 P1 lists (P1). Make an existing docs surface route to analyze then apply as the primary path, with replace and second-app behind an explicit choice (BL-260911 front door).
-**Exit evidence:** config schema and resolution tests for every tier of G1; `authoring-docs` 1.1.0 with contract tests updated; a bootstrap dry run on a fixture repo shows two proposed structures with the nearest preset and cites the resolved guidance; a fixture with existing docs routes to analyze; gates pass; phase PR open.
-**Provisional:** yes
+**Intent:** Ship one coherent IA selection workflow before persistence and restructuring are added in p03. Rewrite `authoring-docs` using P28 D1–D9 and G6: readers/work contexts, organizing principle within each track, page purpose, verification overlay and size gate; the six approved presets (Product/Engineering/QA, Consumer and Maintainer, Domain Engineering, Task Type, Toolkit and CLI, Flat Small) with choose-when signals; per-track standard sections; placement, section-entry and root-landing rules; agent and Product/QA track guidance; IA Proposal template; page types, smell tests, persona mapping, writing-style and rubric/SKILL reference updates. Feature and QA validation page templates remain p07. Add `documentation.guidance: string | string[]` through repository and user normalization and the real config command, preserving unrelated config fields. Implement G1 selection as explicit argument/conversational source → repo config → user config → built-in reference, reusing the existing effective-config machinery where applicable and adding only the narrow shared support needed by those consumers. Multiple sources retain order; source selection and provenance are explicit, and sources remain read-only Markdown inputs with an index/Contents entry. Bootstrap Step 2.5 and analyze `--ia` load `authoring-docs`, read repo signals, ask only decision-changing questions, and propose two candidate two-level structures with 5–8 representative page placements and the nearest preset. Bootstrap routes existing docs primarily to analyze then apply, requiring an explicit choice before replacement or a second app. Analyze's quality pass, authoring's IA work and apply's content actions load the shared authoring method; analysis/apply templates and bootstrap summaries cite the resolved guidance. External guidance remains advisory to repo AGENTS/contributing rules; conflicts become `ask_user`, and private source contents are never copied into repository artifacts. Update current user-facing config/workflow documentation for this phase's behavior. No IA persistence, restructure action, approval-class changes, scaffold preset materialization or new docs-check command in p02.
+**Exit evidence:** Real config read/write and resolution tests prove repo and user scalar/array guidance, explicit/conversational override and built-in fallback, ordered source provenance and preservation of unrelated config; settle the user-tier known unknown using actual user-file normalization rather than mocked resolved values alone. Updated authoring-docs contract tests and a conservation review cover D1–D9 with the two page-template deferrals explicit, and authoring-docs reaches at least 1.1.0. Preserve synthetic fixture evidence of bootstrap proposal output containing two plausible trees, page placements, nearest presets and resolved-source citation for fresh Markdown/framework setup; an existing-docs fixture takes analyze→apply by default, and replacement/second-app routes require an explicit choice. The IA proposal is exercised through the skill workflow and shared helpers as applicable, without inventing a CLI bootstrap stage or pretending prose assertions execute an agent. Conflict and read-only behavior are demonstrated on public synthetic guidance. Each changed skill receives its one PR-scoped bump, the five public packages and bundled metadata advance together to the next release after p01 (0.3.24 unless current main requires higher), gates 1–8 run in order with explicit exits and accurate cache disclosure, skill prose contract/lint/format checks pass, and the phase PR opens against the p01 branch (or main if p01 has merged).
+**Provisional:** no
 
 ## Phase p03: Record and act on the IA
 
@@ -454,20 +459,24 @@ Default is `[]` (fully sequential, no worktrees). This brief declares none: p04,
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation                                                      | Gate Target       |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ----------------- |
-| plan   | artifact | fixes_completed | 2026-10-22 | structured (no artifact), plan round 1: 9 findings          | -                                        | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
-| plan   | artifact | fixes_completed | 2026-10-22 | structured (no artifact), plan round 2: 4 findings          | -                                        | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
-| plan   | artifact | passed          | 2026-10-22 | structured (no artifact), plan round 3: 0 findings          | 61b2e3281739e094979d5ded38488de69d2c86d6 | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
-| p01    | code     | fixes_completed | 2026-10-22 | reviews/p01-review-2026-10-22T203848Z.md                    | 169c15cf503ec55071a2a2c255cf4da2d486942b | auto                                                            | -                 |
-| final  | code     | pending         | -          | -                                                           | -                                        | -                                                               | -                 |
-| plan   | artifact | passed          | 2026-10-22 | reviews/archived/artifact-plan-review-2026-10-22T200026Z.md | e6a6a4f7bcce399a2bd33d1229de77026c787436 | gate                                                            | codex-6-sol-xhigh |
-| p01    | code     | fixes_completed | 2026-10-22 | reviews/p01-testing-complexity-20261022.md                  | f0c3bedf0179c49cb790763ed98d1e7ad34b7731 | manual                                                          | -                 |
-| p01    | code     | fixes_completed | 2026-10-22 | reviews/p01-review-2026-10-22T205540Z.md                    | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | auto                                                            | -                 |
-| p01    | code     | passed          | 2026-10-22 | reviews/p01-testing-complexity-confirmation-20261022.md     | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | manual                                                          | -                 |
-| p01    | code     | passed          | 2026-10-22 | reviews/p01-review-2026-10-22T210641Z.md                    | 183b3d3aa7944c85919f09cc05dcb47b08c8f011 | auto                                                            | -                 |
-| p01    | code     | fixes_completed | 2026-10-22 | reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md | 7a0078df58e2f94868216c3381d6a9dcc421891b | auto                                                            | -                 |
-| p-rev1 | code     | passed          | 2026-10-22 | reviews/p-rev1-review-2026-10-22T213617Z.md                 | 79ab7f30a1831fe2b09d7a199c4bb178395f0d22 | auto                                                            | -                 |
+| Scope  | Type     | Status          | Date       | Artifact                                                         | Reviewed Head                            | Invocation                                                      | Gate Target       |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ----------------- |
+| plan   | artifact | fixes_completed | 2026-10-22 | structured (no artifact), plan round 1: 9 findings               | -                                        | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
+| plan   | artifact | fixes_completed | 2026-10-22 | structured (no artifact), plan round 2: 4 findings               | -                                        | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
+| plan   | artifact | passed          | 2026-10-22 | structured (no artifact), plan round 3: 0 findings               | 61b2e3281739e094979d5ded38488de69d2c86d6 | codex exec gpt-6-astra high, read-only, user-requested reviewer | -                 |
+| p01    | code     | fixes_completed | 2026-10-22 | reviews/archived/p01-review-2026-10-22T203848Z.md                | 169c15cf503ec55071a2a2c255cf4da2d486942b | auto                                                            | -                 |
+| final  | code     | pending         | -          | -                                                                | -                                        | -                                                               | -                 |
+| plan   | artifact | passed          | 2026-10-22 | reviews/archived/artifact-plan-review-2026-10-22T200026Z.md      | e6a6a4f7bcce399a2bd33d1229de77026c787436 | gate                                                            | codex-6-sol-xhigh |
+| p01    | code     | fixes_completed | 2026-10-22 | reviews/archived/p01-testing-complexity-20261022.md              | f0c3bedf0179c49cb790763ed98d1e7ad34b7731 | manual                                                          | -                 |
+| p01    | code     | fixes_completed | 2026-10-22 | reviews/archived/p01-review-2026-10-22T205540Z.md                | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | auto                                                            | -                 |
+| p01    | code     | passed          | 2026-10-22 | reviews/archived/p01-testing-complexity-confirmation-20261022.md | d42f19285c2841d72fecac32fbd7f0ec130f4d31 | manual                                                          | -                 |
+| p01    | code     | passed          | 2026-10-22 | reviews/archived/p01-review-2026-10-22T210641Z.md                | 183b3d3aa7944c85919f09cc05dcb47b08c8f011 | auto                                                            | -                 |
+| p01    | code     | fixes_completed | 2026-10-22 | reviews/archived/remote-pr-368-review-2026-10-22T212500Z.md      | 7a0078df58e2f94868216c3381d6a9dcc421891b | auto                                                            | -                 |
+| p-rev1 | code     | passed          | 2026-10-22 | reviews/p-rev1-review-2026-10-22T213617Z.md                      | 79ab7f30a1831fe2b09d7a199c4bb178395f0d22 | auto                                                            | -                 |
+| p02    | code     | fixes_completed | 2026-10-22 | reviews/archived/p02-review-2026-10-22T215711Z.md                | 7564e8332cdcae4d40e6dbf746f0c54ba93a23a8 | auto                                                            | -                 |
+| p02    | code     | fixes_completed | 2026-10-22 | reviews/archived/p02-review-2026-10-22T221413Z.md                | bbefca279ca3a24108f465b65c7b6f351be3ee80 | auto                                                            | -                 |
+| p02    | code     | passed          | 2026-10-22 | reviews/archived/p02-review-2026-10-22T222739Z.md                | 7f6ee861b5bee201f636d80dcae74b78711ca47e | auto                                                            | -                 |
+| p02    | code     | passed          | 2026-10-22 | reviews/p02-complexity-20261022.md                               | c6d5877dc2284bce1d5a96bf7e823851da159839 | manual                                                          | -                 |
 
 Add one `code` row per phase as phases become concrete. For code-review events,
 `Reviewed Head` is the full 40-character SHA at the head of the reviewed range.
