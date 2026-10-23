@@ -15,23 +15,28 @@ OAT docs navigation starts from authored `docs/**/index.md` files. Each `## Cont
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - Every `## Contents` link should use a `.md`-suffixed relative target, including child directory links such as `subdir/index.md`.
 - Do not hand-edit generated navigation or generated root-index artifacts.
-- For Fumadocs, refresh or freshness-check the generated app-root manifest after adding, removing, or renaming Markdown files. Compare that manifest against authored `## Contents` maps for drift; reordering `## Contents` does not reorder the generated manifest's file-tree sort.
+- For Fumadocs, refresh or freshness-check the generated app-root manifest after adding, removing, or renaming Markdown files. Compare that manifest against authored `## Contents` maps for drift; the manifest follows each local Contents order, with deterministic unlisted fallback entries.
 - Run `oat docs nav sync` after adding, removing, renaming, or reordering pages. It regenerates the framework's navigation from authored `## Contents` maps and preserves the order declared in each local map: the `nav:` block in `mkdocs.yml` for MkDocs, and one `meta.json` per docs directory for Fumadocs.
 
 ## `## Contents` format
 
-Use Markdown bullet links for sibling pages and child directories:
+Use dash-prefixed Markdown links for sibling pages and child directories. Optional third-level headings start ordered groups:
 
 ```md
 ## Contents
 
 - [Getting Started](getting-started.md) - Setup and local workflow.
+
+### Reference
+
 - [Reference](reference/index.md) - Reference pages for the subsystem.
 ```
 
 Notes:
 
 - Links after `## Contents` can include short human-readable descriptions.
+- Groups start at `### <Label>` and end at the next group or the next `## ` heading. Links before the first group remain ungrouped. Fumadocs emits `---Label---` before the first retained entry; MkDocs emits a labeled nested list. Filtering a self-index or non-reader link never leaves an empty separator.
+- A group with no authored entries is an error with its file and line; add a dash link or remove the empty heading. A `*` or `+` link bullet is also an error with file and line; replace it with `-`.
 - Child directories should link to their `index.md`.
 - Leaf pages should link to their `.md` filename.
 - Prose outside `## Contents` is ignored by nav generation and remains freeform; it can explain scope, reader paths, or migration status.
@@ -65,8 +70,8 @@ pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --ou
 
 Fumadocs generated behavior:
 
-- Generated entries are ordered by the file-tree generator: `index.md` first, directories before files, then lexical order.
-- Reordering a `## Contents` block does not reorder the generated manifest's file-tree sort.
+- The inventory stays hierarchical. Each local Contents orders its surviving direct entries; a cross-directory link orders its containing direct entry without duplicating the page. Child directory titles come from their index frontmatter title, then H1, then slug, independently of nav labels.
+- Remaining entries use deterministic index/directories/files/lexical fallback and carry `[unlisted in Contents]` when a Contents map exists. With no Contents map the inventory keeps its fallback order; malformed present Contents reports the shared grammar errors.
 - Generated manifests should carry an autogen warning and are rewritten by `predev` / `prebuild`.
 
 ## Fumadocs Nav Sync
@@ -75,7 +80,7 @@ In a Fumadocs app (detected by its `source.config.ts`), `oat docs nav sync --tar
 
 Fumadocs generated behavior:
 
-- `pages` follows the order of the directory's `## Contents` links. The root list starts with `index`; a child directory appears by its folder name, and its own `index.md` becomes that folder's landing page. A folder whose `meta.json` keeps `root: true` also lists `index` first, because Fumadocs gives a root folder no implicit landing page.
+- `pages` follows the order of the directory's `## Contents` links. The root list starts with `index`; a child directory appears by its folder name, and its own `index.md` becomes that folder's landing page. A folder whose `meta.json` keeps `root: true` or a nonempty trimmed string also lists `index` first, because Fumadocs gives a root folder no implicit landing page. OAT source config narrowly adapts the pinned metadata schema to accept these named roots.
 - Navigation is strict: there is no `"..."` rest entry. A page or folder that no `## Contents` map lists stays out of the sidebar, and the command reports it by path in its human output and in `--json` (`unlisted`). Add the page to its directory's `## Contents` map to show it.
 - A `## Contents` link to a page in another directory is written as a Fumadocs link entry such as `[Writing Skills](/contributing/skills)`, so each page belongs to exactly one folder.
 - A page or folder whose name Fumadocs would read as a `pages` directive, such as `!hidden`, `z...a`, `...name`, or `---`, is written in the local-path form `./!hidden` so it stays a page entry.
@@ -94,8 +99,16 @@ MkDocs generated behavior:
 
 - Root `docs/index.md` becomes `Home`.
 - Child directory `index.md` files become section landing pages.
-- Nested entries are emitted in the order they appear under each local `## Contents` block.
+- Nested entries are emitted in the order they appear under each local `## Contents` block, including labeled groups.
 - `mkdocs.yml` may contain other configuration, but its `nav:` block is derived from authored `## Contents`.
+
+## Non-reader paths and ownership
+
+Shared `documentation.nonReaderPaths` declares drafts/templates outside the reader tree using the [bounded exclusion grammar](../docs-tooling/commands.md#exclusion-patterns), relative to the content root. It applies only to the configured app/content root. Navigation inventory, explicit Contents links, read-only nav checks and manifests skip matches; an explicit link does not override an exclusion. Excluded subtrees are not read, rewritten or cleaned by nav sync. A missing reader entry remains an error in Fumadocs `--check`. Existing `documentation.excludes` affects manifests only.
+
+Fumadocs collections also omit matching pages and metadata when `defineDocs` uses OAT's `docs` and `meta` source options with an explicit repository config path. The pinned MkDocs 1.4.2 has no configurable rendering exclusion: these pages leave navigation and manifests but still render as routes. This setting is not a way to keep private content out of a MkDocs site.
+
+Fresh Fumadocs/MkDocs init explicitly writes `documentation.navOwner: nav-sync` and generates navigation after scaffold/config succeeds. Their generated `prebuild` / `docs:build` scripts run `nav sync --check`. Existing hand-authored or undeclared surfaces are preserved through bootstrap and use analyze/apply to choose ownership; absence never implies permission to regenerate. Markdown has no sidebar or nav sync.
 
 ## Generated-file boundaries
 

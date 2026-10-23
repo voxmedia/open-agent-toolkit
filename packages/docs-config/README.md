@@ -30,10 +30,16 @@ export default createDocsConfig({
 import { createSourceConfig } from '@open-agent-toolkit/docs-config';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 
-const sourceConfig = createSourceConfig();
+// Paths resolve from the app working directory, including bundled source configs.
+const sourceConfig = createSourceConfig({
+  oatConfigFile: '../../.oat/config.json',
+  appRoot: '.',
+});
 
 export const docs = defineDocs({
   dir: sourceConfig.contentDir,
+  docs: sourceConfig.docs,
+  meta: sourceConfig.meta,
 });
 
 export default defineConfig({
@@ -42,6 +48,10 @@ export default defineConfig({
   },
 });
 ```
+
+The `docs` and `meta` options apply shared `documentation.nonReaderPaths` only when the explicit repo config's documentation root matches this app. Patterns follow OAT's bounded content-root-relative grammar: `*` within a segment, whole-segment `**` across directories, trailing `/` for directories, all other characters literal. Excluded directories omit descendants and metadata. `documentation.excludes` remains manifest-only. No ancestor config search occurs; scaffolded apps receive their resolved relative config path.
+
+The metadata schema preserves Fumadocs fields and narrowly allows `root: true` or a nonempty trimmed string, matching the pinned loader's named-root behavior. Use both source options so collection validation and rendering agree with navigation. The scaffold pins MkDocs 1.4.2 separately; that version has no configurable rendering exclusion, so its non-readers leave nav/manifest but still render as routes.
 
 ## Exports
 

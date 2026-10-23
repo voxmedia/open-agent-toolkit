@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: '1.4.1'
+  version: '1.4.2'
 ---
 
 # Docs Bootstrap
@@ -399,7 +399,7 @@ through `oat-docs-analyze --ia`; it does not return to scaffold afterward.
    it unrecorded. Do not silently initialize PJM. For an existing surface, hand
    off an analysis artifact plus approved recommendation IDs to apply, with
    individual approval for explicit record/restructure/tooling items.
-   This stage does not materialize preset trees or change scaffold/nav defaults.
+   This IA selection stage does not materialize preset trees or change ownership for an existing app.
    Sidebar ownership is separately chosen for existing framework apps; absent
    remains undeclared, Markdown ignores it, and no automatic nav generation is
    authorized by IA approval alone.
@@ -411,6 +411,10 @@ Invoke `oat docs init` with the collected inputs and then apply gated post-patch
 Print `[3/7] Scaffolding…` at the start of this step.
 
 **Precondition:** The Conflict Resolution Contract's "Allowed mutations" have completed and the working-tree state matches what the CLI expects (Step 2's pre-scaffold invariant). If any resolution-triggered mutation is still pending, **do not invoke the CLI** — stop the flow and surface the missing state.
+
+For an explicitly fresh Fumadocs/MkDocs app, current CLI init writes `documentation.navOwner: nav-sync` and generates navigation after successful scaffold/config. An explicitly selected new app in a repository with prior docs config is fresh creation; preserve the old app's authored files. This does not authorize regeneration of an existing app: keep undeclared/hand-authored ownership untouched and use the existing analyze/apply handoff. IA approval alone never authorizes navigation writes. Markdown and dry runs run no nav sync.
+
+Inspect the generated package scripts rather than adding a duplicate patch: Fumadocs `prebuild` and MkDocs `docs:build` run `nav sync --check`, using external `oat` from the app directory with `--target-dir .`, or source-workspace CLI with the explicit quoted repo-relative app. A stale navigation check requires fixing authored Contents and explicitly syncing owned navigation before retrying, not deleting the check or silently regenerating an undeclared owner.
 
 **3a. Assemble CLI flags.**
 
@@ -712,6 +716,8 @@ Narrate each field actually present in their config (skip fields that are absent
   - **Fumadocs:** this should be the generated app-root manifest, usually `<appRoot>/index.md`, after the successful build ran `oat docs generate-index`. Explain that this machine-shaped file is how tools inspect the full Markdown file tree, and that the authored source map the user edits is a separate file at `<appRoot>/docs/index.md` with its own `## Contents`.
   - **Fumadocs stale path warning:** if the inspected path still points inside `<appRoot>/docs/` after build verification, do not teach that as normal. Surface it as a warning that `oat docs generate-index` did not update `documentation.index` as expected, then point the user to Section B for the generated/authored split.
   - **MkDocs:** this should point at the configured MkDocs nav/config surface, usually `<appRoot>/mkdocs.yml` and matching `documentation.config`. Explain that the YAML file contains the generated/derived `nav:` block when `oat docs nav sync` is used, while authored `docs/index.md` and nested `## Contents` sections remain the source maps the user edits.
+- **`documentation.navOwner`** — fresh framework init explicitly sets `nav-sync`; existing absent means undeclared and `hand-authored` stays authored. Never infer write permission from missing ownership. Markdown ignores it.
+- **`documentation.nonReaderPaths`** — if present, content-root-relative bounded globs omit drafts/templates from nav inventory, explicit Contents links, nav checks and manifests; excluded metadata is not rewritten. OAT Fumadocs collections also omit rendering when wired through source config. Pinned MkDocs 1.4.2 still renders these routes; explain the limitation and do not add a plugin or upgrade as a bootstrap repair. `documentation.excludes` stays manifest-only. Do not add exclusions or mutate this setting without an approved content/config change through the existing workflow.
 - **`documentation.config`** — optional path to the framework configuration, such as `mkdocs.yml` or `next.config.js`. Inspect whichever path is actually configured.
 - **`documentation.requireForProjectCompletion`** — the opt-in collected in Step 5e. If `true`, `oat-project-complete` will block project completion until the project records `oat_docs_updated: complete` or an explicit `skipped` after the `oat-project-document` prompt. Explain whichever value is set on this project.
 
@@ -744,11 +750,12 @@ This section explains why tooling works at all — the contract every OAT docs t
 
 Narrate:
 
-- **Every directory under `docs/` has an `index.md`.** No exceptions, no `overview.md`, no README-as-index. Missing `index.md`s are the first thing `oat-docs-analyze` flags.
+- **Every non-excluded Markdown-bearing directory under `docs/` has an `index.md`.** Asset-only and non-reader trees are exempt; use no `overview.md` or README-as-index. Missing reader indexes are an analyze finding.
 - **Every `index.md` has a `## Contents` section.** The section is a plain Markdown bulleted list of links to the direct children of that directory — both subdirectory `index.md`s and leaf pages.
 - **Link targets use `.md` extensions.** Leaf pages link as `[Title](page.md)`; subdirectories link as `[Section](subdir/index.md)`. The `@open-agent-toolkit/docs-transforms` remark-links plugin normalizes these at build time for Fumadocs routing (`.md` stripped; `dir/index.md` collapsed to `dir`). `.md`-suffixed authored links render correctly **and** let agents follow each link to the target file without path inference — the best of both worlds.
 - **The `## Contents` section is the machine-readable local map.** For Fumadocs, `oat docs nav sync` reads it to write the committed `meta.json` sidebar files, and agents compare it against the generated app-root manifest. For MkDocs, `oat docs nav sync` reads it to update `mkdocs.yml` `nav:`. `oat-docs-analyze` reads the same authored source to find orphaned pages and stale generated artifacts.
-- **Anything not listed in `## Contents` is invisible to the tooling.** Adding a Markdown file is not enough — it must also appear under the parent `index.md`'s `## Contents`.
+- **Contents uses dash links and optional `### <Label>` groups.** Groups become Fumadocs separators or MkDocs nested nav. Empty authored groups and `*`/`+` link bullets are file/line errors; add a dash link/remove the empty heading, or replace the bullet with `-`.
+- **Reader pages must appear in the local Contents map for navigation.** The manifest retains deterministic unlisted fallback entries and flags them; adding a file alone does not put it in the sidebar. Non-reader exclusions take precedence over explicit Contents links.
 
 Show the user their own `docs/index.md` `## Contents` as a concrete example (read the file and paste the relevant 5–15 lines). Then note: "That's the pattern. Every directory you create from now on follows the same shape — `.md`-suffixed links, bulleted list, dash-separated summary per entry."
 
