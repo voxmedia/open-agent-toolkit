@@ -83,6 +83,10 @@ docs367-p03-accept-20261023: p03 accepted after three standard rounds and two fi
 
 docs367-prev2-pr369-wait-8235909: clean independent re-review and integrated gates passed; correction published to PR #369 at 823590911f8b6709a44d3c29e8e78f96db29c821; waiting for current-head CI, release dry-run and Bugbot under standing land-pr authority; phase remains in_progress and final PR remains held.
 
+### 2026-10-23 · structural · oat-project-implement · p-rev2
+
+docs367-prev2-accepted-ec1261f: p-rev2 passed, two review rounds and one fix continuation, recovery 0/10; PR #369 landed via land-pr after CI/Bugbot clear, merge ec1261f44f93d07bbc2926aa5680b7bfd777089e; final PR remains held.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

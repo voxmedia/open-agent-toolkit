@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p-rev2
+oat_current_task_id: p04
 oat_generated: false
 oat_template: false
 ---
@@ -45,7 +45,7 @@ oat_template: false
 | p-rev1 | completed | 1     | 1/1      |
 | p02    | completed | 1     | 1/1      |
 | p03    | completed | 1     | 1/1      |
-| p-rev2 | pending   | 1     | 0/1      |
+| p-rev2 | completed | 1     | 1/1      |
 | p04    | pending   | 1     | 0/1      |
 | p05    | pending   | 1     | 0/1      |
 | p06    | pending   | 1     | 0/1      |
@@ -53,7 +53,7 @@ oat_template: false
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 4/11 phases accepted
+**Total:** 5/11 phases accepted
 
 ---
 
@@ -647,6 +647,8 @@ Passing-gate judgment sweep, all findings dispositioned against Outcome 5/G4 and
 
 ## Phase p-rev2: Preserve loaded skill bindings
 
+**Phase acceptance and landing:** p-rev2 accepted after two independent review rounds and one fix continuation, all findings closed, all integrated gates and forced verification passing. Final live sweep confirmed all three checks SUCCESS at 823590911f8b6709a44d3c29e8e78f96db29c821, Bugbot explicitly completed with no issues, no unresolved thread, no pending review request, and no branch protection/rules requiring approval. Base/head were unchanged through the sweep. Plain land-pr used the established merge-commit method with an atomic expected-head guard, no admin/auto/delete. GitHub confirms PR #369 MERGED at 2026-10-23T02:00:29Z, merge commit ec1261f44f93d07bbc2926aa5680b7bfd777089e. Watch stopped. Recovery remains 0/10 pending null; original Base/Head frozen. Next: integrate main, open/deliver accepted P03, then concretize p04. Final PR held until project completion.
+
 **Post-publication verification:** Supplemental integrated p02 forced run finished with exit 0, 12/12 Turbo tasks executed and zero cached; 8,862 CLI plus 351 supporting-package tests pass, alongside the docs suite. This supersedes the earlier pending status; exec session 67873 is finished. Raw integrated logs/results are copied into this worktree's ignored `analysis/p-rev2/p02-delivery/`. Current-head Bugbot SUCCESS and release dry-run SUCCESS are verified on 823590911; updated Cursor summary 6352792304 contains no new finding, and review 5623021473 is for the same head. CI remains IN_PROGRESS. No further PR edit, duplicate reply or merge is warranted until CI finishes.
 
 **Continuation:** optional supplemental forced run remains in exec session 67873, launched by `/tmp/oat-docs367-p02-delivery-gates.py` in the p02 checkout. On wake, read its `analysis/p-rev2/p02-delivery/results.jsonl` and logs; do not duplicate it or credit pending output. All required integrated gates and direct checks already passed. Resume the same plain land-pr cycle with a full new-head comment/thread/check sweep.
@@ -673,7 +675,7 @@ Independent reviewer executed current/candidate guards, immutable prior-head and
 
 **Root pre-review validation:** Verified clean handoff a9dbae59abf7dc156d8c9bbaff915e1d4b3c9734, exact five-path product b7a82ef1eeadec1bf3d289caca76721548faba18, journal-only tail and frozen Base/Head ancestry. Explicit ordered exits are 0; forced Turbo proof reports 12/12 fresh tasks, 9,229 package plus 85 docs tests. Root independently reran four prose guards and the temporary mixed-scope walkthrough. Controls and conservation preserve guidance precedence and P03 behavior; manual/prose evidence is not automated agent execution. Recovery 0/10, pending null. Tasks complete; independent review and delivery remain pending.
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 63a9deabd440e26bca49f4128b79a2bfb7c1d800
 **Head:** 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
 
