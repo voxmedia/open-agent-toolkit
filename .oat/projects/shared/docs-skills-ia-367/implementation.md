@@ -1726,12 +1726,18 @@ All8 ordered precommit/candidate gates exit0; candidate Turbo cached/fresh11/0,1
 
 ### Task p06-t08: (review) Discover recursively declared workspace command contexts
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; continuation cont-docs367-p06-fix-r2-from-docs367-p06-impl-20261023
+**Start HEAD:** b8d94e3d4850c86aa41c9cb739aaae80970c443d
 **Source review:** reviews/archived/p06-review-2026-10-23T181410Z.md (R2-M1)
 
 Intent: Let workspace patterns determine descent as well as membership without adding another glob engine or dependency. Resolve nested libs/\*_ and packages/_/\* members for literal --filter/cd; preserve exclusions and existing context behavior.
 Files: `packages/cli/src/commands/docs/check/commands.ts`, `packages/cli/src/commands/docs/check/checker.test.ts`.
 Proof: Extend existing public checkDocs command-context cases; reproduce the pre-fix missing member, then prove nested filter/cd resolves to the member manifest and missing scripts report there. Retain excluded/hidden/node_modules and site/out/dist controls. Compare against real pnpm membership using the existing reviewer fixture; no subprocess execution in product code or test-only API.
+
+**Commit:** 14769e9a39c8ab3443f17448ffd42e7da924a7b2
+**Verification:** Pre-fix existing public context cases: two nested patterns fail for the intended missing member, four prior members pass. Fixed checker/navigation114 tests execute fresh, isolated HOME, exit0; exclusions/hidden/node_modules and site/out/dist controls retained. Real pnpm12.11.2 lists both recursive and two-level nested members and runs their literal filters; tool extraction entry-point typo corrected in ignored proof before product commit. Same existing matcher handles derived descent prefixes and membership, no dependency or second glob engine. CLI check/types/build exit0. Exact red/fixed/valid probes and oracle logs under analysis/p06/fix-r2.
 
 ### Task p06-t09: (review) Attribute source and navigation failures accurately
 
