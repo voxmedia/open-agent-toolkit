@@ -1885,6 +1885,20 @@ Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, 
 **Commit:** 42ea66a51abb4c1754d0a009474c218d865832dd
 **Verification:** Installed TypeScript executable is linked into actual package/workspace bin paths and pnpm executes its version control successfully; checker accepts root/member/filter shorthand and workspace fallback without executing commands. Explicit pnpm run/npm run, genuinely missing scripts and missing-install controls retain literal errors/lines. Pre-fix and bin-allowance-neutralized regression fail as intended; final checker86 fresh tests pass. An initial fixture subpath-export failure and one lint shadow error were corrected under prevention; logs retained. Final CLI check/type/build and docs check pass. Public guidance states presence-only local-bin scope and PATH/preinstall limits. Recovery1/10,pendingnull unchanged.
 
+### Task p06-t15: Skip absent optional hand-authored pages
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; same-target remote-fix continuation
+**Start HEAD:** 88b1694a43f7626a39db6c060d4025fa311f6f29
+**Source review:** W-M2, discussion4363730396; operator-approved absent-pages comparison exception.
+**Intent:** Skip hand-authored/undeclared metadata objects without pages, continue explicit comparisons, reject non-array pages and preserve generated strictness; document deferred implicit order.
+**Files:** packages/cli/src/commands/docs/check/navigation.ts; packages/cli/src/commands/docs/check/checker.test.ts; apps/oat-docs/docs/docs-tooling/check.md.
+**Proof:** Extend existing real-file optional-meta fixture with title-only, invalid explicit pages, later drift and generated controls; skip neutralization; scoped checks/build.
+
+**Commit:** 14587af7fe6de55c1205674271bd244abaaa9154
+**Verification:** Title-only root/subfolder metadata passes for hand-authored and undeclared ownership; absent-pages skip still allows later explicit drift and malformed-file diagnostics. Present null pages errors; nav-sync missing/title-only artifacts stay stale. Pre-fix and skip-neutralized controls fail both ownership cases; restored controls pass and combined checker/nav118 fresh tests pass. CLI check/type/build and docs check pass; flagship0errors/756visible warnings. Guidance accurately states absent optional meta/pages/nav behavior and no implicit-order comparison. Recovery1/10,pendingnull unchanged.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
