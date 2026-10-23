@@ -136,6 +136,10 @@ docs367-p04-complexity-process-20261023: independent complexity review found all
 
 docs367-prev4-start-20261023: add a bounded revision correcting accepted p04 for PR372 external H1 legacy generated-header compatibility and M1 Windows nested ordering; existing outcomes only, prior anchors/review history preserved. One same-target phase implementer continuation owns two sequential fixes, recovery0/10 pendingnull.
 
+### 2026-10-23 · structural · oat-project-implement · p-rev4
+
+docs367-prev4-accepted-20261023: p-rev4 accepted at ba253ba359a03d2f40410e2431e38ca6effd629b; all four external compatibility fixes verified, independent review0C0H0M0L, gates1–8 pass; implementation.md carries evidence and limitations; PR372 delivery awaits current-head checks.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

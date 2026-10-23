@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p-rev4
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | in_progress | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 7/13 phases accepted
+**Total:** 8/13 phases accepted
 
 ---
 
@@ -1105,7 +1105,7 @@ https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/d
 
 ## Phase p-rev4: Preserve manifest regeneration and portable Contents order
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 06c160aa3204d6c8397d42e38d8456a8ffa8a19c
 **Head:** ba253ba359a03d2f40410e2431e38ca6effd629b
 **Executor:** phase-implementer:docs367-prev4-impl-20261023
@@ -1199,6 +1199,12 @@ All eight gates ran in order against the candidate with explicit exits. Fetch or
 
 **Evidence:** ignored analysis/p-rev4/README.md indexes every baseline, immutable source/hash probe, M7/control script, built CLI receipt, t01–t04 pre/post check, ordered gate and supplemental log/exit. phase-summary.json and fresh-test-counts.json preserve cache/execution counts; installed-provenance.json identifies actual external package files. Final journal validation and exact ownership conservation are captured in handoff receipts. This verification-only journal commit changes no tested product bytes.
 
+### Review Received: p-rev4 round 1 and acceptance
+
+Root read the complete review artifact reviews/archived/p-rev4-review-2026-10-23T054624Z.md and validated the confirmation's single not-attempted reconnaissance signal, absent Review Orchestration, exact anchor provenance and consistent0C/0H/0M/0L counts. Request docs367-prev4-review-r1-20261023 independently closes H1/M1/H2/M2; no fix, deferral, rejection or new requirement. The reviewer confirmed the released header against main and published npm0.3.25, real pinned tinyglobby/CLI parity for22patterns (old adapter diverges on3),14 fence cases, and fresh141CLI/16docs-config tests. Broad gates and M7 were inspected rather than rerun; Windows semantics remain a portable macOS proof, not Windows-host execution. The two expressly nonfinding scope observations add no task.
+
+Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all four task records closed, all required gates1–8 passed and no optional external phase gate selects p-rev4 (plan selects p03/p06). Both findings-bearing remote events retain fixes_completed and this clean successor is passed. P04 anchors/history/recovery3 stay frozen; p-rev4 recovery0/10,pendingnull. PR372 publication, replies and current-head CI/Bugbot/Warp reconciliation remain delivery conditions before land-pr. Provisional p05 has no Base and starts only after this intermediate PR lands.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
@@ -1231,7 +1237,7 @@ All eight gates ran in order against the candidate with explicit exits. Fetch or
 
 ## Orchestration Runs
 
-run/v1 · request=docs367-prev4-review-r1-20261023 · scope=p-rev4 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev4 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-prev4-review-r1-20261023 · scope=p-rev4 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev4 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p04-complexity-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

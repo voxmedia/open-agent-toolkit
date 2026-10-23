@@ -1,6 +1,6 @@
 ---
-oat_current_task: p-rev4
-oat_last_commit: 3f99348b589cbd750bdfd088e02e4c10a5848e2f
+oat_current_task: p05
+oat_last_commit: ba253ba359a03d2f40410e2431e38ca6effd629b
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -136,7 +136,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T05:19:08Z
+oat_project_state_updated: 2026-10-23T05:48:37Z
 oat_generated: false
 ---
 
@@ -148,12 +148,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev4 corrects four newly reported PR372 regressions; p04 accepted anchors/history preserved.
+Implement — p-rev4 accepted; deliver PR372 once current-head checks and bot findings clear, then concretize p05.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 accepted; 7/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; 8/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -162,4 +162,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; fresh independent revision review and current-head CI/Bugbot reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; independent revision review passed with zero findings. Publication and current-head CI/Bugbot/Warp reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
