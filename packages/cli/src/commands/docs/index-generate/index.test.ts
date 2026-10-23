@@ -14,6 +14,7 @@ import { basename, join } from 'node:path';
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { buildDocumentationConfig } from '@commands/docs/init/scaffold';
+import { createDocsNavSyncCommand } from '@commands/docs/nav/sync';
 import type { OatConfig } from '@config/oat-config';
 import { dirExists } from '@fs/io';
 import type { Scope } from '@shared/types';
@@ -382,8 +383,7 @@ describe('createDocsGenerateIndexCommand', () => {
 
   describe('scaffold-derived safety', () => {
     it('leaves the authored Fumadocs docs/index.md untouched and records the manifest transition', async () => {
-      const authored =
-        '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n- [Guide](guide.md)\n';
+      const authored = '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n';
       const config = fumadocsScaffoldConfig();
       // Pre-fix seed: documentation.index still points at the authored page.
       config.documentation!.index = 'apps/docs/docs/index.md';
@@ -923,8 +923,7 @@ describe('createDocsGenerateIndexCommand', () => {
         'utf8',
       );
 
-      const authored =
-        '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n- [Guide](guide.md)\n';
+      const authored = '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n';
       await writeFile(join(appRoot, 'docs', 'index.md'), authored, 'utf8');
       await writeFile(
         join(appRoot, 'docs', 'guide.md'),
@@ -956,6 +955,97 @@ describe('createDocsGenerateIndexCommand', () => {
 
       return { appRoot, authored, capture, command, readConfig, repoRoot };
     }
+
+    it.each([
+      ['escaping', '- [Outside](../README.md)'],
+      ['external', '- [Website](https://example.com)'],
+      ['missing', '- [Missing](gone.md)'],
+      ['unsupported extension', '- [Image](image.svg)'],
+      ['excluded inventory', '- [Draft](draft.md)'],
+      ['empty', ''],
+      ['prose-only', 'Read the guides below.'],
+    ])(
+      'uses conserved inventory fallback for %s Contents hints',
+      async (_name, body) => {
+        const repo = await createRealRepo({
+          root: 'apps/docs/docs',
+          tooling: 'markdown',
+          nonReaderPaths: ['draft.md'],
+        });
+        const contentRoot = join(repo.appRoot, 'docs');
+        await writeFile(
+          join(contentRoot, 'index.md'),
+          `# Docs\n## Contents\n${body}\n`,
+        );
+        await writeFile(join(contentRoot, 'z.md'), '# Zulu');
+        await writeFile(join(contentRoot, 'a.md'), '# Alpha');
+        await writeFile(join(contentRoot, 'draft.md'), '# Draft');
+        await writeFile(join(contentRoot, 'image.svg'), '<svg/>');
+        await writeFile(join(repo.appRoot, 'README.md'), '# Outside inventory');
+
+        await runCommand(repo.command, ['--output', 'manifest.md']);
+
+        expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+        const manifest = await readFile(
+          join(repo.repoRoot, 'manifest.md'),
+          'utf8',
+        );
+        expect(
+          manifest.split('\n').filter((line) => line.startsWith('- ')),
+        ).toEqual([
+          '- [Docs](index.md)',
+          '- [Alpha](a.md) [unlisted in Contents]',
+          '- [Guide](guide.md) — How to [unlisted in Contents]',
+          '- [Zulu](z.md) [unlisted in Contents]',
+        ]);
+      },
+    );
+
+    it('composes Fumadocs MDX nav sync with the Markdown manifest inventory', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      await writeFile(
+        join(repo.appRoot, 'source.config.ts'),
+        'export default {};',
+      );
+      await writeFile(
+        join(repo.appRoot, 'docs/index.md'),
+        '# Docs\n## Contents\n- [Fancy](fancy.mdx)\n- [Guide](guide.md)\n',
+      );
+      await writeFile(join(repo.appRoot, 'docs/fancy.mdx'), '# Fancy');
+      const nav = createDocsNavSyncCommand({
+        buildCommandContext: () => ({
+          scope: 'all' as Scope,
+          dryRun: false,
+          verbose: false,
+          json: false,
+          cwd: repo.repoRoot,
+          home: join(repo.repoRoot, 'home'),
+          interactive: false,
+          logger: repo.capture.logger,
+        }),
+      });
+      await nav.parseAsync(['--target-dir', repo.appRoot], { from: 'user' });
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      expect(
+        JSON.parse(await readFile(join(repo.appRoot, 'docs/meta.json'), 'utf8'))
+          .pages,
+      ).toEqual(['index', 'fancy', 'guide']);
+      await nav.parseAsync(['--target-dir', repo.appRoot, '--check'], {
+        from: 'user',
+      });
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
+      expect(
+        manifest.split('\n').filter((line) => line.startsWith('- ')),
+      ).toEqual(['- [Docs](index.md)', '- [Guide](guide.md) — How to']);
+    });
 
     it('writes the real manifest, preserves authored bytes, and records a repo-relative index', async () => {
       const repo = await createRealRepo({

@@ -1,10 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
-import {
-  parseIndexContents,
-  resolveEntryTarget,
-} from '@commands/docs/nav/contents';
+import { parseIndexContents } from '@commands/docs/nav/contents';
 import { resolveFolderTitle } from '@commands/docs/nav/fumadocs';
 import {
   createExclusionMatcher,
@@ -114,7 +111,6 @@ async function collectEntries(
   docsDir: string,
   relativeBase: string,
   matcher: ExclusionMatcher,
-  docsRoot: string,
 ): Promise<IndexEntry[]> {
   const entries: IndexEntry[] = [];
   const subdirs: string[] = [];
@@ -149,7 +145,6 @@ async function collectEntries(
       join(docsDir, subdir),
       relativeKey(relativeBase, subdir),
       matcher,
-      docsRoot,
     );
     // A directory with no surviving children emits no heading. This already
     // pruned genuinely empty directories; exclusion simply empties more of
@@ -170,29 +165,36 @@ async function collectEntries(
   const fallback = sortEntries(entries);
   if (indexMarkdown === undefined || !/^##\s+Contents\s*$/m.test(indexMarkdown))
     return fallback;
-  const contents = parseIndexContents(indexMarkdown, join(docsDir, 'index.md'));
+  const contents = parseIndexContents(
+    indexMarkdown,
+    join(docsDir, 'index.md'),
+    {
+      allowEmpty: true,
+    },
+  );
+  // Contents only orders surviving inventory. Looking up captured paths avoids
+  // probing missing, excluded or outside-root targets with nav's strict resolver.
+  const inventory = new Map<string, IndexEntry>();
+  const recordPaths = (entry: IndexEntry, direct: IndexEntry): void => {
+    inventory.set(entry.path, direct);
+    for (const child of entry.children ?? []) recordPaths(child, direct);
+  };
+  for (const entry of entries) recordPaths(entry, entry);
   const ordered: IndexEntry[] = [];
   const add = (entry: IndexEntry | undefined): void => {
     if (entry && !ordered.includes(entry)) ordered.push(entry);
   };
   add(entries.find((entry) => entry.path === 'index.md'));
   for (const entry of contents) {
-    const target = await resolveEntryTarget(
-      docsRoot,
-      docsDir,
-      relativeBase,
-      entry,
-      ['.md'],
-      matcher,
-    );
-    if (target.kind === 'excluded') continue;
-    const local = relative(docsDir, resolve(docsRoot, target.path)).replaceAll(
+    const href = entry.href.split('#', 1)[0]?.trim() ?? '';
+    if (!href || /^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//'))
+      continue;
+    const local = relative(docsDir, resolve(docsDir, href)).replaceAll(
       '\\',
       '/',
     );
     if (local === '..' || local.startsWith('../')) continue;
-    const direct = local.split('/')[0];
-    add(entries.find((candidate) => candidate.path === direct));
+    add(inventory.get(local));
   }
   for (const entry of fallback) {
     if (!ordered.includes(entry)) ordered.push({ ...entry, unlisted: true });
@@ -208,7 +210,6 @@ export async function generateIndex(
     docsDir,
     '',
     createExclusionMatcher(options.excludes ?? []),
-    docsDir,
   );
 }
 

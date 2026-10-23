@@ -17,6 +17,7 @@ export interface DocsContentsEntry {
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
+  options: { allowEmpty?: boolean } = {},
 ): DocsContentsEntry[] {
   const lines = markdown.split(/\r?\n/);
   const contentsHeadingIndex = lines.findIndex((line) =>
@@ -64,7 +65,7 @@ export function parseIndexContents(
   }
   checkGroup();
 
-  if (entries.length === 0) {
+  if (entries.length === 0 && !options.allowEmpty) {
     throw new Error(
       `No machine-readable links found under ## Contents in ${sourcePath}`,
     );
