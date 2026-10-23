@@ -157,6 +157,47 @@ describe('repository IA mirrors through real command and storage', () => {
     });
   });
 
+  it.each(
+    [' ../secret.md', '\t..\\secret.md ', 'guide/.. '].flatMap((path) => [
+      { field: 'decision', value: { ...ia, decision: path } },
+      {
+        field: 'track',
+        value: { ...ia, tracks: [{ path, principle: 'reader task' }] },
+      },
+    ]),
+  )(
+    'rejects padded traversal in $field without writing: $value',
+    async ({ value }) => {
+      const f = await fixture();
+      await f.command('set', 'documentation.ia', JSON.stringify(ia));
+      const before = await readFile(f.repoPath, 'utf8');
+      expect(
+        await f.command('set', 'documentation.ia', JSON.stringify(value)),
+      ).toMatchObject({ status: 'error' });
+      expect(await readFile(f.repoPath, 'utf8')).toBe(before);
+    },
+  );
+
+  it('stores valid padded relative decision and track paths trimmed', async () => {
+    const f = await fixture();
+    const padded = {
+      ...ia,
+      decision: ` \t${ia.decision} \n`,
+      tracks: [{ path: ' \tguide \n', principle: 'reader task' }],
+    };
+    expect(
+      await f.command('set', 'documentation.ia', JSON.stringify(padded)),
+    ).toMatchObject({ status: 'ok', value: ia });
+    expect(await f.command('get', 'documentation.ia')).toMatchObject({
+      status: 'ok',
+      value: ia,
+      source: 'shared',
+    });
+    expect(
+      JSON.parse(await readFile(f.repoPath, 'utf8')).documentation.ia,
+    ).toEqual(ia);
+  });
+
   it.each(['--user', '--local'])(
     'rejects mirror writes/unsets at %s and ignores unsupported stored tiers',
     async (scope) => {

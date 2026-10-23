@@ -2532,10 +2532,15 @@ export function normalizeDocumentationIa(
   if (value === undefined || value === null) return undefined;
   const nonempty = (entry: unknown): entry is string =>
     typeof entry === 'string' && entry.trim().length > 0;
-  const repoRelative = (entry: unknown): entry is string =>
-    nonempty(entry) &&
-    !/^(?:[\\/]|[a-zA-Z]:|[a-zA-Z][a-zA-Z+.-]*:)/.test(entry.trim()) &&
-    !entry.split(String.fromCharCode(92)).join('/').split('/').includes('..');
+  const repoRelative = (entry: unknown): entry is string => {
+    if (typeof entry !== 'string') return false;
+    const path = entry.trim();
+    return (
+      nonempty(path) &&
+      !/^(?:[\\/]|[a-zA-Z]:|[a-zA-Z][a-zA-Z+.-]*:)/.test(path) &&
+      !path.split(String.fromCharCode(92)).join('/').split('/').includes('..')
+    );
+  };
   if (
     !isRecord(value) ||
     Object.keys(value).some(
