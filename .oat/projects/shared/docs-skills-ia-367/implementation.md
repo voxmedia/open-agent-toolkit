@@ -861,6 +861,18 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 
 Protects against: pinned external schema rejecting accepted roots and collection globs interpreting literal metacharacters as operators; existing loader-only checks could not detect either failure; covered by the installed-schema/loader and real collection-emitter parity tests.
 
+### Task p04-t05: Initialize owned navigation and guard framework builds
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Seed nav-sync for explicitly fresh framework apps, generate navigation after config, and execute correctly selected/quoted build checks while preserving existing apps and Markdown.
+**Files:** CLI docs init command/scaffold and existing tests; Fumadocs/MkDocs package templates.
+**Proof command:** isolated-HOME CLI Vitest docs/init and docs/nav, actual rendered script commands with spaced paths; scoped lint/type-check/build.
+
+**Commit:** 3458b34814099118b507c9b1eecb06ea41a293a8
+**Evidence:** 154 fresh isolated-HOME init/nav tests pass, scoped oxlint/type-check/CLI build exit 0. Real init seeds/syncs both frameworks even with prior config, preserves unknown config siblings and old app metadata; existing Markdown/dry-run controls pass. Actual extracted Fuma prebuild and MkDocs docs:build execute real CLI commands for external and source workspaces with `apps/docs site`; clean navigation passes and drift fails. External framework build executables are inert fixture programs, so this proves script/CLI composition, not a Next/MkDocs framework build. Baseline fails four owner cases; removing only template build guards makes all four drift assertions fail. Earlier prevention-run failures remain in ignored logs; no failed verification was followed by a commit. Evidence: ignored `analysis/p04/t05-*`, exact final commands/exits in `t05-final-exits.json`. Recovery stays 1/10, pending null.
+
 ---
 
 ## Phase p05: Reader-first starter app
