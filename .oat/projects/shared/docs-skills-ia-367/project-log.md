@@ -196,6 +196,10 @@ target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:2,l
 
 docs367-p06-accepted-20261023: p06 accepted at standard review cycle3/3 plus external gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passing high threshold; four gate findings deferred to final, two standard Lows operator-approved;10/13 phases accepted, intermediate delivery pending. See implementation.md.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-pr374-m1-complete-20261023: PR374-M1 instruction correction p06-t11 passed root conservation and CI-command parity review; gates1–9 exit0, standard full-code loop remains3/3, p06 acceptance restored and delivery pending current-head checks.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

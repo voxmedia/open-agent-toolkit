@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p06-t11
+oat_current_task_id: p07
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | in_progress | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 9/13 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
@@ -1520,7 +1520,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 **Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 
@@ -1836,6 +1836,12 @@ The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and r
 
 **Commit:** 9ebc2bea8eeec925eb1b315aab457e06a4280742
 **Verification:** AGENTS-only conservation diff preserves every other instruction byte and the first eight gate commands/order. Both step9 commands exactly match CI and run sequentially, directly despite docs-build cache replay. Scoped oxfmt/diff checks pass. Ordered gates1–8 exit0; step9 regeneration/diff exit0/0. Turbo cached/executed: check11/0, types11/0, test12/0, build5/0, skill/version/release direct, docs-build6/0; cached package/runtime evidence is inherited. Gate3 direct smoke165/skills712/scripts1 run fresh and pass under isolated HOME. Fetch before version gate exits0; no AGENTS/workflow main drift. Verified product committed bytes match the tested source. No new tests, runtime/dependency/version edits, installs, review dispatch or recovery event. Recovery remains1/10,pendingnull; historical anchors, deferrals and root acceptance unchanged. Exact commands/exits/diff: ignored analysis/p06/remote-pr374-m1.
+
+### Root PR374 instruction correction validation
+
+2026-10-23; original handle continuation docs367-p06-pr374-dod-20261023 completed at e16d66b9d2126eac1b620d0055e556e25e24f338, exact retained codex_codex_proxy/gpt-6.1-sol/high/priority. Root verified the sole authored path is AGENTS.md in product9ebc2bea8eeec925eb1b315aab457e06a4280742; the remaining tail is journal only. The nine-line addition preserves every prior instruction byte and first eight gates. Root independently compared both new commands and their order against actual CI. Formatting and journal check pass. Producer gates1–8 plus both gate9 commands exit0; Turbo cached/executed11/0,11/0,12/0,5/0,direct,direct,direct,6/0, then direct freshness. Smoke165/skills712/scripts1 ran freshly under isolated HOME; no new full-run claim. No failures or new tests. Evidence: analysis/p06/remote-pr374-m1.
+
+Root closes PR374-M1 and restores p06 acceptance (10/13). Historical Base/Head, selected passing phase gate, all review/cap decisions and six deferred findings are conserved. This is a root-reviewed documentation-only tail, as with p05-t11, not a fourth full-code review or new behavior. P07 has no Base and remains provisional. Recovery1/10,pendingnull unchanged. Publish the fix, reply on its source thread, resolve after verifying published code, then await fresh current-head CI/Bugbot. No final project PR or later-phase implementation.
 
 ## Phase p07: Page templates and presets
 
