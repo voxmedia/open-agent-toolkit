@@ -1125,6 +1125,23 @@ Proof: Existing real-filesystem command test seeded with literal origin/main hea
 
 **Execution/evidence:** Narrow literal compatibility recognizes current and released0.3.25 markers; emission remains current-only. The real production-dependency command test initially fails (exit1) because legacy output is refused as not generated; original product bytes were unchanged for that red run. Fixed precommit formatting, scoped lint/check, fresh isolated137 nav/index tests, CLI type-check and CLI build all exit0. Immediate committed-byte lint/format and fresh137 tests all exit0. Built CLI scratch command independently gives legacy regeneration0/current repeat0/unmarked refusal1 before and after commit; output has one current header, repeat bytes match and refused bytes survive. Existing Markdown, protected-root/config/YAML/symlink and explicit-output controls stay green. Only owned index.ts/index.test.ts changed. Exact commands, origin/main header provenance, failure and controls live in ignored analysis/p-rev4/t01-baseline.\*, t01-pre/post-exits.json and t01-built-pre/post.json. Recovery0/10,pendingnull unchanged.
 
+### Task prev4-t02: Keep nested inventory and rendered paths portable
+
+**Status:** completed
+**Commit:** d093a003ea83ad8f0aa8205bf4e1a0f5944bc44a
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356339214 (M1)
+
+Intent: Use the existing POSIX relative-key operation for inventory/render paths while preserving native filesystem paths, Contents order, nonduplication and fallback/exclusions.
+Files: packages/cli/src/commands/docs/index-generate/generator.ts and generator.test.ts.
+Proof: Reuse the real authored-order fixture in host and portable win32-relative-join modes, with literal expected paths/order/unlisted flags and output links. Node's actual win32.join supplies the platform-specific relative-path behavior; absolute joins/IO stay on the real host filesystem. This covers a distinct risk missed on POSIX: relative inventory keys disagree with normalized href lookup. No own-module mocks, new harness or exported production hooks. Preserve the pre-fix intended order mismatch, fixed/valid controls and fresh nav/index/lint/format/CLI types/build precommit; immediate committed-byte checks afterwards. This is not an actual Windows host run.
+
+**Execution/evidence:** Reused relativeKey for published nested entry paths; native join/resolve/relative remain for IO and href resolution. Existing authored-order fixture now runs host and real win32-relative-join modes on macOS, with literal ordering, flags, nested paths and rendered links. Pre-fix Windows-semantics case fails because section follows a.md and is unlisted; host control passes. Fixed precommit format/lint/check, fresh isolated138 nav/index tests, CLI type-check/build all exit0; committed bytes re-read and focused lint/format/138tests all exit0. Nested path expectations now use POSIX literals, and exclusion tests no longer normalize away incorrect output. No own-module mocks or production hooks; the tiny external node:path adapter uses actual win32.join only for relative joins and retains real absolute filesystem IO. This is not a Windows host run. replay-baselines.py repeats both H1/M1 intended failures from immutable launch819ce410f source bytes; hashes and exact commands/logs in ignored analysis/p-rev4. Recovery0/10,pendingnull unchanged.
+
+### Root-authorized in-flight scope amendment
+
+Root steering on the same request docs367-prev4-impl-20261023 / continuation cont-docs367-p04-external-prev4 accepts external Warp review5624216218 at source06c160aa: H2 discussion_r4356366295 → prev4-t03 directory-only collection parity; M2 discussion_r4356366304 → prev4-t04 fenced Contents compatibility. Root independently reproduced both and explicitly approved adding reader-paths.ts/source-config.test.ts and nav/contents.ts/nav/sync.test.ts to the original four-path product boundary. These correct existing G2/G3/P14 contracts within this same revision phase; no new requirement, phase or automated p04 review round. Root will align plan/state/remote receipt after handoff to avoid concurrent tracked writes. Source artifact (local-only): reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md; root-directory-only-repro.json and root-fenced-contents-repro.json preserve evidence. Same target and recovery0/10,pendingnull; original p04 anchors/history/usage3 remain frozen. Integrated final gates follow all four tasks once.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
