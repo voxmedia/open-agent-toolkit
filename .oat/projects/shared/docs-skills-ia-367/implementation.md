@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p05
+oat_current_task_id: p-rev4
 oat_generated: false
 oat_template: false
 ---
@@ -39,22 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p05    | pending   | 1     | 0/1      |
-| p06    | pending   | 1     | 0/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | in_progress | 1     | 0/1      |
+| p05    | pending     | 1     | 0/1      |
+| p06    | pending     | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 7/12 phases accepted
+**Total:** 7/13 phases accepted
 
 ---
 
@@ -1102,6 +1103,15 @@ https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/d
 
 **Root dispositions:** Keep product mechanisms: each maps to the pinned contract or observed failure. Optional matching-root predicate cleanup is not a defect or an acceptance condition; reconsider only when p06 adds another consumer, preserving Markdown versus framework root semantics. Forward process guidance accepted: future prose/lint-only recovery receipts use the required Recovery Event block and one exits line; retain required ledger transitions and substantive composition diagnosis, without rewriting historical receipts. Optional copied-app deletion is left untouched to preserve evidence. Incidental optional test-dependency observation is not a production defect: DEFAULT_DEPENDENCIES always provides resolveNonReaderPaths and real-file reader-path tests exercise the production command. No fix or unapproved finding deferral is needed. All self-review lenses are complete; PR may be marked ready. Main risk remains framework source/schema/navigation composition, covered by generated consumer/real Next controls; MkDocs rendering limitation disclosed. Final-scope p03 deferred items remain tracked below.
 
+## Phase p-rev4: Preserve manifest regeneration and portable Contents order
+
+**Status:** in_progress
+**Base:** 06c160aa3204d6c8397d42e38d8456a8ffa8a19c
+**Executor:** phase-implementer:docs367-prev4-impl-20261023
+**Corrects:** p04
+
+One phase implementer in the existing root worktree owns the correction commits, continuing the accepted p04 implementer conversation at the same exact codex_codex_proxy/gpt-6.1-sol/high/priority target. No parallel group is declared; both corrections share generator tests/build output and journal, so root fan-out fails independence. Root retains receive judgment, review, acceptance and PR publication. Main fetched; no index-generation path advancement. New external correction scope preserves accepted p04 anchors and three-round history. Recovery policy10 attempts, used0,pendingnull; separate from settled p04 usage3/10.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
@@ -1225,6 +1235,15 @@ run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role
 run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #372
+
+2026-10-23, source Cursor review5624184704 at commit06c160aa3204d6c8397d42e38d8456a8ffa8a19c. Counts0C/1H/1M/0L; normalized artifact(local-only) reviews/archived/remote-pr-372-review-2026-10-23T051908Z.md. No source OAT marker, ledger provenance unknown.
+
+- H1 cursor discussion_r4356339210 → fix prev4-t01: old released generated header is misclassified as hand-authored; root actual built-CLI scratch reproduction exits1. Accept exact known generated ownership while preserving hand-authored refusal.
+- M1 cursor discussion_r4356339214 → fix prev4-t02: win32 nested inventory key differs from POSIX Contents key; root win32.join/relative probe proves mismatch. Canonicalize relative keys while preserving native IO.
+
+Outcome: both converted, none deferred/dismissed. External PR372 receive cycle1; create p-rev4 correcting p04, preserving accepted p04 evidence/anchors and its completed review cap. No new outcome or constraint; brief section2 authorizes phase-local corrections. PR372 remains blocked for these findings; original implementer continuation follows. Routine factual replies are authorized by land-pr after published verification.
 
 - PR https://github.com/voxmedia/open-agent-toolkit/pull/371 opened for accepted p03 against main on 2026-10-23, initial head cf3d17001b6bc1d06714d934748e981984974c8d, base ec1261f44f93d07bbc2926aa5680b7bfd777089e. Post-open pr-self-review inventories all four independent product lenses from P03 rounds 1–3 and p-rev2 rounds 1–2; no duplicate lens requested. Later authored delta is delivery bookkeeping only; merge changes no product bytes. Deferred hoisted lookup and shim grants stay explicitly tracked for final; prose/manual proof limits and cache/flake history are disclosed in the body. No outstanding operator decision or unreviewed product fix; mark draft ready after metadata push. Land-pr mode=land, standing intermediate merge authority, merge-commit method, final PR held.
 

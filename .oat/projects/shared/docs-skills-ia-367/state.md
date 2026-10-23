@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05
+oat_current_task: p-rev4
 oat_last_commit: 3f99348b589cbd750bdfd088e02e4c10a5848e2f
 oat_blockers: []
 associated_issues: [
@@ -39,6 +39,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p04:
       used_attempts: 3
+      pending_attempt: null
+    p-rev4:
+      used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -133,7 +136,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T05:05:27Z
+oat_project_state_updated: 2026-10-23T05:19:08Z
 oat_generated: false
 ---
 
@@ -145,12 +148,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p04 accepted after clean independent round3; phase delivery PR next, then concretize p05.
+Implement — p-rev4 corrects two newly reported PR372 regressions; p04 accepted anchors/history preserved.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 accepted; 7/12 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 accepted; 7/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
