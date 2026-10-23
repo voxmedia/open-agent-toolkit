@@ -1343,6 +1343,28 @@ Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, t
 
 Root validated all four closed p05 records and the final prose scope at13d07784d; only implementation.md follows candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212. Three-page headings/link conservation and explicit ordered gate exits reconcile, including the disclosed single no-edit server-timeout retry; the prior forced9374tests and real-export/browser evidence remain inherited. Recovery01 stays settled at1/10,pendingnull. Base and candidate Head are valid ancestor anchors. Root review is pending; no p05 acceptance or later-phase start is recorded.
 
+### Review Received: p05
+
+**Review:** reviews/archived/p05-review-2026-10-23T072438Z.md
+**Scope:** p05; code; auto; round1/3; anchored d02e20521f336aa45beab84a5f5e2df7b9541f79..95a2cef6610eb3a65c18544ffcdd51f9abb4b212.
+**Findings:** Critical0 · High1 · Medium2 · Low3. The reviewer terminal handoff explicitly confirms Reconnaissance not-attempted; the artifact contains no orchestration section (the signal itself is in the handoff, not the file). Root read the entire artifact and dispositions all six against Outcome7 and the concrete p05 Intent/Exit. No new requirement or approved deferral.
+
+- H1 (High): MkDocs silently overwrites contributing.md with contributing/index.md. Task Scope: Moderate. Convert → p05-t05. Both approved paths must render distinctly. Root selects use_directory_urls:false only in the new MkDocs template: source paths remain authoritative, no contract pins directory URLs, and existing consumer configs are untouched. Document fresh-scaffold .html URLs and verify nav/source-link compatibility with pinned1.4.2 build evidence. No Python dependency upgrade or generic routing layer.
+- M1 (Medium): llms basePath prefix can be omitted when the first content segment matches it. Task Scope: Minor. Convert → p05-t06; loader baseUrl remains '/', so prefix the configured base exactly once per source URL and retain ordinary-base controls.
+- M2 (Medium): public add-docs page still describes the retired AGENTS bridge. Task Scope: Negligible. Convert → p05-t08; align with older-CLI missing-capability/analyze/manual advice. This corrects the overbroad t04 no-residue claim; preserve headings, links and valid behavior.
+- L1 (Low): Markdown endpoint links double-encode loader slugs. Task Scope: Minor. Convert → p05-t06; reconcile emitted URLs, static params and request params using a real spaced-filename export and served URL, rather than assuming a unit-only encoding fix suffices.
+- L2 (Low): app-root docs.md incorrectly changes docs/index.md link routing. Task Scope: Minor. Convert → p05-t07; root index has no same-name sibling inside the content root; preserve nested collision behavior and real-file controls.
+- L3 (Low): nav docstring omits the precise source-file collision exception. Task Scope: Negligible. Convert → p05-t08; comment-only alignment with the implemented loader contract.
+
+**Outcome:** fixes queued p05-t05–p05-t08; phase remains in_progress, Base frozen, no acceptance. Same implementer resumes bounded fix mode; next independent review narrows to the fix delta and inherits unaffected round1 coverage. Recovery remains1/10,pendingnull; review fixes do not reserve a recovery attempt.
+
+**Queued execution records (open on start):**
+
+- p05-t05 — preserve both MkDocs contributor pages with fresh-template URL setting, guidance and one bounded existing regression; pinned build red/fixed/valid proof.
+- p05-t06 — correct llms basePath and encoding against real loader/static export; extend existing tests and serve spaced-file endpoints.
+- p05-t07 — isolate root-index routing from app-root siblings; extend existing real-file collision coverage.
+- p05-t08 — conserve and correct the remaining public bridge sentence and nav docstring; docs check, no new prose tests.
+
 ---
 
 ## Phase p06: oat docs check
@@ -1371,7 +1393,7 @@ Root validated all four closed p05 records and the final prose scope at13d07784d
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-review-r1-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p05-review-r1-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-prose-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-prose-after-recovery01 · observed=~ · match=~
 
