@@ -839,6 +839,21 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 **Commit:** 294af3ad15760612c5559efdfde99c9118399773
 **Evidence:** 129 focused docs tests pass; new ordering/title/shared-grammar cases fail on baseline. Existing real fixture now supplies a valid Contents link instead of an empty section; existing nested-title expectation follows the new authored-title contract. Type-check and scoped lint exit 0. Logs: ignored `analysis/p04/t03-*`.
 
+### Task p04-t04: Adapt pinned Fumadocs schema and collection discovery
+
+**Status:** failed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Narrowly accept named roots in the installed metadata schema and exclude non-readers from Fumadocs collections with bounded-glob parity, explicit config location and matching-app applicability.
+**Files:** docs-config source helper/tests, docs app and Fumadocs template source configs, scaffold token resolver/tests as needed.
+**Proof command:** docs-config Vitest with installed fumadocs-mdx 14.3.2 schema/collection and fumadocs-core 16.10.2 loader; CLI matcher parity and scoped package type-check/lint/build.
+
+**Commit:** 9712fcba8ac65355f78edeb813303c1c0592c8d8 (immutable implementation candidate; scoped CLI lint failed)
+**Evidence:** docs-config check/type-check/test/build exit 0 (13 fresh tests); CLI init tests exit 0 (112 fresh tests, isolated HOME), CLI type-check exit 0. Neutralizing the schema adaptation and collection exclusions independently makes the relevant regression fail (exit 1 each). Installed schema rejects the named root, the adapted real collection schema accepts it, the installed loader retains its landing page, and the installed Next collection emitter excludes non-reader imports with bounded-matcher parity. Declared zod dependency reuses installed 4.3.6; no framework upgrade. Logs/scripts: ignored `analysis/p04/t04-*`.
+**Stop boundary:** CLI scoped oxlint exit 1: `prefer-template` at scaffold.ts:371, the new explicit-config-path token uses string concatenation. The shell continued into the commit after the failed lint command; that was a commit-control error. Mechanical repair is to use a template literal for the same path value. No recovery edit made: dispatch reserves state.md to root, so the required durable attempt reservation cannot be written by this implementer. Direction-required; recovery remains 0/10, pending null, exact target unchanged. Root must reserve/authorize the bounded recovery before resuming. Phase remains in_progress; no phase Head or full-gate success claimed.
+
+Protects against: pinned external schema rejecting accepted roots and collection globs interpreting literal metacharacters as operators; existing loader-only checks could not detect either failure; covered by the installed-schema/loader and real collection-emitter parity tests.
+
 ---
 
 ## Phase p05: Reader-first starter app
