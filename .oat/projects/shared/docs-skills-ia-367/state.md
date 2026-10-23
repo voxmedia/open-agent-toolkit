@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Current Phase
 
-P06 accepted after the operator-approved bounded correction and clean focused independent confirmation (0 findings; 39 public probes). All16 records are closed; 10/13 phase-units accepted. PR374 corrections are published; delivery is blocked by one CI installed-binary fixture failure and pending remote reviewer clearance. Warp supplied a concurrent test-only fix; root merged it and verification is pending. The original implementer stopped without consuming an attempt. P07 remains provisional and unstarted. Historical anchors, gate and explicit residual deferrals are preserved.
+P06 accepted after the operator-approved bounded correction and clean focused independent confirmation (0 findings; 39 public probes). All16 records are closed; 10/13 phase-units accepted. The merged external test-only correction is verified on Node22.17/26.11 and all nine gates pass. Remote CI, release dry-run, Bugbot and Warp clearance are confirmed atbcf9d83. Publish reconciled tracking, then require fresh final-head checks before delivery. Recovery1/10,pendingnull is unchanged. P07 remains provisional and unstarted; historical anchors, gate and explicit residual deferrals are preserved.
 
 ## Artifacts
 
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Verify the merged external p06-t14 fixture correction, preserving real-pnpm and checker controls; then publish reconciled bookkeeping and obtain successful current-head checks plus remote reviewer clearance before plain merge-commit delivery. Installed local pnpm binaries and absent-pages skip are operator-approved; implicit ordering and system-PATH support remain deferred. P06 historical anchors and gate are preserved. Recovery1/10,pendingnull. Align p07 only after p06 lands; no npm publication or final project PR.
+Publish the verified reconciliation and obtain successful final-head checks before plain merge-commit delivery of PR374. Installed local pnpm binaries and absent-pages skip are operator-approved; implicit ordering and system-PATH support remain deferred. P06 historical anchors and gate are preserved. Recovery1/10,pendingnull. Align p07 only after p06 lands; no npm publication or final project PR.

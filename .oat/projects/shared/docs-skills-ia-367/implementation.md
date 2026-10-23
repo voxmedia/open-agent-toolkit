@@ -1943,6 +1943,14 @@ Nine gates, 9487 fresh package/app tests, direct165/712/1, flagship0errors/756wa
 
 Root reconciled the external change by a normal conflict-free merge preserving both histories. Warp's test-only patch pins the temporary manifest to the repository's pnpm version and runs pnpm from the fixture cwd. Existing real binary and checker assertions are conserved; no production/dependency/CI changes. This receives external work rather than consuming or disguising a phase recovery attempt. Verify the committed merged test and gates before publication; report Corepack/Linux attribution only to the extent independently supported. Operator-approved scope choices and prior clean independent product review remain unchanged.
 
+### External fixture correction verified
+
+2026-10-23; original implementer verified clean merged HEAD02800224ea81849c1a0df45d3c1a23a2fc965bc6. External test-only correctionbcf9d83aff2fe635b578ba8702c8a00097f05e83 is an ancestor, and checker.test.ts bytes match it exactly (SHA2560938794ad3e58c56d645fe8bef4af7be76d2583ad70e4a76f202524c1f21ed47). The fixture pins the repository pnpm version and executes from its own cwd; all checker assertions and real-pnpm coverage are conserved. Root verified ancestry, bytes, manifest exits and every log hash. Evidence: ignored analysis/p06/recovery02/external-verification/README.md and manifest.json.
+
+Fresh isolated-HOME focused suites pass144/144 on both exact Node22.17.0 and26.11.1; the installed-binary test separately passes on each. All nine ordered gates exit0. Turbo cached/executed: G1 8/3, G2 9/2, G3 9/3, G4 5/0, G8 6/0; remaining gates direct. G3 freshly executes CLI9025 and docs93, replaying369 other package results; direct smoke165/skills712/scripts1 pass fresh. G3 executes the docs build, G8 replays it, and both G9 manifest commands run directly and pass. No tracked edits, commits, installs or recovery reservation by the verifier. Recovery1/10,pendingnull remains unchanged; attempt2 was not consumed.
+
+Root separately observed Linux/Node22.17 CI run40034555611/job120690710620 succeed atbcf9d83, with release dry-run and Bugbot successful and Bugbot reporting no issues. Warp confirms all five fixes and accepts the documented navigation exception; original rejection dismissed, no unresolved threads or requested reviewers in the complete remote sweep. Corepack causality remains unproven because the original failure omitted subprocess stderr. Prior independent review and approved residual deferrals remain unchanged. P06 stays accepted (10/13 units); publish reconciled tracking and require fresh final-head CI/Bugbot before plain merge delivery. P07 remains provisional.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1963,7 +1971,7 @@ Root reconciled the external change by a normal conflict-free merge preserving b
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-external-fix-verify-20261023 · scope=p06 · action=analysis · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-external-fix-verify-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-external-fix-verify-20261023 · scope=p06 · action=analysis · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-external-fix-verify-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-recovery02-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-recovery02-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
