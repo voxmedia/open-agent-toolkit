@@ -1620,6 +1620,61 @@ Root fresh-install disposition: intelligent recon confirmed a pre-existing pinne
 
 ---
 
+### Review Received: p06 (round 1)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p06-review-2026-10-23T174051Z.md
+**Findings:** Critical 0 · High 0 · Medium 4 · Low 2
+
+- M1 (Medium): optional hand-authored/undeclared navigation artifacts cause false drift and a raw absolute-path ENOENT abort → fix p06-t04. G5/P21 compare existing meta/nav; skip absent optional artifacts, continue checking later existing files, retain nav-sync strictness. Scope Moderate.
+- M2 (Medium): a labeled MkDocs landing page is misclassified as a group → fix p06-t04. Membership/order and explicit groups are contractual; page/section display labels are not. Scope Moderate.
+- M3 (Medium): directory-name skips hide declared site/out/dist workspace members → fix p06-t05. P22 requires real literal cd/filter package selection; workspace patterns decide membership. Scope Minor.
+- M4 (Medium): YAML parse errors share description exceptions and drop body checks; Mermaid accessibility and syntax share one rule → fix p06-t06. Separate parse diagnostics from metadata/accessibility exceptions and retain independent body checks. Preserve G5's explicit per-rule warn/off controls; do not invent unsuppressible errors. Scope Moderate.
+- L1 (Low): language-less fenced commands report the opening fence line → fix p06-t05. Detect fenced versus indented code from actual source, keeping physical positions accurate. Scope Minor.
+- L2 (Low): missing spaces in shipped package/docs/starter/bootstrap prose → fix p06-t07. Cosmetic edit only; conserve sections, links, claims and approval boundaries. Scope Negligible.
+
+**Root analysis:** Read the entire artifact and inspected navigation.ts, commands.ts, checker.ts, markdown.ts, diagrams.ts and the rule policy alongside G5 and concrete p06. Source and independent probe logs substantiate all six. Consumed exactly one not-attempted signal; artifact has no Review Orchestration section. Exact full anchors/provenance and current-tier counts are valid. The auto review is received autonomously under standing workflow authority. The root-owned review row is established here because the read-only reviewer was prohibited from tracking writes.
+
+**Design drift / artifact alignment notes:** No accepted design change. For M4, introduce a stable configurable frontmatter rule for YAML parse/mapping errors, retain the page body for independent checks, and move Mermaid accTitle/accDescr warnings to existing diagram-accessibility. Keep mermaid for syntax. Explicit syntax-rule overrides remain permitted by G5; only accidental cross-category suppression is corrected. Document the final stable IDs together.
+
+**Outcome:** fixes queued: p06-t04–t07; round1 is fixes_added, not passed. Original Base and historical candidate Head remain frozen until the fix handoff. Recovery remains 1/10, pending null; review fixes do not consume recovery attempts. All prior evidence remains, including cache truth, constrained install policy and 756 visible warnings. No acceptance or p07 advancement.
+
+### Task p06-t04: (review) Compare optional hand-authored navigation semantically
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M1, M2)
+
+Intent: Skip absent optional Fumadocs meta files and absent MkDocs nav in hand-authored/undeclared mode, while continuing comparisons of every existing artifact; nav-sync still requires generated freshness. Compare labeled or bare MkDocs landing entries by page membership/order while preserving explicit group semantics. No raw absolute-path diagnostic for missing optional artifacts.
+Files: packages/cli/src/commands/docs/check/navigation.ts; existing checker.test.ts.
+Proof: Extend existing real-file checker navigation cases with missing root/subfolder meta plus a later real mismatch; absent MkDocs nav; labeled landing versus valid relabel and dropped/reordered page controls, both ownership modes. New regressions fail on immutable pre-fix source for the intended reason and pass fixed; retain nav-sync strictness and group/collision controls. Public boundary is checkDocs/CLI navigation diagnostics; no helper-only mirrors, mocks or new hooks.
+
+### Task p06-t05: (review) Resolve declared workspace command contexts and physical fence lines
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M3, L1)
+
+Intent: Remove directory-name assumptions that hide declared site/out/dist workspace members; preserve workspace inclusion/exclusion patterns, node_modules/hidden scope and literal cd/filter semantics. Fix physical line reporting for language-less fences while retaining labeled/indented/inline forms.
+Files: packages/cli/src/commands/docs/check/commands.ts; existing checker.test.ts.
+Proof: Extend existing command-context fixture with declared site/out/dist members and exact valid cd/filter versus missing-script diagnostics. Add literal expected physical lines for language-less versus labeled/indented code at the same public checker boundary. Pre-fix red/fixed/valid proof, no duplicate layer or fixture framework.
+
+### Task p06-t06: (review) Separate syntax diagnostics from metadata and accessibility exceptions
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (M4)
+
+Intent: Add stable configurable frontmatter rule for invalid YAML/mapping; preserve masked frontmatter positions and parse independent body checks even when metadata is invalid. Move Mermaid accTitle/accDescr warnings to existing diagram-accessibility; keep Mermaid syntax under mermaid. Description/accessibility exceptions must not hide unrelated parse errors. Preserve explicit per-rule severity/filter/exception behavior, including intentional warn/off for the syntax rule itself. No generic exception machinery or unsuppressible-error policy.
+Files: packages/cli/src/commands/docs/check/checker.ts; markdown.ts; diagrams.ts; files.ts only if directly needed for read/parse composition; config/documentation-check.ts; existing checker.test.ts and config/docs-check.test.ts only for the public policy contract; apps/oat-docs/docs/docs-tooling/check.md; packages/cli/README.md only if its rule list needs alignment.
+Proof: Real malformed YAML with duplicate H1/broken link and independent Mermaid: description exception leaves frontmatter error plus applicable body findings; accessibility exception leaves syntax error; valid YAML/diagram controls pass; explicit syntax-rule override and rule-filter remain honored. Check actual CLI JSON/exits/config roundtrip for the final stable IDs, with minimal distinct coverage at owning boundaries. Preserve pre-fix red/fixed/valid controls, no test-only API or own-module mocks.
+
+### Task p06-t07: (review) Correct spacing in shipped p06 prose
+
+**Status:** pending
+**Source review:** reviews/archived/p06-review-2026-10-23T174051Z.md (L2)
+
+Intent: Correct joined prose tokens such as exit1, pnpm10 and12, exactly2.1.2 and depth0 in the six named changed surfaces, conserving all claims, sections, links, setup behavior and approval boundaries. Keep already-required PR-scoped skill/public version bumps; no second edit-scoped bump.
+Files: packages/cli/README.md; apps/oat-docs/docs/docs-tooling/commands.md; apps/oat-docs/docs/reference/cli-reference.md; apps/oat-docs/docs/docs-tooling/check.md; .oat/templates/docs-app-fuma/docs/contributing/docs-toolchain.md; .agents/skills/oat-docs-bootstrap/SKILL.md. Exact pinned sentence expectations may be updated in existing skill contract tests only if required by those corrected literals, with original behavioral assertions retained.
+Proof: Conservation diff and file-scoped formatting; existing skill sentence contracts run freshly with isolated HOME. No new prose tests, snapshots, receipts or negative controls. Final combined fix candidate runs all eight ordered DoD gates, applicable lint/format and direct suites, preserving prior broad fresh evidence for unchanged boundaries.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1640,7 +1695,7 @@ Root fresh-install disposition: intelligent recon confirmed a pre-existing pinne
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-review-r1-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p06-review-r1-20261023 · scope=p06 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-finish-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-finish-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
