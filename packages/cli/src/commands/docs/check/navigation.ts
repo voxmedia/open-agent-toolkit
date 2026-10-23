@@ -8,24 +8,34 @@ import { syncDocsNavigation } from '@commands/docs/nav/sync';
 import YAML from 'yaml';
 
 import type { Report } from './check.types';
-import type { CheckTarget } from './files';
+import { present, type CheckTarget } from './files';
 
 function pageIdentity(item: string): string {
   // Hand-authored collision links can use their own display labels.
   return item.replace(/^\[[^\]]*\]\((.*)\)$/, '[]($1)').replace(/^\.\//, '');
 }
-function navIdentity(value: unknown): unknown {
+function navIdentity(value: unknown, expected: unknown): unknown {
   if (!Array.isArray(value)) return value;
-  return value.map((item) => {
+  return value.map((item, index) => {
     if (typeof item === 'string') return item;
     if (typeof item !== 'object' || item === null) return item;
     const entry = Object.entries(item)[0];
     if (!entry) return item;
-    // Section and page labels are presentation; explicit group separators retain their labels.
+    const expectedItem = Array.isArray(expected) ? expected[index] : undefined;
+    const children =
+      expectedItem && typeof expectedItem === 'object'
+        ? Object.values(expectedItem)[0]
+        : undefined;
+    // The Contents-derived tree identifies sections by their direct landing path.
+    // Actual landing/page labels are presentation; explicit group labels remain meaningful.
+    const section =
+      Array.isArray(children) &&
+      children.some(
+        (child) => typeof child === 'string' && child.endsWith('/index.md'),
+      );
     return Array.isArray(entry[1])
       ? {
-          [typeof entry[1][0] === 'string' ? '$section' : entry[0]]:
-            navIdentity(entry[1]),
+          [section ? '$section' : entry[0]]: navIdentity(entry[1], children),
         }
       : entry[1];
   });
@@ -47,6 +57,7 @@ export async function checkNavigation(
       for (const file of result.metaFiles) {
         let stale = file.changed;
         if (!generated) {
+          if (!(await present(join(target.contentRoot, file.path)))) continue;
           const actual = JSON.parse(
             await readFile(join(target.contentRoot, file.path), 'utf8'),
           ) as { pages?: unknown };
@@ -97,7 +108,13 @@ export async function checkNavigation(
       const actual = YAML.parse(
         await readFile(join(target.appRoot, 'mkdocs.yml'), 'utf8'),
       ) as { nav?: unknown };
-      if (!isDeepStrictEqual(navIdentity(actual.nav), navIdentity(expected)))
+      if (!actual || !Object.hasOwn(actual, 'nav')) return;
+      if (
+        !isDeepStrictEqual(
+          navIdentity(actual.nav, expected),
+          navIdentity(expected, expected),
+        )
+      )
         report(
           'navigation',
           'error',

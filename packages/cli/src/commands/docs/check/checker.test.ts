@@ -376,6 +376,67 @@ describe('calibrated reader rules through real files and config', () => {
 });
 
 describe('real framework navigation boundaries', () => {
+  it.each(['hand-authored', undefined] as const)(
+    '%s skips missing optional Fumadocs meta and still reports later drift',
+    async (navOwner) => {
+      const f = await fixture('fumadocs');
+      await f.config({}, { navOwner });
+      await f.write(
+        'index.md',
+        `${index()}\n- [Absent](absent/index.md)\n- [Later](later/index.md)\n`,
+      );
+      for (const section of ['absent', 'later']) {
+        await f.write(`${section}/index.md`, index());
+        await f.write(`${section}/guide.md`, page());
+      }
+      await syncDocsNavigation({ appRoot: f.app });
+      expect(await f.run('navigation')).toEqual([]);
+      await rm(join(f.content, 'meta.json'));
+      await rm(join(f.content, 'absent/meta.json'));
+      expect(await f.run('navigation')).toEqual([]);
+      await f.write('later/meta.json', '{"pages":["index"]}');
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'later/meta.json',
+          message:
+            'Navigation membership/order differs from authored Contents; update pages or Contents.',
+        },
+      ]);
+      await f.config({}, { navOwner: 'nav-sync' });
+      expect(
+        (await f.run('navigation')).map(({ path, message }) => [path, message]),
+      ).toEqual([
+        [
+          'absent/meta.json',
+          'Generated navigation is stale; run oat docs nav sync.',
+        ],
+        [
+          'later/meta.json',
+          'Generated navigation is stale; run oat docs nav sync.',
+        ],
+        ['meta.json', 'Generated navigation is stale; run oat docs nav sync.'],
+      ]);
+    },
+  );
+  it.each(['hand-authored', undefined] as const)(
+    '%s skips absent optional MkDocs nav while generated ownership stays strict',
+    async (navOwner) => {
+      const f = await fixture('mkdocs');
+      await f.config({}, { navOwner });
+      expect(await f.run('navigation')).toEqual([]);
+      await f.config({}, { navOwner: 'nav-sync' });
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'mkdocs.yml',
+          message: 'Generated navigation is stale; run oat docs nav sync.',
+        },
+      ]);
+    },
+  );
   it.each(['fumadocs', 'mkdocs'] as const)(
     '%s checks drift read-only and preserves hand-authored labels',
     async (framework) => {
@@ -652,28 +713,67 @@ describe('parser/runtime and boundary composition', () => {
       ).summary.errors,
     ).toBe(0);
   });
-  it('checks hand-authored nested section membership while allowing customized MkDocs section/page labels', async () => {
-    const f = await fixture('mkdocs');
-    await f.write(
-      'index.md',
-      index().replace(
-        '- [Reader 0](guide.md)',
-        '- [Section](section/index.md)',
-      ),
-    );
-    await f.write('section/index.md', index());
-    await f.write('section/guide.md', page());
-    await syncDocsNavigation({ appRoot: f.app });
-    const path = join(f.app, 'mkdocs.yml');
-    const original = await readFile(path, 'utf8');
-    await writeFile(
-      path,
-      original
-        .replace('Section:', 'Custom section:')
-        .replace('Reader 0:', 'Custom reader:'),
-    );
-    expect(await f.run('navigation')).toEqual([]);
-  });
+  it.each(['hand-authored', undefined] as const)(
+    '%s compares MkDocs landings by path and preserves groups and order',
+    async (navOwner) => {
+      const f = await fixture('mkdocs');
+      await f.config({}, { navOwner });
+      await f.write(
+        'index.md',
+        index(1, true).replace(
+          '- [Reader 0](guide.md)',
+          '- [Section](section/index.md)',
+        ),
+      );
+      await f.write('section/index.md', `${index()}\n- [Second](second.md)\n`);
+      await f.write('section/guide.md', page());
+      await f.write('section/second.md', page());
+      await syncDocsNavigation({ appRoot: f.app });
+      const path = join(f.app, 'mkdocs.yml');
+      const original = await readFile(path, 'utf8');
+      await writeFile(
+        path,
+        original
+          .replace('Section:', 'Custom section:')
+          .replace('Reader 0:', 'Custom reader:'),
+      );
+      expect(await f.run('navigation')).toEqual([]);
+      const labeled =
+        'site_name: Fixture\nnav:\n  - Welcome: index.md\n  - Readers:\n      - Custom section:\n          - Overview: section/index.md\n          - Custom reader: section/guide.md\n          - Second: section/second.md\n';
+      await writeFile(path, labeled);
+      expect(await f.run('navigation')).toEqual([]);
+      const drift = [
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'mkdocs.yml',
+          message:
+            'Navigation membership/order differs from authored Contents; update nav or Contents.',
+        },
+      ];
+      for (const invalid of [
+        labeled.replace('Readers:', 'Different group:'),
+        labeled.replace('          - Second: section/second.md\n', ''),
+        labeled.replace(
+          '          - Custom reader: section/guide.md\n          - Second: section/second.md',
+          '          - Second: section/second.md\n          - Custom reader: section/guide.md',
+        ),
+      ]) {
+        await writeFile(path, invalid);
+        expect(await f.run('navigation')).toEqual(drift);
+      }
+      await writeFile(path, labeled);
+      await f.config({}, { navOwner: 'nav-sync' });
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'mkdocs.yml',
+          message: 'Generated navigation is stale; run oat docs nav sync.',
+        },
+      ]);
+    },
+  );
   it('uses real groups and preserves page/folder collision identity in hand-authored Fumadocs navigation', async () => {
     const f = await fixture('fumadocs');
     await f.write(
