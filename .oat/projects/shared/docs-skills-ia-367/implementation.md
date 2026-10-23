@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | in_progress | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 8/13 phases accepted
+**Total:** 9/13 phases accepted
 
 ---
 
@@ -1207,7 +1207,7 @@ Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all
 
 ## Phase p05: Reader-first starter app
 
-**Status:** in_progress
+**Status:** completed
 **Base:** d02e20521f336aa45beab84a5f5e2df7b9541f79
 **Head:** 04d5361060ed597fb59431ea4e98ee1d0d30f853
 **Executor:** phase-implementer:docs367-p05-impl-20261023
@@ -1427,7 +1427,7 @@ Recovery remains1/10,9remaining,pendingnull; these review fixes consume no recov
 - L2 (Low): app-root docs.md incorrectly changes docs/index.md link routing. Task Scope: Minor. Convert → p05-t07; root index has no same-name sibling inside the content root; preserve nested collision behavior and real-file controls.
 - L3 (Low): nav docstring omits the precise source-file collision exception. Task Scope: Negligible. Convert → p05-t08; comment-only alignment with the implemented loader contract.
 
-**Outcome:** fixes completed p05-t05–p05-t08; independent round2 pending; phase remains in_progress, Base frozen, no acceptance. Same implementer resumes bounded fix mode; next independent review narrows to the fix delta and inherits unaffected round1 coverage. Recovery remains1/10,pendingnull; review fixes do not reserve a recovery attempt.
+**Outcome:** fixes completed p05-t05–p05-t08; round2 confirms every original finding closed; phase remains in_progress, Base frozen, no acceptance. Same implementer resumes bounded fix mode; next independent review narrows to the fix delta and inherits unaffected round1 coverage. Recovery remains1/10,pendingnull; review fixes do not reserve a recovery attempt.
 
 **Queued execution records (open on start):**
 
@@ -1441,6 +1441,13 @@ Recovery remains1/10,9remaining,pendingnull; these review fixes consume no recov
 ### Root round2 ledger validation
 
 Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98ee1d0d30f853: four append-only product commits and four separate task journals close H1/M1/M2/L1/L2/L3. Exactly eleven authorized product files and p05-local journal changed; final tail is journal-only. Root inspected diffs, gates.json (eight explicit0 exits), focused/probe receipts and real MkDocs/Next export outcomes rather than rerunning broad gates. MkDocs proof uses default theme, not Material/plugins; fresh Next proof covers decoded params and once-encoded served URLs. Gate3 executes9376 package tests plus smoke/skills/scripts; cached builds remain cache evidence. Base remains frozen; no later phase has started, so Head advances to the tested fix candidate. Recovery usage1/10,pendingnull is unchanged; no new recovery event. Phase stays in_progress for fresh independent round2, narrowed to95a2cef6610eb3a65c18544ffcdd51f9abb4b212..04d5361060ed597fb59431ea4e98ee1d0d30f853, with unaffected round1 coverage inherited.
+
+### Review Received: p05 round2 and acceptance
+
+**Review:** reviews/archived/p05-review-2026-10-23T080358Z.md; code; auto; round2/3; narrowed95a2cef6610eb3a65c18544ffcdd51f9abb4b212..04d5361060ed597fb59431ea4e98ee1d0d30f853, full phase Base d02e20521f336aa45beab84a5f5e2df7b9541f79 unchanged.
+**Findings:** Critical0 · High0 · Medium0 · Low1. Exactly one not-attempted reconnaissance signal and no orchestration section. Root read the complete artifact and validated scope/provenance, closure evidence and unchanged-product journal tail.
+**Disposition:** R2-L1, stale Next Milestone text naming the old candidate, Task Scope: Negligible → corrected by root in this review-outcome bookkeeping. State now names the accepted candidate and progress-PR delivery. This is the lifecycle resume-text update the review requests, not a product fix or new guarantee; no execution task, new tests or third product review is needed.
+**Outcome:** passed. Independent pinned-runtime probes close all six original findings; focused config20/transforms38/init-nav156/docs93 and docs/changed-file checks pass. Reviewer independently served the existing pinned Next export and built default-theme MkDocs red/fixed scaffolds; broad gates, fresh Next build, browser, Material/plugins, next-dev and Windows remain unrun by that reviewer. Unaffected round1 coverage inherited. All8 execution records closed, all8 ordered gates0, no deferred finding or selected optional phase-review gate remains. Root accepts p05 at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853. Recovery1/10,pendingnull preserved; one product fix cycle, two independent rounds. Intermediate PR delivery follows before p06; final PR held.
 
 ## Phase p06: oat docs check
 
@@ -1468,7 +1475,7 @@ Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-review-r2-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p05-review-r2-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-fix-r1-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-fix-r1 · observed=~ · match=~
 

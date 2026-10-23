@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: d5c5c620d6b11ddbf6ebf5e022e9de4cbb16d523
+oat_last_commit: b48c6e3e9be92ed16b5da945bf811c145880ab46
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -139,7 +139,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T07:55:45.730708Z'
+oat_project_state_updated: '2026-10-23T08:07:17.864693Z'
 oat_generated: false
 ---
 
@@ -151,12 +151,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p05 reader-first starter is concrete and in progress.
+Implement — p05 reader-first starter is accepted; intermediate PR delivery is next.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; 8/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 and p05 accepted; 9/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: all four execution records and the prose propagation are complete; recovery01 is settled at1/10,pendingnull. Independently review p05 at candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212 before acceptance. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
+P05 accepted after two independent reviews at candidate04d5361060ed597fb59431ea4e98ee1d0d30f853; all eight execution records are closed and all eight ordered gates pass. Recovery01 remains settled at1/10,pendingnull. Open and deliver the p05 progress PR from docs/docs-skills-ia-367-p05 after PR self-review, current-head CI and Bugbot clearance; use land-pr. Then align provisional p06 before implementation. Earlier PRs #368/#369/#371/#372 are merged and unwatched. Hold the final PR until project completion.

@@ -156,6 +156,10 @@ Required p05 contributor entry plus child index exposed the pinned loader collis
 
 docs367-p05-handoff-20261023: recovery01 validated and settled at1/10,pendingnull; DONE_WITH_CONCERNS requires the agreed three-page prose propagation before independent review (fix-loop0).
 
+### 2026-10-23 · structural · oat-project-implement · p05
+
+docs367-p05-accepted-20261023: p05 accepted at04d536106 after round2 closed six findings and root corrected stale resume text; all eight gates passed, recovery1/10,pendingnull, one fix cycle; see implementation.md and archived p05-review-2026-10-23T080358Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
