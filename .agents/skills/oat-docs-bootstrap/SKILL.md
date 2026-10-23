@@ -523,9 +523,9 @@ Skip this step entirely if `Scaffold Result.scaffoldSucceeded !== true` — a fa
 Before running install, read the CLI's `installationAdvice` and the generated
 toolchain guide. Locate the actual pnpm installation root, including any enclosing
 `pnpm-workspace.yaml`; a workspace member's package is not that root. Current
-Fumadocs loses handler properties added by `mdast-util-to-markdown`2.2.0, so valid
+Fumadocs loses handler properties added by `mdast-util-to-markdown` 2.2.0, so valid
 bold/italic content can fail compilation. Preserve all content and framework APIs.
-The required compatibility constraint is exactly2.1.2 in the effective root's
+The required compatibility constraint is exactly 2.1.2 in the effective root's
 `pnpm-workspace.yaml`:
 
 ```yaml
@@ -545,10 +545,10 @@ a local boundary that splits a workspace member. Do not implement a policy merge
 or silently extend CLI root-package patching: it changes build scripts only,
 and `--no-root-patch` neither sets nor approves dependency policy.
 
-Honor the selected manager (pnpm10+); effective-root YAML works in pnpm10 and12.
-A member-only override is ignored in10, and12 also ignores `package.json`'s
+Honor the selected manager (pnpm 10+); effective-root YAML works in pnpm 10 and 12.
+A member-only override is ignored in 10, and 12 also ignores `package.json`'s
 `pnpm.overrides`. After install, inspect actual `pnpm why mdast-util-to-markdown`
-from that root, confirm2.1.2, retain the root config/lockfile, then run checker and
+from that root, confirm 2.1.2, retain the root config/lockfile, then run checker and
 build. Label this a constrained fresh install; do not promise unconstrained
 resolution, change user-scope pnpm, or delete bold/italic to avoid the failure.
 

@@ -40,7 +40,7 @@ a successful install/build. Do not split an actual workspace member with a local
 policy changes. CLI init does not merge or overwrite existing root policy.
 
 Use the repository's selected pnpm version (10+). This root YAML syntax works
-with pnpm10 and12; pnpm12 ignores `package.json`'s `pnpm.overrides`, and pnpm10
+with pnpm 10 and 12; pnpm 12 ignores `package.json`'s `pnpm.overrides`, and pnpm 10
 ignores policy in a workspace member. After installation, inspect
 `pnpm why mdast-util-to-markdown` from the effective root to confirm `2.1.2`, then
 run the checker and real build below. Retain the effective root policy and

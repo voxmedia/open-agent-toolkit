@@ -29,7 +29,7 @@ or **MkDocs Material**.
 
 ## `oat docs check`
 
-Run `oat docs check [--target-dir <dir>] [--rule <id>...] [--json]` before committing. It resolves the configured root, validates real reader files without a site build, and emits deterministic findings. Errors exit1; warning-only exits0. See [Check Documentation](check.md) for stable rule IDs, counting, narrow policy/exception settings and the exact JSON contract.
+Run `oat docs check [--target-dir <dir>] [--rule <id>...] [--json]` before committing. It resolves the configured root, validates real reader files without a site build, and emits deterministic findings. Errors exit 1; warning-only exits 0. See [Check Documentation](check.md) for stable rule IDs, counting, narrow policy/exception settings and the exact JSON contract.
 
 ## Which Generation Command To Run
 
