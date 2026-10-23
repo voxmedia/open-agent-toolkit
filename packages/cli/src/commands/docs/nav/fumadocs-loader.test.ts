@@ -30,6 +30,8 @@ interface PageTreeNode {
   $ref?: string;
   index?: PageTreeNode;
   children?: PageTreeNode[];
+  name?: string;
+  url?: string;
 }
 
 type FumadocsLoader = (options: {
@@ -58,8 +60,9 @@ async function listFiles(root: string, dir = '.'): Promise<string[]> {
   return files;
 }
 
-/** Docs-relative paths of every page the real loader puts in the tree. */
-async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
+async function sourceFiles(
+  docsRoot: string,
+): Promise<Array<Record<string, unknown>>> {
   const files: Array<Record<string, unknown>> = [];
   for (const path of await listFiles(docsRoot)) {
     if (path.endsWith('meta.json')) {
@@ -72,7 +75,12 @@ async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
       files.push({ type: 'page', path, data: { title: path } });
     }
   }
-  return pagesInTreeOf(files);
+  return files;
+}
+
+/** Docs-relative paths of every page the real loader puts in the tree. */
+async function pagesInLoadedTree(docsRoot: string): Promise<string[]> {
+  return pagesInTreeOf(await sourceFiles(docsRoot));
 }
 
 async function pagesInTreeOf(
@@ -151,11 +159,11 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
     );
     await writeFile(
       join(docsRoot, 'section/index.md'),
-      '# Section\n\n## Contents\n- [Authoring contract](../section.md)\n- [Leaf](leaf.md)\n',
+      '# Section\n\n## Contents\n- [Authoring contract](../section.md#contract)\n- [Leaf](leaf.md)\n',
     );
     await writeFile(
       join(docsRoot, 'other/index.md'),
-      '# Other\n\n## Contents\n- [Section landing](../section/index.md)\n',
+      '# Other\n\n## Contents\n- [Section landing](../section/index.md)\n- [Elsewhere contract](../section.md#contract)\n',
     );
     const result = await syncDocsNavigation({ appRoot });
     if (result.framework !== 'fumadocs') throw new Error('unreachable');
@@ -174,8 +182,39 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
     const otherMeta = JSON.parse(
       await readFile(join(docsRoot, 'other/meta.json'), 'utf8'),
     );
-    expect(otherMeta.pages).toEqual(['[Section landing](/section/index)']);
+    expect
+      .soft(otherMeta.pages)
+      .toEqual([
+        '[Section landing](/section/index)',
+        '[Elsewhere contract](/section#contract)',
+      ]);
     const loader = await importFumadocsLoader();
+    // Consume actual synchronized files. The installed loader globally dedups
+    // source references, but an unrelated authored URL must remain a link.
+    const tree = loader({
+      baseUrl: '/',
+      source: { files: await sourceFiles(docsRoot) },
+    }).pageTree;
+    expect
+      .soft(tree.children?.find((node) => node.name === 'Other'))
+      .toMatchObject({
+        children: [
+          { type: 'page', name: 'Section landing', url: '/section/index' },
+          {
+            type: 'page',
+            name: 'Elsewhere contract',
+            url: '/section#contract',
+          },
+        ],
+      });
+    expect(
+      tree.children?.find((node) => node.name === 'Section'),
+    ).toMatchObject({
+      children: [
+        { type: 'page', $ref: 'section.md', url: '/section' },
+        { type: 'page', $ref: 'section/leaf.md', url: '/section/leaf' },
+      ],
+    });
     const loaded = loader({
       baseUrl: '/',
       source: {

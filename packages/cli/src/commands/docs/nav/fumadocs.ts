@@ -218,10 +218,10 @@ function hrefFragment(href: string): string {
  * Build one folder's `pages` from its index.md Contents map.
  *
  * A page in this folder or an immediate subfolder is referenced by name.
- * Same-name page/folder collisions use a precise source-file item, including
- * `../contributing.md` from a child map: pinned core16.10.2 selects the folder
- * first for an extensionless reference. Other non-local targets become link
- * entries. There is never a `"..."` rest entry: pages the Contents map does
+ * Local same-name page/folder collisions use a precise source-file item, as
+ * does `../contributing.md` from its own contributing/ map: pinned core16.10.2
+ * selects the folder first for an extensionless reference. Other non-local
+ * targets become link entries. There is never a `"..."` rest entry: pages the Contents map does
  * not list stay out of the tree and are reported instead.
  */
 /**
@@ -281,13 +281,15 @@ async function buildFolderPages(
 
     if (
       target.kind === 'page' &&
+      (targetDir === relativeDir ||
+        target.path.slice(0, -extname(target.path).length) === relativeDir) &&
       inventory.directories.includes(
         target.path.slice(0, -extname(target.path).length),
       )
     ) {
       // An extensionless reference selects the same-name folder first.
-      // A precise source-file reference selects the actual page, even from
-      // the child map (e.g. ../contributing.md).
+      // Keep source identity only in local/owning placement. A nonlocal map
+      // needs an authored URL link: core16.10.2 globally dedups source refs.
       item = toFumadocsPageItem(posix.relative(relativeDir, target.path));
     } else if (target.kind === 'section' && targetDir === relativeDir) {
       continue;
