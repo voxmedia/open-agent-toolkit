@@ -44,6 +44,14 @@ markdownlint over `docs/**/*.md`). One surface still sits outside
 
 ### Definition of Done
 
+- Agent instructions are still true: when a change adds, renames, or removes a
+  command, directory, convention, workflow, version pin, or known footgun, create
+  or update the covering instructions in the same PR. See
+  [Keeping instructions current](#keeping-instructions-current).
+- Update relevant human documentation describing changed behavior in the same PR:
+  `README.md`, the affected `packages/*/README.md`, and applicable pages under
+  `apps/oat-docs/docs/`.
+
 Every change runs the checks CI gates on, in this order:
 
 1. `pnpm check`
@@ -146,6 +154,60 @@ so an existing root-oxlint violation under `tools/smoke` or `.agents/skills`
 leaves it green (verified: a seeded `prefer-const` under `.agents/skills`
 does not turn it red). That is why the root pass stays ungated.
 
+### Keeping instructions current
+
+Instructions are code: keep them accurate as the repository changes.
+
+- Before editing, read root `AGENTS.md`, each changed directory's ancestor
+  `AGENTS.md` files, and any `.agents/rules/*.md` whose `globs` match the files.
+  Fix or delete false commands, paths, versions, flags, workflows, and owners.
+  Search for leftovers with
+  `git grep -n -F -e '<old-name>' -- '*AGENTS.md' '.agents/rules/'`.
+- Add a nested `AGENTS.md` only for distinct local commands, runtime behavior, or
+  footguns. Put cross-directory rules in `.agents/rules/<topic>.md` with exact
+  `globs`; keep repo-wide facts short in root `AGENTS.md`.
+
+  Maintain the [Instruction index](#instruction-index) when creating, renaming,
+  removing, or changing the globs of an instruction file.
+
+- Record durable facts, not task notes or guesses. In the PR description, list
+  created or updated instruction files, or state "No instruction changes needed".
+- Canonical rules live in `.agents/rules/`; generated provider views are derived
+  output. After rule changes, run
+  `npx @open-agent-toolkit/cli sync --scope project` and commit the canonical
+  rules, tracked generated views, and `.oat/sync/manifest.json` together. Preserve
+  ignored output policies. Codex has no generated rule views, so the index below
+  makes matching rule scopes discoverable.
+
+### Instruction index
+
+Read each active instruction file before editing matching files; scopes below
+are repository-relative globs and inherit ancestor guidance. Any canonical rule
+added to this index must list its exact `globs` and be read before editing
+matching files. There are currently no `.agents/rules/*.md` files.
+
+| Active instruction file                   | Scope                              | Purpose                                    |
+| ----------------------------------------- | ---------------------------------- | ------------------------------------------ |
+| `AGENTS.md`                               | `**/*`                             | Repository commands and shared conventions |
+| `apps/oat-docs/AGENTS.md`                 | `apps/oat-docs/**`                 | Documentation authoring and navigation     |
+| `packages/cli/AGENTS.md`                  | `packages/cli/**`                  | CLI behavior and package checks            |
+| `packages/control-plane/AGENTS.md`        | `packages/control-plane/**`        | Read-only project inspection contracts     |
+| `packages/docs-config/AGENTS.md`          | `packages/docs-config/**`          | Shared docs configuration                  |
+| `packages/docs-theme/AGENTS.md`           | `packages/docs-theme/**`           | Shared docs components                     |
+| `packages/docs-transforms/AGENTS.md`      | `packages/docs-transforms/**`      | Shared Markdown transforms                 |
+| `.oat/repo/AGENTS.md`                     | `.oat/repo/**`                     | Repository planning and reference routing  |
+| `.oat/repo/pjm/AGENTS.md`                 | `.oat/repo/pjm/**`                 | Backlog lifecycle and kickoff handoffs     |
+| `.oat/repo/reference/AGENTS.md`           | `.oat/repo/reference/**`           | Durable reference ownership                |
+| `.oat/repo/reference/decisions/AGENTS.md` | `.oat/repo/reference/decisions/**` | Managed decision-record guidance           |
+
+`.agents/skills/oat-docs-bootstrap/assets/AGENTS.md.template` and
+`.oat/templates/{repo,pjm,reference}-agents.md` are shipped templates, not active
+repository governance. Instruction examples embedded in skills, fixtures, and
+payloads likewise describe their target contexts. Provider skill/agent views in
+`.claude/`, `.cursor/`, and `.codex/` are generated views of canonical tools,
+not additional directory instructions. This repository uses `AGENTS.md` directly
+with no Claude shims.
+
 ### Development Workflow
 
 - `pnpm dev` - Run workspace development tasks
@@ -221,6 +283,14 @@ does not turn it red). That is why the root pass stays ungated.
 - Clean builds with `pnpm clean` to remove all `dist/` directories
 
 ## Feature Planning Triage
+
+Before adding material complexity for a speculative failure mode or unconfirmed
+future need, explain the concrete problem, evidence that it matters, simpler
+alternatives, and the implementation and maintenance cost, then get the user's
+buy-in. This applies to production code, tests and fixtures, and operational
+safeguards. Do not silently expand scope for theoretical robustness, flexibility,
+or scale. Ordinary regression tests and required checks still apply, as do
+established correctness, security, and durability requirements.
 
 ### Workflow Mode Change Inventory
 
