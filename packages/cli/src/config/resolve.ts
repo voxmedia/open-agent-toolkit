@@ -71,6 +71,7 @@ const DEFAULT_SHARED_CONFIG = {
     guidance: null,
     ia: null,
     navOwner: null,
+    nonReaderPaths: null,
     root: null,
     tooling: null,
     config: null,

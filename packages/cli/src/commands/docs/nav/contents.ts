@@ -1,6 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 
+import {
+  createExclusionMatcher,
+  isExcludedPath,
+  type ExclusionMatcher,
+} from '@commands/docs/shared/exclusions';
 import { dirExists, fileExists } from '@fs/io';
 
 export interface DocsContentsEntry {
@@ -74,6 +79,7 @@ interface BuildDocsNavTreeOptions {
   docsRoot: string;
   dirRelativePath?: string;
   visitedDirectories?: Set<string>;
+  nonReaderPaths?: readonly string[];
 }
 
 function toPosixPath(path: string): string {
@@ -90,7 +96,8 @@ export async function resolveEntryTarget(
    * Fumadocs also renders `.mdx` pages.
    */
   pageExtensions: readonly string[] = ['.md'],
-): Promise<{ kind: 'page' | 'section'; path: string }> {
+  matcher?: ExclusionMatcher,
+): Promise<{ kind: 'page' | 'section' | 'excluded'; path: string }> {
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {
     throw new Error(
@@ -124,6 +131,10 @@ export async function resolveEntryTarget(
         'index.md',
       )}`,
     );
+  }
+
+  if (matcher && isExcludedPath(matcher, relativeTargetPath)) {
+    return { kind: 'excluded', path: relativeTargetPath };
   }
 
   if (!(await fileExists(targetPath))) {
@@ -175,6 +186,7 @@ export async function buildDocsNavTree(
   const indexMarkdown = await readFile(indexPath, 'utf8');
   const contentsEntries = parseIndexContents(indexMarkdown, indexPath);
 
+  const matcher = createExclusionMatcher(options.nonReaderPaths ?? []);
   const nav: DocsNavTree =
     dirRelativePath === '.'
       ? [{ Home: 'index.md' }]
@@ -188,7 +200,10 @@ export async function buildDocsNavTree(
       directoryPath,
       dirRelativePath,
       entry,
+      ['.md'],
+      matcher,
     );
+    if (resolvedTarget.kind === 'excluded') continue;
 
     if (
       resolvedTarget.kind === 'section' &&
@@ -225,6 +240,7 @@ export async function buildDocsNavTree(
         docsRoot: options.docsRoot,
         dirRelativePath: childDirRelativePath,
         visitedDirectories: childVisitedDirectories,
+        nonReaderPaths: options.nonReaderPaths,
       }),
     });
   }

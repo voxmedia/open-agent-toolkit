@@ -32,6 +32,7 @@ interface SyncDocsNavigationOptions {
   configuredTooling?: string | null;
   /** Compute the navigation and compare it with the files; write nothing. */
   check?: boolean;
+  nonReaderPaths?: readonly string[];
 }
 
 interface MkDocsNavigationResult {
@@ -64,6 +65,7 @@ interface DocsNavSyncDependencies {
     cwd: string,
     appRoot: string,
   ) => Promise<string | null>;
+  resolveNonReaderPaths?: (cwd: string, appRoot: string) => Promise<string[]>;
   syncDocsNavigation: (
     options: SyncDocsNavigationOptions,
   ) => Promise<SyncDocsNavigationResult>;
@@ -132,9 +134,27 @@ async function resolveConfiguredTooling(
   }
 }
 
+async function resolveNonReaderPaths(
+  cwd: string,
+  appRoot: string,
+): Promise<string[]> {
+  let repoRoot: string;
+  try {
+    repoRoot = await resolveProjectRoot(cwd);
+  } catch {
+    return [];
+  } // Explicit app targets also work outside a configured repository.
+  const config = await readOatConfig(repoRoot);
+  const root = config.documentation?.root?.trim();
+  return root && resolve(repoRoot, root) === appRoot
+    ? (config.documentation?.nonReaderPaths ?? [])
+    : [];
+}
+
 const DEFAULT_DEPENDENCIES: DocsNavSyncDependencies = {
   buildCommandContext,
   resolveConfiguredTooling,
+  resolveNonReaderPaths,
   syncDocsNavigation,
 };
 
@@ -179,6 +199,7 @@ export async function syncDocsNavigation(
     const result = await syncFumadocsNavigation({
       docsRoot,
       check: options.check,
+      nonReaderPaths: options.nonReaderPaths,
     });
     return {
       framework,
@@ -189,7 +210,10 @@ export async function syncDocsNavigation(
   }
 
   const mkdocsPath = join(options.appRoot, 'mkdocs.yml');
-  const nav = await buildDocsNavTree({ docsRoot });
+  const nav = await buildDocsNavTree({
+    docsRoot,
+    nonReaderPaths: options.nonReaderPaths,
+  });
   const mkdocsSource = await readFile(mkdocsPath, 'utf8');
   const navSection = YAML.stringify({ nav }).trimEnd();
   const updatedMkdocsSource = replaceTopLevelYamlSection(
@@ -322,6 +346,10 @@ async function runDocsNavSyncCommand(
         appRoot,
       ),
       check: options.check === true,
+      nonReaderPaths: await dependencies.resolveNonReaderPaths?.(
+        context.cwd,
+        appRoot,
+      ),
     });
 
     if (options.check) {

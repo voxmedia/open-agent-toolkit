@@ -85,6 +85,8 @@ export interface OatDocumentationConfig {
   /** Repository-only mirror; the authored decision and local guidance own IA. */
   ia?: OatDocumentationIa;
   /** Absent is undeclared. Markdown ignores sidebar ownership. */
+  /** Content-root-relative globs excluded from reader navigation and manifests. */
+  nonReaderPaths?: string[];
   navOwner?: 'nav-sync' | 'hand-authored';
   /** Ordered advisory IA source paths/URLs; selected as a layer, never merged. */
   guidance?: string | string[];
@@ -1598,6 +1600,7 @@ async function normalizeReadableProjectPath(
 function normalizeDocumentationExcludes(
   value: unknown,
   configPath: string,
+  key = 'excludes',
 ): string[] {
   if (value === undefined) {
     return [];
@@ -1605,8 +1608,8 @@ function normalizeDocumentationExcludes(
 
   const invalid = (): never => {
     throw new CliError(
-      `Invalid documentation.excludes in ${configPath}: expected an array of non-empty strings. ` +
-        'Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).',
+      `Invalid documentation.${key} in ${configPath}: expected an array of non-empty strings. ` +
+        `Repair it with oat config set documentation.${key} "<glob>,<glob>" (an empty value clears it).`,
       2,
     );
   };
@@ -1920,6 +1923,12 @@ function normalizeOatConfig(
       doc.requireForProjectCompletion =
         parsed.documentation.requireForProjectCompletion;
     }
+    const nonReaderPaths = normalizeDocumentationExcludes(
+      parsed.documentation.nonReaderPaths,
+      configPath,
+      'nonReaderPaths',
+    );
+    if (nonReaderPaths.length > 0) doc.nonReaderPaths = nonReaderPaths;
     const excludes = normalizeDocumentationExcludes(
       parsed.documentation.excludes,
       configPath,

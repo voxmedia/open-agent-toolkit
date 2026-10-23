@@ -3,6 +3,10 @@ import { basename, extname, join, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import {
+  createExclusionMatcher,
+  type ExclusionMatcher,
+} from '@commands/docs/shared/exclusions';
+import {
   getFrontmatterBlock,
   parseFrontmatterScalarFields,
 } from '@commands/shared/frontmatter';
@@ -70,7 +74,10 @@ function parentDir(path: string): string {
   return posix.dirname(path);
 }
 
-async function inventoryDocs(docsRoot: string): Promise<DocsInventory> {
+async function inventoryDocs(
+  docsRoot: string,
+  matcher: ExclusionMatcher,
+): Promise<DocsInventory> {
   const directories: string[] = [];
   const pages: string[] = [];
 
@@ -85,12 +92,13 @@ async function inventoryDocs(docsRoot: string): Promise<DocsInventory> {
       }
       const entryPath = posix.join(relativeDir, entry.name);
       if (entry.isDirectory()) {
+        if (matcher.excludesDirectory(entryPath)) continue;
         await walk(entryPath);
       } else if (
         entry.isFile() &&
         PAGE_EXTENSIONS.includes(extname(entry.name))
       ) {
-        pages.push(entryPath);
+        if (!matcher.excludesFile(entryPath)) pages.push(entryPath);
       }
     }
   }
@@ -235,6 +243,7 @@ async function buildFolderPages(
   relativeDir: string,
   markdown: string,
   implicitIndex: boolean,
+  matcher: ExclusionMatcher,
 ): Promise<string[]> {
   const indexPath = join(docsRoot, relativeDir, 'index.md');
   const entries = parseIndexContents(markdown, indexPath);
@@ -252,7 +261,9 @@ async function buildFolderPages(
       relativeDir,
       entry,
       PAGE_EXTENSIONS,
+      matcher,
     );
+    if (target.kind === 'excluded') continue;
     const targetDir = parentDir(target.path);
     let item: string;
 
@@ -394,16 +405,21 @@ export async function syncFumadocsNavigation(options: {
   docsRoot: string;
   /** Compute and compare only; never write. */
   check?: boolean;
+  nonReaderPaths?: readonly string[];
 }): Promise<SyncFumadocsNavigationResult> {
   const { docsRoot } = options;
-  const inventory = await inventoryDocs(docsRoot);
+  const matcher = createExclusionMatcher(options.nonReaderPaths ?? []);
+  const inventory = await inventoryDocs(docsRoot, matcher);
   const metas = new Map<string, FumadocsMeta>();
   const existingMetas = new Map<string, Record<string, unknown> | null>();
   const implicitIndexDirs = new Set<string>();
 
   for (const relativeDir of inventory.directories) {
     const indexPath = join(docsRoot, relativeDir, 'index.md');
-    if (!(await fileExists(indexPath))) {
+    if (
+      matcher.excludesFile(posix.join(relativeDir, 'index.md')) ||
+      !(await fileExists(indexPath))
+    ) {
       continue;
     }
     // Index handling depends on the effective metadata, which keeps the
@@ -425,6 +441,7 @@ export async function syncFumadocsNavigation(options: {
         relativeDir,
         markdown,
         implicitIndex,
+        matcher,
       ),
     });
   }

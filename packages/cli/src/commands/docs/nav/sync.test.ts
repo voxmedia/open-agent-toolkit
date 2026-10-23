@@ -224,6 +224,49 @@ describe('syncDocsNavigation', () => {
     ]);
   });
 
+  it('skips explicit non-reader targets and never reads or rewrites excluded subtree metadata', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-nonreader-'));
+    createdRoots.push(root);
+    const untouched = '{"pages":["hand-authored"],"unknown":true}\n';
+    await writeTree(root, {
+      'source.config.ts': 'export {};',
+      'docs/index.md':
+        '# Home\n## Contents\n### Templates\n- [Template](templates/index.md)\n### Read\n- [Read](read.md)',
+      'docs/read.md': '# Read',
+      'docs/templates/index.md':
+        '# Invalid excluded Contents\n## Contents\n* [Ignored](missing.md)',
+      'docs/templates/meta.json': untouched,
+      'docs/templates/sample.md': '# Sample',
+    });
+    const result = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+    });
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    expect(await readMeta(join(root, 'docs'), '.')).toEqual({
+      title: 'Home',
+      pages: ['index', '---Read---', 'read'],
+    });
+    expect(await readFile(join(root, 'docs/templates/meta.json'), 'utf8')).toBe(
+      untouched,
+    );
+    const check = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+      check: true,
+    });
+    expect(check.stale).toEqual([]);
+    await writeFile(join(root, 'docs/omitted.md'), '# Reader');
+    const readerCheck = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+      check: true,
+    });
+    if (readerCheck.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(readerCheck.unlisted).toEqual(['omitted.md']);
+  });
+
   it('builds nested navigation and preserves prose outside the contents section', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-docs-nav-'));
     createdRoots.push(root);

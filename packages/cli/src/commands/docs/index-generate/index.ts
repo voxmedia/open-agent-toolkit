@@ -297,10 +297,12 @@ function collectExclude(
 function resolveExcludes(
   config: OatConfig,
   flagValues: string[] | undefined,
+  nonReaderPaths: readonly string[] = [],
 ): string[] {
   const merged: string[] = [];
   for (const value of [
     ...(config.documentation?.excludes ?? []),
+    ...nonReaderPaths,
     ...(flagValues ?? []),
   ]) {
     const entry = value.trim();
@@ -416,7 +418,17 @@ async function resolveIndexGeneratePaths(
     docsDirSource,
     outputPath,
     outputIsExplicit,
-    excludes: resolveExcludes(config, options.exclude),
+    excludes: resolveExcludes(
+      config,
+      options.exclude,
+      configuredRoot &&
+        docsDir ===
+          (!isMarkdown && (await deps.dirExists(join(configuredRoot, 'docs')))
+            ? join(configuredRoot, 'docs')
+            : configuredRoot)
+        ? config.documentation?.nonReaderPaths
+        : [],
+    ),
   };
 }
 
