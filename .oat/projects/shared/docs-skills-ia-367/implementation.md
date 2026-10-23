@@ -1155,6 +1155,19 @@ Proof: Extend existing actual pinned tinyglobby/CLI-matcher/Next-emitter parity 
 
 **Execution/evidence:** Directory-only negatives now require an actual directory component and descendant file; an all-globstar directory path becomes the nonempty directory wildcard before descendant matching. Nondirectory translation is unchanged. Existing real collection fixture runs bounded literals plus guide.md/ and \*_/: original adapter loses guide.md in the first new case and all root files in the second (two intended red failures; bounded control green). Corrected actual pinned tinyglobby, CLI matcher, metadata and Next collection-emitter controls pass all16 docs-config tests before and after commit. Scoped format/check/type-check/test/build all exit0 precommit; committed bytes re-read, check/type-check/test/build all exit0 postcommit. Installed provenance remains fumadocs-mdx14.3.2/core16.10.2; actual emitter used, no fake glob/schema. Exact baseline failure and pre/post commands/logs/exits are ignored analysis/p-rev4/t03-_. Recovery0/10,pendingnull unchanged.
 
+### Task prev4-t04: Ignore fenced examples when reading authored Contents
+
+**Status:** completed
+**Commit:** d9c65e4973c4eadf80a154279779f1dad167ba61
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356366304 (M2), root-authorized amendment above
+
+Intent: Share fence-aware Contents discovery between generator and parser, masking fenced examples without shifting source lines. Ordinary backtick/tilde fences close only with matching markers of sufficient length. Preserve no-map inventory fallback, strict missing-map error and universal actual-map grammar.
+Files: packages/cli/src/commands/docs/nav/contents.ts, nav/sync.test.ts, index-generate/generator.ts and generator.test.ts (all owned).
+Proof: Generator real filesystem cases cover fenced-only fallback and examples preceding a real ordered map; existing parser tests cover examples inside a true map, strict missing-map behavior and preserved authored group line numbers. Preserve pre-fix red and valid controls; fresh scoped nav/index/lint/format/types/build precommit and committed bytes afterwards; temporary-copy M7 must still fail the generator empty-group assertion. No Markdown dependency, generic parser engine or test-only export.
+
+**Execution/evidence:** Shared production hasIndexContents discovery and parseIndexContents mask ordinary backtick/tilde fences using the same implementation; source arrays retain original indices. Closing fences require matching markers, sufficient length and whitespace-only tails; short/mismatched markers remain examples. Generator retains deterministic unflagged inventory fallback when no authored map exists. Original source produces five intended regression failures (two generator fence cases, parser inner example/pre-map example and fenced-only missing-map case), while true no-map control passes. Fixed precommit format/lint/check, fresh isolated141 nav/index tests, CLI type-check/build all exit0; committed bytes re-read and focused lint/format/141tests exit0. Real built CLI pre/post probes give fallback0, strict-nav missing-map1 without metadata writes, actual-map nav0 and authored-order generation0. Actual dash/empty-group errors remain green; a temporary-copy-only M7 guard bypass still fails the existing generator empty-group assertion (exit1, promise resolved instead of rejecting); restored copy passes (exit0). No production mutation for probes or new dependency/test-only hook. Exact baseline, t04 pre/post, built CLI and m7-probe.py/logs/exits are ignored analysis/p-rev4. Recovery0/10,pendingnull unchanged; phase remains in_progress pending integrated verification/root review.
+
 ## Phase p05: Reader-first starter app
 
 **Status:** pending
