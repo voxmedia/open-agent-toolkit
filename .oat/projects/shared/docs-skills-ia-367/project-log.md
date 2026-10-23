@@ -172,6 +172,10 @@ docs367-p06-concrete-20261023: completed bounded readiness recon; made p06 concr
 
 docs367-p06-dom-alignment-20261023: NEEDS_CONTEXT reconciled; t01 committed and t02 edits preserved. Real Mermaid Node failure requires DOM; authorize pinned jsdom29.1.1/compatible typings within P23, verified valid/invalid controls on Node22.17 and26, same-target continuation, recovery0/10.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-recovery01-direction-20261023: Validated pre-attempt direction-required stop; corrected root no-reservation wording and reserved1/10 for exactly two stale test-expectation files. Same handle/target, t03 dirty hashes conserved; unlocked Fumadocs dependency limitation remains explicit.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

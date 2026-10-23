@@ -1560,6 +1560,35 @@ Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 pr
 **Commit:** d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
 **Verification:** Fresh final focused checker/config/nav suite111 passed; wider docs/config suite1,022 passed; CLI lint/type-check/build and transforms check/tests exit0. Packed CLI host26.11.1 and actual minimum22.17.0 accept labeled flowchart/class/sequence/HTML diagrams in supported tabs, reject nested-tab invalid syntax, and prove exact G5 JSON, warning-only/filter/unknown-rule/malformed-config exits. Real Git and quantitative boundary controls are in the production-boundary suite. Flagship baseline0 errors/756 warnings. Logs/probes: ignored analysis/p06/t02-\*.log and packed/{probe.mjs,host-probe.log,node22-probe.log}. DOM/parser/association/lint corrections completed before product commit; recovery0/10,pendingnull. Effective continuation start2dc1aa8ec54fba6e42792c878f51b4531204f14f includes only authorized root artifact descendants; exactly one product commit follows.
 
+### Task p06-t03: Wire portable checks into scaffolds, bootstrap CI and reader guidance
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023 (same accepted T3 delegated task)
+**Start HEAD:** b4ec258d7e2846631b2708a86fd31058cf7283e5
+**Intent:** Make shipped starters and flagship run the checker, preserve specialized validators, supply an actually used bootstrap PR CI recipe and explicit configured-manifest freshness, and document rule/config/repair behavior.
+**Files:** Exact producer-owned paths retained in ignored analysis/p06/t03.paths: canonical framework templates and scaffold substitutions/tests; flagship package/instructions/docs; bootstrap and directly affected guidance; CI and applicable READMEs.
+**Proof:** Generated starter integration and real framework builds; executed bootstrap CI recipe with seeded checker/stale-manifest controls; Markdown no-build/no-default-manifest; all ordered gates and forced isolated-HOME/direct suites before product commit.
+
+### Recovery Event docs367-p06-t02-gate3
+
+- Phase/task: p06 / p06-t02
+- Original request: docs367-p06-impl-20261023
+- Original commit: d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+- Defect class: test
+- Discovered by: pnpm test
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: codex_codex_proxy / gpt-6.1-sol / reasoningEffort high / serviceTier priority
+- Recovery commit: -
+- Verification: Focused t02 checks pass; ordered gate3 fails docs-help snapshot and two real dependency-map expectations.
+- Reason: Root continuation's no-reservation instruction was overbroad; no reservation, correction or recovery commit occurred. Root validates this pre-attempt stop with usage0/pendingnull and restores the original standing bounded recovery authority. The restriction applied only to the earlier DOM clarification, not future committed defects.
+
+Root recovery scope: refresh only packages/cli/src/commands/help-snapshots.test.ts and packages/cli/src/release/release-utils.test.ts to reflect actual docs-check registration and the approved CLI dependency on docs-transforms. Root read gate3's literal expected/received diff and verified the manifest dependency. Preserve production behavior and test-only ignore controls. One mechanically related test correction from the same verification command is reserved as docs367-p06-recovery-01; this is not a t03 prevention edit. All34 handoff hashes matched before root bookkeeping; t03 product edits remain owned and unchanged. Same implementer and exact target continue. Focused verification covers both existing test files, and relevant phase verification is isolated-HOME pnpm test before and after the recovery commit. Return the completed marker for root validation/clearance before continuing t03.
+
+Open verification limit: the unlocked Fumadocs install selected mdast-util-to-markdown2.2.0 and failed; the successful real-build proof uses the repository lock's2.1.2. Preserve the reproduction and do not claim a clean unconstrained install or silently change dependency policy. This limit requires disposition before phase acceptance.
+
 ---
 
 ## Phase p07: Page templates and presets
@@ -1582,7 +1611,7 @@ Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 pr
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-dom-continue-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-dom-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-dom-continue-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-dom-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-impl-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=NEEDS_CONTEXT · terminal=no · class=live · continuation=~ · observed=~ · match=~
 
