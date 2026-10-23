@@ -827,6 +827,18 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 **Commit:** c3555e995bdcb7c221b99813644705f95acce6e0
 **Evidence:** 689 focused tests pass; baseline targeted run fails the config, real command applicability, and excluded-subtree regressions. Type-check and scoped lint exit 0. Existing excludes remains manifest-only, including an unrelated explicit app target control. Logs/scripts: ignored `analysis/p04/t02-*`.
 
+### Task p04-t03: Order the hierarchical manifest from authored Contents
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Order surviving direct entries by Contents without duplicating cross-directory targets, derive directory titles from child indexes, flag deterministic unlisted fallback, and describe regeneration accurately.
+**Files:** CLI docs index-generate generator/command and related tests.
+**Proof command:** isolated-HOME CLI Vitest docs/index-generate and docs/nav; CLI type-check and scoped lint/format.
+
+**Commit:** 294af3ad15760612c5559efdfde99c9118399773
+**Evidence:** 129 focused docs tests pass; new ordering/title/shared-grammar cases fail on baseline. Existing real fixture now supplies a valid Contents link instead of an empty section; existing nested-title expectation follows the new authored-title contract. Type-check and scoped lint exit 0. Logs: ignored `analysis/p04/t03-*`.
+
 ---
 
 ## Phase p05: Reader-first starter app
