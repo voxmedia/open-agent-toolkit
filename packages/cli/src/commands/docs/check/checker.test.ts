@@ -630,13 +630,20 @@ describe('real framework navigation boundaries', () => {
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {
-  it.each(['manual', 'site', 'out', 'dist'])(
+  it.each([
+    ['apps/*', 'apps/manual', 'manual'],
+    ['apps/*', 'apps/site', 'site'],
+    ['apps/*', 'apps/out', 'out'],
+    ['apps/*', 'apps/dist', 'dist'],
+    ['libs/**', 'libs/group/nested', 'nested-deep'],
+    ['packages/*/*', 'packages/group/nested', 'nested-pair'],
+  ] as const)(
     'resolves declared %s commands with cd/filter and retains missing-script diagnostics',
-    async (member) => {
+    async (pattern, memberPath, member) => {
       const f = await fixture();
-      await f.put('pnpm-workspace.yaml', 'packages:\n  - apps/*\n');
+      await f.put('pnpm-workspace.yaml', `packages:\n  - "${pattern}"\n`);
       await f.put(
-        `apps/${member}/package.json`,
+        `${memberPath}/package.json`,
         JSON.stringify({
           name: member,
           scripts: {
@@ -648,20 +655,22 @@ describe('contributing commands resolve actual literal package contexts', () => 
       await f.write(
         'contributing.md',
         page(
-          '# Contributing\n\n```bash\ncd apps/MEMBER\npnpm preview\npnpm -w build\npnpm --filter MEMBER run preview\npnpm --dir ../../apps/MEMBER preview\npnpm install\npnpm exec made-up-tool\npnpm <script>\n```\n'.replaceAll(
-            'MEMBER',
-            member,
-          ),
+          '# Contributing\n\n```bash\ncd MEMBER_PATH\npnpm preview\npnpm -w build\npnpm --filter MEMBER run preview\npnpm --dir MEMBER_RETURN preview\npnpm install\npnpm exec made-up-tool\npnpm <script>\n```\n'
+            .replaceAll('MEMBER_PATH', memberPath)
+            .replaceAll(
+              'MEMBER_RETURN',
+              '../'.repeat(memberPath.split('/').length) + memberPath,
+            )
+            .replaceAll('MEMBER', member),
         ),
       );
       expect(await f.run('commands')).toEqual([]);
       await f.write(
         'contributing.md',
         page(
-          '# Contributing\n\n```bash\ncd apps/MEMBER\npnpm preview\npnpm missing-in-app\npnpm --filter MEMBER preview\npnpm --filter MEMBER missing-in-app\n```\n'.replaceAll(
-            'MEMBER',
-            member,
-          ),
+          '# Contributing\n\n```bash\ncd MEMBER_PATH\npnpm preview\npnpm missing-in-app\npnpm --filter MEMBER preview\npnpm --filter MEMBER missing-in-app\n```\n'
+            .replaceAll('MEMBER_PATH', memberPath)
+            .replaceAll('MEMBER', member),
         ),
       );
       expect(await f.run('commands')).toEqual([
@@ -670,14 +679,14 @@ describe('contributing commands resolve actual literal package contexts', () => 
           severity: 'error',
           path: 'contributing.md',
           line: 11,
-          message: `Script "missing-in-app" does not exist in apps/${member}/package.json.`,
+          message: `Script "missing-in-app" does not exist in ${memberPath}/package.json.`,
         },
         {
           ruleId: 'commands',
           severity: 'error',
           path: 'contributing.md',
           line: 13,
-          message: `Script "missing-in-app" does not exist in apps/${member}/package.json.`,
+          message: `Script "missing-in-app" does not exist in ${memberPath}/package.json.`,
         },
       ]);
 

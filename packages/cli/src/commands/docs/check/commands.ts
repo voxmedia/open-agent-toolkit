@@ -73,6 +73,18 @@ async function packages(target: CheckTarget): Promise<Package[]> {
     patterns = config.packages?.filter((p) => !p.startsWith('!')) ?? [];
   }
   const match = createExclusionMatcher(patterns);
+  // A proper pattern prefix can still contain a member below it. A globstar
+  // prefix remains open at every depth. Reuse the membership matcher.
+  const descend = createExclusionMatcher(
+    patterns.flatMap((pattern) => {
+      const parts = pattern.trim().replace(/\/+$/, '').split('/');
+      return parts.flatMap((part, index) =>
+        index < parts.length - 1 || part === '**'
+          ? [parts.slice(0, index + 1).join('/')]
+          : [],
+      );
+    }),
+  );
   const excluded = createExclusionMatcher(
     (await present(join(target.repoRoot, 'pnpm-workspace.yaml')))
       ? (
@@ -115,8 +127,7 @@ async function packages(target: CheckTarget): Promise<Package[]> {
           if (!result.some((p) => p.root === dir)) await add(dir);
         }
         // Package patterns, rather than arbitrary repo fixtures, define scope.
-        if (patterns.some((p) => p.startsWith(`${rel}/`) || p.startsWith('**')))
-          await walk(dir);
+        if (descend.excludesDirectory(rel)) await walk(dir);
       }
     };
     await walk(target.repoRoot);
