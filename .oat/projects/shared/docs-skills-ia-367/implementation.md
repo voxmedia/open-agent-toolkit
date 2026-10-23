@@ -1545,15 +1545,20 @@ Root DOM-host continuation: NEEDS_CONTEXT is reconciled against immutable t01 pr
 
 ### Task p06-t02: Implement portable reader, navigation, command and diagram checks
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:docs367-p06-impl-20261023
 **Handle:** docs367-p06-impl-20261023 (accepted T3 delegated task)
 **Start HEAD:** af2ddcc03f2f4997b930754b7f2d084ce502bcb3
 **Intent:** Implement the G5 command and calibrated rules over real reader files, shared navigation and installed parsers; expose deterministic diagnostics and preserve tab locations.
-**Files:** packages/cli/src/commands/docs/check/** (exact produced paths retained in ignored analysis/p06/t02.paths); packages/cli/src/commands/docs/index.ts; packages/docs-transforms/src/remark-tabs.ts and adjacent tests; five public package.json files; pnpm-lock.yaml.
+**Files:** packages/cli/src/commands/docs/check/** (exact produced paths retained in ignored analysis/p06/t02.paths); packages/cli/src/commands/docs/index.ts; packages/docs-transforms/src/remark-tabs.ts and adjacent tests; five public package.json files; generated packages/cli/assets/public-package-versions.json; pnpm-lock.yaml.
 **Proof:\*\* production-boundary checker/config/nav/transform tests, CLI lint/type-check/build and packed CLI probes; quantitative boundary and Git fixture controls.
 
 **Pre-commit boundary:** Paused for root direction: actual Mermaid11.12.3 in Node requires DOMPurify.sanitize/addHook backed by a DOM even with loose security. Allowed dependency list provides no DOM host. No new dependency/adapter or parser bypass introduced. Product remains uncommitted; 57/60 new focused tests pass, with Mermaid runtime and tab-associated accessibility/freshness failures still under prevention. CLI type-check and docs-transforms build pass; the new CLI build has not run. Lint has seven new test-style errors pending correction. Recovery0/10,pendingnull. Reproduce with ignored analysis/p06/mermaid-node-probe.mjs; t02.paths is the exact provisional write manifest.
+
+**Continuation:** cont-docs367-p06-dom-from-docs367-p06-impl-20261023 reconciled root-only commits1d4ca02ad and2dc1aa8ec; preserved exact t02 product dirt. Bounded jsdom29.1.1 support is authorized. Recovery remains0/10,pendingnull.
+
+**Commit:** d8d8ccece992d6cc6a1f7e1f68bc8818436b839f
+**Verification:** Fresh final focused checker/config/nav suite111 passed; wider docs/config suite1,022 passed; CLI lint/type-check/build and transforms check/tests exit0. Packed CLI host26.11.1 and actual minimum22.17.0 accept labeled flowchart/class/sequence/HTML diagrams in supported tabs, reject nested-tab invalid syntax, and prove exact G5 JSON, warning-only/filter/unknown-rule/malformed-config exits. Real Git and quantitative boundary controls are in the production-boundary suite. Flagship baseline0 errors/756 warnings. Logs/probes: ignored analysis/p06/t02-\*.log and packed/{probe.mjs,host-probe.log,node22-probe.log}. DOM/parser/association/lint corrections completed before product commit; recovery0/10,pendingnull. Effective continuation start2dc1aa8ec54fba6e42792c878f51b4531204f14f includes only authorized root artifact descendants; exactly one product commit follows.
 
 ---
 
