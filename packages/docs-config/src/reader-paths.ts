@@ -16,16 +16,24 @@ export function collectionFiles(
       .replace(/^\.\//, '')
       .replace(/^\/+/, '');
     if (!path) continue;
-    const glob = path
-      .split('/')
+    const segments = path.split('/');
+    const glob = segments
       .map((segment) =>
         segment === '**'
           ? '**'
           : segment.replace(/\*+/g, '*').replace(/[?[\]{}()!+@|\\]/g, '\\$&'),
       )
       .join('/');
-    if (!directoryOnly) files.push(`!${glob}`);
-    files.push(`!${glob}/**`);
+    if (directoryOnly) {
+      // A globstar may consume zero segments, but a pruned directory must
+      // consume at least one, followed by an actual descendant file.
+      const directoryGlob = segments.every((segment) => segment === '**')
+        ? '*'
+        : glob;
+      files.push(`!${directoryGlob}/**/*`);
+    } else {
+      files.push(`!${glob}`, `!${glob}/**`);
+    }
   }
   return files;
 }
