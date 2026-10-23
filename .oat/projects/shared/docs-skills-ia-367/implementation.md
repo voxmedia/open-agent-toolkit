@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p-rev3
+oat_current_task_id: p05
 oat_generated: false
 oat_template: false
 ---
@@ -39,22 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | in_progress | 1     | 0/1      |
-| p04    | pending     | 1     | 0/1      |
-| p05    | pending     | 1     | 0/1      |
-| p06    | pending     | 1     | 0/1      |
-| p07    | pending     | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | pending   | 1     | 0/1      |
+| p06    | pending   | 1     | 0/1      |
+| p07    | pending   | 1     | 0/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 5/12 phases accepted
+**Total:** 8/13 phases accepted
 
 ---
 
@@ -747,11 +748,13 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 ## Phase p-rev3: Validate normalized IA paths
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 130f8c0521e3e03704680fb3237898a46335cfac
 **Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
 **Executor:** phase-implementer:docs367-prev3-impl-20261023
 **Corrects:** p03
+
+**Acceptance and delivery:** Root accepts p-rev3 after the independent review passed, its one Low ledger total was corrected, and all required verification passed. Fresh remote sweep at 57c17239f0cffa1ba8891bef054f688ccc376ec6 confirmed CI/release/Bugbot SUCCESS, Bugbot output explicitly no issues, Warp replies 4355580563/4355580687/4355580799 confirming every fix, all three threads resolved, zero pending review requests and no branch protection/rules requiring approval. Head/base stayed unchanged. Plain land-pr used merge method with --match-head-commit; no admin/auto/delete or review dismissal by root. GitHub confirms PR #371 MERGED at 2026-10-23T02:46:48Z, merge eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2; watch stopped. The path fix is independently reviewed; final ledger-only total correction is verified without another product review. Recovery 0/10 pending null. Frozen prior anchors unchanged. Next p04, final PR held until project completion.
 
 Phase start: one committing phase implementer, shared existing checkout; no nested dispatch or parallel group. The two paths share one guard and regression boundary, so independent implementation lanes would overlap. Root owns ledger repair, review receipt, acceptance and PR landing. Main fetched at phase start; no main advancement in the two product paths. Preserve p03/p-rev2 anchors. Recovery 0/10, pending null.
 
@@ -793,9 +796,414 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 
 ## Phase p04: Navigation follows Contents
 
-**Status:** pending
+**Status:** completed
+**Base:** 56e05597392dfb4951679d5236b960afb296f951
+**Head:** 3f99348b589cbd750bdfd088e02e4c10a5848e2f
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+
+Phase start: approved brief p04 made concrete after bounded read-only reconnaissance. One committing phase implementer owns this checkout, with no nested dispatch or parallel group: Contents parsing, reader-path matching, init defaults and index order share producer/consumer contracts and must compose before review. Root retains scope judgment, independent review, acceptance and delivery. Main fetched before phase concretization; no changes in planned paths beyond merged P03 already in the branch. Worktree init passed with SKIP_S3_ARCHIVE_SYNC=1; only its generated manifest version refresh was restored. Recovery 0/10, pending null. Prior phase anchors preserved.
+
+Recon verified parser/nav/init/index paths and pinned schema/runtime differences. Root inspected shared parser, both consumers, index matcher/order, init/scaffold command wiring, installed Fumadocs schema/loader and human source contracts before selecting the bounded interpretations recorded in p04 Intent. String-root schema adaptation fulfills the existing G3 requirement; MkDocs rendering limitation is covered by G2's where-supported qualifier, without a new dependency upgrade. Existing ownership/config guarantees are preserved. Source title/order fallback follows P14; no preset, checks engine or new approval guarantee is added.
+
+### Task p04-t01: Preserve authored Contents groups and root landing pages
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current T3 implementation thread (provider session ID unavailable)
+**Intent:** Extend the shared parser and both nav consumers with ordered groups and actionable grammar errors; retain string-root landing pages.
+**Files:** `packages/cli/src/commands/docs/nav/{contents,fumadocs,sync.test,fumadocs-loader.test}.ts`.
+**Proof command:** isolated-HOME CLI Vitest `src/commands/docs/nav`; CLI type-check and scoped formatter/lint.
+
+**Commit:** c8c37d7dcbfe39119212a9e9bc160695c5aca67d
+**Evidence:** nav tests pass (including real fumadocs-core 16.10.2 separator/landing consumer); new grammar cases fail on baseline. CLI type-check and scoped oxlint exit 0. Logs: ignored `analysis/p04/t01-*.log`.
+
+### Task p04-t02: Apply shared non-reader paths to navigation and manifest inventory
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Add repository nonReaderPaths with the existing bounded glob grammar; share its matcher across nav and index, apply only to matching content roots, and preserve manifest-only excludes.
+**Files:** CLI docs nav/shared/index-generate, config oat-config/resolve and config command with related tests.
+**Proof command:** isolated-HOME CLI Vitest docs/nav, docs/index-generate, config and commands/config; CLI type-check and scoped lint/format.
+
+**Commit:** c3555e995bdcb7c221b99813644705f95acce6e0
+**Evidence:** 689 focused tests pass; baseline targeted run fails the config, real command applicability, and excluded-subtree regressions. Type-check and scoped lint exit 0. Existing excludes remains manifest-only, including an unrelated explicit app target control. Logs/scripts: ignored `analysis/p04/t02-*`.
+
+### Task p04-t03: Order the hierarchical manifest from authored Contents
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Order surviving direct entries by Contents without duplicating cross-directory targets, derive directory titles from child indexes, flag deterministic unlisted fallback, and describe regeneration accurately.
+**Files:** CLI docs index-generate generator/command and related tests.
+**Proof command:** isolated-HOME CLI Vitest docs/index-generate and docs/nav; CLI type-check and scoped lint/format.
+
+**Commit:** 294af3ad15760612c5559efdfde99c9118399773
+**Evidence:** 129 focused docs tests pass; new ordering/title/shared-grammar cases fail on baseline. Existing real fixture now supplies a valid Contents link instead of an empty section; existing nested-title expectation follows the new authored-title contract. Type-check and scoped lint exit 0. Logs: ignored `analysis/p04/t03-*`.
+
+### Task p04-t04: Adapt pinned Fumadocs schema and collection discovery
+
+**Status:** completed
+**Original execution outcome:** failed at 9712fcba8ac65355f78edeb813303c1c0592c8d8; original failure and direction-required stop are preserved below. Recovered through append-only lint correction 395a89777cf5da9a738363ccbe0a175ddf23793c and generated-type correction bfbe0002c6a977c201277e3d760cfef8000cb717; both original failures and recovery receipts remain below.
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Narrowly accept named roots in the installed metadata schema and exclude non-readers from Fumadocs collections with bounded-glob parity, explicit config location and matching-app applicability.
+**Files:** docs-config source helper/tests, docs app and Fumadocs template source configs, scaffold token resolver/tests as needed.
+**Proof command:** docs-config Vitest with installed fumadocs-mdx 14.3.2 schema/collection and fumadocs-core 16.10.2 loader; CLI matcher parity and scoped package type-check/lint/build.
+
+**Commit:** 9712fcba8ac65355f78edeb813303c1c0592c8d8 (immutable implementation candidate; scoped CLI lint failed)
+**Evidence:** docs-config check/type-check/test/build exit 0 (13 fresh tests); CLI init tests exit 0 (112 fresh tests, isolated HOME), CLI type-check exit 0. Neutralizing the schema adaptation and collection exclusions independently makes the relevant regression fail (exit 1 each). Installed schema rejects the named root, the adapted real collection schema accepts it, the installed loader retains its landing page, and the installed Next collection emitter excludes non-reader imports with bounded-matcher parity. Declared zod dependency reuses installed 4.3.6; no framework upgrade. Logs/scripts: ignored `analysis/p04/t04-*`.
+**Stop boundary:** CLI scoped oxlint exit 1: `prefer-template` at scaffold.ts:371, the new explicit-config-path token uses string concatenation. The shell continued into the commit after the failed lint command; that was a commit-control error. Mechanical repair is to use a template literal for the same path value. No recovery edit made: dispatch reserves state.md to root, so the required durable attempt reservation cannot be written by this implementer. Direction-required; recovery remains 0/10, pending null, exact target unchanged. Root must reserve/authorize the bounded recovery before resuming. Phase remains in_progress; no phase Head or full-gate success claimed.
+
+**Recovery receipt (cont-docs367-p04-fix-1):** Continued the same accepted implementer at unchanged `codex_codex_proxy/gpt-6.1-sol/high/priority`. Reconciled clean reservation HEAD b89a1aa9af19528906675fb37b92162fd1280f85, exact p04 pending attempt/event/original identities, immutable original commit 9712fcba8ac65355f78edeb813303c1c0592c8d8 with unchanged parent 849bdd59125d1de2ec85559676a03938ee82eb2e, and exclusive writer transfer before editing. No recovered artifact was supplied or processed. Corrected only the equivalent config-path expression. Recovery commit 395a89777cf5da9a738363ccbe0a175ddf23793c contains the correction and matching reserved → completed status transition; no other state field changed. Pre-commit and authoritative immediate post-commit focused oxlint, isolated-HOME CLI init Vitest (112 tests), docs-config check/type-check/test (13 tests)/build and CLI type-check all exit 0, with direct fresh execution and no Turbo cache. Attempt remains 1/10 (9 remaining), matching completed marker retained for root settlement. Evidence: ignored `analysis/p04/recovery01/{eligibility.json,verify.py,pre-exits.json,post-exits.json}` and exact command logs. Phase remains in_progress, Base unchanged, no phase Head or acceptance; remaining planned tasks and broad phase gates were not resumed.
+
+**Root recovery reservation (docs367-p04-t04-lint-stop):** Verified clean HEAD c2134bdff57c172901978867c46647ee176afeb6, immutable original task commit 9712fcba8ac65355f78edeb813303c1c0592c8d8 at its existing history position, terminal original dispatch with no pending child runs, and exact codex_codex_proxy/gpt-6.1-sol/high/priority controls. Root reproduced the same scoped oxlint exit 1 at scaffold.ts:371. The equivalent template-literal correction is bounded, reversible and in-phase, with no behavior, requirement or architecture change. Phase-standing authorization applies. Atomically reserved attempt 1/10 before product edits; 9 remain. Same-handle recovery is authorized solely for this correction, focused lint and relevant init/docs-config verification before and after the append-only recovery commit. The implementer may only transition this matching pending marker to completed or failed; root clears it after validation. No phase acceptance or remaining-task completion is claimed. Original stop evidence and task commit remain intact.
+
+**Root recovery settlement:** Validated the canonical recovered event docs367-p04-t04-lint-stop, terminal same-handle report, unchanged codex_codex_proxy/gpt-6.1-sol/high/priority axes and matching committed completed marker. Recovery 395a89777cf5da9a738363ccbe0a175ddf23793c changes only the equivalent scaffold expression and marker status; journal 3f8eacb69bd129c513f842ca47299555d2db5091 changes only p04 evidence/status. Original task commit and parent are unchanged. Root read all seven pre/post exit records (each 0; post records name the recovery commit) and independently reran focused oxlint successfully. Cleared the completed marker after validation; usage stays 1/10, 9 remain, pending null. Main fetched before resumption; no newer main changes in p04 paths. Resume the same implementer for remaining approved p04 scope; no acceptance or review verdict is implied.
+
+Protects against: pinned external schema rejecting accepted roots and collection globs interpreting literal metacharacters as operators; existing loader-only checks could not detect either failure; covered by the installed-schema/loader and real collection-emitter parity tests.
+
+### Task p04-t05: Initialize owned navigation and guard framework builds
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Seed nav-sync for explicitly fresh framework apps, generate navigation after config, and execute correctly selected/quoted build checks while preserving existing apps and Markdown.
+**Files:** CLI docs init command/scaffold and existing tests; Fumadocs/MkDocs package templates.
+**Proof command:** isolated-HOME CLI Vitest docs/init and docs/nav, actual rendered script commands with spaced paths; scoped lint/type-check/build.
+
+**Commit:** 3458b34814099118b507c9b1eecb06ea41a293a8
+**Evidence:** 154 fresh isolated-HOME init/nav tests pass, scoped oxlint/type-check/CLI build exit 0. Real init seeds/syncs both frameworks even with prior config, preserves unknown config siblings and old app metadata; existing Markdown/dry-run controls pass. Actual extracted Fuma prebuild and MkDocs docs:build execute real CLI commands for external and source workspaces with `apps/docs site`; clean navigation passes and drift fails. External framework build executables are inert fixture programs, so this proves script/CLI composition, not a Next/MkDocs framework build. Baseline fails four owner cases; removing only template build guards makes all four drift assertions fail. Earlier prevention-run failures remain in ignored logs; no failed verification was followed by a commit. Evidence: ignored `analysis/p04/t05-*`, exact final commands/exits in `t05-final-exits.json`. Recovery stays 1/10, pending null.
+
+### Task p04-t06: Document reader navigation and publish lockstep metadata
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Handle:** current implementation thread
+**Intent:** Update affected grammar/config/bootstrap contracts and source-config usage, retain approval/ownership boundaries and pinned MkDocs limitations, and advance public lockstep metadata to 0.3.26.
+**Files:** affected docs tooling/reference pages, docs-config README, oat-docs-bootstrap skill; five public manifests and bundled versions; CLI-generated docs app manifest.
+**Proof command:** docs validation, full lint/format and isolated skill sentence contracts before/after prose; release/build checks; conservation review and ordered phase gates.
+
+**Commit:** 50a82e98b719729241169b159b183c4762d5e66e
+**Evidence:** Full lint/format and 1,087 isolated-HOME CLI skill/sentence tests pass before prose edits, before commit and against committed bytes; committed docs validation also passes. A broken new heading fragment was caught/fixed during prevention; original failure log retained. Docs-config check, CLI build, version gate and release validation pass before commit; all five public packages are 0.3.26, bootstrap is 1.4.2, bundled metadata regenerated by bundle-assets. App manifest regenerated by source CLI. Conservation review preserves approval/IA/adoption and existing-owner prohibitions, with no execution-engine claim for prose. Real pinned framework schema/collection proof stays in t04; no framework upgrade or MkDocs plugin. Four direct existing-app command controls preserve all config/files for undeclared and hand-authored owners. Exact commands/exits: ignored `analysis/p04/t06-{before,precommit-2,postcommit}-*`; controls and conservation mapping remain there. Phase-wide ordered gates still pending at this task boundary. Recovery 1/10, pending null.
+
+**Postcommit phase-check outcome:** Initial `pnpm check` failed with MD038 at docs-index-contract.md:38 (trailing space inside a code span). Original task commit 50a82e98b719729241169b159b183c4762d5e66e and task receipt remain immutable. Mechanical prose-only recovery replaces that span with “second-level heading”; no grammar or behavior change. Pre/post focused Markdown lint and full `pnpm check` all exit 0. Reservation 76b4b91088c8687f12403d6581f5471ce19b67c5 preceded the edit; candidate 57db87362ef16dd6f3cdfdc822ff769bb719d0a9 includes the one-line correction and reserved → completed marker. Usage is 2/10 (8 remain), matching completed marker retained for root settlement. Exact eligibility, commands, cache logs and exits: ignored `analysis/p04/recovery02/`; original failed gate log remains `phase-01-check.log`.
+
+### Recovery Event docs367-p04-t06-markdownlint
+
+- Phase/task: p04 / p04-t06
+- Original request: docs367-p04-impl-20261023
+- Original commit: 50a82e98b719729241169b159b183c4762d5e66e
+- Defect class: lint
+- Discovered by: pnpm check
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: 57db87362ef16dd6f3cdfdc822ff769bb719d0a9
+- Verification: focused Markdown lint and full pnpm check exit 0 before commit and immediately against committed HEAD; postcommit results authoritative.
+- Reason: Equivalent wording removes MD038; clean immutable original history, matching ledger reservation before edit and unchanged exact target; no behavior/scope change. Completed marker remains for root validation/settlement.
+
+**Phase verification stop:** On cb491cd47e0368c3433bc2f81402c3e7dc55a4a7, ordered `pnpm check` exits 0 (11/11 Turbo tasks replayed), `pnpm type-check` exits 0 (5/11 cached), then isolated-HOME `pnpm test` exits 1 (5/11 tasks cached) in its docs-build dependency: `lib/source.ts:6:16`, `Property 'toFumadocsSource' does not exist on type 'never'`. The installed fumadocs-mdx 14.3.2 server conditional requires metadata output extending fumadocs-core 16.10.2 MetaData, whose declared root remains boolean-only; t04's widened boolean|string output therefore collapses the generated collection type. Runtime schema/loader checks passed, but did not cover this generated TypeScript composition. No product edit, reservation or retry was made for this independent failure. The existing completed attempt-2 marker cannot be cleared/overwritten by this implementer; root must validate/settle it before another bounded reservation. Gates 4–8, forced tests and direct supplemental suites have not run. Phase stays in_progress; no Head or phase-verification success. Exact logs/exits and diagnosis: ignored `analysis/p04/{phase-final-*,source-type-stop.json}`. Original t04/t06 history and Base preserved; no route fallback.
+
+### Recovery Event docs367-p04-t04-source-type-stop
+
+- Phase/task: p04 / p04-t04
+- Original request: docs367-p04-impl-20261023
+- Original commit: 9712fcba8ac65355f78edeb813303c1c0592c8d8
+- Defect class: composition
+- Discovered by: isolated-HOME pnpm test (oat-docs build dependency)
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 2/10 (no new reservation)
+- Dispatch target: codex_codex_proxy/gpt-6.1-sol/high/priority
+- Recovery commit: -
+- Verification: check/type-check exit 0; isolated-HOME test exits 1 at generated Fumadocs collection TypeScript boundary; remaining gates unrun.
+- Reason: Separate deterministic metadata-type composition failure; no edit or new attempt. Prior event docs367-p04-t06-markdownlint still owns the matching completed pending marker. Root-only settlement is required before an independent reservation; marker and monotonic usage remain unchanged.
+
+**Root recovery02 settlement and composition disposition:** Validated canonical recovered event docs367-p04-t06-markdownlint, matching completed attempt2 marker, reservation76b4b91088c8687f12403d6581f5471ce19b67c5, immutable original50a82e98b719729241169b159b183c4762d5e66e, exact unchanged codex_codex_proxy/gpt-6.1-sol/high/priority controls and one-line equivalent prose correction57db87362ef16dd6f3cdfdc822ff769bb719d0a9. Both focused/full-check pre/post receipts exit0; cached full-check results are disclosed. Clear only that completed marker; usage2/10 stays consumed. A separate generated-type composition failure is genuine: the recorded Next build reports toFumadocsSource on never, and root independently inspected installed fumadocs-mdx14.3.2 conditional plus fumadocs-core16.10.2 boolean metadata type and loader truthiness. Accepted G3 requires string inputs to act as roots, not exposing strings through generated metadata. Normalize valid non-empty string inputs to true at the existing schema boundary, keeping booleans and unrelated validation unchanged; no casts, framework upgrades or dependency patches. This is bounded composition recovery within p04, requiring a generated-consumer type regression and real docs builds pre/post candidate. Root will reserve a distinct attempt before edits. Elevated recovery-volume warning: this is the third p04 recovery event; require composition evidence and retain every prior failure rather than relying on isolated runtime tests.
+
+**Root recovery03 reservation:** Atomically reserved attempt3/10 (7 remain), event docs367-p04-t04-source-type-stop, before any composition correction. Clean reservation base a0367c32d848100dd1f5c07cad3fd2be4dfe919f; immutable original t04 commit9712fcba8ac65355f78edeb813303c1c0592c8d8, original request and exact target retained. Same accepted implementer may correct only schema input/output composition and its directly related tests/docs, transition matching marker status under canonical recovery rules, and run full pending phase verification. No reset, artifact replay, marker clearing, history rewrite or scope expansion. Phase remains in_progress; earlier anchors frozen.
+
+### Recovery continuation cont-docs367-p04-fix-3
+
+**Canonical recovery event:** docs367-p04-t04-source-type-stop; disposition recovered; original request docs367-p04-impl-20261023, task p04-t04, immutable original commit 9712fcba8ac65355f78edeb813303c1c0592c8d8, defect composition, discovered by isolated-HOME pnpm test (oat-docs build dependency). Authorization: phase-standing plus root's bounded input-normalization interpretation and prior atomic reservation. Attempt 3/10, 7 remaining; exact target codex_codex_proxy/gpt-6.1-sol/high/priority, unchanged high/priority axes. Recovery commit bfbe0002c6a977c201277e3d760cfef8000cb717 atomically contains only the bounded docs-config correction/tests/README and matching reserved → completed marker; root alone clears it. Elevated recovery-volume warning: third p04 recovery event; every original failure and prior receipt remains intact.
+
+**Recovery proof:** Reconciled exact clean base 3029ae27eccc1b17734c49d20635bc3e75ed754e, full marker, original commit and unchanged parent 849bdd59125d1de2ec85559676a03938ee82eb2e before edits; no artifact supplied/applied. Installed fumadocs-mdx 14.3.2 emitter/server conditional and fumadocs-core 16.10.2 metadata types are the actual boundary. The new generated-consumer test fails against immutable t04 source solely with toFumadocsSource on never, then passes after schema normalization. Initial test setup failures (compiler alias and explicit Node types) remain preserved, separate from authoritative checks. String root inputs normalize to true; true/false/undefined controls retain values, blank/type/unrelated metadata errors still reject, and the actual loader retains explicit landing/leaf pages. The former string-output expectation is superseded by root's supported boolean-normalization direction, not dropped silently. No casts, dependency patch/upgrade, authored metadata changes or unrelated validation relaxation.
+
+**Verification:** Eight direct pre-commit and eight immediate authoritative committed-HEAD commands all exit 0: generated-type regression; docs-config check/lint/type-check/test (14 tests)/build; actual oat-docs build; copied real app Next build with authored padded string root. Both named-root builds emit reader routes and preserve the authored string bytes. No Turbo cache replay in these direct checks. Exact argv, HEAD, logs/exits, immutable baseline and named-app fixture script: ignored analysis/p04/recovery03/. Protects against generated schema output collapsing the installed server.docs export to never; runtime schema/loader checks cannot catch that compile-composition failure. Separate remaining phase verification now resumes under root authorization; phase stays in_progress, frozen Base unchanged, no acceptance implied.
+
+**Phase verification candidate:** 905b048de4f64c836c3fce0797f4469dd790e145. All six execution records are closed; phase remains in_progress for root's independent review and acceptance. Fresh ordered DoD sequence completed on this candidate, separately from the preserved earlier failed sequences:
+
+| Gate | Exact command                 | Exit | Turbo cached / total |
+| ---- | ----------------------------- | ---- | -------------------- |
+| 1    | `pnpm check`                  | 0    | 8/11                 |
+| 2    | `pnpm type-check`             | 0    | 9/11                 |
+| 3    | isolated-HOME `pnpm test`     | 0    | 8/12                 |
+| 4    | `pnpm build`                  | 0    | 5/5                  |
+| 5    | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6    | `pnpm release:check-versions` | 0    | direct               |
+| 7    | `pnpm release:validate`       | 0    | direct               |
+| 8    | `pnpm build:docs`             | 0    | 6/6                  |
+
+`git fetch origin main` exits 0 immediately before gate6; the scoped advancement check finds no newer main changes in p04 paths. Five public archives validate at 0.3.26. Cache replays above are passing gate results, not claims of fresh execution. Supplemental isolated-HOME `pnpm exec turbo run test --force` exits 0 with all12 tasks executed, 0 cached: CLI8,903, control-plane289, docs-config14, docs-theme20, docs-transforms31 and docs-app85, total9,342 tests plus actual docs build. Direct isolated-HOME `pnpm test:smoke`165, `pnpm test:skills`712 and `pnpm test:scripts`1 all pass; `pnpm oat:validate-skills` exits0. Full `pnpm lint` and `pnpm format` exit0 (each5/10 tasks cached; root checks execute), and isolated-HOME CLI Vitest `src/commands/init/tools/shared src/validation` executes1,087 tests across26 files, exit0. No infrastructure retry used. Earlier MD038 and generated-type gate failures remain failed in their original logs; no green replay substitutes for execution.
+
+**Conservation and controls:** P12/G3 groups, grammar diagnostics, separators and landing pages map to t01; actual fresh-init ownership and quoted external/source build guards map to t05. P13/G3 named-root source acceptance maps to t04 plus recovery03's installed generated-type and actual normal/named-root builds. P14 authored manifest order, child-index titles, unlisted fallback and nonduplication map to t03 and CLI-generated app index in t06. G2 bounded reader matching, matching-app applicability, manifest-only excludes and no excluded metadata writes map to t02/t04; actual installed collection-pattern parity and negative controls remain reproducible. Four existing-app refusal controls preserve undeclared/hand-authored owners; Markdown/dry controls remain green. t06 prose conservation preserves headings, generated manifest targets, approval and ownership prohibitions; this is prose evidence, not agent execution. No instruction changes needed; no p05/p06/p07 product, generic config locator or framework upgrade. Pinned MkDocs1.4.2 rendering limitation remains an explicit accepted limitation.
+
+**Journal validation:** Precommit `oat project journal check --project .oat/projects/shared/docs-skills-ia-367 --at review --scope p04 --json` exits 0, status ok, no reasons or warnings (handoff-pre-journal.log).
+
+**Evidence and ownership handoff:** Exact argv/HEAD/exits/cache summaries are ignored under analysis/p04/: phase-verified-exits-combined.json, supplemental-verified-exits.json, fresh-test-counts.json, phase-extras-verified-exits.json and their raw logs. INDEX.md maps P12/P13/P14/G2/G3; recovery03/ retains eligibility, immutable baseline, generated/named-root fixture scripts and16 zero pre/post exits. Frozen Base and all prior anchors/history preserved. Recovery usage3/10,7 remain; matching attempt3 marker stays completed for root settlement, with elevated third-recovery-volume warning. No open task record or new product concern. Root retains state/plan/review/acceptance/GitHub ownership; implementer stops writing after clean final journal validation/handoff.
+
+**Root pre-review validation / recovery03 settlement:** Validated the canonical recovered event docs367-p04-t04-source-type-stop and matching committed completed attempt3 marker. Exact same-handle codex_codex_proxy/gpt-6.1-sol/high/priority controls and immutable original9712fcba8ac65355f78edeb813303c1c0592c8d8/parent849bdd59125d1de2ec85559676a03938ee82eb2e remain intact. Recoverybfbe0002c6a977c201277e3d760cfef8000cb717 has only the authorized schema normalization, generated-consumer regression, directly related test/docs and marker transition. Root inspected production output typing and generated-consumer test; read all16 pre/post zero receipts, including actual ordinary/named-root Next builds, all8 ordered gate exits and zero-cache forced9342-test proof plus supplemental exits. Earlier type/build and lint failures remain preserved. Cleared completed marker only after validation; usage3/10 stays consumed,7 remain,pending null. Tested candidate905b048de4f64c836c3fce0797f4469dd790e145 differs from final handoffa618d6327f7c7ce38b50df76d93f14a930880a9e only in the phase journal. All6 task records closed, phase stays in_progress, original Base frozen; independent phase review is next. No external p04 gate or phase acceptance is claimed. Elevated recovery-volume warning remains recorded.
+
+### Review Received: p04
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-23T040657Z.md
+**Findings:** Critical 0 · High 1 · Medium 0 · Low 2
+
+- H1 (High): generate-index now imposes strict nav-target resolution and rejects valid MDX, escaping/external/missing links and empty/prose-only Contents → fix task p04-t07. Accepted compatibility constraint allows only dash-bullet and empty-group grammar errors globally; Contents must be an ordering hint over existing inventory, not a new target-validation gate. Keep strict nav sync behavior, flagged deterministic fallback and all exclusion boundaries. Preserve the existing inventory extension contract; a valid MDX nav target absent from that inventory must not break index generation. Restore a pre-fix empty-Contents fixture and prove real command behavior, not adapted expectations.
+- L1 (Low): malformed p04 Provisional marker and formatter-mangled literal grammar → root artifact-alignment task p04-t09. Accepted intent already requires star bullets and star glob syntax; code is correct, brief text must state it with code spans.
+- L2 (Low): navOwner doc comment attaches to nonReaderPaths → fix task p04-t08. Move the comment to its actual declaration; no behavior change.
+
+**Design drift / artifact alignment notes:** L1 is artifact drift only; accepted G3 remains source of truth and root owns plan.md. H1 is a regression against the existing compatibility constraint, not a new requirement. No finding is deferred or rejected. Root read the complete artifact; exactly one not-attempted signal, no Review Orchestration section, full anchors and current severity vocabulary validated. Explicit returned artifact selected after both installed and branch latest discovery returned null despite that file existing; no review provenance was inferred.
+**Outcome:** fixes completed p04-t07, p04-t08, p04-t09; independent re-review pending; phase stays in_progress, round1 of3, original Base/Head retained until verified fix candidate. Coverage includes correctness, boundary preservation, testing, complexity, docs and packaging; re-review will cover fixes and composition.
+
+### Task p04-t07: (review) Restore tolerant Contents ordering in generate-index
+
+**Status:** completed
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (H1)
+
+Intent: Keep shared dash-only/empty-group syntax errors, but let empty or prose-only Contents fall back and ignore unsupported, missing, external or out-of-root ordering hints. Use only surviving in-root inventory entries for ordering, with deterministic unlisted fallback. MDX links accepted by Fumadocs nav must not fail generate-index; preserve current inventory scope and strict nav sync behavior.
+Files: CLI index-generate generator and existing tests; smallest shared Contents parser option/helper plus related existing nav tests if required; affected human docs only if needed to state fallback truthfully.
+Proof: pre-fix real-command regressions fail for intended errors; fixed valid Fumadocs MDX nav+index and undeclared Markdown external/escape/missing/empty/prose fixtures pass; valid authored order, exclusions and malformed shared grammar controls remain; relevant suites and full ordered phase gates.
+
+**Commit:** f9a75274244347aff564bf8c49e0920c9be173df
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Files:** packages/cli/src/commands/docs/index-generate/{generator.ts,index.test.ts}; packages/cli/src/commands/docs/nav/contents.ts.
+**Evidence:** Contents now orders a captured surviving-inventory map without filesystem target resolution; external, escaping, missing, excluded and unsupported targets cannot add entries or trigger outside-root reads. Generator explicitly allows an empty parsed map; nav retains the strict default, shared dash/empty-group grammar and its unchanged strict target resolver. Existing hierarchical/title/order/nonduplication/exclusion controls remain. Restored both empty-Contents scaffold safety fixtures. On immutable reviewed905b048de generator/parser bytes, seven new real-command cases fail for the intended strict target/empty errors (one excluded valid control passes), and the full restored suite reports13 failures/62 passes; original logs retained. After correction,137 isolated-HOME nav/index tests pass before and against committed bytes, plus scoped lint/format, CLI type-check/build (all exit0, direct execution). The real MDX fixture nav sync/check writes index/fancy/guide successfully and generate-index emits only its historical Markdown inventory. Protects against command/config/filesystem composition rejecting tolerated ordering hints; existing valid-target generator tests did not cover this boundary. No own-module mocks, catch/message matching, new MDX inventory promise or docs change needed. Exact commands/fixtures/logs/exits: ignored analysis/p04/fix-r1/t07-\*. Recovery stays3/10,pending null; no postcommit correction or retry.
+
+### Task p04-t08: (review) Attach sidebar ownership documentation to navOwner
+
+**Status:** completed
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L2)
+
+Intent: Move the existing navOwner JSDoc immediately above navOwner and retain nonReaderPaths documentation.
+Files: packages/cli/src/config/oat-config.ts only.
+Proof: scoped format/lint and declaration diff; no behavior test needed for comment relocation.
+
+**Commit:** aa53c9d20bec4447a3ea03068f293ef365c16a28
+**Executor:** phase-implementer:docs367-p04-impl-20261023
+**Evidence:** Moved only the existing sidebar-ownership JSDoc directly above navOwner; retained nonReaderPaths documentation and every declaration unchanged. Scoped oxlint/oxfmt checks exit0 before and against committed bytes; post-hook declaration read confirms exact placement. No behavior test needed for comment relocation and no unrelated test replay at this task boundary. Exact commands/exits: ignored analysis/p04/fix-r1/t08-{pre,post}-\*. Recovery3/10,pending null, original task/history and root t09 preserved.
+
+### Task p04-t09: (review) Correct brief phase marker and literal grammar
+
+**Status:** completed
+**Executor:** root
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L1)
+
+Intent: Restore exact Provisional marker and protect literal star/plus/glob syntax with code spans, without changing accepted p04 behavior.
+Files: project plan.md p04 Intent/Exit and Provisional only; own task receipt.
+Proof: committed marker/literal inspection and journal check; artifact-only change does not need product tests.
+
+**Commit:** 6ac9c55d68dd7404e17fd8c13cedb0c1d6f5db88
+**Evidence:** Committed exact Provisional marker and code-spanned star/plus/glob literals verified after formatter/hook. Accepted p04 behavior unchanged. Journal review-boundary refusal is expected while p04-t07/t08 remain open; final review validation waits for those fixes.
+
+### Review-fix verification and handoff
+
+**Review-fix verification candidate:** 3bbe2a49326835a44c839a24de609335a119baa6. Accepted H1 is implemented by t07 product f9a75274244347aff564bf8c49e0920c9be173df / journal d00f817feb4dcea89edb1a08cfe757b77e4e3e8c; accepted L2 by t08 product aa53c9d20bec4447a3ea03068f293ef365c16a28 / journal 3bbe2a49326835a44c839a24de609335a119baa6. Root's completed L1/t09 product 6ac9c55d68dd7404e17fd8c13cedb0c1d6f5db88 and receipt remain intact; plan.md, state.md, root receipt/Orchestration Runs and all other phase bytes are preserved. No replay of t01–t06 or new version bump. All nine p04 task records are closed; phase stays in_progress for root re-review, judgment and fixes_completed bookkeeping.
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 8/11                 |
+| 2            | `pnpm type-check`             | 0    | 9/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 9/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All gates were invoked in this order on the candidate; `git fetch origin main` exits0 immediately before gate6, with no newer main changes in p04 paths. All five0.3.26 public archives validate. Cached logs above are disclosed as gate results, not fresh executions. Additional isolated-HOME `pnpm exec turbo run test --force` exits0 with12/12 tasks freshly executed and0cached: CLI8,911, control-plane289, docs-config14, theme20, transforms31 and docs-app85, total9,350tests plus actual docs build. This preserves recovery03's real generated-consumer/string-root compilation contract. Direct isolated smoke165/skills712/scripts1, skill validation, full lint/format (each9/10cached, root passes executed) and isolated CLI sentence contracts1,087tests/26files all exit0. No infrastructure retry, unexpected failure, new recovery event or postcommit correction; usage3/10,pending null stays unchanged.
+
+**Fix controls and conservation:** t07's immutable-candidate negative probe preserves seven intended failures (escape/external/missing/unsupported/empty/prose/MDX) and one accepted exclusion control, then all137 focused nav/index tests pass before and after commit. Both original empty-Contents scaffold safety fixtures are restored. Public command assertions conserve literal hierarchical inventory/fallback outputs; real nav sync/check accepts present MDX while generate-index retains its existing Markdown-only inventory. Existing strict nav target failures, dash-only/empty-group file+line diagnostics, authored ordering/child titles/cross-directory nonduplication and non-reader exclusions remain green. No target filesystem reads, broad catch, generic engine or own-module mocks added. L2 is comment placement only. Human documentation/skill bytes, approval/ownership prose, generated app-index targets and t09's exact code-spanned literals/Provisional marker remain unchanged. Accepted MkDocs1.4.2 rendering limitation remains; no framework upgrade or MDX inventory expansion.
+
+**Journal validation:** Review-boundary check exits0, status ok, no reasons or warnings (analysis/p04/fix-r1/handoff-pre-journal.log).
+
+**Evidence:** ignored analysis/p04/fix-r1/ contains exact command/HEAD/log/exit receipts, phase-exits.json, supplemental-exits.json, extras-exits.json, fresh-test-counts.json, immutable-baseline.json, baseline logs, tested fixture literals and replay-baseline.py. Prior failures/recoveries/evidence remain preserved. Frozen Base56e05597392dfb4951679d5236b960afb296f951 and original immutable task history remain. No nested delegation, GitHub work, state/plan/other-phase writes or open execution records; independent review/acceptance remain root-owned.
+
+**Root fix-round1 validation:** Accepted clean handoff23b0fcedef3e34c5aea435e910a966e0e76def99, inspected the complete small production fix diff and explicit zero exits for all8 ordered gates, fresh9350-test proof, supplemental and focused pre/post checks. t07 removes strict target IO from inventory ordering, explicitly allows empty maps only for generator and leaves nav strict; t08 only moves JSDoc. Root t09 exact literals/marker retained. Tested candidate3bbe2a49326835a44c839a24de609335a119baa6 differs from final handoff only in p04 journal; no new recovery/infra retry, usage3/10 pendingnull. Findings-bearing round1 event is fixes_completed, not passed; fresh independent round2 will verify closures/composition before acceptance. Original Base retained.
+
+### Review Received: p04 (round 2)
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-23T043436Z.md
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- Round1 H1/L1/L2: independently confirmed closed; retain the original findings-bearing event as fixes_completed. Tolerant generator ordering, strict nav, restored fixtures, root brief literals and comment placement compose correctly.
+- R2-L1 (Low): the new generator allowEmpty call lacks a test protecting the existing empty-group G3 exception → fix task p04-t10. Reviewer independently bypassed the empty-group guard for allowEmpty callers and all137 tests still passed, despite production currently rejecting the bad input. Add one case to the existing malformed-Contents generator test and prove that exact bypass then fails. This protects an already accepted universal grammar guarantee; it adds no new production requirement or harness.
+
+**Design drift / artifact alignment notes:** None. No finding deferred or rejected. Root read the complete artifact, checked full anchors and current severities, and consumed exactly one not-attempted signal with no Review Orchestration section. Unchanged coverage is inherited from round1; scope/composition and prior closures were independently re-verified in round2.
+**Outcome:** fixes_completed via p04-t10 test commit e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0 and journal/candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f. Root verified the exact seven-line existing-test extension and unchanged production, all ten closed records, explicit eight-gate exits and cache counts, and old-tests/M7 green → new-assertion/M7 red → restored-parser green evidence. Prior forced full execution remains inherited; fresh focused137 and gate3 CLI8911/docs85/direct suites are distinguished. Final independent round3 remains pending; this findings-bearing round2 event is not a passed event. Phase stays in_progress, recovery3/10 pendingnull unchanged.
+
+### Task p04-t10: (review) Protect generator empty-group grammar with allowEmpty
+
+**Status:** completed
+**Commit:** e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0
+**Source review:** reviews/archived/p04-review-2026-10-23T043436Z.md (R2-L1)
+
+Intent: Extend the existing malformed-Contents generator test with an authored empty ### group followed by a populated group; assert the existing file/line group error through generateIndex's allowEmpty path. Production behavior is already correct; no production change.
+Files: packages/cli/src/commands/docs/index-generate/generator.test.ts only; own journal receipt and ignored proof.
+Proof: new case passes current production; temp/immutable copy mutation that bypasses the empty-group guard only for allowEmpty callers fails this test for the intended missing rejection. Existing empty/prose fallback and strict-nav controls stay green. Run focused nav/index suites freshly and required ordered gates; preserve prior broad fresh proof for unchanged production rather than needlessly repeating all supplemental suites.
+
+**Execution receipt:** Extended the existing malformed-Contents generator test with the literal empty `### Empty` group followed by populated `### Real`; asserts `index.md:3: Contents group "Empty" has no entries` through generateIndex's allowEmpty path. Existing H1/slug controls and dash error remain. No production source, other test, version or skill changed.
+
+**Verification:** Precommit file-scoped oxfmt write/check, oxlint and fresh isolated-HOME nav/index suites all exit0; committed-hook bytes re-read, clean tree confirmed, then focused oxlint/format and all137 nav/index tests rerun freshly against e7b00cd42, all exit0. Exact commands/logs/exits: ignored analysis/p04/fix-r2/t10-pre-exits.json and t10-post-exits.json.
+
+**Negative and valid controls:** Reproducible probe.py archives immutable launch0029f754c into a temporary copy and applies only M7 (`!options.allowEmpty` on checkGroup). Old tests+M7 pass137/137 (exit0); new assertion+M7 fails exactly the intended promise-resolved-instead-of-rejecting case (exit1;136passed/1failed); restoring original copied parser gives137/137 (exit0). Production checkout parser remains byte-identical by SHA256; source-conservation.json, mutation-exits.json and three full logs preserve proof. This closes accepted R2-L1's test gap without inventing a pre-fix product defect. Recovery3/10,pendingnull unchanged; elevated recovery-volume warning remains durable from prior attempts. Root owns review completion/acceptance.
+
+### Round2 test-fix verification and handoff
+
+**Tested candidate:** 3f99348b589cbd750bdfd088e02e4c10a5848e2f (t10 journal), containing test product e7b00cd42d8dd6b3527eaf8fa7e8452b085706b0. Accepted R2-L1 is covered by the existing generator test's empty-group assertion. All ten task records are completed; phase remains in_progress for root round3 review, fixes_completed bookkeeping and acceptance. Prior round1 closures, root t09 literals/Provisional marker, Base56e05597392dfb4951679d5236b960afb296f951 and original history remain intact.
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 8/11                 |
+| 2            | `pnpm type-check`             | 0    | 9/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 9/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All eight gates ran in order against the candidate, with explicit exit receipts. Fetch origin main exits0 before gate6; no advancement in scoped p04 paths. Lockstep0.3.26 release archives validate. Cache replays are gate results, not fresh execution. Gate3 freshly executes CLI8,911tests/425files, docs-app85tests and the actual docs build (including generated collections/TypeScript), then its root-script direct smoke165/skills712/scripts1 suites. Supporting-package tests and dependency builds are replayed. Prior forced9350-test/12-task/0cached evidence, independent lint/format/validation and sentence1087 contracts are inherited evidence for unchanged production; no extra forced or supplemental run is claimed for this seven-line test-only change.
+
+**Focused proof:** All137 nav/index tests pass freshly before and after the product commit; scoped lint/format exit0. In an immutable-launch temporary copy only, old tests+M7 pass137/137; new assertion+M7 fails exactly once (promise resolved instead of rejecting); restoring original parser yields137/137. Existing fallback/strict-nav/order/exclusion controls stay green. No production file changed; only generator.test.ts and this p04 journal differ from launch0029f754c. Root plan/state/root receipts, other phases, version/skill bytes and all earlier failure evidence are preserved. No test hooks, new harness, delegation, GitHub action, infrastructure retry or new recovery event. Recovery3/10,pendingnull remains unchanged (7 capacity remaining); prior three-event elevated recovery-volume warning remains disclosed.
+
+**Evidence:** ignored analysis/p04/fix-r2/README.md indexes probe.py, mutation logs/exits, source-conservation.json, changed-paths.json, focused pre/post receipts, ordered gate logs/exits, phase-summary.json and fetch/main-movement.json. Journal review-boundary validation and final owned-scope conservation are captured with the handoff receipts. This final verification journal changes no tested product bytes; root owns final review and acceptance.
 
 ---
+
+### Root acceptance: p04 final review
+
+**Verdict:** accepted after independent round3 of3; 0 critical, 0 high, 0 medium, 0 low. Review artifact (local-only): reviews/archived/p04-review-2026-10-23T050209Z.md, anchored Base56e05597392dfb4951679d5236b960afb296f951..Head3f99348b589cbd750bdfd088e02e4c10a5848e2f, narrowed from prior3bbe2a49326835a44c839a24de609335a119baa6. Root read the complete artifact and validated exact provenance, counts and one not-attempted signal with no Review Orchestration section. No review-orchestration log entry applies.
+
+All R1 findings are independently closed in R2; R2-L1 is independently closed in R3. The reviewer reproduced old137 tests+M7 green, new assertion+M7 red (exact missing rejection), restored parser137green, and checkout137green; verified production unchanged and all ten records closed. Remaining p04 requirements inherit R1/R2 coverage. All eight candidate gates pass with cache counts8/11,9/11,9/12,5/5, direct5–7,6/6. Fresh candidate gate3 CLI8911/docs85/build/direct165/712/1 and prior forced9350/12tasks0cached are distinguished. No selected external p04 phase gate. No findings deferred, no fourth phase round, no unreviewed product delta. Phase acceptance is root-owned; intermediate delivery PR follows. Recovery usage remains3/10 pendingnull; earlier elevated-volume warning and failed logs remain preserved. MkDocs1.4.2 rendering exclusion remains a documented limitation.
+
+---
+
+### Delivery: p04 PR #372
+
+https://github.com/voxmedia/open-agent-toolkit/pull/372 targets main from docs/docs-skills-ia-367-p04, opened as draft after phase acceptance. Mode land, standing user merge authority, established merge-commit method with expected-head guard; no auto/admin/delete. Current-head CI/release and Cursor Bugbot completion plus all actionable findings/thread dispositions are required before landing. Phase review rounds1–3 cover correctness/testing/documentation; R1's inline complexity judgment explicitly lacked the installed complexity-review standard, so PR self-review fills only that lens with a fresh reader. Draft remains until that lens clears; no repeated phase review. MkDocs rendering limitation and inherited/fresh verification are disclosed in the PR body. P03 final-scope deferred dependency-discovery/tool-grant findings remain in Deferred Findings and are not part of this delivery.
+
+### PR self-review: p04 delivery
+
+**Coverage:** correctness/testing/documentation covered by independent phase rounds1–3 through product candidate3f99348b589cbd750bdfd088e02e4c10a5848e2f. Fresh complexity-review report reviews/archived/p04-complexity-20261023.md covers actual PR baseeebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2..heada3f9b62528ae70f9d81e56e86ae8e6f9180f3315. Target Claude Opus5.5/high/fastModefalse was enforced and returned by T3. Verdict Partially compliant: all product machinery Keep, no change required to land. After that reviewed head only root outcome/run-line/state bookkeeping changes; no authored product change. This is the single missing PR lens, not a fourth phase review.
+
+**Root dispositions:** Keep product mechanisms: each maps to the pinned contract or observed failure. Optional matching-root predicate cleanup is not a defect or an acceptance condition; reconsider only when p06 adds another consumer, preserving Markdown versus framework root semantics. Forward process guidance accepted: future prose/lint-only recovery receipts use the required Recovery Event block and one exits line; retain required ledger transitions and substantive composition diagnosis, without rewriting historical receipts. Optional copied-app deletion is left untouched to preserve evidence. Incidental optional test-dependency observation is not a production defect: DEFAULT_DEPENDENCIES always provides resolveNonReaderPaths and real-file reader-path tests exercise the production command. No fix or unapproved finding deferral is needed. All self-review lenses are complete; PR may be marked ready. Main risk remains framework source/schema/navigation composition, covered by generated consumer/real Next controls; MkDocs rendering limitation disclosed. Final-scope p03 deferred items remain tracked below.
+
+## Phase p-rev4: Preserve manifest regeneration and portable Contents order
+
+**Status:** completed
+**Base:** 06c160aa3204d6c8397d42e38d8456a8ffa8a19c
+**Head:** ba253ba359a03d2f40410e2431e38ca6effd629b
+**Executor:** phase-implementer:docs367-prev4-impl-20261023
+**Corrects:** p04
+
+One phase implementer in the existing root worktree owns the correction commits, continuing the accepted p04 implementer conversation at the same exact codex_codex_proxy/gpt-6.1-sol/high/priority target. No parallel group is declared; the four corrections share tests/build output and journal, so root fan-out fails independence. Root retains receive judgment, review, acceptance and PR publication. Main fetched; no index-generation path advancement. New external correction scope preserves accepted p04 anchors and three-round history. Recovery policy10 attempts, used0,pendingnull; separate from settled p04 usage3/10.
+
+### Task prev4-t01: Recognize the released generated-manifest header
+
+**Status:** completed
+**Commit:** 3eabcde7e0b2f0b58fc66d3489d18c99faeb6ebb
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356339210 (H1)
+
+Intent: Accept only the known current and exact released generated ownership markers on derived output; continue emitting only the current tooling-aware header and preserve output safeguards.
+Files: packages/cli/src/commands/docs/index-generate/index.ts and index.test.ts.
+Proof: Existing real-filesystem command test seeded with literal origin/main header; pre-fix refusal red, fixed regeneration and repeated-current-header green, unmarked/spoofed header refusal preserves bytes. Fresh scoped nav/index, lint/format, CLI type-check/build before product commit and committed-byte selfcheck afterwards. No new production abstractions or arbitrary AUTOGENERATED recognition.
+
+**Execution/evidence:** Narrow literal compatibility recognizes current and released0.3.25 markers; emission remains current-only. The real production-dependency command test initially fails (exit1) because legacy output is refused as not generated; original product bytes were unchanged for that red run. Fixed precommit formatting, scoped lint/check, fresh isolated137 nav/index tests, CLI type-check and CLI build all exit0. Immediate committed-byte lint/format and fresh137 tests all exit0. Built CLI scratch command independently gives legacy regeneration0/current repeat0/unmarked refusal1 before and after commit; output has one current header, repeat bytes match and refused bytes survive. Existing Markdown, protected-root/config/YAML/symlink and explicit-output controls stay green. Only owned index.ts/index.test.ts changed. Exact commands, origin/main header provenance, failure and controls live in ignored analysis/p-rev4/t01-baseline.\*, t01-pre/post-exits.json and t01-built-pre/post.json. Recovery0/10,pendingnull unchanged.
+
+### Task prev4-t02: Keep nested inventory and rendered paths portable
+
+**Status:** completed
+**Commit:** d093a003ea83ad8f0aa8205bf4e1a0f5944bc44a
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356339214 (M1)
+
+Intent: Use the existing POSIX relative-key operation for inventory/render paths while preserving native filesystem paths, Contents order, nonduplication and fallback/exclusions.
+Files: packages/cli/src/commands/docs/index-generate/generator.ts and generator.test.ts.
+Proof: Reuse the real authored-order fixture in host and portable win32-relative-join modes, with literal expected paths/order/unlisted flags and output links. Node's actual win32.join supplies the platform-specific relative-path behavior; absolute joins/IO stay on the real host filesystem. This covers a distinct risk missed on POSIX: relative inventory keys disagree with normalized href lookup. No own-module mocks, new harness or exported production hooks. Preserve the pre-fix intended order mismatch, fixed/valid controls and fresh nav/index/lint/format/CLI types/build precommit; immediate committed-byte checks afterwards. This is not an actual Windows host run.
+
+**Execution/evidence:** Reused relativeKey for published nested entry paths; native join/resolve/relative remain for IO and href resolution. Existing authored-order fixture now runs host and real win32-relative-join modes on macOS, with literal ordering, flags, nested paths and rendered links. Pre-fix Windows-semantics case fails because section follows a.md and is unlisted; host control passes. Fixed precommit format/lint/check, fresh isolated138 nav/index tests, CLI type-check/build all exit0; committed bytes re-read and focused lint/format/138tests all exit0. Nested path expectations now use POSIX literals, and exclusion tests no longer normalize away incorrect output. No own-module mocks or production hooks; the tiny external node:path adapter uses actual win32.join only for relative joins and retains real absolute filesystem IO. This is not a Windows host run. replay-baselines.py repeats both H1/M1 intended failures from immutable launch819ce410f source bytes; hashes and exact commands/logs in ignored analysis/p-rev4. Recovery0/10,pendingnull unchanged.
+
+### Root-authorized in-flight scope amendment
+
+Root steering on the same request docs367-prev4-impl-20261023 / continuation cont-docs367-p04-external-prev4 accepts external Warp review5624216218 at source06c160aa: H2 discussion_r4356366295 → prev4-t03 directory-only collection parity; M2 discussion_r4356366304 → prev4-t04 fenced Contents compatibility. Root independently reproduced both and explicitly approved adding reader-paths.ts/source-config.test.ts and nav/contents.ts/nav/sync.test.ts to the original four-path product boundary. These correct existing G2/G3/P14 contracts within this same revision phase; no new requirement, phase or automated p04 review round. Root will align plan/state/remote receipt after handoff to avoid concurrent tracked writes. Source artifact (local-only): reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md; root-directory-only-repro.json and root-fenced-contents-repro.json preserve evidence. Same target and recovery0/10,pendingnull; original p04 anchors/history/usage3 remain frozen. Integrated final gates follow all four tasks once.
+
+### Task prev4-t03: Preserve directory-only collection exclusion semantics
+
+**Status:** completed
+**Commit:** ac0f7c4ce99d0f608928d3e3f35c77f032811304
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356366295 (H2), root-authorized amendment above
+
+Intent: Translate directory-only negatives to require a descendant file segment; preserve literal/wildcard/root anchoring semantics, real-directory pruning and metadata exclusion without dependencies or a generic glob engine.
+Files: packages/docs-config/src/reader-paths.ts and source-config.test.ts.
+Proof: Extend existing actual pinned tinyglobby/CLI-matcher/Next-emitter parity fixture with guide.md/ and \*\*/ cases, preserving existing literal-glob and real-directory controls. Original adapter must lose routes incorrectly (red); corrected adapter keeps root files and omits actual subdirectory content and metadata. Scoped docs-config format/check/types/test/build precommit and committed-byte verification afterwards.
+
+**Execution/evidence:** Directory-only negatives now require an actual directory component and descendant file; an all-globstar directory path becomes the nonempty directory wildcard before descendant matching. Nondirectory translation is unchanged. Existing real collection fixture runs bounded literals plus guide.md/ and \*_/: original adapter loses guide.md in the first new case and all root files in the second (two intended red failures; bounded control green). Corrected actual pinned tinyglobby, CLI matcher, metadata and Next collection-emitter controls pass all16 docs-config tests before and after commit. Scoped format/check/type-check/test/build all exit0 precommit; committed bytes re-read, check/type-check/test/build all exit0 postcommit. Installed provenance remains fumadocs-mdx14.3.2/core16.10.2; actual emitter used, no fake glob/schema. Exact baseline failure and pre/post commands/logs/exits are ignored analysis/p-rev4/t03-_. Recovery0/10,pendingnull unchanged.
+
+### Task prev4-t04: Ignore fenced examples when reading authored Contents
+
+**Status:** completed
+**Commit:** d9c65e4973c4eadf80a154279779f1dad167ba61
+**Executor:** phase-implementer:docs367-prev4-impl-20261023 (same accepted conversation)
+**Source:** PR372 discussion_r4356366304 (M2), root-authorized amendment above
+
+Intent: Share fence-aware Contents discovery between generator and parser, masking fenced examples without shifting source lines. Ordinary backtick/tilde fences close only with matching markers of sufficient length. Preserve no-map inventory fallback, strict missing-map error and universal actual-map grammar.
+Files: packages/cli/src/commands/docs/nav/contents.ts, nav/sync.test.ts, index-generate/generator.ts and generator.test.ts (all owned).
+Proof: Generator real filesystem cases cover fenced-only fallback and examples preceding a real ordered map; existing parser tests cover examples inside a true map, strict missing-map behavior and preserved authored group line numbers. Preserve pre-fix red and valid controls; fresh scoped nav/index/lint/format/types/build precommit and committed bytes afterwards; temporary-copy M7 must still fail the generator empty-group assertion. No Markdown dependency, generic parser engine or test-only export.
+
+**Execution/evidence:** Shared production hasIndexContents discovery and parseIndexContents mask ordinary backtick/tilde fences using the same implementation; source arrays retain original indices. Closing fences require matching markers, sufficient length and whitespace-only tails; short/mismatched markers remain examples. Generator retains deterministic unflagged inventory fallback when no authored map exists. Original source produces five intended regression failures (two generator fence cases, parser inner example/pre-map example and fenced-only missing-map case), while true no-map control passes. Fixed precommit format/lint/check, fresh isolated141 nav/index tests, CLI type-check/build all exit0; committed bytes re-read and focused lint/format/141tests exit0. Real built CLI pre/post probes give fallback0, strict-nav missing-map1 without metadata writes, actual-map nav0 and authored-order generation0. Actual dash/empty-group errors remain green; a temporary-copy-only M7 guard bypass still fails the existing generator empty-group assertion (exit1, promise resolved instead of rejecting); restored copy passes (exit0). No production mutation for probes or new dependency/test-only hook. Exact baseline, t04 pre/post, built CLI and m7-probe.py/logs/exits are ignored analysis/p-rev4. Recovery0/10,pendingnull unchanged; phase remains in_progress pending integrated verification/root review.
+
+### Integrated verification and clean handoff
+
+**Tested candidate:** ba253ba359a03d2f40410e2431e38ca6effd629b. Four coherent execution records are completed; this revision remains in_progress for root independent review and acceptance. Accepted p04 Base/Head/status/reviews and all other phase anchors are frozen. Root-authorized H2/M2 amendment is recorded above; root alone aligns plan/state/remote receive bookkeeping after handoff.
+
+| Task           | Product commit                           | Separate task journal                    |
+| -------------- | ---------------------------------------- | ---------------------------------------- |
+| prev4-t01 (H1) | 3eabcde7e0b2f0b58fc66d3489d18c99faeb6ebb | cc8d1b9edf3060302a4b1a77cc347c7b7c80da21 |
+| prev4-t02 (M1) | d093a003ea83ad8f0aa8205bf4e1a0f5944bc44a | 248978bf543423f72014f5f12f24e30c9a1a185f |
+| prev4-t03 (H2) | ac0f7c4ce99d0f608928d3e3f35c77f032811304 | dae8449808ec5d4e5fd46966bc13e38d17bb421e |
+| prev4-t04 (M2) | d9c65e4973c4eadf80a154279779f1dad167ba61 | ba253ba359a03d2f40410e2431e38ca6effd629b |
+
+| Ordered gate | Command                       | Exit | Turbo cached / total |
+| ------------ | ----------------------------- | ---- | -------------------- |
+| 1            | `pnpm check`                  | 0    | 6/11                 |
+| 2            | `pnpm type-check`             | 0    | 8/11                 |
+| 3            | isolated-HOME `pnpm test`     | 0    | 8/12                 |
+| 4            | `pnpm build`                  | 0    | 5/5                  |
+| 5            | `pnpm run check:skill-bumps`  | 0    | direct               |
+| 6            | `pnpm release:check-versions` | 0    | direct               |
+| 7            | `pnpm release:validate`       | 0    | direct               |
+| 8            | `pnpm build:docs`             | 0    | 6/6                  |
+
+All eight gates ran in order against the candidate with explicit exits. Fetch origin main exits0 before gate6; no scoped advancement. Public0.3.26 archives and existing PR-scoped bootstrap1.4.2 bump validate. Cached gate logs are disclosed as replays. Gate3 freshly executes CLI8,915, docs-config16, docs-app85 and the actual docs build, then chained smoke165/skills712/scripts1. Separate isolated-HOME `pnpm exec turbo run test --force` exits0 with12/12 tasks freshly executed,0cached: CLI8,915/control-plane289/docs-config16/theme20/transforms31/docs85 =9,356tests, plus actual dependency/Next docs builds. Separate isolated direct smoke165/skills712/scripts1 and skill validation each exit0. Prior p04 broad proof is inherited context only; all production-change evidence credited here is fresh. No skill prose changed, so no redundant sentence-contract suite; applicable scoped lint/format/check/type/build coverage passes. No instruction/docs change is needed because these fixes restore already documented compatibility.
+
+**Regression/valid controls:** All four failures are preserved against immutable launch product bytes with exact source hashes and reproduction scripts. H1 accepts the exact released literal but refuses arbitrary AUTOGENERATED text and conserves refused/authored bytes; repeated generation has one current tooling-aware header. M1's real win32.join-backed portable test fails pre-fix for section order/unlisted mismatch while host control passes; fixed nested paths/rendered links are POSIX. Absolute IO remains on the macOS host; this is not a Windows-host or drive/UNC end-to-end claim. H2 parity uses installed fumadocs-mdx14.3.2, fumadocs-core16.10.2 and tinyglobby0.2.17, actual CLI matcher, metadata patterns and actual Next emitter; `guide.md/` keeps the root file and `**/` keeps root readers while actual directories are pruned. M2 generator/parser share fence discovery: only examples give unflagged fallback, examples before/inside real Contents are ignored, strict nav still rejects missing maps, authored ordering/group line numbers survive. Actual dash/empty-group grammar remains protected: M7 bypass fails the existing generator assertion for missing rejection, then restored copied source passes. No checkout production mutation occurred during probes. Final focused nav/index141 and docs-config16 suites pass freshly before/after relevant commits.
+
+**Scope and ownership:** Only the eight authorized product paths plus this phase-local journal changed; no source schema/type normalization, framework dependency, version, skill, instruction, human docs, plan/state/root receipt/Orchestration Run, other-phase or p04 acceptance bytes were edited. No nested dispatch, GitHub actions, infrastructure retry or postcommit recovery. Revision recovery0/10,pendingnull (10 remaining); original p04 usage3 stays frozen. Frozen revision Base06c160aa3204d6c8397d42e38d8456a8ffa8a19c remains an ancestor. Root owns review/acceptance, remote bookkeeping, publication/replies and PR372 current-head CI/Bugbot landing. Writes stop at the clean handoff.
+
+**Evidence:** ignored analysis/p-rev4/README.md indexes every baseline, immutable source/hash probe, M7/control script, built CLI receipt, t01–t04 pre/post check, ordered gate and supplemental log/exit. phase-summary.json and fresh-test-counts.json preserve cache/execution counts; installed-provenance.json identifies actual external package files. Final journal validation and exact ownership conservation are captured in handoff receipts. This verification-only journal commit changes no tested product bytes.
+
+### Review Received: p-rev4 round 1 and acceptance
+
+Root read the complete review artifact reviews/archived/p-rev4-review-2026-10-23T054624Z.md and validated the confirmation's single not-attempted reconnaissance signal, absent Review Orchestration, exact anchor provenance and consistent0C/0H/0M/0L counts. Request docs367-prev4-review-r1-20261023 independently closes H1/M1/H2/M2; no fix, deferral, rejection or new requirement. The reviewer confirmed the released header against main and published npm0.3.25, real pinned tinyglobby/CLI parity for22patterns (old adapter diverges on3),14 fence cases, and fresh141CLI/16docs-config tests. Broad gates and M7 were inspected rather than rerun; Windows semantics remain a portable macOS proof, not Windows-host execution. The two expressly nonfinding scope observations add no task.
+
+Root accepts p-rev4 at frozen Head ba253ba359a03d2f40410e2431e38ca6effd629b: all four task records closed, all required gates1–8 passed and no optional external phase gate selects p-rev4 (plan selects p03/p06). Both findings-bearing remote events retain fixes_completed and this clean successor is passed. P04 anchors/history/recovery3 stay frozen; p-rev4 recovery0/10,pendingnull. PR372 publication, replies and current-head CI/Bugbot/Warp reconciliation remain delivery conditions before land-pr. Provisional p05 has no Base and starts only after this intermediate PR lands.
 
 ## Phase p05: Reader-first starter app
 
@@ -828,6 +1236,30 @@ L1 (Progress Overview total says 5/11) is fixed by root bookkeeping to 5/12, mat
 ---
 
 ## Orchestration Runs
+
+run/v1 · request=docs367-prev4-review-r1-20261023 · scope=p-rev4 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev4 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-complexity-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-review-r3-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-fix-r2-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1,cont-docs367-p04-review-fix-r2 · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-review-r2-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-fix-r1-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1 · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-review-r1-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+run/v1 · request=docs367-p04-recovery03-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3 · observed=~ · match=~
+
+run/v1 · request=docs367-p04-resume-after-recovery-20261023 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery · observed=~ · match=~
+
+run/v1 · request=docs367-p04-recovery01-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1 · observed=~ · match=~
+
+run/v1 · request=docs367-p04-impl-20261023 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p04-readiness-20261023 · scope=p04-readiness · action=implementation · role=recon-worker · target=research · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p04-readiness action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-prev3-review-r1-20261023 · scope=p-rev3 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p-rev3 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -897,7 +1329,24 @@ run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role
 
 run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
+
 ## Reviews and Gates
+
+### Remote Review Received: PR #372, second event and verified handoff
+
+Source Warp review5624216218 at commit06c160aa3204d6c8397d42e38d8456a8ffa8a19c; counts0C/1H/1M/0L. Local artifact reviews/archived/remote-pr-372-review-2026-10-23T052300Z.md has no OAT provenance marker; ledger Reviewed Head/Invocation/Gate Target stay unknown. H2 discussion4356366295 → prev4-t03 restores directory-only collection parity; M2 discussion4356366304 → prev4-t04 ignores fenced Contents examples. Root independently reproduced both before explicitly steering the same accepted implementer request with the four added paths. No new requirement was introduced. Root deferred tracked plan/state/receipt writes until ownership returned, and now aligns the eight-file/four-task scope.
+
+Both remote events are fixes_completed, pending fresh p-rev4 independent review; none deferred or dismissed. Root verified clean handoff c15f9c403e76385ba7fe7d7079e849d784eecfe2, Base ancestry, exactly eight owned product paths, current source hashes against the handoff, four separate product/journal commits and journal-only tail after candidate ba253ba359a03d2f40410e2431e38ca6effd629b. All eight gate exits are0; cache replays are disclosed. Fresh forced proof9356 tests/12tasks/0cached and direct165/712/1/skill validation are recorded separately; Windows proof is win32 semantics over macOS IO. Immutable pre-fix/fixed/valid controls exist for all four findings, plus retained M7 red/restored guard. No product rerun is implied by this bookkeeping; independent reviewer will verify load-bearing boundaries. Recovery0/10,pendingnull; p04 anchors and recovery3/10 remain frozen. Phase stays in_progress. PR372 remains blocked on review/publication/current-head checks.
+
+### Remote Review Received: PR #372
+
+2026-10-23, source Cursor review5624184704 at commit06c160aa3204d6c8397d42e38d8456a8ffa8a19c. Counts0C/1H/1M/0L; normalized artifact(local-only) reviews/archived/remote-pr-372-review-2026-10-23T051908Z.md. No source OAT marker, ledger provenance unknown.
+
+- H1 cursor discussion_r4356339210 → fix prev4-t01: old released generated header is misclassified as hand-authored; root actual built-CLI scratch reproduction exits1. Accept exact known generated ownership while preserving hand-authored refusal.
+- M1 cursor discussion_r4356339214 → fix prev4-t02: win32 nested inventory key differs from POSIX Contents key; root win32.join/relative probe proves mismatch. Canonicalize relative keys while preserving native IO.
+
+Outcome: both converted, none deferred/dismissed. External PR372 receive cycle1; create p-rev4 correcting p04, preserving accepted p04 evidence/anchors and its completed review cap. No new outcome or constraint; brief section2 authorizes phase-local corrections. PR372 remains blocked for these findings; original implementer continuation follows. Routine factual replies are authorized by land-pr after published verification.
 
 - PR https://github.com/voxmedia/open-agent-toolkit/pull/371 opened for accepted p03 against main on 2026-10-23, initial head cf3d17001b6bc1d06714d934748e981984974c8d, base ec1261f44f93d07bbc2926aa5680b7bfd777089e. Post-open pr-self-review inventories all four independent product lenses from P03 rounds 1–3 and p-rev2 rounds 1–2; no duplicate lens requested. Later authored delta is delivery bookkeeping only; merge changes no product bytes. Deferred hoisted lookup and shim grants stay explicitly tracked for final; prose/manual proof limits and cache/flake history are disclosed in the body. No outstanding operator decision or unreviewed product fix; mark draft ready after metadata push. Land-pr mode=land, standing intermediate merge authority, merge-commit method, final PR held.
 

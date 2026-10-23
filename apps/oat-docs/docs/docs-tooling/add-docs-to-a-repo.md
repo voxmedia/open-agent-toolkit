@@ -212,10 +212,18 @@ oat docs nav sync --target-dir apps/my-docs
 
 Generated Fumadocs `meta.json` is strict: a page no `## Contents` map lists
 stays out of the sidebar. The `prebuild` script that `oat docs init` scaffolds
-for Fumadocs does not run the read-only check. To make builds fail on stale
-navigation or an unlisted page, as `apps/oat-docs` does, append
-`&& oat docs nav sync --check` to it; the script runs from the app directory,
-which `--target-dir` defaults to.
+for Fumadocs runs the read-only check before generation/build; fresh MkDocs
+`docs:build` does too. Init explicitly seeds `documentation.navOwner: nav-sync`
+and generates navigation after successful scaffold/config. External scripts select
+`--target-dir .` from the app directory; source-workspace scripts select the
+repo-relative app and quote paths with spaces. Existing apps are not rewritten:
+bootstrap sends undeclared/hand-authored ownership through analyze/apply.
+
+Use shared `documentation.nonReaderPaths` for drafts/page templates with the
+[bounded glob grammar](commands.md#exclusion-patterns). Nav, nav checks and
+manifests omit matches even when Contents links them; `documentation.excludes`
+stays manifest-only. OAT's Fumadocs collections also omit their rendering. Pinned
+MkDocs 1.4.2 still renders those routes; nav exclusion does not make content private.
 
 **Fumadocs** apps also have an app-root docs index manifest, generated from
 the Markdown file tree automatically via `predev`/`prebuild` hooks. You can
@@ -305,8 +313,8 @@ need.
 - If a Node/pnpm team wants a hosted site, choose Fumadocs. Its build hooks
   regenerate the app-root `index.md` inventory but not the sidebar files, so run
   `oat docs nav sync` after adding, moving, or renaming pages, commit the
-  `meta.json` files it writes, and add `oat docs nav sync --check` to your build
-  or CI yourself, because the scaffold does not.
+  `meta.json` files it writes. Fresh scaffold builds already run the read-only
+  check; older apps can add it explicitly after choosing nav-sync ownership.
 - If your team uses Python and MkDocs Material, choose MkDocs. Run
   `oat docs nav sync --check` to see what would change before letting nav sync
   rewrite `nav:`.

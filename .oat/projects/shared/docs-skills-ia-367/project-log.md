@@ -95,6 +95,51 @@ docs367-p03-pr371-open: opened https://github.com/voxmedia/open-agent-toolkit/pu
 
 PR #371 findings received; p-rev3 starts bounded G2 normalization correction, preserving prior anchors; Reviews table and accepted p-rev2 marker repaired. docs367-prev3-start-20261023
 
+### 2026-10-23 · structural · oat-project-implement · p-rev3
+
+p-rev3 passed one independent review with its ledger-only Low fixed; PR #371 landed via land-pr after all three checks and Warp confirmations at 57c17239f, merge eebcf61cf, watch stopped. docs367-prev3-accepted-20261023
+
+### 2026-10-23 · structural · oat-project-implement · p04
+
+p04 concretized from approved G2/G3/P12-P14 after bounded recon; one committing owner, matching-root nonReaderPaths, pinned string-root schema adapter and documented MkDocs rendering limitation. docs367-p04-start-20261023
+
+### 2026-10-23 · structural · oat-project-implement · p04-recovery
+
+docs367-p04-recovery-reserved-20261023: p04 stopped after a committed prefer-template lint defect. Root reproduced it and reserved bounded recovery attempt 1/10 before product edits; same handle and exact target retained, with focused and relevant committed-head verification required.
+
+### 2026-10-23 · structural · oat-project-implement · p04-recovery
+
+docs367-p04-recovery-settled-20261023: validated recovery 395a89777 and fourteen passing pre/post check receipts against the unchanged original history and exact target. Completed marker cleared with usage preserved at 1/10; resume remaining approved p04 work in the same implementer.
+
+### 2026-10-23 · structural · oat-project-implement · p04-recovery02
+
+docs367-p04-recovery02-settled-20261023: validated completed prose-lint recovery and cleared its marker with usage2/10 preserved. A separate generated collection type failure requires bounded schema-output normalization, generated-consumer regression and real docs-build verification; third recovery-event warning recorded.
+
+### 2026-10-23 · structural · oat-project-implement · p04-pre-review
+
+docs367-p04-pre-review-20261023: accepted clean implementation handoff and settled completed recovery03 after generated-consumer regression, ordinary/named-root builds and ordered phase gates passed. Forced tests executed12 tasks without cache; phase remains in_progress for independent review, recovery3/10 pending null.
+
+### 2026-10-23 · structural · oat-project-implement · p04
+
+docs367-p04-accepted-r3-20261023: p04 accepted after three independent rounds and two review-fix continuations, all findings closed; eight gates passed at 3f99348b589cbd750bdfd088e02e4c10a5848e2f with inherited/fresh proof distinguished in implementation.md. Recovery3/10 pendingnull; delivery PR next.
+
+### 2026-10-23 · project · friction · recovery-receipt-proportionality
+
+**Category:** efficiency
+**Source:** docs367-p04-complexity-process-20261023
+**Origin:** pr-self-review
+**Recorded:** 2026-10-23T05:11:27Z
+
+docs367-p04-complexity-process-20261023: independent complexity review found all p04 product mechanisms proportionate but repeated narrative around the one-line prose recovery added reading cost. For future prose/lint-only recoveries keep the mandatory Recovery Event and ledger transitions plus one exits line; retain substantive diagnosis for behavior/composition recoveries and preserve existing history.
+
+### 2026-10-23 · structural · oat-project-implement · p-rev4
+
+docs367-prev4-start-20261023: add a bounded revision correcting accepted p04 for PR372 external H1 legacy generated-header compatibility and M1 Windows nested ordering; existing outcomes only, prior anchors/review history preserved. One same-target phase implementer continuation owns two sequential fixes, recovery0/10 pendingnull.
+
+### 2026-10-23 · structural · oat-project-implement · p-rev4
+
+docs367-prev4-accepted-20261023: p-rev4 accepted at ba253ba359a03d2f40410e2431e38ca6effd629b; all four external compatibility fixes verified, independent review0C0H0M0L, gates1–8 pass; implementation.md carries evidence and limitations; PR372 delivery awaits current-head checks.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

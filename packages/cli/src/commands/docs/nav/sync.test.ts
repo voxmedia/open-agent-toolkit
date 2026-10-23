@@ -115,6 +115,14 @@ Intro paragraph.
 ## Contents
 
 - [Getting Started](getting-started.md) - setup guide
+
+~~~markdown
+### Empty example group
+* [Example](example.md)
+## Example end heading
+- [Also example](also-example.md)
+~~~~
+
 - [Reference](reference/index.md)
 
 ## Notes
@@ -128,8 +136,45 @@ Intro paragraph.
     ]);
   });
 
-  it('throws when the reserved contents section is missing', () => {
-    expect(() => parseIndexContents('# Docs\n', 'docs/index.md')).toThrow(
+  it('preserves pre-group entries and group identity in authored order', () => {
+    expect(
+      parseIndexContents(
+        '```markdown\n## Contents\n* [Example](example.md)\n```\n## Contents\n- [Intro](intro.md)\n### Guides\n- [Start](start.md)\n### Guides\n- [More](more.md)',
+        'docs/index.md',
+      ),
+    ).toEqual([
+      { title: 'Intro', href: 'intro.md' },
+      { title: 'Start', href: 'start.md', group: { title: 'Guides', line: 7 } },
+      { title: 'More', href: 'more.md', group: { title: 'Guides', line: 9 } },
+    ]);
+  });
+
+  it.each(['*', '+'])(
+    'rejects %s link bullets with the source line',
+    (bullet) => {
+      expect(() =>
+        parseIndexContents(
+          `## Contents\n- [Valid](valid.md)\n${bullet} [Lost](lost.md)`,
+          'docs/index.md',
+        ),
+      ).toThrow('docs/index.md:3: Contents links must use a dash (-) bullet');
+    },
+  );
+
+  it.each(['### Empty\n### Next\n- [Start](start.md)', '### Empty\n## Notes'])(
+    'rejects an empty authored group',
+    (body) => {
+      expect(() =>
+        parseIndexContents(`## Contents\n${body}`, 'docs/index.md'),
+      ).toThrow('docs/index.md:2: Contents group "Empty" has no entries');
+    },
+  );
+
+  it.each([
+    '# Docs\n',
+    '# Docs\n```markdown\n## Contents\n* [Example](example.md)\n```\n',
+  ])('throws when the authored contents section is missing', (markdown) => {
+    expect(() => parseIndexContents(markdown, 'docs/index.md')).toThrow(
       'Missing required ## Contents section in docs/index.md',
     );
   });
@@ -155,6 +200,82 @@ describe('syncDocsNavigation', () => {
       }),
     );
     createdRoots.length = 0;
+  });
+
+  it('emits MkDocs groups as nested lists while retaining landing pages', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-groups-'));
+    createdRoots.push(root);
+    await writeTree(root, {
+      'mkdocs.yml': 'site_name: Test\n',
+      'docs/index.md':
+        '# Home\n## Contents\n- [Intro](intro.md)\n### Learn\n- [Section](section/index.md)\n### Reference\n- [API](api.md)\n',
+      'docs/intro.md': '# Intro',
+      'docs/api.md': '# API',
+      'docs/section/index.md':
+        '# Section\n## Contents\n### Self only\n- [Self](index.md)\n### Tasks\n- [Task](task.md)',
+      'docs/section/task.md': '# Task',
+    });
+    await syncDocsNavigation({ appRoot: root });
+    expect(
+      YAML.parse(await readFile(join(root, 'mkdocs.yml'), 'utf8')).nav,
+    ).toEqual([
+      { Home: 'index.md' },
+      { Intro: 'intro.md' },
+      {
+        Learn: [
+          {
+            Section: [
+              'section/index.md',
+              { Tasks: [{ Task: 'section/task.md' }] },
+            ],
+          },
+        ],
+      },
+      { Reference: [{ API: 'api.md' }] },
+    ]);
+  });
+
+  it('skips explicit non-reader targets and never reads or rewrites excluded subtree metadata', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-nonreader-'));
+    createdRoots.push(root);
+    const untouched = '{"pages":["hand-authored"],"unknown":true}\n';
+    await writeTree(root, {
+      'source.config.ts': 'export {};',
+      'docs/index.md':
+        '# Home\n## Contents\n### Templates\n- [Template](templates/index.md)\n### Read\n- [Read](read.md)',
+      'docs/read.md': '# Read',
+      'docs/templates/index.md':
+        '# Invalid excluded Contents\n## Contents\n* [Ignored](missing.md)',
+      'docs/templates/meta.json': untouched,
+      'docs/templates/sample.md': '# Sample',
+    });
+    const result = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+    });
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    expect(await readMeta(join(root, 'docs'), '.')).toEqual({
+      title: 'Home',
+      pages: ['index', '---Read---', 'read'],
+    });
+    expect(await readFile(join(root, 'docs/templates/meta.json'), 'utf8')).toBe(
+      untouched,
+    );
+    const check = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+      check: true,
+    });
+    expect(check.stale).toEqual([]);
+    await writeFile(join(root, 'docs/omitted.md'), '# Reader');
+    const readerCheck = await syncDocsNavigation({
+      appRoot: root,
+      nonReaderPaths: ['templates/'],
+      check: true,
+    });
+    if (readerCheck.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(readerCheck.unlisted).toEqual(['omitted.md']);
   });
 
   it('builds nested navigation and preserves prose outside the contents section', async () => {

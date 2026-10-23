@@ -4737,6 +4737,103 @@ describe('oat config', () => {
     });
   });
 
+  describe('documentation.nonReaderPaths', () => {
+    function realHarness(root: string) {
+      const capture = createLoggerCapture();
+      return {
+        capture,
+        command: createConfigCommand({
+          buildCommandContext: (options: GlobalOptions): CommandContext => ({
+            cwd: root,
+            home: root,
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: options.json ?? false,
+            interactive: false,
+            logger: capture.logger,
+          }),
+          resolveProjectRoot: async () => root,
+        }),
+      };
+    }
+    async function writeSharedConfig(root: string, value: unknown) {
+      await writeFile(join(root, '.oat/config.json'), JSON.stringify(value));
+    }
+    it('round-trips shared globs, preserves siblings, clears and repairs invalid values', async () => {
+      const root = await createRepoRoot();
+      const siblings = {
+        root: 'apps/docs',
+        excludes: ['CLAUDE.md'],
+        guidance: ['guide.md'],
+        navOwner: 'hand-authored',
+        future: { keep: true },
+      };
+      await writeSharedConfig(root, { documentation: siblings });
+      const { command, capture } = realHarness(root);
+      await runCommand(command, [
+        'set',
+        'documentation.nonReaderPaths',
+        ' templates/ , **/draft*.md ,templates/',
+      ]);
+      expect(capture.error).toEqual([]);
+      expect(process.exitCode).toBe(0);
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8'))
+          .documentation,
+      ).toEqual({
+        ...siblings,
+        nonReaderPaths: ['templates/', '**/draft*.md'],
+      });
+      await runCommand(
+        command,
+        ['get', 'documentation.nonReaderPaths'],
+        ['--json'],
+      );
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        value: ['templates/', '**/draft*.md'],
+        source: 'shared',
+      });
+      await runCommand(command, ['set', 'documentation.nonReaderPaths', '']);
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8'))
+          .documentation,
+      ).toEqual(siblings);
+      await writeSharedConfig(root, {
+        documentation: { ...siblings, nonReaderPaths: 5 },
+      });
+      await runCommand(command, ['get', 'documentation.nonReaderPaths']);
+      expect(process.exitCode).toBe(1);
+      expect(capture.error.at(-1)).toContain(
+        'Invalid documentation.nonReaderPaths',
+      );
+      await runCommand(command, [
+        'set',
+        'documentation.nonReaderPaths',
+        'drafts/',
+      ]);
+      expect(process.exitCode).toBe(0);
+      await runCommand(command, ['unset', 'documentation.nonReaderPaths']);
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8'))
+          .documentation,
+      ).toEqual(siblings);
+    });
+
+    it.each(['--local', '--user'])('refuses %s scope', async (scope) => {
+      const root = await createRepoRoot();
+      const { command, capture } = realHarness(root);
+      await runCommand(command, [
+        'set',
+        'documentation.nonReaderPaths',
+        'templates/',
+        scope,
+      ]);
+      expect(process.exitCode).toBe(1);
+      expect(capture.error.at(-1)).toContain('documentation.nonReaderPaths');
+    });
+  });
+
   describe('documentation.excludes', () => {
     async function readSharedConfig(root: string): Promise<unknown> {
       return JSON.parse(

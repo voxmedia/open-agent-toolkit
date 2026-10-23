@@ -1,8 +1,8 @@
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, sep } from 'node:path';
+import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { generateIndex, type IndexEntry, renderIndex } from './generator';
 
@@ -10,11 +10,147 @@ describe('generateIndex', () => {
   const createdDirs: string[] = [];
 
   afterEach(async () => {
+    vi.doUnmock('node:path');
+    vi.resetModules();
     const { rm } = await import('node:fs/promises');
     await Promise.all(
       createdDirs.map((d) => rm(d, { recursive: true, force: true })),
     );
     createdDirs.length = 0;
+  });
+
+  it.each(['host', 'win32-relative'])(
+    'orders direct entries by Contents, derives directory titles and flags unlisted fallback without cross-directory duplication (%s)',
+    async (pathMode) => {
+      let generate = generateIndex;
+      if (pathMode === 'win32-relative') {
+        // Use actual Windows relative joins while absolute filesystem IO stays
+        // host-native. The href lookup already normalizes its keys to POSIX.
+        vi.resetModules();
+        vi.doMock('node:path', async () => {
+          const path =
+            await vi.importActual<typeof import('node:path')>('node:path');
+          return {
+            ...path,
+            join: (...parts: string[]) =>
+              path.isAbsolute(parts[0] ?? '')
+                ? path.join(...parts)
+                : path.win32.join(...parts),
+          };
+        });
+        generate = (await import('./generator')).generateIndex;
+      }
+      const dir = await mkdtemp(join(tmpdir(), 'oat-index-authored-'));
+      createdDirs.push(dir);
+      await mkdir(join(dir, 'section'));
+      await writeFile(
+        join(dir, 'index.md'),
+        '# Home\n## Contents\n- [Z first](z.md)\n### Read\n- [Deep link](section/deep.md)\n- [Same section](section/index.md)\n- [A last](a.md)',
+      );
+      await writeFile(join(dir, 'z.md'), '# Z');
+      await writeFile(join(dir, 'a.md'), '# A');
+      await writeFile(join(dir, 'unlisted.md'), '# Unlisted');
+      await writeFile(
+        join(dir, 'section/index.md'),
+        '---\ntitle: Actual section title\n---\n# Other heading\n## Contents\n- [Deep](deep.md)\n- [Other directory](../a.md)',
+      );
+      await writeFile(join(dir, 'section/deep.md'), '# Deep');
+      const entries = await generate(dir);
+      expect(entries.map((e) => [e.path, e.unlisted ?? false])).toEqual([
+        ['index.md', false],
+        ['z.md', false],
+        ['section', false],
+        ['a.md', false],
+        ['unlisted.md', true],
+      ]);
+      expect(entries[2]!.title).toBe('Actual section title');
+      expect(entries[2]!.children!.map((e) => e.path)).toEqual([
+        'section/index.md',
+        'section/deep.md',
+      ]);
+      const text = renderIndex(entries);
+      expect(text.match(/\]\(a.md\)/g)).toHaveLength(1);
+      expect(text).toContain('[Unlisted](unlisted.md) [unlisted in Contents]');
+      expect(text).toContain('  - [Deep](section/deep.md)');
+    },
+  );
+
+  it.each([
+    ['```markdown', '``', '~~~', '````'],
+    ['~~~~markdown', '~~~', '```', '~~~~~'],
+  ])(
+    'ignores fenced Contents examples (%s)',
+    async (opening, shortClose, otherMarker, closing) => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-index-fenced-'));
+      createdDirs.push(dir);
+      await writeFile(join(dir, 'a.md'), '# A');
+      await writeFile(join(dir, 'z.md'), '# Z');
+      const example = [
+        opening,
+        shortClose,
+        otherMarker,
+        '## Contents',
+        '* [Example](example.md)',
+        '### Empty',
+        closing,
+      ].join('\n');
+      await writeFile(join(dir, 'index.md'), `# Home\n${example}\n`);
+      expect(
+        (await generateIndex(dir)).map((entry) => [
+          entry.path,
+          entry.unlisted ?? false,
+        ]),
+      ).toEqual([
+        ['index.md', false],
+        ['a.md', false],
+        ['z.md', false],
+      ]);
+
+      await writeFile(
+        join(dir, 'index.md'),
+        `# Home\n${example}\n## Contents\n- [Z](z.md)\n- [A](a.md)\n`,
+      );
+      expect(
+        (await generateIndex(dir)).map((entry) => [
+          entry.path,
+          entry.unlisted ?? false,
+        ]),
+      ).toEqual([
+        ['index.md', false],
+        ['z.md', false],
+        ['a.md', false],
+      ]);
+    },
+  );
+
+  it('uses H1 then directory slug titles and rejects malformed present Contents', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-index-title-'));
+    createdDirs.push(dir);
+    for (const [name, source] of [
+      ['h1-section', '# Heading title'],
+      ['slug-section', 'No title'],
+    ]) {
+      await mkdir(join(dir, name!));
+      await writeFile(join(dir, name!, 'index.md'), source!);
+    }
+    expect((await generateIndex(dir)).map((e) => e.title)).toEqual([
+      'Heading title',
+      'Slug Section',
+    ]);
+    await writeFile(
+      join(dir, 'index.md'),
+      '# Home\n## Contents\n* [Bad](bad.md)',
+    );
+    await expect(generateIndex(dir)).rejects.toThrow(
+      `${join(dir, 'index.md')}:3: Contents links must use a dash`,
+    );
+    await writeFile(
+      join(dir, 'index.md'),
+      '# Home\n## Contents\n### Empty\n### Real\n- [A](a.md)',
+    );
+    await expect(generateIndex(dir)).rejects.toThrow(
+      `${join(dir, 'index.md')}:3: Contents group "Empty" has no entries`,
+    );
   });
 
   it('generates entries from flat directory', async () => {
@@ -76,19 +212,15 @@ describe('generateIndex', () => {
       (child) => child.title === 'Authentication',
     );
     expect(authEntry).toBeDefined();
-    expect(authEntry!.path).toBe(join('api', 'auth.md'));
+    expect(authEntry!.path).toBe('api/auth.md');
     const nestedEntry = entries[1]!.children!.find(
-      (child) => child.title === 'Nested',
+      (child) => child.title === 'Nested API',
     );
     expect(nestedEntry).toBeDefined();
-    expect(nestedEntry!.path).toBe(join('api', 'nested'));
+    expect(nestedEntry!.path).toBe('api/nested');
     expect(nestedEntry!.children).toHaveLength(2);
-    expect(nestedEntry!.children![0]!.path).toBe(
-      join('api', 'nested', 'index.md'),
-    );
-    expect(nestedEntry!.children![1]!.path).toBe(
-      join('api', 'nested', 'tokens.md'),
-    );
+    expect(nestedEntry!.children![0]!.path).toBe('api/nested/index.md');
+    expect(nestedEntry!.children![1]!.path).toBe('api/nested/tokens.md');
   });
 
   it('falls back to heading then filename for title', async () => {
@@ -173,9 +305,7 @@ describe('generateIndex exclusions', () => {
   /** Flattened docs-root-relative POSIX paths of every leaf entry, in order. */
   function leafPaths(entries: IndexEntry[]): string[] {
     return entries.flatMap((entry) =>
-      entry.children
-        ? leafPaths(entry.children)
-        : [entry.path.split(sep).join('/')],
+      entry.children ? leafPaths(entry.children) : [entry.path],
     );
   }
 

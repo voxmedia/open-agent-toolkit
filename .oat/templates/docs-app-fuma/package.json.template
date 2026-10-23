@@ -7,7 +7,7 @@
   "scripts": {
     "predev": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "dev": "next dev",
-    "prebuild": "fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
+    "prebuild": "{{NAV_SYNC_CHECK_CMD}} && fumadocs-mdx && {{GENERATE_INDEX_CMD}}",
     "build": "next build",
     "start": "next start",
     "docs:lint": "{{DOCS_LINT_SCRIPT}}",

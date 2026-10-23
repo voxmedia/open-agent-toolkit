@@ -1,47 +1,102 @@
 import { readFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 
+import {
+  createExclusionMatcher,
+  isExcludedPath,
+  type ExclusionMatcher,
+} from '@commands/docs/shared/exclusions';
 import { dirExists, fileExists } from '@fs/io';
 
 export interface DocsContentsEntry {
   title: string;
   href: string;
+  group?: { title: string; line: number };
+}
+
+/** Mask fenced examples without changing authored source line numbers. */
+function unfencedLines(markdown: string): string[] {
+  let fence: { marker: string; length: number } | undefined;
+  return markdown.split(/\r?\n/).map((line) => {
+    if (fence) {
+      const closing = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (
+        closing &&
+        closing[1]![0] === fence.marker &&
+        closing[1]!.length >= fence.length
+      ) {
+        fence = undefined;
+      }
+      return '';
+    }
+    const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (opening && (opening[1]![0] === '~' || !opening[2]!.includes('`'))) {
+      fence = { marker: opening[1]![0]!, length: opening[1]!.length };
+      return '';
+    }
+    return line;
+  });
+}
+
+function contentsHeadingIndex(lines: string[]): number {
+  return lines.findIndex((line) => /^##\s+Contents\s*$/.test(line.trim()));
+}
+
+/** Shared discovery lets inventory generation retain its no-map fallback. */
+export function hasIndexContents(markdown: string): boolean {
+  return contentsHeadingIndex(unfencedLines(markdown)) >= 0;
 }
 
 export function parseIndexContents(
   markdown: string,
   sourcePath = 'index.md',
+  options: { allowEmpty?: boolean } = {},
 ): DocsContentsEntry[] {
-  const lines = markdown.split(/\r?\n/);
-  const contentsHeadingIndex = lines.findIndex((line) =>
-    /^##\s+Contents\s*$/.test(line.trim()),
-  );
+  const lines = unfencedLines(markdown);
+  const headingIndex = contentsHeadingIndex(lines);
 
-  if (contentsHeadingIndex < 0) {
+  if (headingIndex < 0) {
     throw new Error(`Missing required ## Contents section in ${sourcePath}`);
   }
 
-  const sectionLines = lines.slice(contentsHeadingIndex + 1);
-  const nextHeadingIndex = sectionLines.findIndex((line) =>
-    /^##\s+/.test(line.trim()),
-  );
-  const contentsLines =
-    nextHeadingIndex >= 0
-      ? sectionLines.slice(0, nextHeadingIndex)
-      : sectionLines;
+  const entries: DocsContentsEntry[] = [];
+  let group: DocsContentsEntry['group'];
+  let groupEntries = 0;
+  const checkGroup = (): void => {
+    if (group && groupEntries === 0) {
+      throw new Error(
+        `${sourcePath}:${group.line}: Contents group "${group.title}" has no entries`,
+      );
+    }
+  };
+  for (let i = headingIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i]!;
+    if (/^##\s+/.test(line.trim())) break;
+    const heading = line.match(/^###\s+(.+?)\s*$/);
+    if (heading) {
+      checkGroup();
+      group = { title: heading[1]!.trim(), line: i + 1 };
+      groupEntries = 0;
+      continue;
+    }
+    if (/^\s*[*+]\s+\[[^\]]+\]\([^)]+\)/.test(line)) {
+      throw new Error(
+        `${sourcePath}:${i + 1}: Contents links must use a dash (-) bullet`,
+      );
+    }
+    const match = line.match(/^\s*-\s+\[([^\]]+)\]\(([^)]+)\)/);
+    if (match) {
+      entries.push({
+        title: match[1]!.trim(),
+        href: match[2]!.trim(),
+        ...(group ? { group } : {}),
+      });
+      groupEntries += 1;
+    }
+  }
+  checkGroup();
 
-  const entries = contentsLines
-    .map((line) => line.match(/^\s*-\s+\[([^\]]+)\]\(([^)]+)\)/))
-    .filter((match): match is RegExpMatchArray => match !== null)
-    .map((match) => {
-      const [, title = '', href = ''] = match;
-      return {
-        title: title.trim(),
-        href: href.trim(),
-      };
-    });
-
-  if (entries.length === 0) {
+  if (entries.length === 0 && !options.allowEmpty) {
     throw new Error(
       `No machine-readable links found under ## Contents in ${sourcePath}`,
     );
@@ -56,6 +111,7 @@ interface BuildDocsNavTreeOptions {
   docsRoot: string;
   dirRelativePath?: string;
   visitedDirectories?: Set<string>;
+  nonReaderPaths?: readonly string[];
 }
 
 function toPosixPath(path: string): string {
@@ -72,7 +128,8 @@ export async function resolveEntryTarget(
    * Fumadocs also renders `.mdx` pages.
    */
   pageExtensions: readonly string[] = ['.md'],
-): Promise<{ kind: 'page' | 'section'; path: string }> {
+  matcher?: ExclusionMatcher,
+): Promise<{ kind: 'page' | 'section' | 'excluded'; path: string }> {
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {
     throw new Error(
@@ -106,6 +163,10 @@ export async function resolveEntryTarget(
         'index.md',
       )}`,
     );
+  }
+
+  if (matcher && isExcludedPath(matcher, relativeTargetPath)) {
+    return { kind: 'excluded', path: relativeTargetPath };
   }
 
   if (!(await fileExists(targetPath))) {
@@ -157,18 +218,24 @@ export async function buildDocsNavTree(
   const indexMarkdown = await readFile(indexPath, 'utf8');
   const contentsEntries = parseIndexContents(indexMarkdown, indexPath);
 
+  const matcher = createExclusionMatcher(options.nonReaderPaths ?? []);
   const nav: DocsNavTree =
     dirRelativePath === '.'
       ? [{ Home: 'index.md' }]
       : [toPosixPath(join(dirRelativePath, 'index.md'))];
 
+  let currentGroup: DocsContentsEntry['group'];
+  let groupNav: DocsNavTree = nav;
   for (const entry of contentsEntries) {
     const resolvedTarget = await resolveEntryTarget(
       options.docsRoot,
       directoryPath,
       dirRelativePath,
       entry,
+      ['.md'],
+      matcher,
     );
+    if (resolvedTarget.kind === 'excluded') continue;
 
     if (
       resolvedTarget.kind === 'section' &&
@@ -177,8 +244,13 @@ export async function buildDocsNavTree(
       continue;
     }
 
+    if (entry.group !== currentGroup) {
+      currentGroup = entry.group;
+      groupNav = [];
+      nav.push({ [currentGroup!.title]: groupNav });
+    }
     if (resolvedTarget.kind === 'page') {
-      nav.push({ [entry.title]: resolvedTarget.path });
+      groupNav.push({ [entry.title]: resolvedTarget.path });
       continue;
     }
 
@@ -195,11 +267,12 @@ export async function buildDocsNavTree(
 
     const childVisitedDirectories = new Set(visitedDirectories);
     childVisitedDirectories.add(childDirRelativePath);
-    nav.push({
+    groupNav.push({
       [entry.title]: await buildDocsNavTree({
         docsRoot: options.docsRoot,
         dirRelativePath: childDirRelativePath,
         visitedDirectories: childVisitedDirectories,
+        nonReaderPaths: options.nonReaderPaths,
       }),
     });
   }

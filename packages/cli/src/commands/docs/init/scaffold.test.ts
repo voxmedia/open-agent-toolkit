@@ -22,7 +22,7 @@ const MKDOCS_TEMPLATE_FILES: Record<string, string> = {
     "docs:format:check": "{{DOCS_FORMAT_CHECK_SCRIPT}}"
   },
   "devDependencies": {
-{{DEV_DEPENDENCIES}}
+    "@open-agent-toolkit/cli": "{{OAT_CLI_DEP}}"{{DEV_DEPENDENCIES}}
   }
 }
 `,
@@ -256,6 +256,7 @@ describe('scaffoldDocsApp', () => {
     expect(result.documentationConfig).toEqual({
       root: 'apps/oat-docs',
       tooling: 'mkdocs',
+      navOwner: 'nav-sync',
       config: join('apps/oat-docs', 'mkdocs.yml'),
       index: join('apps/oat-docs', 'mkdocs.yml'),
     });
@@ -582,6 +583,7 @@ describe('scaffoldDocsApp', () => {
     expect(result.documentationConfig).toEqual({
       root: 'apps/my-docs',
       tooling: 'fumadocs',
+      navOwner: 'nav-sync',
       index: join('apps/my-docs', 'index.md'),
     });
   });

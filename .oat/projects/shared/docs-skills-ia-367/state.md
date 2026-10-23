@@ -1,6 +1,6 @@
 ---
-oat_current_task: p-rev3
-oat_last_commit: 41e0ad2cbdc9f84a90b0a1a842091f41810b5246
+oat_current_task: p05
+oat_last_commit: ba253ba359a03d2f40410e2431e38ca6effd629b
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -35,6 +35,12 @@ oat_phase_recovery_policy:
       used_attempts: 0
       pending_attempt: null
     p-rev3:
+      used_attempts: 0
+      pending_attempt: null
+    p04:
+      used_attempts: 3
+      pending_attempt: null
+    p-rev4:
       used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -127,10 +133,10 @@ oat_workflow_origin: native # native | imported
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/371' # null | string — tracked PR URL when a PR exists
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T02:08:31Z
+oat_project_state_updated: 2026-10-23T05:48:37Z
 oat_generated: false
 ---
 
@@ -142,12 +148,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p-rev3 corrects PR #371 findings before landing P03; p04 remains pending.
+Implement — p-rev4 accepted; deliver PR372 once current-head checks and bot findings clear, then concretize p05.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03 and p-rev2 accepted; 5/12 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; 8/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -156,4 +162,4 @@ None.
 
 ## Next Milestone
 
-PR #369 merged at ec1261f44f93d07bbc2926aa5680b7bfd777089e after current-head CI/Bugbot clear; p-rev2 accepted. P03 PR #371 is open against main after integrated verification; land it when CI/Bugbot clear, then concretize p04. PR #368 is merged; use the `land-pr` skill to automatically land each intermediate phase PR once CI, Bugbot and blocking findings are clear. Hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. P04 final independent review passed at candidate 3f99348b589cbd750bdfd088e02e4c10a5848e2f; all ten records closed. P04 PR #372 is open against main; complexity review is settled. P-rev4 fixes all four external findings at ba253ba359a03d2f40410e2431e38ca6effd629b with passing integrated verification; independent revision review passed with zero findings. Publication and current-head CI/Bugbot/Warp reconciliation precede land-pr and provisional p05. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.

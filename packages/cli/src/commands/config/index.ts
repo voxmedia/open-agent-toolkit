@@ -143,6 +143,7 @@ type ConfigKey =
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.ia'
+  | 'documentation.nonReaderPaths'
   | 'documentation.navOwner'
   | 'documentation.guidance'
   | 'documentation.config'
@@ -329,6 +330,7 @@ const KEY_ORDER: ConfigKey[] = [
   'autoReviewAtCheckpoints',
   'lastPausedProject',
   'documentation.ia',
+  'documentation.nonReaderPaths',
   'documentation.navOwner',
   'documentation.guidance',
   'documentation.root',
@@ -583,6 +585,19 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set documentation.config <value>',
     description:
       'Repository-relative path to the primary documentation tool config file.',
+  },
+  {
+    key: 'documentation.nonReaderPaths',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string[]',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set documentation.nonReaderPaths <glob[,glob...]>',
+    description:
+      'Content-root-relative globs excluded from reader navigation, manifest and supported framework rendering. Empty clears the key.',
   },
   {
     key: 'documentation.excludes',
@@ -2443,6 +2458,7 @@ async function setConfigValue(
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
 
   if (
+    key === 'documentation.nonReaderPaths' ||
     key === 'documentation.guidance' ||
     key === 'documentation.ia' ||
     key === 'documentation.navOwner'
@@ -2455,7 +2471,10 @@ async function setConfigValue(
     const trimmed = rawValue.trim();
     let value: unknown;
     try {
-      if (key === 'documentation.ia') {
+      if (key === 'documentation.nonReaderPaths') {
+        const paths = parseDocumentationExcludes(rawValue);
+        value = paths.length > 0 ? paths : undefined;
+      } else if (key === 'documentation.ia') {
         const parsed: unknown = JSON.parse(trimmed);
         if (parsed === null) throw new Error('Expected an IA JSON object.');
         value = normalizeDocumentationIa(parsed, configPath);
@@ -3236,6 +3255,7 @@ async function removeFromSurface(
   dependencies: ConfigCommandDependencies,
 ): Promise<boolean> {
   if (
+    key === 'documentation.nonReaderPaths' ||
     key === 'documentation.guidance' ||
     key === 'documentation.ia' ||
     key === 'documentation.navOwner'
