@@ -1,5 +1,5 @@
 ---
-oat_current_task: p07
+oat_current_task: p06-t11
 oat_last_commit: 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 oat_blockers: []
 associated_issues: [
@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
@@ -142,7 +142,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/374'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T19:53:11.813968Z'
+oat_project_state_updated: '2026-10-23T20:01:39.879427Z'
 oat_generated: false
 ---
 
@@ -154,12 +154,12 @@ oat_generated: false
 
 ## Current Phase
 
-Implement — p06 accepted after standard review disposition and the passing selected external gate; 10/13 phase-units accepted. P06 intermediate PR374 is open; current-head CI/Bugbot and landing pending. P07 remains provisional and unstarted.
+Implement — p06 reopened only for PR374-M1 instruction accuracy, p06-t11; 9/13 phase-units currently accepted. Historical candidate, passing gate and cap dispositions preserved. P07 remains provisional and unstarted.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 and p06 accepted, 10/13 phases accepted.
+- **Implementation:** `implementation.md` — p01, p-rev1, p02, p03, p-rev2 and p-rev3 and p04 and p-rev4 accepted; p05 accepted; p06 instruction-only correction pending, 9/13 phases accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -168,4 +168,4 @@ None.
 
 ## Next Milestone
 
-Deliver open PR374 (https://github.com/voxmedia/open-agent-toolkit/pull/374) with current-head CI/Bugbot clearance and expected-head merge. Plain land mode and standing intermediate merge authority retained; review-stage complete. P06 frozen Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8. Selected gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passed at high threshold; its two Medium and two Low findings are deferred to final via the configured passing-gate sweep. Operator-approved standard R3-L1/R3-L2 deferrals and configurable source-read policy stand. Recovery1/10,pendingnull. After delivery, align provisional p07 before implementation; no p07/P24, npm publication or final project PR now.
+Correct PR374-M1 through p06-t11, verify the docs-only delta, then deliver open PR374 (https://github.com/voxmedia/open-agent-toolkit/pull/374) with current-head CI/Bugbot clearance and expected-head merge. Plain land mode and standing intermediate merge authority retained; review-stage complete. P06 frozen Base9b35decdc32c31e55d65e0138d49fc7de67bacfa..Head9e19dd89657e18386cb3cdffcb58e753d66a68a8. Selected gate02598e6c-cf5d-48cc-8509-74aeb2362db2 passed at high threshold; its two Medium and two Low findings are deferred to final via the configured passing-gate sweep. Operator-approved standard R3-L1/R3-L2 deferrals and configurable source-read policy stand. Recovery1/10,pendingnull. After delivery, align provisional p07 before implementation; no p07/P24, npm publication or final project PR now.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-22
-oat_current_task_id: p07
+oat_current_task_id: p06-t11
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | completed | 1     | 1/1      |
-| p07    | pending   | 1     | 0/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | in_progress | 1     | 0/1      |
+| p07    | pending     | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 9/13 phases accepted
 
 ---
 
@@ -1520,7 +1520,7 @@ Delivery mode remains plain land-pr using the established merge-commit method wi
 
 ## Phase p06: oat docs check
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 9b35decdc32c31e55d65e0138d49fc7de67bacfa
 **Head:** 9e19dd89657e18386cb3cdffcb58e753d66a68a8
 
@@ -1823,6 +1823,16 @@ The reviewer ran128focused tests, skill-bumps, flagship0errors/756warnings and r
 
 **Outcome:** gate passed and consumed; all four sub-threshold findings deferred durably to final under the configured passing-gate policy. Standard review's operator-approved R3-L1/R3-L2 deferrals stand. All ten execution records closed, selected phase gate passed, every current disposition settled. Root accepts p06 at frozen Base/Head; recovery1/10,pendingnull unchanged. Delivery requires current-head CI/Bugbot and expected-head land-pr; p07 remains provisional/unstarted and the final project PR stays held.
 
+### Task p06-t11: (remote review) Include manifest freshness in root Definition of Done
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p06-impl-20261023
+**Handle:** docs367-p06-impl-20261023; original same-target continuation
+**Source review:** PR374-M1, cursor discussion_r4363691671
+**Intent:** Add the exact manifest regeneration and scoped diff CI commands as gate 9 after build:docs; explain that the direct check runs despite a Turbo docs-build cache hit. Preserve all eight existing commands and other instructions.
+**Files:** AGENTS.md only.
+**Proof:** Conservation diff, exact workflow-command/order comparison, scoped oxfmt, ordered DoD gates including direct freshness. No new tests, fixtures, negative controls, dependency or version change; unchanged runtime evidence remains inherited.
+
 ## Phase p07: Page templates and presets
 
 **Status:** pending
@@ -1986,6 +1996,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #374
+
+2026-10-23; Cursor review5633751204, source https://github.com/voxmedia/open-agent-toolkit/pull/374#discussion_r4363691671. Counts 0 Critical/0 High/1 Medium/0 Low. PR374-M1: root instructions omit the generated-manifest CI gate and overclaim exact parity; **convert** to p06-t11 under existing DoD instruction accuracy, no expanded guarantee. Root compared both files, fetched main and found no scoped drift. Source footer names b952a158fa5b3c72554a89ef4e33aec36ea90073; OAT marker provenance unknown, ledger remains '-'. Event artifact reviews/archived/remote-pr-374-review-2026-10-23T200139Z.md.
+
+Documentation-only remote receive cycle1; standard full-code review remains3/3, approved cap and six deferred findings unchanged. P06 temporarily reopens for this bounded instruction correction because p07 has no Base; prior accepted candidate/gate and all anchors stay historical and conserved. Root will review the correction by conservation and workflow parity, not request a fourth full review of unchanged code. Recovery1/10,pendingnull; review correction is not automatic recovery. Original implementer retains ownership. Current-head landing remains blocked until published fix, resolved finding and CI/Bugbot clearance.
 
 ### P06 PR374 delivery and self-review
 
