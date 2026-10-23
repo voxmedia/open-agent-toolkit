@@ -1475,7 +1475,7 @@ Root validated clean handoff d5c5c620d and candidate04d5361060ed597fb59431ea4e98
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-remote-fix-expanded-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p05-remote-fix-expanded · observed=~ · match=~
+- run/v1 · request=docs367-p05-remote-fix-expanded-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-fix-expanded · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-remote-fix-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-fix · observed=~ · match=~
 
@@ -1588,6 +1588,10 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### PR373 bounded dependency authorization
+
+Root accepts the clean no-edit design handoff at b5a69c844cbae09f65f4fb0b7797fedbc50ab04c. Pinned fumadocs-mdx14.3.2 buildMDX initializes VFile with path/cwd/frontmatter/compiler helpers, without filtered reader inventory; collection emission uses tinyglobby0.2.17 over collectionFiles patterns. Authorize tinyglobby as a direct docs-config runtime dependency at the already-resolved compatible0.2.17 and the corresponding pnpm-lock.yaml importer update, plus the existing bounded product paths. createSourceConfig may supply its explicit content root and lazily evaluate the same existing collection patterns; remarkLinks keeps no-context fallback. Use actual filtered inventory for both source and target collisions. Do not cache reader membership permanently across transformations in dev or silently fall back to physical files after inventory errors. This is implementation of accepted G2/p05 routing, not a new requirement or framework upgrade. Minimal composed pipeline controls must cover configured root, filtered membership, and later membership changes; use deliberate-testing. No arbitrary discovery, second glob grammar, broad dependency refresh or test-only API. Root retains independent review/acceptance; recovery1/10,pendingnull and frozen history are unchanged.
 
 ### Remote Review Received: PR #373 filtered collisions and nonlocal navigation
 
