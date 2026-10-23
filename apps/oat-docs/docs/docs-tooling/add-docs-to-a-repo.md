@@ -77,7 +77,7 @@ What the framework path adds over the raw CLI:
 - **Educational walkthrough.** Seven sections covering the `documentation` config, the authored-source/generated-navigation model, the `## Contents` contract (with extension discipline), the three agent-instruction surfaces (root `AGENTS.md` pointer / docs-app `AGENTS.md` / `docs/contributing.md`), Fumadocs internals (or MkDocs Minimum Contract), and the OAT docs ecosystem (`oat-project-document`, `oat-docs-analyze`, `oat-docs-apply`).
 - **Optional content kickoff.** Hands off to `oat-docs-analyze` + `oat-docs-apply` if you want to populate initial repo-specific content immediately.
 
-Capability detection gates the remaining AGENTS bridge. Existing files are preserved; use analyze and reviewed recommendations to address older scaffold output.
+Missing app-root `AGENTS.md` from an older CLI is reported as a missing capability with analyze/manual CLI-template upgrade advice. Existing files are preserved; use analyze and reviewed recommendations to address older scaffold output.
 
 ### 3b. Direct CLI (deterministic / non-interactive)
 

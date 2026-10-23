@@ -217,9 +217,11 @@ function hrefFragment(href: string): string {
 /**
  * Build one folder's `pages` from its index.md Contents map.
  *
- * A page in this folder or an immediate subfolder is referenced by name. Any
- * other target becomes a Fumadocs link entry, so no page is claimed by two
- * folders. There is never a `"..."` rest entry: pages the Contents map does
+ * A page in this folder or an immediate subfolder is referenced by name.
+ * Same-name page/folder collisions use a precise source-file item, including
+ * `../contributing.md` from a child map: pinned core16.10.2 selects the folder
+ * first for an extensionless reference. Other non-local targets become link
+ * entries. There is never a `"..."` rest entry: pages the Contents map does
  * not list stay out of the tree and are reported instead.
  */
 /**
