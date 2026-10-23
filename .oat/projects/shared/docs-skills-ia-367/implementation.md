@@ -749,6 +749,7 @@ Exactly one `**Reconnaissance:** not-attempted` signal was consumed before valid
 
 **Status:** in_progress
 **Base:** 130f8c0521e3e03704680fb3237898a46335cfac
+**Head:** 007d3f2c47edfa4b8e1670155370314731b4f953
 **Executor:** phase-implementer:docs367-prev3-impl-20261023
 **Corrects:** p03
 
@@ -757,6 +758,12 @@ Phase start: one committing phase implementer, shared existing checkout; no nest
 Root remote-review receipt (PR #371 review 5623136468, reviewed head 130f8c0521e3e03704680fb3237898a46335cfac): 0 Critical, 0 High, 1 Medium, 1 Low. M1 discussion_r4355448299 confirmed: blank line split p-rev2 event rows; removed it without altering any event cells. Status metadata also relocated directly under the p-rev2 heading so accepted status is readable, preserving its values and history. L1 discussion_r4355448304 confirmed against G2: raw traversal checks allowed leading-space escapes later trimmed into stored decision/track paths; queued as prev3-t01 within accepted contract. No new requirement or version increment. Remote review has no OAT provenance marker. Cursor summary is informational.
 
 CI run 39888000833 failed independently at agents-md.test.ts: two real processes returned appended/blocked rather than appended/no-change. Neither that module nor test changed in this PR. Preserve the failed run; inspect/rerun the existing focused test during verification, without changing unrelated code or timeouts. Final-head CI must pass before landing.
+
+**Verification:** Pre-fix real-command regression exited 1: all six padded traversal decision/track rows incorrectly returned ok; 17 existing/control cases passed, including valid padded paths. Post-fix focused config suites passed 661 tests (14 files, exit 0). CLI lint/build and the corrected branch-built CLI probe exited 0; six traversal inputs reject without changing config bytes, and valid padded paths store trimmed and read back successfully. The probe's first scratch setup omitted Git initialization and failed its valid control; corrected setup passed, both logs retained. No product correction was needed after the task commit.
+
+Ordered DoD gates 1–8 all exited 0, with isolated HOME and successful fetch before gate 6. Turbo cached/total: check 8/11, types 9/11, test 9/12, build 5/5, docs build 6/6. Gate 3 freshly ran 8,885 CLI tests and the docs suite; four supporting-package test suites replayed. Direct smoke 165, skill 712 and script 1 passed freshly. Supplemental isolated-HOME `pnpm exec turbo run test --force` exited 0, executing all 12 tasks with zero cached; 8,885 CLI plus 351 supporting-package tests and the docs suite passed freshly. No verification retry or recovery attempt was used.
+
+The unchanged `agents-md.test.ts` focused run passed all 71 tests (exit 0), including the two-process appended/no-change assertion; the earlier CI failure remains preserved history. No unrelated source or timeout edits. Existing PR-scoped 0.3.25 versions suffice; no instruction changes needed. Root relayed Warp review 5623152090 / discussion4355461672 as independent confirmation of the same G2 defect, without expanding scope. Exact probes, commands, explicit exits and raw logs are ignored under `analysis/p-rev3/`. Recovery remains 0/10, pending null. Phase remains in_progress for root's independent review and acceptance; no child PR action.
 
 ### Task prev3-t01: Reject traversal after IA path trimming
 
