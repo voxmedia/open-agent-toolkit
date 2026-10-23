@@ -47,8 +47,10 @@ Fix the authored page, its local Contents map and inbound links together. For
 owned generated navigation, run `oat docs nav sync`, then rerun the checker.
 Hand-authored or undeclared navigation is compared for membership/order without
 requiring generated display labels, title fields or YAML formatting; do not
-silently regenerate it. Nav-sync ownership retains its existing strict read-only
-freshness check. Generated inventories are separate: regenerate configured output
+silently regenerate it. Missing optional Fumadocs metadata, metadata objects without
+`pages`, and absent MkDocs `nav` skip comparison. Present `pages` must be an array;
+explicit entries still compare membership/order. Implicit Fumadocs order is not
+compared. Nav-sync ownership retains its existing strict read-only freshness check. Generated inventories are separate: regenerate configured output
 and check its Git diff after the build. A build that rewrites the inventory does
 not prove the committed copy was fresh.
 
@@ -83,7 +85,7 @@ recursive tabs participate.
 | `contents-description`  | Error for descriptions ending in an ellipsis/truncation.                                                                                                                                                                                         |
 | `overview`              | Warn below `overviewWords: 10` before Contents.                                                                                                                                                                                                  |
 | `contents-separator`    | Warn when Contents descriptions mix separators in a tree.                                                                                                                                                                                        |
-| `navigation`            | Error for drift using the declared ownership semantics; Markdown skips it.                                                                                                                                                                       |
+| `navigation`            | Error for explicit navigation drift using declared ownership semantics; hand-authored/undeclared absent optional meta/pages/nav skips comparison. Nav-sync freshness stays strict; Markdown skips it.                                            |
 | `commands`              | Error for missing literal contributor scripts; implicit pnpm shorthand also accepts installed package/workspace `.bin` entries. Explicit pnpm run/npm run stays script-only; unresolved context errors; echo scripts warn.                       |
 | `mermaid`               | Parse every real Mermaid fence using the pinned Mermaid parser. Invalid syntax errors.                                                                                                                                                           |
 | `diagram-pairs`         | Diagram light/dark SVG siblings and both page references are required. Conventional diagram paths and explicit paired references participate; ordinary logos are not diagrams.                                                                   |

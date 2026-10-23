@@ -62,6 +62,13 @@ export async function checkNavigation(
             const actual = JSON.parse(
               await readFile(join(target.contentRoot, file.path), 'utf8'),
             ) as { pages?: unknown };
+            if (
+              actual &&
+              typeof actual === 'object' &&
+              !Array.isArray(actual) &&
+              !Object.hasOwn(actual, 'pages')
+            )
+              continue;
             stale =
               !Array.isArray(actual.pages) ||
               !isDeepStrictEqual(

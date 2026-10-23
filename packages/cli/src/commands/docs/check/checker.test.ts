@@ -689,6 +689,23 @@ describe('real framework navigation boundaries', () => {
       await rm(join(f.content, 'meta.json'));
       await rm(join(f.content, 'aa/meta.json'));
       expect(await f.run('navigation')).toEqual([]);
+      await f.write('meta.json', '{"title":"Own root title"}');
+      await f.write('aa/meta.json', '{"title":"Own section title"}');
+      expect(await f.run('navigation')).toEqual([]);
+      await f.write(
+        'aa/meta.json',
+        '{"title":"Own section title","pages":null}',
+      );
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'aa/meta.json',
+          message:
+            'Navigation membership/order differs from authored Contents; update pages or Contents.',
+        },
+      ]);
+      await f.write('aa/meta.json', '{"title":"Own section title"}');
       await f.write('zz/meta.json', '{"pages":["index"]}');
       expect(await f.run('navigation')).toEqual([
         {
