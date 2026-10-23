@@ -1604,6 +1604,8 @@ Open verification limit: the unlocked Fumadocs install selected mdast-util-to-ma
 - Verification: Pre/post isolated-HOME focused Vitest exit0,96/96 fresh each; pre/post isolated-HOME pnpm test exit0. Pre Turbo12/12 successful,8 cached/4 executed (CLI8,996 and docs93 tests fresh); post Turbo12/12 cached. Both chained runs freshly pass smoke165,skills712,scripts1. CLI lint/type-check and bounded formatting exit0. Exact commands/logs: ignored analysis/p06/recovery01-results.json and recovery01-\*.log.
 - Reason: Mechanically stale help and real dependency-map expectations refreshed from independently read production registration and package manifest; synthetic dependency-map and test-only ignore controls retained, with no product behavior change. Root-reserved attempt1 continued without increment; all33 t03 product hashes preserved. Completed marker remains committed for root validation;9 attempts remain, and t03 is not resumed.
 
+Root recovery settlement: validated original ancestry, exact target/axes, canonical recovered event, recovery98edd0f3276425b3194550ee28fbbdc335f4e2d4, committed completed marker and focused/phase logs. Focused96 tests ran freshly before/after; post phase Turbo12/12 cache is inherited broad evidence, with direct smoke/skills/scripts fresh. All33 t03 hashes preserved and index empty. Clear pending marker, retain used1/10 and9 remaining; t03 stays open pending bounded fresh-install compatibility diagnosis.
+
 ---
 
 ## Phase p07: Page templates and presets
@@ -1626,7 +1628,7 @@ Open verification limit: the unlocked Fumadocs install selected mdast-util-to-ma
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p06-recovery01-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p06-recovery01-from-docs367-p06-impl-20261023 · observed=~ · match=~
+- run/v1 · request=docs367-p06-recovery01-20261023 · scope=p06 · action=recover · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-recovery01-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-dom-continue-20261023 · scope=p06 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=BLOCKED · terminal=yes · class=terminal-stop · continuation=cont-docs367-p06-dom-from-docs367-p06-impl-20261023 · observed=~ · match=~
 

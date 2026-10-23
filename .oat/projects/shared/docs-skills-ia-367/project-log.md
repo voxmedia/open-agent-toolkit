@@ -176,6 +176,10 @@ docs367-p06-dom-alignment-20261023: NEEDS_CONTEXT reconciled; t01 committed and 
 
 docs367-p06-recovery01-direction-20261023: Validated pre-attempt direction-required stop; corrected root no-reservation wording and reserved1/10 for exactly two stale test-expectation files. Same handle/target, t03 dirty hashes conserved; unlocked Fumadocs dependency limitation remains explicit.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-recovery01-settle-20261023: Recovery98edd0f32 accepted, immutable original/exact target and focused/phase pre/post logs validated with cache limits disclosed;33 t03 hashes preserved. Clear completed marker and retain1/10. Fresh-install Fumadocs compatibility diagnosis precedes t03 continuation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

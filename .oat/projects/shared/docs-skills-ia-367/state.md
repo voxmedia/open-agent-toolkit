@@ -48,16 +48,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p06:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: 'docs367-p06-recovery-01'
-        original_request_id: 'docs367-p06-impl-20261023'
-        original_task_id: 'p06-t02'
-        original_commit: 'd8d8ccece992d6cc6a1f7e1f68bc8818436b839f'
-        discovered_by: 'pnpm test (ordered gate3)'
-        dispatch_target: 'codex_codex_proxy/gpt-6.1-sol/high/priority'
-        reservation_head: 'b4ec258d7e2846631b2708a86fd31058cf7283e5'
-        status: 'completed'
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
