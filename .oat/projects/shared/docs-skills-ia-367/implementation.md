@@ -955,6 +955,47 @@ Protects against: pinned external schema rejecting accepted roots and collection
 
 **Root pre-review validation / recovery03 settlement:** Validated the canonical recovered event docs367-p04-t04-source-type-stop and matching committed completed attempt3 marker. Exact same-handle codex_codex_proxy/gpt-6.1-sol/high/priority controls and immutable original9712fcba8ac65355f78edeb813303c1c0592c8d8/parent849bdd59125d1de2ec85559676a03938ee82eb2e remain intact. Recoverybfbe0002c6a977c201277e3d760cfef8000cb717 has only the authorized schema normalization, generated-consumer regression, directly related test/docs and marker transition. Root inspected production output typing and generated-consumer test; read all16 pre/post zero receipts, including actual ordinary/named-root Next builds, all8 ordered gate exits and zero-cache forced9342-test proof plus supplemental exits. Earlier type/build and lint failures remain preserved. Cleared completed marker only after validation; usage3/10 stays consumed,7 remain,pending null. Tested candidate905b048de4f64c836c3fce0797f4469dd790e145 differs from final handoffa618d6327f7c7ce38b50df76d93f14a930880a9e only in the phase journal. All6 task records closed, phase stays in_progress, original Base frozen; independent phase review is next. No external p04 gate or phase acceptance is claimed. Elevated recovery-volume warning remains recorded.
 
+### Review Received: p04
+
+**Date:** 2026-10-23
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-23T040657Z.md
+**Findings:** Critical 0 · High 1 · Medium 0 · Low 2
+
+- H1 (High): generate-index now imposes strict nav-target resolution and rejects valid MDX, escaping/external/missing links and empty/prose-only Contents → fix task p04-t07. Accepted compatibility constraint allows only dash-bullet and empty-group grammar errors globally; Contents must be an ordering hint over existing inventory, not a new target-validation gate. Keep strict nav sync behavior, flagged deterministic fallback and all exclusion boundaries. Preserve the existing inventory extension contract; a valid MDX nav target absent from that inventory must not break index generation. Restore a pre-fix empty-Contents fixture and prove real command behavior, not adapted expectations.
+- L1 (Low): malformed p04 Provisional marker and formatter-mangled literal grammar → root artifact-alignment task p04-t09. Accepted intent already requires star bullets and star glob syntax; code is correct, brief text must state it with code spans.
+- L2 (Low): navOwner doc comment attaches to nonReaderPaths → fix task p04-t08. Move the comment to its actual declaration; no behavior change.
+
+**Design drift / artifact alignment notes:** L1 is artifact drift only; accepted G3 remains source of truth and root owns plan.md. H1 is a regression against the existing compatibility constraint, not a new requirement. No finding is deferred or rejected. Root read the complete artifact; exactly one not-attempted signal, no Review Orchestration section, full anchors and current severity vocabulary validated. Explicit returned artifact selected after both installed and branch latest discovery returned null despite that file existing; no review provenance was inferred.
+**Outcome:** fixes queued p04-t07, p04-t08, p04-t09; phase stays in_progress, round1 of3, original Base/Head retained until verified fix candidate. Coverage includes correctness, boundary preservation, testing, complexity, docs and packaging; re-review will cover fixes and composition.
+
+### Task p04-t07: (review) Restore tolerant Contents ordering in generate-index
+
+**Status:** in_progress
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (H1)
+
+Intent: Keep shared dash-only/empty-group syntax errors, but let empty or prose-only Contents fall back and ignore unsupported, missing, external or out-of-root ordering hints. Use only surviving in-root inventory entries for ordering, with deterministic unlisted fallback. MDX links accepted by Fumadocs nav must not fail generate-index; preserve current inventory scope and strict nav sync behavior.
+Files: CLI index-generate generator and existing tests; smallest shared Contents parser option/helper plus related existing nav tests if required; affected human docs only if needed to state fallback truthfully.
+Proof: pre-fix real-command regressions fail for intended errors; fixed valid Fumadocs MDX nav+index and undeclared Markdown external/escape/missing/empty/prose fixtures pass; valid authored order, exclusions and malformed shared grammar controls remain; relevant suites and full ordered phase gates.
+
+### Task p04-t08: (review) Attach sidebar ownership documentation to navOwner
+
+**Status:** in_progress
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L2)
+
+Intent: Move the existing navOwner JSDoc immediately above navOwner and retain nonReaderPaths documentation.
+Files: packages/cli/src/config/oat-config.ts only.
+Proof: scoped format/lint and declaration diff; no behavior test needed for comment relocation.
+
+### Task p04-t09: (review) Correct brief phase marker and literal grammar
+
+**Status:** in_progress
+**Executor:** root
+**Source review:** reviews/archived/p04-review-2026-10-23T040657Z.md (L1)
+
+Intent: Restore exact Provisional marker and protect literal star/plus/glob syntax with code spans, without changing accepted p04 behavior.
+Files: project plan.md p04 Intent/Exit and Provisional only; own task receipt.
+Proof: committed marker/literal inspection and journal check; artifact-only change does not need product tests.
+
 ---
 
 ## Phase p05: Reader-first starter app
@@ -989,7 +1030,7 @@ Protects against: pinned external schema rejecting accepted roots and collection
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p04-review-r1-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p04-review-r1-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 run/v1 · request=docs367-p04-recovery03-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3 · observed=~ · match=~
 
