@@ -618,6 +618,8 @@ Proof: prose conservation and existing helper/sentence contracts; no new copy-on
 
 **Evidence:** Conservation diff is confined to Offline Package Drift: ahead is representable; only older drift receives an upgrade command and stable explicit ID; current has no tooling recommendation; ahead selects/updates the intended CLI before re-analysis; unverified requires manual verification. Existing helper/prose checks (6 tests) and isolated sentence contracts (1,087) pass before and immediately after commit, all exit 0; scoped lint/format pass. No new copy-only test, helper edit or version bump.
 
+Root round-2 fix validation: verified the three product paths, bounded task commits and journal-only final tip `103e41f31b74651277641d8f395494b4ae323453`. Null rejection is confined to set input; stored-read semantics are unchanged. Reviewed pre-fix failure, fixed controls, all raw gate exits, retained PJM cleanup failure/no-edit rerun, and forced 12-task execution with zero cache replays. Both round-2 findings are fixes_completed; candidate Head `28887537aa3498293340bbc86f3f85772b4a9f09`. Final standard independent review round 3/3 and external p03 gate remain pending. Phase in_progress, recovery 0/10 pending null.
+
 ## Phase p-rev2: Preserve loaded skill bindings
 
 **Status:** pending
@@ -713,7 +715,7 @@ run/v1 · request=docs367-p03-fix-r1-20261022 · scope=p03 · action=fix · role
 
 run/v1 · request=docs367-p03-review-r2-20261022 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
-run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=pending · terminal=no · class=live · continuation=~ · observed=~ · match=~
+run/v1 · request=docs367-p03-fix-r2-20261022 · scope=p03 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-medium · model=gpt-6.1-sol · effort=medium · stamp=Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 ## Reviews and Gates
 
