@@ -857,6 +857,8 @@ Recon verified parser/nav/init/index paths and pinned schema/runtime differences
 
 **Root recovery reservation (docs367-p04-t04-lint-stop):** Verified clean HEAD c2134bdff57c172901978867c46647ee176afeb6, immutable original task commit 9712fcba8ac65355f78edeb813303c1c0592c8d8 at its existing history position, terminal original dispatch with no pending child runs, and exact codex_codex_proxy/gpt-6.1-sol/high/priority controls. Root reproduced the same scoped oxlint exit 1 at scaffold.ts:371. The equivalent template-literal correction is bounded, reversible and in-phase, with no behavior, requirement or architecture change. Phase-standing authorization applies. Atomically reserved attempt 1/10 before product edits; 9 remain. Same-handle recovery is authorized solely for this correction, focused lint and relevant init/docs-config verification before and after the append-only recovery commit. The implementer may only transition this matching pending marker to completed or failed; root clears it after validation. No phase acceptance or remaining-task completion is claimed. Original stop evidence and task commit remain intact.
 
+**Root recovery settlement:** Validated the canonical recovered event docs367-p04-t04-lint-stop, terminal same-handle report, unchanged codex_codex_proxy/gpt-6.1-sol/high/priority axes and matching committed completed marker. Recovery 395a89777cf5da9a738363ccbe0a175ddf23793c changes only the equivalent scaffold expression and marker status; journal 3f8eacb69bd129c513f842ca47299555d2db5091 changes only p04 evidence/status. Original task commit and parent are unchanged. Root read all seven pre/post exit records (each 0; post records name the recovery commit) and independently reran focused oxlint successfully. Cleared the completed marker after validation; usage stays 1/10, 9 remain, pending null. Main fetched before resumption; no newer main changes in p04 paths. Resume the same implementer for remaining approved p04 scope; no acceptance or review verdict is implied.
+
 Protects against: pinned external schema rejecting accepted roots and collection globs interpreting literal metacharacters as operators; existing loader-only checks could not detect either failure; covered by the installed-schema/loader and real collection-emitter parity tests.
 
 ---
@@ -892,6 +894,8 @@ Protects against: pinned external schema rejecting accepted roots and collection
 ---
 
 ## Orchestration Runs
+
+run/v1 · request=docs367-p04-recovery01-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1 · observed=~ · match=~
 
 run/v1 · request=docs367-p04-impl-20261023 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=~ · observed=~ · match=~
 
