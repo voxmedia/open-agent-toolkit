@@ -966,7 +966,7 @@ Protects against: pinned external schema rejecting accepted roots and collection
 - L2 (Low): navOwner doc comment attaches to nonReaderPaths → fix task p04-t08. Move the comment to its actual declaration; no behavior change.
 
 **Design drift / artifact alignment notes:** L1 is artifact drift only; accepted G3 remains source of truth and root owns plan.md. H1 is a regression against the existing compatibility constraint, not a new requirement. No finding is deferred or rejected. Root read the complete artifact; exactly one not-attempted signal, no Review Orchestration section, full anchors and current severity vocabulary validated. Explicit returned artifact selected after both installed and branch latest discovery returned null despite that file existing; no review provenance was inferred.
-**Outcome:** fixes queued p04-t07, p04-t08, p04-t09; phase stays in_progress, round1 of3, original Base/Head retained until verified fix candidate. Coverage includes correctness, boundary preservation, testing, complexity, docs and packaging; re-review will cover fixes and composition.
+**Outcome:** fixes completed p04-t07, p04-t08, p04-t09; independent re-review pending; phase stays in_progress, round1 of3, original Base/Head retained until verified fix candidate. Coverage includes correctness, boundary preservation, testing, complexity, docs and packaging; re-review will cover fixes and composition.
 
 ### Task p04-t07: (review) Restore tolerant Contents ordering in generate-index
 
@@ -1031,6 +1031,8 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 
 **Evidence:** ignored analysis/p04/fix-r1/ contains exact command/HEAD/log/exit receipts, phase-exits.json, supplemental-exits.json, extras-exits.json, fresh-test-counts.json, immutable-baseline.json, baseline logs, tested fixture literals and replay-baseline.py. Prior failures/recoveries/evidence remain preserved. Frozen Base56e05597392dfb4951679d5236b960afb296f951 and original immutable task history remain. No nested delegation, GitHub work, state/plan/other-phase writes or open execution records; independent review/acceptance remain root-owned.
 
+**Root fix-round1 validation:** Accepted clean handoff23b0fcedef3e34c5aea435e910a966e0e76def99, inspected the complete small production fix diff and explicit zero exits for all8 ordered gates, fresh9350-test proof, supplemental and focused pre/post checks. t07 removes strict target IO from inventory ordering, explicitly allows empty maps only for generator and leaves nav strict; t08 only moves JSDoc. Root t09 exact literals/marker retained. Tested candidate3bbe2a49326835a44c839a24de609335a119baa6 differs from final handoff only in p04 journal; no new recovery/infra retry, usage3/10 pendingnull. Findings-bearing round1 event is fixes_completed, not passed; fresh independent round2 will verify closures/composition before acceptance. Original Base retained.
+
 ---
 
 ## Phase p05: Reader-first starter app
@@ -1064,6 +1066,8 @@ All gates were invoked in this order on the candidate; `git fetch origin main` e
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p04-fix-r1-20261023 · scope=p04 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-fix-1,cont-docs367-p04-resume-after-recovery,cont-docs367-p04-fix-3,cont-docs367-p04-review-fix-r1 · observed=~ · match=~
 
 - run/v1 · request=docs367-p04-review-r1-20261023 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04
-oat_last_commit: 905b048de4f64c836c3fce0797f4469dd790e145
+oat_last_commit: 3bbe2a49326835a44c839a24de609335a119baa6
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -133,7 +133,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/371' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T03:57:43Z
+oat_project_state_updated: 2026-10-23T04:28:35Z
 oat_generated: false
 ---
 
@@ -159,4 +159,4 @@ None.
 
 ## Next Milestone
 
-PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. Review p04, navigation follows Contents, at candidate 905b048de4f64c836c3fce0797f4469dd790e145. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #371 merged at eebcf61cf8a39214c9e1e3ccf41a0e7681f25ab2 after current-head CI/Bugbot and Warp confirmations; p-rev3 accepted. Re-review p04 fixes at candidate 3bbe2a49326835a44c839a24de609335a119baa6. PRs #368/#369/#371 are merged. Continue land-pr for green intermediate PRs; hold the final PR until project completion.
