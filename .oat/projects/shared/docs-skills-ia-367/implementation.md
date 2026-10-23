@@ -849,6 +849,8 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 
 ## Reviews and Gates
 
+- P03 delivery preparation: merged landed main at bcd59cfde after PR #369; only AGENTS.md and the two additive journal receipts changed from the accepted local tree, with no product-byte conflict. Both journal insertions were preserved. Ordinary merge completion used Git merge continuation (the exact-path helper intentionally blocks MERGE_HEAD); hooks remained enabled. A commit-message type rejection was corrected before the merge committed. P03 Base/Head stay frozen and reviewed P03 product bytes are unchanged except the independently reviewed p-rev2 correction already in main. Integrated gates are running against 0.3.24 main; archived residual p02 complexity artifact references were conserved.
+
 - p03 external gate f11cc34a-2996-48df-9555-2577c6f79eaa: passed (exit 0, high threshold), 0 Critical/0 High/0 Medium/2 Low; both deferred to final in passing-gate judgment sweep, no waiver; received artifact reviews/archived/p03-review-2026-10-23T000851Z.md.
 
 ### PR #369 loaded-binding correction delivery
