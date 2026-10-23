@@ -80,16 +80,23 @@ describe('pinned Fumadocs reader boundaries', () => {
     const collection = defineDocs({ meta: source.meta, docs: source.docs });
     const parsed = await collection.meta.schema['~standard'].validate(data);
     expect(parsed.issues).toBeUndefined();
-    expect(parsed.value).toMatchObject({ root: 'Named root' });
+    expect(parsed.value).toMatchObject({
+      root: true,
+      title: 'Section',
+      pages: ['index', 'leaf'],
+    });
     for (const root of ['', '   ', 42, null]) {
       expect(
         (await collection.meta.schema['~standard'].validate({ root })).issues,
       ).toBeDefined();
     }
-    expect(
-      (await collection.meta.schema['~standard'].validate({ root: true }))
-        .issues,
-    ).toBeUndefined();
+    for (const root of [true, false, undefined]) {
+      const control = await collection.meta.schema['~standard'].validate({
+        root,
+      });
+      expect(control.issues).toBeUndefined();
+      expect(control.value).toMatchObject({ root });
+    }
     expect(
       (
         await collection.meta.schema['~standard'].validate({

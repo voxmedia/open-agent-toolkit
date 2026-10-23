@@ -11,7 +11,6 @@ import { metaSchema } from 'fumadocs-core/source/schema';
 import type { Root } from 'mdast';
 import { remarkAlert } from 'remark-github-blockquote-alert';
 import type { Plugin } from 'unified';
-import { z } from 'zod';
 
 import { collectionFiles } from './reader-paths.js';
 import { createSearchConfig, type SearchConfig } from './search-config.js';
@@ -19,15 +18,18 @@ import { createSearchConfig, type SearchConfig } from './search-config.js';
 // oxlint-disable-next-line typescript-eslint/no-explicit-any -- unified Plugin generics are covariant but typed invariantly
 type RemarkPlugin = Plugin<any[], Root>;
 
-// fumadocs-core 16.10.2's loader accepts named roots, but its metadata schema
-// (also used by fumadocs-mdx 14.3.2) only accepts booleans. Widen only that field.
-type DocsMeta = Omit<ReturnType<typeof metaSchema.parse>, 'root'> & {
-  root?: boolean | string;
-};
-const docsMetaSchema: z.ZodType<DocsMeta> = metaSchema.extend({
+// Accept named-root inputs while keeping output compatible with fumadocs-mdx
+// 14.3.2's generated server.docs conditional and core 16.10.2's MetaData.
+const docsMetaSchema = metaSchema.extend({
   root: metaSchema.shape.root
     .unwrap()
-    .or(metaSchema.shape.title.unwrap().trim().min(1))
+    .or(
+      metaSchema.shape.title
+        .unwrap()
+        .trim()
+        .min(1)
+        .transform(() => true),
+    )
     .optional(),
 });
 
