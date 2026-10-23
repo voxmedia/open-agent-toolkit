@@ -1492,6 +1492,14 @@ Clean handoff50f8b2d1441beb69f0b4df3eb96ff44d4ab5d7ab; authoritative tested cand
 
 All10 records closed; no later phase started. Advance p05 Head to the tested candidate for narrowed third review04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45 with unchanged Base and preserved historical acceptance/reviews. Prior round2 coverage is inherited for unchanged code. Remote findings are implemented, independent confirmation pending; current p05 acceptance remains suspended and PR373 is held. Recovery1/10,pendingnull unchanged. No product edit or extra gate run by root.
 
+### Review Received: p05 round3, behavioral confirmation and cycle boundary
+
+**Review:** reviews/archived/p05-review-2026-10-23T085345Z.md; auto code, round3/3; narrowed04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45, same frozen Base. Root read the complete artifact and verified its provenance/anchors; confirmation has exactly one not-attempted reconnaissance signal and no orchestration section. Counts Critical0/High0/Medium0/Low2. All3 external M1/H1/H2 are independently confirmed fixed: actual pinned compilation/loader probes plus transforms38/config22/nav40 tests. Fresh emit matches dist; original red failures, export hash equality and8gate exits were inspected by reviewer; unaffected prior coverage is inherited.
+
+R3-L1: docs-config README says Discovery errors propagate, but engine itself skips unreadable directories; OAT adds no catch and membership agrees with emitter. Task Scope: Negligible, factual wording correction proposed. R3-L2: public options are inferable inline, but RemarkLinksOptions is not re-exported from barrel; convenience-only, no accepted runtime guarantee requires a named type export. Task Scope: Negligible; root proposes retaining minimal current type surface with explicit rationale. Neither note blocks correctness. No fix task or public API addition is created before operator choice at cap.
+
+**Outcome:** received; three-cycle cap reached with two residual Low notes. Per oat-project-review-receive Step8 and complexity-review-fallback, dispatch a new read-only complexity check because the earlier p05 audit predates round3 and this delta; save its inline report locally and show the operator concrete choices. No fourth code review or automatic disposition. P05 remains in_progress, current acceptance suspended; recovery1/10,pendingnull and prior historical acceptance stay preserved. Root must record operator choice before proceeding; no PR push/reply/merge performed.
+
 ## Phase p06: oat docs check
 
 **Status:** pending
@@ -1518,7 +1526,7 @@ All10 records closed; no later phase started. Advance p05 Head to the tested can
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-review-r3-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p05-review-r3-20261023 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-remote-inventory-20261023 · scope=p05 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-remote-inventory · observed=~ · match=~
 

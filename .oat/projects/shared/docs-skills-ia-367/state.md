@@ -1,7 +1,7 @@
 ---
 oat_current_task: p05
 oat_last_commit: b48c6e3e9be92ed16b5da945bf811c145880ab46
-oat_blockers: []
+oat_blockers: [operator disposition at the p05 three-review cap]
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
     { type: backlog, ref: 'BL-261002-correct-docs-bootstrap-docs' },
@@ -139,7 +139,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/373'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T08:47:40.147795Z'
+oat_project_state_updated: '2026-10-23T08:56:22.710812Z'
 oat_generated: false
 ---
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-Independent p05 round3 re-review of04d5361060ed597fb59431ea4e98ee1d0d30f853..e197f3f8c4f4b76d5e9837508d543933e3ec5b45 confirms PR373 M1 nested-docs routing, H1 filtered collision membership and H2 nonlocal nav placement. All10 records closed; all8 ordered gates pass. Historical acceptance and reviews remain preserved, current acceptance suspended. Recovery1/10,pendingnull stays settled. PR373 is open/watched; publish only after independent confirmation, then require current-head CI/Bugbot clearance before plain land-pr with established squash policy. Then align provisional p06. Earlier PRs #368/#369/#371/#372 are merged/unwatched. Hold final PR until project completion.
+Round3 independently confirms all3 PR373 behavior fixes at candidatee197f3f8c4f4b76d5e9837508d543933e3ec5b45; two Low documentation/export notes remain. Complete the required complexity check at the three-review cap, show its report and concrete remaining choices, then record operator disposition. No fourth review or public API expansion is authorized automatically. All10 task records closed/all8 gates pass; recovery1/10,pendingnull remains settled. P05 acceptance is suspended pending this disposition. PR373 stays open/watched and held from merge; final PR remains held until project completion. After disposition, publish correction, require exact-head CI/Bugbot and use authorized land-pr, then align p06.
