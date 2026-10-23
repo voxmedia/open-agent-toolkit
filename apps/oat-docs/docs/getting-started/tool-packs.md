@@ -976,9 +976,11 @@ The `docs` pack contains active documentation and instruction-governance
 workflows:
 
 - **oat-docs-bootstrap** — Guide users through Markdown setup/adoption or a docs app
-  end-to-end: preflight detection, input gathering, scaffold (via `oat docs
-init`) with capability-gated post-patches, build verification, config
-  inspection, and an educational walkthrough.
+  end-to-end: preflight detection, input gathering, scaffold via `oat docs init`,
+  capability probing, CLI-owned scaffold inspection, build verification,
+  config inspection, and an educational walkthrough. Current CLI templates own
+  framework app-root `AGENTS.md`; missing capabilities or older scaffold gaps
+  lead to CLI update advice or analyze/manual CLI/template upgrade recommendations.
 - **oat-docs-analyze** — Analyze a docs surface for contract coverage, nav
   drift, stale claims, and coverage gaps.
 - **oat-docs-apply** — Apply only approved, evidence-backed docs-analysis

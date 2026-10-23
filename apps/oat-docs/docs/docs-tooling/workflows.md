@@ -31,7 +31,7 @@ Install the workflow skills with `oat tools install docs` (preferred) or
   local navigation maintenance inside an existing OAT documentation surface
 - `oat-docs-bootstrap` is the guided onramp for Markdown setup/adoption or adding a docs app —
   wraps `oat docs init` with preflight detection, richer input gathering (site
-  name distinct from package name), labeled post-patches for open CLI gaps,
+  name distinct from package name), capability probing and CLI-owned scaffold inspection,
   file-level verification for Markdown or framework build verification, config
   inspection, and an educational walkthrough
 - `oat-docs-analyze` evaluates a docs surface for structure, drift, coverage,
@@ -96,8 +96,8 @@ Diagram: bootstrap once, then analyze, approve and apply only agreed improvement
 - **Setup, once.** `oat-docs-bootstrap` checks the repo without writing, asks
   you to confirm its inputs, then runs `oat docs init`. Plain Markdown setup validates authored files,
   configuration and guidance without installing app dependencies or building a
-  site. Fumadocs and MkDocs setup adds the relevant post-patches, installation,
-  build verification and walkthrough.
+  site. Fumadocs and MkDocs setup inspects CLI-owned scaffold output, installs
+  dependencies, verifies the build and provides a walkthrough.
 - **Analyze.** `oat-docs-analyze` never edits docs. It writes an analysis
   artifact under `.oat/repo/analysis/` (and updates OAT tracking).
 - **Approve.** `oat-docs-apply` builds a plan from the newest artifact and
@@ -109,7 +109,7 @@ Diagram: bootstrap once, then analyze, approve and apply only agreed improvement
   marked as needing confirmation are confirmed again before they are written.
 - **Repeat.** Re-run analyze afterwards to confirm the result.
 
-1. Bootstrap or explicitly adopt a documentation surface with `oat-docs-bootstrap` (preferred — guided, includes post-scaffold patches and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
+1. Bootstrap or explicitly adopt a documentation surface with `oat-docs-bootstrap` (preferred — guided, includes capability probing, scaffold verification and walkthrough) or `oat docs init` directly (CLI-only / non-interactive workflows)
 2. (Optional) If migrating from MkDocs, handle that as a separate migration workstream; `oat docs migrate --docs-dir docs --config mkdocs.yml --apply` is only the syntax/frontmatter helper
 3. Use `oat-docs-authoring` for targeted OAT Markdown/Fumadocs authoring work, with `authoring-docs` as the universal documentation-quality baseline
 4. Keep authored context and title/description metadata, with an `index.md` and useful `## Contents` in each non-excluded Markdown-bearing directory; preserve asset-only exceptions and local instructions
@@ -296,8 +296,12 @@ configuration, and links.
 **Fumadocs or MkDocs path:** Use this when you want a built documentation
 site. The skill gathers app inputs (the visible site title and the package
 name are different inputs), probes which capabilities the installed CLI
-supports, runs the scaffold, and applies only the relevant post-patches (the
-skill's labeled fixes for known gaps in the CLI's scaffold output).
+supports, runs the CLI scaffold, and inspects the output. Current CLI templates
+own the app-root `AGENTS.md` and framework content. Missing `--site-name` support
+stops bootstrap before scaffolding with CLI update advice. Missing app guidance
+or older scaffold gaps become analyze findings with manual CLI/template upgrade
+recommendations; bootstrap preserves existing files and supplies no replacement
+AGENTS template.
 Verification installs dependencies and runs a build. If a docs app already
 exists, the default repair route runs analyze then apply and exits. An explicit
 `replace` choice deletes the existing app; a second app remains unsupported.
@@ -306,10 +310,10 @@ exists, the default repair route runs analyze then apply and exits. An explicit
 runs `oat docs init`, which writes the `documentation` section of
 `.oat/config.json` and adds or updates a managed `## Documentation` section
 in the root `AGENTS.md`. This happens on both paths. On the Fumadocs or
-MkDocs path it also scaffolds the app, applies post-patches, installs
-dependencies, runs a build, and may patch the root `package.json` so the
-default build leaves the docs app out. It may also write an `AGENTS.md`
-inside the new app when the CLI did not create one. Only after you confirm:
+MkDocs path the CLI also scaffolds the app, including its app-root `AGENTS.md`,
+and may patch the root `package.json` so the default build leaves the docs app
+out. Bootstrap inspects that output, installs dependencies and runs a build.
+Only after you confirm:
 the `replace` choice deletes the existing docs app directory and clears its
 `documentation` config and root `AGENTS.md` section (it refuses only when
 that directory has uncommitted changes); answering yes to the
