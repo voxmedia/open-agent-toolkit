@@ -1339,6 +1339,10 @@ Review-scope p05 journal check exits0/statusok; its sole warning is the root-own
 
 Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, task-docs-check.log, gates.json/gate1–3.log, infrastructure-retry.md and gates-retry.json/gate3–8-retry.log, fetch.log/main-paths.log and journal-check.json. Earlier proof index analysis/p05/README.md is historical; recovery01 was settled by root at c59e30557b79a8680a4541b2b9cdc0bca8fcdc0d, and the public-prose concern recorded there is now closed by t04.
 
+### Root pre-review ledger validation
+
+Root validated all four closed p05 records and the final prose scope at13d07784d; only implementation.md follows candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212. Three-page headings/link conservation and explicit ordered gate exits reconcile, including the disclosed single no-edit server-timeout retry; the prior forced9374tests and real-export/browser evidence remain inherited. Recovery01 stays settled at1/10,pendingnull. Base and candidate Head are valid ancestor anchors. Root review is pending; no p05 acceptance or later-phase start is recorded.
+
 ---
 
 ## Phase p06: oat docs check
@@ -1367,7 +1371,7 @@ Evidence: ignored analysis/p05/prose/README.md, conservation.md, product.diff, t
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p05-prose-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p05-prose-after-recovery01 · observed=~ · match=~
+- run/v1 · request=docs367-p05-prose-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p05-prose-after-recovery01 · observed=~ · match=~
 
 - run/v1 · request=docs367-p05-impl-20261023 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05
-oat_last_commit: a7a46982cac6fd4e163ecc57895f127792da9872
+oat_last_commit: 13d07784d15e696bacf9d62bfa34b488860a7cb2
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -139,7 +139,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/372' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-10-23T07:01:31Z
+oat_project_state_updated: 2026-10-23T07:15:21Z
 oat_generated: false
 ---
 
@@ -165,4 +165,4 @@ None.
 
 ## Next Milestone
 
-PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: three implementation records and verification are complete; recovery01 is settled at1/10,pendingnull. Finish the bounded three-page public prose propagation, then independently review p05 before acceptance. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
+PR #372 merged at 2ff89a2c3bd2dc4f19a40cd7b908bb62ed244002 after current-head CI/Bugbot and all four Warp confirmations; its watcher is stopped. All eight accepted phases are delivered. Continue p05 on docs/docs-skills-ia-367-p05 from merged main: all four execution records and the prose propagation are complete; recovery01 is settled at1/10,pendingnull. Independently review p05 at candidate95a2cef6610eb3a65c18544ffcdd51f9abb4b212 before acceptance. PRs #368/#369/#371/#372 are merged. Use land-pr for green intermediate PRs; hold the final PR until project completion.
