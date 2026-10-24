@@ -2203,15 +2203,27 @@ Actual case-insensitive regression executed red/green,479 fresh focused tests an
 
 ### Review Received: p08 round 3
 
-**Date:** 2026-10-24. **Review artifact (local-only):** reviews/p08-review-2026-10-24T180640Z.md.
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T180640Z.md.
 **Findings:** Critical 0 · High 0 · Medium 0 · Low 1.
 
-R1 M1/L1 and R2 M1 are independently closed. R3 L1 is an accepted-requirement gap in source-root identity: case-variant source roots can duplicate physical files and miss canonical-spelled exclusions on a case-insensitive filesystem. Root reproduced src/SRC duplicate searched paths at the built public CLI boundary. No outside read or reader-exclusion bypass occurs. Finding disposition is pending the required review-cap complexity assessment and operator choice; no fix task or deferral has been created.
+R1 M1/L1 and R2 M1 are independently closed. R3 L1 is an accepted-requirement gap in source-root identity: case-variant source roots can duplicate physical files and miss canonical-spelled exclusions on a case-insensitive filesystem. Root reproduced src/SRC duplicate searched paths at the built public CLI boundary. No outside read or reader-exclusion bypass occurs. Operator approved the recommended corrective revision on 2026-10-24; convert R3 L1 to sole execution record p08-t05 under the existing source-root dedup/exclusion contract.
 
 **Design drift / artifact alignment notes:** None accepted; the existing overlap-deduplication and source-exclusion contract remains authoritative.
-**Outcome:** received, cycle3/3; complexity assessment completed, operator disposition pending. All four records remain complete; phase remains in_progress,11/13 accepted, p09 has no Base. Reviewer rebuilt CLI, checked22 hashes, passed18 categorical probes and1253 fresh focused tests with the case regression executing. Broad gates/manual/platform limits are inherited. Exactly one not-attempted reconnaissance signal consumed; no Review Orchestration section/log is required.
+**Outcome:** fixes queued p08-t05, cycle3/3; operator approved one bounded corrective revision with focused independent confirmation beyond the cap. All four records remain complete; phase remains in_progress,11/13 accepted, p09 has no Base. Reviewer rebuilt CLI, checked22 hashes, passed18 categorical probes and1253 fresh focused tests with the case regression executing. Broad gates/manual/platform limits are inherited. Exactly one not-attempted reconnaissance signal consumed; no Review Orchestration section/log is required.
 
-**Review-cap assessment:** reviews/archived/complexity-p08-2026-10-24T181242Z.md. Verdict partially compliant: core helper and six assessments retained; process scope is the overshoot. Recommended corrective revision is one canonical-source-root check, one real-CLI red/green regression and one doc sentence, then nine required gates and one focused independent delta confirmation. Broader normalization, platform proof and a fourth full-range campaign are not recommended. Alternative is an operator-approved documentation caveat/deferral. R3-L1 is an accepted-requirement gap, not new hardening. No choice, fix record, deferral or acceptance has been made on the operator's behalf; waiting for cap disposition. Recovery0/10,pendingnull and prior histories remain conserved.
+**Review-cap assessment:** reviews/archived/complexity-p08-2026-10-24T181242Z.md. Verdict partially compliant: core helper and six assessments retained; process scope is the overshoot. Recommended corrective revision is one canonical-source-root check, one real-CLI red/green regression and one doc sentence, then nine required gates and one focused independent delta confirmation. Broader normalization, platform proof and a fourth full-range campaign are not recommended. Alternative is an operator-approved documentation caveat/deferral. R3-L1 is an accepted-requirement gap, not new hardening. Operator chose corrective revision on 2026-10-24. Only p08-t05 plus one focused independent delta confirmation is authorized beyond the cap; no fourth full-range review or new platform campaign. Phase acceptance remains pending. Recovery0/10,pendingnull and prior histories remain conserved.
+
+### Task p08-t05: (review) Require canonical source-root spelling
+
+**Status:** in_progress
+**Commit:** —
+**Source review:** reviews/archived/p08-review-2026-10-24T180640Z.md (L1), operator-approved corrective revision at cycle3/3.
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** After source-root containment and symlink handling, require the typed repo-relative root to equal its canonical async-realpath spelling relative to the canonical repo root. Reject mismatches with an actionable input error. Preserve canonical-root exclusions, overlap deduplication, source skips, prior page guards, configured-root aliases and triad gating. No shared abstraction/global folding/exclusion normalization or inode dedup.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md.
+**Proof command:** One real public-CLI regression with runtime case-sensitivity detection: case-variant source root rejects with input exit1, canonical root/exclusion/overlap controls remain valid. Retain intended pre-fix red/fixed green actually executed on this APFS host. Run relevant focused tests and nine ordered gates with explicit exits/cache truth and direct manifest freshness; one independent delta confirmation only. Inherit unchanged broader/runtime/manual evidence. No new test-only hook, dependency/schema/version/skill change or full-range campaign.
+**Analysis:** analysis/p08/fix-r3/.
 
 ---
 
@@ -2408,6 +2420,8 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+- 2026-10-24 · p08 · review-receive three-cycle cap · complexity verdict Partially compliant · operator chose corrective revision ("Approve"): one canonical-source-root fix, one public-CLI regression and documentation sentence, nine gates plus one focused independent delta confirmation; no fourth full-range/platform campaign. Report: reviews/archived/complexity-p08-2026-10-24T181242Z.md.
 
 ### Remote Review Received: PR #375 Windows scaffold regression
 
