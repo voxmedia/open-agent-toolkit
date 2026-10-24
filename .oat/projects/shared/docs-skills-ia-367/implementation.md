@@ -2126,6 +2126,37 @@ Root verified the complete report, exact22-path product manifest digest and ever
 
 All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo replay counts are disclosed in the implementation report; fresh1564 scoped isolated-HOME tests and78 committed CLI/help tests passed. Root lint/format, direct manifest freshness and manual six-assessment walkthrough passed. This is public synthetic/manual evidence, with no autonomous-agent, fresh Node22 or native Windows claim. Scope keeps all six assessments in analyze judgment; helper occurrences do not establish runtime truth. P09 remains provisional with no Base.
 
+### Review Received: p08 round 1
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T172427Z.md.
+**Findings:** Critical0/High0/Medium1/Low1. **Reconnaissance:** not-attempted; confirmation consumed exactly once, no orchestration section.
+
+- M1 (Medium, Minor scope): lexical-only nonReaderPaths checking accepts an in-content symlink alias to an excluded template. Root independently reproduced direct rejection and alias acceptance. Convert to p08-t02; accepted p08 reader-exclusion/contained-reader contract requires repair. Reject page paths with symlink components relative to the resolved content root, aligning the existing checker reader inventory. Keep configured-root identity handling intact.
+- L1 (Low, Minor scope): selected source roots can contain documentation and self-match. Root reproduced a docs-page citation. Convert to p08-t03, documentation clarification only: state that the helper does not automatically remove docs from selected sources and a self-citation is not implementation evidence. The existing narrow-source selection and canonical-relevance judgment remain authoritative; an automatic overlap guard is additional hardening not required by p08 and is not queued.
+
+**Design drift / artifact alignment notes:** No brief change. L1 aligns shipped guidance with the approved limited text-occurrence guarantee, preserving operator-selected sources and explicit exclusions. No new dependency, schema, check rule or source-classification engine.
+**Outcome:** fixes queued p08-t02/p08-t03. Phase remains in_progress,11/13 accepted, frozen Base/Head retained until fix completion; p09 has no Base. Original round1 event remains distinct from the successor review. Reviewer independently rebuilt CLI, verified all22 hashes, ran11 probes and1165 focused tests. Nine-gate and earlier manual/runtime limits remain inherited. No project-log append while a fix child owns the worktree.
+
+### Task p08-t02: (review) Reject symlinked reader-page selections
+
+**Status:** pending
+**Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (M1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Close the nonReaderPaths alias bypass by rejecting any selected content-relative page with a symlink component, reusing the existing bounded lstat walk with a root parameter. Preserve valid readers, root identity, containment, pre-read triad gating and source semantics.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md (page-symlink disclosure only).
+**Proof command:** Real CLI alias-to-excluded-template and symlink-directory bad controls must fail for the page guard, with contained reader control passing; retain pre-fix red and fixed green evidence. Focused literals/help suites and all nine ordered DoD gates; exact exits/cache truth under ignored analysis/p08/fix-r1/. No own-reader mocks or production-only test hook.
+
+### Task p08-t03: (review) Clarify selected source self-matches
+
+**Status:** pending
+**Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (L1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Explicitly state that selected source roots are not automatically filtered to remove docs; roots/exclusions must omit docs and a found citation to documentation itself cannot establish implementation support. Keep canonical relevance judgment and not-found=unverified semantics. No automatic overlap guard.
+**Files:** .agents/skills/oat-docs-analyze/SKILL.md; apps/oat-docs/docs/docs-tooling/commands.md; mechanically pinned existing skill sentence contracts only if required and reported.
+**Proof command:** Conservation diff and focused skill-sentence tests; no new prose-mirroring test. Retain current skill1.7.4/public0.3.30 PR-scoped bumps. Run root lint/format and ordered gates as required; manual inspection of the existing self-match probe verifies the clarified limitation.
+
 ---
 
 ## Phase p09: Docs, release and closeout
