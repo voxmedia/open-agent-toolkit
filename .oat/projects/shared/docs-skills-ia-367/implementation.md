@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p08
+oat_current_task_id: p08-t01
 oat_generated: false
 oat_template: false
 ---
@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p08    | in_progress | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
 **Total:** 11/13 phases accepted
 
@@ -2101,7 +2101,20 @@ P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readines
 
 ## Phase p08: Product and QA checks against source
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 65baa0145acea94872fadcf4a44edb00609b0ed5
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+
+Execution shape: one phase implementer owns the sequential helper/analyze/docs integration in the existing p08 branch/worktree. Shared command registration, skill sentences and bundled builds preclude independent parallel lanes. No optional children. Recovery default10, p08 usage0/10,pendingnull. Root owns plan/state/log, independent review and delivery. Prototype-based local design is committed; no Outcome/Constraint/Decision/authority change.
+
+### Task p08-t01: Deliver triad analysis and literal occurrence evidence
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Implement concrete p08 Intent/Exit with a narrow CLI helper and conditional six-check analysis, retaining reader/config/approval boundaries.
+**Files:** docs/literals command/module/tests and docs registration; oat-docs-analyze skill/reference templates/checklist and mechanically affected skill/help/release contracts; relevant CLI README/human docs/covering instructions; public prototype reference; all five public manifests/generated bundled versions. No docs-check rule or config schema change, new dependency, consumer edit or private material.
+**Proof command:** real CLI synthetic bad/valid cases, focused fresh isolated-HOME suites, manual six-check walkthrough and nine ordered repository gates. See phase brief; retain detailed commands/results under ignored analysis/p08.
 
 ---
 
