@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p08
+oat_current_task_id: p07-t05
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p08    | pending   | 1     | 0/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | completed   | 1     | 1/1      |
+| p07    | in_progress | 1     | 0/1      |
+| p08    | pending     | 1     | 0/1      |
+| p09    | pending     | 1     | 0/1      |
 
-**Total:** 11/13 phases accepted
+**Total:** 10/13 phases accepted
 
 ---
 
@@ -1959,7 +1959,7 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 ## Phase p07: Page templates and presets
 
-**Status:** completed
+**Status:** in_progress
 **Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
 **Head:** 632d69e04954f58e26e1a541fdd6b36968189e1e
 **Executor:** phase-implementer:docs367-p07-impl-20261024
@@ -2057,6 +2057,19 @@ Full anchored review Base1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3..Head632d69e04
 Fresh reviewer evidence: 1,325 tests in37 files, authoring2/2, twelve CLI rows across all three modes (nine presets/three defaults), invalid-input no-write controls,43 canonical-template byte comparisons, all35 candidate product hashes, skill bumps and formatting/diff checks pass. Reviewer used existing post-product dist without rebuilding. Nine gates, packed runtime/assets, exclusion/preservation controls and manual bootstrap walkthrough remain inherited with original limits; no clean-install, autonomous-bootstrap, Windows or next-dev claim. Exact commands/logs are in ignored analysis/p07/review-r2. Reconnaissance not-attempted; no orchestration section or recon log entry.
 
 **Outcome:** passed, cycle2/3. Root accepts p07 with all four execution records closed and no configured external phase gate (plan selects only p03/p06). Frozen Base/Head preserved; recovery0/10,pendingnull. Phase count11/13 accepted; p08/p09 remain provisional and unstarted. Intermediate PR delivery proceeds under standing plain land-pr authority; current-head CI/Bugbot still required. No final project PR or publication.
+
+---
+
+### Task p07-t05: (remote review) Preserve native preset scaffold destinations
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-pr375-windows-20261024 (same original implementer continuation)
+**Source review:** reviews/archived/remote-pr-375-review-2026-10-24T161341Z.md (H1; Warp discussion4367677917)
+
+Intent: Compare native destinations consistently in preset page removal and toolchain link rewriting, preserving default output.
+Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the smallest relevant existing or focused regression test file within docs/init.
+Proof: regression fails before correction and passes after for both separator-sensitive behaviors; actual native default/preset scaffold controls, relevant fresh suites and nine ordered gates. Windows simulation must be labeled; no test-only production API or new dependency.
 
 ---
 
@@ -2239,6 +2252,12 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### Remote Review Received: PR #375 Windows scaffold regression
+
+**Date:** 2026-10-24. Source: https://github.com/voxmedia/open-agent-toolkit/pull/375#pullrequestreview-5638896591 at f6b5b38e8079f48a2b355253207ef2c3697f00ed; finding by warp-factories[bot]: https://github.com/voxmedia/open-agent-toolkit/pull/375#discussion_r4367677917. Critical0/High1/Medium0/Low0 (external important normalized High). H1: slash-only comparisons miss native Windows destinations, retaining an out-of-Contents page and stale link. Accepted requirement gap in p07 preset materialization, queued as p07-t05; no scope expansion or deferral.
+
+Remote receive cycle1; standard full-range reviews remain2/3. P07 temporarily reopens, historical acceptance and frozen Base/Head retained; no later phase Base exists, so verified fix may advance p07 Head. Recovery0/10,pendingnull unchanged. Root owns tracking, independent focused confirmation and delivery; original implementer owns bounded product correction. Detailed source is local-only reviews/archived/remote-pr-375-review-2026-10-24T161341Z.md; this receipt retains public identity and disposition.
 
 PR375 self-review complete through product candidate632d69e04954f58e26e1a541fdd6b36968189e1e and tracking-only tail660af17977a2f03db01785601f6b74816f216190. Correctness, deliberate-testing and documentation are covered by independent R1/R2; complexity-only review docs367-p07-complexity-20261024 is Partially compliant at optional edges, with no delivery blocker. Root read the report completely and confirmed the two raw merge blocks and duplicated reachable inspection prose. Keep all core machinery and tests. Consolidate the config merge only when index.ts is next edited; consolidate the checklist when IDs/mappings/subsets/threshold change, preserving Markdown reachability. Those conditional maintenance suggestions require no standalone fix/review. Two incidental uninvestigated observations (pre-existing default config normalization, possible future template wording drift) establish no p07 regression or new guarantee and create no corrective scope. Report: reviews/archived/complexity-p07-2026-10-24.md. No product changes or deviations; only delivery bookkeeping follows. Human review should focus first on selection/refusal and exclusion composition in init/index.ts/content.ts. Self-review lenses complete, no pending operator question; draft may become ready. Standing plain land-pr authority and exact-head CI/Bugbot gate remain in force.
 
