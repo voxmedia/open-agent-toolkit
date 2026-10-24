@@ -49,6 +49,9 @@ oat_phase_recovery_policy:
     p06:
       used_attempts: 1
       pending_attempt: null
+    p07:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery

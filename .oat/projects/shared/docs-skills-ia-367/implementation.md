@@ -1959,7 +1959,11 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 ## Phase p07: Page templates and presets
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+
+Execution shape: rung3, one phase implementer owns this existing worktree on docs/docs-skills-ia-367-p07. No parallel group is declared; root fan-out fails independence because canonical template assets, CLI content/config planning, bootstrap guidance, fixtures and bundled build outputs share sequential dependencies. Root-inline exception does not apply to this new public surface. Recovery default10, no phase override; authoritative p07 usage0/10, remaining10, pending null. Root retains plan/state/log, independent review, acceptance and delivery ownership.
 
 ---
 
