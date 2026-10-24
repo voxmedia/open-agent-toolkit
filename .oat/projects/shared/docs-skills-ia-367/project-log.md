@@ -269,6 +269,10 @@ Operator approved explicit full-project final review range; original anchors pre
 
 target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md run=96d4018b-7030-4867-a0cb-85be5d8beb1a
 
+### 2026-10-24 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-10-24T22:28:56Z; project-log roll-up status: ok. oat-seal:docs-skills-ia-367
+
 ## End-of-run synthesis
 
 All 13 accepted phase-units and the full-project final reviews support the eleven-Outcomes audit. Retain bounded occurrence evidence, explicit approval boundaries and the eight approved residual findings. Recovery bookkeeping should stay proportional to the corrected behavior. Consumer acceptance and publication remain separate follow-up work. Categorized observations are rolled up in summary.md; no general promotion selected.

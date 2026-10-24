@@ -150,8 +150,8 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/377
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:27:22.142Z'
+oat_project_completed: '2026-10-24T22:28:58.132Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-10-24T22:29:11.677Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -232,17 +232,19 @@ oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-24T22:13:02.420Z'
+oat_lifecycle: complete
+oat_pr_status_observed_at: 2026-10-24T22:29:11.676Z
 ---
 
 # Project State: docs-skills-ia-367
 
-**Status:** Implementation complete
+**Status:** Complete
 **Started:** 2026-10-22
 **Last Updated:** 2026-10-24
 
 ## Current Phase
 
-Implementation — PR #377 is open as a draft; all 13 phase-units, final integrated review, configured exit review and the stored summary → document → PR sequence are complete. All eight historical deferrals retain explicit operator approval. Completion may run before or after merge.
+Lifecycle complete; archived locally
 
 ## Artifacts
 
@@ -256,7 +258,7 @@ None.
 
 ## Next Milestone
 
-Finish the independent closeout-documentation review and lifecycle completion/archive, then clear exact-head CI and actionable remote feedback and land PR #377 with the authorized plain merge. For feedback use oat-project-revise; completion can run before or after merge. No publication or consumer rollout.
+None. Project complete.
 
 ## Configured Exit Review Scope
 

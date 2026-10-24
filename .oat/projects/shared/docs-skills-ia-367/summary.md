@@ -100,7 +100,7 @@ All eight historical findings (two Medium, six Low) retain explicit operator app
 - **p05 R3-L2 — Low:** the named `RemarkLinksOptions` barrel export is deferred; inline options remain typed and no consumer requires the public symbol. Revisit when a consumer/typed wrapper needs to name it; no runtime guarantee is deferred.
 - **p03 Gate-L1 — Low:** hoisted-only docs packages return safe unverified drift without an upgrade command. Define the ancestor-search boundary and add a real hoisted-layout regression before changing resolution.
 
-The former p03 Gate-L2 allowed-tools gap is closed by p09-t01, not a ninth open deferral. External automation configuration and actual consumer acceptance moved to **BL-261024-roll-out-the-shipped-oat-docs**, whose eight criteria remain unchecked. Consumer repositories, house conventions, package publication and BL-260830 discovery prerequisites were outside this delivery. PR #377 awaits exact-head checks and remote feedback clearance for the authorized plain merge. Lifecycle completion and configured archive are being finalized by the root.
+The former p03 Gate-L2 allowed-tools gap is closed by p09-t01, not a ninth open deferral. External automation configuration and actual consumer acceptance moved to **BL-261024-roll-out-the-shipped-oat-docs**, whose eight criteria remain unchecked. Consumer repositories, house conventions, package publication and BL-260830 discovery prerequisites were outside this delivery. PR #377 awaits exact-head checks and remote feedback clearance for the authorized plain merge. Lifecycle completion is recorded; configured archive retains the project evidence and exports this written summary.
 
 ## Explainer Outcome
 
