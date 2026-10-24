@@ -10,6 +10,12 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261024-authored-ia-with-config-mirror | 2026-10-24 | accepted   | Authored IA with config mirror                                                                         | -       |
+| DR-261024-explicit-docs-apply-approvals  | 2026-10-24 | accepted   | Explicit docs apply approvals                                                                          | -       |
+| DR-261024-guidance-driven-ia-selection   | 2026-10-24 | accepted   | Guidance-driven IA selection                                                                           | -       |
+| DR-261024-judgment-led-source            | 2026-10-24 | accepted   | Judgment-led source verification                                                                       | -       |
+| DR-261024-portable-docs-check-boundaries | 2026-10-24 | accepted   | Portable docs check boundaries                                                                         | -       |
+| DR-261024-reader-first-starter-ownership | 2026-10-24 | accepted   | Reader-first starter ownership                                                                         | -       |
 | DR-261012-archive-retry-identity         | 2026-10-12 | accepted   | Archive retry identity and generations                                                                 | -       |
 | DR-261012-archived-pr-status-is          | 2026-10-12 | accepted   | Archived PR status is an observation                                                                   | -       |
 | DR-261012-canonical-journal-format       | 2026-10-12 | accepted   | Canonical journal format and validator                                                                 | -       |

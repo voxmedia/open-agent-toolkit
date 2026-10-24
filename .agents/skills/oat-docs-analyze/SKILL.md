@@ -4,9 +4,9 @@ description: Run when you need to evaluate documentation structure, navigation, 
 argument-hint: '[target] [--ia] [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(command -v:*), Bash(sed:*), Bash(npm root -g:*), Bash(test:*), Bash(oat --version), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.7.4'
+  version: '1.7.5'
 ---
 
 # Docs Analysis
