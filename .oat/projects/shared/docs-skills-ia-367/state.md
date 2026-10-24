@@ -141,11 +141,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/374'
+oat_pr_status: draft
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T15:54:08Z'
+oat_project_state_updated: '2026-10-24T15:57:24Z'
 oat_generated: false
 ---
 
@@ -157,7 +157,7 @@ oat_generated: false
 
 ## Current Phase
 
-P07 accepted after fresh cross-provider round2, zero findings and all R1 corrections closed. Eleven of13 phase-units accepted. All nine gates and focused evidence pass with cache/inheritance limits disclosed; recovery0/10,pendingnull. Intermediate p07 delivery is next; p08/p09 remain provisional with no Base.
+P07 accepted after fresh cross-provider round2, zero findings and all R1 corrections closed. Eleven of13 phase-units accepted. All nine gates and focused evidence pass with cache/inheritance limits disclosed; recovery0/10,pendingnull. Draft PR375 is open; complexity-only self-review and CI/Bugbot pending; p08/p09 remain provisional with no Base.
 
 ## Artifacts
 
@@ -171,4 +171,4 @@ None.
 
 ## Next Milestone
 
-Open and land p07 intermediate PR after current-head CI/Bugbot and actionable feedback clear, then concretize/execute p08 and p09. Standing bottom-up merge authority retained; no publication or final project PR before closeout. PR374 remains merged and unwatched.
+Finish self-review, mark PR375 ready and land it after current-head CI/Bugbot and actionable feedback clear, then concretize/execute p08 and p09. Standing bottom-up merge authority retained; no publication or final project PR before closeout. PR374 remains merged and unwatched.
