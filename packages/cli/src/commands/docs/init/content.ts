@@ -43,7 +43,7 @@ interface Track {
   title: string;
   principle: string;
   purpose: string;
-  sections: string[];
+  sections: [title: string, guidance: string][];
 }
 const engineering: Track = {
   path: 'engineering',
@@ -53,9 +53,18 @@ const engineering: Track = {
   purpose:
     'Engineering is hybrid: enter by domain or implementation contract when changing shared behavior, and by feature when following its paired Product and QA pages.',
   sections: [
-    'Domain contracts',
-    'Feature implementation',
-    'Operations and failure modes',
+    [
+      'Domain contracts',
+      'Place shared domain rules, interface boundaries and invariants here; link the features that depend on them.',
+    ],
+    [
+      'Feature implementation',
+      'Link implementation details for each feature to its Product intent, shared domain contracts and QA validation.',
+    ],
+    [
+      'Operations and failure modes',
+      'Place diagnosis, recovery and operational limits here; link runbooks and incident solution records.',
+    ],
   ],
 };
 const TRACKS: Record<IaPreset, Track[]> = {
@@ -67,9 +76,18 @@ const TRACKS: Record<IaPreset, Track[]> = {
       purpose:
         'Product readers enter by feature or journey to understand availability, intended behavior and user-visible boundaries.',
       sections: [
-        'Availability',
-        'Journeys and behavior',
-        'States and boundaries',
+        [
+          'Availability',
+          'Describe who can use each feature, supported environments and known availability limits; link its feature page.',
+        ],
+        [
+          'Journeys and behavior',
+          'Place feature goals and ordered user journeys here, with their expected user-visible outcomes.',
+        ],
+        [
+          'States and boundaries',
+          'Document visible states, transitions, empty and error behavior, and what each feature excludes.',
+        ],
       ],
     },
     engineering,
@@ -79,7 +97,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Feature or journey with reproducible verification',
       purpose:
         'QA readers enter by feature or journey to reproduce behavior with named seeds, ready signals, exact expectations and cleanup.',
-      sections: ['Seeds and configuration', 'Scenarios', 'Execution evidence'],
+      sections: [
+        [
+          'Seeds and configuration',
+          'Place reproducible test data, configuration and ready signals here; identify safe setup and cleanup.',
+        ],
+        [
+          'Scenarios',
+          'Organize validation by feature or journey, with actions, exact expectations and links to the supported contract.',
+        ],
+        [
+          'Execution evidence',
+          'Keep dated runs, observed results and discrepancies here, separate from planned automation and implemented assertions.',
+        ],
+      ],
     },
   ],
   'consumer-maintainer': [
@@ -89,7 +120,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Reader task and supported contract',
       purpose:
         'Consumers enter by the task they need to complete and the supported contract they can rely on.',
-      sections: ['Start here', 'Tasks', 'Supported reference'],
+      sections: [
+        [
+          'Start here',
+          'Link the shortest supported first task, including prerequisites and a result the reader can verify.',
+        ],
+        [
+          'Tasks',
+          'Place bounded procedures for consumer goals here; link required inputs and verification steps.',
+        ],
+        [
+          'Supported reference',
+          'Collect supported interfaces, inputs, outputs and compatibility limits for consumer lookup.',
+        ],
+      ],
     },
     {
       path: 'maintainer',
@@ -97,7 +141,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Change, operation and maintenance responsibility',
       purpose:
         'Maintainers enter by the responsibility they own: implementation, delivery, operations or support of the shared contract.',
-      sections: ['Implementation contracts', 'Delivery', 'Operations'],
+      sections: [
+        [
+          'Implementation contracts',
+          'Place internal interfaces, invariants and ownership boundaries here for maintainers changing behavior.',
+        ],
+        [
+          'Delivery',
+          'Document release preparation, compatibility checks, rollout and rollback responsibilities here.',
+        ],
+        [
+          'Operations',
+          'Link routine maintenance, diagnostic procedures and recovery runbooks, with their authority and safety boundaries.',
+        ],
+      ],
     },
   ],
   'domain-engineering': [engineering],
@@ -108,7 +165,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Learning by a complete safe exercise',
       purpose:
         'Learners enter through a guided exercise with a clear starting state and an independently verifiable result.',
-      sections: ['Prerequisites', 'Guided exercise', 'Expected result'],
+      sections: [
+        [
+          'Prerequisites',
+          'State the required knowledge, access, environment and safe starting data before the reader begins.',
+        ],
+        [
+          'Guided exercise',
+          'Walk through one complete learning exercise in order, explaining what each step demonstrates.',
+        ],
+        [
+          'Expected result',
+          'Show how to recognize a successful exercise and compare the observed result with the learning goal.',
+        ],
+      ],
     },
     {
       path: 'how-to',
@@ -116,7 +186,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'One concrete reader task',
       purpose:
         'Readers who know their goal enter by task, confirm prerequisites and follow a bounded procedure.',
-      sections: ['Prerequisites', 'Procedure', 'Verification and cleanup'],
+      sections: [
+        [
+          'Prerequisites',
+          'State the required knowledge, access, environment and safe starting data before the reader begins.',
+        ],
+        [
+          'Procedure',
+          'Give the ordered actions for one concrete task, including decision points and supported alternatives.',
+        ],
+        [
+          'Verification and cleanup',
+          'Explain how to check the task result, remove temporary resources and recover from an incomplete attempt.',
+        ],
+      ],
     },
     {
       path: 'reference',
@@ -124,7 +207,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Lookup by supported interface or contract',
       purpose:
         'Readers enter by a named interface or contract to find exact inputs, outputs, defaults and supported limits.',
-      sections: ['Interfaces', 'Defaults and limits', 'Failure behavior'],
+      sections: [
+        [
+          'Interfaces',
+          'Describe supported commands, APIs or configuration fields with their accepted inputs and observable outputs.',
+        ],
+        [
+          'Defaults and limits',
+          'Record source-verified defaults, supported ranges and compatibility constraints for precise lookup.',
+        ],
+        [
+          'Failure behavior',
+          'Describe errors, partial outcomes and recovery expectations for each supported interface.',
+        ],
+      ],
     },
     {
       path: 'explanation',
@@ -132,7 +228,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Understanding concepts and tradeoffs',
       purpose:
         'Readers enter by a concept or design question to understand relationships, constraints and tradeoffs.',
-      sections: ['Concepts', 'Relationships', 'Tradeoffs'],
+      sections: [
+        [
+          'Concepts',
+          'Explain the vocabulary and mental models readers need before following task or reference pages.',
+        ],
+        [
+          'Relationships',
+          'Show how the concepts and components depend on one another, linking their canonical contracts.',
+        ],
+        [
+          'Tradeoffs',
+          'Explain design choices, alternatives and constraints, linking the decisions that establish them.',
+        ],
+      ],
     },
   ],
   'toolkit-cli': [
@@ -142,7 +251,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Tool, skill or command invocation',
       purpose:
         'Tool users enter by command or skill, confirm prerequisites and mutation scope, then inspect the expected output.',
-      sections: ['Invocation', 'Inputs and side effects', 'Outputs'],
+      sections: [
+        [
+          'Invocation',
+          'Document how to invoke each command or skill, including prerequisites and supported examples.',
+        ],
+        [
+          'Inputs and side effects',
+          'Describe accepted arguments and configuration, mutation scope, required approval and external effects.',
+        ],
+        [
+          'Outputs',
+          'Document result fields, generated artifacts, exit behavior and the next action each outcome supports.',
+        ],
+      ],
     },
     {
       path: 'workflows',
@@ -151,9 +273,18 @@ const TRACKS: Record<IaPreset, Track[]> = {
       purpose:
         'Workflow users enter by their goal and follow an ordered sequence of tools with explicit authority and handoffs.',
       sections: [
-        'Starting state',
-        'Sequence and handoffs',
-        'Completion evidence',
+        [
+          'Starting state',
+          'State the reader goal, required inputs, authority and ready signals before a workflow begins.',
+        ],
+        [
+          'Sequence and handoffs',
+          'Order the tools and decisions, naming what each step passes to the next responsible actor.',
+        ],
+        [
+          'Completion evidence',
+          'Define the observable result that closes the workflow and where to retain its execution evidence.',
+        ],
       ],
     },
   ],
@@ -164,7 +295,20 @@ const TRACKS: Record<IaPreset, Track[]> = {
       principle: 'Reader goal in a flat grouped index',
       purpose:
         'Readers enter by their immediate goal, using one grouped index instead of navigating a hierarchy before choosing a task.',
-      sections: ['Reader tasks', 'Reference', 'Operations'],
+      sections: [
+        [
+          'Reader tasks',
+          'Group links by the immediate goals readers need to accomplish, keeping each procedure focused.',
+        ],
+        [
+          'Reference',
+          'Link canonical interface and configuration facts for lookup without repeating them in task pages.',
+        ],
+        [
+          'Operations',
+          'Link routine maintenance, diagnostic procedures and recovery runbooks, with their authority and safety boundaries.',
+        ],
+      ],
     },
   ],
 };
@@ -234,10 +378,7 @@ export async function planPresetContent(
       );
     } else {
       const sections = track.sections
-        .map(
-          (s) =>
-            `## ${s}\n\nBefore relying on ${s.toLowerCase()}, identify the supported environment, the owning interface and the expected result. Use the linked first-task procedure to check prerequisites and capture discrepancies for the responsible owner.`,
-        )
+        .map(([title, guidance]) => `## ${title}\n\n${guidance}`)
         .join('\n\n');
       files.push({
         name: indexName,
