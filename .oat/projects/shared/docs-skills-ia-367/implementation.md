@@ -2486,6 +2486,8 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+- Final-PR ledger preflight reconciliation2026-10-24: three structured plan reviews never produced files; p01 remote review212500Z and p-rev1 review213617Z were ignored local files unavailable across all six known worktree review roots and absent from tracked Git history. Set only those five Artifact cells to the supported `-` placeholder, preserving original identities in the plan note and existing durable receipts, statuses, dates, provenance and all phase anchors. No review recreated, erased or rejudged. Exact PRFINAL-05 guard must pass before PR creation.
+
 - Closeout summary completed2026-10-24 at e005cc67372d9ec6d2e57ba2b02f26df5b85bba3:126-line summary, exact eight owned paths verified, phase/learnings fingerprints current; four observations rolled up, ledger deduplicated; six decision records created, one exact-slug duplicate skipped. Written-only recap preference preserved; no product edits.
 
 ### Review Received: final — 2026-10-24T220442Z
