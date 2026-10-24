@@ -6,6 +6,7 @@ import {
   mkdir,
   mkdtemp,
   rm,
+  stat,
   symlink,
   truncate,
   writeFile,
@@ -369,6 +370,36 @@ describe('docs literals actual CLI acceptance boundary', () => {
       })),
     );
     // Root identity aliases are resolved before the below-content-root page guard.
+    await symlink('manual', join(f.root, 'manual-alias'));
+    await f.config('triad', { root: 'manual-alias' });
+    const rootAlias = await f.run();
+    expect(rootAlias.code, rootAlias.stderr).toBe(0);
+    expect(JSON.parse(rootAlias.stdout).scope.contentRoot).toBe('manual');
+  }, 20_000);
+
+  it('rejects case-variant excluded pages on a case-insensitive filesystem', async (context) => {
+    const f = await fixture();
+    const variant = 'Contributing/Templates/example.md';
+    try {
+      await stat(join(f.root, f.content, variant));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      context.skip(
+        true,
+        'Case-sensitive filesystem: alternate spelling does not resolve.',
+      );
+      return;
+    }
+    const valid = await f.run();
+    expect(valid.code, valid.stderr).toBe(0);
+    const output = await f.run(['--page', variant, '--source-root', 'src']);
+    expect({ code: output.code, result: JSON.parse(output.stdout) }).toEqual({
+      code: 1,
+      result: {
+        status: 'error',
+        message: `Page ${variant} must use its canonical content-relative spelling: contributing/templates/example.md.`,
+      },
+    });
     await symlink('manual', join(f.root, 'manual-alias'));
     await f.config('triad', { root: 'manual-alias' });
     const rootAlias = await f.run();

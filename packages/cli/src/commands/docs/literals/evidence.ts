@@ -249,6 +249,13 @@ export async function collectLiteralEvidence(
         throw new LiteralInputError(
           `Page ${path} must be readable reader Markdown inside the content root, outside nonReaderPaths, with no symlink components below the content root.`,
         );
+      const canonical = posix(
+        relative(await realpath(target.contentRoot), await realpath(absolute)),
+      );
+      if (canonical !== path)
+        throw new LiteralInputError(
+          `Page ${path} must use its canonical content-relative spelling: ${canonical}.`,
+        );
       const decoded = text(await readFile(absolute));
       if ('reason' in decoded)
         throw new LiteralInputError(
