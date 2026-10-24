@@ -430,10 +430,13 @@ folders. An unresolved mapping stays `unverified` / `ask_user` without new confi
    Pages are content-relative; roots and exclusions are repository-relative.
    Never scan the repository root, dependencies, home or external sources.
    Select implementation roots and exclusions that omit docs, templates,
-   generated/vendor output and example/test fixtures as evidence. Inspect the
-   returned scope, searched files and skipped symlink/binary/non-UTF8 inputs;
-   incomplete traversal or invalid selections fail visibly. Missing canonical
-   sources remain unverified; do not broaden scanning to manufacture matches.
+   generated/vendor output and example/test fixtures as evidence. The helper
+   does not automatically exclude documentation from selected source roots;
+   a match to documentation itself is not canonical implementation support.
+   Inspect the returned scope, searched files and skipped symlink/binary/non-UTF8
+   inputs; incomplete traversal or invalid selections fail visibly. Missing
+   canonical sources remain unverified; do not broaden scanning to manufacture
+   matches.
 
    The helper extracts AST inline code, ignores fences, and performs exactly
    one strict HTML entity decode per value and physical source line, followed

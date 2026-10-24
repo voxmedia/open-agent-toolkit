@@ -338,7 +338,9 @@ root. Pages must be readable readers within the real content tree and outside
 repository; nested symlinks are skipped, never traversed. Invalid/escaping selections, unreadable traversal
 and an empty effective text inventory fail visibly. Select implementation
 roots and explicit exclusions to omit docs, fixtures, generated output and
-vendor code as evidence.
+vendor code as evidence. The helper does not automatically exclude documentation
+from selected source roots. A match to documentation itself is not canonical
+implementation support; inspect the citation and judge its relevance.
 
 `--source-exclude` is optional/repeatable, using the existing bounded POSIX
 exclusion grammar in **repository** coordinates: segment `*`, whole-segment
