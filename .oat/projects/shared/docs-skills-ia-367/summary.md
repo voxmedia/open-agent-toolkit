@@ -16,7 +16,7 @@ oat_summary_phase_fingerprint: 1835158f6aba4429244c8a8d1b41b776bea129bec2c27c4a7
 
 Issue #367 identified a missing documentation information-architecture (IA) workflow and friction across skills, scaffolds, navigation and validation. This brief delivered guidance-driven IA selection, recorded architecture, approval-aware restructuring, reader-first starters and portable checks across Markdown, Fumadocs and MkDocs.
 
-All 13 phase-units are accepted in their original order: p01, p-rev1, p02, p03, p-rev2, p-rev3, p04, p-rev4, p05, p06, p07, p08, p09. PRs #368, #369 and #371–#376 are merged; final lifecycle delivery remains pending. The p09 product candidate is `a7e569e660566d62978928a00f44347ca4798941`, with all five public packages at **0.3.31** and `oat-docs-analyze` at **1.7.5**. No package publication or consumer rollout is claimed.
+All 13 phase-units are accepted in their original order: p01, p-rev1, p02, p03, p-rev2, p-rev3, p04, p-rev4, p05, p06, p07, p08, p09. PRs #368, #369 and #371–#376 are merged; final PR #377 is open and implementation, final reviews and the stored closeout sequence are complete. The p09 product candidate is `a7e569e660566d62978928a00f44347ca4798941`, with all five public packages at **0.3.31** and `oat-docs-analyze` at **1.7.5**. No package publication or consumer rollout is claimed.
 
 ## What Was Implemented
 
@@ -100,7 +100,7 @@ All eight historical findings (two Medium, six Low) retain explicit operator app
 - **p05 R3-L2 — Low:** the named `RemarkLinksOptions` barrel export is deferred; inline options remain typed and no consumer requires the public symbol. Revisit when a consumer/typed wrapper needs to name it; no runtime guarantee is deferred.
 - **p03 Gate-L1 — Low:** hoisted-only docs packages return safe unverified drift without an upgrade command. Define the ancestor-search boundary and add a real hoisted-layout regression before changing resolution.
 
-The former p03 Gate-L2 allowed-tools gap is closed by p09-t01, not a ninth open deferral. External automation configuration and actual consumer acceptance moved to **BL-261024-roll-out-the-shipped-oat-docs**, whose eight criteria remain unchecked. Consumer repositories, house conventions, package publication and BL-260830 discovery prerequisites were outside this delivery. Final delivery and lifecycle disposition remain root-owned.
+The former p03 Gate-L2 allowed-tools gap is closed by p09-t01, not a ninth open deferral. External automation configuration and actual consumer acceptance moved to **BL-261024-roll-out-the-shipped-oat-docs**, whose eight criteria remain unchecked. Consumer repositories, house conventions, package publication and BL-260830 discovery prerequisites were outside this delivery. PR #377 awaits exact-head checks and remote feedback clearance for the authorized plain merge. Lifecycle completion and configured archive are being finalized by the root.
 
 ## Explainer Outcome
 
