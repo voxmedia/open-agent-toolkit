@@ -1985,12 +1985,19 @@ Execution shape: rung3, one phase implementer owns this existing worktree on doc
 
 ### Task p07-t02: (review) Correct Markdown preset bootstrap verification
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024 (accepted continuation 26df61f3ad1e8cb3949c6a38aecfc533ebee91d8)
+**Pre-task HEAD:** 26df61f3ad1e8cb3949c6a38aecfc533ebee91d8
 **Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (M1)
 
 Intent: Qualify the two-page default as no-preset only, and make Markdown preset inspection reachable without entering framework procedures. Verify selected tree/flat collapse, templates/exclusion and contributing track table while retaining no-app/no-build/no-default-manifest behavior.
 Files: `.agents/skills/oat-docs-bootstrap/SKILL.md` and only mechanically affected existing prose contracts.
 Proof: isolated-HOME skill-sentence suite, root lint/format, and a conservation/manual walkthrough of Markdown default and preset branches.
+
+**Commit:** 05d65a3cb83122b89aeeb2f6277e7468cde80114
+**Outcome:** M1 corrected in the condensed Markdown Step 4. The no-preset two-page default is qualified; actual preset tree, exact 14/15/flat-small depth, purpose/Contents, template subset, nonReaderPaths and contributing track table are directly inspected. Markdown/adoption restrictions and existing skill version 1.4.5 are conserved; no sentence-contract changes needed.
+**Verification:** Scoped oxfmt and diff check pass. Fresh isolated-HOME init/sentence/validation suite passes 1,229 tests in 35 files; authoring contracts 7/7. Root lint/format exit0 (each Turbo hits5/misses5); build exit0 with five fresh tasks. Four generated Markdown controls (default, triad14, triad15, flat-small40) check with zero errors and match literal expected structure/config. Manual conservation walkthrough confirms adoption bytes/audit routing remain unchanged; this is prose/output inspection, not autonomous agent execution. Evidence: analysis/p07/fix-r1/t02-\*.log, fresh-t02-focused.log and t02-output.json. Recovery0/10,pendingnull; no children.
 
 ### Task p07-t03: (review) Make section placement guidance specific
 
