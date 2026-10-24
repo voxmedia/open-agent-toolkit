@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p09
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p08    | completed   | 1     | 1/1      |
-| p09    | in_progress | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p09    | completed | 1     | 1/1      |
 
-**Total:** 12/13 phases accepted
+**Total:** 13/13 phases accepted
 
 ---
 
@@ -2242,7 +2242,7 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 ## Phase p09: Docs, release and closeout
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 21acf4e58cd83391e1e190424cf30bd6f8c54865
 **Head:** a7e569e660566d62978928a00f44347ca4798941
 **Executor:** phase-implementer:docs367-p09-impl-20261024
@@ -2252,6 +2252,8 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 Execution shape: one phase implementer owns sequential prose, E13 grant/version reconciliation, criteria transfer and backlog closeout in docs/docs-skills-ia-367-p09 at the existing worktree. No declared parallel group; slices share release/version/generated-index/gate output and sequential closure dependencies, so root fan-out fails independence. Root retains disposition, plan/state/log writes, final review and GitHub operations. No nested agents. Recovery0/10,pendingnull.
 
 **Verification:** all nine ordered AGENTS gates exit 0 at candidate a7e569e660566d62978928a00f44347ca4798941, including fetch before version check and direct manifest regeneration plus diff despite cached docs build. Root lint/format also exit 0. Turbo executed/cached task counts: check 11/0, type-check 6/5, test 7/5, build 0/5, docs-build 0/6, lint 5/5, format 5/5. Test's five replays are dependency builds; all six test suites and the docs build executed freshly with isolated HOME: CLI 9,068 tests, supporting packages 369, docs 93, plus direct smoke 165, skills 713 and scripts 1, all passed with zero skips. Separate fresh sentence contracts 1,087/26 files, analyze drift 1 and stale-path 2 pass. Build/docs-build replays are not fresh executions. All five public 0.3.31 packages pass release validation; analyze 1.7.5 passes skill-bump gate against fetched main. Raw commands/exits/cache evidence, source conservation, full archive affectedPaths and exact 22-product-path SHA256 manifest are under ignored `analysis/p09/implementation/` (candidate manifest digest a807474f6fef197dd77620b2f46cd348bda5634db8be813000e1dbda1a4cb100). Original seeded/runtime/manual evidence is inherited; no new tests or runtime/platform/consumer campaign. Earlier phase content and root-owned state/plan/log/run/review/deferred records are conserved. No instruction changes beyond the authorized canonical analyze grant header are needed. Root owns final integrated lifecycle review/acceptance/closeout/GitHub; p09 remains in_progress. Recovery 0/10, pending null.
+
+Root acceptance: p09 implementation accepted at a7e569e660566d62978928a00f44347ca4798941 after independent root verification of all 22 product paths, candidate/worktree SHA256 hashes, deleted-file base hashes, exact no-renames diff membership, five narrow grant/procedure pairs, eight unchecked consumer criteria and reciprocal archive links. Required gate exits and cache receipts inspected in analysis/p09/implementation/implementation-report.md. Final integrated review covers p09; no duplicate p09-only review. Issue checklist posted: https://github.com/voxmedia/open-agent-toolkit/issues/367#issuecomment-6388402460. All 13 units accepted; final review, configured exit gate and stored lifecycle closeout remain pending. Recovery0/10,pendingnull.
 
 ### Task p09-t01: Reconcile workflow docs, E13 grants and release versions
 
@@ -2285,7 +2287,7 @@ All three archive commands exit 0 without warnings. Complete affectedPaths recei
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p09-impl-20261024 · scope=p09 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p09-impl-20261024 · scope=p09 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p09-readiness-20261024 · scope=p09-readiness · action=analysis · role=bounded-readiness-recon · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -2643,7 +2645,7 @@ Delivery remains pending current-head CI/Bugbot after normal push. Landing mode 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 - p03 gate Gate-L1 · Low · Hoisted installed docs packages are not found by the app-only package-drift helper; returns safe unverified, no command. Deferred to final integrated helper review: define ancestor search boundary and add a real hoisted-layout regression before changing resolution. Source: gate f11cc34a-2996-48df-9555-2577c6f79eaa, package-drift.mjs:78, Outcome 5.
-- p03 gate Gate-L2 · Low · Shim fallback uses command -v, oat --version, sed, test and npm root -g beyond analyze's narrow grants. Deferred to final integrated skill contract review after remaining analyze edits: add narrow grants or rewrite through Read/node and verify the documented commands. Read-only discovery can require explicit permission meanwhile; no bypass. Source: same gate, oat-docs-analyze/SKILL.md:516, p01 E13.
+- p03 gate Gate-L2 · Low · CLOSED by p09-t01 (0d5b09247e885251a0a4f60fa2f33cf0bf8875b2): narrow grants now match all five documented discovery commands, procedure and nav-sync --check preserved; fresh sentence contracts and skill drift test pass. Historical deferral follows. Shim fallback uses command -v, oat --version, sed, test and npm root -g beyond analyze's narrow grants. Deferred to final integrated skill contract review after remaining analyze edits: add narrow grants or rewrite through Read/node and verify the documented commands. Read-only discovery can require explicit permission meanwhile; no bypass. Source: same gate, oat-docs-analyze/SKILL.md:516, p01 E13.
 
 ## Deviations from Plan / Design
 
@@ -2657,27 +2659,47 @@ Document any intentional deviations from the brief. Include accepted review find
 
 **What shipped:**
 
-- [capability 1]
+- Guidance-driven documentation IA discovery, approval-aware recording/restructure, authored Contents navigation and ordered manifests.
+- Reader-first framework starters and Markdown support, agent Markdown exports, ten canonical templates and six opt-in IA presets.
+- Portable docs checks and bounded source-literal evidence, with human source/triad judgments and current workflow docs.
 
 **Behavioral changes (user-facing):**
 
-- [bullet]
+- Existing docs audit first; explicit recommendations require individual approval. IA selection and decision recording remain separate.
+- Presets require paired flags and empty targets; fewer than 15 planned pages collapse reader tracks. Non-readers are excluded from checks/navigation/manifests, not a privacy boundary.
+- Offline package drift distinguishes older/current/ahead/unverified; checker warnings remain visible. Literal matches are occurrence evidence, not runtime or semantic support.
 
 **Key files / modules:**
 
-- `[path]` - [purpose]
+- `.agents/skills/{authoring-docs,oat-docs-bootstrap,oat-docs-analyze,oat-docs-apply}/`: approved agent workflows and canonical assets.
+- `packages/cli/src/commands/docs/{init,nav,check,literals}/`: scaffold, navigation, validation and bounded evidence.
+- `packages/docs-{config,theme,transforms}/`, `.oat/templates/docs-app-*`, `apps/oat-docs/`: framework behavior and human documentation.
+- `.oat/repo/pjm/backlog/`: three transfer-qualified closures and the open consumer-rollout successor.
 
 **Verification performed:**
 
-- [tests/lint/typecheck/build/manual steps]
+- All nine ordered gates passed at p09 candidate; lint/format and fresh 1,087 sentence/validation contracts passed. Gate3 freshly executed CLI9,068, supporting369, docs93, smoke165, skills713 and scripts1, zero skips.
+- Turbo executed/cached: check11/0, types6/5, test7/5, build0/5, docs0/6; direct manifest generation/freshness passed despite cached docs gate. Earlier real negative controls, independent phase reviews, packed/runtime and manual proofs remain labeled inherited in phase receipts.
+- Root verified p09's exact 22-path manifest and conservation/transfer. No new consumer, publication, autonomous-agent, platform or install claim. Final integrated review and configured exit gate are pending.
 
 **Outcomes audit:**
 
-- Outcome 1: [observed evidence (accepted phase, commit, or verification result) or the recorded deferral]
+- Outcome 1: accepted p01/p-rev1/p09; config passthrough negative control, literal docs-path seeded failure, P7/E12 correction and p09-t01 E13 narrow grants. PR368 and p09 product0d5b0924.
+- Outcome 2: accepted p02/p07; axes/presets/IA Proposal and authoring contracts, ten canonical templates. PR369/375.
+- Outcome 3: accepted p02/p-rev2; guidance precedence/schema, two candidate trees, audit-first existing surface and loaded-sibling binding. PR369/371.
+- Outcome 4: accepted p03/p-rev3; decision/mirror validation, IA-fit audit, approved restructure and inbound/old-URL plan. PR371; static-export recovery stays bounded, unsupported host/app changes manual.
+- Outcome 5: accepted p03/p09; explicit/default handoff and offline older/ahead/unverified drift. PR371; hoisted-only resolution remains safely unverified (deferred Gate-L1). Actual consumer acceptance transferred to BL-261024-roll-out-the-shipped-oat-docs, all eight criteria unchecked.
+- Outcome 6: accepted p04/p-rev4; Contents groups/string roots/errors, real init sync, build freshness and hierarchical manifest ordering. PR372.
+- Outcome 7: accepted p01/p05/p07; CLI-owned reader/contributor starters, parity, transforms and static-export llms endpoints. PR368/373/375. Approved P15 endpoint is /llms/<page-slugs>/content.md; MkDocs remains disclosed legacy with rendered-route limits.
+- Outcome 8: accepted p06 and corrective revisions; portable checker/config/rules, real negative controls and CI recipe. PR374; flagship0 errors/756 visible warnings. Approved limits: optional absent navigation skipped/implicit order deferred; installed local pnpm bins supported, system-PATH-only and pre-install shorthand deferred. Diagnostic/readability Lows retained below.
+- Outcome 9: accepted p07; all six presets, 14/15 boundary, template byte identity, reader exclusions and empty-target refusal verified. PR375; native joins confirmed with simulated Windows paths, not native Windows.
+- Outcome 10: accepted p08; six analyze judgments and bounded quoted-literal helper; prototype in references/p08-source-verification-prototype.md. PR376; source/page canonical identity corrections independently confirmed. Public synthetic/manual evidence only, no G5 runtime verdict.
+- Outcome 11: accepted p09 two human pages, analyze1.7.5 and five lockstep0.3.31 packages; every phase PR versioned. Three source items archived with conserved criteria and reciprocal successor links. P1–P28 issue response: https://github.com/voxmedia/open-agent-toolkit/issues/367#issuecomment-6388402460. Final lifecycle delivery remains pending; no publication or consumer acceptance claimed.
 
 **Brief deltas (if any):**
 
-- [what changed vs plan.md and why]
+- Operator-approved corrections and explicit deferrals are conserved in phase receipts and Deferred Findings: P15 export URL shape, legacy MkDocs, optional navigation/implicit ordering, installed-only pnpm binary support and bounded literal evidence.
+- Outstanding external consumer criteria moved intact to the open rollout item before BL-260911 closure. No consumer repository work was performed.
 
 ## References
 

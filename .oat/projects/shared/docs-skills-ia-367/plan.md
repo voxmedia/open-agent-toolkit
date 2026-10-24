@@ -581,11 +581,23 @@ it does not revoke the final passing reviews or p01 acceptance.
 
 **Summary:**
 
-- Phase p01: [Description]
+- Phase p01: Contract cleanup and silent defects — accepted; journal anchors and exit evidence conserved.
+- Phase p-rev1: Correct the scaffold navigation command — accepted; journal anchors and exit evidence conserved.
+- Phase p02: IA method and guidance input — accepted; journal anchors and exit evidence conserved.
+- Phase p03: Record and act on the IA — accepted; journal anchors and exit evidence conserved.
+- Phase p-rev2: Preserve loaded skill bindings — accepted; journal anchors and exit evidence conserved.
+- Phase p-rev3: Validate normalized IA paths — accepted; journal anchors and exit evidence conserved.
+- Phase p04: Navigation follows Contents — accepted; journal anchors and exit evidence conserved.
+- Phase p-rev4: Preserve manifest regeneration and portable Contents order — accepted; journal anchors and exit evidence conserved.
+- Phase p05: Reader-first starter app — accepted; journal anchors and exit evidence conserved.
+- Phase p06: oat docs check — accepted; journal anchors and exit evidence conserved.
+- Phase p07: Page templates and presets — accepted; journal anchors and exit evidence conserved.
+- Phase p08: Product and QA checks against source — accepted; journal anchors and exit evidence conserved.
+- Phase p09: Docs, release and closeout — accepted; journal anchors and exit evidence conserved.
 
-**Total: [N] phases**
+**Total: 13/13 phases accepted**
 
-Ready for final code review and PR preparation.
+All execution records closed. Final integrated review, configured exit gate and lifecycle summary/document/PR sequence remain pending.
 
 ---
 

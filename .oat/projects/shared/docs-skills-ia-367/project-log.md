@@ -253,6 +253,10 @@ docs367-p08-accepted-20261024: p08 accepted at 7e9c2c7669b84261cb8d522d9d6ba279c
 
 docs367-p09-concrete-20261024: p09 concretized within Outcome11: two human pages, existing E13 narrow grants, consumer criteria transfer and accurate backlog archives; docs conservation plus final integrated review, required gates, no new product engine or external edits. Readiness analysis/p09/readiness/report.md.
 
+### 2026-10-24 · structural · oat-project-implement · p09
+
+p09 implementation accepted after root identity/conservation verification; 0 fix loops, required gates passed; see analysis/p09/implementation/implementation-report.md. Final integrated review covers p09. docs367-p09-accept-20261024
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
