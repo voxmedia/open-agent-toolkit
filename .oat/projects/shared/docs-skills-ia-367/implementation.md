@@ -2103,9 +2103,9 @@ P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readines
 
 **Status:** in_progress
 **Base:** 65baa0145acea94872fadcf4a44edb00609b0ed5
-**Head:** c49077ee517d27c4d2cc3c73e083eda0c1c85145
+**Head:** 7e9c2c7669b84261cb8d522d9d6ba279c461e52a
 **Executor:** phase-implementer:docs367-p08-impl-20261024
-**Verification:** Original/R1 evidence remains valid. R2 canonical-page fix passes actual case-insensitive-host red/green (not skipped), canonical reader/root-alias and retained symlink controls, fresh isolated-HOME docs/help suites, all14 built reviewer probes (Q9 error1/Q1/Q7 valid0/Q13 intentional self-match0) and all nine ordered DoD gates including direct manifest freshness. Exact exits/cache truth, scope conservation and full22-path hashes: analysis/p08/fix-r2/. Original history/versions retained; recovery0/10,pendingnull. Phase remains in_progress; R3/acceptance is root-owned.
+**Verification:** Operator-approved sole t05 corrective delta passes actual case-insensitive-host red/green (not skipped), fresh isolated-HOME literals/help tests and built CLI canonical-root bad/valid overlap/exclusion controls. All nine ordered DoD gates pass, including direct manifest freshness; exact exits/cache truth, conserved scope and full22-path hashes are under analysis/p08/fix-r3/. Earlier closures and broader/manual/runtime proof remain inherited; original history/versions and recovery0/10,pendingnull retained. Phase remains in_progress; root owns focused independent delta confirmation and acceptance.
 
 Execution shape: one phase implementer owns the sequential helper/analyze/docs integration in the existing p08 branch/worktree. Shared command registration, skill sentences and bundled builds preclude independent parallel lanes. No optional children. Recovery default10, p08 usage0/10,pendingnull. Root owns plan/state/log, independent review and delivery. Prototype-based local design is committed; no Outcome/Constraint/Decision/authority change.
 
