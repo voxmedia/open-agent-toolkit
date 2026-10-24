@@ -19,7 +19,9 @@ Install the workflow skills with `oat tools install docs` (preferred) or
 - `oat docs migrate` converts MkDocs admonitions to GFM callouts and injects frontmatter
 - `oat docs generate-index` generates a Fumadocs app-root docs index manifest from the Markdown file tree
 - `oat docs nav sync` regenerates MkDocs `mkdocs.yml` nav, or strict Fumadocs `meta.json` files, from `index.md` `## Contents` sections
-- `oat docs analyze` and `oat docs apply` expose the workflow surface in CLI help
+- [`oat docs check`](check.md) checks reader pages, navigation, contributor commands and diagrams without building a site
+- [`oat docs literals`](commands.md#oat-docs-literals) supplies bounded inline-code occurrence evidence for analyze
+- `oat docs analyze` and `oat docs apply` expose guidance pointers in CLI help; the skills perform analysis and apply
 
 ### Skills
 
@@ -93,8 +95,9 @@ Diagram: bootstrap once, then analyze, approve and apply only agreed improvement
       Q -->|"all skipped"| STOP
     ```
 
-- **Setup, once.** `oat-docs-bootstrap` checks the repo without writing, asks
-  you to confirm its inputs, then runs `oat docs init`. Plain Markdown setup validates authored files,
+- **Fresh setup or explicit adoption.** `oat-docs-bootstrap` checks the repo without writing, asks
+  you to confirm its inputs, then runs `oat docs init`. Existing docs default to
+  [analyze then approved apply](#ia-selection-and-guidance) and exit before scaffolding. Plain Markdown setup validates authored files,
   configuration and guidance without installing app dependencies or building a
   site. Fumadocs and MkDocs setup inspects CLI-owned scaffold output, installs
   dependencies, verifies the build and provides a walkthrough.
@@ -277,9 +280,10 @@ with a docs app simply because one can be scaffolded.
 
 Preflight only reads. It checks declared documentation configuration before
 discovery and checks framework evidence before assuming a populated
-directory is plain Markdown. The skill then summarizes your choices and asks
-you to confirm them before it runs `oat docs init`. The two setup paths
-differ from that point on.
+directory is plain Markdown. Existing docs default to analyze then approved
+apply and exit before scaffolding. For fresh setup or explicit adoption, the
+skill summarizes your choices and asks you to confirm them before it runs
+`oat docs init`. The two setup paths differ from that point on.
 
 **Plain Markdown path:** Use this when you want plain Markdown files and no
 site runtime. The skill collects a title, a dedicated repository-relative
@@ -352,8 +356,9 @@ pages, grouped headings in one flat index often suffice.
 For fresh Markdown/framework setup and explicit adoption, bootstrap proposes
 two plausible two-level trees with 5–8 representative page placements each,
 page jobs, nearest presets and tradeoffs. Analyze's `--ia` does the same in its
-existing analysis artifact and review loop. These are **skill arguments**;
-they do not add CLI bootstrap commands or flags to `oat docs init`.
+existing analysis artifact and review loop. `--ia` and `--ia-guidance` are
+**skill arguments**, not `oat docs init` flags. The CLI accepts the approved
+selection through the paired [`--ia-preset` and `--planned-pages` flags](commands.md#approved-preset-readers).
 
 Resolve advisory sources in this order: explicit `--ia-guidance <path|url>` or
 conversation, repo `documentation.guidance`, user config, then the installed
@@ -372,8 +377,15 @@ proposal becomes durable only after approval: bootstrap/apply use `oat decision 
 and an Information architecture section in the framework docs-app `AGENTS.md`
 or Markdown contributing page, plus the shared `documentation.ia` mirror.
 Authored records stay authoritative; missing/conflicting records become `ask_user`.
-Preset scaffolds and Feature/QA validation page templates are a later delivery;
-the IA Proposal template is available now.
+Fresh empty targets can now materialize all six presets and their relevant
+page-template subsets, including Feature and QA validation templates, through
+that opt-in flag pair. Counts below 15 collapse reader tracks into grouped root
+headings; 15 or more creates tracks, while `flat-small` always stays flat.
+`contributing/templates/**` is excluded from reader navigation, checks and
+manifests. See [preset mappings and template subsets](commands.md#approved-preset-readers),
+including the MkDocs rendered-route limitation. Selection does not create the
+separate approved IA decision; the IA Proposal template remains the selection
+artifact.
 
 ## oat-docs-analyze
 
@@ -454,8 +466,10 @@ navigation or generated-artifact refreshes, plus a structured result listing
 applied, skipped (ID/reason), and failed IDs. Markdown retains its authored
 index and needs no framework build or nav sync; Fumadocs sidebar metadata is
 regenerated only with recorded `navOwner: nav-sync`. Hand-authored navigation
-gets approved edits and read-only Contents membership/order comparison;
-undeclared ownership becomes `ask_user`. The summary
+gets approved edits and read-only Contents membership/order comparison.
+[Absent optional metadata/pages/nav skips comparison](check.md); implicit
+Fumadocs order is not checked. Explicit lists remain checked and nav-sync
+freshness stays strict. Undeclared ownership becomes `ask_user`. The summary
 reports the applied plan and checks.
 
 **What it does without asking:** Nothing changes until you approve the plan.
@@ -526,8 +540,13 @@ source citations and existing recommendation approval classes still govern.
 
 For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*` packages to the
 running CLI's bundled `public-package-versions.json`, never registry latest.
-Missing installations are unverified. The recommendation includes the exact
-upgrade command. Individual tooling approval permits only docs-app `@open-agent-toolkit/docs-*`
+Older installed packages produce an explicit drift recommendation with the
+exact upgrade command. Equal versions are current. Newer packages are `ahead`: select
+or update the intended CLI installation before re-analysis, without a package
+downgrade command. Missing installations or bundle metadata and non-orderable
+versions are `unverified` and require manual verification; hoisted-only packages
+also remain unverified. Neither ahead nor unverified supplies a package-update
+command or authorizes an upgrade. Individual tooling approval permits only docs-app `@open-agent-toolkit/docs-*`
 dependency bumps (and resulting lockfile), the admonition/frontmatter conversions
 already supported by `oat docs migrate`, and build verification. App config,
 routes and package scripts remain manual required changes.
