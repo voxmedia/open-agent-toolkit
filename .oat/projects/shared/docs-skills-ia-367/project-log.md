@@ -257,6 +257,10 @@ docs367-p09-concrete-20261024: p09 concretized within Outcome11: two human pages
 
 p09 implementation accepted after root identity/conservation verification; 0 fix loops, required gates passed; see analysis/p09/implementation/implementation-report.md. Final integrated review covers p09. docs367-p09-accept-20261024
 
+### 2026-10-24 · structural · oat-project-implement · final
+
+Final review paused before dispatch: anchor resolver rejects historical p-rev1 to p02 sequential continuity. All 13 phase anchors are contained by aggregate head; original p02 overlaps the late p01 correction. Explicit full project range requires operator choice; see analysis/final/anchor-reconciliation.json. docs367-final-anchor-stop-20261024
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
