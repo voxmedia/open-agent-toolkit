@@ -146,12 +146,12 @@ oat_workflow_origin: native # native | imported
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:16:44.427Z'
+oat_project_state_updated: '2026-10-24T22:21:34.068Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
