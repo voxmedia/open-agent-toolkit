@@ -153,14 +153,13 @@ export async function collectLiteralEvidence(
   const sources = new Set<string>();
   const skipped = new Map<string, LiteralResult['skipped'][number]['reason']>();
   // Inspect each component so an explicitly selected nested alias cannot bypass traversal policy.
-  const symlinkComponent = async (path: string): Promise<boolean> => {
+  const symlinkComponent = async (
+    root: string,
+    path: string,
+  ): Promise<boolean> => {
     const parts = path.split('/');
     for (let i = 1; i <= parts.length; i++) {
-      if (
-        (
-          await lstat(join(target.repoRoot, ...parts.slice(0, i)))
-        ).isSymbolicLink()
-      )
+      if ((await lstat(join(root, ...parts.slice(0, i)))).isSymbolicLink())
         return true;
     }
     return false;
@@ -188,7 +187,7 @@ export async function collectLiteralEvidence(
         throw new LiteralInputError(
           'Source roots must be narrow directories inside the repository, never the repository root.',
         );
-      if (await symlinkComponent(path)) {
+      if (await symlinkComponent(target.repoRoot, path)) {
         // An external alias is invalid input, even though it will never be read.
         if (!inside(target.repoRoot, await realpath(absolute)))
           throw new LiteralInputError(
@@ -244,10 +243,11 @@ export async function collectLiteralEvidence(
       if (
         !/\.mdx?$/.test(path) ||
         isExcludedPath(target.matcher, path) ||
+        (await symlinkComponent(target.contentRoot, path)) ||
         !(await containedFile(target.contentRoot, absolute))
       )
         throw new LiteralInputError(
-          `Page ${path} must be readable reader Markdown inside the content root, outside nonReaderPaths.`,
+          `Page ${path} must be readable reader Markdown inside the content root, outside nonReaderPaths, with no symlink components below the content root.`,
         );
       const decoded = text(await readFile(absolute));
       if ('reason' in decoded)

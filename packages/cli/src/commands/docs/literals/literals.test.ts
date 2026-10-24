@@ -337,6 +337,45 @@ describe('docs literals actual CLI acceptance boundary', () => {
     expect(JSON.parse(valid.stdout).status).toBe('ok');
   }, 60_000);
 
+  it('rejects file and directory page aliases to excluded templates while preserving resolved-root aliases', async () => {
+    const f = await fixture();
+    const valid = await f.run();
+    expect(valid.code, valid.stderr).toBe(0);
+    await symlink(
+      'contributing/templates/example.md',
+      join(f.root, f.content, 'alias.md'),
+    );
+    await symlink(
+      'contributing/templates',
+      join(f.root, f.content, 'alias-dir'),
+    );
+    const outputs = [];
+    for (const page of ['alias.md', 'alias-dir/example.md']) {
+      const output = await f.run(['--page', page, '--source-root', 'src']);
+      outputs.push({
+        page,
+        code: output.code,
+        result: JSON.parse(output.stdout),
+      });
+    }
+    expect(outputs).toEqual(
+      ['alias.md', 'alias-dir/example.md'].map((page) => ({
+        page,
+        code: 1,
+        result: {
+          status: 'error',
+          message: `Page ${page} must be readable reader Markdown inside the content root, outside nonReaderPaths, with no symlink components below the content root.`,
+        },
+      })),
+    );
+    // Root identity aliases are resolved before the below-content-root page guard.
+    await symlink('manual', join(f.root, 'manual-alias'));
+    await f.config('triad', { root: 'manual-alias' });
+    const rootAlias = await f.run();
+    expect(rootAlias.code, rootAlias.stderr).toBe(0);
+    expect(JSON.parse(rootAlias.stdout).scope.contentRoot).toBe('manual');
+  }, 20_000);
+
   it('fails unreadable traversal instead of reporting absence, and keeps valid inventory usable', async () => {
     const f = await fixture();
     await f.put('src/private/file.ts', 'hidden\n');

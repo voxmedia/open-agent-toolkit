@@ -333,8 +333,9 @@ resolution as check. `--page` and `--source-root` are required, repeatable
 single-value flags. Pages are content-relative Markdown (`.md` or `.mdx`,
 without evaluating JSX); roots are repo-relative directories, never the repo
 root. Pages must be readable readers within the real content tree and outside
-`nonReaderPaths`. Sources must remain within the repository; nested symlinks
-are skipped, never traversed. Invalid/escaping selections, unreadable traversal
+`nonReaderPaths`, with no symlink components below the resolved content root
+(including page files and directory aliases). Sources must remain within the
+repository; nested symlinks are skipped, never traversed. Invalid/escaping selections, unreadable traversal
 and an empty effective text inventory fail visibly. Select implementation
 roots and explicit exclusions to omit docs, fixtures, generated output and
 vendor code as evidence.
