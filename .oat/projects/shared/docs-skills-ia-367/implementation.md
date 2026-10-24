@@ -2486,6 +2486,8 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+- Final PR registered 2026-10-24: https://github.com/voxmedia/open-agent-toolkit/pull/377; scope final/p09 closeout, draft opened after both zero-findings final reviews; summary/document sequence reused, all eight approved limits retained. Independent documentation-gap review pending only for new closeout artifacts.
+
 - Closeout documentation completed2026-10-24 at ca28531aff6eb5d5b6319e93f03f4f6e82cdabd2:11 capability areas adequately covered; repo-reference refresh no-op, zero human-doc edits, exact state-only docs flag/timestamp conservation verified. PJM declared with11 unchanged unrelated warnings; successor remains open. Written-only recap skip/interactive consumed without manifest discovery; terminal-outcome guard passed.
 
 - Final-PR ledger preflight reconciliation2026-10-24: three structured plan reviews never produced files; p01 remote review212500Z and p-rev1 review213617Z were ignored local files unavailable across all six known worktree review roots and absent from tracked Git history. Set only those five Artifact cells to the supported `-` placeholder, preserving original identities in the plan note and existing durable receipts, statuses, dates, provenance and all phase anchors. No review recreated, erased or rejudged. Exact PRFINAL-05 guard must pass before PR creation.

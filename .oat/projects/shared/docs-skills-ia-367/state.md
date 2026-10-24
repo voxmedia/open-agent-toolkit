@@ -16,7 +16,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   phase_attempt_usage:
     p01:
@@ -147,11 +147,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/377
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:23:54.922Z'
+oat_project_state_updated: '2026-10-24T22:26:47.769Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: allowed
@@ -212,7 +212,7 @@ oat_implement_exit_gate:
   updated_at: 2026-10-24T22:23:06.331Z
   decided_at: 2026-10-24T22:09:28.483Z
 oat_post_implement_sequence:
-  status: pre_approval
+  status: complete
   source: configured
   final_phase: p09
   pre_approval:
@@ -222,6 +222,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: not_required
   approval_source: null
   post_approval: []
@@ -241,7 +242,7 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all 13 phase-units accepted and execution records closed; final integrated review authorized over the explicit full-project range; historical phase anchors preserved. Independent final review received with zero new findings (Claude Opus5.5/high, explicit full-project range); operator explicitly approved retaining all two Medium and six Low historical deferrals; final review passed. P09 candidate a7e569e660566d62978928a00f44347ca4798941; root verified product identity/conservation and Outcome audit. Required gates passed; final exit gate and stored closeout sequence remain pending.
+Implementation — PR #377 is open as a draft; all 13 phase-units, final integrated review, configured exit review and the stored summary → document → PR sequence are complete. All eight historical deferrals retain explicit operator approval. Completion may run before or after merge.
 
 ## Artifacts
 
@@ -255,7 +256,7 @@ None.
 
 ## Next Milestone
 
-Run the configured exit gate, then stored summary → document → final PR sequence; final review and all eight historical deferrals are explicitly approved. Standing plain-merge delivery authority retained. All prior phase PRs368–376 are merged and unwatched. No publication or consumer rollout.
+Finish the independent closeout-documentation review and lifecycle completion/archive, then clear exact-head CI and actionable remote feedback and land PR #377 with the authorized plain merge. For feedback use oat-project-revise; completion can run before or after merge. No publication or consumer rollout.
 
 ## Configured Exit Review Scope
 
