@@ -2252,7 +2252,8 @@ Execution shape: one phase implementer owns sequential prose, E13 grant/version 
 
 ### Task p09-t01: Reconcile workflow docs, E13 grants and release versions
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 0d5b09247e885251a0a4f60fa2f33cf0bf8875b2
 **Executor:** phase-implementer:docs367-p09-impl-20261024
 **Handle:** docs367-p09-impl-20261024
 
@@ -2260,6 +2261,8 @@ Intent: correct the two readiness-identified human workflow pages, grant only th
 Files: `apps/oat-docs/docs/docs-tooling/workflows.md`, `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`, `.agents/skills/oat-docs-analyze/SKILL.md`, `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, and generated `packages/cli/assets/public-package-versions.json`.
 Proof: source-cited conservation diff; exact five grant/command pairs with nav-sync check retained; file-scoped formatter and docs Markdown lint; fresh isolated-HOME installed-skill/validation sentence contracts; existing analyze skill tests; bundle generation. Phase-wide nine ordered gates plus root lint/format follow both records. No new tests or runtime proof campaign.
 Pre-task HEAD: `e4742b717e34b83bce01af7c88bcf1a84c2badc4`. Authorized launch-only descendant of dispatch base `a411d89ba4735a639cf5d9c0b2a5802d5a7feb2d`; clean checkout, canonical role digest matched, fetched main has no scoped drift. Recovery 0/10, pending null. Root-owned phase Base, status, run line and all earlier history retained.
+
+Outcome: nine exact product files committed, hooks enabled and clean afterward. File-scoped oxfmt/Markdown lint/diff checks, bundle generation, 1,087 fresh isolated-HOME sentence contracts (26 files), 1 fresh analyze drift test and 2 fresh stale-path tests all exit 0. Logs and conservation/source-pair notes: `analysis/p09/implementation/t01-*` and `stale-path.log`. No tests changed. Five public manifests are 0.3.31; the owning bundle command generated its four shipped version entries (control-plane is not in that asset's schema). Analyze alone bumps to 1.7.5. Existing `Bash(oat docs nav sync --check:*)` remains exact; added command -v/sed/npm root -g/test/oat --version grants correspond to the existing offline procedure at analyze lines 622–640. Earlier E12 handoff/scaffold corrections and p01-t04 seeded stale-path negative control are inherited; the two human-page changes conserve headings, links, IA Proposal availability and approved limits. Phase gates follow p09-t02. Recovery 0/10, pending null.
 
 ## Orchestration Runs
 
