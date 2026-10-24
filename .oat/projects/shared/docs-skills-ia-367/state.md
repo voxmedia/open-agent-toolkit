@@ -55,6 +55,9 @@ oat_phase_recovery_policy:
     p08:
       used_attempts: 0
       pending_attempt: null
+    p09:
+      used_attempts: 0
+      pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -160,7 +163,7 @@ oat_generated: false
 
 ## Current Phase
 
-P08 accepted and delivered in PR376, plain merge d7831aaa854f05e362b0b0583d40c1c6bace7f93 on2026-10-24. CI, release dry-run, Cursor Bugbot and Warp zero-finding review all covered fe52c01bab78fee8a51f474dbe267616a8b11e00; no unresolved threads. P09 readiness is next on docs/docs-skills-ia-367-p09, still provisional without Base;12/13 phases accepted.
+P09 is concrete and in_progress: final human docs, accepted E13 grants and consumer-backlog transfer/closure. Frozen Base21acf4e58cd83391e1e190424cf30bd6f8c54865. One phase implementer owns product/tasks; root owns final integrated review and lifecycle delivery. 12/13 phase-units accepted; p09 recovery0/10,pendingnull. All prior PRs368–376 are merged and unwatched.
 
 ## Artifacts
 

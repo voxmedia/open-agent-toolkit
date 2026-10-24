@@ -39,21 +39,21 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status    | Units | Accepted |
-| ------ | --------- | ----- | -------- |
-| p01    | completed | 1     | 1/1      |
-| p-rev1 | completed | 1     | 1/1      |
-| p02    | completed | 1     | 1/1      |
-| p03    | completed | 1     | 1/1      |
-| p-rev2 | completed | 1     | 1/1      |
-| p-rev3 | completed | 1     | 1/1      |
-| p04    | completed | 1     | 1/1      |
-| p-rev4 | completed | 1     | 1/1      |
-| p05    | completed | 1     | 1/1      |
-| p06    | completed | 1     | 1/1      |
-| p07    | completed | 1     | 1/1      |
-| p08    | completed | 1     | 1/1      |
-| p09    | pending   | 1     | 0/1      |
+| Phase  | Status      | Units | Accepted |
+| ------ | ----------- | ----- | -------- |
+| p01    | completed   | 1     | 1/1      |
+| p-rev1 | completed   | 1     | 1/1      |
+| p02    | completed   | 1     | 1/1      |
+| p03    | completed   | 1     | 1/1      |
+| p-rev2 | completed   | 1     | 1/1      |
+| p-rev3 | completed   | 1     | 1/1      |
+| p04    | completed   | 1     | 1/1      |
+| p-rev4 | completed   | 1     | 1/1      |
+| p05    | completed   | 1     | 1/1      |
+| p06    | completed   | 1     | 1/1      |
+| p07    | completed   | 1     | 1/1      |
+| p08    | completed   | 1     | 1/1      |
+| p09    | in_progress | 1     | 0/1      |
 
 **Total:** 12/13 phases accepted
 
@@ -2242,9 +2242,13 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 ## Phase p09: Docs, release and closeout
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 21acf4e58cd83391e1e190424cf30bd6f8c54865
+**Executor:** phase-implementer:docs367-p09-impl-20261024
 
 ---
+
+Execution shape: one phase implementer owns sequential prose, E13 grant/version reconciliation, criteria transfer and backlog closeout in docs/docs-skills-ia-367-p09 at the existing worktree. No declared parallel group; slices share release/version/generated-index/gate output and sequential closure dependencies, so root fan-out fails independence. Root retains disposition, plan/state/log writes, final review and GitHub operations. No nested agents. Recovery0/10,pendingnull.
 
 ## Orchestration Runs
 
