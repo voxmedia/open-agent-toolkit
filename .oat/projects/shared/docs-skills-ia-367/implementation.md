@@ -2201,6 +2201,16 @@ Root verified the report, manifest88b7e22b17bf5a7207eb92f0ed6050fe18daaac6600724
 
 Actual case-insensitive regression executed red/green,479 fresh focused tests and14 CLI probes passed; all nine gates and direct manifest freshness exited0 with cache truth retained in analysis/p08/fix-r2/implementation-report.md. R2 event moves to fixes_completed; phase stays in_progress at original Base and updated Head pending R3. P09 remains provisional without Base.
 
+### Review Received: p08 round 3
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/p08-review-2026-10-24T180640Z.md.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1.
+
+R1 M1/L1 and R2 M1 are independently closed. R3 L1 is an accepted-requirement gap in source-root identity: case-variant source roots can duplicate physical files and miss canonical-spelled exclusions on a case-insensitive filesystem. Root reproduced src/SRC duplicate searched paths at the built public CLI boundary. No outside read or reader-exclusion bypass occurs. Finding disposition is pending the required review-cap complexity assessment and operator choice; no fix task or deferral has been created.
+
+**Design drift / artifact alignment notes:** None accepted; the existing overlap-deduplication and source-exclusion contract remains authoritative.
+**Outcome:** received, cycle3/3; complexity assessment next, then operator disposition. All four records remain complete; phase remains in_progress,11/13 accepted, p09 has no Base. Reviewer rebuilt CLI, checked22 hashes, passed18 categorical probes and1253 fresh focused tests with the case regression executing. Broad gates/manual/platform limits are inherited. Exactly one not-attempted reconnaissance signal consumed; no Review Orchestration section/log is required.
+
 ---
 
 ## Phase p09: Docs, release and closeout
@@ -2211,7 +2221,7 @@ Actual case-insensitive regression executed red/green,479 fresh focused tests an
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p08-review-r3-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p08-review-r3-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p08-fix-r2-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r2-from-docs367-p08-impl-20261024 · observed=~ · match=~
 
