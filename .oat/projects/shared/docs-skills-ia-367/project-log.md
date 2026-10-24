@@ -265,6 +265,10 @@ Final review paused before dispatch: anchor resolver rejects historical p-rev1 t
 
 Operator approved explicit full-project final review range; original anchors preserved and all 13 units covered, see analysis/final/scope.json. docs367-final-range-approved-20261024
 
+### 2026-10-24 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md run=96d4018b-7030-4867-a0cb-85be5d8beb1a
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
