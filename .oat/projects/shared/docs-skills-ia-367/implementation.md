@@ -2139,13 +2139,17 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 
 ### Task p08-t02: (review) Reject symlinked reader-page selections
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** b04f035a226f5e45fcf8a0fda18ca6f2a117bb26
 **Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (M1)
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
 **Intent:** Close the nonReaderPaths alias bypass by rejecting any selected content-relative page with a symlink component, reusing the existing bounded lstat walk with a root parameter. Preserve valid readers, root identity, containment, pre-read triad gating and source semantics.
 **Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md (page-symlink disclosure only).
 **Proof command:** Real CLI alias-to-excluded-template and symlink-directory bad controls must fail for the page guard, with contained reader control passing; retain pre-fix red and fixed green evidence. Focused literals/help suites and all nine ordered DoD gates; exact exits/cache truth under ignored analysis/p08/fix-r1/. No own-reader mocks or production-only test hook.
+
+**Verification:** Pre-fix real CLI regression exits1 because both excluded-template aliases incorrectly succeed; fixed79 literals/help tests pass freshly with contained-reader and resolved-root-alias controls. CLI check/types/build and docs check exit0. Full phase checks follow; no recovery attempt.
+**Analysis:** analysis/p08/fix-r1/ (t02 red/green, exact commands/exits and scoped checks).
 
 ### Task p08-t03: (review) Clarify selected source self-matches
 
