@@ -2044,7 +2044,7 @@ Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspect
 
 **Design drift / artifact alignment notes:** No product/design deviation. Root separately repaired the pre-range p07 Provisional/Exit-evidence formatting markers with paragraph separation; accepted intent and exit text are conserved. Plan validator passes after formatting. Reviewer independently ran1325 tests and nine CLI fixture runs, invalid-input/preservation/exclusion/packed controls; all passed. Nine gates remain inherited producer proof with cache truth disclosed. Reconnaissance not-attempted; no orchestration section/log entry.
 
-**Outcome:** fixes queued p07-t02–p07-t04, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
+**Outcome:** fixes completed p07-t02–p07-t04 at verified candidate632d69e04954f58e26e1a541fdd6b36968189e1e; awaiting independent round2, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
 
 ---
 
@@ -2062,7 +2062,7 @@ Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspect
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p07-fix-r1-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p07-fix-r1-from-docs367-p07-impl-20261024 · observed=~ · match=~
+- run/v1 · request=docs367-p07-fix-r1-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-fix-r1-from-docs367-p07-impl-20261024 · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-review-r1-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
