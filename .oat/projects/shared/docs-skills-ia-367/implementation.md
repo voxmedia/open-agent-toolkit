@@ -2183,13 +2183,17 @@ R1 M1 and L1 are independently closed, including file/directory aliases, configu
 
 ### Task p08-t04: (review) Require canonical reader-page spelling
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 3b25736af091e50b1508ff1466bae0caaf9f3c48
 **Source review:** reviews/archived/p08-review-2026-10-24T174706Z.md (M1)
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
 **Intent:** Reject a selected page when its content-relative requested spelling differs from the canonical async-realpath spelling below the resolved content root. This closes case-variant nonReaderPaths bypasses without enumerating unrelated reader pages or changing source matching. Preserve configured-root aliases and prior symlink/containment/overlay behavior.
 **Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md only if needed to disclose canonical page spelling.
 **Proof command:** Real CLI case-variant excluded-template regression with runtime filesystem case-sensitivity detection, failing pre-fix and passing after on this case-insensitive host; canonical reader and resolved-root-alias controls remain valid. Existing symlink/source/triad controls pass. Focused fresh tests, original14 reviewer probes and nine ordered gates with explicit exits/cache truth; retain evidence under ignored analysis/p08/fix-r2/. No mocked own reader, production test hook or full platform campaign.
+
+**Verification:** Actual case-insensitive-host regression ran (not skipped): pre-fix exit1 for incorrectly accepted template spelling; fixed80 literals/help tests pass with canonical-reader/root-alias and retained R1 symlink controls. CLI check/types/build and docs check exit0; all14 built reviewer probes match expected categories, including Q9 canonical-spelling error1, Q1/Q7 valid0 and Q13 self-match0. Phase-wide gates follow; no recovery attempt.
+**Analysis:** analysis/p08/fix-r2/ (red/green, provenance, probes, exact commands/exits and scoped checks).
 
 ---
 
