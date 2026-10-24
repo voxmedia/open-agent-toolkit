@@ -2153,13 +2153,17 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 
 ### Task p08-t03: (review) Clarify selected source self-matches
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 99533bc88cf07ab2af471e963ee888e37cd5a211
 **Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (L1)
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
 **Intent:** Explicitly state that selected source roots are not automatically filtered to remove docs; roots/exclusions must omit docs and a found citation to documentation itself cannot establish implementation support. Keep canonical relevance judgment and not-found=unverified semantics. No automatic overlap guard.
 **Files:** .agents/skills/oat-docs-analyze/SKILL.md; apps/oat-docs/docs/docs-tooling/commands.md; mechanically pinned existing skill sentence contracts only if required and reported.
 **Proof command:** Conservation diff and focused skill-sentence tests; no new prose-mirroring test. Retain current skill1.7.4/public0.3.30 PR-scoped bumps. Run root lint/format and ordered gates as required; manual inspection of the existing self-match probe verifies the clarified limitation.
+
+**Verification:** Conservation diff preserves all prior prose, links and judgment requirements while adding the explicit self-match limitation. Fresh isolated-HOME skill-sentence/validation1087 tests, root lint/format and docs check exit0; no sentence contract edit or new test. Skill1.7.4/public0.3.30 remain unchanged. Built reviewer probes and ordered phase gates follow; recovery0/10,pendingnull unchanged.
+**Analysis:** analysis/p08/fix-r1/ (t03 conservation diff/result, exact commands/exits and checks).
 
 ---
 
