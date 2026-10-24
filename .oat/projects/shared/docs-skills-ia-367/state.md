@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t05
-oat_last_commit: 632d69e04954f58e26e1a541fdd6b36968189e1e
+oat_current_task: p07
+oat_last_commit: 484ae87aa12c32c5807a50241f073224da8d8cbb
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -157,7 +157,7 @@ oat_generated: false
 
 ## Current Phase
 
-P07 reopened for accepted PR375 Windows destination regression p07-t05. Ten of13 phase-units accepted while the bounded correction and focused confirmation are pending. Historical p07 acceptance/reviews remain preserved; recovery0/10,pendingnull. P08/p09 remain provisional with no Base.
+P07-t05 is complete; focused independent confirmation of the PR375 Windows correction is pending. Ten of13 phase-units accepted while the bounded correction and focused confirmation are pending. Historical p07 acceptance/reviews remain preserved; recovery0/10,pendingnull. P08/p09 remain provisional with no Base.
 
 ## Artifacts
 

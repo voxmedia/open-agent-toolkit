@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p07-t05
+oat_current_task_id: p07
 oat_generated: false
 oat_template: false
 ---
@@ -2081,6 +2081,10 @@ Proof: regression fails before correction and passes after for both separator-se
 
 ---
 
+### P07 Windows correction verified for focused confirmation
+
+Root verified product c75296c20c790b5d59205a312eadc784eef4c90c, immediate journal 484ae87aa12c32c5807a50241f073224da8d8cbb, final journal edecad017f812fd669fc34b28d17c9f5e579adb6, two exact path hashes and clean ancestry. Both joins are native-consistent. Retained pre-fix regression fails two simulated Windows presets with six controls passing; all eight pass after correction. All nine gate exits0, cache truth and inherited limits are retained in analysis/p07/pr375-windows/README.md. Root inspected evidence, not a second full suite run. H1 implemented; independent focused confirmation pending. P07 stays in_progress, frozen Base retained; recovery0/10,pendingnull.
+
 ## Phase p08: Product and QA checks against source
 
 **Status:** pending
@@ -2095,7 +2099,7 @@ Proof: regression fails before correction and passes after for both separator-se
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p07-pr375-windows-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p07-pr375-windows-from-docs367-p07-impl-20261024 · observed=~ · match=~
+- run/v1 · request=docs367-p07-pr375-windows-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-pr375-windows-from-docs367-p07-impl-20261024 · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-complexity-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
