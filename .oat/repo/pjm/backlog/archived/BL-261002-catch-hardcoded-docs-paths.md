@@ -39,7 +39,7 @@ tests (2/2, exit 0); the original seeded negative control is inherited, not
 repeated or expanded. Computed paths and historical fixture prose remain out
 of scope. Shipped in [PR #368](https://github.com/voxmedia/open-agent-toolkit/pull/368).
 
-Evidence: [docs-skills-ia-367 implementation](../../../../projects/shared/docs-skills-ia-367/implementation.md),
-[approved brief](../../../../projects/shared/docs-skills-ia-367/plan.md) and
-[issue #367 delivery checklist](../../../../projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
+Evidence: [docs-skills-ia-367 implementation](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/implementation.md),
+[approved brief](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/plan.md) and
+[issue #367 delivery checklist](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
 P09 prepares OAT closure; root retains final acceptance/review and delivery.

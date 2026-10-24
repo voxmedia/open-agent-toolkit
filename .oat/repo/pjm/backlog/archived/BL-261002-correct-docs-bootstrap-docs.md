@@ -68,7 +68,7 @@ no runtime code/test hook changes. Fresh isolated-HOME sentence/validation
 contracts pass 1087/1087; existing analyze drift test passes. Prior E12/procedure
 proof is inherited; all nine p09 gates are recorded in the phase journal.
 
-Evidence: [docs-skills-ia-367 implementation](../../../../projects/shared/docs-skills-ia-367/implementation.md),
-[approved brief](../../../../projects/shared/docs-skills-ia-367/plan.md) and
-[issue #367 delivery checklist](../../../../projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
+Evidence: [docs-skills-ia-367 implementation](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/implementation.md),
+[approved brief](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/plan.md) and
+[issue #367 delivery checklist](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
 P09 prepares OAT closure; root retains final acceptance/review and delivery.

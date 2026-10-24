@@ -26,12 +26,12 @@ Markdown-project history. AC1/3/4/7/8 and the OAT capability portions of AC2/5/6
 are delivered; they are not new unfinished OAT implementation work.
 
 Approved transfer: [issue #367](https://github.com/voxmedia/open-agent-toolkit/issues/367),
-[docs-skills-ia-367 brief](../../../../projects/shared/docs-skills-ia-367/plan.md)
-and [implementation evidence](../../../../projects/shared/docs-skills-ia-367/implementation.md)
+[docs-skills-ia-367 brief](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/plan.md)
+and [implementation evidence](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/implementation.md)
 (p02/p03 accepted; p09-t01 corrects residual E13). The front door/guidance shipped
 in [PR #369](https://github.com/voxmedia/open-agent-toolkit/pull/369), and IA records,
 approval handoff and offline drift in [PR #371](https://github.com/voxmedia/open-agent-toolkit/pull/371).
-See the [P1–P28 delivery checklist](../../../../projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
+See the [P1–P28 delivery checklist](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
 
 The named local paths below are historical source observations, not verified
 current facts. No external repository was accessed for this transfer. Consumer

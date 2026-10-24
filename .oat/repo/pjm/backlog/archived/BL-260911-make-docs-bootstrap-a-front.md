@@ -50,9 +50,9 @@ Markdown Slice above without changing its original text, criteria, observations,
 metadata or previous project pointer. The shipped OAT capability slice is complete:
 AC1/3/4/7/8 and the OAT portions of AC2/5/6 are supported by
 [issue #367](https://github.com/voxmedia/open-agent-toolkit/issues/367), the
-[docs-skills-ia-367 brief](../../../../projects/shared/docs-skills-ia-367/plan.md),
-[accepted phase records](../../../../projects/shared/docs-skills-ia-367/implementation.md)
-and [delivery checklist](../../../../projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
+[docs-skills-ia-367 brief](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/plan.md),
+[accepted phase records](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/implementation.md)
+and [delivery checklist](https://github.com/voxmedia/open-agent-toolkit/blob/a65959999f17c5c77b4659946f48251098061fed/.oat/projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
 [PR #369](https://github.com/voxmedia/open-agent-toolkit/pull/369) delivers the
 existing-docs front door/guidance; [PR #371](https://github.com/voxmedia/open-agent-toolkit/pull/371)
 delivers IA recording, approval-class handoff and offline package drift. Prior
