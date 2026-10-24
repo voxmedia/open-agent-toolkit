@@ -2179,7 +2179,7 @@ Nine ordered gates exited0; cache/execution truth,1565 fresh focused tests and a
 R1 M1 and L1 are independently closed, including file/directory aliases, configured-root identity and the approved documentation-only self-match clarification. R2 M1 (Medium, Minor scope): a differently cased page spelling bypasses nonReaderPaths on a case-insensitive filesystem. Root independently reran14 CLI probes and reproduced Q5 canonical rejection versus Q9 case-variant acceptance, with Q1/Q7 valid. This predates the earlier fix and is inside p08's original range. Convert to p08-t04 under the existing reader-exclusion guarantee, not a new requirement. Enforce canonical on-disk page spelling relative to the resolved content root using async realpath, preserving symlink rejection and narrow selected-page reads.
 
 **Design drift / artifact alignment notes:** No brief change; no automatic docs-source overlap guard, global case-folding policy or full reader-tree enumeration is introduced. Existing skill/public version bumps remain PR-scoped.
-**Outcome:** fix queued p08-t04, original implementer continuation. Cycle2/3; no cap escalation yet. Phase stays in_progress,11/13 accepted; frozen Base and prior Head conserved until fix completion. P09 has no Base. Reviewer rebuilt CLI, verified all22 hashes, ran14 probes and1166 fresh focused tests. Broader gates/runtime/manual limits remain inherited. No project-log write before fix dispatch.
+**Outcome:** fix completed p08-t04; independent successor review pending. Cycle2/3; no cap escalation yet. Phase stays in_progress,11/13 accepted; frozen Base and prior Head conserved until fix completion. P09 has no Base. Reviewer rebuilt CLI, verified all22 hashes, ran14 probes and1166 fresh focused tests. Broader gates/runtime/manual limits remain inherited. No project-log write before fix dispatch.
 
 ### Task p08-t04: (review) Require canonical reader-page spelling
 
@@ -2195,6 +2195,12 @@ R1 M1 and L1 are independently closed, including file/directory aliases, configu
 **Verification:** Actual case-insensitive-host regression ran (not skipped): pre-fix exit1 for incorrectly accepted template spelling; fixed80 literals/help tests pass with canonical-reader/root-alias and retained R1 symlink controls. CLI check/types/build and docs check exit0; all14 built reviewer probes match expected categories, including Q9 canonical-spelling error1, Q1/Q7 valid0 and Q13 self-match0. Phase-wide gates follow; no recovery attempt.
 **Analysis:** analysis/p08/fix-r2/ (red/green, provenance, probes, exact commands/exits and scoped checks).
 
+### P08 canonical-page fix complete; round 3 baseline
+
+Root verified the report, manifest88b7e22b17bf5a7207eb92f0ed6050fe18daaac6600724cfffe78b4b04242195, all22 candidate/current hashes and original/fix/journal commit boundaries. Product3b25736af091e50b1508ff1466bae0caaf9f3c48 has immediate journalc49077ee517d27c4d2cc3c73e083eda0c1c85145; final1b3c6d8069978832ade6eff31e637889e6c9b68f is journal-only. All four records are complete; prior R1 fixes, versions and recovery0/10,pendingnull are conserved.
+
+Actual case-insensitive regression executed red/green,479 fresh focused tests and14 CLI probes passed; all nine gates and direct manifest freshness exited0 with cache truth retained in analysis/p08/fix-r2/implementation-report.md. R2 event moves to fixes_completed; phase stays in_progress at original Base and updated Head pending R3. P09 remains provisional without Base.
+
 ---
 
 ## Phase p09: Docs, release and closeout
@@ -2205,7 +2211,7 @@ R1 M1 and L1 are independently closed, including file/directory aliases, configu
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p08-fix-r2-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p08-fix-r2-from-docs367-p08-impl-20261024 · observed=~ · match=~
+- run/v1 · request=docs367-p08-fix-r2-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r2-from-docs367-p08-impl-20261024 · observed=~ · match=~
 
 - run/v1 · request=docs367-p08-review-r2-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
