@@ -151,8 +151,53 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T21:59:36.574547Z'
+oat_project_state_updated: '2026-10-24T22:01:02.358Z'
 oat_generated: false
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
+  resolved_command:
+    oat --json gate review --project "$PROJECT_PATH" --review-type
+    code --review-scope final --exit-nonzero-on important "Use the
+    oat-project-review-provide skill to review the current project. Use project
+    state to determine the most appropriate review scope. If the project is
+    complete, provide a final independent code review of the entire project.
+    Return blocking findings clearly, or say no blocking findings."
+  resolved_description: Semantic cross-family final implementation review before
+    oat-project-implement exits.
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: a7e569e660566d62978928a00f44347ca4798941
+  implementation_base_ref: origin/main
+  implementation_fingerprint: sha256:effective-delta-v2:adbc6902c83cd623f044ec1e5b93bf101c9dbbecce693bc2ba45da3dd8e6fe4e
+  freshness_head: a7e569e660566d62978928a00f44347ca4798941
+  freshness_fingerprint: sha256:effective-delta-v2:adbc6902c83cd623f044ec1e5b93bf101c9dbbecce693bc2ba45da3dd8e6fe4e
+  waivers: []
+  launch_state: intent_persisted
+  launch_attempt_id: b29ed87f-7947-40ef-86da-ee6c40e01ac8
+  launch_started_at: 2026-10-24T22:01:02.334Z
+  launch_result_receipt: .oat/projects/shared/docs-skills-ia-367/analysis/final/exit-gate/result.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: 2026-10-24T22:01:02.334Z
+  decided_at: null
 ---
 
 # Project State: docs-skills-ia-367
@@ -178,3 +223,7 @@ None.
 ## Next Milestone
 
 Run the configured exit gate, then stored summary → document → final PR sequence; final review and all eight historical deferrals are explicitly approved. Standing plain-merge delivery authority retained. All prior phase PRs368–376 are merged and unwatched. No publication or consumer rollout.
+
+## Configured Exit Review Scope
+
+The operator approved the explicit full-project range c3ba7e31d17521cf51252b5ee5167c6c81d8a629..a7e569e660566d62978928a00f44347ca4798941 for final review. This supplied range remains authoritative for the configured final exit review: use review-provide Step3.0 explicit-input route, source=explicit, requested range unchanged, scope=final. Preserve all13 phase IDs in document order: p01,p-rev1,p02,p03,p-rev2,p-rev3,p04,p-rev4,p05,p06,p07,p08,p09. The historical p-rev1→p02 discontinuity was explicitly reconciled; all anchors are contained by the head. Do not rewrite anchors, use the rejected sequential resolver, narrow the range or re-review only the tracking tail. Final review reviews/archived/final-review-2026-10-24T193457Z.md passed; all eight historical deferrals explicitly approved. Gate review must independently assess actual product within this range and record its own immutable gate metadata; the prior manual review cannot satisfy the gate. Root owns receive/disposition; keep this exit carrier and the stored closeout sequence intact.
