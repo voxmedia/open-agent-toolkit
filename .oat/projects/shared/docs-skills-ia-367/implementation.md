@@ -1983,6 +1983,48 @@ Execution shape: rung3, one phase implementer owns this existing worktree on doc
 **Verification:** Precommit nine ordered gates all exit 0; exact cache hits/misses in analysis/p07/gates.json. Build preflight freshly ran five tasks. Fresh isolated-HOME focused run passes 1,325 tests/37 files, including init/default/adoption, registered help, release packaging, skill-sentence and validation contracts; authoring contracts 7/7. Main test gate freshly runs CLI 9,046/428 files, with smoke165, skills713 and scripts1 directly executed. Root lint/format exit0. Six retained preset fixtures plus triad14 have zero checker errors, real framework nav --check and excluded-template manifest proof. Packed CLI resolves its own bundled assets and copies all ten byte-identically; runtime dependencies are reused, without a clean-install claim. Manual bootstrap walkthrough is explicitly labeled, with record-ia persistence left to the existing approval/adoption flow.
 **Prevention/recovery:** Initial output link, lint and packed inventory failures were fixed before commit; stale generated 0.3.28 assets after the manifest bump were refreshed by build, then all focused contracts passed. Recovery remains 0/10, remaining10, pending null. Optional children absent. Root alone reviews/accepts/delivers; phase remains in_progress.
 
+### Task p07-t02: (review) Correct Markdown preset bootstrap verification
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (M1)
+
+Intent: Qualify the two-page default as no-preset only, and make Markdown preset inspection reachable without entering framework procedures. Verify selected tree/flat collapse, templates/exclusion and contributing track table while retaining no-app/no-build/no-default-manifest behavior.
+Files: `.agents/skills/oat-docs-bootstrap/SKILL.md` and only mechanically affected existing prose contracts.
+Proof: isolated-HOME skill-sentence suite, root lint/format, and a conservation/manual walkthrough of Markdown default and preset branches.
+
+### Task p07-t03: (review) Make section placement guidance specific
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L1)
+
+Intent: Replace repeated track-section boilerplate with short section-specific placement guidance, preserving public generic examples and existing paths, pages, Contents and reader model. No new directories, pages, facts or mechanism.
+Files: `packages/cli/src/commands/docs/init/content.ts` and existing preset tests only if meaningful for the shipped prose contract.
+Proof: existing real preset init/check/nav tests and generated-output inspection with distinct relevant section guidance.
+
+### Task p07-t04: (review) Label the toolchain home link accurately
+
+**Status:** pending
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L2)
+
+Intent: In preset mode replace the full Getting Started link label and destination with the documentation-home label and root-index destination; no-input default link stays unchanged.
+Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the existing preset fixture assertion if warranted.
+Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspected; default starter conserved.
+
+### Review Received: p07 round 1
+
+**Date:** 2026-10-24
+**Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T152354Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 2
+
+- M1 (Medium): Markdown bootstrap's default-only file assertion contradicts preset output and bypasses framework-only inspection → fix task p07-t02; approved p07 handoff/inspection guarantee requires both tooling branches to agree.
+- L1 (Low): Generated track sections repeat boilerplate with little placement value → fix task p07-t03; p07 explicitly promises useful section guidance, a bounded text improvement.
+- L2 (Low): Toolchain Getting Started label points at the root index → fix task p07-t04; align shipped reader guidance to its real destination.
+
+**Design drift / artifact alignment notes:** No product/design deviation. Root separately repaired the pre-range p07 Provisional/Exit-evidence formatting markers with paragraph separation; accepted intent and exit text are conserved. Plan validator passes after formatting. Reviewer independently ran1325 tests and nine CLI fixture runs, invalid-input/preservation/exclusion/packed controls; all passed. Nine gates remain inherited producer proof with cache truth disclosed. Reconnaissance not-attempted; no orchestration section/log entry.
+
+**Outcome:** fixes queued p07-t02–p07-t04, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
+
 ---
 
 ## Phase p08: Product and QA checks against source
