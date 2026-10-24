@@ -228,6 +228,10 @@ docs367-p07-accepted-r2-20261024: p07 accepted, verdict passed after one fix loo
 
 docs367-p07-pr375-selfreview-20261024: PR375 four review lenses covered; independent complexity pass retains core implementation with two optional next-touch consolidations and no blocker; dispositions in implementation.md, report reviews/archived/complexity-p07-2026-10-24.md; current-head CI/Bugbot pending.
 
+### 2026-10-24 · structural · oat-project-implement · p07
+
+docs367-p07-windows-accepted-20261024: p07 accepted after clean focused confirmation; three standard reviews, no residual findings; proof analysis/p07/pr375-windows/README.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

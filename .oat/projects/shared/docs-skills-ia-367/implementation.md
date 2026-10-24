@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p07
+oat_current_task_id: p08
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | completed   | 1     | 1/1      |
-| p07    | in_progress | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 11/13 phases accepted
 
 ---
 
@@ -1959,7 +1959,7 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 ## Phase p07: Page templates and presets
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
 **Head:** 484ae87aa12c32c5807a50241f073224da8d8cbb
 **Executor:** phase-implementer:docs367-p07-impl-20261024
@@ -2085,6 +2085,14 @@ Proof: regression fails before correction and passes after for both separator-se
 
 Root verified product c75296c20c790b5d59205a312eadc784eef4c90c, immediate journal 484ae87aa12c32c5807a50241f073224da8d8cbb, final journal edecad017f812fd669fc34b28d17c9f5e579adb6, two exact path hashes and clean ancestry. Both joins are native-consistent. Retained pre-fix regression fails two simulated Windows presets with six controls passing; all eight pass after correction. All nine gate exits0, cache truth and inherited limits are retained in analysis/p07/pr375-windows/README.md. Root inspected evidence, not a second full suite run. H1 implemented; independent focused confirmation pending. P07 stays in_progress, frozen Base retained; recovery0/10,pendingnull.
 
+### Review Received: p07 focused Windows confirmation
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T163100Z.md. **Findings:** Critical0/High0/Medium0/Low0. Narrowed5a76dd234c03067dfc87fe785fc72237bb5b3c83..484ae87aa12c32c5807a50241f073224da8d8cbb; prior full R2 coverage at632d69e04954f58e26e1a541fdd6b36968189e1e inherited.
+
+Root read the complete artifact and checked full head/range provenance, exactly one not-attempted reconnaissance signal and no orchestration section. Reviewer independently ran8 separator regression cases and150 init tests, inspected final-test red evidence, verified hashes and tracking-only descendants. Both native comparisons satisfy H1; default controls remain unchanged. Nine gates and full CLI9054 are inherited producer proof. Windows relative joins were simulated on macOS; native Windows remains unverified.
+
+**Outcome:** passed; all five task records closed and remote H1 corrected. P07 acceptance restored (11/13 units), frozen Base retained and Head484ae87aa12c32c5807a50241f073224da8d8cbb. Third standard code review is clean; no further automated review cycle is queued. Prior complexity assessment remains valid for unchanged architecture; no new mechanism or optional simplification was added. Historical reviews, prior acceptance and recovery0/10,pendingnull remain conserved. Root will publish correction and require current-head CI/Bugbot plus clearance of the live Warp objection before plain merge delivery. P08/p09 remain provisional without Base.
+
 ## Phase p08: Product and QA checks against source
 
 **Status:** pending
@@ -2099,7 +2107,7 @@ Root verified product c75296c20c790b5d59205a312eadc784eef4c90c, immediate journa
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p07-windows-review-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p07-windows-review-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-pr375-windows-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-pr375-windows-from-docs367-p07-impl-20261024 · observed=~ · match=~
 
