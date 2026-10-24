@@ -1965,6 +1965,21 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 Execution shape: rung3, one phase implementer owns this existing worktree on docs/docs-skills-ia-367-p07. No parallel group is declared; root fan-out fails independence because canonical template assets, CLI content/config planning, bootstrap guidance, fixtures and bundled build outputs share sequential dependencies. Root-inline exception does not apply to this new public surface. Recovery default10, no phase override; authoritative p07 usage0/10, remaining10, pending null. Root retains plan/state/log, independent review, acceptance and delivery ownership.
 
+### Task p07-t01: Materialize approved preset readers and canonical page templates
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-impl-20261024 (accepted launch a46330482f433303bf969fdfecc2672cdc0dc436)
+**Intent:** Deliver p07's canonical ten page shapes and opt-in shared init materialization, preserving default/adoption behavior and the existing IA approval boundary.
+**Files:** authoring-docs assets/references, bootstrap, docs init and mechanically affected CLI contracts, human docs/instructions, five public manifests and generated bundled versions. The offline lockfile-only refresh made no lockfile change (workspace links contain no package versions). Exact producer-owned paths are retained in ignored analysis/p07/owned-paths.json.
+**Proof command:** isolated-HOME docs init integration and skill contracts; CLI types/lint/build; public six-preset fixture matrix at real checker/nav/manifest seams; installed package asset resolution; all nine ordered DoD gates plus fresh relevant suites/root lint/format.
+**Pre-task HEAD:** a46330482f433303bf969fdfecc2672cdc0dc436
+
+**Commit:** a947d26b940a6b44af1c46a251233f28a03c6131
+**Outcome:** All ten canonical page bodies ship under authoring-docs/references/page-templates and are copied unchanged by one shared init content planner. Opt-in paired preset/count flags validate before writes; the exact 14/15 boundary, all six models/subsets, purpose/Contents/entry guidance and accepted-selection tables are delivered. NonReaderPaths merges before nav; existing/adopted surfaces and default starter behavior stay protected. No screen instances, per-track AGENTS, IA decisions, PJM adoption, checker suppressions, dependencies or framework upgrades were added. Bootstrap transports the approved pair and inspects actual output. Authoring-docs 1.2.0 and bootstrap 1.4.5 carry one skill bump; all five public packages are 0.3.29.
+**Verification:** Precommit nine ordered gates all exit 0; exact cache hits/misses in analysis/p07/gates.json. Build preflight freshly ran five tasks. Fresh isolated-HOME focused run passes 1,325 tests/37 files, including init/default/adoption, registered help, release packaging, skill-sentence and validation contracts; authoring contracts 7/7. Main test gate freshly runs CLI 9,046/428 files, with smoke165, skills713 and scripts1 directly executed. Root lint/format exit0. Six retained preset fixtures plus triad14 have zero checker errors, real framework nav --check and excluded-template manifest proof. Packed CLI resolves its own bundled assets and copies all ten byte-identically; runtime dependencies are reused, without a clean-install claim. Manual bootstrap walkthrough is explicitly labeled, with record-ia persistence left to the existing approval/adoption flow.
+**Prevention/recovery:** Initial output link, lint and packed inventory failures were fixed before commit; stale generated 0.3.28 assets after the manifest bump were refreshed by build, then all focused contracts passed. Recovery remains 0/10, remaining10, pending null. Optional children absent. Root alone reviews/accepts/delivers; phase remains in_progress.
+
 ---
 
 ## Phase p08: Product and QA checks against source
