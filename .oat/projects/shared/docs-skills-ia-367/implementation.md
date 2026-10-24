@@ -2287,6 +2287,7 @@ All three archive commands exit 0 without warnings. Complete affectedPaths recei
 
 ## Orchestration Runs
 
+- run/v1 · request=docs367-closeout-document-20261024 · scope=closeout-document · action=document · role=project-document-worker · target=implementation · model=gpt-6.1-sol · effort=high · stamp=~ · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
 - run/v1 · request=docs367-closeout-summary-20261024 · scope=closeout-summary · action=summary · role=project-summary-worker · target=implementation · model=gpt-6.1-sol · effort=high · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=docs367-final-exit-wait-20261024 · scope=final-exit-wait · action=analysis · role=bounded-gate-result-waiter · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=docs367-final-review-r1-20261024 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
