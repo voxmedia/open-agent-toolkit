@@ -261,6 +261,10 @@ p09 implementation accepted after root identity/conservation verification; 0 fix
 
 Final review paused before dispatch: anchor resolver rejects historical p-rev1 to p02 sequential continuity. All 13 phase anchors are contained by aggregate head; original p02 overlaps the late p01 correction. Explicit full project range requires operator choice; see analysis/final/anchor-reconciliation.json. docs367-final-anchor-stop-20261024
 
+### 2026-10-24 · structural · oat-project-implement · final
+
+Operator approved explicit full-project final review range; original anchors preserved and all 13 units covered, see analysis/final/scope.json. docs367-final-range-approved-20261024
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
