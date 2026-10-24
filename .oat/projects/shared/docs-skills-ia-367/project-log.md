@@ -212,6 +212,26 @@ docs367-p06-concurrent-fix-reconciled-20261023: CI fixture recovery stopped befo
 
 docs367-p06-external-verification-received: External fixture-only correction verified at02800224e; focused144 each Node22.17/26.11 and nine gates pass; remote bcf9d83 CI/Bugbot/Warp clear. Publish reconciliation and await final-head checks; accepted10/13, review cap3/3 plus approved focused confirmation, recovery1/10 pendingnull.
 
+### 2026-10-23 · structural · oat-project-implement · p06
+
+docs367-p06-delivered-20261023: PR374 merged eebe3f564 after expected-head84220e7 CI/release/Bugbot success and complete review clearance; watcher stopped. P06 accepted10/13, recovery1/10 pendingnull. Resume p07 provisional on its continuation branch; this PR watcher event is complete.
+
+### 2026-10-24 · structural · oat-project-implement · p07-readiness
+
+Readiness completed with no writes; p07 concretized within approved P5/P26/P27: opt-in preset and anticipated reader count, shared CLI materialization and canonical authoring assets, preserved direct-init and Markdown contracts. Main fetch has no scoped drift. No additional workflow approval is required by the standing all-phases instruction.
+
+### 2026-10-24 · structural · oat-project-implement · p07
+
+docs367-p07-accepted-r2-20261024: p07 accepted, verdict passed after one fix loop and two independent rounds; all four records closed, zero R2 findings, nine gates pass with inherited/cache limits disclosed; review receipt in implementation.md, artifact reviews/archived/p07-review-2026-10-24T155132Z.md; delivery precedes p08.
+
+### 2026-10-24 · structural · pr-self-review · p07
+
+docs367-p07-pr375-selfreview-20261024: PR375 four review lenses covered; independent complexity pass retains core implementation with two optional next-touch consolidations and no blocker; dispositions in implementation.md, report reviews/archived/complexity-p07-2026-10-24.md; current-head CI/Bugbot pending.
+
+### 2026-10-24 · structural · oat-project-implement · p07
+
+docs367-p07-windows-accepted-20261024: p07 accepted after clean focused confirmation; three standard reviews, no residual findings; proof analysis/p07/pr375-windows/README.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -55,3 +55,120 @@ test('portable IA contract keeps the six approved presets, reader-first decision
   );
   assert.match(read('SKILL.md'), /references\/guidance-sources\.md/);
 });
+
+test('copyable page assets retain their required field and evidence contracts', () => {
+  const headings = {
+    'product-feature': [
+      'Availability and entry points',
+      'Expected journey',
+      'Behavior rules',
+      'States and edge cases',
+      'External boundary',
+      'Paired documentation',
+      'Evidence and owner-review gaps',
+    ],
+    'engineering-feature': [
+      'Routes and params',
+      'Primary files',
+      'Data and state',
+      'Flags',
+      'Failure modes and constraints',
+      'Testing seams',
+      'Paired documentation',
+      'Source references',
+    ],
+    'qa-validation': [
+      'Scope',
+      'Named seeds',
+      'Configuration matrix',
+      'Scenarios',
+      'Ready signal',
+      'Cleanup',
+      'Platform deltas',
+      'External boundary',
+      'Out of scope',
+    ],
+    'screen-spec': [
+      'When to use',
+      'Route and params',
+      'Entry points',
+      'Visible states',
+      'Locators',
+      'Transitions',
+      'Back behavior',
+    ],
+    'alert-runbook': [
+      'When to use and entry criteria',
+      'Production context',
+      'Ownership',
+      'First-five-minutes triage',
+      'Procedure',
+      'Why this approach',
+      'Rollback',
+      'Verification checklist',
+    ],
+    'solution-record': ['Problem', 'Root cause', 'Fix', 'Prevention'],
+    'command-reference': [
+      'Production impact',
+      'Command group index',
+      'Shared flags',
+      'Per-command arguments',
+      'Outputs and JSON',
+      'Exit codes',
+      'Side effects',
+    ],
+    'skill-command-guide': [
+      'Invocation',
+      'Prerequisites',
+      'Example scenario',
+      'What it does without asking',
+      'Expected output',
+      'Next step',
+    ],
+    'decisions-pointer': [
+      'Where records live',
+      'How records are created',
+      'Selected decisions',
+      'Staleness and review',
+    ],
+    'per-area-agents': [
+      'Audience',
+      'Voice',
+      'Belongs here versus elsewhere',
+      'Cross-area triggers',
+      'Verification',
+    ],
+  };
+  for (const [name, required] of Object.entries(headings)) {
+    const body = read(`references/page-templates/${name}.md`);
+    for (const heading of required)
+      assert.ok(body.includes(`## ${heading}`), `${name}: ${heading}`);
+    for (const rule of [
+      'Use backticks only for literals verified verbatim in source',
+      'Write concepts in ordinary prose',
+      'Planned automation:',
+      'Implemented assertions:',
+      'Dated execution evidence:',
+    ])
+      assert.ok(body.includes(rule), `${name}: ${rule}`);
+  }
+  const qa = read('references/page-templates/qa-validation.md');
+  assert.match(
+    qa,
+    /ID\s*\|\s*Priority\s*\|\s*Given\s*\|\s*When\s*\|\s*Then \(exact copy\)\s*\|\s*Evidence\s*\|\s*Automation/,
+  );
+  const screen = read('references/page-templates/screen-spec.md');
+  assert.match(
+    screen,
+    /Test ID\s*\|\s*A11y label\s*\|\s*Literal text\s*\|\s*Source path/,
+  );
+  const solution = read('references/page-templates/solution-record.md');
+  for (const field of [
+    'symptoms',
+    'root_cause',
+    'component',
+    'severity',
+    'date',
+  ])
+    assert.match(solution, new RegExp(`^${field}:`, 'm'));
+});

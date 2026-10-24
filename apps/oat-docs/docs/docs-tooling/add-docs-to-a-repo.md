@@ -63,6 +63,8 @@ Choose Markdown files or a framework app, using the guided skill or direct CLI.
 
 The docs-bootstrap skill offers Markdown, Fumadocs, and MkDocs. Configured tooling is authoritative; framework evidence is checked before plain-directory evidence. A root README alone does not trigger adoption, and an empty selected target stays fresh setup. Markdown uses file checks and an adopt/audit handoff, with no app questions, dependencies, framework patches, docs-root AGENTS, or site build.
 
+For fresh empty targets, the skill obtains explicit IA approval with an anticipated reader-page count, probes `--ia-preset` and `--planned-pages`, then passes both to CLI init. The CLI materializes the selected model at 15 or more pages and collapses it into grouped root headings below 15 (always flat for `flat-small`). It also supplies relevant non-reader page templates. Existing surfaces use analyze and individually approved apply; adoption receives no preset flags. See [preset mappings and template subsets](commands.md#approved-preset-readers). Selection guidance does not replace the existing IA decision/adoption flow.
+
 For framework apps, it wraps `oat docs init` with a seven-step guided flow: preflight detection (repo shape + existing-setup conflict surfacing), richer input gathering (including a site name distinct from the package name), the CLI invocation itself, CLI-owned scaffold inspection, install + build verification, post-scaffold config inspection, and a chunked educational walkthrough.
 
 What the framework path adds over the raw CLI:

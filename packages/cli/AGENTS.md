@@ -34,6 +34,10 @@ Maintain consistent, safe CLI behavior across commands and modules.
   `applyOatCoreGitattributes` and `checkSyncedProjects`; do not rely on the
   production implementations against a path that does not exist.
 
+## Preset documentation init
+
+`docs init --ia-preset <preset> --planned-pages <count>` is opt-in, paired and validated before writes. Shared content planning consumes canonical bundled `skills/authoring-docs/references/page-templates/*.md` bodies, never framework copies. Existing surfaces require analyze/approved apply; preset init cannot adopt or replace them. Seed `contributing/templates/**` in nonReaderPaths before nav sync and preserve the no-input starter. Below 15 anticipated reader pages collapse tracks; flat-small always collapses.
+
 ## Documentation checker
 
 - `pnpm run cli:source -- docs check --target-dir <root>` is read-only and does not build a site.

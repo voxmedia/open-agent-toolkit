@@ -551,8 +551,8 @@ docs/
 ## IA Proposal
 
 Use for bootstrap or an existing-tree `--ia` analysis. This proposes structure;
-it neither persists an IA decision nor materializes a preset. Feature and QA
-validation page templates are not included; use the page-type guidance to
+it neither persists an IA decision nor materializes a preset. Use the copyable
+page assets below and the page-type guidance to
 plan their content.
 
 ````markdown
@@ -601,3 +601,23 @@ questions. Record an explicit choice before replacement or a second app.
 Existing docs default to analyze → apply of approved recommendations.
 No private exemplar text, copied external contents or unapproved moves.}
 ````
+
+## Copyable page assets
+
+These Markdown bodies are the canonical source for approved preset scaffolds under
+`contributing/templates/`. They are drafts, excluded from reader navigation and
+manifest inventories through `documentation.nonReaderPaths`. Prefer local templates
+when present; remove prompts and unneeded sections before publishing a reader page.
+A Solution record captures an incident diagnosis, unlike the solution page type; a
+Decisions pointer routes to records and never substitutes for an ADR.
+
+- [Product feature](page-templates/product-feature.md) - Intended behavior and reader-visible boundaries for one feature or journey.
+- [Engineering feature](page-templates/engineering-feature.md) - Implementation contracts and testing seams for one feature.
+- [QA validation](page-templates/qa-validation.md) - Reproducible behavioral validation for one feature or journey.
+- [Screen spec](page-templates/screen-spec.md) - Shared visible-state contract only for screens serving several journeys.
+- [Alert runbook](page-templates/alert-runbook.md) - Triage, recovery and verification for a specific operational alert.
+- [Solution record](page-templates/solution-record.md) - An incident diagnosis and fix, distinct from a capability solution guide.
+- [Command reference](page-templates/command-reference.md) - Verified command inputs, outputs and mutation boundaries.
+- [Skill or command guide](page-templates/skill-command-guide.md) - A reader task guide for invoking one skill or command.
+- [Decisions pointer](page-templates/decisions-pointer.md) - A curated guide to consequential decisions, not a ledger or an ADR.
+- [Per-area AGENTS](page-templates/per-area-agents.md) - Local authoring instructions excluded from reader navigation.

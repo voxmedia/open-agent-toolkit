@@ -12,6 +12,7 @@ import type { OatDocumentationConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
 import { OAT_VERSION } from '@shared/oat-version';
 
+import { planPresetContent } from './content';
 import { buildDocsCommands, shellQuote } from './docs-commands';
 import { applyMarkdownDocsPlan, planMarkdownDocs } from './markdown';
 import type {
@@ -574,6 +575,7 @@ export async function scaffoldDocsApp(
   }
 
   await ensureTargetWritable(appRoot);
+  const contentPlan = await planPresetContent({ ...options, markdown: false });
   await ensureDir(appRoot);
   const packageManagerField = await buildPackageManagerField(
     options,
@@ -592,10 +594,17 @@ export async function scaffoldDocsApp(
       !independentPnpmRoot
     )
       continue;
+    if (
+      contentPlan &&
+      [join('docs', 'index.md'), join('docs', 'getting-started.md')].includes(
+        templateFile.destination,
+      )
+    )
+      continue;
     const source = join(templateRoot, templateFile.source);
     const destination = join(appRoot, templateFile.destination);
     const template = await readFile(source, 'utf8');
-    const rendered = renderTemplate(
+    let rendered = renderTemplate(
       template,
       options,
       depContext,
@@ -603,9 +612,32 @@ export async function scaffoldDocsApp(
       nodeRequirement,
       templateFile.destination === 'package.json',
     );
+    if (contentPlan && templateFile.destination === 'AGENTS.md') {
+      rendered = rendered.replace(
+        'This starter separates reader Getting Started from contributor setup.',
+        'This starter uses the selected reader tracks and entry principles listed below.',
+      );
+      rendered += `\n${contentPlan.guidance}`;
+    }
+    if (
+      contentPlan &&
+      templateFile.destination ===
+        join('docs', 'contributing', 'docs-toolchain.md')
+    )
+      rendered = rendered.replaceAll(
+        '[Getting Started](../getting-started.md)',
+        '[the documentation home](../index.md)',
+      );
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');
     createdFiles.push(templateFile.destination);
+  }
+
+  for (const file of contentPlan?.files ?? []) {
+    const destination = join(appRoot, 'docs', file.name);
+    await ensureDir(dirname(destination));
+    await writeFile(destination, file.content, 'utf8');
+    createdFiles.push(join('docs', file.name));
   }
 
   return {

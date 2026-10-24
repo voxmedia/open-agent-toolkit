@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-10-22
-oat_current_task_id: p06
+oat_last_updated: 2026-10-24
+oat_current_task_id: p08
 oat_generated: false
 oat_template: false
 ---
@@ -11,7 +11,7 @@ oat_template: false
 # Implementation: docs-skills-ia-367
 
 **Started:** 2026-10-22
-**Last Updated:** 2026-10-22
+**Last Updated:** 2026-10-24
 
 > This journal records execution of the Project Brief in `plan.md` and is used
 > to resume interrupted sessions.
@@ -51,11 +51,11 @@ oat_template: false
 | p-rev4 | completed | 1     | 1/1      |
 | p05    | completed | 1     | 1/1      |
 | p06    | completed | 1     | 1/1      |
-| p07    | pending   | 1     | 0/1      |
+| p07    | completed | 1     | 1/1      |
 | p08    | pending   | 1     | 0/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 11/13 phases accepted
 
 ---
 
@@ -1951,11 +1951,147 @@ Fresh isolated-HOME focused suites pass144/144 on both exact Node22.17.0 and26.1
 
 Root separately observed Linux/Node22.17 CI run40034555611/job120690710620 succeed atbcf9d83, with release dry-run and Bugbot successful and Bugbot reporting no issues. Warp confirms all five fixes and accepts the documented navigation exception; original rejection dismissed, no unresolved threads or requested reviewers in the complete remote sweep. Corepack causality remains unproven because the original failure omitted subprocess stderr. Prior independent review and approved residual deferrals remain unchanged. P06 stays accepted (10/13 units); publish reconciled tracking and require fresh final-head CI/Bugbot before plain merge delivery. P07 remains provisional.
 
+### P06 delivered through PR374
+
+2026-10-23T22:56:49Z; PR https://github.com/voxmedia/open-agent-toolkit/pull/374 merged using a plain merge commit eebe3f5645a62bdad23c560207962913cfb4fa2f, atomically matching verified head 84220e7e5f3f45725049b90b68a998f50356f600. A fresh complete paginated sweep read 13 reviews, 16 inline comments, the updated informational summary, seven resolved threads and zero requested reviewers. No live rejection or actionable finding remains. Current-head CI run40035776287/job120694740579, release dry-run and Bugbot all succeeded; Bugbot explicitly reported no issues. Head/base stayed unchanged through the sweep. No admin override, auto-merge, branch deletion or publication. T3 watcher stopped after remote MERGED/mergedAt/merge-commit verification.
+
+P06 acceptance remains 10/13 phase-units, with historical anchors, configured passing gate, approved scope exceptions and residual diagnostic deferrals unchanged. Recovery remains 1/10 used, pending null. Resume pointer advances to provisional p07; its approved Outcome9 covers page templates and preset scaffolds, and it must be made concrete before implementation. Fetch after landing shows no unrelated main changes in the prospective p07 paths. Continued tracking uses docs/docs-skills-ia-367-p07 in the same existing worktree; no p07 product work or new Base has started. Final project PR and npm publication remain held.
+
 ## Phase p07: Page templates and presets
 
-**Status:** pending
+**Status:** completed
+**Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
+**Head:** 484ae87aa12c32c5807a50241f073224da8d8cbb
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+
+Execution shape: rung3, one phase implementer owns this existing worktree on docs/docs-skills-ia-367-p07. No parallel group is declared; root fan-out fails independence because canonical template assets, CLI content/config planning, bootstrap guidance, fixtures and bundled build outputs share sequential dependencies. Root-inline exception does not apply to this new public surface. Recovery default10, no phase override; authoritative p07 usage0/10, remaining10, pending null. Root retains plan/state/log, independent review, acceptance and delivery ownership.
+
+**Verified handoff:** Candidate Head632d69e04954f58e26e1a541fdd6b36968189e1e includes all three accepted review corrections in bounded product/journal pairs p07-t02–t04; all four p07 execution records are closed. Frozen Base1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3 and historical candidate65d121f0e8cf86bdfa9c15c97d704fcb13f5d6d4 remain valid. M1 makes actual Markdown preset inspection reachable and qualifies the two-page default; L1 supplies relevant section placement sentences; L2 accurately labels preset documentation-home links while preserving default output. All nine ordered gates exit0 at the committed candidate. Turbo hits/misses: check5/6, types5/6, test5/7, build5/0, docs6/0. Direct step9 generate/diff exit0 despite cached docs gate; no cache replay is claimed fresh. The test gate freshly runs CLI9046/428 files, all other test tasks and its docs-build dependency, plus direct smoke165, skills713 and scripts1. Fresh isolated-HOME focused init/sentence/validation suite1229/35 files passes; final init suite142/9 files, authoring7, root lint/format and direct CLI lint/types/build pass. Actual Markdown default/14/15/flat-small controls, triad/task-type placement inspection and both framework before/after link controls pass checker/nav seams. Framework defaults are byte-identical; preset link changes only the toolchain page. All35 original product hashes are indexed at analysis/p07/fix-r1/product-manifest.json:31 unchanged, four authorized fix paths changed. Exact per-task product/journal SHAs, gate logs/cache counts and output proof index are in analysis/p07/fix-r1/README.md and handoff.json; original analysis/p07 proof is retained. Journal review check exits0 with only root-owned live continuation warning. Prior phase/task records, launcher runs and root review disposition are conserved. Recovery0/10, remaining10, pendingnull; no optional children or recovery events. Limits: manual prose/output walkthrough, inherited unchanged packed asset/runtime/framework/install-policy proof; no new installation or autonomous-agent execution claim. Phase stays in_progress; root owns independent review, acceptance and delivery.
+
+**PR375 correction handoff:** Candidate Head484ae87aa12c32c5807a50241f073224da8d8cbb closes t05/H1 after productc75296c20c790b5d59205a312eadc784eef4c90c and immediate task journal. All nine ordered gates exit0; Turbo hits/misses check9/2, types9/2, test9/3, build5/0, docs6/0, with direct step9 generation/diff0. Fresh CLI9054/429 files, focused init150/10 files, smoke165, skills713 and scripts1 pass. The unchanged final regression fails both simulated Windows preset rows before the fix (six controls pass), then passes8/8. Frozen Base and historical acceptance remain preserved; phase stays in_progress. Windows execution is simulated, with unchanged manual/packed/runtime/framework limits inherited. Recovery0/10,pendingnull. Evidence: analysis/p07/pr375-windows/README.md.
+
+### Task p07-t01: Materialize approved preset readers and canonical page templates
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-impl-20261024 (accepted launch a46330482f433303bf969fdfecc2672cdc0dc436)
+**Intent:** Deliver p07's canonical ten page shapes and opt-in shared init materialization, preserving default/adoption behavior and the existing IA approval boundary.
+**Files:** authoring-docs assets/references, bootstrap, docs init and mechanically affected CLI contracts, human docs/instructions, five public manifests and generated bundled versions. The offline lockfile-only refresh made no lockfile change (workspace links contain no package versions). Exact producer-owned paths are retained in ignored analysis/p07/owned-paths.json.
+**Proof command:** isolated-HOME docs init integration and skill contracts; CLI types/lint/build; public six-preset fixture matrix at real checker/nav/manifest seams; installed package asset resolution; all nine ordered DoD gates plus fresh relevant suites/root lint/format.
+**Pre-task HEAD:** a46330482f433303bf969fdfecc2672cdc0dc436
+
+**Commit:** a947d26b940a6b44af1c46a251233f28a03c6131
+**Outcome:** All ten canonical page bodies ship under authoring-docs/references/page-templates and are copied unchanged by one shared init content planner. Opt-in paired preset/count flags validate before writes; the exact 14/15 boundary, all six models/subsets, purpose/Contents/entry guidance and accepted-selection tables are delivered. NonReaderPaths merges before nav; existing/adopted surfaces and default starter behavior stay protected. No screen instances, per-track AGENTS, IA decisions, PJM adoption, checker suppressions, dependencies or framework upgrades were added. Bootstrap transports the approved pair and inspects actual output. Authoring-docs 1.2.0 and bootstrap 1.4.5 carry one skill bump; all five public packages are 0.3.29.
+**Verification:** Precommit nine ordered gates all exit 0; exact cache hits/misses in analysis/p07/gates.json. Build preflight freshly ran five tasks. Fresh isolated-HOME focused run passes 1,325 tests/37 files, including init/default/adoption, registered help, release packaging, skill-sentence and validation contracts; authoring contracts 7/7. Main test gate freshly runs CLI 9,046/428 files, with smoke165, skills713 and scripts1 directly executed. Root lint/format exit0. Six retained preset fixtures plus triad14 have zero checker errors, real framework nav --check and excluded-template manifest proof. Packed CLI resolves its own bundled assets and copies all ten byte-identically; runtime dependencies are reused, without a clean-install claim. Manual bootstrap walkthrough is explicitly labeled, with record-ia persistence left to the existing approval/adoption flow.
+**Prevention/recovery:** Initial output link, lint and packed inventory failures were fixed before commit; stale generated 0.3.28 assets after the manifest bump were refreshed by build, then all focused contracts passed. Recovery remains 0/10, remaining10, pending null. Optional children absent. Root alone reviews/accepts/delivers; phase remains in_progress.
+
+### Task p07-t02: (review) Correct Markdown preset bootstrap verification
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024 (accepted continuation 26df61f3ad1e8cb3949c6a38aecfc533ebee91d8)
+**Pre-task HEAD:** 26df61f3ad1e8cb3949c6a38aecfc533ebee91d8
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (M1)
+
+Intent: Qualify the two-page default as no-preset only, and make Markdown preset inspection reachable without entering framework procedures. Verify selected tree/flat collapse, templates/exclusion and contributing track table while retaining no-app/no-build/no-default-manifest behavior.
+Files: `.agents/skills/oat-docs-bootstrap/SKILL.md` and only mechanically affected existing prose contracts.
+Proof: isolated-HOME skill-sentence suite, root lint/format, and a conservation/manual walkthrough of Markdown default and preset branches.
+
+**Commit:** 05d65a3cb83122b89aeeb2f6277e7468cde80114
+**Outcome:** M1 corrected in the condensed Markdown Step 4. The no-preset two-page default is qualified; actual preset tree, exact 14/15/flat-small depth, purpose/Contents, template subset, nonReaderPaths and contributing track table are directly inspected. Markdown/adoption restrictions and existing skill version 1.4.5 are conserved; no sentence-contract changes needed.
+**Verification:** Scoped oxfmt and diff check pass. Fresh isolated-HOME init/sentence/validation suite passes 1,229 tests in 35 files; authoring contracts 7/7. Root lint/format exit0 (each Turbo hits5/misses5); build exit0 with five fresh tasks. Four generated Markdown controls (default, triad14, triad15, flat-small40) check with zero errors and match literal expected structure/config. Manual conservation walkthrough confirms adoption bytes/audit routing remain unchanged; this is prose/output inspection, not autonomous agent execution. Evidence: analysis/p07/fix-r1/t02-\*.log, fresh-t02-focused.log and t02-output.json. Recovery0/10,pendingnull; no children.
+
+### Task p07-t03: (review) Make section placement guidance specific
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024
+**Pre-task HEAD:** d293f5c026340fd3b9f57c67e4323cc54cdc022a
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L1)
+
+Intent: Replace repeated track-section boilerplate with short section-specific placement guidance, preserving public generic examples and existing paths, pages, Contents and reader model. No new directories, pages, facts or mechanism.
+Files: `packages/cli/src/commands/docs/init/content.ts` and existing preset tests only if meaningful for the shipped prose contract.
+Proof: existing real preset init/check/nav tests and generated-output inspection with distinct relevant section guidance.
+
+**Commit:** 7a3f169b23a97d73283e8100727894be469b29e0
+**Outcome:** L1 corrected with a short placement sentence paired with each existing section heading. No reader facts are invented; paths, pages, purpose, Contents, template subsets and default/flat behavior remain unchanged. Existing preset coverage is retained; no exact-copy assertions were added for editorial judgment.
+**Verification:** Scoped oxfmt/diff check and direct CLI lint/types pass. Build exits0 (Turbo hits4/misses1); fresh isolated-HOME init suite passes142 tests/9 files. Generated triad Markdown15 and task-type Fumadocs15 pass real checker with zero errors; Fumadocs nav --check passes. Triad output comparison changes only three track index bodies, conserving heading/link lines and every other output byte. Manual inspection confirms availability/journeys/states, domain/feature/operations, seeds/scenarios/evidence and task-type placement sentences are relevant. Evidence: analysis/p07/fix-r1/t03-output.json and t03/fresh-t03 logs. Precommit probe-script corrections were prevention only; recovery0/10,pendingnull; no children.
+
+### Task p07-t04: (review) Label the toolchain home link accurately
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024
+**Pre-task HEAD:** 6608e2ab5fe77c7ef6d70ad69b6332b843d9ba0b
+**Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L2)
+
+Intent: In preset mode replace the full Getting Started link label and destination with the documentation-home label and root-index destination; no-input default link stays unchanged.
+Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the existing preset fixture assertion if warranted.
+Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspected; default starter conserved.
+
+**Commit:** 02b49519da9e972c607ffce20fe31459160c6fa6
+**Outcome:** L2 corrected by replacing the full Getting Started link with the documentation-home label and ../index.md in preset toolchain output only. No-input starters retain the original Getting Started label/destination. One existing real preset assertion now protects both Fumadocs and MkDocs.
+**Verification:** Scoped oxfmt/diff check and CLI lint/types pass. Build exits0 (Turbo hits4/misses1); fresh isolated-HOME init suite passes142 tests/9 files. The new regression first fails on pre-fix output in all four framework preset fixture rows (two Markdown controls pass); after the fix all21 preset cases pass within the init suite. Four before/after actual CLI controls show default Fumadocs/MkDocs output byte-identical and preset output changing only docs/contributing/docs-toolchain.md. All controls pass real docs check with zero errors and nav --check. Evidence: analysis/p07/fix-r1/fresh-t04-red.log (expected exit1), fresh-t04-init.log, t04-before/after-output.json and logs. Recovery0/10,pendingnull; no children.
+
+### Review Received: p07 round 1
+
+**Date:** 2026-10-24
+**Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T152354Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 2
+
+- M1 (Medium): Markdown bootstrap's default-only file assertion contradicts preset output and bypasses framework-only inspection → fix task p07-t02; approved p07 handoff/inspection guarantee requires both tooling branches to agree.
+- L1 (Low): Generated track sections repeat boilerplate with little placement value → fix task p07-t03; p07 explicitly promises useful section guidance, a bounded text improvement.
+- L2 (Low): Toolchain Getting Started label points at the root index → fix task p07-t04; align shipped reader guidance to its real destination.
+
+**Design drift / artifact alignment notes:** No product/design deviation. Root separately repaired the pre-range p07 Provisional/Exit-evidence formatting markers with paragraph separation; accepted intent and exit text are conserved. Plan validator passes after formatting. Reviewer independently ran1325 tests and nine CLI fixture runs, invalid-input/preservation/exclusion/packed controls; all passed. Nine gates remain inherited producer proof with cache truth disclosed. Reconnaissance not-attempted; no orchestration section/log entry.
+
+**Outcome:** fixes completed p07-t02–p07-t04 at verified candidate632d69e04954f58e26e1a541fdd6b36968189e1e; closure confirmed by passing round2 below, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
+
+### Review Received: p07 round 2
+
+**Date:** 2026-10-24
+**Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T155132Z.md
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Full anchored review Base1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3..Head632d69e04954f58e26e1a541fdd6b36968189e1e independently confirms all R1 findings closed: M1 Markdown bootstrap now qualifies default output and inspects presets; L1 track sections have relevant placement guidance; L2 preset toolchain labels the documentation-home destination while defaults retain Getting Started. No new finding, design drift, deferral or rejection. R1 retains its historical fixes_completed event; this distinct R2 event is passed.
+
+Fresh reviewer evidence: 1,325 tests in37 files, authoring2/2, twelve CLI rows across all three modes (nine presets/three defaults), invalid-input no-write controls,43 canonical-template byte comparisons, all35 candidate product hashes, skill bumps and formatting/diff checks pass. Reviewer used existing post-product dist without rebuilding. Nine gates, packed runtime/assets, exclusion/preservation controls and manual bootstrap walkthrough remain inherited with original limits; no clean-install, autonomous-bootstrap, Windows or next-dev claim. Exact commands/logs are in ignored analysis/p07/review-r2. Reconnaissance not-attempted; no orchestration section or recon log entry.
+
+**Outcome:** passed, cycle2/3. Root accepts p07 with all four execution records closed and no configured external phase gate (plan selects only p03/p06). Frozen Base/Head preserved; recovery0/10,pendingnull. Phase count11/13 accepted; p08/p09 remain provisional and unstarted. Intermediate PR delivery proceeds under standing plain land-pr authority; current-head CI/Bugbot still required. No final project PR or publication.
 
 ---
+
+### Task p07-t05: (remote review) Preserve native preset scaffold destinations
+
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-pr375-windows-20261024 (same original implementer continuation)
+**Pre-task HEAD:** 5a76dd234c03067dfc87fe785fc72237bb5b3c83
+**Source review:** reviews/archived/remote-pr-375-review-2026-10-24T161341Z.md (H1; Warp discussion4367677917)
+
+Intent: Compare native destinations consistently in preset page removal and toolchain link rewriting, preserving default output.
+Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the smallest relevant existing or focused regression test file within docs/init.
+Proof: regression fails before correction and passes after for both separator-sensitive behaviors; actual native default/preset scaffold controls, relevant fresh suites and nine ordered gates. Windows simulation must be labeled; no test-only production API or new dependency.
+
+**Commit:** c75296c20c790b5d59205a312eadc784eef4c90c
+**Outcome:** H1 corrected with native join comparisons for preset default-page removal and toolchain-link rewriting. Real bundled scaffold output is covered in both frameworks, in host and explicitly simulated win32-relative modes, with default/preset controls; no production-only test API or dependency added.
+**Verification:** Final pre-fix regression exits1 (two simulated Windows presets fail both behaviors, six controls pass); fixed regression8/8 and fresh isolated-HOME init150/10 files pass. Scoped formatting, CLI lint/types and build exit0; nine phase gates are recorded in the final handoff. No native Windows execution claim. Recovery0/10,pendingnull.
+**Evidence:** analysis/p07/pr375-windows/README.md
+
+---
+
+### P07 Windows correction verified for focused confirmation
+
+Root verified product c75296c20c790b5d59205a312eadc784eef4c90c, immediate journal 484ae87aa12c32c5807a50241f073224da8d8cbb, final journal edecad017f812fd669fc34b28d17c9f5e579adb6, two exact path hashes and clean ancestry. Both joins are native-consistent. Retained pre-fix regression fails two simulated Windows presets with six controls passing; all eight pass after correction. All nine gate exits0, cache truth and inherited limits are retained in analysis/p07/pr375-windows/README.md. Root inspected evidence, not a second full suite run. H1 implemented; independent focused confirmation pending. P07 stays in_progress, frozen Base retained; recovery0/10,pendingnull.
+
+### Review Received: p07 focused Windows confirmation
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T163100Z.md. **Findings:** Critical0/High0/Medium0/Low0. Narrowed5a76dd234c03067dfc87fe785fc72237bb5b3c83..484ae87aa12c32c5807a50241f073224da8d8cbb; prior full R2 coverage at632d69e04954f58e26e1a541fdd6b36968189e1e inherited.
+
+Root read the complete artifact and checked full head/range provenance, exactly one not-attempted reconnaissance signal and no orchestration section. Reviewer independently ran8 separator regression cases and150 init tests, inspected final-test red evidence, verified hashes and tracking-only descendants. Both native comparisons satisfy H1; default controls remain unchanged. Nine gates and full CLI9054 are inherited producer proof. Windows relative joins were simulated on macOS; native Windows remains unverified.
+
+**Outcome:** passed; all five task records closed and remote H1 corrected. P07 acceptance restored (11/13 units), frozen Base retained and Head484ae87aa12c32c5807a50241f073224da8d8cbb. Third standard code review is clean; no further automated review cycle is queued. Prior complexity assessment remains valid for unchanged architecture; no new mechanism or optional simplification was added. Historical reviews, prior acceptance and recovery0/10,pendingnull remain conserved. Root will publish correction and require current-head CI/Bugbot plus clearance of the live Warp objection before plain merge delivery. P08/p09 remain provisional without Base.
 
 ## Phase p08: Product and QA checks against source
 
@@ -1970,6 +2106,22 @@ Root separately observed Linux/Node22.17 CI run40034555611/job120690710620 succe
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p07-windows-review-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-pr375-windows-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-pr375-windows-from-docs367-p07-impl-20261024 · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-complexity-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-review-r2-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-fix-r1-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-fix-r1-from-docs367-p07-impl-20261024 · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-review-r1-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-impl-20261024 · scope=p07 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p07-readiness-20261024 · scope=p07-readiness · action=analysis · role=bounded-readiness-recon · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p06-external-fix-verify-20261023 · scope=p06 · action=analysis · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p06 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p06-external-fix-verify-from-docs367-p06-impl-20261023 · observed=~ · match=~
 
@@ -2125,6 +2277,18 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+### Remote Review Received: PR #375 Windows scaffold regression
+
+**Date:** 2026-10-24. Source: https://github.com/voxmedia/open-agent-toolkit/pull/375#pullrequestreview-5638896591 at f6b5b38e8079f48a2b355253207ef2c3697f00ed; finding by warp-factories[bot]: https://github.com/voxmedia/open-agent-toolkit/pull/375#discussion_r4367677917. Critical0/High1/Medium0/Low0 (external important normalized High). H1: slash-only comparisons miss native Windows destinations, retaining an out-of-Contents page and stale link. Accepted requirement gap in p07 preset materialization, queued as p07-t05; no scope expansion or deferral.
+
+Remote receive cycle1; standard full-range reviews remain2/3. P07 temporarily reopens, historical acceptance and frozen Base/Head retained; no later phase Base exists, so verified fix may advance p07 Head. Recovery0/10,pendingnull unchanged. Root owns tracking, independent focused confirmation and delivery; original implementer owns bounded product correction. Detailed source is local-only reviews/archived/remote-pr-375-review-2026-10-24T161341Z.md; this receipt retains public identity and disposition.
+
+PR375 self-review complete through product candidate632d69e04954f58e26e1a541fdd6b36968189e1e and tracking-only tail660af17977a2f03db01785601f6b74816f216190. Correctness, deliberate-testing and documentation are covered by independent R1/R2; complexity-only review docs367-p07-complexity-20261024 is Partially compliant at optional edges, with no delivery blocker. Root read the report completely and confirmed the two raw merge blocks and duplicated reachable inspection prose. Keep all core machinery and tests. Consolidate the config merge only when index.ts is next edited; consolidate the checklist when IDs/mappings/subsets/threshold change, preserving Markdown reachability. Those conditional maintenance suggestions require no standalone fix/review. Two incidental uninvestigated observations (pre-existing default config normalization, possible future template wording drift) establish no p07 regression or new guarantee and create no corrective scope. Report: reviews/archived/complexity-p07-2026-10-24.md. No product changes or deviations; only delivery bookkeeping follows. Human review should focus first on selection/refusal and exclusion composition in init/index.ts/content.ts. Self-review lenses complete, no pending operator question; draft may become ready. Standing plain land-pr authority and exact-head CI/Bugbot gate remain in force.
+
+PR https://github.com/voxmedia/open-agent-toolkit/pull/375 opened as draft on2026-10-24 for accepted p07 against main eebe3f5645a62bdad23c560207962913cfb4fa2f, initial head ed021c2b429e402b055c0834abdc359e0f6458c3. Phase Base/Head stay frozen. Self-review: independent R1/R2 cover correctness, deliberate-testing and documentation over all35 product paths; no duplicate lens. Complexity is the sole gap, pending fresh docs367-p07-complexity-20261024. Disclosures: approved opt-in/count semantics, no product deviations, preservation refusal for existing docs, packed dependencies reused and bootstrap walkthrough manual; no Windows/next-dev or fresh-install claim. CLI instructions updated in packages/cli/AGENTS.md. Earlier p06 deferrals remain tracked unchanged.
+
+Delivery mode=land, plain, standing intermediate merge authority and merge-commit/--match-head-commit retained. Self-review pending; draft stays draft until complexity disposition settles. Require fresh current-head CI/release-dry-run, explicit Bugbot completion or supported quota exception, paginated comments/reviews/threads and no live actionable feedback before merge. No admin/auto merge, force push, branch/worktree deletion, publication or final project PR. P08/p09 remain unstarted until p07 delivery; T3 link registered.
+
 ### PR374 CI recovery pending: p06-t14 installed-binary test
 
 2026-10-23; current published head8d2ec9b8528bda0666d321d315ec7616331f3ddf fails declared gate3 in CI run40033430596, job120687017216. Exactly one CLI test fails: checker.test.ts "accepts installed pnpm shorthand binaries while explicit run remains script-only", at real pnpm --dir /tmp/oat-check-2yegN8 tsc --version. CLI9024other tests pass; release dry-run and Bugbot checks succeed, but reviewer clearance is still pending. The log does not include the subprocess stderr, so root makes no platform/permission diagnosis. Evidence: ignored analysis/p06/recovery02/ci-failed.log.
@@ -2199,7 +2363,7 @@ The same implementer yielded clean at a17444587b215ef43f1ddf9919d4eaaaea9a56ae w
 
 P05 reopens in place because no later phase Base exists. Frozen Base d02e20521f336aa45beab84a5f5e2df7b9541f79 and prior accepted candidate04d5361060ed597fb59431ea4e98ee1d0d30f853 remain historical anchors; prior acceptance/review receipts are preserved. Current acceptance is suspended pending bounded correction and independent re-review. Recovery1/10,pendingnull is unchanged; this review fix is not a recovery reservation. Original implementer continues, root owns tracking/review/GitHub. All current-head CI checks passed but Bugbot's actionable finding blocks merge. No reply posted yet.
 
-- 2026-10-23: PR373 self-review complete through product candidate04d536106 and tracking tail2f624dd9d. Correctness/testing/documentation covered by fresh independent p05 rounds1–2 (explicit deliberate-testing brief); complexity-only audit docs367-p05-complexity-20261023 reports deletion-rule compliant, zero blocking findings, at reviews/p05-complexity-20261023.md. All product machinery retained. Optional root re-export simplification declined: the package deliberately supports its ordinary barrel import as well as the documented narrow /llms runtime path; both export the same implementation and the small API cost is accepted consistently with the other package helpers. Optional local pruning is scheduled after landing: retain export trees while CI/Bugbot may still need reproduction, then prune only generated node_modules/.next/out from the two identified ignored scratch repos; preserve scripts/tarballs/logs/probe reports. No product delta or extra code-review round. Plain land-pr remains authorized after fresh exact-head CI/Bugbot and no open actionable threads; no admin/early-auto merge or branch/worktree deletion.
+- 2026-10-23: PR373 self-review complete through product candidate04d536106 and tracking tail2f624dd9d. Correctness/testing/documentation covered by fresh independent p05 rounds1–2 (explicit deliberate-testing brief); complexity-only audit docs367-p05-complexity-20261023 reports deletion-rule compliant, zero blocking findings, at reviews/archived/p05-complexity-20261023.md. All product machinery retained. Optional root re-export simplification declined: the package deliberately supports its ordinary barrel import as well as the documented narrow /llms runtime path; both export the same implementation and the small API cost is accepted consistently with the other package helpers. Optional local pruning is scheduled after landing: retain export trees while CI/Bugbot may still need reproduction, then prune only generated node_modules/.next/out from the two identified ignored scratch repos; preserve scripts/tarballs/logs/probe reports. No product delta or extra code-review round. Plain land-pr remains authorized after fresh exact-head CI/Bugbot and no open actionable threads; no admin/early-auto merge or branch/worktree deletion.
 
 - 2026-10-23: Progress PR https://github.com/voxmedia/open-agent-toolkit/pull/373 opened as draft for accepted p05; correctness/testing/docs covered by independent rounds1–2 through candidate04d536106, later tail is tracking only. PR self-review lenses now covered; plain land-pr after current-head CI/Bugbot and all findings clear.
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06
-oat_last_commit: 9e19dd89657e18386cb3cdffcb58e753d66a68a8
+oat_current_task: p08
+oat_last_commit: 484ae87aa12c32c5807a50241f073224da8d8cbb
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -48,6 +48,9 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p06:
       used_attempts: 1
+      pending_attempt: null
+    p07:
+      used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -139,10 +142,10 @@ oat_workflow_origin: native # native | imported
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/374'
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-23T22:23:23.007917+00:00'
+oat_project_state_updated: '2026-10-24T16:32:56Z'
 oat_generated: false
 ---
 
@@ -150,16 +153,16 @@ oat_generated: false
 
 **Status:** Implementation
 **Started:** 2026-10-22
-**Last Updated:** 2026-10-23
+**Last Updated:** 2026-10-24
 
 ## Current Phase
 
-P06 accepted after the operator-approved bounded correction and clean focused independent confirmation (0 findings; 39 public probes). All16 records are closed; 10/13 phase-units accepted. The merged external test-only correction is verified on Node22.17/26.11 and all nine gates pass. Remote CI, release dry-run, Bugbot and Warp clearance are confirmed atbcf9d83. Publish reconciled tracking, then require fresh final-head checks before delivery. Recovery1/10,pendingnull is unchanged. P07 remains provisional and unstarted; historical anchors, gate and explicit residual deferrals are preserved.
+P07 accepted after focused independent confirmation of the PR375 Windows correction with zero findings. Eleven of13 phase-units accepted. All five records closed; recovery0/10,pendingnull. Publish correction, then await current-head CI/Bugbot and clearance of Warp's live objection before delivery. P08/p09 remain provisional with no Base.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01–p05 and four revisions accepted; p06 accepted after focused confirmation, 10/13 phase-units accepted.
+- **Implementation:** `implementation.md` — p01–p06 and four revisions accepted; p07 accepted, 11/13 phase-units accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -168,4 +171,4 @@ None.
 
 ## Next Milestone
 
-Publish the verified reconciliation and obtain successful final-head checks before plain merge-commit delivery of PR374. Installed local pnpm binaries and absent-pages skip are operator-approved; implicit ordering and system-PATH support remain deferred. P06 historical anchors and gate are preserved. Recovery1/10,pendingnull. Align p07 only after p06 lands; no npm publication or final project PR.
+Publish the verified p07-t05 correction and land PR375 after current-head CI/Bugbot and actionable feedback clear, then concretize/execute p08 and p09. Standing bottom-up merge authority retained; no publication or final project PR before closeout. PR374 remains merged and unwatched.

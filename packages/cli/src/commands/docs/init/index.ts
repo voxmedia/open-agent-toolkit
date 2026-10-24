@@ -31,6 +31,7 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { atomicWriteJson, fileExists } from '@fs/io';
 import { Command, Option } from 'commander';
 
+import { mergeTemplateExclusion } from './content';
 import { buildDocsCommands } from './docs-commands';
 import {
   applyMarkdownDocsPlan,
@@ -57,6 +58,8 @@ import { scaffoldDocsApp } from './scaffold';
 
 interface DocsInitCommandOptions {
   framework?: DocsFramework;
+  iaPreset?: string;
+  plannedPages?: string;
   appName?: string;
   siteName?: string;
   targetDir?: string;
@@ -226,8 +229,30 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
             root: plan.targetDir,
             tooling: 'markdown',
             index: `${plan.targetDir}/index.md`,
+            ...(options.iaPreset
+              ? {
+                  nonReaderPaths: mergeTemplateExclusion(
+                    latest.documentation?.nonReaderPaths,
+                  ),
+                }
+              : {}),
           };
-          await writeOatConfig(context.cwd, latest);
+          if (options.iaPreset) {
+            const configPath = join(context.cwd, '.oat/config.json');
+            const raw = (await fileExists(configPath))
+              ? (JSON.parse(await readFile(configPath, 'utf8')) as Record<
+                  string,
+                  unknown
+                >)
+              : latest;
+            await atomicWriteJson(configPath, {
+              ...raw,
+              documentation: {
+                ...(raw.documentation as Record<string, unknown>),
+                ...latest.documentation,
+              },
+            });
+          } else await writeOatConfig(context.cwd, latest);
           report.configStatus = 'updated';
         } catch (error) {
           return {
@@ -265,6 +290,10 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     });
 
     const config = await readOatConfig(context.cwd);
+    if (options.iaPreset)
+      result.documentationConfig.nonReaderPaths = mergeTemplateExclusion(
+        config.documentation?.nonReaderPaths,
+      );
     config.documentation = {
       ...config.documentation,
       ...result.documentationConfig,
@@ -385,6 +414,8 @@ async function runDocsInitCommand(
       interactive: context.interactive,
       acceptDefaults: options.yes ?? false,
       providedFramework: options.framework,
+      providedIaPreset: options.iaPreset,
+      providedPlannedPages: options.plannedPages,
       providedAdopt: options.adopt,
       providedAppName: options.appName,
       providedSiteName: options.siteName,
@@ -413,6 +444,15 @@ async function runDocsInitCommand(
     }
     const inapplicableOptions: string[] = [];
     const existingConfig = await dependencies.readOatConfig(context.cwd);
+    if (
+      resolved.iaPreset &&
+      (existingConfig.documentation?.root ||
+        existingConfig.documentation?.ia ||
+        existingConfig.documentation?.navOwner)
+    )
+      throw new Error(
+        'Preset init cannot replace an existing docs surface or navigation ownership. Use oat-docs-analyze and individually approved oat-docs-apply.',
+      );
     if (resolved.framework === 'markdown') {
       resolved.targetDir = await validateMarkdownTarget(
         context.cwd,
@@ -673,6 +713,14 @@ export function createDocsInitCommand(
         '--target-dir <path>',
         'Docs directory (Markdown defaults to docs; requires a dedicated directory)',
       ),
+    )
+    .option(
+      '--ia-preset <preset>',
+      'Approved IA preset (requires --planned-pages; fresh empty target only)',
+    )
+    .option(
+      '--planned-pages <count>',
+      'Anticipated reader pages: integer >=1; collapse below 15 (requires --ia-preset)',
     )
     .addOption(new Option('--description <text>', 'Documentation description'))
     .addOption(
