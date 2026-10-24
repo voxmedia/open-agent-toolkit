@@ -81,11 +81,11 @@ The accepted implementation and source delivery checklist account for all eleven
 
 ### Agent-instruction updates
 
-- Keep source/triad assessment in analyze judgment and qualify helper occurrences; absent registry or mapping evidence must remain unverified. The prototype supports the narrow helper, not a generic semantic checker. Source: oat-project:docs-skills-ia-367#2026-10-24-worked-well-p08-prototype-1
+- Keep source/triad assessment in analyze judgment and qualify helper occurrences; absent registry or mapping evidence must remain unverified. The prototype supports the narrow helper, not a generic semantic checker. Source: oat-archive:20261024-docs-skills-ia-367#2026-10-24-worked-well-p08-prototype-1
 
 ### Workflow issues
 
-- For prose/lint-only recovery, retain the mandatory Recovery Event, ledger transitions and one exits line; reserve extended diagnosis for behavioral or composition failures. Repeated narrative added review cost without improving the product assurance. Source: oat-project:docs-skills-ia-367#2026-10-23-friction-recovery-receipt-proportionality-1
+- For prose/lint-only recovery, retain the mandatory Recovery Event, ledger transitions and one exits line; reserve extended diagnosis for behavioral or composition failures. Repeated narrative added review cost without improving the product assurance. Source: oat-archive:20261024-docs-skills-ia-367#2026-10-23-friction-recovery-receipt-proportionality-1
 
 ## Follow-up Items
 
@@ -114,13 +114,13 @@ The former p03 Gate-L2 allowed-tools gap is closed by p09-t01, not a ninth open 
 
 ## Workflow Observations
 
-- **2026-10-24 · worked-well · p08-prototype** (project, decision) `oat-project:docs-skills-ia-367#2026-10-24-worked-well-p08-prototype-1`
+- **2026-10-24 · worked-well · p08-prototype** (project, decision) `oat-archive:20261024-docs-skills-ia-367#2026-10-24-worked-well-p08-prototype-1`
   docs367-p08-local-design-20261024: Public synthetic prototype supports a narrow line-local entity-normalized occurrence helper while all six P24 assessments remain analyze judgment.
-- **2026-10-23 · friction · p05-integration** (project) `oat-project:docs-skills-ia-367#2026-10-23-friction-p05-integration-1`
+- **2026-10-23 · friction · p05-integration** (project) `oat-archive:20261024-docs-skills-ia-367#2026-10-23-friction-p05-integration-1`
   Required p05 contributor entry plus child index exposed the pinned loader collision that OAT nav and remarkLinks previously flattened.
-- **2026-10-23 · friction · recovery-receipt-proportionality** (project, efficiency) `oat-project:docs-skills-ia-367#2026-10-23-friction-recovery-receipt-proportionality-1`
+- **2026-10-23 · friction · recovery-receipt-proportionality** (project, efficiency) `oat-archive:20261024-docs-skills-ia-367#2026-10-23-friction-recovery-receipt-proportionality-1`
   docs367-p04-complexity-process-20261023: independent complexity review found all p04 product mechanisms proportionate but repeated narrative around the one-line prose recovery added reading cost.
-- **2026-10-22 · friction · verification runtime** (project) `oat-project:docs-skills-ia-367#2026-10-22-friction-verification-runtime-1`
+- **2026-10-22 · friction · verification runtime** (project) `oat-archive:20261024-docs-skills-ia-367#2026-10-22-friction-verification-runtime-1`
   Gate 3 freshly passed 8,857 CLI tests, then a smoke resolver failed to import a built control-plane module.
 
 Synthesized recommendations for categorized learnings are in the Autonomous Execution Learnings section.
