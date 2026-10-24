@@ -2215,14 +2215,15 @@ R1 M1/L1 and R2 M1 are independently closed. R3 L1 is an accepted-requirement ga
 
 ### Task p08-t05: (review) Require canonical source-root spelling
 
-**Status:** in_progress
-**Commit:** —
+**Status:** completed
+**Commit:** 5c417265da9d11378976992c1d6ba30dfbf354fc
 **Source review:** reviews/archived/p08-review-2026-10-24T180640Z.md (L1), operator-approved corrective revision at cycle3/3.
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
 **Intent:** After source-root containment and symlink handling, require the typed repo-relative root to equal its canonical async-realpath spelling relative to the canonical repo root. Reject mismatches with an actionable input error. Preserve canonical-root exclusions, overlap deduplication, source skips, prior page guards, configured-root aliases and triad gating. No shared abstraction/global folding/exclusion normalization or inode dedup.
 **Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md.
 **Proof command:** One real public-CLI regression with runtime case-sensitivity detection: case-variant source root rejects with input exit1, canonical root/exclusion/overlap controls remain valid. Retain intended pre-fix red/fixed green actually executed on this APFS host. Run relevant focused tests and nine ordered gates with explicit exits/cache truth and direct manifest freshness; one independent delta confirmation only. Inherit unchanged broader/runtime/manual evidence. No new test-only hook, dependency/schema/version/skill change or full-range campaign.
+**Verification:** Actual case-insensitive-host regression executed (not skipped): intended pre-fix red1, fixed81 fresh literals/help tests pass with canonical exclusions/overlap and retained page/symlink controls. CLI check/types/build and docs check exit0. Built CLI delta controls reject SRC with canonical-root diagnostic1 and accept canonical overlap/exclusion control0. Nine phase gates follow; prior broad/manual/runtime proof stays inherited. Recovery0/10,pendingnull unchanged.
 **Analysis:** analysis/p08/fix-r3/.
 
 ---
