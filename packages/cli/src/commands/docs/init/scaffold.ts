@@ -623,7 +623,10 @@ export async function scaffoldDocsApp(
       contentPlan &&
       templateFile.destination === 'docs/contributing/docs-toolchain.md'
     )
-      rendered = rendered.replaceAll('../getting-started.md', '../index.md');
+      rendered = rendered.replaceAll(
+        '[Getting Started](../getting-started.md)',
+        '[the documentation home](../index.md)',
+      );
     await ensureDir(dirname(destination));
     await writeFile(destination, rendered, 'utf8');
     createdFiles.push(templateFile.destination);

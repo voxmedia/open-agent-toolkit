@@ -279,6 +279,14 @@ describe('approved preset materialization at real init/reader/config boundaries'
         expect(config.navOwner).toBeUndefined();
         expect(config.index).toBe('handbook/index.md');
       }
+      if (!markdown) {
+        const toolchain = await readFile(
+          join(content, 'contributing/docs-toolchain.md'),
+          'utf8',
+        );
+        expect(toolchain).toContain('[the documentation home](../index.md)');
+        expect(toolchain).not.toContain('[Getting Started]');
+      }
       if (f.preset === 'flat-small') {
         expect(index).toContain('### Start here');
         expect(index).toContain('](start-here.md)');
