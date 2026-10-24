@@ -2017,12 +2017,19 @@ Proof: existing real preset init/check/nav tests and generated-output inspection
 
 ### Task p07-t04: (review) Label the toolchain home link accurately
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024
+**Pre-task HEAD:** 6608e2ab5fe77c7ef6d70ad69b6332b843d9ba0b
 **Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L2)
 
 Intent: In preset mode replace the full Getting Started link label and destination with the documentation-home label and root-index destination; no-input default link stays unchanged.
 Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the existing preset fixture assertion if warranted.
 Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspected; default starter conserved.
+
+**Commit:** 02b49519da9e972c607ffce20fe31459160c6fa6
+**Outcome:** L2 corrected by replacing the full Getting Started link with the documentation-home label and ../index.md in preset toolchain output only. No-input starters retain the original Getting Started label/destination. One existing real preset assertion now protects both Fumadocs and MkDocs.
+**Verification:** Scoped oxfmt/diff check and CLI lint/types pass. Build exits0 (Turbo hits4/misses1); fresh isolated-HOME init suite passes142 tests/9 files. The new regression first fails on pre-fix output in all four framework preset fixture rows (two Markdown controls pass); after the fix all21 preset cases pass within the init suite. Four before/after actual CLI controls show default Fumadocs/MkDocs output byte-identical and preset output changing only docs/contributing/docs-toolchain.md. All controls pass real docs check with zero errors and nav --check. Evidence: analysis/p07/fix-r1/fresh-t04-red.log (expected exit1), fresh-t04-init.log, t04-before/after-output.json and logs. Recovery0/10,pendingnull; no children.
 
 ### Review Received: p07 round 1
 
