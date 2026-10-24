@@ -2109,12 +2109,14 @@ Execution shape: one phase implementer owns the sequential helper/analyze/docs i
 
 ### Task p08-t01: Deliver triad analysis and literal occurrence evidence
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 9178a800bff8f1c6fff85fc4baa537e0d280c59d
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
 **Intent:** Implement concrete p08 Intent/Exit with a narrow CLI helper and conditional six-check analysis, retaining reader/config/approval boundaries.
 **Files:** docs/literals command/module/tests and docs registration; oat-docs-analyze skill/reference templates/checklist and mechanically affected skill/help/release contracts; relevant CLI README/human docs/covering instructions; public prototype reference; all five public manifests/generated bundled versions. No docs-check rule or config schema change, new dependency, consumer edit or private material.
-**Proof command:** real CLI synthetic bad/valid cases, focused fresh isolated-HOME suites, manual six-check walkthrough and nine ordered repository gates. See phase brief; retain detailed commands/results under ignored analysis/p08.
+**Proof command:** Real CLI bad/valid controls, fresh isolated-HOME docs/help/skill-sentence/validation suites, manual six-check walkthrough, ordered DoD gates, root lint/format and built help all passed.
+**Analysis:** analysis/p08/verification/ (exact commands/exits, cache truth, manual walkthrough and product manifest).
 
 ---
 
