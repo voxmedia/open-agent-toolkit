@@ -2135,7 +2135,7 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 - L1 (Low, Minor scope): selected source roots can contain documentation and self-match. Root reproduced a docs-page citation. Convert to p08-t03, documentation clarification only: state that the helper does not automatically remove docs from selected sources and a self-citation is not implementation evidence. The existing narrow-source selection and canonical-relevance judgment remain authoritative; an automatic overlap guard is additional hardening not required by p08 and is not queued.
 
 **Design drift / artifact alignment notes:** No brief change. L1 aligns shipped guidance with the approved limited text-occurrence guarantee, preserving operator-selected sources and explicit exclusions. No new dependency, schema, check rule or source-classification engine.
-**Outcome:** fixes queued p08-t02/p08-t03. Phase remains in_progress,11/13 accepted, frozen Base/Head retained until fix completion; p09 has no Base. Original round1 event remains distinct from the successor review. Reviewer independently rebuilt CLI, verified all22 hashes, ran11 probes and1165 focused tests. Nine-gate and earlier manual/runtime limits remain inherited. No project-log append while a fix child owns the worktree.
+**Outcome:** fixes completed p08-t02/p08-t03; independent successor review pending. Phase remains in_progress,11/13 accepted, frozen Base/Head retained until fix completion; p09 has no Base. Original round1 event remains distinct from the successor review. Reviewer independently rebuilt CLI, verified all22 hashes, ran11 probes and1165 focused tests. Nine-gate and earlier manual/runtime limits remain inherited. No project-log append while a fix child owns the worktree.
 
 ### Task p08-t02: (review) Reject symlinked reader-page selections
 
@@ -2165,6 +2165,12 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 **Verification:** Conservation diff preserves all prior prose, links and judgment requirements while adding the explicit self-match limitation. Fresh isolated-HOME skill-sentence/validation1087 tests, root lint/format and docs check exit0; no sentence contract edit or new test. Skill1.7.4/public0.3.30 remain unchanged. Built reviewer probes and ordered phase gates follow; recovery0/10,pendingnull unchanged.
 **Analysis:** analysis/p08/fix-r1/ (t03 conservation diff/result, exact commands/exits and checks).
 
+### P08 fixes complete; round 2 baseline
+
+Root verified the full report, combined manifest digest a8a4feee51b2a233c38d622cdad7fe4ef1bf3d1ad1847a0b6de537f295ef7676 and all22 final/current hashes plus exact per-commit file boundaries. Both product commits have immediate separate journals; the final descendant changes only the Head/verification record. All three execution records are complete. M1 rejects page file/directory aliases below the resolved content root; L1 only clarifies caller-selected source self-matches. Original history, scope, versions and recovery0/10,pendingnull are preserved.
+
+Nine ordered gates exited0; cache/execution truth,1565 fresh focused tests and actual regression red/green are retained in analysis/p08/fix-r1/implementation-report.md. Scope remains in_progress at frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and updated Head4f737e1381e00194a72263b46b25d0e6bbb36bd6. Round1 findings event is fixes_completed, never a substitute for a passing successor review. P09 remains provisional without Base; no phase acceptance or delivery yet.
+
 ---
 
 ## Phase p09: Docs, release and closeout
@@ -2175,7 +2181,7 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p08-fix-r1-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=cont-docs367-p08-fix-r1-from-docs367-p08-impl-20261024 · observed=~ · match=~
+- run/v1 · request=docs367-p08-fix-r1-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r1-from-docs367-p08-impl-20261024 · observed=~ · match=~
 
 - run/v1 · request=docs367-p08-review-r1-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 

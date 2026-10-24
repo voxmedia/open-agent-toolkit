@@ -1,6 +1,6 @@
 ---
 oat_current_task: p08
-oat_last_commit: c73207979ac57f0d2b3a6a5a172d3ed9c4aaee19
+oat_last_commit: 4f737e1381e00194a72263b46b25d0e6bbb36bd6
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -148,7 +148,7 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T17:27:40.376766Z'
+oat_project_state_updated: '2026-10-24T17:42:28.852461Z'
 oat_generated: false
 ---
 
@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Current Phase
 
-P08 round1 found one Medium reader-exclusion bypass and one Low source-scope disclosure issue. Fix records p08-t02/p08-t03 are queued for the original implementer; phase remains in_progress,11/13 accepted. Frozen Base/Head retained pending fixes and re-review. P09 stays provisional without Base. P08 recovery0/10,pendingnull.
+P08 round1 fixes are complete and verified; independent round2 review is next. All three execution records are closed. Frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and updated Head4f737e1381e00194a72263b46b25d0e6bbb36bd6 retained. Eleven of13 phase-units remain accepted. P09 stays provisional without Base. P08 recovery0/10,pendingnull.
 
 ## Artifacts
 
@@ -174,4 +174,4 @@ None.
 
 ## Next Milestone
 
-Complete p08-t02/p08-t03 and re-review/deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.
+Re-review and deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.
