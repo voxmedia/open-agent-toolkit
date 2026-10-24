@@ -596,7 +596,7 @@ export async function scaffoldDocsApp(
       continue;
     if (
       contentPlan &&
-      ['docs/index.md', 'docs/getting-started.md'].includes(
+      [join('docs', 'index.md'), join('docs', 'getting-started.md')].includes(
         templateFile.destination,
       )
     )
@@ -621,7 +621,8 @@ export async function scaffoldDocsApp(
     }
     if (
       contentPlan &&
-      templateFile.destination === 'docs/contributing/docs-toolchain.md'
+      templateFile.destination ===
+        join('docs', 'contributing', 'docs-toolchain.md')
     )
       rendered = rendered.replaceAll(
         '[Getting Started](../getting-started.md)',
