@@ -144,8 +144,8 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: merged
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-24T18:35:10.898146Z'
@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Current Phase
 
-P08 accepted after the approved focused corrective confirmation: zero findings, all five records closed. Frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and Head7e9c2c7669b84261cb8d522d9d6ba279c461e52a retained. 12/13 phase-units accepted; recovery0/10,pendingnull. Preparing intermediate p08 delivery; p09 is provisional with no Base.
+P08 accepted after the approved focused corrective confirmation: zero findings, all five records closed. Frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and Head7e9c2c7669b84261cb8d522d9d6ba279c461e52a retained. 12/13 phase-units accepted; recovery0/10,pendingnull. Intermediate PR376 is open; current-head CI/Bugbot and remote review are pending. P09 is provisional with no Base.
 
 ## Artifacts
 
@@ -174,4 +174,4 @@ None.
 
 ## Next Milestone
 
-Deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.
+Deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched; PR376 is the active p08 delivery.

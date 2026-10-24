@@ -2438,6 +2438,14 @@ run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implemen
 
 ## Reviews and Gates
 
+### P08 intermediate delivery and self-review
+
+PR https://github.com/voxmedia/open-agent-toolkit/pull/376 opened as draft on2026-10-24 against main2eb0b635aa67069273fc6c76896beafc94658ebf at1bb418491a71b0a6828cd129cbcefc62d9f96430. T3 link registered. Frozen p08 Base/Head retained; following changes are tracking-only. Requirements are the approved brief Outcome10/P24. All five records accepted,12/13 phase-units complete; p09 remains provisional without Base until delivery.
+
+PR self-review: independent R3 and focused t05 confirmation cover correctness, deliberate-testing and human documentation; the cap complexity assessment explicitly retained the helper/assessments and specified the exact minimal canonical-root correction. Independent delta confirmation verified that correction adds no dependency, abstraction or extra machinery and its regression has fixed oracles. Those lenses are covered by the conserved union; no duplicate campaign. Operator-approved cap correction is complete, with no new deviation or residual finding. Existing p06 Low deferrals remain tracked. Source roots may include docs and self-match; exclusions remain case-sensitive. Manual walkthrough and inherited runtime/install/platform proof are disclosed; no fresh native Windows/Linux or autonomous-agent claim. Instruction files updated: packages/cli/AGENTS.md and apps/oat-docs/AGENTS.md. Human review should start with literal helper input identity/containment and relevance limits. No pending operator decision; draft may become ready.
+
+Delivery mode=land, plain merge with --match-head-commit, standing intermediate authority. Require current-head CI/release-dry-run and explicit Bugbot completion or supported quota exception, paginated feedback inspection and no live actionable objection. No admin/auto merge, force push, branch/worktree deletion, publication or final project PR. P09 follows authorized delivery.
+
 - 2026-10-24 · p08 · review-receive three-cycle cap · complexity verdict Partially compliant · operator chose corrective revision ("Approve"): one canonical-source-root fix, one public-CLI regression and documentation sentence, nine gates plus one focused independent delta confirmation; no fourth full-range/platform campaign. Report: reviews/archived/complexity-p08-2026-10-24T181242Z.md.
 
 ### Remote Review Received: PR #375 Windows scaffold regression
