@@ -2266,7 +2266,8 @@ Outcome: nine exact product files committed, hooks enabled and clean afterward. 
 
 ### Task p09-t02: Transfer consumer acceptance and record OAT closure evidence
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** 832913a2b4af649eb18183db6752bf50dfe66c08
 **Executor:** phase-implementer:docs367-p09-impl-20261024
 **Handle:** docs367-p09-impl-20261024
 
@@ -2274,6 +2275,10 @@ Intent: use the backlog CLI to create the one approved consumer-rollout successo
 Files: authored successor, three named source records (old and archived paths), `references/issue-367-delivery-checklist.md`; complete literal archive `affectedPaths` union plus only existing owned kickoff-handoff deletions; narrow current-state/roadmap/curated-index corrections where closure makes existing active claims false. All auto-rewritten references retain content/history.
 Proof: PJM declared-adoption preflight; bounded local duplicate search; verbatim readiness eight-checkbox transfer and original source criteria/history conservation; reciprocal links inspected after archive; complete JSON affectedPaths retained; owning index regeneration and fresh doctor comparison; P1–P28 mapped to locally verified merged PRs with approved qualifications; scoped formatter/diff checks. All nine ordered gates and root lint/format follow. Existing seeded path proof inherited, no new tests or proof campaign.
 Pre-task HEAD: `341d96a718fd74b4e13a8a85151e91540551f0f1` (immediate p09-t01 journal). Clean transition; product 0d5b09247e885251a0a4f60fa2f33cf0bf8875b2 carries only the nine declared files. Existing PJM warning lists unrelated completed-but-unarchived items; preserve them. Recovery 0/10, pending null.
+
+Outcome: thirteen exact product paths committed (including three tracked old-path deletions and three archived destinations); hooks enabled, clean afterward. Created high/feature/M `BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories` with docs/consumer-rollout labels. All eight outstanding readiness checkboxes conserved, including AC2 Markdown/config/content, AC5 automation exclusion/path gate and individual support scope, AC6 offline framework drift/controls and actual consumer records. Formatter only escapes two literal docs-\* asterisks. All source bodies and original criteria/history remain verbatim; dated transfer note supersedes historical partial-open wording. Reciprocal full-ID/title/path links and new project/PR369/371/checklist links resolve after archive; framework target remains future-owner choice, no external reads or acceptance/publication claim.
+
+All three archive commands exit 0 without warnings. Complete affectedPaths receipts (4/4/6 paths respectively) retained in `analysis/p09/implementation/BL-*-archive.json`; union and authored-source paths in `t02-owned.json`. The BL-260911 operation also rewrites the successor and prior Markdown project-summary inbound link; its own successor link rebases to ../items/. No kickoff handoff exists for any named item. Regenerate-index exits 0, 137 active items and byte-identical freshness. Doctor before/after is identical: adoption declared, exit 1 only for the same eleven unrelated completed-but-unarchived references. The new completion summary uses descriptive successor wording so the doctor's ID scan does not mistake a still-open transfer target for completed work; reciprocal ID/title/path links remain in source/successor. Narrow current-state/roadmap/curated-overview updates remove the now-stale active-source claim; unrelated records/warnings preserved. P1–P28 checklist links locally verified merged PRs368/369/371/372/373/374/375/376 and preserves P15/P18/P21/P22/P24/P28 limits. Formatter/diff/conservation checks pass. Root owns final integrated lifecycle review. Recovery 0/10, pending null.
 
 ## Orchestration Runs
 
