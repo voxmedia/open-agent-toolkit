@@ -151,7 +151,7 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:01:02.358Z'
+oat_project_state_updated: '2026-10-24T22:01:22.688Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: pending
@@ -177,12 +177,12 @@ oat_implement_exit_gate:
   freshness_head: a7e569e660566d62978928a00f44347ca4798941
   freshness_fingerprint: sha256:effective-delta-v2:adbc6902c83cd623f044ec1e5b93bf101c9dbbecce693bc2ba45da3dd8e6fe4e
   waivers: []
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: b29ed87f-7947-40ef-86da-ee6c40e01ac8
   launch_started_at: 2026-10-24T22:01:02.334Z
   launch_result_receipt: .oat/projects/shared/docs-skills-ia-367/analysis/final/exit-gate/result.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/96d4018b-7030-4867-a0cb-85be5d8beb1a.json
+  gate_run_id: 96d4018b-7030-4867-a0cb-85be5d8beb1a
   envelope_status: null
   artifact: null
   handoff: null
@@ -196,7 +196,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: 2026-10-24T22:01:02.334Z
+  updated_at: 2026-10-24T22:01:22.688Z
   decided_at: null
 ---
 
