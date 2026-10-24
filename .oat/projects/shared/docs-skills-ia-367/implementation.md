@@ -2139,7 +2139,7 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 
 ### Task p08-t02: (review) Reject symlinked reader-page selections
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (M1)
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
@@ -2149,7 +2149,7 @@ All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo r
 
 ### Task p08-t03: (review) Clarify selected source self-matches
 
-**Status:** pending
+**Status:** in_progress
 **Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (L1)
 **Executor:** phase-implementer:docs367-p08-impl-20261024
 **Handle:** docs367-p08-impl-20261024
