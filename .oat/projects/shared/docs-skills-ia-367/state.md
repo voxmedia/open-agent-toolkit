@@ -141,11 +141,11 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: draft
+oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T15:57:24Z'
+oat_project_state_updated: '2026-10-24T16:00:42Z'
 oat_generated: false
 ---
 
@@ -157,7 +157,7 @@ oat_generated: false
 
 ## Current Phase
 
-P07 accepted after fresh cross-provider round2, zero findings and all R1 corrections closed. Eleven of13 phase-units accepted. All nine gates and focused evidence pass with cache/inheritance limits disclosed; recovery0/10,pendingnull. Draft PR375 is open; complexity-only self-review and CI/Bugbot pending; p08/p09 remain provisional with no Base.
+P07 accepted after fresh cross-provider round2, zero findings and all R1 corrections closed. Eleven of13 phase-units accepted. All nine gates and focused evidence pass with cache/inheritance limits disclosed; recovery0/10,pendingnull. PR375 is open; self-review complete and CI/Bugbot pending; p08/p09 remain provisional with no Base.
 
 ## Artifacts
 
