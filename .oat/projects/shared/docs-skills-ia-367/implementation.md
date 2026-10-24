@@ -1961,9 +1961,12 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 **Status:** in_progress
 **Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
+**Head:** 65d121f0e8cf86bdfa9c15c97d704fcb13f5d6d4
 **Executor:** phase-implementer:docs367-p07-impl-20261024
 
 Execution shape: rung3, one phase implementer owns this existing worktree on docs/docs-skills-ia-367-p07. No parallel group is declared; root fan-out fails independence because canonical template assets, CLI content/config planning, bootstrap guidance, fixtures and bundled build outputs share sequential dependencies. Root-inline exception does not apply to this new public surface. Recovery default10, no phase override; authoritative p07 usage0/10, remaining10, pending null. Root retains plan/state/log, independent review, acceptance and delivery ownership.
+
+**Verified handoff:** Candidate Head65d121f0e8cf86bdfa9c15c97d704fcb13f5d6d4 is frozen after task product a947d26b940a6b44af1c46a251233f28a03c6131 and immediately separate record65d121f0e8cf86bdfa9c15c97d704fcb13f5d6d4. All nine ordered gates pass again on the clean committed range, with direct step9 manifest freshness despite cached docs build. Final Turbo hits/misses: check11/0, types11/0, test12/0, build5/0, docs6/0; no cached task is claimed fresh. Earlier first-pass hits/misses were check4/7, types5/6, test5/7, build5/0, docs6/0; preflight build0/5. Fresh isolated-HOME relevant suite1325/37 files and fresh CLI9046/428 files in the first main test gate remain valid for identical hook-final product bytes. Root direct smoke165, skills713 and scripts1 ran on both gate passes; root lint/format and seven authoring contracts pass. Journal review check exits0, with only the expected root-owned accepted/live run warning. Exact35-path product hashes and all proof/cache indexes are retained under ignored analysis/p07/README.md and product-manifest.json; prior phase and launcher sections are byte-conserved. Phase stays in_progress; independent review/acceptance/delivery remain root-owned. Recovery0/10, remaining10, pending null; no optional child or recovery event. Limits: labeled manual bootstrap walkthrough, reused installed runtime dependencies, no fresh unchanged framework/parser/render installation claim; reader starter warnings are visible and unsuppressed.
 
 ### Task p07-t01: Materialize approved preset readers and canonical page templates
 
