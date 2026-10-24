@@ -141,7 +141,7 @@ oat_workflow_origin: native # native | imported
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open
+oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
@@ -157,7 +157,7 @@ oat_generated: false
 
 ## Current Phase
 
-P07 accepted after focused independent confirmation of the PR375 Windows correction with zero findings. Eleven of13 phase-units accepted. All five records closed; recovery0/10,pendingnull. Publish correction, then await current-head CI/Bugbot and clearance of Warp's live objection before delivery. P08/p09 remain provisional with no Base.
+P07 delivered through merged PR375 at2eb0b635aa67069273fc6c76896beafc94658ebf. Eleven of13 phase-units accepted. Current-head CI/Bugbot passed; Warp's correction was accepted. P08 readiness/prototype is next; p08/p09 remain provisional without Base. Recovery p07 remains0/10,pendingnull.
 
 ## Artifacts
 
@@ -171,4 +171,4 @@ None.
 
 ## Next Milestone
 
-Publish the verified p07-t05 correction and land PR375 after current-head CI/Bugbot and actionable feedback clear, then concretize/execute p08 and p09. Standing bottom-up merge authority retained; no publication or final project PR before closeout. PR374 remains merged and unwatched.
+Concretize and execute p08 from approved Outcome10's prototype, narrow helper/analyze or evidence-backed descope alternatives; then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.
