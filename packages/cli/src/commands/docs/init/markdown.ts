@@ -15,6 +15,7 @@ import { dirExists, ensureDir } from '@fs/io';
 import { normalizeToPosixPath, validatePathWithinScope } from '@fs/paths';
 import { parse as parseYaml } from 'yaml';
 
+import { mergeTemplateExclusion, planPresetContent } from './content';
 import {
   humanizeAppName,
   type DocsInitResolvedOptions,
@@ -318,16 +319,36 @@ export async function planMarkdownDocs(
       `Markdown docs target is not empty: ${targetDir}. Use --adopt to preserve existing docs, then run oat-docs-analyze for content gaps.`,
     );
   }
+  if (
+    options.iaPreset &&
+    (await dirExists(appRoot)) &&
+    (await readdir(appRoot)).length > 0
+  )
+    throw new Error(
+      'Preset init requires an empty docs target. Preserve existing docs and use oat-docs-analyze with individually approved oat-docs-apply.',
+    );
+  const contentPlan = await planPresetContent({ ...options, markdown: true });
   const documentationConfig = {
     ...options.documentation,
     root: targetDir,
     tooling: 'markdown',
     index: `${targetDir}/index.md`,
+    ...(contentPlan
+      ? {
+          nonReaderPaths: mergeTemplateExclusion(
+            options.documentation?.nonReaderPaths,
+          ),
+        }
+      : {}),
   };
   const configChanged =
     options.documentation?.root !== targetDir ||
     options.documentation?.tooling !== 'markdown' ||
-    options.documentation?.index !== `${targetDir}/index.md`;
+    options.documentation?.index !== `${targetDir}/index.md` ||
+    (contentPlan !== null &&
+      !options.documentation?.nonReaderPaths?.includes(
+        'contributing/templates/**',
+      ));
   const existing = new Map<string, string | null>();
   for (const name of ['index.md', 'contributing.md'])
     existing.set(
@@ -364,9 +385,17 @@ export async function planMarkdownDocs(
     );
     files.push({
       name,
-      content: renderMarkdownTemplate(template, options, contents),
+      content:
+        (contentPlan?.files.find((file) => file.name === name)?.content ??
+          renderMarkdownTemplate(template, options, contents)) +
+        (contentPlan && name === 'contributing.md'
+          ? `\n${contentPlan.guidance}`
+          : ''),
     });
   }
+  files.push(
+    ...(contentPlan?.files.filter((file) => file.name !== 'index.md') ?? []),
+  );
   return {
     repoRoot: options.repoRoot,
     targetDir,
@@ -397,6 +426,7 @@ export async function applyMarkdownDocsPlan(
     for (const { name, content } of plan.files) {
       await validateMarkdownTarget(plan.repoRoot, plan.targetDir);
       const path = join(plan.appRoot, name);
+      await ensureDir(dirname(path));
       let handle;
       try {
         handle = await open(path, 'wx');

@@ -1029,6 +1029,10 @@ describe('help output snapshots', () => {
         --site-name <name>       Site display title or Markdown documentation title
         --target-dir <path>      Docs directory (Markdown defaults to docs; requires
                                  a dedicated directory)
+        --ia-preset <preset>     Approved IA preset (requires --planned-pages; fresh
+                                 empty target only)
+        --planned-pages <count>  Anticipated reader pages: integer >=1; collapse
+                                 below 15 (requires --ia-preset)
         --description <text>     Documentation description
         --lint <mode>            Markdown lint mode (choices: "none",
                                  "markdownlint-cli2")

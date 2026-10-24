@@ -60,9 +60,53 @@ Key behavior:
 - for framework apps, when the repo root exposes a compatible Turbo `scripts.build`, patches it to exclude the new docs app from the default root build and adds a root-level `build:docs` script
 - prints a unified diff before writing the root `package.json` change and returns a manual snippet when the patch is skipped because the build script is missing, non-Turbo, or ambiguous
 
-Markdown setup:
+### Approved preset readers
 
-- Creates only authored root `index.md` and `contributing.md` baseline pages,
+Opt into an approved reader model with `--ia-preset <preset> --planned-pages <count>`.
+Both flags are required together; the count is an integer of at least 1 and covers
+anticipated reader pages, excluding contributor/toolchain/template content. No flags
+keeps the existing starter. Preset init requires an empty target and refuses existing
+docs config/ownership; use analyze and individually approved apply for existing trees.
+
+| Preset                   | Reader directories at 15 or more anticipated pages    | Templates                                   |
+| ------------------------ | ----------------------------------------------------- | ------------------------------------------- |
+| `product-engineering-qa` | `product/`, `engineering/`, `qa/`                     | All ten                                     |
+| `consumer-maintainer`    | `consumer/`, `maintainer/`                            | Six support shapes                          |
+| `domain-engineering`     | `engineering/`                                        | Engineering feature plus six support shapes |
+| `task-type`              | `tutorials/`, `how-to/`, `reference/`, `explanation/` | Six support shapes                          |
+| `toolkit-cli`            | `tools/`, `workflows/`                                | Six support shapes                          |
+| `flat-small`             | Always grouped headings in one flat root index        | Six support shapes                          |
+
+Below 15 pages, each model uses grouped root headings and flat reader pages while
+retaining its template subset. Track entries have purpose, entry principle and
+useful sections. Engineering is hybrid: domain/implementation contracts alongside
+paired feature pages; Product/QA enter by feature or journey.
+
+Templates live under `contributing/templates/`: Product feature, Engineering
+feature, QA validation, conditional Screen spec, Alert runbook, incident Solution
+record, Command reference, Skill or command guide, Decisions pointer and Per-area
+AGENTS. The six support shapes are the last six in that list. Screen pages and
+per-track AGENTS are never automatically instantiated. Bodies come from canonical
+`authoring-docs` assets, with verified-literal rules and separate planned automation,
+implemented assertions and dated execution evidence.
+
+The CLI merges `contributing/templates/**` into `documentation.nonReaderPaths`
+before nav generation. These drafts stay out of reader Contents, navigation,
+checker inventory and manifests; `excludes` remains manifest-only. Pinned MkDocs
+1.4.2 can still render excluded routes and retains `use_directory_urls: false`.
+Framework app-root AGENTS gets the track table; Markdown uses `contributing.md`,
+with no docs-root AGENTS, dependencies, sidebar, build or default manifest.
+Selection guidance is not a persisted IA decision: bootstrap still requires explicit
+approval and the existing adoption/`record-ia` flow, without implicit PJM adoption.
+
+```bash
+oat docs init --framework markdown --ia-preset toolkit-cli --planned-pages 14 --yes
+oat docs init --framework fumadocs --ia-preset product-engineering-qa --planned-pages 30 --yes
+```
+
+### Default Markdown setup
+
+- Without preset inputs, creates only authored root `index.md` and `contributing.md` baseline pages,
   with metadata, context and real relative `.md` Contents links.
 - Records literal root/tooling/authored index and managed root guidance; no
   docs-root AGENTS, app package, dependencies, package/Turbo patch or site build.
@@ -112,6 +156,7 @@ Supported flags:
 - `--framework <markdown|fumadocs|mkdocs>` (default: `fumadocs` in non-interactive mode)
 - `--site-name <name>` (site display title or Markdown documentation title)
 - `--description <text>` (documentation description, optional)
+- `--ia-preset <preset>` and `--planned-pages <count>` (approved fresh selection; pair required, integer count >= 1)
 - `--lint <none|markdownlint-cli2>`
 - `--format <oxfmt|none>`
 - `--adopt` (Markdown only; add missing baseline files, preserve existing bytes)

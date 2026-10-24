@@ -6,13 +6,15 @@ import type {
 } from '@commands/shared/shared.prompts';
 import { dirExists, fileExists } from '@fs/io';
 
+import { resolvePresetSelection, type PresetSelection } from './content';
+
 export type DocsRepoShape = 'monorepo' | 'single-package' | 'nested-standalone';
 export type DocsDetectedRepoShape = Exclude<DocsRepoShape, 'nested-standalone'>;
 export type DocsFramework = 'fumadocs' | 'mkdocs' | 'markdown';
 export type DocsLintMode = 'none' | 'markdownlint-cli2';
 export type DocsFormatMode = 'oxfmt' | 'none';
 
-export interface DocsInitResolvedOptions {
+export interface DocsInitResolvedOptions extends PresetSelection {
   repoRoot: string;
   repoShape: DocsRepoShape;
   framework: DocsFramework;
@@ -32,6 +34,8 @@ export interface ResolveDocsInitOptionsInput {
   interactive: boolean;
   acceptDefaults: boolean;
   providedFramework?: DocsFramework;
+  providedIaPreset?: string;
+  providedPlannedPages?: string;
   providedAdopt?: boolean;
   providedAppName?: string;
   providedSiteName?: string;
@@ -181,6 +185,10 @@ export function resolveEffectiveDocsShape(
 export async function resolveDocsInitOptions(
   input: ResolveDocsInitOptionsInput,
 ): Promise<DocsInitResolvedOptions | null> {
+  const selection = resolvePresetSelection(
+    input.providedIaPreset,
+    input.providedPlannedPages,
+  );
   const ctx = { interactive: input.interactive };
 
   const framework =
@@ -220,6 +228,7 @@ export async function resolveDocsInitOptions(
         : 'docs');
     if (!targetDir) return null;
     return {
+      ...selection,
       repoRoot: input.repoRoot,
       repoShape: input.repoShape,
       framework,
@@ -307,6 +316,7 @@ export async function resolveDocsInitOptions(
   );
 
   return {
+    ...selection,
     repoRoot: input.repoRoot,
     repoShape,
     framework,

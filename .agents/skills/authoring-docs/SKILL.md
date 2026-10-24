@@ -6,7 +6,7 @@ disable-model-invocation: false
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # Authoring Docs
@@ -116,7 +116,7 @@ Load only the references needed for the current task:
 - `references/categories.md`: API, CLI, app, service, library, framework,
   monorepo, architecture, operations, and audience-specific guidance.
 - `references/writing-style.md`: plain technical writing and Markdown rules.
-- `references/templates.md`: reusable page and handoff templates.
+- `references/templates.md`: reusable page and handoff templates, linking canonical copyable Markdown under `references/page-templates/`. Fresh approved preset init consumes those same bodies; local templates remain preferred.
 - `references/review-rubric.md`: readiness checklist and review rubric.
 
 ## Examples
