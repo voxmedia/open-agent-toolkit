@@ -2103,9 +2103,9 @@ P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readines
 
 **Status:** in_progress
 **Base:** 65baa0145acea94872fadcf4a44edb00609b0ed5
-**Head:** c73207979ac57f0d2b3a6a5a172d3ed9c4aaee19
+**Head:** 4f737e1381e00194a72263b46b25d0e6bbb36bd6
 **Executor:** phase-implementer:docs367-p08-impl-20261024
-**Verification:** Ordered DoD gates passed, with cache use disclosed; fresh scoped isolated-HOME tests, root lint/format, built help and the labeled manual walkthrough passed. Direct manifest freshness passed. Acceptance remains root-owned.
+**Verification:** Original evidence remains valid. R1 fixes pass pre-fix red/fixed green CLI controls, built reviewer probes (P1 valid0/P4 alias1/P5 self-match0), fresh isolated-HOME focused suites, conservation diff, root lint/format and all nine ordered DoD gates including direct manifest freshness. Exact exits/cache truth and combined scope manifest: analysis/p08/fix-r1/. Original history and versions retained; recovery0/10,pendingnull. Phase remains in_progress; acceptance is root-owned.
 
 Execution shape: one phase implementer owns the sequential helper/analyze/docs integration in the existing p08 branch/worktree. Shared command registration, skill sentences and bundled builds preclude independent parallel lanes. No optional children. Recovery default10, p08 usage0/10,pendingnull. Root owns plan/state/log, independent review and delivery. Prototype-based local design is committed; no Outcome/Constraint/Decision/authority change.
 
