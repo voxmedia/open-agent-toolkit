@@ -151,7 +151,7 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:08:40.286Z'
+oat_project_state_updated: '2026-10-24T22:08:50.822Z'
 oat_generated: false
 oat_implement_exit_gate:
   status: pending
@@ -188,17 +188,28 @@ oat_implement_exit_gate:
   handoff: Run oat-project-review-receive for
     .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
     before treating this gate review as consumed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation:
+    gate_run_id: 96d4018b-7030-4867-a0cb-85be5d8beb1a
+    handoff: Run oat-project-review-receive for
+      .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
+      before treating this gate review as consumed.
+    source_artifact: .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-24T220442Z.md
+  receive_source_artifact: .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
+  receive_archived_artifact: .oat/projects/shared/docs-skills-ia-367/reviews/archived/final-review-2026-10-24T220442Z.md
+  receive_event_identity:
+    scope: final
+    type: code
+    source_filename: final-review-2026-10-24T220442Z.md
+  receive_pre_head: 1a60e7fc97a81acee1203bb27ed603a8ffafafc8
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: 2026-10-24T22:08:40.286Z
+  updated_at: 2026-10-24T22:08:50.821Z
   decided_at: null
 ---
 
