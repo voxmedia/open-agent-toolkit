@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p07
+oat_current_task_id: p08
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | completed   | 1     | 1/1      |
-| p07    | in_progress | 1     | 0/1      |
-| p08    | pending     | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p08    | pending   | 1     | 0/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 10/13 phases accepted
+**Total:** 11/13 phases accepted
 
 ---
 
@@ -1959,7 +1959,7 @@ P06 acceptance remains 10/13 phase-units, with historical anchors, configured pa
 
 ## Phase p07: Page templates and presets
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3
 **Head:** 632d69e04954f58e26e1a541fdd6b36968189e1e
 **Executor:** phase-implementer:docs367-p07-impl-20261024
@@ -2044,7 +2044,19 @@ Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspect
 
 **Design drift / artifact alignment notes:** No product/design deviation. Root separately repaired the pre-range p07 Provisional/Exit-evidence formatting markers with paragraph separation; accepted intent and exit text are conserved. Plan validator passes after formatting. Reviewer independently ran1325 tests and nine CLI fixture runs, invalid-input/preservation/exclusion/packed controls; all passed. Nine gates remain inherited producer proof with cache truth disclosed. Reconnaissance not-attempted; no orchestration section/log entry.
 
-**Outcome:** fixes completed p07-t02–p07-t04 at verified candidate632d69e04954f58e26e1a541fdd6b36968189e1e; awaiting independent round2, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
+**Outcome:** fixes completed p07-t02–p07-t04 at verified candidate632d69e04954f58e26e1a541fdd6b36968189e1e; closure confirmed by passing round2 below, all within accepted p07 requirements. Auto receive, no deferrals or rejected findings. Review cycle1/3; no later phase Base. Frozen p07 Base/Head remain historical until verified fix report advances Head. Recovery0/10,pendingnull unchanged; review fixes are not recovery attempts. Original implementer owns corrections; root owns independent round2/acceptance/delivery.
+
+### Review Received: p07 round 2
+
+**Date:** 2026-10-24
+**Review artifact (local-only):** reviews/archived/p07-review-2026-10-24T155132Z.md
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+Full anchored review Base1bd1dd4c359344abbd2bb3fd89dee55d2ff7dbd3..Head632d69e04954f58e26e1a541fdd6b36968189e1e independently confirms all R1 findings closed: M1 Markdown bootstrap now qualifies default output and inspects presets; L1 track sections have relevant placement guidance; L2 preset toolchain labels the documentation-home destination while defaults retain Getting Started. No new finding, design drift, deferral or rejection. R1 retains its historical fixes_completed event; this distinct R2 event is passed.
+
+Fresh reviewer evidence: 1,325 tests in37 files, authoring2/2, twelve CLI rows across all three modes (nine presets/three defaults), invalid-input no-write controls,43 canonical-template byte comparisons, all35 candidate product hashes, skill bumps and formatting/diff checks pass. Reviewer used existing post-product dist without rebuilding. Nine gates, packed runtime/assets, exclusion/preservation controls and manual bootstrap walkthrough remain inherited with original limits; no clean-install, autonomous-bootstrap, Windows or next-dev claim. Exact commands/logs are in ignored analysis/p07/review-r2. Reconnaissance not-attempted; no orchestration section or recon log entry.
+
+**Outcome:** passed, cycle2/3. Root accepts p07 with all four execution records closed and no configured external phase gate (plan selects only p03/p06). Frozen Base/Head preserved; recovery0/10,pendingnull. Phase count11/13 accepted; p08/p09 remain provisional and unstarted. Intermediate PR delivery proceeds under standing plain land-pr authority; current-head CI/Bugbot still required. No final project PR or publication.
 
 ---
 
@@ -2062,7 +2074,7 @@ Proof: existing init/preset suite with actual Fumadocs and MkDocs output inspect
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p07-review-r2-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p07-review-r2-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-fix-r1-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-fix-r1-from-docs367-p07-impl-20261024 · observed=~ · match=~
 
