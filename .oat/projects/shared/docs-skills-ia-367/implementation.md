@@ -2113,6 +2113,8 @@ P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readines
 
 ## Orchestration Runs
 
+- run/v1 · request=docs367-p08-readiness-20261024 · scope=p08-readiness · action=analysis · role=bounded-readiness-recon · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+
 - run/v1 · request=docs367-p07-windows-review-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-pr375-windows-20261024 · scope=p07 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p07 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p07-pr375-windows-from-docs367-p07-impl-20261024 · observed=~ · match=~
