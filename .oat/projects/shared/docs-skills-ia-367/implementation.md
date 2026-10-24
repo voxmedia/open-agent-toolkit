@@ -2244,11 +2244,14 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 **Status:** in_progress
 **Base:** 21acf4e58cd83391e1e190424cf30bd6f8c54865
+**Head:** a7e569e660566d62978928a00f44347ca4798941
 **Executor:** phase-implementer:docs367-p09-impl-20261024
 
 ---
 
 Execution shape: one phase implementer owns sequential prose, E13 grant/version reconciliation, criteria transfer and backlog closeout in docs/docs-skills-ia-367-p09 at the existing worktree. No declared parallel group; slices share release/version/generated-index/gate output and sequential closure dependencies, so root fan-out fails independence. Root retains disposition, plan/state/log writes, final review and GitHub operations. No nested agents. Recovery0/10,pendingnull.
+
+**Verification:** all nine ordered AGENTS gates exit 0 at candidate a7e569e660566d62978928a00f44347ca4798941, including fetch before version check and direct manifest regeneration plus diff despite cached docs build. Root lint/format also exit 0. Turbo executed/cached task counts: check 11/0, type-check 6/5, test 7/5, build 0/5, docs-build 0/6, lint 5/5, format 5/5. Test's five replays are dependency builds; all six test suites and the docs build executed freshly with isolated HOME: CLI 9,068 tests, supporting packages 369, docs 93, plus direct smoke 165, skills 713 and scripts 1, all passed with zero skips. Separate fresh sentence contracts 1,087/26 files, analyze drift 1 and stale-path 2 pass. Build/docs-build replays are not fresh executions. All five public 0.3.31 packages pass release validation; analyze 1.7.5 passes skill-bump gate against fetched main. Raw commands/exits/cache evidence, source conservation, full archive affectedPaths and exact 22-product-path SHA256 manifest are under ignored `analysis/p09/implementation/` (candidate manifest digest a807474f6fef197dd77620b2f46cd348bda5634db8be813000e1dbda1a4cb100). Original seeded/runtime/manual evidence is inherited; no new tests or runtime/platform/consumer campaign. Earlier phase content and root-owned state/plan/log/run/review/deferred records are conserved. No instruction changes beyond the authorized canonical analyze grant header are needed. Root owns final integrated lifecycle review/acceptance/closeout/GitHub; p09 remains in_progress. Recovery 0/10, pending null.
 
 ### Task p09-t01: Reconcile workflow docs, E13 grants and release versions
 
