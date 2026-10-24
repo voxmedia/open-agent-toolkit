@@ -4,9 +4,9 @@ description: Run when you need to evaluate documentation structure, navigation, 
 argument-hint: '[target] [--ia] [--ia-guidance <path|url>]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.7.3'
+  version: '1.7.4'
 ---
 
 # Docs Analysis
@@ -336,7 +336,8 @@ app's docs avoid merely mirroring implementation directories. Review coverage
 only for declared readers: Product features/journeys/screens/states; QA scenario
 tables with seeds and automation references; consumer first-success/task guides;
 agent entrypoints, canonical sources and verification commands. Do not demand
-these tracks from every repository or implement the later P24 source checks.
+these tracks from every repository. For an accepted triad, also perform the
+conditional source assessments below.
 
 Top-level IA misroutes a declared audience: `High` when the reader cannot find
 a normal first-success or required verification path; `Medium` when that path
@@ -388,6 +389,88 @@ Evidence standard for this step:
 - Each checked claim must cite the docs location plus the canonical repo source used to verify it.
 - If multiple repo files are needed to verify a claim, cite all relevant sources.
 - If the canonical source is ambiguous, mark the claim `unverified` rather than guessing.
+
+### Conditional triad source assessments (P24)
+
+Run these six assessments only after the authored **accepted** IA decision and
+local Information architecture section agree with the mirror's
+`verification: triad`. Cite that agreement first. A mirror alone does not prove
+acceptance. For absent, `agent-only`, or `none` overlays, record not applicable
+and continue ordinary analysis unchanged. Missing/broken authored acceptance or
+a conflicting mirror blocks these assessments with `unverified` / `ask_user`;
+it does not block ordinary analysis or justify choosing an IA.
+
+Map Product, QA and Engineering feature subsets from the accepted decision,
+tracks/principles and local guidance, citing each mapping. Do not infer roles
+from fixed folder names or tracks array order. Engineering may mix domain
+contracts with feature pages: compare only its mapped feature subset. A grouped
+flat IA may have no per-feature triad; explain not applicable rather than invent
+folders. An unresolved mapping stays `unverified` / `ask_user` without new config.
+
+1. **Slug parity.** Compare relative feature/journey keys in the mapped subsets.
+   Exclude indexes, support pages, templates and Engineering domain contracts.
+   Cite missing/extra peers and the declared mapping before recommending repair.
+2. **Paired documentation.** Inspect each member's actual peer links, resolving
+   relative paths and anchors within the repository. Accept case-insensitive
+   Paired Documentation headings and QA's canonical Scope links when they point
+   to the appropriate Product/Engineering peers. A heading alone or an unrelated
+   resolving link is insufficient. Cite both link and target/anchor; unresolved
+   or wrong-peer links become evidence-backed findings.
+3. **Quoted literals and concepts.** Select Product/QA reader Markdown and narrow
+   canonical implementation directories from cited source references/local
+   guidance, then invoke the read-only helper (repeat one value per flag):
+
+   ```bash
+   oat docs literals --target-dir <resolved-target> \
+     --page <product-page> --page <qa-page> \
+     --source-root <implementation-dir> \
+     --source-exclude <generated-or-fixture-pattern> --json
+   ```
+
+   Pages are content-relative; roots and exclusions are repository-relative.
+   Never scan the repository root, dependencies, home or external sources.
+   Select implementation roots and exclusions that omit docs, templates,
+   generated/vendor output and example/test fixtures as evidence. Inspect the
+   returned scope, searched files and skipped symlink/binary/non-UTF8 inputs;
+   incomplete traversal or invalid selections fail visibly. Missing canonical
+   sources remain unverified; do not broaden scanning to manufacture matches.
+
+   The helper extracts AST inline code, ignores fences, and performs exactly
+   one strict HTML entity decode per value and physical source line, followed
+   by case-sensitive substring matching. It reports the first lexical source
+   file/physical line, without snippets or a runtime verdict. CommonMark can
+   normalize multiline spans; source matching stays per physical line. It does
+   not fold whitespace/Unicode, decode JS escapes, evaluate interpolation or
+   load i18n/runtime values. A found substring can be in a comment, dead code,
+   fixture or longer text: read the citation and judge canonical relevance.
+   `not-found` is initially **unverified**, never automatic contradiction.
+   Require a differing canonical value before judging contradicted. Distinguish
+   intentionally explained concepts from UI literals; prose concepts need no
+   occurrence, while ambiguous backticked concepts require clarification or a
+   cited conceptual explanation. Exit 0 means completed candidates (including
+   not-found/not-applicable), not verified documentation.
+
+4. **Test-ID registry membership.** Locate the repository's actual canonical
+   test-ID registry and read its real format. Check exact member equality,
+   never substring occurrence in arbitrary source. Cite registry and docs.
+   Missing/ambiguous registry stays `unverified` / `ask_user`; do not invent a
+   registry path/schema or treat helper matches as membership proof.
+5. **Scoped scenario candidates.** Inspect QA tables for duplicate IDs and the
+   same scoped Given + When with different Then outcomes. Compare feature,
+   seed, platform and configuration preconditions before judging contradiction;
+   meaningful differences can explain the result. Cite both rows and scope.
+   Ambiguous scope stays unverified. This is judgment, not a scenario engine.
+6. **Templates in authored Contents.** Read raw authored `## Contents` links
+   before applying reader/nav exclusions. Flag links that expose drafting
+   templates as reader destinations even when `nonReaderPaths` makes nav/check
+   skip them; cite the map entry and template purpose/local declaration. Do not
+   infer safety from a clean generated nav or checker result.
+
+Record applicability, mappings, docs/source citations, candidates and judgments
+in the existing artifact's Accuracy Verification section. Use the existing
+severity and recommendation `approval: explicit | default` classes; missing
+mapping/registry evidence is not permission to add a schema or implementation.
+No P24 `oat docs check` rule is added, and its G5 JSON/rule IDs are unchanged.
 
 ### Step 5: Analyze Content Coverage Opportunities
 

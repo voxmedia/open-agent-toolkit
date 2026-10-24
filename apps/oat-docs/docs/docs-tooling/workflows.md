@@ -508,6 +508,22 @@ consumer and agent coverage. A top-level misroute is High when it blocks normal
 first success/verification, Medium when it causes material detours; cosmetic
 organization stays Low. Missing IA/owner raises `ask_user`.
 
+When the authored accepted IA and its mirror agree on triad verification,
+analyze also checks six source-related concerns: mapped feature slug parity,
+real peer links/anchors (including QA Scope pairing), quoted literals versus
+explained concepts, exact membership in the repository's own test-ID registry,
+scoped duplicate/contradictory scenarios, and raw Contents links to templates
+even when nav excludes them. Roles come from the decision/local guidance,
+including renamed tracks and hybrid Engineering; flat layouts may be not
+applicable. Missing mapping/registry stays unverified / `ask_user`. Other
+overlays continue ordinary analysis unchanged.
+
+The [literal occurrence helper](commands.md#oat-docs-literals) supplies bounded
+text candidates for selected Product/QA pages. A found substring requires
+canonical-source judgment; not-found is initially unverified. It cannot prove
+runtime behavior, registry membership or scenario correctness. Accepted IA,
+source citations and existing recommendation approval classes still govern.
+
 For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*` packages to the
 running CLI's bundled `public-package-versions.json`, never registry latest.
 Missing installations are unverified. The recommendation includes the exact

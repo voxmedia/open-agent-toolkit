@@ -13,7 +13,7 @@ or **MkDocs Material**.
 
 - What it does: documents the docs-specific CLI surface for scaffolding apps, migrating markdown, generating Fumadocs app-root index manifests, and syncing MkDocs or Fumadocs navigation.
 - When to use it: when you already know you are working on a docs surface and need the exact command-level behavior.
-- Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`, `oat docs check`
+- Primary commands: `oat docs init`, `oat docs migrate`, `oat docs generate-index`, `oat docs nav sync`, `oat docs check`, `oat docs literals`
 
 ## Command surface
 
@@ -24,6 +24,7 @@ or **MkDocs Material**.
 | `oat docs generate-index` | Generate a manifest from Markdown files, outside authored content.                    |
 | `oat docs nav sync`       | Regenerate `mkdocs.yml` nav or Fumadocs `meta.json` from `index.md` maps.             |
 | `oat docs check`          | Read-only reader, navigation, command and diagram checks; errors fail, warnings pass. |
+| `oat docs literals`       | Read-only occurrence candidates for explicitly selected Product/QA pages in a triad.  |
 | `oat docs analyze`        | CLI entrypoint that points users to the `oat-docs-analyze` skill.                     |
 | `oat docs apply`          | CLI entrypoint that points users to the `oat-docs-apply` skill.                       |
 
@@ -314,6 +315,63 @@ oat docs nav sync --target-dir apps/oat-docs --check
 Related reference:
 
 - [`../reference/docs-index-contract.md`](../reference/docs-index-contract.md)
+
+## `oat docs literals`
+
+After `oat-docs-analyze` confirms the authored accepted IA and config mirror
+agree on `verification: triad`, select Product/QA reader pages and narrow
+canonical implementation directories:
+
+```bash
+oat docs literals --target-dir manual \
+  --page experience/save.md --page verify/save.md \
+  --source-root src/ui --source-exclude src/ui/generated/ --json
+```
+
+`--target-dir` is optional and uses the same configured-root/app/content
+resolution as check. `--page` and `--source-root` are required, repeatable
+single-value flags. Pages are content-relative Markdown (`.md` or `.mdx`,
+without evaluating JSX); roots are repo-relative directories, never the repo
+root. Pages must be readable readers within the real content tree and outside
+`nonReaderPaths`. Sources must remain within the repository; nested symlinks
+are skipped, never traversed. Invalid/escaping selections, unreadable traversal
+and an empty effective text inventory fail visibly. Select implementation
+roots and explicit exclusions to omit docs, fixtures, generated output and
+vendor code as evidence.
+
+`--source-exclude` is optional/repeatable, using the existing bounded POSIX
+exclusion grammar in **repository** coordinates: segment `*`, whole-segment
+`**`, trailing `/` for directories; other metacharacters are literal. Parent
+segments, absolute patterns and backslashes are invalid. `documentation.excludes`
+remains manifest-only; `nonReaderPaths` remains content-relative.
+
+Only a matching mirror declaring triad enables extraction. Other overlays,
+absent IA or an unrelated explicit target return `not-applicable` with reason
+and empty candidates before selected pages/sources are read. This gate does
+not establish authored acceptance; the skill judges that separately.
+
+JSON completion has `status: ok`, `scope: {contentRoot, pages, sourceRoots,
+sourceExcludes}`, `searched` source paths, `skipped: [{path, reason}]`, and
+`literals: [{path, line, literal, normalized, status, source?}]`. Candidate
+status is `found` or `not-found`; source is `{path, line}`. Docs locations are
+content-relative; contentRoot/source scope is repo-relative POSIX. Duplicate
+pages/overlapping inventories are deduplicated. Page order and source file
+order are lexical, then physical line order; the first source occurrence is
+reported. Skipped reasons include symlink, binary, non-UTF8 and non-regular.
+No source snippets, severity or runtime verdict are emitted.
+
+Extraction uses Markdown AST inline code and ignores fenced blocks. Matching
+applies one strict HTML entity decode to each value and each physical source
+line, then a case-sensitive substring search. CommonMark may normalize multiline
+spans; source matching stays per physical line. There is no whitespace/Unicode
+folding, JS escape decoding, interpolation, i18n loading or runtime evaluation.
+A comment, dead code or longer text can match. Inspect canonical relevance;
+`not-found` starts as unverified, and explained concepts require judgment.
+
+Exit 0 means completed evidence, including not-found/not-applicable; exit 1 is
+an actionable input/config error; exit 2 is an unexpected runtime failure.
+Global `--json`/`--cwd` work as usual. This helper is separate from check's G5
+rules, and `oat docs analyze` remains a guidance entrypoint.
 
 ## `oat docs analyze` and `oat docs apply`
 

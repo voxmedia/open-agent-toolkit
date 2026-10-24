@@ -958,6 +958,8 @@ describe('help output snapshots', () => {
       Commands:
         check [options]           Read-only portable reader, navigation, command and
                                   diagram validation
+        literals [options]        Read-only triad inline-code occurrence candidates;
+                                  found does not prove runtime behavior
         analyze                   Show guidance for the oat-docs-analyze skill
         apply                     Show guidance for the oat-docs-apply skill
         generate-index [options]  Generate a docs index from markdown files
