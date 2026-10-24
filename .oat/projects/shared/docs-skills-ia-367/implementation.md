@@ -2250,6 +2250,17 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 Execution shape: one phase implementer owns sequential prose, E13 grant/version reconciliation, criteria transfer and backlog closeout in docs/docs-skills-ia-367-p09 at the existing worktree. No declared parallel group; slices share release/version/generated-index/gate output and sequential closure dependencies, so root fan-out fails independence. Root retains disposition, plan/state/log writes, final review and GitHub operations. No nested agents. Recovery0/10,pendingnull.
 
+### Task p09-t01: Reconcile workflow docs, E13 grants and release versions
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p09-impl-20261024
+**Handle:** docs367-p09-impl-20261024
+
+Intent: correct the two readiness-identified human workflow pages, grant only the already documented analyze shim-discovery commands, and prepare the lockstep 0.3.31 release. Preserve navigation read-only authority and existing runtime behavior.
+Files: `apps/oat-docs/docs/docs-tooling/workflows.md`, `apps/oat-docs/docs/docs-tooling/add-docs-to-a-repo.md`, `.agents/skills/oat-docs-analyze/SKILL.md`, `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, and generated `packages/cli/assets/public-package-versions.json`.
+Proof: source-cited conservation diff; exact five grant/command pairs with nav-sync check retained; file-scoped formatter and docs Markdown lint; fresh isolated-HOME installed-skill/validation sentence contracts; existing analyze skill tests; bundle generation. Phase-wide nine ordered gates plus root lint/format follow both records. No new tests or runtime proof campaign.
+Pre-task HEAD: `e4742b717e34b83bce01af7c88bcf1a84c2badc4`. Authorized launch-only descendant of dispatch base `a411d89ba4735a639cf5d9c0b2a5802d5a7feb2d`; clean checkout, canonical role digest matched, fetched main has no scoped drift. Recovery 0/10, pending null. Root-owned phase Base, status, run line and all earlier history retained.
+
 ## Orchestration Runs
 
 - run/v1 · request=docs367-p09-impl-20261024 · scope=p09 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
