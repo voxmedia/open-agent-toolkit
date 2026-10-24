@@ -151,12 +151,12 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T22:08:50.822Z'
+oat_project_state_updated: '2026-10-24T22:09:28.483Z'
 oat_generated: false
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324
   resolved_command:
     oat --json gate review --project "$PROJECT_PATH" --review-type
@@ -174,7 +174,7 @@ oat_implement_exit_gate:
   reviewed_head: a7e569e660566d62978928a00f44347ca4798941
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v2:adbc6902c83cd623f044ec1e5b93bf101c9dbbecce693bc2ba45da3dd8e6fe4e
-  freshness_head: a7e569e660566d62978928a00f44347ca4798941
+  freshness_head: 3b9dc985b2b3fddcebe90f2d4a703f5b598818db
   freshness_fingerprint: sha256:effective-delta-v2:adbc6902c83cd623f044ec1e5b93bf101c9dbbecce693bc2ba45da3dd8e6fe4e
   waivers: []
   launch_state: result_persisted
@@ -184,11 +184,11 @@ oat_implement_exit_gate:
   gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/96d4018b-7030-4867-a0cb-85be5d8beb1a.json
   gate_run_id: 96d4018b-7030-4867-a0cb-85be5d8beb1a
   envelope_status: ok
-  artifact: .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
+  artifact: .oat/projects/shared/docs-skills-ia-367/reviews/archived/final-review-2026-10-24T220442Z.md
   handoff: Run oat-project-review-receive for
     .oat/projects/shared/docs-skills-ia-367/reviews/final-review-2026-10-24T220442Z.md
     before treating this gate review as consumed.
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     gate_run_id: 96d4018b-7030-4867-a0cb-85be5d8beb1a
     handoff: Run oat-project-review-receive for
@@ -205,12 +205,12 @@ oat_implement_exit_gate:
     type: code
     source_filename: final-review-2026-10-24T220442Z.md
   receive_pre_head: 1a60e7fc97a81acee1203bb27ed603a8ffafafc8
-  receive_commit: null
+  receive_commit: 3b9dc985b2b3fddcebe90f2d4a703f5b598818db
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: 2026-10-24T22:08:50.821Z
-  decided_at: null
+  updated_at: 2026-10-24T22:09:28.483Z
+  decided_at: 2026-10-24T22:09:28.483Z
 ---
 
 # Project State: docs-skills-ia-367
