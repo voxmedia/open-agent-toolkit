@@ -2001,12 +2001,19 @@ Proof: isolated-HOME skill-sentence suite, root lint/format, and a conservation/
 
 ### Task p07-t03: (review) Make section placement guidance specific
 
-**Status:** pending
+**Status:** completed
+**Executor:** phase-implementer:docs367-p07-impl-20261024
+**Handle:** docs367-p07-fix-r1-20261024
+**Pre-task HEAD:** d293f5c026340fd3b9f57c67e4323cc54cdc022a
 **Source review:** reviews/archived/p07-review-2026-10-24T152354Z.md (L1)
 
 Intent: Replace repeated track-section boilerplate with short section-specific placement guidance, preserving public generic examples and existing paths, pages, Contents and reader model. No new directories, pages, facts or mechanism.
 Files: `packages/cli/src/commands/docs/init/content.ts` and existing preset tests only if meaningful for the shipped prose contract.
 Proof: existing real preset init/check/nav tests and generated-output inspection with distinct relevant section guidance.
+
+**Commit:** 7a3f169b23a97d73283e8100727894be469b29e0
+**Outcome:** L1 corrected with a short placement sentence paired with each existing section heading. No reader facts are invented; paths, pages, purpose, Contents, template subsets and default/flat behavior remain unchanged. Existing preset coverage is retained; no exact-copy assertions were added for editorial judgment.
+**Verification:** Scoped oxfmt/diff check and direct CLI lint/types pass. Build exits0 (Turbo hits4/misses1); fresh isolated-HOME init suite passes142 tests/9 files. Generated triad Markdown15 and task-type Fumadocs15 pass real checker with zero errors; Fumadocs nav --check passes. Triad output comparison changes only three track index bodies, conserving heading/link lines and every other output byte. Manual inspection confirms availability/journeys/states, domain/feature/operations, seeds/scenarios/evidence and task-type placement sentences are relevant. Evidence: analysis/p07/fix-r1/t03-output.json and t03/fresh-t03 logs. Precommit probe-script corrections were prevention only; recovery0/10,pendingnull; no children.
 
 ### Task p07-t04: (review) Label the toolchain home link accurately
 
