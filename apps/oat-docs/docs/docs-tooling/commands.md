@@ -332,7 +332,8 @@ oat docs literals --target-dir manual \
 resolution as check. `--page` and `--source-root` are required, repeatable
 single-value flags. Pages are content-relative Markdown (`.md` or `.mdx`,
 without evaluating JSX); roots are repo-relative directories, never the repo
-root. Pages must use their canonical on-disk spelling (including case) and be
+root. Source roots must also use their canonical on-disk spelling (including case).
+Pages must use their canonical on-disk spelling (including case) and be
 readable readers within the real content tree, outside `nonReaderPaths`,
 with no symlink components below the resolved content root
 (including page files and directory aliases). Sources must remain within the

@@ -407,6 +407,36 @@ describe('docs literals actual CLI acceptance boundary', () => {
     expect(JSON.parse(rootAlias.stdout).scope.contentRoot).toBe('manual');
   }, 20_000);
 
+  it('rejects case-variant source roots while preserving canonical exclusions and overlap deduplication', async (context) => {
+    const f = await fixture();
+    try {
+      await stat(join(f.root, 'SRC'));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      context.skip(
+        true,
+        'Case-sensitive filesystem: alternate source-root spelling does not resolve.',
+      );
+      return;
+    }
+    const valid = await f.run([...f.args, '--source-root', 'src']);
+    expect(valid.code, valid.stderr).toBe(0);
+    const result = JSON.parse(valid.stdout);
+    expect(result.searched).toEqual(['src/a.ts', 'src/z.ts']);
+    expect(result.literals).toContainEqual(
+      expect.objectContaining({ literal: 'Archive now', status: 'not-found' }),
+    );
+    const output = await f.run([...f.args, '--source-root', 'SRC']);
+    expect({ code: output.code, result: JSON.parse(output.stdout) }).toEqual({
+      code: 1,
+      result: {
+        status: 'error',
+        message:
+          'Source root SRC must use its canonical repo-relative spelling: src.',
+      },
+    });
+  }, 20_000);
+
   it('fails unreadable traversal instead of reporting absence, and keeps valid inventory usable', async () => {
     const f = await fixture();
     await f.put('src/private/file.ts', 'hidden\n');

@@ -203,6 +203,13 @@ export async function collectLiteralEvidence(
         throw new LiteralInputError(
           `Source root ${path} must be a contained directory.`,
         );
+      const canonical = posix(
+        relative(await realpath(target.repoRoot), await realpath(absolute)),
+      );
+      if (canonical !== path)
+        throw new LiteralInputError(
+          `Source root ${path} must use its canonical repo-relative spelling: ${canonical}.`,
+        );
       await walk(path);
     });
   }
