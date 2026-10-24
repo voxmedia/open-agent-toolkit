@@ -148,7 +148,7 @@ oat_pr_status: merged
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T17:42:28.852461Z'
+oat_project_state_updated: '2026-10-24T17:49:34.120518Z'
 oat_generated: false
 ---
 
@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Current Phase
 
-P08 round1 fixes are complete and verified; independent round2 review is next. All three execution records are closed. Frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and updated Head4f737e1381e00194a72263b46b25d0e6bbb36bd6 retained. Eleven of13 phase-units remain accepted. P09 stays provisional without Base. P08 recovery0/10,pendingnull.
+P08 round2 confirmed prior fixes and found one Medium case-variant reader-exclusion bypass. Record p08-t04 is active for the original implementer; phase remains in_progress,11/13 accepted. Existing Base/Head and recovery0/10,pendingnull conserved. P09 remains provisional without Base.
 
 ## Artifacts
 
@@ -174,4 +174,4 @@ None.
 
 ## Next Milestone
 
-Re-review and deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.
+Complete p08-t04, then re-review and deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched.

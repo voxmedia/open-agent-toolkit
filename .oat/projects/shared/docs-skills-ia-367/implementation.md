@@ -2171,6 +2171,26 @@ Root verified the full report, combined manifest digest a8a4feee51b2a233c38d622c
 
 Nine ordered gates exited0; cache/execution truth,1565 fresh focused tests and actual regression red/green are retained in analysis/p08/fix-r1/implementation-report.md. Scope remains in_progress at frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and updated Head4f737e1381e00194a72263b46b25d0e6bbb36bd6. Round1 findings event is fixes_completed, never a substitute for a passing successor review. P09 remains provisional without Base; no phase acceptance or delivery yet.
 
+### Review Received: p08 round 2
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T174706Z.md.
+**Findings:** Critical0/High0/Medium1/Low0. **Reconnaissance:** not-attempted; exact confirmation consumed once, no orchestration section.
+
+R1 M1 and L1 are independently closed, including file/directory aliases, configured-root identity and the approved documentation-only self-match clarification. R2 M1 (Medium, Minor scope): a differently cased page spelling bypasses nonReaderPaths on a case-insensitive filesystem. Root independently reran14 CLI probes and reproduced Q5 canonical rejection versus Q9 case-variant acceptance, with Q1/Q7 valid. This predates the earlier fix and is inside p08's original range. Convert to p08-t04 under the existing reader-exclusion guarantee, not a new requirement. Enforce canonical on-disk page spelling relative to the resolved content root using async realpath, preserving symlink rejection and narrow selected-page reads.
+
+**Design drift / artifact alignment notes:** No brief change; no automatic docs-source overlap guard, global case-folding policy or full reader-tree enumeration is introduced. Existing skill/public version bumps remain PR-scoped.
+**Outcome:** fix queued p08-t04, original implementer continuation. Cycle2/3; no cap escalation yet. Phase stays in_progress,11/13 accepted; frozen Base and prior Head conserved until fix completion. P09 has no Base. Reviewer rebuilt CLI, verified all22 hashes, ran14 probes and1166 fresh focused tests. Broader gates/runtime/manual limits remain inherited. No project-log write before fix dispatch.
+
+### Task p08-t04: (review) Require canonical reader-page spelling
+
+**Status:** in_progress
+**Source review:** reviews/archived/p08-review-2026-10-24T174706Z.md (M1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Reject a selected page when its content-relative requested spelling differs from the canonical async-realpath spelling below the resolved content root. This closes case-variant nonReaderPaths bypasses without enumerating unrelated reader pages or changing source matching. Preserve configured-root aliases and prior symlink/containment/overlay behavior.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md only if needed to disclose canonical page spelling.
+**Proof command:** Real CLI case-variant excluded-template regression with runtime filesystem case-sensitivity detection, failing pre-fix and passing after on this case-insensitive host; canonical reader and resolved-root-alias controls remain valid. Existing symlink/source/triad controls pass. Focused fresh tests, original14 reviewer probes and nine ordered gates with explicit exits/cache truth; retain evidence under ignored analysis/p08/fix-r2/. No mocked own reader, production test hook or full platform campaign.
+
 ---
 
 ## Phase p09: Docs, release and closeout
