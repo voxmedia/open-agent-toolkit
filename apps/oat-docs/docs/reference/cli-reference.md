@@ -80,6 +80,8 @@ Lifecycle](../workflows/backlog-and-planning/backlog-lifecycle.md).
 
 `oat docs check [--target-dir <dir>] [--rule <id>...] [--json]` validates reader structure, links, navigation, contributor commands and diagrams without a site build. Errors exit 1; warning-only exits 0. See [Check Documentation](../docs-tooling/check.md) for rules/config and JSON.
 
+`oat docs literals --page <reader.md> --source-root <implementation-dir> [--target-dir <dir>] [--source-exclude <pattern>] --json` reports bounded inline-code occurrence candidates for triad IA mirrors. Pages and roots are repeatable single-value flags in content/repository coordinates respectively. Found candidates require canonical-source judgment. See [literal helper scope, JSON and limits](../docs-tooling/commands.md#oat-docs-literals).
+
 ## Command Groups
 
 | Command group                                   | What it covers                                                                                                                                                                                                             | Go deeper                                                                                   |

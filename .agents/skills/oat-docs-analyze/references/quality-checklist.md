@@ -55,6 +55,24 @@ Use this checklist when evaluating a docs surface.
 - Referenced paths exist.
 - Tooling/setup instructions are current.
 
+## Conditional triad source assessments (P24)
+
+- Authored accepted IA and local section agree with the mirror's triad overlay;
+  other overlays are not applicable, missing/conflicting evidence unverified / ask_user.
+- Roles and feature subsets come from cited decisions/local guidance, including
+  renamed tracks, hybrid Engineering and flat applicability; no folder/order inference.
+- Slug parity compares only mapped feature keys, excluding support/domain pages.
+- Peer links resolve to the correct member and anchor; QA Scope links count.
+- Product/QA literals use `oat docs literals` with explicit pages, narrow source
+  roots and source exclusions. Scope, searched files and skipped reasons are reviewed.
+- Once-decoded, case-sensitive physical-line occurrences receive canonical-source
+  judgment; not-found remains unverified and explained concepts are distinguished.
+- Test IDs use exact membership in the actual registry; absent registry stays unverified.
+- Duplicate IDs and same scoped Given+When/different Then candidates are judged
+  with seed/platform/configuration evidence, never automatically contradicted.
+- Raw authored Contents links to templates are flagged despite reader/nav exclusions.
+- Existing severity, citations and recommendation approval classes are preserved.
+
 ## Discoverability
 
 - Important pages are reachable from a parent `index.md` or site nav.

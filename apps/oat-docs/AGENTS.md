@@ -44,9 +44,13 @@ The supported-skill catalog is committed source in `docs/skills/index.md` and bu
 ## When you need to audit or bulk-edit docs
 
 1. Use `oat-docs-analyze` to audit the docs surface against the `## Contents` contract and surface gaps, drift, and coverage opportunities. This is read-only; it produces a report artifact under `.oat/repo/analysis/`.
-2. Review the report with the user. The analyze output is a set of ordered recommendations — apply them selectively, not wholesale.
-3. Use `oat-docs-apply` to execute approved recommendations. Apply creates a branch, performs the approved changes, runs nav sync, and optionally opens a PR. It will not make unapproved changes or invent new conventions.
-4. Do not bypass analyze/apply for sweeping content changes. The branch-and-review discipline catches mistakes that would otherwise land silently and accumulate over time.
+2. For an accepted triad IA, analyze uses `oat docs literals` for explicitly
+   selected Product/QA pages and narrow canonical implementation roots. Treat its
+   found/not-found output as occurrence evidence requiring judgment. Other IA
+   overlays keep ordinary analysis; a mirror alone does not prove acceptance.
+3. Review the report with the user. The analyze output is a set of ordered recommendations — apply them selectively, not wholesale.
+4. Use `oat-docs-apply` to execute approved recommendations. Apply creates a branch, performs the approved changes, runs nav sync, and optionally opens a PR. It will not make unapproved changes or invent new conventions.
+5. Do not bypass analyze/apply for sweeping content changes. The branch-and-review discipline catches mistakes that would otherwise land silently and accumulate over time.
 
 ## When you're unsure where content belongs
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08
-oat_last_commit: 484ae87aa12c32c5807a50241f073224da8d8cbb
+oat_current_task: p09
+oat_last_commit: 7e9c2c7669b84261cb8d522d9d6ba279c461e52a
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260911-make-docs-bootstrap-a-front' },
@@ -50,6 +50,9 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p07:
+      used_attempts: 0
+      pending_attempt: null
+    p08:
       used_attempts: 0
       pending_attempt: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -142,10 +145,10 @@ oat_workflow_origin: native # native | imported
 #   decided_at: null # ISO 8601 UTC
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: open
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/375'
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/376'
 oat_project_created: '2026-10-22T19:01:57.211Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-24T16:32:56Z'
+oat_project_state_updated: '2026-10-24T18:35:10.898146Z'
 oat_generated: false
 ---
 
@@ -157,12 +160,12 @@ oat_generated: false
 
 ## Current Phase
 
-P07 accepted after focused independent confirmation of the PR375 Windows correction with zero findings. Eleven of13 phase-units accepted. All five records closed; recovery0/10,pendingnull. Publish correction, then await current-head CI/Bugbot and clearance of Warp's live objection before delivery. P08/p09 remain provisional with no Base.
+P08 accepted after the approved focused corrective confirmation: zero findings, all five records closed. Frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and Head7e9c2c7669b84261cb8d522d9d6ba279c461e52a retained. 12/13 phase-units accepted; recovery0/10,pendingnull. Intermediate PR376 is open; current-head CI/Bugbot and remote review are pending. P09 is provisional with no Base.
 
 ## Artifacts
 
 - **Brief:** `plan.md` — approved; independent review and configured gate passed.
-- **Implementation:** `implementation.md` — p01–p06 and four revisions accepted; p07 accepted, 11/13 phase-units accepted.
+- **Implementation:** `implementation.md` — p01–p06 and four revisions accepted; p07–p08 accepted, 12/13 phase-units accepted.
 - **Research:** `references/research/issue-367.md`.
 
 ## Blockers
@@ -171,4 +174,4 @@ None.
 
 ## Next Milestone
 
-Publish the verified p07-t05 correction and land PR375 after current-head CI/Bugbot and actionable feedback clear, then concretize/execute p08 and p09. Standing bottom-up merge authority retained; no publication or final project PR before closeout. PR374 remains merged and unwatched.
+Deliver p08, then execute p09 docs/release/backlog closeout. Standing bottom-up plain merge authority retained. No publication or final project PR before closeout. PR375 is merged and unwatched; PR376 is the active p08 delivery.

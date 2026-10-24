@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p08
+oat_current_task_id: p09
 oat_generated: false
 oat_template: false
 ---
@@ -52,10 +52,10 @@ oat_template: false
 | p05    | completed | 1     | 1/1      |
 | p06    | completed | 1     | 1/1      |
 | p07    | completed | 1     | 1/1      |
-| p08    | pending   | 1     | 0/1      |
+| p08    | completed | 1     | 1/1      |
 | p09    | pending   | 1     | 0/1      |
 
-**Total:** 11/13 phases accepted
+**Total:** 12/13 phases accepted
 
 ---
 
@@ -2093,11 +2093,152 @@ Root read the complete artifact and checked full head/range provenance, exactly 
 
 **Outcome:** passed; all five task records closed and remote H1 corrected. P07 acceptance restored (11/13 units), frozen Base retained and Head484ae87aa12c32c5807a50241f073224da8d8cbb. Third standard code review is clean; no further automated review cycle is queued. Prior complexity assessment remains valid for unchanged architecture; no new mechanism or optional simplification was added. Historical reviews, prior acceptance and recovery0/10,pendingnull remain conserved. Root will publish correction and require current-head CI/Bugbot plus clearance of the live Warp objection before plain merge delivery. P08/p09 remain provisional without Base.
 
+### P07 delivered through PR375
+
+PR https://github.com/voxmedia/open-agent-toolkit/pull/375 merged2026-10-24T16:42:02Z using plain merge commit2eb0b635aa67069273fc6c76896beafc94658ebf with expected-head46917a8709b46234c388b4f044af8881ce8e836d. Fresh complete sweep read all3 reviews,1 issue comment,3 inline comments,1 resolved thread and0 requested reviewers; Warp's rejection was dismissed and correction accepted. Current-head CI, release dry-run and Bugbot succeeded; Bugbot explicitly found no issues. No admin/auto override, deletion or publication. T3 watcher stopped after remote MERGED/mergedAt/merge-commit verification.
+
+P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readiness within approved Outcome10 on docs/docs-skills-ia-367-p08, same worktree. Main has no unintegrated planned-path drift. Worktree init completed; optional S3 archive sync warned because AWS access is unconfigured, while dependency/build/provider sync completed. Restored its sole generated manifest version-only churn. P08/p09 remain provisional without Base pending bounded prototype/readiness.
+
 ## Phase p08: Product and QA checks against source
 
-**Status:** pending
+**Status:** completed
+**Base:** 65baa0145acea94872fadcf4a44edb00609b0ed5
+**Head:** 7e9c2c7669b84261cb8d522d9d6ba279c461e52a
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Verification:** Operator-approved sole t05 corrective delta passes actual case-insensitive-host red/green (not skipped), fresh isolated-HOME literals/help tests and built CLI canonical-root bad/valid overlap/exclusion controls. All nine ordered DoD gates pass, including direct manifest freshness; exact exits/cache truth, conserved scope and full22-path hashes are under analysis/p08/fix-r3/. Earlier closures and broader/manual/runtime proof remain inherited; original history/versions and recovery0/10,pendingnull retained. Focused independent confirmation passed with zero findings; root accepts p08 with all five records closed. Earlier full-range coverage and stated platform/manual limits remain inherited.
+
+Execution shape: one phase implementer owns the sequential helper/analyze/docs integration in the existing p08 branch/worktree. Shared command registration, skill sentences and bundled builds preclude independent parallel lanes. No optional children. Recovery default10, p08 usage0/10,pendingnull. Root owns plan/state/log, independent review and delivery. Prototype-based local design is committed; no Outcome/Constraint/Decision/authority change.
+
+### Task p08-t01: Deliver triad analysis and literal occurrence evidence
+
+**Status:** completed
+**Commit:** 9178a800bff8f1c6fff85fc4baa537e0d280c59d
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Implement concrete p08 Intent/Exit with a narrow CLI helper and conditional six-check analysis, retaining reader/config/approval boundaries.
+**Files:** docs/literals command/module/tests and docs registration; oat-docs-analyze skill/reference templates/checklist and mechanically affected skill/help/release contracts; relevant CLI README/human docs/covering instructions; public prototype reference; all five public manifests/generated bundled versions. No docs-check rule or config schema change, new dependency, consumer edit or private material.
+**Proof command:** Real CLI bad/valid controls, fresh isolated-HOME docs/help/skill-sentence/validation suites, manual six-check walkthrough, ordered DoD gates, root lint/format and built help all passed.
+**Analysis:** analysis/p08/verification/ (exact commands/exits, cache truth, manual walkthrough and product manifest).
+
+### P08 pre-review verification
+
+Root verified the complete report, exact22-path product manifest digest and every committed/current hash. Product9178a800bff8f1c6fff85fc4baa537e0d280c59d is followed immediately by task journalc73207979ac57f0d2b3a6a5a172d3ed9c4aaee19; final571dbf0194d753e1536de7d9c62aae33f44bbb2b changes only the phase Head record. One execution record is complete and the phase remains in_progress pending independent review. No recovery attempt; usage0/10,pendingnull is unchanged.
+
+All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo replay counts are disclosed in the implementation report; fresh1564 scoped isolated-HOME tests and78 committed CLI/help tests passed. Root lint/format, direct manifest freshness and manual six-assessment walkthrough passed. This is public synthetic/manual evidence, with no autonomous-agent, fresh Node22 or native Windows claim. Scope keeps all six assessments in analyze judgment; helper occurrences do not establish runtime truth. P09 remains provisional with no Base.
+
+### Review Received: p08 round 1
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T172427Z.md.
+**Findings:** Critical0/High0/Medium1/Low1. **Reconnaissance:** not-attempted; confirmation consumed exactly once, no orchestration section.
+
+- M1 (Medium, Minor scope): lexical-only nonReaderPaths checking accepts an in-content symlink alias to an excluded template. Root independently reproduced direct rejection and alias acceptance. Convert to p08-t02; accepted p08 reader-exclusion/contained-reader contract requires repair. Reject page paths with symlink components relative to the resolved content root, aligning the existing checker reader inventory. Keep configured-root identity handling intact.
+- L1 (Low, Minor scope): selected source roots can contain documentation and self-match. Root reproduced a docs-page citation. Convert to p08-t03, documentation clarification only: state that the helper does not automatically remove docs from selected sources and a self-citation is not implementation evidence. The existing narrow-source selection and canonical-relevance judgment remain authoritative; an automatic overlap guard is additional hardening not required by p08 and is not queued.
+
+**Design drift / artifact alignment notes:** No brief change. L1 aligns shipped guidance with the approved limited text-occurrence guarantee, preserving operator-selected sources and explicit exclusions. No new dependency, schema, check rule or source-classification engine.
+**Outcome:** fixes completed p08-t02/p08-t03; independent successor review pending. Phase remains in_progress,11/13 accepted, frozen Base/Head retained until fix completion; p09 has no Base. Original round1 event remains distinct from the successor review. Reviewer independently rebuilt CLI, verified all22 hashes, ran11 probes and1165 focused tests. Nine-gate and earlier manual/runtime limits remain inherited. No project-log append while a fix child owns the worktree.
+
+### Task p08-t02: (review) Reject symlinked reader-page selections
+
+**Status:** completed
+**Commit:** b04f035a226f5e45fcf8a0fda18ca6f2a117bb26
+**Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (M1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Close the nonReaderPaths alias bypass by rejecting any selected content-relative page with a symlink component, reusing the existing bounded lstat walk with a root parameter. Preserve valid readers, root identity, containment, pre-read triad gating and source semantics.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md (page-symlink disclosure only).
+**Proof command:** Real CLI alias-to-excluded-template and symlink-directory bad controls must fail for the page guard, with contained reader control passing; retain pre-fix red and fixed green evidence. Focused literals/help suites and all nine ordered DoD gates; exact exits/cache truth under ignored analysis/p08/fix-r1/. No own-reader mocks or production-only test hook.
+
+**Verification:** Pre-fix real CLI regression exits1 because both excluded-template aliases incorrectly succeed; fixed79 literals/help tests pass freshly with contained-reader and resolved-root-alias controls. CLI check/types/build and docs check exit0. Full phase checks follow; no recovery attempt.
+**Analysis:** analysis/p08/fix-r1/ (t02 red/green, exact commands/exits and scoped checks).
+
+### Task p08-t03: (review) Clarify selected source self-matches
+
+**Status:** completed
+**Commit:** 99533bc88cf07ab2af471e963ee888e37cd5a211
+**Source review:** reviews/archived/p08-review-2026-10-24T172427Z.md (L1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Explicitly state that selected source roots are not automatically filtered to remove docs; roots/exclusions must omit docs and a found citation to documentation itself cannot establish implementation support. Keep canonical relevance judgment and not-found=unverified semantics. No automatic overlap guard.
+**Files:** .agents/skills/oat-docs-analyze/SKILL.md; apps/oat-docs/docs/docs-tooling/commands.md; mechanically pinned existing skill sentence contracts only if required and reported.
+**Proof command:** Conservation diff and focused skill-sentence tests; no new prose-mirroring test. Retain current skill1.7.4/public0.3.30 PR-scoped bumps. Run root lint/format and ordered gates as required; manual inspection of the existing self-match probe verifies the clarified limitation.
+
+**Verification:** Conservation diff preserves all prior prose, links and judgment requirements while adding the explicit self-match limitation. Fresh isolated-HOME skill-sentence/validation1087 tests, root lint/format and docs check exit0; no sentence contract edit or new test. Skill1.7.4/public0.3.30 remain unchanged. Built reviewer probes and ordered phase gates follow; recovery0/10,pendingnull unchanged.
+**Analysis:** analysis/p08/fix-r1/ (t03 conservation diff/result, exact commands/exits and checks).
+
+### P08 fixes complete; round 2 baseline
+
+Root verified the full report, combined manifest digest a8a4feee51b2a233c38d622cdad7fe4ef1bf3d1ad1847a0b6de537f295ef7676 and all22 final/current hashes plus exact per-commit file boundaries. Both product commits have immediate separate journals; the final descendant changes only the Head/verification record. All three execution records are complete. M1 rejects page file/directory aliases below the resolved content root; L1 only clarifies caller-selected source self-matches. Original history, scope, versions and recovery0/10,pendingnull are preserved.
+
+Nine ordered gates exited0; cache/execution truth,1565 fresh focused tests and actual regression red/green are retained in analysis/p08/fix-r1/implementation-report.md. Scope remains in_progress at frozen Base65baa0145acea94872fadcf4a44edb00609b0ed5 and updated Head4f737e1381e00194a72263b46b25d0e6bbb36bd6. Round1 findings event is fixes_completed, never a substitute for a passing successor review. P09 remains provisional without Base; no phase acceptance or delivery yet.
+
+### Review Received: p08 round 2
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T174706Z.md.
+**Findings:** Critical0/High0/Medium1/Low0. **Reconnaissance:** not-attempted; exact confirmation consumed once, no orchestration section.
+
+R1 M1 and L1 are independently closed, including file/directory aliases, configured-root identity and the approved documentation-only self-match clarification. R2 M1 (Medium, Minor scope): a differently cased page spelling bypasses nonReaderPaths on a case-insensitive filesystem. Root independently reran14 CLI probes and reproduced Q5 canonical rejection versus Q9 case-variant acceptance, with Q1/Q7 valid. This predates the earlier fix and is inside p08's original range. Convert to p08-t04 under the existing reader-exclusion guarantee, not a new requirement. Enforce canonical on-disk page spelling relative to the resolved content root using async realpath, preserving symlink rejection and narrow selected-page reads.
+
+**Design drift / artifact alignment notes:** No brief change; no automatic docs-source overlap guard, global case-folding policy or full reader-tree enumeration is introduced. Existing skill/public version bumps remain PR-scoped.
+**Outcome:** fix completed p08-t04; independent successor review pending. Cycle2/3; no cap escalation yet. Phase stays in_progress,11/13 accepted; frozen Base and prior Head conserved until fix completion. P09 has no Base. Reviewer rebuilt CLI, verified all22 hashes, ran14 probes and1166 fresh focused tests. Broader gates/runtime/manual limits remain inherited. No project-log write before fix dispatch.
+
+### Task p08-t04: (review) Require canonical reader-page spelling
+
+**Status:** completed
+**Commit:** 3b25736af091e50b1508ff1466bae0caaf9f3c48
+**Source review:** reviews/archived/p08-review-2026-10-24T174706Z.md (M1)
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** Reject a selected page when its content-relative requested spelling differs from the canonical async-realpath spelling below the resolved content root. This closes case-variant nonReaderPaths bypasses without enumerating unrelated reader pages or changing source matching. Preserve configured-root aliases and prior symlink/containment/overlay behavior.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md only if needed to disclose canonical page spelling.
+**Proof command:** Real CLI case-variant excluded-template regression with runtime filesystem case-sensitivity detection, failing pre-fix and passing after on this case-insensitive host; canonical reader and resolved-root-alias controls remain valid. Existing symlink/source/triad controls pass. Focused fresh tests, original14 reviewer probes and nine ordered gates with explicit exits/cache truth; retain evidence under ignored analysis/p08/fix-r2/. No mocked own reader, production test hook or full platform campaign.
+
+**Verification:** Actual case-insensitive-host regression ran (not skipped): pre-fix exit1 for incorrectly accepted template spelling; fixed80 literals/help tests pass with canonical-reader/root-alias and retained R1 symlink controls. CLI check/types/build and docs check exit0; all14 built reviewer probes match expected categories, including Q9 canonical-spelling error1, Q1/Q7 valid0 and Q13 self-match0. Phase-wide gates follow; no recovery attempt.
+**Analysis:** analysis/p08/fix-r2/ (red/green, provenance, probes, exact commands/exits and scoped checks).
+
+### P08 canonical-page fix complete; round 3 baseline
+
+Root verified the report, manifest88b7e22b17bf5a7207eb92f0ed6050fe18daaac6600724cfffe78b4b04242195, all22 candidate/current hashes and original/fix/journal commit boundaries. Product3b25736af091e50b1508ff1466bae0caaf9f3c48 has immediate journalc49077ee517d27c4d2cc3c73e083eda0c1c85145; final1b3c6d8069978832ade6eff31e637889e6c9b68f is journal-only. All four records are complete; prior R1 fixes, versions and recovery0/10,pendingnull are conserved.
+
+Actual case-insensitive regression executed red/green,479 fresh focused tests and14 CLI probes passed; all nine gates and direct manifest freshness exited0 with cache truth retained in analysis/p08/fix-r2/implementation-report.md. R2 event moves to fixes_completed; phase stays in_progress at original Base and updated Head pending R3. P09 remains provisional without Base.
+
+### Review Received: p08 round 3
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T180640Z.md.
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1.
+
+R1 M1/L1 and R2 M1 are independently closed. R3 L1 is an accepted-requirement gap in source-root identity: case-variant source roots can duplicate physical files and miss canonical-spelled exclusions on a case-insensitive filesystem. Root reproduced src/SRC duplicate searched paths at the built public CLI boundary. No outside read or reader-exclusion bypass occurs. Operator approved the recommended corrective revision on 2026-10-24; convert R3 L1 to sole execution record p08-t05 under the existing source-root dedup/exclusion contract.
+
+**Design drift / artifact alignment notes:** None accepted; the existing overlap-deduplication and source-exclusion contract remains authoritative.
+**Outcome:** fix completed p08-t05, cycle3/3; approved focused independent delta confirmation pending. All four records remain complete; phase remains in_progress,11/13 accepted, p09 has no Base. Reviewer rebuilt CLI, checked22 hashes, passed18 categorical probes and1253 fresh focused tests with the case regression executing. Broad gates/manual/platform limits are inherited. Exactly one not-attempted reconnaissance signal consumed; no Review Orchestration section/log is required.
+
+**Review-cap assessment:** reviews/archived/complexity-p08-2026-10-24T181242Z.md. Verdict partially compliant: core helper and six assessments retained; process scope is the overshoot. Recommended corrective revision is one canonical-source-root check, one real-CLI red/green regression and one doc sentence, then nine required gates and one focused independent delta confirmation. Broader normalization, platform proof and a fourth full-range campaign are not recommended. Alternative is an operator-approved documentation caveat/deferral. R3-L1 is an accepted-requirement gap, not new hardening. Operator chose corrective revision on 2026-10-24. Only p08-t05 plus one focused independent delta confirmation is authorized beyond the cap; no fourth full-range review or new platform campaign. Phase acceptance remains pending. Recovery0/10,pendingnull and prior histories remain conserved.
+
+### Task p08-t05: (review) Require canonical source-root spelling
+
+**Status:** completed
+**Commit:** 5c417265da9d11378976992c1d6ba30dfbf354fc
+**Source review:** reviews/archived/p08-review-2026-10-24T180640Z.md (L1), operator-approved corrective revision at cycle3/3.
+**Executor:** phase-implementer:docs367-p08-impl-20261024
+**Handle:** docs367-p08-impl-20261024
+**Intent:** After source-root containment and symlink handling, require the typed repo-relative root to equal its canonical async-realpath spelling relative to the canonical repo root. Reject mismatches with an actionable input error. Preserve canonical-root exclusions, overlap deduplication, source skips, prior page guards, configured-root aliases and triad gating. No shared abstraction/global folding/exclusion normalization or inode dedup.
+**Files:** packages/cli/src/commands/docs/literals/evidence.ts; packages/cli/src/commands/docs/literals/literals.test.ts; apps/oat-docs/docs/docs-tooling/commands.md.
+**Proof command:** One real public-CLI regression with runtime case-sensitivity detection: case-variant source root rejects with input exit1, canonical root/exclusion/overlap controls remain valid. Retain intended pre-fix red/fixed green actually executed on this APFS host. Run relevant focused tests and nine ordered gates with explicit exits/cache truth and direct manifest freshness; one independent delta confirmation only. Inherit unchanged broader/runtime/manual evidence. No new test-only hook, dependency/schema/version/skill change or full-range campaign.
+**Verification:** Actual case-insensitive-host regression executed (not skipped): intended pre-fix red1, fixed81 fresh literals/help tests pass with canonical exclusions/overlap and retained page/symlink controls. CLI check/types/build and docs check exit0. Built CLI delta controls reject SRC with canonical-root diagnostic1 and accept canonical overlap/exclusion control0. Nine phase gates follow; prior broad/manual/runtime proof stays inherited. Recovery0/10,pendingnull unchanged.
+**Analysis:** analysis/p08/fix-r3/.
+
+### P08 source-root corrective revision complete; focused confirmation baseline
+
+Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46bc575b, all22 candidate/current hashes and all original/fix commit scopes/hashes. Sole approved3-path product5c417265da9d11378976992c1d6ba30dfbf354fc has immediate journal/candidate7e9c2c7669b84261cb8d522d9d6ba279c461e52a; final0d5b3cb4e8bfab26feaf1bb6657053a7994adfce is journal-only. Actual APFS case regression executed red/green (not skipped),81 fresh literals/help tests and built bad/valid controls passed. All nine gates and direct freshness exited0 with disclosed cache truth; exact report analysis/p08/fix-r3/implementation-report.md. All five records are closed, prior closures/versions/history and recovery0/10,pendingnull conserved. R3 event fixes_completed; one focused independent delta confirmation is next under operator cap approval. No fourth full-range/platform campaign; p08 remains in_progress,11/13 accepted; p09 has no Base.
 
 ---
+
+### Review Received: p08 focused corrective confirmation
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T183119Z.md.
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0.
+
+**Outcome:** passed; R3 L1 is independently closed. Reviewer verified the sole approved three-path delta, canonical source-root rejection, overlap deduplication and exclusions with 12 categorical built-CLI probes and 81 fresh isolated-HOME tests (zero skipped). Retained pre-fix failure was inspected. Full R3 coverage, 22-path identity, nine gates and earlier runtime/manual limits are inherited; no fourth full-range or platform campaign. Exactly one not-attempted reconnaissance signal consumed, with no orchestration section or log. All five execution records and dispositions are settled; no external gate selected for p08. Root accepts p08, 12/13 phase-units accepted, pointers advance to provisional p09 without a Base. Intermediate p08 delivery precedes p09 execution.
 
 ## Phase p09: Docs, release and closeout
 
@@ -2106,6 +2247,26 @@ Root read the complete artifact and checked full head/range provenance, exactly 
 ---
 
 ## Orchestration Runs
+
+- run/v1 · request=docs367-p08-delta-review-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-fix-r3-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r3-from-docs367-p08-impl-20261024 · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-cap-complexity-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-review-r3-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-fix-r2-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r2-from-docs367-p08-impl-20261024 · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-review-r2-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-fix-r1-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r1-from-docs367-p08-impl-20261024 · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-review-r1-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-impl-20261024 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=docs367-p08-readiness-20261024 · scope=p08-readiness · action=analysis · role=bounded-readiness-recon · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p07-windows-review-20261024 · scope=p07 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -2276,6 +2437,16 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+### P08 intermediate delivery and self-review
+
+PR https://github.com/voxmedia/open-agent-toolkit/pull/376 opened as draft on2026-10-24 against main2eb0b635aa67069273fc6c76896beafc94658ebf at1bb418491a71b0a6828cd129cbcefc62d9f96430. T3 link registered. Frozen p08 Base/Head retained; following changes are tracking-only. Requirements are the approved brief Outcome10/P24. All five records accepted,12/13 phase-units complete; p09 remains provisional without Base until delivery.
+
+PR self-review: independent R3 and focused t05 confirmation cover correctness, deliberate-testing and human documentation; the cap complexity assessment explicitly retained the helper/assessments and specified the exact minimal canonical-root correction. Independent delta confirmation verified that correction adds no dependency, abstraction or extra machinery and its regression has fixed oracles. Those lenses are covered by the conserved union; no duplicate campaign. Operator-approved cap correction is complete, with no new deviation or residual finding. Existing p06 Low deferrals remain tracked. Source roots may include docs and self-match; exclusions remain case-sensitive. Manual walkthrough and inherited runtime/install/platform proof are disclosed; no fresh native Windows/Linux or autonomous-agent claim. Instruction files updated: packages/cli/AGENTS.md and apps/oat-docs/AGENTS.md. Human review should start with literal helper input identity/containment and relevance limits. No pending operator decision; draft may become ready.
+
+Delivery mode=land, plain merge with --match-head-commit, standing intermediate authority. Require current-head CI/release-dry-run and explicit Bugbot completion or supported quota exception, paginated feedback inspection and no live actionable objection. No admin/auto merge, force push, branch/worktree deletion, publication or final project PR. P09 follows authorized delivery.
+
+- 2026-10-24 · p08 · review-receive three-cycle cap · complexity verdict Partially compliant · operator chose corrective revision ("Approve"): one canonical-source-root fix, one public-CLI regression and documentation sentence, nine gates plus one focused independent delta confirmation; no fourth full-range/platform campaign. Report: reviews/archived/complexity-p08-2026-10-24T181242Z.md.
 
 ### Remote Review Received: PR #375 Windows scaffold regression
 

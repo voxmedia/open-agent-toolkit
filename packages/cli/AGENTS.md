@@ -44,6 +44,16 @@ Maintain consistent, safe CLI behavior across commands and modules.
 - Preserve exact G5 JSON and stable rule IDs in `src/config/documentation-check.ts`; config normalization and real config commands must retain checker policy.
 - Mermaid syntax checks lazily initialize the pinned real Node DOM with strict sanitization. Do not render, enable scripts/resources, or bypass the sanitizer.
 
+## Triad literal evidence
+
+`docs literals` reuses checker target isolation and inline-code AST parsing but
+has a separate occurrence result, never a G5 rule. Only a matching triad mirror
+enables reads of selected pages/sources; authored acceptance stays in analyze.
+Keep explicit content-relative reader pages, narrow repo-relative source roots,
+real containment, no nested symlink traversal, bounded repo-relative exclusions,
+and searched/skipped evidence. Matches are once-decoded physical-line substrings,
+not runtime or registry verification. Preserve the guidance-only analyze command.
+
 ## Completion checks
 
 - Tests updated for changed behavior.

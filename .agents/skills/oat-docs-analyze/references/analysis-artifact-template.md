@@ -247,6 +247,29 @@ runtime-only behavior here.
 
 {Or: "No repo-checkable substantive claims required accuracy verification."}
 
+### Conditional triad source assessments (P24)
+
+- Gate: {accepted authored IA + local section citations and mirror agreement;
+  non-triad: not applicable; missing/conflict: unverified / ask_user}
+- Role/subset mapping: {Product, QA, Engineering feature roots and citations;
+  hybrid domain exclusions; flat applicability; never folder names/array order}
+- Literal helper: {exact invocation; scope, searched files and skipped reasons;
+  occurrence candidates only, not a runtime verdict}
+
+| Assessment                 | Docs / canonical evidence                                      | Candidate and judgment                                                                  |
+| -------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Slug parity                | {mapped feature keys and missing/extra peers}                  | {verdict or unverified / not applicable}                                                |
+| Paired documentation       | {peer links + resolved target anchors; QA Scope accepted}      | {correct peers, not just any resolving link}                                            |
+| Quoted literals / concepts | {helper path:line + canonical source / conceptual explanation} | {found requires relevance judgment; not-found initially unverified}                     |
+| Test-ID registry           | {actual registry path:line + exact member}                     | {membership; absent registry unverified / ask_user}                                     |
+| Scoped scenarios           | {both rows + feature/seed/platform/config scope}               | {duplicate ID / same Given+When with differing Then candidate; explained or unresolved} |
+| Raw authored Contents      | {map entry + template purpose / nonReaderPaths}                | {flag reader links to templates even when nav excludes them}                            |
+
+Keep one strict HTML entity decode per side and physical-source-line matching
+limits visible. No JS/i18n evaluation, runtime claim, invented mapping/registry,
+or automatic contradiction from absence. Recommendations retain existing
+approval classes and docs/source citations.
+
 ## Coverage Review by Surface
 
 Summarize which documentable surfaces were proven by repo evidence and how well
