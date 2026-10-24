@@ -2264,6 +2264,17 @@ Pre-task HEAD: `e4742b717e34b83bce01af7c88bcf1a84c2badc4`. Authorized launch-onl
 
 Outcome: nine exact product files committed, hooks enabled and clean afterward. File-scoped oxfmt/Markdown lint/diff checks, bundle generation, 1,087 fresh isolated-HOME sentence contracts (26 files), 1 fresh analyze drift test and 2 fresh stale-path tests all exit 0. Logs and conservation/source-pair notes: `analysis/p09/implementation/t01-*` and `stale-path.log`. No tests changed. Five public manifests are 0.3.31; the owning bundle command generated its four shipped version entries (control-plane is not in that asset's schema). Analyze alone bumps to 1.7.5. Existing `Bash(oat docs nav sync --check:*)` remains exact; added command -v/sed/npm root -g/test/oat --version grants correspond to the existing offline procedure at analyze lines 622–640. Earlier E12 handoff/scaffold corrections and p01-t04 seeded stale-path negative control are inherited; the two human-page changes conserve headings, links, IA Proposal availability and approved limits. Phase gates follow p09-t02. Recovery 0/10, pending null.
 
+### Task p09-t02: Transfer consumer acceptance and record OAT closure evidence
+
+**Status:** in_progress
+**Executor:** phase-implementer:docs367-p09-impl-20261024
+**Handle:** docs367-p09-impl-20261024
+
+Intent: use the backlog CLI to create the one approved consumer-rollout successor, preserve and reciprocally link all outstanding external criteria, archive the three named source items only after their closure conditions hold, and add the concise P1–P28 delivery checklist. No external access or consumer/publication claim.
+Files: authored successor, three named source records (old and archived paths), `references/issue-367-delivery-checklist.md`; complete literal archive `affectedPaths` union plus only existing owned kickoff-handoff deletions; narrow current-state/roadmap/curated-index corrections where closure makes existing active claims false. All auto-rewritten references retain content/history.
+Proof: PJM declared-adoption preflight; bounded local duplicate search; verbatim readiness eight-checkbox transfer and original source criteria/history conservation; reciprocal links inspected after archive; complete JSON affectedPaths retained; owning index regeneration and fresh doctor comparison; P1–P28 mapped to locally verified merged PRs with approved qualifications; scoped formatter/diff checks. All nine ordered gates and root lint/format follow. Existing seeded path proof inherited, no new tests or proof campaign.
+Pre-task HEAD: `341d96a718fd74b4e13a8a85151e91540551f0f1` (immediate p09-t01 journal). Clean transition; product 0d5b09247e885251a0a4f60fa2f33cf0bf8875b2 carries only the nine declared files. Existing PJM warning lists unrelated completed-but-unarchived items; preserve them. Recovery 0/10, pending null.
+
 ## Orchestration Runs
 
 - run/v1 · request=docs367-p09-impl-20261024 · scope=p09 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
