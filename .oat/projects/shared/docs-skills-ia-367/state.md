@@ -225,6 +225,10 @@ oat_post_implement_sequence:
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-10-24T22:13:02.420Z'
 ---
 
 # Project State: docs-skills-ia-367
