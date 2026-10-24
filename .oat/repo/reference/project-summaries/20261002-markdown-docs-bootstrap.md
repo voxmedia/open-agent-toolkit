@@ -64,7 +64,7 @@ Main #338 was merged at `5a38d447c0843e6abc47468808924693fbf7930d`. Nineteen con
 
 ## Follow-up Items
 
-- [BL-260911-make-docs-bootstrap-a-front](../../../repo/pjm/backlog/items/BL-260911-make-docs-bootstrap-a-front.md) remains **open** for its broader approval classes, package/version drift, and other-repository acceptance. This project supplies only the Markdown portion and has no unresolved Medium/Low review debt.
+- [BL-260911-make-docs-bootstrap-a-front](../../pjm/backlog/archived/BL-260911-make-docs-bootstrap-a-front.md) remains **open** for its broader approval classes, package/version drift, and other-repository acceptance. This project supplies only the Markdown portion and has no unresolved Medium/Low review debt.
 - Configured closeout steps are complete and [PR #335](https://github.com/voxmedia/open-agent-toolkit/pull/335) is open; final p04 approval is recorded and the lifecycle is ready for configured archival. Release assets are validated; no publication, normal user-scope installation, GitHub PR merge, or deployment is claimed.
 
 ## Retrospective Follow-ups

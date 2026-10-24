@@ -149,10 +149,11 @@ copying their content here. -->
   passed. Both Low artifact-alignment findings are addressed. Existing closeout
   steps and final approval are complete; lifecycle is complete and the project is archived. See the
   [project record](../reference/project-summaries/20261002-markdown-docs-bootstrap.md).
-  **BL-260911-make-docs-bootstrap-a-front: Make docs bootstrap a front door
-  for existing docs and support the docs-directory convention** remains open
-  for package drift, approval classes, pntr automation and external-repository
-  acceptance.
+  Update 2026-10-24: [BL-260911-make-docs-bootstrap-a-front — Make docs bootstrap a front door for existing docs and support the docs-directory convention](backlog/archived/BL-260911-make-docs-bootstrap-a-front.md)
+  is transfer-qualified closed after OAT capability delivery in #367's merged
+  phase PRs. All unperformed external acceptance remains open in
+  [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](backlog/items/BL-261024-roll-out-the-shipped-oat-docs.md).
+  No consumer acceptance or publication is claimed.
 
 - CLI `0.3.11` (`backlog-wave-3`, branch `wave/2026-09-30-backlog-wave-3`)
   closes thirteen backlog items. Project scaffold, promote, PJM, backlog, and

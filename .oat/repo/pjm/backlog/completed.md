@@ -8,6 +8,9 @@
 
 ## Completed Items
 
+- 2026-10-24 — BL-260911-make-docs-bootstrap-a-front — Make docs bootstrap a front door for existing docs and support the docs-directory convention — OAT-side front door, Markdown, approval and offline drift capability delivered in PRs #369/#371 and prior Markdown work; all outstanding external AC2/5/6 criteria transferred with reciprocal links to the open consumer-rollout successor linked in the archived source; consumer acceptance remains open.
+- 2026-10-24 — BL-261002-correct-docs-bootstrap-docs — Correct docs-bootstrap, docs-apply, and docs-analyze skill contracts — E12 scaffold statements and artifact-plus-approved-IDs handoff shipped in PRs #368/#371; p09-t01 closes residual E13 shim grants while preserving nav-check authority and bumps analyze to 1.7.5.
+- 2026-10-24 — BL-261002-catch-hardcoded-docs-paths — Catch hardcoded docs paths in skill tests when docs pages move — Dedicated literal skill-test docs-path regression shipped in PR #368/p01-t04 with inherited real seeded failure/repaired success; existing suite freshly passes in p09.
 - 2026-10-12 — BL-261012-raise-the-timeout — Raise the timeout of the review-ledger path guard contract test — Gave the multi-process review-ledger guard test its own 120s timeout (cb61b448d) after three CI timeouts under load.
 - 2026-10-11 — BL-261011-resolve-validate-plan-project — Resolve validate-plan --project-path against --cwd — Fixed on feat/brief-workflow-mode-v1 (PR #361): validate-plan resolves a relative --project-path against context.cwd with a --cwd regression test
 - 2026-10-11 — BL-261011-fix-the-phase-commit-grep — Fix the phase commit-grep regex in review-provide and pr-progress — Fixed on feat/brief-workflow-mode-v1 (PR #361): review-provide and pr-progress use --fixed-strings --grep with --max-count instead of a BRE group and HEAD~N range; scripted control recorded in the commit

@@ -2,7 +2,7 @@
 id: BL-260911-make-docs-bootstrap-a-front
 title: Make docs bootstrap a front door for existing docs and support the
   docs-directory convention
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - analyze
 assignee: null
 created: 2026-09-11T01:18:44.450Z
-updated: 2026-10-01T16:57:13.757Z
+updated: '2026-10-24T19:01:58Z'
 associated_issues: []
 external_plans: []
 ---
@@ -42,3 +42,34 @@ Related: BL-260911-support-per-tool-scope (per-tool scope migration, lower prior
 The [markdown-docs-bootstrap project](../../../../projects/shared/markdown-docs-bootstrap/implementation.md) implements the plain Markdown mode/config, additive bootstrap/adoption, authored-index protection, and corresponding docs consumers. Integrated command/file acceptance and release-valid bundles are recorded there. All fourteen tasks and current independent final review passed, including the remote feedback and optional-directory preservation fixes. Configured closeout outputs are complete; the retained exit gate passed with all dispositions settled. Final HiLL approval remains pending. Five public packages are prepared at `0.3.11`; no publication, GitHub PR merge or external-repository acceptance is claimed.
 
 This is a partial slice. This item remains **open**: package drift, explicit-approval policy, pntr automation changes and acceptance in the named external repositories remain outside that project and are not claimed complete.
+
+## OAT delivery and external-criteria transfer — 2026-10-24
+
+This dated note supersedes the open-work statement in the historical Partial
+Markdown Slice above without changing its original text, criteria, observations,
+metadata or previous project pointer. The shipped OAT capability slice is complete:
+AC1/3/4/7/8 and the OAT portions of AC2/5/6 are supported by
+[issue #367](https://github.com/voxmedia/open-agent-toolkit/issues/367), the
+[docs-skills-ia-367 brief](../../../../projects/shared/docs-skills-ia-367/plan.md),
+[accepted phase records](../../../../projects/shared/docs-skills-ia-367/implementation.md)
+and [delivery checklist](../../../../projects/shared/docs-skills-ia-367/references/issue-367-delivery-checklist.md).
+[PR #369](https://github.com/voxmedia/open-agent-toolkit/pull/369) delivers the
+existing-docs front door/guidance; [PR #371](https://github.com/voxmedia/open-agent-toolkit/pull/371)
+delivers IA recording, approval-class handoff and offline package drift. Prior
+Markdown delivery remains recorded above. P09-t01 closes the E13 residual with
+five narrow read-only shim grants and analyze 1.7.5.
+
+Every outstanding external portion of AC2, AC5 and AC6 is durably transferred to
+[BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](../items/BL-261024-roll-out-the-shipped-oat-docs.md)
+(path `.oat/repo/pjm/backlog/items/BL-261024-roll-out-the-shipped-oat-docs.md`). Its eight unchecked criteria retain
+named Markdown adoption/config/content acceptance, pntr's explicit-approval
+exclusion and docs/.oat path gate, real default/explicit automation controls,
+offline framework drift and individually approved supported-upgrade evidence,
+and actual consumer delivery records. Framework consumer selection is left to
+the future rollout owner. Source paths are historical observations only.
+
+Closure is transfer-qualified: OAT capability delivered, external work preserved
+and still open in the successor, not consumer acceptance. No external repository
+read/change/run, framework target selection, package publication or consumer
+commit/PR is claimed. The source's historical migration wording is bounded by
+the shipped admonition/frontmatter helper; unsupported scaffold work stays manual.

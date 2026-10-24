@@ -4,6 +4,14 @@
 
 ## Curated Overview
 
+- 2026-10-24: #367's merged phase PRs deliver the OAT docs front door,
+  approval classes and offline drift. [BL-260911-make-docs-bootstrap-a-front — Make docs bootstrap a front door for existing docs and support the docs-directory convention](archived/BL-260911-make-docs-bootstrap-a-front.md)
+  is transfer-qualified closed, superseding the 2026-10-01 open-work note below.
+  All external AC2/5/6 obligations remain open in
+  [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](items/BL-261024-roll-out-the-shipped-oat-docs.md).
+  The two docs-contract/stale-path items are archived with E12/E13 and inherited
+  seeded-regression evidence; no consumer acceptance or publication is claimed.
+
 - 2026-10-12: the `artifact-cleanup` project (lockstep 0.3.22) shipped the
   readable-artifact contracts and filed six follow-ups:
   `BL-261012-read-only-journal-lint`, `BL-261012-convert-legacy-journals`,
@@ -445,7 +453,7 @@
 | BL-261002-gitignore-project-review       | Gitignore project review artifacts instead of committing them                                            | open   | high     | task       | M        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                             | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                             | open   | high     | feature    | L        |
-| BL-260911-make-docs-bootstrap-a-front    | Make docs bootstrap a front door for existing docs and support the docs-directory convention             | open   | high     | feature    | M        |
+| BL-261024-roll-out-the-shipped-oat-docs  | Roll out the shipped OAT docs front door and approval policy to consumer repositories                    | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                              | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                            | open   | high     | feature    | L        |
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                             | open   | high     | feature    | M        |
@@ -455,13 +463,11 @@
 | BL-261002-align-implement-complete       | Align implement, complete, and pr-final skill contracts with their actual behavior                       | open   | medium   | task       | S        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                           | open   | medium   | feature    | M        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                              | open   | medium   | task       | M        |
-| BL-261002-catch-hardcoded-docs-paths     | Catch hardcoded docs paths in skill tests when docs pages move                                           | open   | medium   | task       | S        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                   | open   | medium   | feature    | M        |
 | BL-261013-classify-review-findings       | Classify review findings against the contract at every receive                                           | open   | medium   | task       | M        |
 | BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                                 | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                            | open   | medium   | initiative | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                      | open   | medium   | task       | S        |
-| BL-261002-correct-docs-bootstrap-docs    | Correct docs-bootstrap, docs-apply, and docs-analyze skill contracts                                     | open   | medium   | task       | S        |
 | BL-261002-decide-a-supported-permission  | Decide a supported permission setup for unattended cross-runtime review                                  | open   | medium   | idea       | M        |
 | BL-261002-decide-first-run-defaults      | Decide first-run defaults for project scope without origin and non-interactive pack install              | open   | medium   | idea       | M        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                                  | open   | medium   | idea       | L        |
