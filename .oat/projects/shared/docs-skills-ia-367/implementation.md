@@ -2287,7 +2287,7 @@ All three archive commands exit 0 without warnings. Complete affectedPaths recei
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-closeout-summary-20261024 · scope=closeout-summary · action=summary · role=project-summary-worker · target=implementation · model=gpt-6.1-sol · effort=high · stamp=~ · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-closeout-summary-20261024 · scope=closeout-summary · action=summary · role=project-summary-worker · target=implementation · model=gpt-6.1-sol · effort=high · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=docs367-final-exit-wait-20261024 · scope=final-exit-wait · action=analysis · role=bounded-gate-result-waiter · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - run/v1 · request=docs367-final-review-r1-20261024 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
@@ -2484,6 +2484,8 @@ run/v1 · request=docs367-p03-review-r3-20261022 · scope=p03 · action=review �
 run/v1 · request=docs367-prev4-impl-20261023 · scope=p-rev4 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p-rev4 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p04-external-prev4 · observed=~ · match=~
 
 ## Reviews and Gates
+
+- Closeout summary completed2026-10-24 at e005cc67372d9ec6d2e57ba2b02f26df5b85bba3:126-line summary, exact eight owned paths verified, phase/learnings fingerprints current; four observations rolled up, ledger deduplicated; six decision records created, one exact-slug duplicate skipped. Written-only recap preference preserved; no product edits.
 
 ### Review Received: final — 2026-10-24T220442Z
 
