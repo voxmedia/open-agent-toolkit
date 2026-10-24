@@ -2062,14 +2062,20 @@ Fresh reviewer evidence: 1,325 tests in37 files, authoring2/2, twelve CLI rows a
 
 ### Task p07-t05: (remote review) Preserve native preset scaffold destinations
 
-**Status:** in_progress
+**Status:** completed
 **Executor:** phase-implementer:docs367-p07-impl-20261024
 **Handle:** docs367-p07-pr375-windows-20261024 (same original implementer continuation)
+**Pre-task HEAD:** 5a76dd234c03067dfc87fe785fc72237bb5b3c83
 **Source review:** reviews/archived/remote-pr-375-review-2026-10-24T161341Z.md (H1; Warp discussion4367677917)
 
 Intent: Compare native destinations consistently in preset page removal and toolchain link rewriting, preserving default output.
 Files: `packages/cli/src/commands/docs/init/scaffold.ts` and the smallest relevant existing or focused regression test file within docs/init.
 Proof: regression fails before correction and passes after for both separator-sensitive behaviors; actual native default/preset scaffold controls, relevant fresh suites and nine ordered gates. Windows simulation must be labeled; no test-only production API or new dependency.
+
+**Commit:** c75296c20c790b5d59205a312eadc784eef4c90c
+**Outcome:** H1 corrected with native join comparisons for preset default-page removal and toolchain-link rewriting. Real bundled scaffold output is covered in both frameworks, in host and explicitly simulated win32-relative modes, with default/preset controls; no production-only test API or dependency added.
+**Verification:** Final pre-fix regression exits1 (two simulated Windows presets fail both behaviors, six controls pass); fixed regression8/8 and fresh isolated-HOME init150/10 files pass. Scoped formatting, CLI lint/types and build exit0; nine phase gates are recorded in the final handoff. No native Windows execution claim. Recovery0/10,pendingnull.
+**Evidence:** analysis/p07/pr375-windows/README.md
 
 ---
 
