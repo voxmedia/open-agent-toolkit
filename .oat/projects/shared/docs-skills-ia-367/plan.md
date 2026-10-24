@@ -600,7 +600,7 @@ Historical artifact availability (2026-10-24 closeout): the first three plan eve
 
 **Total: 13/13 phases accepted**
 
-All execution records are closed. Final integrated review, the configured exit gate and the stored summary/document/PR sequence are complete. PR #377 is open; lifecycle completion is recorded, with configured archive and exact-head PR landing remaining.
+All execution records are closed. Final integrated review, the configured exit gate and the stored summary/document/PR sequence are complete. PR #377 is open; lifecycle completion is recorded, configured archive is selected and exact-head PR landing remains.
 
 ---
 
