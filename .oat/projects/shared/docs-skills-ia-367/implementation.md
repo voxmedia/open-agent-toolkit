@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p08-t01
+oat_current_task_id: p08
 oat_generated: false
 oat_template: false
 ---
@@ -2120,6 +2120,12 @@ Execution shape: one phase implementer owns the sequential helper/analyze/docs i
 **Proof command:** Real CLI bad/valid controls, fresh isolated-HOME docs/help/skill-sentence/validation suites, manual six-check walkthrough, ordered DoD gates, root lint/format and built help all passed.
 **Analysis:** analysis/p08/verification/ (exact commands/exits, cache truth, manual walkthrough and product manifest).
 
+### P08 pre-review verification
+
+Root verified the complete report, exact22-path product manifest digest and every committed/current hash. Product9178a800bff8f1c6fff85fc4baa537e0d280c59d is followed immediately by task journalc73207979ac57f0d2b3a6a5a172d3ed9c4aaee19; final571dbf0194d753e1536de7d9c62aae33f44bbb2b changes only the phase Head record. One execution record is complete and the phase remains in_progress pending independent review. No recovery attempt; usage0/10,pendingnull is unchanged.
+
+All nine ordered exits are0 in analysis/p08/verification/gate-exits.txt. Turbo replay counts are disclosed in the implementation report; fresh1564 scoped isolated-HOME tests and78 committed CLI/help tests passed. Root lint/format, direct manifest freshness and manual six-assessment walkthrough passed. This is public synthetic/manual evidence, with no autonomous-agent, fresh Node22 or native Windows claim. Scope keeps all six assessments in analyze judgment; helper occurrences do not establish runtime truth. P09 remains provisional with no Base.
+
 ---
 
 ## Phase p09: Docs, release and closeout
@@ -2130,7 +2136,7 @@ Execution shape: one phase implementer owns the sequential helper/analyze/docs i
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p08-impl-20261024 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p08-impl-20261024 · scope=p08 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p08-readiness-20261024 · scope=p08-readiness · action=analysis · role=bounded-readiness-recon · target=research · model=gpt-6.1-sol · effort=medium · stamp=~ · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
