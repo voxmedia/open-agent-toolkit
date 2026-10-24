@@ -232,6 +232,15 @@ docs367-p07-pr375-selfreview-20261024: PR375 four review lenses covered; indepen
 
 docs367-p07-windows-accepted-20261024: p07 accepted after clean focused confirmation; three standard reviews, no residual findings; proof analysis/p07/pr375-windows/README.md.
 
+### 2026-10-24 · project · worked-well · p08-prototype
+
+**Category:** decision
+**Source:** docs367-p08-local-design-20261024
+**Origin:** oat-project-implement
+**Recorded:** 2026-10-24T16:50:16Z
+
+docs367-p08-local-design-20261024: Public synthetic prototype supports a narrow line-local entity-normalized occurrence helper while all six P24 assessments remain analyze judgment. QA Scope peer links count as pairing; absent registry/mapping stays unverified. Phase-local contract in plan.md; prototype evidence analysis/p08/readiness/report.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
