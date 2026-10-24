@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Current Phase
 
-P08 R3 closed all prior findings and reports one Low source-root case-spelling gap. Cycle3/3 reached; complexity assessment and operator disposition are required before another fix/review or delivery. All four execution records remain closed, phase in_progress,11/13 accepted. Recovery0/10,pendingnull; p09 has no Base.
+P08 R3 closed all prior findings and reports one Low source-root case-spelling gap. Cycle3/3 reached; complexity assessment recommends one bounded corrective fix and focused confirmation. Operator cap disposition is pending before another fix/review or delivery. All four execution records remain closed, phase in_progress,11/13 accepted. Recovery0/10,pendingnull; p09 has no Base.
 
 ## Artifacts
 

@@ -241,6 +241,10 @@ docs367-p07-windows-accepted-20261024: p07 accepted after clean focused confirma
 
 docs367-p08-local-design-20261024: Public synthetic prototype supports a narrow line-local entity-normalized occurrence helper while all six P24 assessments remain analyze judgment. QA Scope peer links count as pairing; absent registry/mapping stays unverified. Phase-local contract in plan.md; prototype evidence analysis/p08/readiness/report.md.
 
+### 2026-10-24 · structural · oat-project-implement · p08-review-cap
+
+docs367-p08-cap-decision-pending-20261024: p08 standard review cycle3/3 leaves one Low source-root identity gap; complexity assessment recommends one bounded fix and focused confirmation, with operator disposition pending before further execution; report reviews/archived/complexity-p08-2026-10-24T181242Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
