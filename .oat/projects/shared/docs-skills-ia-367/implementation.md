@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
@@ -2723,7 +2723,7 @@ Document any intentional deviations from the brief. Include accepted review find
 
 - All nine ordered gates passed at p09 candidate; lint/format and fresh 1,087 sentence/validation contracts passed. Gate3 freshly executed CLI9,068, supporting369, docs93, smoke165, skills713 and scripts1, zero skips.
 - Turbo executed/cached: check11/0, types6/5, test7/5, build0/5, docs0/6; direct manifest generation/freshness passed despite cached docs gate. Earlier real negative controls, independent phase reviews, packed/runtime and manual proofs remain labeled inherited in phase receipts.
-- Root verified p09's exact 22-path manifest and conservation/transfer. No new consumer, publication, autonomous-agent, platform or install claim. Final integrated review passed with explicit final deferral approval; configured exit gate is pending.
+- Root verified p09's exact 22-path manifest and conservation/transfer. No new consumer, publication, autonomous-agent, platform or install claim. Final integrated review passed with explicit final deferral approval; configured exit gate passed and was received; summary, documentation and final PR sequence are complete.
 
 **Outcomes audit:**
 
@@ -2737,7 +2737,7 @@ Document any intentional deviations from the brief. Include accepted review find
 - Outcome 8: accepted p06 and corrective revisions; portable checker/config/rules, real negative controls and CI recipe. PR374; flagship0 errors/756 visible warnings. Approved limits: optional absent navigation skipped/implicit order deferred; installed local pnpm bins supported, system-PATH-only and pre-install shorthand deferred. Diagnostic/readability Lows retained below.
 - Outcome 9: accepted p07; all six presets, 14/15 boundary, template byte identity, reader exclusions and empty-target refusal verified. PR375; native joins confirmed with simulated Windows paths, not native Windows.
 - Outcome 10: accepted p08; six analyze judgments and bounded quoted-literal helper; prototype in references/p08-source-verification-prototype.md. PR376; source/page canonical identity corrections independently confirmed. Public synthetic/manual evidence only, no G5 runtime verdict.
-- Outcome 11: accepted p09 two human pages, analyze1.7.5 and five lockstep0.3.31 packages; every phase PR versioned. Three source items archived with conserved criteria and reciprocal successor links. P1–P28 issue response: https://github.com/voxmedia/open-agent-toolkit/issues/367#issuecomment-6388402460. Final lifecycle delivery remains pending; no publication or consumer acceptance claimed.
+- Outcome 11: accepted p09 two human pages, analyze1.7.5 and five lockstep0.3.31 packages; every phase PR versioned. Three source items archived with conserved criteria and reciprocal successor links. P1–P28 issue response: https://github.com/voxmedia/open-agent-toolkit/issues/367#issuecomment-6388402460. Final PR #377 is open; lifecycle archive and exact-head landing remain pending; no publication or consumer acceptance claimed.
 
 **Brief deltas (if any):**
 
