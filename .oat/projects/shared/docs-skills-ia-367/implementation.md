@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-24
-oat_current_task_id: p08
+oat_current_task_id: p09
 oat_generated: false
 oat_template: false
 ---
@@ -39,23 +39,23 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase  | Status      | Units | Accepted |
-| ------ | ----------- | ----- | -------- |
-| p01    | completed   | 1     | 1/1      |
-| p-rev1 | completed   | 1     | 1/1      |
-| p02    | completed   | 1     | 1/1      |
-| p03    | completed   | 1     | 1/1      |
-| p-rev2 | completed   | 1     | 1/1      |
-| p-rev3 | completed   | 1     | 1/1      |
-| p04    | completed   | 1     | 1/1      |
-| p-rev4 | completed   | 1     | 1/1      |
-| p05    | completed   | 1     | 1/1      |
-| p06    | completed   | 1     | 1/1      |
-| p07    | completed   | 1     | 1/1      |
-| p08    | in_progress | 1     | 0/1      |
-| p09    | pending     | 1     | 0/1      |
+| Phase  | Status    | Units | Accepted |
+| ------ | --------- | ----- | -------- |
+| p01    | completed | 1     | 1/1      |
+| p-rev1 | completed | 1     | 1/1      |
+| p02    | completed | 1     | 1/1      |
+| p03    | completed | 1     | 1/1      |
+| p-rev2 | completed | 1     | 1/1      |
+| p-rev3 | completed | 1     | 1/1      |
+| p04    | completed | 1     | 1/1      |
+| p-rev4 | completed | 1     | 1/1      |
+| p05    | completed | 1     | 1/1      |
+| p06    | completed | 1     | 1/1      |
+| p07    | completed | 1     | 1/1      |
+| p08    | completed | 1     | 1/1      |
+| p09    | pending   | 1     | 0/1      |
 
-**Total:** 11/13 phases accepted
+**Total:** 12/13 phases accepted
 
 ---
 
@@ -2101,11 +2101,11 @@ P07 remains accepted11/13 units; recovery0/10,pendingnull. Continue p08 readines
 
 ## Phase p08: Product and QA checks against source
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 65baa0145acea94872fadcf4a44edb00609b0ed5
 **Head:** 7e9c2c7669b84261cb8d522d9d6ba279c461e52a
 **Executor:** phase-implementer:docs367-p08-impl-20261024
-**Verification:** Operator-approved sole t05 corrective delta passes actual case-insensitive-host red/green (not skipped), fresh isolated-HOME literals/help tests and built CLI canonical-root bad/valid overlap/exclusion controls. All nine ordered DoD gates pass, including direct manifest freshness; exact exits/cache truth, conserved scope and full22-path hashes are under analysis/p08/fix-r3/. Earlier closures and broader/manual/runtime proof remain inherited; original history/versions and recovery0/10,pendingnull retained. Phase remains in_progress; root owns focused independent delta confirmation and acceptance.
+**Verification:** Operator-approved sole t05 corrective delta passes actual case-insensitive-host red/green (not skipped), fresh isolated-HOME literals/help tests and built CLI canonical-root bad/valid overlap/exclusion controls. All nine ordered DoD gates pass, including direct manifest freshness; exact exits/cache truth, conserved scope and full22-path hashes are under analysis/p08/fix-r3/. Earlier closures and broader/manual/runtime proof remain inherited; original history/versions and recovery0/10,pendingnull retained. Focused independent confirmation passed with zero findings; root accepts p08 with all five records closed. Earlier full-range coverage and stated platform/manual limits remain inherited.
 
 Execution shape: one phase implementer owns the sequential helper/analyze/docs integration in the existing p08 branch/worktree. Shared command registration, skill sentences and bundled builds preclude independent parallel lanes. No optional children. Recovery default10, p08 usage0/10,pendingnull. Root owns plan/state/log, independent review and delivery. Prototype-based local design is committed; no Outcome/Constraint/Decision/authority change.
 
@@ -2232,6 +2232,14 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 ---
 
+### Review Received: p08 focused corrective confirmation
+
+**Date:** 2026-10-24. **Review artifact (local-only):** reviews/archived/p08-review-2026-10-24T183119Z.md.
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0.
+
+**Outcome:** passed; R3 L1 is independently closed. Reviewer verified the sole approved three-path delta, canonical source-root rejection, overlap deduplication and exclusions with 12 categorical built-CLI probes and 81 fresh isolated-HOME tests (zero skipped). Retained pre-fix failure was inspected. Full R3 coverage, 22-path identity, nine gates and earlier runtime/manual limits are inherited; no fourth full-range or platform campaign. Exactly one not-attempted reconnaissance signal consumed, with no orchestration section or log. All five execution records and dispositions are settled; no external gate selected for p08. Root accepts p08, 12/13 phase-units accepted, pointers advance to provisional p09 without a Base. Intermediate p08 delivery precedes p09 execution.
+
 ## Phase p09: Docs, release and closeout
 
 **Status:** pending
@@ -2240,7 +2248,7 @@ Root verified manifestc7686c5041ef2e8e83f8aa27acee26e3d06a8087185dba1e216ff37c46
 
 ## Orchestration Runs
 
-- run/v1 · request=docs367-p08-delta-review-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=running · terminal=no · class=live · continuation=~ · observed=~ · match=~
+- run/v1 · request=docs367-p08-delta-review-20261024 · scope=p08 · action=review · role=oat-reviewer · target=oat-reviewer-claude-claude-opus-5-5-high · model=claude-opus-5-5 · effort=high · stamp=Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5 effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-claude-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=docs367-p08-fix-r3-20261024 · scope=p08 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-6-1-sol-high · model=gpt-6.1-sol · effort=high · stamp=Dispatch: scope=p08 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-6.1-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-6-1-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=cont-docs367-p08-fix-r3-from-docs367-p08-impl-20261024 · observed=~ · match=~
 
