@@ -268,6 +268,27 @@ export async function compareFumadocsMembership(
         : {}),
     };
   };
+  /**
+   * The page fumadocs-core 16.10.2 `buildFolder` selects as a folder's index
+   * (its `indexPath`): an existing path-form pagesIndex page, else `index`
+   * when the generator's hasImplicitIndex rule gives the folder one.
+   */
+  const folderIndexSource = async (
+    dir: string,
+    meta:
+      | { pagesIndex?: string; metadata: Record<string, unknown> }
+      | undefined,
+  ): Promise<string | undefined> => {
+    if (meta?.pagesIndex !== undefined) {
+      const index = classify(dir, meta.pagesIndex);
+      if (index.kind !== 'path') return undefined;
+      const target = await resolveTarget(index.key);
+      return target.exists && !target.folder ? stripPage(index.key) : undefined;
+    }
+    if (!hasImplicitIndex(dir, meta?.metadata ?? null)) return undefined;
+    const key = posix.join(dir, 'index');
+    return (await resolveTarget(key)).exists ? key : undefined;
+  };
   const visit = async (dir: string): Promise<void> => {
     if (visited.has(dir)) return;
     visited.add(dir);
@@ -286,22 +307,17 @@ export async function compareFumadocsMembership(
     // attaches index. The docs root's own index never enters the sidebar
     // tree (the loader drops the root folder's index), so the root reaches
     // its landing page only through pages, a rest entry or a link.
+    // The page buildFolder selects as the folder index is reserved: rest
+    // entries and folder listings never repeat it, even at the docs root,
+    // where the loader then drops the index with the root folder node.
+    const indexSource = await folderIndexSource(dir, meta);
     if (meta?.pagesIndex !== undefined) {
-      if (dir === '.') {
-        // Dropped by the loader with the root folder node.
-      } else {
-        const index = classify(dir, meta.pagesIndex);
-        if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
-        else if (index.kind === 'path') {
-          const target = await resolveTarget(index.key);
-          if (target.exists && !excluded(index.key)) reachedIds.add(target.id);
-        }
-      }
-    } else if (hasImplicitIndex(dir, meta?.metadata ?? null)) {
-      const key = posix.join(dir, 'index');
-      const landing = await resolveTarget(key);
-      if (landing.exists && !excluded(key)) reachedIds.add(landing.id);
+      const index = classify(dir, meta.pagesIndex);
+      if (dir !== '.' && index.kind === 'link' && index.url)
+        reachedUrls.add(index.url);
     }
+    if (dir !== '.' && indexSource !== undefined && !excluded(indexSource))
+      reachedIds.add((await resolveTarget(indexSource)).id);
     const reachAll = async (): Promise<void> => {
       let entries;
       try {
@@ -318,7 +334,8 @@ export async function compareFumadocsMembership(
         } else if (
           entry.isFile() &&
           PAGE_EXTENSIONS.includes(extname(entry.name)) &&
-          !excluded(key)
+          !excluded(key) &&
+          stripPage(key) !== indexSource
         )
           reachedIds.add(`page:${stripPage(key)}`);
       }
@@ -369,6 +386,12 @@ export async function compareFumadocsMembership(
       }
     }
     const pagesLine = lineOf(actual.source, '"pages"');
+    // A rest entry never shows the folder's reserved index page.
+    const indexSource = await folderIndexSource(actual.dir, actual);
+    const reservedId =
+      indexSource === undefined
+        ? undefined
+        : (await resolveTarget(indexSource)).id;
     // A nested folder's landing page is implicit (never in generated pages),
     // so only an explicit exclusion can hide it.
     const landing = await resolveTarget(posix.join(actual.dir, 'index'));
@@ -381,7 +404,7 @@ export async function compareFumadocsMembership(
     for (const { name, target } of expected) {
       if (
         (listed.includes(target.id) && !excluded.has(target.id)) ||
-        (rest && !excluded.has(target.id)) ||
+        (rest && !excluded.has(target.id) && target.id !== reservedId) ||
         reachedIds.has(target.id) ||
         (!target.folder && reachedUrls.has(target.url))
       )

@@ -150,6 +150,24 @@ describe('hand-authored membership against the installed Fumadocs loader', () =>
       ['index.md'],
     ],
     ['root lists index', { 'meta.json': listedRoot }, []],
+    // pagesIndex reserves index.md for the root folder index, which the loader
+    // drops, so rest entries do not bring it back.
+    [
+      'root pagesIndex with rest',
+      { 'meta.json': { pagesIndex: 'index', pages: ['...'] } },
+      ['index.md'],
+    ],
+    [
+      'root pagesIndex with reverse rest',
+      { 'meta.json': { pagesIndex: 'index', pages: ['z...a'] } },
+      ['index.md'],
+    ],
+    ['root rest', { 'meta.json': { pages: ['...'] } }, []],
+    [
+      'root pagesIndex listing index with rest',
+      { 'meta.json': { pagesIndex: 'index', pages: ['index', '...'] } },
+      [],
+    ],
     [
       'root links home',
       { 'meta.json': { pages: ['[Home](/)', 'guide', 'section'] } },
