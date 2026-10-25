@@ -635,12 +635,9 @@ node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --cli "$(comm
 such as a pnpm global `oat`, the helper reads the shim as text without executing
 it: the `# cmd-shim-target=` comment first, then relative `exec` targets resolved
 from the shim's real directory. If the helper still reports that it cannot
-locate the running CLI bundle, discover the bundle from that invoked installation
-offline. Inspect `command -v oat` and, for a shell
-shim, read its `exec` lines or `cmd-shim-target` comment (for example,
-`sed -n '1,160p' "$(command -v oat)"`). Resolve a relative JavaScript target from
-the shim's directory; do not evaluate copied shell text. Locate that target's
-package root containing `package.json` named `@open-agent-toolkit/cli` and
+locate the running CLI bundle (a wrapper it cannot parse), locate the invoked
+installation offline without evaluating wrapper text: find its JavaScript entry
+and that entry's package root containing `package.json` named `@open-agent-toolkit/cli` and
 `assets/public-package-versions.json`. `pnpm root -g` or `npm root -g` can help
 locate it, but newer pnpm installations may nest it in a hashed directory; use
 the actual shim target, never another checkout's bundle. Bind the inspected paths:

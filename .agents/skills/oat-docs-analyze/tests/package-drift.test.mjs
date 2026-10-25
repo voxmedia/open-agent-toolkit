@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   chmod,
   mkdtemp,
@@ -10,7 +11,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 
 // Protect the actual offline skill-helper boundary: installed bytes can disagree
@@ -162,6 +163,7 @@ function pnpmShim(prefix, { targetComment }) {
     'done',
     'basedir=$(dirname "$(echo "$link" | sed -e \'s,\\\\,/,g\')")',
     'basedir_win="$basedir"',
+    ': > "$basedir/EXECUTED"',
     'exe=""',
     'if [ -n "$exe" ] && [ -x "$basedir/node.exe" ]; then',
     `  exec "$basedir/node.exe"  "$basedir_win/${rel}" "$@"`,
@@ -245,6 +247,8 @@ test('--cli follows a pnpm global shell shim to the installed CLI bundle without
         `targetComment=${targetComment}`,
       );
       assert.equal(result.packages[0].bundled, '0.3.31');
+      // The fixture shim leaves a marker if any line of it ever runs.
+      assert.equal(existsSync(join(dirname(shim), 'EXECUTED')), false);
     }
   } finally {
     await rm(root, { recursive: true, force: true });

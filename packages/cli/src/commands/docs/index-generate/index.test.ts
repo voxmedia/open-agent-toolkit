@@ -1472,6 +1472,9 @@ describe('createDocsGenerateIndexCommand', () => {
       // manifest transition is ineligible and config is untouched.
       const config = await repo.readConfig();
       expect(config.documentation?.index).toBe('apps/docs/index.md');
+      // Links resolve from the configured path the manifest is read through.
+      for (const [, target] of written.matchAll(/\]\(([^)]+)\)/g))
+        expect(existsSync(join(repo.appRoot, target!)), target).toBe(true);
     });
   });
 
