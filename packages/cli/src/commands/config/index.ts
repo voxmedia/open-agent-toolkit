@@ -150,6 +150,7 @@ type ConfigKey =
   | 'documentation.navOwner'
   | 'documentation.guidance'
   | 'documentation.config'
+  | 'documentation.index'
   | 'documentation.excludes'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
@@ -340,6 +341,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.root',
   'documentation.tooling',
   'documentation.config',
+  'documentation.index',
   'documentation.excludes',
   'documentation.requireForProjectCompletion',
   'explainers.defaults.style',
@@ -603,6 +605,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Repository-relative path to the primary documentation tool config file.',
   },
   {
+    key: 'documentation.index',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.index <value>',
+    description:
+      'Repository-relative docs index path. Markdown: the authored root index.md. Fumadocs: the generated app-root manifest; MkDocs: mkdocs.yml. oat docs init writes it and oat docs generate-index updates the Fumadocs transition.',
+  },
+  {
     key: 'documentation.nonReaderPaths',
     group: 'Shared Repo (.oat/config.json)',
     file: '.oat/config.json',
@@ -611,7 +625,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     defaultValue: 'unset',
     mutability: 'read/write',
     owningCommand:
-      'oat config set documentation.nonReaderPaths <glob[,glob...]>',
+      'oat config set documentation.nonReaderPaths <glob[,glob...]|JSON-array>',
     description:
       'Content-root-relative globs excluded from reader navigation, manifest and supported framework rendering. Empty clears the key.',
   },
@@ -623,7 +637,8 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     type: 'string[]',
     defaultValue: 'unset',
     mutability: 'read/write',
-    owningCommand: 'oat config set documentation.excludes <glob[,glob...]>',
+    owningCommand:
+      'oat config set documentation.excludes <glob[,glob...]|JSON-array>',
     description:
       'Comma-separated globs, relative to the docs directory, excluded from `oat docs generate-index`. Repeated `--exclude` flags extend this list; an empty value clears the key.',
   },
@@ -1493,7 +1508,32 @@ function parseInstructionPointerExcludes(rawValue: string): string[] {
   return normalized;
 }
 
-function parseDocumentationExcludes(rawValue: string): string[] {
+function parseDocumentationExcludes(
+  rawValue: string,
+  key: 'documentation.excludes' | 'documentation.nonReaderPaths',
+): string[] {
+  const trimmed = rawValue.trim();
+  // A glob list may be given as a JSON array (which also keeps braces such as
+  // `{a,b}` intact). Anything else that looks like JSON is a mistake, never a
+  // literal glob.
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      parsed = undefined;
+    }
+    if (
+      !Array.isArray(parsed) ||
+      parsed.some(
+        (entry) => typeof entry !== 'string' || entry.trim().length === 0,
+      )
+    )
+      throw new Error(
+        `Invalid ${key} value: a value starting with [ or { must be a JSON array of non-empty strings; otherwise use comma-separated globs.`,
+      );
+    return [...new Set((parsed as string[]).map((entry) => entry.trim()))];
+  }
   const parsed = rawValue
     .split(',')
     .map((entry) => entry.trim())
@@ -2493,7 +2533,10 @@ async function setConfigValue(
         if (parsed === null) throw new Error('Expected a checker JSON object.');
         value = normalizeDocumentationCheck(parsed);
       } else if (key === 'documentation.nonReaderPaths') {
-        const paths = parseDocumentationExcludes(rawValue);
+        const paths = parseDocumentationExcludes(
+          rawValue,
+          'documentation.nonReaderPaths',
+        );
         value = paths.length > 0 ? paths : undefined;
       } else if (key === 'documentation.ia') {
         const parsed: unknown = JSON.parse(trimmed);
@@ -2510,7 +2553,11 @@ async function setConfigValue(
               );
       }
     } catch (error) {
-      if (key === 'documentation.check') throw error;
+      if (
+        key === 'documentation.check' ||
+        key === 'documentation.nonReaderPaths'
+      )
+        throw error;
       if (error instanceof DocumentationIaPresetError)
         throw new Error(`Invalid ${key} value: ${error.detail}.`, {
           cause: error,
@@ -2809,8 +2856,13 @@ async function setConfigValue(
       doc.tooling = rawValue.trim();
     } else if (key === 'documentation.config') {
       doc.config = normalizeSharedRoot(rawValue);
+    } else if (key === 'documentation.index') {
+      doc.index = normalizeSharedRoot(rawValue);
     } else if (key === 'documentation.excludes') {
-      const excludes = parseDocumentationExcludes(rawValue);
+      const excludes = parseDocumentationExcludes(
+        rawValue,
+        'documentation.excludes',
+      );
       if (excludes.length === 0) {
         // Unlike the scalar shared keys, an empty value is the documented way
         // to clear this list rather than an error.
@@ -3000,9 +3052,9 @@ function withoutOwnKey(
  *
  * Pruning is strictly "the object has no remaining own keys". That is what
  * keeps a prune from destroying a sibling the `oat config` catalog does not
- * expose — `documentation.index` is parsed by `config/oat-config.ts` but is
- * not a `ConfigKey`, so an unset of the last catalogued `documentation.*` key
- * leaves the parent in place while it is still present.
+ * expose (such as a key a newer CLI wrote): an unset of the last catalogued
+ * `documentation.*` key leaves the parent in place while any other key is
+ * still present.
  *
  * A missing path, a `null`/`undefined` leaf, or a non-object in the middle of
  * the path all report `removed: false`, which the caller surfaces as the
