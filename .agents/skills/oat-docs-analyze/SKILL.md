@@ -665,11 +665,11 @@ The helper reports declared and installed versions, target versions and commands
 for orderable targets. If the app uses a different package manager, translate the
 command to its documented equivalent preserving package, exact target and
 dependency section. Cite the manifest, installed package path, bundle path and
-exact command. Report older docs-package drift as `tooling-update`,
-`approval: explicit`. Report older app-local CLI drift as `manual`,
-`approval: explicit`, with the helper's exact command: apply's approved tooling
-update covers only `@open-agent-toolkit/docs-*` dependencies. Describe
-unsupported scaffold repairs separately as `manual`. Markdown has no
+exact command. Report older docs-package drift and older app-local CLI drift
+together as one `tooling-update`, `approval: explicit`, listing each drifting
+package's exact command in its own dependency section; apply's approved tooling
+update bumps them and regenerates the manifest with the upgraded app-local CLI.
+Describe unsupported scaffold repairs separately as `manual`. Markdown has no
 app-package drift check. This helper reads only and never upgrades anything.
 
 ### Step 7: Severity-Rate Findings
@@ -685,9 +685,10 @@ Use these defaults:
 
 Give every recommendation a unique stable ID (`R-001`, etc.) and
 `approval: explicit | default`; preserve IDs through review and never reuse a
-retired ID for a different change. `explicit` covers docs-package updates,
-restructure blocks and anything outside the Markdown scope (including authored
-IA decision/config writes). `default` covers ordinary in-scope content repairs.
+retired ID for a different change. `explicit` covers tooling updates (docs
+packages and the app-local CLI), restructure blocks and anything outside the
+Markdown scope (including authored IA decision/config writes). `default` covers
+ordinary in-scope content repairs.
 Missing evidence, `omit` and `ask_user` remain independent blockers regardless
 of approval class. Capture exact targets and commands; an explicit class is not
 permission to perform unsupported work. Apply's one input is this artifact plus

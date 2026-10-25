@@ -318,21 +318,26 @@ after each block, preserving residual findings instead of claiming a clean run.
 #### Individually approved tooling update
 
 A `tooling-update` recommendation has `approval: explicit`. Even with individual
-approval, its out-of-Markdown allowance is only these three operations:
+approval, its out-of-Markdown allowance is only these four operations:
 
-1. Bump the docs app's existing `@open-agent-toolkit/docs-*` dependencies to the
-   bundled versions using the artifact's exact upgrade command (preserve dependency
-   section and package manager; include its resulting lockfile only). Never downgrade
-   an installed version: `ahead` or `unverified` requires CLI selection/update or
-   manual verification before re-analysis, not a docs-package tooling update.
-2. Run `oat docs migrate --docs-dir <authored-root> --apply` only for its currently
+1. Bump the docs app's existing `@open-agent-toolkit/docs-*` dependencies, and the
+   app's own `@open-agent-toolkit/cli` dependency when the app declares it, to the
+   bundled versions using the artifact's exact upgrade commands (preserve each
+   dependency section and the package manager; include the resulting lockfile only).
+   Never downgrade an installed version: `ahead` or `unverified` requires CLI
+   selection/update or manual verification before re-analysis, not a tooling update.
+2. After a CLI bump, regenerate the app's generated manifest (`index.md`) with that
+   upgraded app-local CLI, using the `oat docs generate-index` invocation from the
+   app's existing `predev`/`prebuild` scripts; inspect the diff.
+3. Run `oat docs migrate --docs-dir <authored-root> --apply` only for its currently
    supported admonition conversions and injected frontmatter; inspect the diff.
-3. Run the docs build verifier from the app's existing scripts.
+4. Run the docs build verifier from the app's existing scripts.
 
 Scaffold changes the CLI cannot make (app config, routes, package scripts) are
 `manual`: report the required change and ID without editing those files. This
-allowance does not permit application dependencies, host settings, arbitrary
-migrations or an app-shell rebuild. Other out-of-scope prohibitions remain.
+allowance does not permit other application dependencies, framework upgrades,
+host settings, arbitrary migrations or an app-shell rebuild. Other out-of-scope
+prohibitions remain.
 
 When approved actions involve docs app creation or nav updates:
 

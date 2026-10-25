@@ -495,7 +495,7 @@ work.
 ## Approval, IA records and restructuring
 
 Every analyze recommendation has a stable ID and `approval: explicit | default`.
-`apply all` covers only non-blocked default content repairs. Docs-package updates,
+`apply all` covers only non-blocked default content repairs. Docs tooling updates,
 restructure blocks and work outside Markdown scope require individual approval
 by ID; unattended runs skip explicit items even when their IDs were supplied,
 with reason `explicit_requires_interactive_approval`. Kickoff consent is not
@@ -542,18 +542,22 @@ For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*
 the app's own `@open-agent-toolkit/cli` when the app declares it, to the
 running CLI's bundled `public-package-versions.json`, never registry latest.
 The app-local CLI matters because its `oat docs generate-index` runs in
-`predev`/`prebuild`; its drift is reported as a manual command, outside apply's
-tooling update.
+`predev`/`prebuild`: a stale local CLI writes a different manifest than yours, so
+its drift joins the docs-package drift in the same tooling update.
 Older installed packages produce an explicit drift recommendation with the
 exact upgrade command. Equal versions are current. Newer packages are `ahead`: select
 or update the intended CLI installation before re-analysis, without a package
 downgrade command. Missing installations or bundle metadata and non-orderable
 versions are `unverified` and require manual verification; hoisted-only packages
 also remain unverified. Neither ahead nor unverified supplies a package-update
-command or authorizes an upgrade. Individual tooling approval permits only docs-app `@open-agent-toolkit/docs-*`
-dependency bumps (and resulting lockfile), the admonition/frontmatter conversions
-already supported by `oat docs migrate`, and build verification. App config,
-routes and package scripts remain manual required changes.
+command or authorizes an upgrade. Individual tooling approval permits only
+docs-app `@open-agent-toolkit/docs-*` dependency bumps, a bump of the app's own
+`@open-agent-toolkit/cli` in the dependency section it already uses (with the
+resulting lockfile), regenerating the app's generated manifest with that upgraded
+CLI, the admonition/frontmatter conversions already supported by
+`oat docs migrate`, and build verification. Other application dependencies,
+framework upgrades, app config, routes and package scripts remain manual
+required changes.
 
 ## Related docs
 

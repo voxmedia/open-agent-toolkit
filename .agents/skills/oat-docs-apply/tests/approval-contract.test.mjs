@@ -42,21 +42,34 @@ test('individual approval binds the ID and each restructure block', () => {
     ),
   );
 });
-test('tooling approval stays within three operations and manual scaffold boundary', () => {
+// DR-261025-approved-docs-tooling-updates widened the allowance to the app-local
+// CLI and manifest regeneration; every other application dependency stays out.
+test('tooling approval stays within four operations and manual scaffold boundary', () => {
   assert.ok(
     compact(skill).includes(
-      'its out-of-Markdown allowance is only these three operations:',
+      'its out-of-Markdown allowance is only these four operations:',
     ),
   );
-  assert.match(
-    skill,
-    /1\. Bump the docs app's existing `@open-agent-toolkit\/docs-\*`/,
+  assert.ok(
+    compact(skill).includes(
+      "1. Bump the docs app's existing `@open-agent-toolkit/docs-*` dependencies, and the app's own `@open-agent-toolkit/cli` dependency when the app declares it,",
+    ),
   );
-  assert.match(skill, /2\. Run `oat docs migrate/);
-  assert.match(skill, /3\. Run the docs build verifier/);
+  assert.ok(
+    compact(skill).includes(
+      "2. After a CLI bump, regenerate the app's generated manifest (`index.md`) with that upgraded app-local CLI,",
+    ),
+  );
+  assert.match(skill, /3\. Run `oat docs migrate/);
+  assert.match(skill, /4\. Run the docs build verifier/);
   assert.ok(
     compact(skill).includes(
       'Scaffold changes the CLI cannot make (app config, routes, package scripts) are `manual`:',
+    ),
+  );
+  assert.ok(
+    compact(skill).includes(
+      'This allowance does not permit other application dependencies, framework upgrades,',
     ),
   );
 });
