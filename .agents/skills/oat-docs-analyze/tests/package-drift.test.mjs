@@ -510,3 +510,65 @@ test('drift resolves hoisted installs, pins the declared package manager and exp
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// Workspace files whose membership was confirmed with `pnpm -r ls` (pnpm
+// 10.13.1): every shape lists apps/docs as a member and site as not one.
+test('workspace membership follows valid YAML and pnpm globs', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-yaml-'));
+  const script = new URL('../scripts/package-drift.mjs', import.meta.url)
+    .pathname;
+  try {
+    const versions = join(root, 'public-package-versions.json');
+    await writeFile(versions, JSON.stringify({ 'docs-config': '0.3.32' }));
+    const command = (app) =>
+      JSON.parse(
+        execFileSync(
+          process.execPath,
+          [script, '--app', app, '--versions', versions],
+          { encoding: 'utf8' },
+        ),
+      ).packages[0].upgradeCommand;
+    for (const [shape, yaml] of [
+      ['inline comment', "packages:\n  - 'apps/*' # app members\n"],
+      ['brace pattern', 'packages:\n  - "apps/{docs,web}"\n'],
+      ['unindented list', 'packages:\n- apps/*\n'],
+      ['flow list', 'packages: [\'apps/docs\', "apps/web"] # flow\n'],
+    ]) {
+      const workspace = join(root, shape.replaceAll(' ', '-'));
+      for (const app of ['apps/docs', 'site']) {
+        await mkdir(join(workspace, app), { recursive: true });
+        await writeFile(
+          join(workspace, app, 'package.json'),
+          JSON.stringify({
+            dependencies: { '@open-agent-toolkit/docs-config': '^0.3.0' },
+          }),
+        );
+        const installed = join(
+          workspace,
+          app,
+          'node_modules/@open-agent-toolkit/docs-config',
+        );
+        await mkdir(installed, { recursive: true });
+        await writeFile(
+          join(installed, 'package.json'),
+          JSON.stringify({ version: '0.3.0' }),
+        );
+      }
+      await writeFile(join(workspace, 'pnpm-workspace.yaml'), yaml);
+      const member = join(workspace, 'apps/docs');
+      const outsider = join(workspace, 'site');
+      assert.equal(
+        command(member),
+        `pnpm --dir '${member}' add @open-agent-toolkit/docs-config@0.3.32`,
+        shape,
+      );
+      assert.equal(
+        command(outsider),
+        `pnpm --dir '${outsider}' add --ignore-workspace @open-agent-toolkit/docs-config@0.3.32`,
+        shape,
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

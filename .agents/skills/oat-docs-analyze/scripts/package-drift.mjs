@@ -125,42 +125,133 @@ async function packageManagerFor(appPath) {
   return null;
 }
 
-// The `packages` globs of a pnpm-workspace.yaml, read as text (block or
-// flow list). A file without them (settings only) declares no members.
+// Remove a YAML comment: `#` at line start or after whitespace, outside quotes.
+function stripYamlComment(line) {
+  let quote = null;
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (quote) {
+      if (char === quote) quote = null;
+    } else if (char === '"' || char === "'") quote = char;
+    else if (char === '#' && (index === 0 || /\s/.test(line[index - 1])))
+      return line.slice(0, index);
+  }
+  return line;
+}
+
+function unquoteYaml(value) {
+  const text = value.trim();
+  if (text.length >= 2 && text.startsWith("'") && text.endsWith("'"))
+    return text.slice(1, -1).replaceAll("''", "'");
+  if (text.length >= 2 && text.startsWith('"') && text.endsWith('"')) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text.slice(1, -1);
+    }
+  }
+  return text;
+}
+
+// Split a flow sequence body on commas outside quotes and braces.
+function splitFlowItems(body) {
+  const items = [];
+  let quote = null;
+  let depth = 0;
+  let current = '';
+  for (const char of body) {
+    if (quote) {
+      if (char === quote) quote = null;
+    } else if (char === '"' || char === "'") quote = char;
+    else if (char === '{') depth += 1;
+    else if (char === '}') depth -= 1;
+    else if (char === ',' && depth === 0) {
+      items.push(current);
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+  items.push(current);
+  return items;
+}
+
+// The `packages` list of a pnpm-workspace.yaml: an indented or unindented
+// block sequence or a flow sequence, with quotes and comments. A file
+// without `packages` (settings only) declares no member packages.
 function workspacePatterns(text) {
-  const flow = text.match(/^packages:\s*\[([^\]]*)\]/m);
-  const raw = flow
-    ? flow[1].split(',')
-    : (
-        text.match(
-          /^packages:\s*\n((?:[ \t]+-[^\n]*\n?|[ \t]*#[^\n]*\n?|[ \t]*\n)*)/m,
-        )?.[1] ?? ''
-      )
-        .split('\n')
-        .map((line) => line.match(/^\s+-\s*(.+?)\s*$/)?.[1] ?? '');
-  return raw
-    .map((entry) => entry.trim().replace(/^['"]|['"]$/g, ''))
-    .filter((entry) => entry.length > 0 && !entry.startsWith('#'));
+  const lines = text.split(/\r?\n/).map(stripYamlComment);
+  const start = lines.findIndex((line) => /^packages\s*:/.test(line));
+  if (start < 0) return [];
+  const inline = lines[start].replace(/^packages\s*:/, '').trim();
+  if (inline.startsWith('[')) {
+    let flow = inline;
+    for (
+      let index = start + 1;
+      !flow.includes(']') && index < lines.length;
+      index += 1
+    )
+      flow += ` ${lines[index].trim()}`;
+    return splitFlowItems(flow.slice(1, flow.lastIndexOf(']')))
+      .map(unquoteYaml)
+      .filter((entry) => entry.length > 0);
+  }
+  const patterns = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.trim() === '') continue;
+    const item = line.match(/^\s*-\s*(.*)$/);
+    if (!item) break;
+    patterns.push(unquoteYaml(item[1]));
+  }
+  return patterns.filter((entry) => entry.length > 0);
+}
+
+// Expand `{a,b}` alternatives, innermost first.
+function expandBraces(pattern) {
+  const match = pattern.match(/\{([^{}]*)\}/);
+  if (!match) return [pattern];
+  return match[1]
+    .split(',')
+    .flatMap((alternative) =>
+      expandBraces(
+        pattern.slice(0, match.index) +
+          alternative +
+          pattern.slice(match.index + match[0].length),
+      ),
+    );
 }
 
 function globToRegExp(pattern) {
-  const trimmed = pattern.replace(/^\.\//, '').replace(/\/+$/, '');
-  // A trailing globstar also matches zero segments (`packages/**` includes
-  // `packages`), as in pnpm's own package discovery.
-  const zeroOrMore = /\/\*\*$/.test(trimmed);
-  const source = (zeroOrMore ? trimmed.slice(0, -3) : trimmed)
-    .split(/(\*\*\/?|\*)/)
+  const source = pattern
+    .split(/(\*\*\/|\*\*|\*|\?)/)
     .map((part) =>
-      part === '**/' || part === '**'
+      part === '**/'
         ? '(?:.*/)?'
-        : part === '*'
-          ? '[^/]*'
-          : part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'),
+        : part === '**'
+          ? '.*'
+          : part === '*'
+            ? '[^/]*'
+            : part === '?'
+              ? '[^/]'
+              : part.replace(/[.+^${}()|[\]\\]/g, '\\$&'),
     )
     .join('');
-  return new RegExp(
-    `^${source.replace(/\(\?:\.\*\/\)\?$/, '.*')}${zeroOrMore ? '(?:/.*)?' : ''}$`,
-  );
+  return new RegExp(`^${source}$`);
+}
+
+// pnpm finds members by globbing `<pattern>/package.json`, so a trailing
+// globstar also matches the directory itself; negations exclude.
+function workspaceIncludes(patterns, rel) {
+  const target = `${rel}/package.json`;
+  const matches = (pattern) =>
+    expandBraces(pattern.replace(/^\.\//, '').replace(/\/+$/, '')).some(
+      (expanded) => globToRegExp(`${expanded}/package.json`).test(target),
+    );
+  const positives = patterns.filter((pattern) => !pattern.startsWith('!'));
+  const negatives = patterns
+    .filter((pattern) => pattern.startsWith('!'))
+    .map((pattern) => pattern.slice(1));
+  return positives.some(matches) && !negatives.some(matches);
 }
 
 // A nested app below an ancestor pnpm workspace whose `packages` globs do not
@@ -173,13 +264,10 @@ async function isStandaloneNestedApp(appPath) {
     const file = join(directory, 'pnpm-workspace.yaml');
     if (!(await exists(file))) continue;
     const rel = relative(directory, appPath).split(sep).join('/');
-    let member = false;
-    for (const pattern of workspacePatterns(await readFile(file, 'utf8'))) {
-      const negated = pattern.startsWith('!');
-      if (globToRegExp(negated ? pattern.slice(1) : pattern).test(rel))
-        member = !negated;
-    }
-    return !member;
+    return !workspaceIncludes(
+      workspacePatterns(await readFile(file, 'utf8')),
+      rel,
+    );
   }
   return false;
 }
