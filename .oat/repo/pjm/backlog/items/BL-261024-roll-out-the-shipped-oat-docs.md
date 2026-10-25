@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-25T04:05:00.000Z
+updated: 2026-10-25T14:01:29.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -46,7 +46,7 @@ target or a claim that Markdown proves framework drift.
 - [ ] Audit applicable directory indexes (including useful context and populated dash Contents), sibling/immediate-child relative .md links, title/description metadata and contributor/agent entry guidance. Preserve existing content, local audience/ownership guidance, authored indexes and asset-only exceptions. Additive config success is not full content acceptance; repairs go through analyze/approved apply.
 - [ ] In pntr, change exactly `scripts/github-actions/oat-docs-update/config.mjs` so its blanket phrase “treat this workflow configuration as approval to apply all recommendations” expressly excludes every `approval: explicit` recommendation. Retain its `targetPaths` documentation-only boundary (`docs/` and `.oat/`) and existing path gate; do not broaden it to app packages/build config.
 - [ ] Verify real automation handoff honors per-recommendation approval classes. Blanket/unattended approval applies only eligible default content repairs; explicit recommendations are skipped and reported by ID/reason, even if IDs are supplied unattended. No docs-app package bump under `apps/<docs-app>/` may pass pntr's existing path gate. Preserve an allowed default repair as the accepted control.
-- [ ] Where a framework consumer is actually present/selected, verify offline drift compares installed docs-\* versions with that invoked CLI's bundled `public-package-versions.json`, with source/version evidence and exact upgrade command for genuine older-package drift; no registry-latest lookup. Under automation the explicit upgrade is skipped/reported, never performed. If named Markdown consumers have no docs app, record package drift as not applicable there; root/rollout must select an appropriate framework acceptance target rather than invent packages or claim a Markdown run proves drift. Hoisted-only installs currently return unverified; do not imply a fix.
+- [ ] Where a framework consumer is actually present/selected, verify offline drift compares installed docs-\* versions with that invoked CLI's bundled `public-package-versions.json`, with source/version evidence and exact upgrade command for genuine older-package drift; no registry-latest lookup. Under automation the explicit upgrade is skipped/reported, never performed. If named Markdown consumers have no docs app, record package drift as not applicable there; root/rollout must select an appropriate framework acceptance target rather than invent packages or claim a Markdown run proves drift. Hoisted installs resolve through ancestor `node_modules` since 0.3.33 (#379).
 - [ ] Where interactive tooling approval is actually exercised, allow only docs-app docs-\* dependency updates, the app's own declared `@open-agent-toolkit/cli` update in its existing dependency section (resulting lockfile included) and manifest regeneration with that upgraded CLI (DR-261025-approved-docs-tooling-updates), already-supported migrate admonition/frontmatter conversion and build verification. Unsupported config/routes/package scripts remain manual; don't transfer the old “template shape changed” wording as permission for an unshipped generic migrator. Retain individually approved versus blanket/unattended outcomes separately.
 - [ ] Record actual consumer commits/PRs, invoked CLI version/bundle, commands, categorical outcomes and remaining owner decisions. OAT's merged PRs/synthetic tests prove shipped capability, not these consumer runs. Apply ordinary existing regression/approval-boundary proof standards, without expanding into an unrelated broad rollout campaign.
 
@@ -64,16 +64,54 @@ project discovery remains separate.
 
 ## Delivery status
 
-Open: all consumer acceptance is unperformed. The OAT-side capability is merged
-in the linked phase PRs; this item records no consumer commit/PR, publication,
-deployment or acceptance. Record those delivery facts only when observed.
+Open. Observed delivery as of 2026-10-25, recorded generically (consumer
+repositories are not named in this public record):
 
-## Pilot follow-ups
+- OAT 0.3.32 and 0.3.33 shipped rollout fixes in
+  [PR #378](https://github.com/voxmedia/open-agent-toolkit/pull/378) and
+  [PR #379](https://github.com/voxmedia/open-agent-toolkit/pull/379).
+- Four consumer docs surfaces were brought to conformance and merged: three
+  Fumadocs apps (one nav-sync app with a hoisted install, one standalone nested
+  nav-sync app and one pilot nav-sync app) and one Markdown docs directory
+  adopted with `oat docs init --framework markdown --adopt`.
+- A fifth Fumadocs consumer, with hand-authored navigation, is in review.
+- The invoked CLI was 0.3.33 (bundled `public-package-versions.json` 0.3.33).
+  Package drift was verified current after approved tooling updates, and
+  framework drift acceptance was exercised on real consumers.
+
+No checkbox is ticked yet; each one still has unmet clauses as written:
+
+- 1–2: the second named consumer's documentation config is not yet repaired or
+  added, and both checkboxes cover both named consumers. Checkbox 2 also needs
+  evidence for docs-directory detection, the existing docs fallback, apply and
+  index consumers, and an external generated inventory.
+- 3: conformance is recorded, but not that repairs went through analyze and
+  approved apply, or that authored content and local guidance were kept.
+- 4–5: the named automation config change and a real automation handoff have
+  not been made or verified.
+- 6: interactive offline drift on framework consumers is evidenced. Still
+  missing: the automation skip-and-report path for explicit upgrades, and the
+  not-applicable drift record for the named Markdown consumers. Hoisted
+  installs resolve since 0.3.33 (#379) and were verified on the hoisted consumer.
+- 7: approved tooling updates were exercised, but the allowed-category limits,
+  build verification, and separate individually approved and blanket outcomes
+  are not recorded.
+- 8: the CLI version, bundle, categorical outcomes and one command are recorded
+  above. Consumer commit and PR references and the remaining owner decisions
+  (the second named consumer, the fifth consumer in review and automation) are
+  still to record.
+
+## Rollout follow-ups
 
 A 0.3.31 pilot on a pilot consumer repository surfaced tooling defects (fixed
-for the next release) and four follow-ups tracked separately:
+for the next release) and four follow-ups; read-only 0.3.32 conformance runs on
+consumer repositories added fifteen more. All nineteen were consolidated on
+2026-10-25 into three items whose checklists keep every source acceptance
+criterion (the archived source records keep their original wording):
 
-- [BL-261025-add-a-check-or-stdout-mode — Add a check or stdout mode to oat docs generate-index](BL-261025-add-a-check-or-stdout-mode.md)
-- [BL-261025-keep-oat-docs-analyze-tracking — Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently](BL-261025-keep-oat-docs-analyze-tracking.md)
-- [BL-261025-let-oat-docs-analyze-propose — Let oat-docs-analyze propose candidate IA structures when no IA is recorded](BL-261025-let-oat-docs-analyze-propose.md)
-- [BL-261025-add-an-adoption-path-for-pre-0 — Add an adoption path for pre-0.3.31 Fumadocs apps whose guidance assumes nav sync](BL-261025-add-an-adoption-path-for-pre-0.md)
+- [BL-261025-tighten-oat-docs-check-rules — Tighten oat docs check rules and diagnostics](BL-261025-tighten-oat-docs-check-rules.md)
+- [BL-261025-make-oat-docs-generators — Make OAT docs generators and writers predictable](BL-261025-make-oat-docs-generators.md)
+  (includes the pilot's generate-index check or stdout mode)
+- [BL-261025-close-docs-skill-workflow-gaps — Close docs skill workflow gaps found in the consumer rollout](BL-261025-close-docs-skill-workflow-gaps.md)
+  (includes the pilot's analyze tracking, analyze IA candidates and pre-0.3.31
+  nav-sync adoption follow-ups)

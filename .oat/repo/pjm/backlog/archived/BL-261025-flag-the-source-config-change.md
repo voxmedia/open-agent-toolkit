@@ -1,7 +1,7 @@
 ---
 id: BL-261025-flag-the-source-config-change
 title: Flag the source-config change nonReaderPaths needs to stop rendering
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-25T05:31:08.199Z
-updated: 2026-10-25T05:31:08.199Z
+updated: '2026-10-25T13:59:23Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/367
@@ -21,8 +21,16 @@ external_plans: []
 
 `documentation.nonReaderPaths` stops Fumadocs from rendering excluded pages only when the app's `source.config.ts` passes OAT's config to `createSourceConfig()` (`oatConfigFile`/`appRoot`). Older apps lack that, and oat-docs-apply treats the source-config change as manual, but neither `oat docs check` nor oat-docs-analyze notices that it is missing, so excluded pages keep rendering (and, without `meta.json`, appear in the sidebar).
 
-Found by read-only conformance runs of OAT docs tooling 0.3.32 on consumer repositories; follow-up to [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](BL-261024-roll-out-the-shipped-oat-docs.md) and issue #367.
+Found by read-only conformance runs of OAT docs tooling 0.3.32 on consumer repositories; follow-up to [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](../items/BL-261024-roll-out-the-shipped-oat-docs.md) and issue #367.
 
 ## Acceptance Criteria
 
 - oat-docs-analyze reports the missing source-config wiring as a `manual` recommendation when `nonReaderPaths` is set, and the docs explain the dependency.
+
+## Disposition
+
+Consolidated on 2026-10-25 into
+[BL-261025-close-docs-skill-workflow-gaps — Close docs skill workflow gaps found in the consumer rollout](../items/BL-261025-close-docs-skill-workflow-gaps.md),
+which carries every acceptance criterion above verbatim. Archived as `wont_do`
+only because the backlog CLI has no superseded status; the work remains open in
+the consolidated item.
