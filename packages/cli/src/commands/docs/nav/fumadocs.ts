@@ -55,9 +55,13 @@ const GROUP_FOLDER = /^\(.+\)$/;
 // The `pages` item grammar of the fumadocs-core 16.10.2 page-tree builder
 // (`resolveFolderItem`): exact rest entries, separators, links, and the
 // exclude and extract prefixes are checked before an item is read as a path.
-const FUMADOCS_REST_ITEMS = new Set(['...', 'z...a']);
-const FUMADOCS_SEPARATOR = /^---(?:\[(?<icon>[^\]]+)])?(?<name>.+)---|^---$/;
-const FUMADOCS_LINK =
+export const FUMADOCS_REST_ITEMS: ReadonlySet<string> = new Set([
+  '...',
+  'z...a',
+]);
+export const FUMADOCS_SEPARATOR =
+  /^---(?:\[(?<icon>[^\]]+)])?(?<name>.+)---|^---$/;
+export const FUMADOCS_LINK =
   /^(?<external>external:)?(?:\[(?<icon>[^\]]+)])?\[(?<name>[^\]]+)]\((?<url>[^)]+)\)$/;
 const FUMADOCS_PREFIXES = ['!', '...'];
 const H1 = /^#\s+(.+?)\s*#*\s*$/;
@@ -168,7 +172,7 @@ export function resolveFolderTitle(markdown: string): string | undefined {
  * slugs plugin with the scaffolded `baseUrl: '/'`: group folders are dropped,
  * segments are URI-encoded, and an `index` file maps to its folder.
  */
-function pageUrl(
+export function pageUrl(
   pagePath: string,
   nonIndexUrls: ReadonlySet<string> = new Set(),
 ): string {

@@ -1,45 +1,19 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
-
-import { buildDocsNavTree } from '@commands/docs/nav/contents';
 import { syncFumadocsNavigation } from '@commands/docs/nav/fumadocs';
+import {
+  compareFumadocsMembership,
+  compareMkDocsMembership,
+} from '@commands/docs/nav/membership';
 import { syncDocsNavigation } from '@commands/docs/nav/sync';
-import YAML from 'yaml';
 
 import type { Report } from './check.types';
-import { present, type CheckTarget } from './files';
+import type { CheckTarget } from './files';
 
-function pageIdentity(item: string): string {
-  // Hand-authored collision links can use their own display labels.
-  return item.replace(/^\[[^\]]*\]\((.*)\)$/, '[]($1)').replace(/^\.\//, '');
-}
-function navIdentity(value: unknown, expected: unknown): unknown {
-  if (!Array.isArray(value)) return value;
-  return value.map((item, index) => {
-    if (typeof item === 'string') return item;
-    if (typeof item !== 'object' || item === null) return item;
-    const entry = Object.entries(item)[0];
-    if (!entry) return item;
-    const expectedItem = Array.isArray(expected) ? expected[index] : undefined;
-    const children =
-      expectedItem && typeof expectedItem === 'object'
-        ? Object.values(expectedItem)[0]
-        : undefined;
-    // The Contents-derived tree identifies sections by their direct landing path.
-    // Actual landing/page labels are presentation; explicit group labels remain meaningful.
-    const section =
-      Array.isArray(children) &&
-      children.some(
-        (child) => typeof child === 'string' && child.endsWith('/index.md'),
-      );
-    return Array.isArray(entry[1])
-      ? {
-          [section ? '$section' : entry[0]]: navIdentity(entry[1], children),
-        }
-      : entry[1];
-  });
-}
+/**
+ * `navOwner: nav-sync` keeps strict generated freshness. Hand-authored and
+ * undeclared navigation gets the membership-and-order comparison (issue #367
+ * P21/G5): separators, labels, links, rest entries and borrowed pages are the
+ * author's presentation, never generator output to match.
+ */
 export async function checkNavigation(
   target: CheckTarget,
   report: Report,
@@ -54,48 +28,21 @@ export async function checkNavigation(
         check: true,
         nonReaderPaths,
       });
-      for (const file of result.metaFiles) {
-        let stale = file.changed;
-        if (!generated) {
-          if (!(await present(join(target.contentRoot, file.path)))) continue;
-          try {
-            const actual = JSON.parse(
-              await readFile(join(target.contentRoot, file.path), 'utf8'),
-            ) as { pages?: unknown };
-            if (
-              actual &&
-              typeof actual === 'object' &&
-              !Array.isArray(actual) &&
-              !Object.hasOwn(actual, 'pages')
-            )
-              continue;
-            stale =
-              !Array.isArray(actual.pages) ||
-              !isDeepStrictEqual(
-                actual.pages.map((p) =>
-                  typeof p === 'string' ? pageIdentity(p) : p,
-                ),
-                file.meta.pages.map(pageIdentity),
-              );
-          } catch {
+      if (generated) {
+        for (const file of result.metaFiles)
+          if (file.changed)
             report(
               'navigation',
               'error',
               file.path,
-              'Cannot read or parse meta.json; check file permissions and JSON syntax.',
+              'Generated navigation is stale; run oat docs nav sync.',
             );
-            continue;
-          }
-        }
-        if (stale)
-          report(
-            'navigation',
-            'error',
-            file.path,
-            generated
-              ? 'Generated navigation is stale; run oat docs nav sync.'
-              : 'Navigation membership/order differs from authored Contents; update pages or Contents.',
-          );
+      } else {
+        for (const issue of await compareFumadocsMembership(
+          target.contentRoot,
+          result.metaFiles,
+        ))
+          report('navigation', 'error', issue.path, issue.message, issue.line);
       }
       for (const path of result.unlisted)
         report(
@@ -118,26 +65,12 @@ export async function checkNavigation(
           'Generated navigation is stale; run oat docs nav sync.',
         );
     } else {
-      const expected = await buildDocsNavTree({
+      for (const issue of await compareMkDocsMembership({
+        appRoot: target.appRoot,
         docsRoot: target.contentRoot,
         nonReaderPaths,
-      });
-      const actual = YAML.parse(
-        await readFile(join(target.appRoot, 'mkdocs.yml'), 'utf8'),
-      ) as { nav?: unknown };
-      if (!actual || !Object.hasOwn(actual, 'nav')) return;
-      if (
-        !isDeepStrictEqual(
-          navIdentity(actual.nav, expected),
-          navIdentity(expected, expected),
-        )
-      )
-        report(
-          'navigation',
-          'error',
-          'mkdocs.yml',
-          'Navigation membership/order differs from authored Contents; update nav or Contents.',
-        );
+      }))
+        report('navigation', 'error', issue.path, issue.message, issue.line);
     }
   } catch (error) {
     report('navigation', 'error', 'index.md', (error as Error).message);

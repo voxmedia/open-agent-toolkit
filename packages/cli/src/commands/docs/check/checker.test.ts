@@ -720,8 +720,9 @@ describe('real framework navigation boundaries', () => {
           ruleId: 'navigation',
           severity: 'error',
           path: 'aa/meta.json',
+          line: 1,
           message:
-            'Navigation membership/order differs from authored Contents; update pages or Contents.',
+            'meta.json "pages" must be an array of strings; fix it or remove "pages" to use folder order.',
         },
       ]);
       await f.write('aa/meta.json', '{"title":"Own section title"}');
@@ -731,8 +732,9 @@ describe('real framework navigation boundaries', () => {
           ruleId: 'navigation',
           severity: 'error',
           path: 'zz/meta.json',
+          line: 1,
           message:
-            'Navigation membership/order differs from authored Contents; update pages or Contents.',
+            'Missing reader page: "guide" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
         },
       ]);
       await f.config({}, { navOwner: 'nav-sync' });
@@ -755,8 +757,9 @@ describe('real framework navigation boundaries', () => {
         ruleId: 'navigation',
         severity: 'error',
         path: 'zz/meta.json',
+        line: 1,
         message:
-          'Navigation membership/order differs from authored Contents; update pages or Contents.',
+          'Missing reader page: "guide" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
       };
       expect(await f.run('navigation')).toEqual([
         {
@@ -1289,25 +1292,32 @@ describe('parser/runtime and boundary composition', () => {
         'site_name: Fixture\nnav:\n  - Welcome: index.md\n  - Readers:\n      - Custom section:\n          - Overview: section/index.md\n          - Custom reader: section/guide.md\n          - Second: section/second.md\n';
       await writeFile(path, labeled);
       expect(await f.run('navigation')).toEqual([]);
-      const drift = [
-        {
-          ruleId: 'navigation',
-          severity: 'error',
-          path: 'mkdocs.yml',
-          message:
-            'Navigation membership/order differs from authored Contents; update nav or Contents.',
-        },
-      ];
-      for (const invalid of [
-        labeled.replace('Readers:', 'Different group:'),
-        labeled.replace('          - Second: section/second.md\n', ''),
-        labeled.replace(
-          '          - Custom reader: section/guide.md\n          - Second: section/second.md',
-          '          - Second: section/second.md\n          - Custom reader: section/guide.md',
-        ),
-      ]) {
+      // Group labels and nesting are presentation; membership and order are not.
+      await writeFile(path, labeled.replace('Readers:', 'Different group:'));
+      expect(await f.run('navigation')).toEqual([]);
+      for (const [invalid, message] of [
+        [
+          labeled.replace('          - Second: section/second.md\n', ''),
+          'Missing reader page: "section/second.md" is listed in index.md Contents but not in mkdocs.yml nav; add it to nav or remove it from Contents.',
+        ],
+        [
+          labeled.replace(
+            '          - Custom reader: section/guide.md\n          - Second: section/second.md',
+            '          - Second: section/second.md\n          - Custom reader: section/guide.md',
+          ),
+          'Order differs from authored Contents in section/: expected section/index.md, section/guide.md, section/second.md; found section/index.md, section/second.md, section/guide.md. Reorder nav or Contents (section labels and links are not compared).',
+        ],
+      ] as const) {
         await writeFile(path, invalid);
-        expect(await f.run('navigation')).toEqual(drift);
+        expect(await f.run('navigation')).toEqual([
+          {
+            ruleId: 'navigation',
+            severity: 'error',
+            path: 'mkdocs.yml',
+            line: 2,
+            message,
+          },
+        ]);
       }
       await writeFile(path, labeled);
       await f.config({}, { navOwner: 'nav-sync' });
@@ -1406,5 +1416,139 @@ describe('parser/runtime and boundary composition', () => {
       );
     }
     expect(await f.run('diagram-freshness')).toEqual([]);
+  });
+});
+
+function contentsPage(title: string, entries: string[]): string {
+  return page(
+    `# ${title}\n\nA useful overview explains this section and helps its readers choose their next destination.\n\n## Contents\n\n${entries.join('\n')}\n`,
+    { title },
+  );
+}
+const pretty = (pages: string[]): string =>
+  `${JSON.stringify({ pages }, null, 2)}\n`;
+
+describe('hand-authored navigation membership, not generator equality', () => {
+  it.each(['hand-authored', undefined] as const)(
+    '%s Fumadocs sidebars tolerate separators, borrows, links and labels but report missing, dangling and reordered pages',
+    async (navOwner) => {
+      const f = await fixture('fumadocs');
+      await f.config({}, { navOwner });
+      await f.write(
+        'index.md',
+        contentsPage('Home', [
+          '### Start',
+          '',
+          '- [Guide](guide.md) - Complete description for this reader.',
+          '- [Install](install.md) - Complete description for this reader.',
+          '',
+          '### Sections',
+          '',
+          '- [Section](section/index.md) - Complete description for this reader.',
+        ]),
+      );
+      await f.write('install.md', page());
+      await f.write(
+        'section/index.md',
+        contentsPage('Section', [
+          '- [Usage](usage.md) - Complete description for this reader.',
+          '- [Extra](extra.md) - Complete description for this reader.',
+        ]),
+      );
+      await f.write('section/usage.md', page());
+      await f.write('section/extra.md', page());
+      // Hand-authored shape: a link instead of "index", a separator whose label
+      // and casing differ from the Contents group, an external link, and a
+      // root page borrowed into another folder's sidebar.
+      await f.write(
+        'meta.json',
+        pretty([
+          '[Home](/)',
+          '---START HERE---',
+          'guide',
+          'section',
+          '[Source](https://example.com/repo)',
+        ]),
+      );
+      await f.write(
+        'section/meta.json',
+        pretty(['usage', 'extra', '../install']),
+      );
+      expect(await f.run('navigation')).toEqual([]);
+
+      await f.write('section/meta.json', pretty(['...']));
+      expect(await f.run('navigation')).toEqual([
+        // The rest entry shows extra/usage, but install is no longer borrowed.
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'meta.json',
+          line: 2,
+          message:
+            'Missing reader page: "install" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
+        },
+      ]);
+
+      await f.write(
+        'section/meta.json',
+        pretty(['usage', 'ghost', '../install']),
+      );
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'section/meta.json',
+          line: 2,
+          message:
+            'Missing reader page: "extra" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
+        },
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'section/meta.json',
+          line: 4,
+          message:
+            'Missing target: pages entry "ghost" names no page or folder; remove it or restore the page.',
+        },
+      ]);
+
+      await f.write(
+        'section/meta.json',
+        pretty(['extra', '../install', 'usage']),
+      );
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'section/meta.json',
+          line: 2,
+          message:
+            'Order differs from authored Contents: expected usage, extra; found extra, usage. Reorder pages or Contents (separators, labels and links are not compared).',
+        },
+      ]);
+    },
+  );
+  it('hand-authored MkDocs nav compares page membership, not section labels or links', async () => {
+    const f = await fixture('mkdocs');
+    await f.config({}, { navOwner: 'hand-authored' });
+    await f.put(
+      'site/mkdocs.yml',
+      'site_name: Fixture\nnav:\n  - Home: index.md\n  - My own section:\n      - guide.md\n  - Source: https://example.com/repo\n',
+    );
+    expect(await f.run('navigation')).toEqual([]);
+    await f.put(
+      'site/mkdocs.yml',
+      'site_name: Fixture\nnav:\n  - Home: index.md\n  - guide.md\n  - ghost.md\n',
+    );
+    expect(await f.run('navigation')).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'mkdocs.yml',
+        line: 5,
+        message:
+          'Missing target: nav entry "ghost.md" names no page; remove it or restore the page.',
+      },
+    ]);
   });
 });
