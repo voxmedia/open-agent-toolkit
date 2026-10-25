@@ -225,6 +225,19 @@ export interface RenderIndexOptions {
   linkBase?: string;
 }
 
+/**
+ * Percent-encode the characters that end or split a CommonMark link
+ * destination (whitespace, `#`, `?`, parentheses, angle brackets) and `%`
+ * itself, so any supported filesystem path renders as a resolvable link.
+ */
+function linkDestination(path: string): string {
+  return path.replace(
+    /[%\s#?()<>]/g,
+    (char) =>
+      `%${char.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`,
+  );
+}
+
 function renderEntries(
   entries: IndexEntry[],
   indent: number,
@@ -242,7 +255,7 @@ function renderEntries(
     } else {
       const desc = entry.description ? ` — ${entry.description}` : '';
       lines.push(
-        `${prefix}- [${entry.title}](${linkBase ? posix.join(linkBase, entry.path) : entry.path})${desc}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
+        `${prefix}- [${entry.title}](${linkDestination(linkBase ? posix.join(linkBase, entry.path) : entry.path)})${desc}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
       );
     }
   }

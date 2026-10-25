@@ -20,6 +20,8 @@ import type { OatConfig } from '@config/oat-config';
 import { dirExists } from '@fs/io';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GenerateIndexOptions, IndexEntry } from './generator';
@@ -1141,6 +1143,48 @@ describe('createDocsGenerateIndexCommand', () => {
         }
       },
     );
+
+    // A Markdown parser is the oracle: a space ends a link destination and `#`
+    // starts a fragment, so a raw prefix such as `My Docs#1/` breaks links.
+    it('encodes manifest link destinations that a Markdown parser must resolve', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      const docs = join(repo.repoRoot, 'My Docs#1');
+      await mkdir(docs, { recursive: true });
+      await writeFile(join(docs, 'index.md'), '# Docs\n');
+      await writeFile(join(docs, 'a guide.md'), '# Guide\n');
+
+      await runCommand(repo.command, [
+        '--docs-dir',
+        'My Docs#1',
+        '--output',
+        'manifest.md',
+      ]);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifest = await readFile(
+        join(repo.repoRoot, 'manifest.md'),
+        'utf8',
+      );
+      const urls: string[] = [];
+      const visit = (node: {
+        type: string;
+        url?: string;
+        children?: unknown[];
+      }) => {
+        if (node.type === 'link' && node.url) urls.push(node.url);
+        for (const child of node.children ?? []) visit(child as typeof node);
+      };
+      visit(unified().use(remarkParse).parse(manifest));
+      expect(urls).toHaveLength(2);
+      for (const url of urls)
+        expect(
+          existsSync(join(repo.repoRoot, decodeURIComponent(url))),
+          url,
+        ).toBe(true);
+    });
 
     it('requires explicit Markdown output and indexes the full literal root', async () => {
       const repo = await createRealRepo({
