@@ -694,12 +694,20 @@ async function runIndexGenerate(
     excludes: resolved.excludes,
   });
   // Links are written relative to the manifest file, which always sits outside
-  // the docs directory it indexes. The output's directory is canonicalized so a
-  // symlinked directory alias cannot skew the prefix; the file itself is not,
-  // because a file symlink is read from its own location.
+  // the docs directory it indexes. When this run records the manifest in
+  // `documentation.index`, links resolve from that recorded (real) location.
+  // Otherwise only the output's directory is canonicalized: a symlinked
+  // directory alias cannot skew the prefix, and a file symlink is read from its
+  // own location.
+  const indexPath = isFumadocsManifestTransition(resolved, canonical)
+    ? buildDocumentationIndexValue(resolved, canonical)
+    : null;
   const outputDir =
-    (await canonicalizeOrNull(dirname(outputPath), deps, { kind: 'output' })) ??
-    dirname(outputPath);
+    indexPath !== null
+      ? dirname(canonical.outputPath)
+      : ((await canonicalizeOrNull(dirname(outputPath), deps, {
+          kind: 'output',
+        })) ?? dirname(outputPath));
   const linkBase = normalizeToPosixPath(relative(outputDir, canonical.docsDir));
   const content = buildGeneratedIndexOutput(
     deps.renderIndex(entries, { linkBase }),
@@ -708,17 +716,14 @@ async function runIndexGenerate(
 
   await deps.writeFile(outputPath, content, 'utf8');
 
-  if (isFumadocsManifestTransition(resolved, canonical)) {
-    const indexPath = buildDocumentationIndexValue(resolved, canonical);
-    if (indexPath !== null && config.documentation?.index !== indexPath) {
-      await deps.writeOatConfig(repoRoot, {
-        ...config,
-        documentation: {
-          ...config.documentation,
-          index: indexPath,
-        },
-      });
-    }
+  if (indexPath !== null && config.documentation?.index !== indexPath) {
+    await deps.writeOatConfig(repoRoot, {
+      ...config,
+      documentation: {
+        ...config.documentation,
+        index: indexPath,
+      },
+    });
   }
 
   if (context.json) {

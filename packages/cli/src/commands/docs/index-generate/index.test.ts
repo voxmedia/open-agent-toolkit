@@ -1476,6 +1476,34 @@ describe('createDocsGenerateIndexCommand', () => {
       for (const [, target] of written.matchAll(/\]\(([^)]+)\)/g))
         expect(existsSync(join(repo.appRoot, target!)), target).toBe(true);
     });
+    // When the run records a file-symlink target in `documentation.index`,
+    // links resolve from that recorded path, which is where readers open it.
+    it('writes links that resolve from a recorded file-symlink target', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/index.md',
+      });
+      const linkTarget = join(repo.appRoot, 'generated', 'manifest.md');
+      await mkdir(join(repo.appRoot, 'generated'), { recursive: true });
+      await symlink(linkTarget, join(repo.appRoot, 'index.md'));
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const config = await repo.readConfig();
+      expect(config.documentation?.index).toBe(
+        'apps/docs/generated/manifest.md',
+      );
+      const written = await readFile(linkTarget, 'utf8');
+      const targets = [...written.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]!);
+      expect(targets.length).toBeGreaterThan(0);
+      for (const target of targets)
+        expect(
+          existsSync(resolve(repo.repoRoot, 'apps/docs/generated', target)),
+          target,
+        ).toBe(true);
+    });
   });
 
   describe('real filesystem symlink refusals', () => {
