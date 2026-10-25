@@ -281,3 +281,76 @@ test('--cli keeps resolving a direct install whose executable is the bundle entr
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// The app-local CLI regenerates index.md in predev/prebuild, so a stale local
+// CLI silently diverges from the running one; it needs the same drift oracle.
+test('drift covers an app-declared @open-agent-toolkit/cli in its own dependency section', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-cli-'));
+  try {
+    const versions = join(root, 'public-package-versions.json');
+    await writeFile(
+      versions,
+      JSON.stringify({ cli: '0.3.31', 'docs-config': '0.3.31' }),
+    );
+    const run = (app) =>
+      JSON.parse(
+        execFileSync(
+          process.execPath,
+          [
+            new URL('../scripts/package-drift.mjs', import.meta.url).pathname,
+            '--app',
+            app,
+            '--versions',
+            versions,
+          ],
+          { encoding: 'utf8' },
+        ),
+      ).packages.map(
+        ({ name, section, installed, status, upgradeCommand }) => ({
+          name,
+          section,
+          installed,
+          status,
+          upgradeCommand,
+        }),
+      );
+    for (const [section, flag, installed, status] of [
+      ['devDependencies', ' --save-dev', '0.3.25', 'drift'],
+      ['dependencies', '', '0.3.31', 'current'],
+      ['devDependencies', null, '0.3.32', 'ahead'],
+    ]) {
+      const app = join(root, `${section}-${installed}`);
+      const dir = join(app, 'node_modules/@open-agent-toolkit/cli');
+      await mkdir(dir, { recursive: true });
+      await writeFile(
+        join(app, 'package.json'),
+        JSON.stringify({
+          [section]: { '@open-agent-toolkit/cli': '^0.3.25' },
+        }),
+      );
+      await writeFile(
+        join(dir, 'package.json'),
+        JSON.stringify({ version: installed }),
+      );
+      assert.deepEqual(run(app), [
+        {
+          name: '@open-agent-toolkit/cli',
+          section,
+          installed,
+          status,
+          upgradeCommand:
+            flag === null
+              ? null
+              : `pnpm --dir '${app}' add${flag} @open-agent-toolkit/cli@0.3.31`,
+        },
+      ]);
+    }
+    // An app that does not declare the CLI gets no CLI row.
+    const bare = join(root, 'bare');
+    await mkdir(bare);
+    await writeFile(join(bare, 'package.json'), JSON.stringify({}));
+    assert.deepEqual(run(bare), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

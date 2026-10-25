@@ -101,6 +101,8 @@ try {
     for (const [name, declared] of Object.entries(manifest[section] ?? {})) {
       if (
         ![
+          // The app-local CLI runs generate-index in predev/prebuild.
+          '@open-agent-toolkit/cli',
           '@open-agent-toolkit/docs-config',
           '@open-agent-toolkit/docs-theme',
           '@open-agent-toolkit/docs-transforms',

@@ -538,8 +538,12 @@ canonical-source judgment; not-found is initially unverified. It cannot prove
 runtime behavior, registry membership or scenario correctness. Accepted IA,
 source citations and existing recommendation approval classes still govern.
 
-For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*` packages to the
+For framework apps, offline drift compares installed `@open-agent-toolkit/docs-*` packages, and
+the app's own `@open-agent-toolkit/cli` when the app declares it, to the
 running CLI's bundled `public-package-versions.json`, never registry latest.
+The app-local CLI matters because its `oat docs generate-index` runs in
+`predev`/`prebuild`; its drift is reported as a manual command, outside apply's
+tooling update.
 Older installed packages produce an explicit drift recommendation with the
 exact upgrade command. Equal versions are current. Newer packages are `ahead`: select
 or update the intended CLI installation before re-analysis, without a package

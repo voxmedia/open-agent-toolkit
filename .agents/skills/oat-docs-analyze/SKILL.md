@@ -616,6 +616,10 @@ record whether app migration is relevant only when evidence or user intent suppo
 
 For framework apps read their package.json and installed docs packages against
 the running CLI's bundled `assets/public-package-versions.json`, without network.
+The helper covers the `@open-agent-toolkit/docs-*` packages and, when the app
+declares it in any dependency section, the app-local `@open-agent-toolkit/cli`
+whose `oat docs generate-index` runs in `predev`/`prebuild`; a stale local CLI
+writes a different manifest than the running CLI.
 Run this skill's production helper after resolving this skill's own directory:
 
 ```bash
@@ -659,8 +663,11 @@ The helper reports declared and installed versions, target versions and commands
 for orderable targets. If the app uses a different package manager, translate the
 command to its documented equivalent preserving package, exact target and
 dependency section. Cite the manifest, installed package path, bundle path and
-exact command. Report older-package drift as `tooling-update`, `approval: explicit`;
-describe unsupported scaffold repairs separately as `manual`. Markdown has no
+exact command. Report older docs-package drift as `tooling-update`,
+`approval: explicit`. Report older app-local CLI drift as `manual`,
+`approval: explicit`, with the helper's exact command: apply's approved tooling
+update covers only `@open-agent-toolkit/docs-*` dependencies. Describe
+unsupported scaffold repairs separately as `manual`. Markdown has no
 app-package drift check. This helper reads only and never upgrades anything.
 
 ### Step 7: Severity-Rate Findings
