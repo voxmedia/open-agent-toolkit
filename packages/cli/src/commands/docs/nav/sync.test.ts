@@ -122,6 +122,7 @@ describe('parseIndexContents', () => {
         line: 4,
         description: 'A complete reader description.',
         separator: '—',
+        source: '[Guide](guide.md) — A complete reader description.',
       },
     ]);
   });

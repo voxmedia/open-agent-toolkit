@@ -79,7 +79,15 @@ export async function checkDocs(options: {
   await checkReaders(target, pages, report);
   checkProvenance(target, pages, report);
   if (!options.rules?.length || options.rules.includes('navigation'))
-    await checkNavigation(target, report);
+    await checkNavigation(target, report, (ruleId, path, line) =>
+      findings.some(
+        (f) =>
+          f.severity === 'error' &&
+          f.ruleId === ruleId &&
+          f.path === path &&
+          f.line === line,
+      ),
+    );
   if (!options.rules?.length || options.rules.includes('commands'))
     await checkCommands(target, pages, report);
   if (

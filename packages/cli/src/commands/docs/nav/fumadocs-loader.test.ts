@@ -270,6 +270,30 @@ describe('generated meta.json against the installed Fumadocs loader', () => {
     expect(check.unlisted).toEqual([]);
   });
 
+  it('keeps an index-only leaf with same-page anchor Contents as its landing page alone', async () => {
+    const appRoot = await writeApp(await scratch(), null);
+    const docsRoot = join(appRoot, 'docs');
+    await rm(join(docsRoot, 'section', 'leaf.md'));
+    await writeFile(
+      join(docsRoot, 'section', 'index.md'),
+      '# Section\n\n## Contents\n\n- [Setup](#setup) - setup\n- [Usage](#usage) - usage\n\n## Setup\n\n## Usage\n',
+      'utf8',
+    );
+
+    const result = await syncDocsNavigation({ appRoot });
+
+    if (result.framework !== 'fumadocs') throw new Error('unreachable');
+    expect(result.unlisted).toEqual([]);
+    const sectionMeta = JSON.parse(
+      await readFile(join(docsRoot, 'section', 'meta.json'), 'utf8'),
+    ) as { pages: string[] };
+    expect(sectionMeta.pages).toEqual([]);
+    await expect(pagesInLoadedTree(docsRoot)).resolves.toEqual([
+      'index.md',
+      'section/index.md',
+    ]);
+  });
+
   it('lists a root: true folder landing page explicitly so the loader keeps it', async () => {
     const appRoot = await writeApp(await scratch(), { root: true });
     const docsRoot = join(appRoot, 'docs');

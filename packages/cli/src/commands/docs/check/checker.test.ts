@@ -156,7 +156,7 @@ describe('calibrated reader rules through real files and config', () => {
     if (count === 1) await rm(join(f.content, 'guide.md'));
     if (count === 3) await f.write('other.md', page());
     expect((await f.run('leaf-size')).map((v) => v.severity)).toEqual(
-      count === 1 ? ['error'] : count === 2 ? ['warn'] : [],
+      count < 3 ? ['warn'] : [],
     );
   });
   it.each([3, 4, 5, 6])('depth %i is root-relative', async (depth) => {
@@ -823,6 +823,234 @@ describe('real framework navigation boundaries', () => {
       expect(await readFile(join(f.root, path), 'utf8')).toBe(before);
     },
   );
+});
+
+describe('index-only leaves: single-page sections with in-page Contents', () => {
+  const overview =
+    'A useful overview explains this section and helps its readers choose their next destination.';
+  const map = (title: string, links: string[], tail = ''): string =>
+    page(
+      `# ${title}\n\n${overview}\n\n## Contents\n\n${links.join('\n')}\n${tail}`,
+    );
+  const toc = (title: string, headings: string[]): string =>
+    map(
+      title,
+      headings.map(
+        (h) =>
+          `- [${h}](#${h.toLowerCase().replaceAll(' ', '-')}) - About ${h}.`,
+      ),
+      headings.map((h) => `\n## ${h}\n\nText.\n`).join(''),
+    );
+  const lineOf = (source: string, needle: string): number =>
+    source.split('\n').findIndex((line) => line.includes(needle)) + 1;
+  // Root -> architecture/{multi-brand leaf, overview} and an ads leaf.
+  async function leafTree(framework: 'fumadocs' | 'mkdocs') {
+    const f = await fixture(framework);
+    await rm(join(f.content, 'guide.md'));
+    await f.write(
+      'index.md',
+      map('Home', [
+        '- [Architecture](architecture/index.md) - How the system fits.',
+        '- [Ads](ads/index.md) - How ads are configured.',
+      ]),
+    );
+    await f.write(
+      'architecture/index.md',
+      map('Architecture', [
+        '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+        '- [Overview](overview.md) - The system shape.',
+      ]),
+    );
+    await f.write('architecture/overview.md', page());
+    await f.write(
+      'architecture/multi-brand/index.md',
+      toc('Multi-brand', [
+        'Feature Config',
+        'Brand Themes',
+        'Request Routing Reference',
+        'Domains',
+        'Caching',
+      ]),
+    );
+    await f.write('ads/index.md', toc('Ads', ['Setup', 'Targeting']));
+    return f;
+  }
+  const leafWarning = (path: string) => ({
+    ruleId: 'leaf-size',
+    severity: 'warn',
+    path,
+    message:
+      'Index-only leaf; consider flattening it to a single page or adding reader pages.',
+  });
+
+  it.each(['fumadocs', 'mkdocs'] as const)(
+    '%s accepts leaf anchor Contents, warns on the leaf shape and generates no anchor navigation',
+    async (framework) => {
+      const f = await leafTree(framework);
+      await f.config({}, { navOwner: 'nav-sync' });
+      await syncDocsNavigation({ appRoot: f.app });
+      expect(await f.run()).toEqual([
+        leafWarning('ads/index.md'),
+        leafWarning('architecture/multi-brand/index.md'),
+      ]);
+      const generated =
+        framework === 'fumadocs'
+          ? [
+              await readFile(join(f.content, 'ads/meta.json'), 'utf8'),
+              await readFile(
+                join(f.content, 'architecture/multi-brand/meta.json'),
+                'utf8',
+              ),
+            ].join('')
+          : await readFile(join(f.app, 'mkdocs.yml'), 'utf8');
+      expect(generated).not.toContain('#');
+    },
+  );
+  it('reports a leaf anchor to a missing heading once, as an unresolved link', async () => {
+    const f = await leafTree('fumadocs');
+    const source = toc('Ads', ['Setup', 'Targeting']).replace(
+      '(#targeting)',
+      '(#missing)',
+    );
+    await f.write('ads/index.md', source);
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([
+      {
+        ruleId: 'links',
+        severity: 'error',
+        path: 'ads/index.md',
+        line: lineOf(source, '(#missing)'),
+        message: 'Unresolved anchor "#missing".',
+      },
+    ]);
+    // Not Markdown links, so the links rule never sees them; only strict
+    // Contents resolution can keep them errors.
+    for (const malformed of ['#set up', '#missing(foo', '#missing\\']) {
+      await f.write(
+        'ads/index.md',
+        source.replace('(#missing)', `(${malformed})`),
+      );
+      expect(
+        (await f.run()).filter((finding) => finding.severity === 'error'),
+      ).toEqual([
+        {
+          ruleId: 'directory-index',
+          severity: 'error',
+          path: 'ads/index.md',
+          line: lineOf(source, '(#missing)'),
+          message: expect.stringContaining(
+            `Contents link "${malformed}" in `,
+          ) as string,
+        },
+      ]);
+    }
+    // Balanced and escaped parentheses are real links to a custom heading ID,
+    // although the Contents href capture stops at the first `)`.
+    for (const valid of ['#setup(foo)', '#setup\\(foo\\)']) {
+      await f.write(
+        'ads/index.md',
+        map(
+          'Ads',
+          [`- [Setup](${valid}) - Configure ad slots.`],
+          '\n## Setup {#setup(foo)}\n\nText.\n',
+        ),
+      );
+      expect(
+        (await f.run()).filter((finding) => finding.severity === 'error'),
+      ).toEqual([]);
+    }
+  });
+  it('keeps anchor Contents an error beside child pages, reported once at its own index', async () => {
+    const f = await leafTree('fumadocs');
+    const source = map(
+      'Architecture',
+      [
+        '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+        '- [Overview](overview.md) - The system shape.',
+        '- [Principles](#principles) - Rules every change follows.',
+      ],
+      '\n## Principles\n\nText.\n',
+    );
+    await f.write('architecture/index.md', source);
+    const defect = {
+      severity: 'error',
+      path: 'architecture/index.md',
+      line: lineOf(source, '(#principles)'),
+      message: expect.stringContaining(
+        'Contents link "#principles" in ',
+      ) as string,
+    };
+    // Navigation stops at the same defect; it must not repeat it at the root.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([{ ruleId: 'directory-index', ...defect }]);
+    expect(await f.run('navigation')).toEqual([
+      { ruleId: 'navigation', ...defect },
+    ]);
+  });
+  it('still errors in navigation when a policy exception downgrades the Contents defect', async () => {
+    const f = await leafTree('fumadocs');
+    const source = map(
+      'Architecture',
+      [
+        '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+        '- [Overview](overview.md) - The system shape.',
+        '- [Principles](#principles) - Rules every change follows.',
+      ],
+      '\n## Principles\n\nText.\n',
+    );
+    await f.write('architecture/index.md', source);
+    await f.config({
+      exceptions: [
+        {
+          rule: 'directory-index',
+          path: 'architecture/index.md',
+          reason: 'Fixture downgrade.',
+          severity: 'warn',
+        },
+      ],
+    });
+    // The downgraded finding is not an error, so navigation must not defer to it.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'architecture/index.md',
+        line: lineOf(source, '(#principles)'),
+        message: expect.stringContaining(
+          'Contents link "#principles" in ',
+        ) as string,
+      },
+    ]);
+  });
+  it('reports a framework-only Contents defect once, from navigation at its own index', async () => {
+    const f = await leafTree('mkdocs');
+    await f.config({}, { navOwner: 'nav-sync' });
+    await f.write('architecture/extra.mdx', page());
+    const source = map('Architecture', [
+      '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+      '- [Overview](overview.md) - The system shape.',
+      '- [Extra](extra.mdx) - A page MkDocs does not render.',
+    ]);
+    await f.write('architecture/index.md', source);
+    // The reader check accepts .mdx; MkDocs navigation accepts only .md.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'architecture/index.md',
+        line: lineOf(source, '(extra.mdx)'),
+        message: expect.stringContaining(
+          'must point to a Markdown file or directory index',
+        ) as string,
+      },
+    ]);
+  });
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {

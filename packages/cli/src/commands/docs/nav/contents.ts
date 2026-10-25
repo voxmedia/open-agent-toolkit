@@ -1,5 +1,13 @@
-import { readFile } from 'node:fs/promises';
-import { basename, dirname, extname, join, relative, resolve } from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
+import {
+  basename,
+  dirname,
+  extname,
+  join,
+  posix,
+  relative,
+  resolve,
+} from 'node:path';
 
 import {
   createExclusionMatcher,
@@ -7,6 +15,8 @@ import {
   type ExclusionMatcher,
 } from '@commands/docs/shared/exclusions';
 import { dirExists, fileExists } from '@fs/io';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 
 export interface DocsContentsEntry {
   title: string;
@@ -14,7 +24,133 @@ export interface DocsContentsEntry {
   line?: number;
   description?: string;
   separator?: string;
+  /**
+   * The authored line from the link's opening `[` onward. `href` is captured
+   * only up to the first `)`, so Markdown-level validation reads this instead.
+   */
+  source?: string;
   group?: { title: string; line: number };
+}
+
+/**
+ * A defect in one index.md Contents map. `indexPath` is the index file that
+ * contains it, as the caller named it, and `line` the entry line when the
+ * entries were parsed with locations, so a consumer that only sees the thrown
+ * error can still report it against the file that contains it.
+ */
+export class DocsContentsError extends Error {
+  constructor(
+    message: string,
+    readonly indexPath: string,
+    readonly line?: number,
+  ) {
+    super(message);
+    this.name = 'DocsContentsError';
+  }
+}
+
+export interface DocsInventory {
+  /** Docs-relative POSIX directory paths, `.` for the docs root. */
+  directories: string[];
+  /** Docs-relative POSIX page paths. */
+  pages: string[];
+}
+
+/** Reader page extensions: Fumadocs renders `.md` and `.mdx` pages. */
+export const PAGE_EXTENSIONS: readonly string[] = ['.md', '.mdx'];
+
+/** Every non-excluded directory and reader page under the docs root. */
+export async function inventoryDocs(
+  docsRoot: string,
+  matcher: ExclusionMatcher,
+): Promise<DocsInventory> {
+  const directories: string[] = [];
+  const pages: string[] = [];
+
+  async function walk(relativeDir: string): Promise<void> {
+    directories.push(relativeDir);
+    const entries = await readdir(join(docsRoot, relativeDir), {
+      withFileTypes: true,
+    });
+    for (const entry of entries) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+        continue;
+      }
+      const entryPath = posix.join(relativeDir, entry.name);
+      if (entry.isDirectory()) {
+        if (matcher.excludesDirectory(entryPath)) continue;
+        await walk(entryPath);
+      } else if (
+        entry.isFile() &&
+        PAGE_EXTENSIONS.includes(extname(entry.name))
+      ) {
+        if (!matcher.excludesFile(entryPath)) pages.push(entryPath);
+      }
+    }
+  }
+
+  await walk('.');
+  directories.sort();
+  pages.sort();
+  return { directories, pages };
+}
+
+/**
+ * Whether a directory is an index-only leaf: its own `index.md` is the only
+ * reader page in it or below it, so it renders as a single-page section.
+ * `pagePaths` are docs-relative POSIX reader page paths.
+ */
+export function isIndexOnlyLeaf(
+  dirRelativePath: string,
+  pagePaths: readonly string[],
+): boolean {
+  const prefix = dirRelativePath === '.' ? '' : `${dirRelativePath}/`;
+  const ownIndex = `${prefix}index.md`;
+  let hasIndex = false;
+  for (const path of pagePaths) {
+    if (!path.startsWith(prefix)) continue;
+    if (path !== ownIndex) return false;
+    hasIndex = true;
+  }
+  return hasIndex;
+}
+
+/** A Contents href naming a heading on the same page, such as `#setup`. */
+export function isSamePageAnchor(href: string): boolean {
+  return href.trim().startsWith('#');
+}
+
+interface InlineNode {
+  type: string;
+  url?: string;
+  children?: InlineNode[];
+  position?: { start: { offset?: number } };
+}
+
+const inlineMarkdown = unified().use(remarkParse);
+
+/**
+ * Whether a Contents entry is a real Markdown link to a same-page fragment.
+ * The Contents grammar is line-based, so it captures destinations such as
+ * `#a b`, `#a(b` or `#a\` that Markdown does not parse as links; those render
+ * as plain text and no link rule would ever validate them. The CommonMark
+ * parser the reader check uses decides, over the authored link text rather
+ * than the `href` truncated at the first `)`, so balanced `#a(b)` and escaped
+ * `#a\(b\)` fragments stay links. The links rule then checks the URL remark
+ * parsed against the page's headings.
+ */
+function isMarkdownSamePageLink(entry: DocsContentsEntry): boolean {
+  const tree = inlineMarkdown.parse(
+    entry.source ?? `[${entry.title}](${entry.href})`,
+  ) as InlineNode;
+  const paragraph = tree.children?.length === 1 ? tree.children[0] : undefined;
+  const link =
+    paragraph?.type === 'paragraph' ? paragraph.children?.[0] : undefined;
+  return (
+    link?.type === 'link' &&
+    link.position?.start.offset === 0 &&
+    (link.url ?? '').startsWith('#')
+  );
 }
 
 /** Mask fenced examples without changing authored source line numbers. */
@@ -59,7 +195,10 @@ export function parseIndexContents(
   const headingIndex = contentsHeadingIndex(lines);
 
   if (headingIndex < 0) {
-    throw new Error(`Missing required ## Contents section in ${sourcePath}`);
+    throw new DocsContentsError(
+      `Missing required ## Contents section in ${sourcePath}`,
+      sourcePath,
+    );
   }
 
   const entries: DocsContentsEntry[] = [];
@@ -67,8 +206,9 @@ export function parseIndexContents(
   let groupEntries = 0;
   const checkGroup = (): void => {
     if (group && groupEntries === 0) {
-      throw new Error(
+      throw new DocsContentsError(
         `${sourcePath}:${group.line}: Contents group "${group.title}" has no entries`,
+        sourcePath,
       );
     }
   };
@@ -83,8 +223,9 @@ export function parseIndexContents(
       continue;
     }
     if (/^\s*[*+]\s+\[[^\]]+\]\([^)]+\)/.test(line)) {
-      throw new Error(
+      throw new DocsContentsError(
         `${sourcePath}:${i + 1}: Contents links must use a dash (-) bullet`,
+        sourcePath,
       );
     }
     const match = line.match(/^\s*-\s+\[([^\]]+)\]\(([^)]+)\)/);
@@ -101,6 +242,7 @@ export function parseIndexContents(
                 .replace(/^\s*[-–—:]\s*/, '')
                 .trim(),
               separator: /^\s*([-–—:])/.exec(line.slice(match[0].length))?.[1],
+              source: line.slice(match[0].indexOf('[')),
             }
           : {}),
       });
@@ -110,8 +252,9 @@ export function parseIndexContents(
   checkGroup();
 
   if (entries.length === 0 && !options.allowEmpty) {
-    throw new Error(
+    throw new DocsContentsError(
       `No machine-readable links found under ## Contents in ${sourcePath}`,
+      sourcePath,
     );
   }
 
@@ -125,12 +268,23 @@ interface BuildDocsNavTreeOptions {
   dirRelativePath?: string;
   visitedDirectories?: Set<string>;
   nonReaderPaths?: readonly string[];
+  /** Reader page inventory; the root call computes it once. */
+  pagePaths?: readonly string[];
 }
 
 function toPosixPath(path: string): string {
   return path.replaceAll('\\', '/');
 }
 
+/**
+ * Resolve one Contents entry to the page or section it places in navigation.
+ *
+ * Contents is machine-readable navigation, so every entry must target a page
+ * or a section index. The one exception is an index-only leaf: a single-page
+ * section may list same-page heading anchors as an in-page table of contents.
+ * Those resolve to `anchor` and place nothing in navigation; the `links` check
+ * rule validates that each heading exists.
+ */
 export async function resolveEntryTarget(
   docsRoot: string,
   directoryPath: string,
@@ -142,16 +296,37 @@ export async function resolveEntryTarget(
    */
   pageExtensions: readonly string[] = ['.md'],
   matcher?: ExclusionMatcher,
-): Promise<{ kind: 'page' | 'section' | 'excluded'; path: string }> {
+  options: {
+    /** The directory is an index-only leaf (see {@link isIndexOnlyLeaf}). */
+    indexOnlyLeaf?: boolean;
+  } = {},
+): Promise<{
+  kind: 'page' | 'section' | 'excluded' | 'anchor';
+  path: string;
+}> {
+  const indexPath = join(docsRoot, dirRelativePath, 'index.md');
+  const fail = (message: string): never => {
+    throw new DocsContentsError(message, indexPath, entry.line);
+  };
+  if (isSamePageAnchor(entry.href)) {
+    if (!options.indexOnlyLeaf) {
+      fail(
+        `Contents link "${entry.href}" in ${indexPath} is a same-page anchor; Contents must link pages or sections unless index.md is the only reader page in its directory and it has no child sections.`,
+      );
+    }
+    if (!isMarkdownSamePageLink(entry)) {
+      fail(
+        `Contents link "${entry.href}" in ${indexPath} is not a valid Markdown link; fix its destination (escape or remove spaces and unbalanced parentheses).`,
+      );
+    }
+    return {
+      kind: 'anchor',
+      path: toPosixPath(posix.join(dirRelativePath, 'index.md')),
+    };
+  }
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {
-    throw new Error(
-      `Invalid contents link "${entry.href}" in ${join(
-        docsRoot,
-        dirRelativePath,
-        'index.md',
-      )}`,
-    );
+    fail(`Invalid contents link "${entry.href}" in ${indexPath}`);
   }
 
   let targetPath = resolve(directoryPath, href);
@@ -169,12 +344,8 @@ export async function resolveEntryTarget(
     relativeTargetPath === '..' ||
     relativeTargetPath.length === 0
   ) {
-    throw new Error(
-      `Contents link "${entry.href}" escapes the docs directory from ${join(
-        docsRoot,
-        dirRelativePath,
-        'index.md',
-      )}`,
+    fail(
+      `Contents link "${entry.href}" escapes the docs directory from ${indexPath}`,
     );
   }
 
@@ -183,22 +354,14 @@ export async function resolveEntryTarget(
   }
 
   if (!(await fileExists(targetPath))) {
-    throw new Error(
-      `Contents link "${entry.href}" in ${join(
-        docsRoot,
-        dirRelativePath,
-        'index.md',
-      )} does not resolve to a Markdown file`,
+    fail(
+      `Contents link "${entry.href}" in ${indexPath} does not resolve to a Markdown file`,
     );
   }
 
   if (!pageExtensions.includes(extname(targetPath))) {
-    throw new Error(
-      `Contents link "${entry.href}" in ${join(
-        docsRoot,
-        dirRelativePath,
-        'index.md',
-      )} must point to a Markdown file or directory index`,
+    fail(
+      `Contents link "${entry.href}" in ${indexPath} must point to a Markdown file or directory index`,
     );
   }
 
@@ -229,9 +392,14 @@ export async function buildDocsNavTree(
   }
 
   const indexMarkdown = await readFile(indexPath, 'utf8');
-  const contentsEntries = parseIndexContents(indexMarkdown, indexPath);
+  const contentsEntries = parseIndexContents(indexMarkdown, indexPath, {
+    locations: true,
+  });
 
   const matcher = createExclusionMatcher(options.nonReaderPaths ?? []);
+  const pagePaths =
+    options.pagePaths ?? (await inventoryDocs(options.docsRoot, matcher)).pages;
+  const indexOnlyLeaf = isIndexOnlyLeaf(dirRelativePath, pagePaths);
   const nav: DocsNavTree =
     dirRelativePath === '.'
       ? [{ Home: 'index.md' }]
@@ -247,8 +415,10 @@ export async function buildDocsNavTree(
       entry,
       ['.md'],
       matcher,
+      { indexOnlyLeaf },
     );
-    if (resolvedTarget.kind === 'excluded') continue;
+    if (resolvedTarget.kind === 'excluded' || resolvedTarget.kind === 'anchor')
+      continue;
 
     if (
       resolvedTarget.kind === 'section' &&
@@ -286,6 +456,7 @@ export async function buildDocsNavTree(
         dirRelativePath: childDirRelativePath,
         visitedDirectories: childVisitedDirectories,
         nonReaderPaths: options.nonReaderPaths,
+        pagePaths,
       }),
     });
   }
