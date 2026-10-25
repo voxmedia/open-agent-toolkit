@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(command -v:*), Bash(sed:*), Bash(npm root -g:*), Bash(test:*), Bash(oat --version), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.8.0'
+  version: '1.9.0'
 ---
 
 # Docs Analysis
