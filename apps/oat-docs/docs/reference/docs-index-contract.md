@@ -73,6 +73,7 @@ Fumadocs generated behavior:
 - The inventory stays hierarchical. Each local Contents orders its surviving direct entries; a cross-directory link orders its containing direct entry without duplicating the page. Child directory titles come from their index frontmatter title, then H1, then slug, independently of nav labels.
 - Remaining entries use deterministic index/directories/files/lexical fallback and carry `[unlisted in Contents]` when a Contents map exists. With no Contents map the inventory keeps its fallback order; malformed present Contents reports the shared grammar errors.
 - Generated manifests should carry an autogen warning and are rewritten by `predev` / `prebuild`.
+- Manifest links are relative to the manifest file, so the app-root `index.md` links docs pages as `docs/<path>.md`.
 
 ## Fumadocs Nav Sync
 

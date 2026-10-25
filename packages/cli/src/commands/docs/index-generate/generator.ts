@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
+import { join, posix, relative, resolve } from 'node:path';
 
 import {
   hasIndexContents,
@@ -216,7 +216,20 @@ export async function generateIndex(
   );
 }
 
-function renderEntries(entries: IndexEntry[], indent: number): string[] {
+export interface RenderIndexOptions {
+  /**
+   * POSIX path from the manifest's directory to the indexed docs directory.
+   * Entry paths are docs-relative; this prefix makes each link resolve from
+   * the file the manifest is written to.
+   */
+  linkBase?: string;
+}
+
+function renderEntries(
+  entries: IndexEntry[],
+  indent: number,
+  linkBase: string,
+): string[] {
   const lines: string[] = [];
   const prefix = '  '.repeat(indent);
 
@@ -225,11 +238,11 @@ function renderEntries(entries: IndexEntry[], indent: number): string[] {
       lines.push(
         `${prefix}- ${entry.title}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
       );
-      lines.push(...renderEntries(entry.children, indent + 1));
+      lines.push(...renderEntries(entry.children, indent + 1, linkBase));
     } else {
       const desc = entry.description ? ` — ${entry.description}` : '';
       lines.push(
-        `${prefix}- [${entry.title}](${entry.path})${desc}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
+        `${prefix}- [${entry.title}](${linkBase ? posix.join(linkBase, entry.path) : entry.path})${desc}${entry.unlisted ? ' [unlisted in Contents]' : ''}`,
       );
     }
   }
@@ -237,10 +250,13 @@ function renderEntries(entries: IndexEntry[], indent: number): string[] {
   return lines;
 }
 
-export function renderIndex(entries: IndexEntry[]): string {
+export function renderIndex(
+  entries: IndexEntry[],
+  options: RenderIndexOptions = {},
+): string {
   if (entries.length === 0) {
     return '';
   }
 
-  return `${renderEntries(entries, 0).join('\n')}\n`;
+  return `${renderEntries(entries, 0, options.linkBase ?? '').join('\n')}\n`;
 }

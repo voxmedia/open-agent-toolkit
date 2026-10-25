@@ -60,7 +60,10 @@ interface IndexGenerateFileDependencies {
     docsDir: string,
     options: import('./generator').GenerateIndexOptions,
   ) => Promise<import('./generator').IndexEntry[]>;
-  renderIndex: (entries: import('./generator').IndexEntry[]) => string;
+  renderIndex: (
+    entries: import('./generator').IndexEntry[],
+    options?: import('./generator').RenderIndexOptions,
+  ) => string;
   writeFile: (
     path: string,
     content: string,
@@ -690,8 +693,11 @@ async function runIndexGenerate(
   const entries = await deps.generateIndex(docsDir, {
     excludes: resolved.excludes,
   });
+  // Links are written relative to the manifest file, which always sits outside
+  // the docs directory it indexes.
+  const linkBase = normalizeToPosixPath(relative(dirname(outputPath), docsDir));
   const content = buildGeneratedIndexOutput(
-    deps.renderIndex(entries),
+    deps.renderIndex(entries, { linkBase }),
     resolved.config.documentation?.tooling,
   );
 

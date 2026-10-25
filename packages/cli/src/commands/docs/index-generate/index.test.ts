@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import {
   mkdir,
   mkdtemp,
@@ -9,7 +10,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -993,10 +994,10 @@ describe('createDocsGenerateIndexCommand', () => {
         expect(
           manifest.split('\n').filter((line) => line.startsWith('- ')),
         ).toEqual([
-          '- [Docs](index.md)',
-          '- [Alpha](a.md) [unlisted in Contents]',
-          '- [Guide](guide.md) — How to [unlisted in Contents]',
-          '- [Zulu](z.md) [unlisted in Contents]',
+          '- [Docs](apps/docs/docs/index.md)',
+          '- [Alpha](apps/docs/docs/a.md) [unlisted in Contents]',
+          '- [Guide](apps/docs/docs/guide.md) — How to [unlisted in Contents]',
+          '- [Zulu](apps/docs/docs/z.md) [unlisted in Contents]',
         ]);
       },
     );
@@ -1044,7 +1045,10 @@ describe('createDocsGenerateIndexCommand', () => {
       const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
       expect(
         manifest.split('\n').filter((line) => line.startsWith('- ')),
-      ).toEqual(['- [Docs](index.md)', '- [Guide](guide.md) — How to']);
+      ).toEqual([
+        '- [Docs](docs/index.md)',
+        '- [Guide](docs/guide.md) — How to',
+      ]);
     });
 
     it('writes the real manifest, preserves authored bytes, and records a repo-relative index', async () => {
@@ -1098,6 +1102,46 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(await readFile(outputPath, 'utf8')).toBe(handAuthored);
     });
 
+    // The manifest is read where it is written (an app root, or anywhere
+    // outside a Markdown content root), so each link must resolve from there.
+    it.each([
+      ['the Fumadocs app root', [], 'apps/docs/index.md'],
+      [
+        'a separate directory',
+        ['--output', 'out/manifest.md'],
+        'out/manifest.md',
+      ],
+    ])(
+      'writes manifest links that resolve from %s',
+      async (_name, args, output) => {
+        const repo = await createRealRepo({
+          root: 'apps/docs',
+          tooling: 'fumadocs',
+        });
+        await mkdir(join(repo.appRoot, 'docs', 'nested'), { recursive: true });
+        await writeFile(
+          join(repo.appRoot, 'docs', 'nested', 'index.md'),
+          '---\ntitle: Nested\n---\n\n# Nested\n',
+        );
+        await mkdir(join(repo.repoRoot, 'out'), { recursive: true });
+
+        await runCommand(repo.command, args);
+
+        expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+        const manifestPath = join(repo.repoRoot, output);
+        const manifest = await readFile(manifestPath, 'utf8');
+        const targets = [...manifest.matchAll(/\]\(([^)]+)\)/g)].map(
+          (match) => match[1]!,
+        );
+        expect(targets).toHaveLength(3);
+        for (const target of targets) {
+          const absolute = resolve(dirname(manifestPath), target);
+          expect(existsSync(absolute), target).toBe(true);
+          expect(absolute, target).not.toBe(manifestPath);
+        }
+      },
+    );
+
     it('requires explicit Markdown output and indexes the full literal root', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',
@@ -1129,8 +1173,8 @@ describe('createDocsGenerateIndexCommand', () => {
       );
       expect(manifest).toContain('Markdown has no automatic manifest hooks');
       expect(manifest).not.toContain('predev/prebuild');
-      expect(manifest).toContain('[Handbook](index.md)');
-      expect(manifest).toContain('[Guide](docs/guide.md)');
+      expect(manifest).toContain('[Handbook](apps/docs/index.md)');
+      expect(manifest).toContain('[Guide](apps/docs/docs/guide.md)');
       await expect(
         readFile(join(repo.repoRoot, '.oat', 'config.json'), 'utf8'),
       ).resolves.toBe(beforeConfig);

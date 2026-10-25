@@ -558,7 +558,10 @@ suppressions or automatic navigation ownership.
 
 If a generated root index or manifest exists:
 
-1. Compare generated entries with the authored `## Contents` graph.
+1. Compare generated entries with the authored `## Contents` graph. Current
+   manifests link relative to the manifest file (an app-root manifest links
+   `docs/<page>.md`); links relative to the docs directory instead mean an older
+   CLI wrote it, so cite the CLI that regenerates it rather than content drift.
 2. Flag generated output that is missing, ignored/local-only when local guidance
    expects a tracked artifact, stale, ordered differently from authored maps, or
    unclear because generator semantics are undocumented.
