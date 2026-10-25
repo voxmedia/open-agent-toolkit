@@ -443,6 +443,7 @@
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ | -------- | ---------- | -------- |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                      | open   | urgent   | feature    | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                         | open   | high     | feature    | M        |
+| BL-261025-add-an-adoption-path-for-pre-0 | Add an adoption path for pre-0.3.31 Fumadocs apps whose guidance assumes nav sync                        | open   | high     | task       | M        |
 | BL-261002-add-an-explicit-plan-approval  | Add an explicit plan-approval step to quick and spec-driven projects                                     | open   | high     | feature    | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                                | open   | high     | feature    | L        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                           | open   | high     | feature    | M        |
@@ -457,6 +458,7 @@
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                              | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                            | open   | high     | feature    | L        |
 | BL-261002-warn-when-the-default-branch   | Warn when the default branch has changed planned paths since the branch base                             | open   | high     | feature    | M        |
+| BL-261025-add-a-check-or-stdout-mode     | Add a check or stdout mode to oat docs generate-index                                                    | open   | medium   | task       | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                          | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                       | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                        | open   | medium   | feature    | L        |
@@ -490,6 +492,8 @@
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                   | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                       | open   | medium   | feature    | M        |
+| BL-261025-keep-oat-docs-analyze-tracking | Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently                  | open   | medium   | task       | S        |
+| BL-261025-let-oat-docs-analyze-propose   | Let oat-docs-analyze propose candidate IA structures when no IA is recorded                              | open   | medium   | task       | M        |
 | BL-261002-let-plans-declare-an-evidence  | Let plans declare an evidence tier per phase and reconcile tracking on driver takeover                   | open   | medium   | feature    | L        |
 | BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |

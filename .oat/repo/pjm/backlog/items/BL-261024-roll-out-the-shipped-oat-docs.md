@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-24T18:59:55.490Z
+updated: 2026-10-25T00:30:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -67,3 +67,13 @@ project discovery remains separate.
 Open: all consumer acceptance is unperformed. The OAT-side capability is merged
 in the linked phase PRs; this item records no consumer commit/PR, publication,
 deployment or acceptance. Record those delivery facts only when observed.
+
+## Pilot follow-ups
+
+A 0.3.31 pilot on a pilot consumer repository surfaced tooling defects (fixed
+for the next release) and four follow-ups tracked separately:
+
+- [BL-261025-add-a-check-or-stdout-mode — Add a check or stdout mode to oat docs generate-index](BL-261025-add-a-check-or-stdout-mode.md)
+- [BL-261025-keep-oat-docs-analyze-tracking — Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently](BL-261025-keep-oat-docs-analyze-tracking.md)
+- [BL-261025-let-oat-docs-analyze-propose — Let oat-docs-analyze propose candidate IA structures when no IA is recorded](BL-261025-let-oat-docs-analyze-propose.md)
+- [BL-261025-add-an-adoption-path-for-pre-0 — Add an adoption path for pre-0.3.31 Fumadocs apps whose guidance assumes nav sync](BL-261025-add-an-adoption-path-for-pre-0.md)
