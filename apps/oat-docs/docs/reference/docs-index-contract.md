@@ -90,7 +90,7 @@ Fumadocs generated behavior:
 - Existing files are compared by meaning, not bytes, so a second run with no docs changes writes nothing, even after a formatter rewrites the files.
 - `.md` and `.mdx` pages can both be listed; each appears in `pages` by its file name without the extension.
 
-`oat docs nav sync --check` computes the same result and writes nothing. It exits 1 when a `meta.json` file would change or a page or folder is unlisted, and names each one. In this app, `prebuild` runs it, so `pnpm build:docs` fails until the `## Contents` maps and the committed `meta.json` files agree.
+`oat docs nav sync --check` computes the same result and writes nothing. It exits 1 when a `meta.json` file is missing or would change, or a page or folder is unlisted, and names each one, listing missing files separately. In this app, `prebuild` runs it, so `pnpm build:docs` fails until the `## Contents` maps and the committed `meta.json` files agree.
 
 ## MkDocs Nav Sync
 
@@ -109,7 +109,7 @@ Shared `documentation.nonReaderPaths` declares drafts/templates outside the read
 
 Fumadocs collections also omit matching pages and metadata when `defineDocs` uses OAT's `docs` and `meta` source options with an explicit repository config path. The pinned MkDocs 1.4.2 has no configurable rendering exclusion: these pages leave navigation and manifests but still render as routes. This setting is not a way to keep private content out of a MkDocs site.
 
-Fresh Fumadocs/MkDocs init explicitly writes `documentation.navOwner: nav-sync` and generates navigation after scaffold/config succeeds. Their generated `prebuild` / `docs:build` scripts run `nav sync --check`. Existing hand-authored or undeclared surfaces are preserved through bootstrap and use analyze/apply to choose ownership; absence never implies permission to regenerate. Markdown has no sidebar or nav sync.
+Fresh Fumadocs/MkDocs init explicitly writes `documentation.navOwner: nav-sync` and generates navigation after scaffold/config succeeds. Their generated `prebuild` / `docs:build` scripts run `nav sync --check`. Existing hand-authored or undeclared surfaces are preserved through bootstrap and use analyze/apply to choose ownership; absence never implies permission to regenerate. With `hand-authored`, the writing `oat docs nav sync` refuses and `--check` compares membership and order only; an undeclared owner gets a warning to declare one. Markdown has no sidebar or nav sync.
 
 ## Generated-file boundaries
 
