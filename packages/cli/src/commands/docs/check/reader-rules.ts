@@ -1,6 +1,7 @@
 import { dirname, extname, join, resolve } from 'node:path';
 
 import {
+  isIndexOnlyLeaf,
   parseIndexContents,
   resolveEntryTarget,
 } from '@commands/docs/nav/contents';
@@ -28,11 +29,13 @@ export async function checkReaders(
     ...target.documentation.check?.thresholds,
   };
   const byPath = new Map(pages.map((p) => [p.path, p]));
-  const dirs = readerDirectories(pages.map((p) => p.path));
+  const pagePaths = pages.map((p) => p.path);
+  const dirs = readerDirectories(pagePaths);
   const separators = new Map<string, { path: string; line: number }>();
   for (const dir of dirs) {
     const path = posix(join(dir, 'index.md'));
     const page = byPath.get(path);
+    const indexOnlyLeaf = isIndexOnlyLeaf(dir, pagePaths);
     let grouped = false;
     if (!page)
       report(
@@ -74,6 +77,8 @@ export async function checkReaders(
             separators.set(entry.separator, { path, line: entry.line! });
           try {
             // Existing strict Contents resolution owns local map semantics.
+            // Leaf same-page anchors resolve without error; the links rule
+            // below reports any that name a missing heading.
             await resolveEntryTarget(
               target.contentRoot,
               join(target.contentRoot, dir),
@@ -81,6 +86,7 @@ export async function checkReaders(
               entry,
               ['.md', '.mdx'],
               target.matcher,
+              { indexOnlyLeaf },
             );
           } catch (error) {
             report(
@@ -163,22 +169,21 @@ export async function checkReaders(
     const child = dirs.some(
       (d) => d !== dir && (dir === '.' || d.startsWith(`${dir}/`)),
     );
-    if (!child) {
-      if (count === 1 && page)
-        report(
-          'leaf-size',
-          'error',
-          path,
-          'Index-only leaf has no reader destination; flatten it or add its reader pages.',
-        );
-      else if (count === 2)
-        report(
-          'leaf-size',
-          'warn',
-          path,
-          'Leaf has only two direct reader pages including index.md; consider flattening.',
-        );
-    }
+    // A single-page section renders fine, so its shape is a style suggestion.
+    if (indexOnlyLeaf)
+      report(
+        'leaf-size',
+        'warn',
+        path,
+        'Index-only leaf; consider flattening it to a single page or adding reader pages.',
+      );
+    else if (!child && count === 2)
+      report(
+        'leaf-size',
+        'warn',
+        path,
+        'Leaf has only two direct reader pages including index.md; consider flattening.',
+      );
     if (!grouped) {
       if (count > t.folderError)
         report(

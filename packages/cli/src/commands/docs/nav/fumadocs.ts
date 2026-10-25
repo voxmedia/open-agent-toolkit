@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { basename, extname, join, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
@@ -14,6 +14,9 @@ import { fileExists } from '@fs/io';
 
 import {
   type DocsContentsEntry,
+  type DocsInventory,
+  inventoryDocs,
+  isIndexOnlyLeaf,
   parseIndexContents,
   resolveEntryTarget,
 } from './contents';
@@ -67,50 +70,8 @@ const FUMADOCS_PREFIXES = ['!', '...'];
 const H1 = /^#\s+(.+?)\s*#*\s*$/;
 const FENCE = /^\s*(```|~~~)/;
 
-interface DocsInventory {
-  /** Docs-relative POSIX directory paths, `.` for the docs root. */
-  directories: string[];
-  /** Docs-relative POSIX page paths. */
-  pages: string[];
-}
-
 function parentDir(path: string): string {
   return posix.dirname(path);
-}
-
-async function inventoryDocs(
-  docsRoot: string,
-  matcher: ExclusionMatcher,
-): Promise<DocsInventory> {
-  const directories: string[] = [];
-  const pages: string[] = [];
-
-  async function walk(relativeDir: string): Promise<void> {
-    directories.push(relativeDir);
-    const entries = await readdir(join(docsRoot, relativeDir), {
-      withFileTypes: true,
-    });
-    for (const entry of entries) {
-      if (entry.name.startsWith('.') || entry.name === 'node_modules') {
-        continue;
-      }
-      const entryPath = posix.join(relativeDir, entry.name);
-      if (entry.isDirectory()) {
-        if (matcher.excludesDirectory(entryPath)) continue;
-        await walk(entryPath);
-      } else if (
-        entry.isFile() &&
-        PAGE_EXTENSIONS.includes(extname(entry.name))
-      ) {
-        if (!matcher.excludesFile(entryPath)) pages.push(entryPath);
-      }
-    }
-  }
-
-  await walk('.');
-  directories.sort();
-  pages.sort();
-  return { directories, pages };
 }
 
 /**
@@ -262,7 +223,8 @@ async function buildFolderPages(
   nonIndexUrls: ReadonlySet<string>,
 ): Promise<string[]> {
   const indexPath = join(docsRoot, relativeDir, 'index.md');
-  const entries = parseIndexContents(markdown, indexPath);
+  const entries = parseIndexContents(markdown, indexPath, { locations: true });
+  const indexOnlyLeaf = isIndexOnlyLeaf(relativeDir, inventory.pages);
   // A folder the loader gives no implicit index (the docs root, a `root: true`
   // folder) must list `index` to show its landing page. Elsewhere, listing
   // `index` would demote the folder index to an ordinary child, so it is left
@@ -278,8 +240,11 @@ async function buildFolderPages(
       entry,
       PAGE_EXTENSIONS,
       matcher,
+      { indexOnlyLeaf },
     );
-    if (target.kind === 'excluded') continue;
+    // Same-page anchors in an index-only leaf are an in-page table of
+    // contents, not navigation.
+    if (target.kind === 'excluded' || target.kind === 'anchor') continue;
     const targetDir = parentDir(target.path);
     let item: string;
 
