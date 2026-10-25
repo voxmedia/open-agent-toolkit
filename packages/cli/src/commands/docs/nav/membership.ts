@@ -238,9 +238,18 @@ export async function compareFumadocsMembership(
         listed.push((await resolveTarget(item.key)).id);
     }
     const pagesLine = lineOf(actual.source, '"pages"');
+    // A nested folder's landing page is implicit (never in generated pages),
+    // so only an explicit exclusion can hide it.
+    const landing = await resolveTarget(posix.join(actual.dir, 'index'));
+    if (
+      actual.dir !== '.' &&
+      excluded.has(landing.id) &&
+      !expected.some((entry) => entry.target.id === landing.id)
+    )
+      expected.unshift({ name: 'index', target: landing });
     for (const { name, target } of expected) {
       if (
-        listed.includes(target.id) ||
+        (listed.includes(target.id) && !excluded.has(target.id)) ||
         (rest && !excluded.has(target.id)) ||
         reachedIds.has(target.id) ||
         reachedUrls.has(target.url)
@@ -294,8 +303,8 @@ function flattenNav(tree: unknown, out: string[] = []): string[] {
 
 /**
  * Compare a hand-authored MkDocs `nav:` with the Contents maps: every
- * Contents page appears, every local nav page exists, and pages of one
- * directory keep their Contents order. Section labels, nesting and external
+ * Contents page appears, every local nav page exists, and the entries of
+ * each Contents map (pages and section landing pages) keep their order. Section labels, nesting and external
  * links are the author's. Returns no issues when `nav` is absent.
  */
 export async function compareMkDocsMembership(options: {
@@ -351,10 +360,16 @@ export async function compareMkDocsMembership(options: {
         message: `Missing target: nav entry "${path}" names no page; remove it or restore the page.`,
         line: lineOf(source, path) ?? navLine,
       });
-  const directories = [...new Set(expected.map((path) => posix.dirname(path)))];
+  // A section landing page belongs to its parent's Contents map, so whole
+  // sections keep the parent order; other pages group by their directory.
+  const owner = (path: string): string =>
+    /^index\.mdx?$/.test(posix.basename(path)) && posix.dirname(path) !== '.'
+      ? posix.dirname(posix.dirname(path))
+      : posix.dirname(path);
+  const directories = [...new Set(expected.map(owner))];
   for (const directory of directories) {
     const want = expected.filter(
-      (path) => posix.dirname(path) === directory && actual.includes(path),
+      (path) => owner(path) === directory && actual.includes(path),
     );
     const found = actual.filter((path) => want.includes(path));
     if (want.join('\n') !== found.join('\n'))

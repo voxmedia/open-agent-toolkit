@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, realpath, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
 import {
@@ -460,7 +460,15 @@ async function runDocsNavSyncCommand(
       options.targetDir ??
       (configured ? relative(context.cwd, configured.root) || '.' : '.');
     const appRoot = resolve(context.cwd, targetDir);
-    const documentation = configured?.root === appRoot ? configured : null;
+    // Compare filesystem identity so a symlinked alias of the configured
+    // app keeps its ownership and exclusions.
+    const canonical = async (path: string) =>
+      realpath(path).catch(() => resolve(path));
+    const documentation =
+      configured &&
+      (await canonical(configured.root)) === (await canonical(appRoot))
+        ? configured
+        : null;
     if (documentation?.tooling?.toLowerCase() === 'markdown')
       throw new Error(MARKDOWN_NOT_APPLICABLE);
     const navOwner = documentation?.navOwner;

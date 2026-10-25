@@ -954,6 +954,15 @@ describe('docs nav sync ownership, default target and Markdown', () => {
     );
     const metaPath = join(root, 'app/docs/meta.json');
 
+    const { symlink } = await import('node:fs/promises');
+    await symlink(join(root, 'app'), join(root, 'alias'));
+    for (const target of ['app', 'alias']) {
+      process.exitCode = undefined;
+      await run(root, false, ['--target-dir', target]);
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(metaPath, 'utf8')).resolves.toBe(handMeta);
+    }
+    process.exitCode = undefined;
     const refused = await run(root, false, ['--target-dir', 'app']);
     expect(process.exitCode).toBe(1);
     expect(refused.error.join('\n')).toContain(

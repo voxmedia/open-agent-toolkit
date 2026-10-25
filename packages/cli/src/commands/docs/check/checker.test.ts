@@ -1305,7 +1305,7 @@ describe('parser/runtime and boundary composition', () => {
             '          - Custom reader: section/guide.md\n          - Second: section/second.md',
             '          - Second: section/second.md\n          - Custom reader: section/guide.md',
           ),
-          'Order differs from authored Contents in section/: expected section/index.md, section/guide.md, section/second.md; found section/index.md, section/second.md, section/guide.md. Reorder nav or Contents (section labels and links are not compared).',
+          'Order differs from authored Contents in section/: expected section/guide.md, section/second.md; found section/second.md, section/guide.md. Reorder nav or Contents (section labels and links are not compared).',
         ],
       ] as const) {
         await writeFile(path, invalid);
@@ -1512,6 +1512,22 @@ describe('hand-authored navigation membership, not generator equality', () => {
         },
       ]);
 
+      // An exclusion hides the implicit section landing page.
+      await f.write(
+        'section/meta.json',
+        pretty(['!index', 'usage', 'extra', '../install']),
+      );
+      expect(await f.run('navigation')).toEqual([
+        {
+          ruleId: 'navigation',
+          severity: 'error',
+          path: 'section/meta.json',
+          line: 2,
+          message:
+            'Missing reader page: "index" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
+        },
+      ]);
+
       await f.write(
         'section/meta.json',
         pretty(['extra', '../install', 'usage']),
@@ -1536,6 +1552,40 @@ describe('hand-authored navigation membership, not generator equality', () => {
       'site_name: Fixture\nnav:\n  - Home: index.md\n  - My own section:\n      - guide.md\n  - Source: https://example.com/repo\n',
     );
     expect(await f.run('navigation')).toEqual([]);
+    // Whole sections keep the parent Contents order.
+    await f.write(
+      'index.md',
+      contentsPage('Home', [
+        '- [Guide](guide.md) - Complete description for this reader.',
+        '- [Alpha](a/index.md) - Complete description for this reader.',
+        '- [Beta](b/index.md) - Complete description for this reader.',
+      ]),
+    );
+    for (const section of ['a', 'b']) {
+      await f.write(
+        `${section}/index.md`,
+        contentsPage(section, [
+          '- [Leaf](leaf.md) - Complete description for this reader.',
+        ]),
+      );
+      await f.write(`${section}/leaf.md`, page());
+    }
+    const sections = (first: string, second: string): string =>
+      `site_name: Fixture\nnav:\n  - Home: index.md\n  - guide.md\n  - ${first}:\n      - ${first}/index.md\n      - ${first}/leaf.md\n  - ${second}:\n      - ${second}/index.md\n      - ${second}/leaf.md\n`;
+    await f.put('site/mkdocs.yml', sections('a', 'b'));
+    expect(await f.run('navigation')).toEqual([]);
+    await f.put('site/mkdocs.yml', sections('b', 'a'));
+    expect(await f.run('navigation')).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'mkdocs.yml',
+        line: 2,
+        message:
+          'Order differs from authored Contents in the docs root: expected index.md, guide.md, a/index.md, b/index.md; found index.md, guide.md, b/index.md, a/index.md. Reorder nav or Contents (section labels and links are not compared).',
+      },
+    ]);
+    await f.write('index.md', index());
     await f.put(
       'site/mkdocs.yml',
       'site_name: Fixture\nnav:\n  - Home: index.md\n  - guide.md\n  - ghost.md\n',
