@@ -226,11 +226,10 @@ export interface RenderIndexOptions {
 }
 
 /**
- * Percent-encode the characters that end or split a CommonMark link
+ * Percent-encode the characters that end, split or rewrite a CommonMark link
  * destination (whitespace, `#`, `?`, parentheses, angle brackets, `&` entity
- * starts, `\\` escapes) and `%`
- * itself as UTF-8 bytes, so any supported filesystem path renders as a
- * resolvable link.
+ * starts and `\` escapes) and `%` itself, as UTF-8 bytes, so any supported
+ * filesystem path renders as a resolvable link.
  */
 function linkDestination(path: string): string {
   return path.replace(/[%\s#?()<>&\\]/g, (char) =>
