@@ -1544,6 +1544,56 @@ describe('hand-authored navigation membership, not generator equality', () => {
       ]);
     },
   );
+  it('hand-authored Fumadocs pagesIndex reaches the folder landing page by path or own-route link', async () => {
+    const f = await fixture('fumadocs');
+    await f.config({}, { navOwner: 'hand-authored' });
+    await f.write(
+      'index.md',
+      contentsPage('Home', [
+        '- [Guide](guide.md) - Complete description for this reader.',
+        '- [Section](section/index.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write(
+      'section/index.md',
+      contentsPage('Section', [
+        '- [Usage](usage.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write('section/usage.md', page());
+    await f.write('meta.json', pretty(['index', 'guide', 'section']));
+    // Shape captured from a consumer sidebar: fumadocs-core 16.10.2 makes a
+    // link-form pagesIndex the folder index, routing to the landing URL.
+    const meta = (pagesIndex: string): string =>
+      `${JSON.stringify({ title: 'Section', pagesIndex, pages: ['usage'] }, null, 2)}\n`;
+    for (const reaches of [
+      '[Overview](/section)',
+      '[Overview](/section/)',
+      'index',
+    ]) {
+      await f.write('section/meta.json', meta(reaches));
+      expect(await f.run('navigation'), reaches).toEqual([]);
+    }
+    // At the docs root the loader attaches the landing page only through a
+    // path-form pagesIndex (or a listed "index").
+    await f.write(
+      'meta.json',
+      `${JSON.stringify({ pagesIndex: 'index', pages: ['guide', 'section'] })}\n`,
+    );
+    expect(await f.run('navigation')).toEqual([]);
+    await f.write('meta.json', pretty(['index', 'guide', 'section']));
+    await f.write('section/meta.json', meta('[Overview](/elsewhere)'));
+    expect(await f.run('navigation')).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'section/meta.json',
+        line: 4,
+        message:
+          'Missing reader page: "index" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
+      },
+    ]);
+  });
   it('hand-authored MkDocs nav compares page membership, not section labels or links', async () => {
     const f = await fixture('mkdocs');
     await f.config({}, { navOwner: 'hand-authored' });

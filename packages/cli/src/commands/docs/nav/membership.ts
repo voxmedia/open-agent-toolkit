@@ -134,6 +134,8 @@ interface ActualMeta {
   dir: string;
   source: string;
   items: Array<{ raw: string; item: PagesItem }>;
+  /** Author-owned `pagesIndex`, when it is a string. */
+  pagesIndex?: string;
 }
 
 /**
@@ -187,10 +189,14 @@ export async function compareFumadocsMembership(
       continue;
     }
     const dir = posix.dirname(file.path);
+    const pagesIndex = (parsed as Record<string, unknown>).pagesIndex;
     actuals.push({
       file,
       dir,
       source,
+      ...(typeof pagesIndex === 'string' && pagesIndex.trim()
+        ? { pagesIndex: pagesIndex.trim() }
+        : {}),
       items: (pages as string[]).map((raw) => ({
         raw,
         item: classify(dir, raw),
@@ -202,6 +208,23 @@ export async function compareFumadocsMembership(
   const reachedIds = new Set<string>();
   const reachedUrls = new Set<string>();
   for (const actual of actuals) {
+    // fumadocs-core 16.10.2 `buildFolder`: a path-form pagesIndex attaches
+    // that page as the folder index unless pages excludes it; a link-form
+    // pagesIndex makes the link the folder index, so the folder routes to its
+    // URL (compared like any link item).
+    if (actual.pagesIndex !== undefined) {
+      const index = classify(actual.dir, actual.pagesIndex);
+      if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
+      else if (index.kind === 'path') {
+        const target = await resolveTarget(index.key);
+        const excludedHere = actual.items.some(
+          ({ raw }) =>
+            raw.startsWith('!') &&
+            posix.join(actual.dir, raw.slice(1)) === index.key,
+        );
+        if (target.exists && !excludedHere) reachedIds.add(target.id);
+      }
+    }
     for (const { raw, item } of actual.items) {
       if (item.kind === 'link' && item.url) reachedUrls.add(item.url);
       if (item.kind !== 'path') continue;
