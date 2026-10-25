@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-25T04:05:00.000Z
+updated: 2026-10-25T14:01:29.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -64,9 +64,43 @@ project discovery remains separate.
 
 ## Delivery status
 
-Open: all consumer acceptance is unperformed. The OAT-side capability is merged
-in the linked phase PRs; this item records no consumer commit/PR, publication,
-deployment or acceptance. Record those delivery facts only when observed.
+Open. Observed delivery as of 2026-10-25, recorded generically (consumer
+repositories are not named in this public record):
+
+- OAT 0.3.32 and 0.3.33 shipped rollout fixes in
+  [PR #378](https://github.com/voxmedia/open-agent-toolkit/pull/378) and
+  [PR #379](https://github.com/voxmedia/open-agent-toolkit/pull/379).
+- Four consumer docs surfaces were brought to conformance and merged: three
+  Fumadocs apps (one nav-sync app with a hoisted install, one standalone nested
+  nav-sync app and one pilot nav-sync app) and one Markdown docs directory
+  adopted with `oat docs init --framework markdown --adopt`.
+- A fifth Fumadocs consumer, with hand-authored navigation, is in review.
+- The invoked CLI was 0.3.33 (bundled `public-package-versions.json` 0.3.33).
+  Package drift was verified current after approved tooling updates, and
+  framework drift acceptance was exercised on real consumers.
+
+No checkbox is ticked yet; each one still has unmet clauses as written:
+
+- 1–2: the second named consumer's documentation config is not yet repaired or
+  added, and both checkboxes cover both named consumers. Checkbox 2 also needs
+  evidence for docs-directory detection, the existing docs fallback, apply and
+  index consumers, and an external generated inventory.
+- 3: conformance is recorded, but not that repairs went through analyze and
+  approved apply, or that authored content and local guidance were kept.
+- 4–5: the named automation config change and a real automation handoff have
+  not been made or verified.
+- 6: interactive offline drift on framework consumers is evidenced. Still
+  missing: the automation skip-and-report path for explicit upgrades, and the
+  not-applicable drift record for the named Markdown consumers. Hoisted-only
+  installs still return unverified; the hoisted consumer's conformance does
+  not imply a fix.
+- 7: approved tooling updates were exercised, but the allowed-category limits,
+  build verification, and separate individually approved and blanket outcomes
+  are not recorded.
+- 8: the CLI version, bundle, categorical outcomes and one command are recorded
+  above. Consumer commit and PR references and the remaining owner decisions
+  (the second named consumer, the fifth consumer in review and automation) are
+  still to record.
 
 ## Rollout follow-ups
 
