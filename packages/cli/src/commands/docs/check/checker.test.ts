@@ -925,6 +925,34 @@ describe('index-only leaves: single-page sections with in-page Contents', () => 
       },
     ]);
   });
+  it('keeps anchor Contents an error beside child pages, reported once at its own index', async () => {
+    const f = await leafTree('fumadocs');
+    const source = map(
+      'Architecture',
+      [
+        '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+        '- [Overview](overview.md) - The system shape.',
+        '- [Principles](#principles) - Rules every change follows.',
+      ],
+      '\n## Principles\n\nText.\n',
+    );
+    await f.write('architecture/index.md', source);
+    const defect = {
+      severity: 'error',
+      path: 'architecture/index.md',
+      line: lineOf(source, '(#principles)'),
+      message: expect.stringContaining(
+        'Contents link "#principles" in ',
+      ) as string,
+    };
+    // Navigation stops at the same defect; it must not repeat it at the root.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([{ ruleId: 'directory-index', ...defect }]);
+    expect(await f.run('navigation')).toEqual([
+      { ruleId: 'navigation', ...defect },
+    ]);
+  });
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {

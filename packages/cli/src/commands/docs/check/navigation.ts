@@ -1,3 +1,6 @@
+import { relative } from 'node:path';
+
+import { DocsContentsError } from '@commands/docs/nav/contents';
 import { syncFumadocsNavigation } from '@commands/docs/nav/fumadocs';
 import {
   compareFumadocsMembership,
@@ -6,17 +9,20 @@ import {
 import { syncDocsNavigation } from '@commands/docs/nav/sync';
 
 import type { Report } from './check.types';
-import type { CheckTarget } from './files';
+import { inside, posix, type CheckTarget } from './files';
 
 /**
  * `navOwner: nav-sync` keeps strict generated freshness. Hand-authored and
  * undeclared navigation gets the membership-and-order comparison (issue #367
  * P21/G5): separators, labels, links, rest entries and borrowed pages are the
  * author's presentation, never generator output to match.
+ *
+ * `reported` tells whether a finding already exists for a rule, path and line.
  */
 export async function checkNavigation(
   target: CheckTarget,
   report: Report,
+  reported: (ruleId: string, path: string, line?: number) => boolean,
 ): Promise<void> {
   if (target.framework === 'markdown') return;
   try {
@@ -73,6 +79,20 @@ export async function checkNavigation(
         report('navigation', 'error', issue.path, issue.message, issue.line);
     }
   } catch (error) {
+    if (
+      error instanceof DocsContentsError &&
+      inside(target.contentRoot, error.indexPath)
+    ) {
+      // Navigation stops at the first invalid Contents map. directory-index
+      // resolves every map the same way and reports each defect at its own
+      // index.md, so repeat it here only when that rule did not: it was not
+      // selected, or the defect is framework-only (MkDocs nav accepts only
+      // .md targets, while the reader check also accepts .mdx).
+      const path = posix(relative(target.contentRoot, error.indexPath));
+      if (!reported('directory-index', path, error.line))
+        report('navigation', 'error', path, error.message, error.line);
+      return;
+    }
     report('navigation', 'error', 'index.md', (error as Error).message);
   }
 }
