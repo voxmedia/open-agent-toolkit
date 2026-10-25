@@ -17,6 +17,7 @@ import {
   type DocsInventory,
   inventoryDocs,
   isIndexOnlyLeaf,
+  PAGE_EXTENSIONS,
   parseIndexContents,
   resolveEntryTarget,
 } from './contents';
@@ -53,7 +54,6 @@ export interface SyncFumadocsNavigationResult {
   unlisted: string[];
 }
 
-const PAGE_EXTENSIONS = ['.md', '.mdx'];
 const GROUP_FOLDER = /^\(.+\)$/;
 // The `pages` item grammar of the fumadocs-core 16.10.2 page-tree builder
 // (`resolveFolderItem`): exact rest entries, separators, links, and the

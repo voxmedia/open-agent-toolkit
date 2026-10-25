@@ -3,7 +3,7 @@ import { extname, join, posix } from 'node:path';
 
 import YAML from 'yaml';
 
-import { buildDocsNavTree } from './contents';
+import { buildDocsNavTree, PAGE_EXTENSIONS } from './contents';
 import {
   FUMADOCS_LINK,
   FUMADOCS_REST_ITEMS,
@@ -28,7 +28,6 @@ export interface NavMembershipIssue {
   line?: number;
 }
 
-const PAGE_EXTENSIONS = ['.md', '.mdx'];
 const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 
 function lineOf(source: string, needle: string): number | undefined {

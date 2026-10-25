@@ -49,7 +49,8 @@ export interface DocsInventory {
   pages: string[];
 }
 
-const INVENTORY_PAGE_EXTENSIONS = ['.md', '.mdx'];
+/** Reader page extensions: Fumadocs renders `.md` and `.mdx` pages. */
+export const PAGE_EXTENSIONS: readonly string[] = ['.md', '.mdx'];
 
 /** Every non-excluded directory and reader page under the docs root. */
 export async function inventoryDocs(
@@ -74,7 +75,7 @@ export async function inventoryDocs(
         await walk(entryPath);
       } else if (
         entry.isFile() &&
-        INVENTORY_PAGE_EXTENSIONS.includes(extname(entry.name))
+        PAGE_EXTENSIONS.includes(extname(entry.name))
       ) {
         if (!matcher.excludesFile(entryPath)) pages.push(entryPath);
       }
