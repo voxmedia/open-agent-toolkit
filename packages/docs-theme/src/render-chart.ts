@@ -27,6 +27,8 @@ async function loadMath(measure: MeasureMath): Promise<MathResolver> {
   return (tex, size) => {
     const html = katex.renderToString(tex, {
       output: 'mathml',
+      // Mermaid renders `$$...$$` as display math, which `\tag` needs.
+      displayMode: true,
       throwOnError: false,
       // Pele inserts this markup unsanitized; keep KaTeX's escaping strict.
       trust: false,
