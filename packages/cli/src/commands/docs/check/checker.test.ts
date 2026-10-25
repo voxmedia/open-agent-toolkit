@@ -1552,3 +1552,32 @@ describe('hand-authored navigation membership, not generator equality', () => {
     ]);
   });
 });
+
+describe('framework app contributing commands use the app package first', () => {
+  it('resolves app scripts, falls back to repository-root scripts and names both manifests when missing', async () => {
+    const f = await fixture('fumadocs');
+    await f.put(
+      'site/package.json',
+      JSON.stringify({
+        name: 'site',
+        scripts: { dev: 'next dev', build: 'next build' },
+      }),
+    );
+    await f.write(
+      'contributing.md',
+      page(
+        '# Contributing\n\n```bash\npnpm dev\npnpm test\npnpm missing\ncd site\npnpm dev\n```\n',
+      ),
+    );
+    expect(await f.run('commands')).toEqual([
+      {
+        ruleId: 'commands',
+        severity: 'error',
+        path: 'contributing.md',
+        line: 11,
+        message:
+          'Script "missing" does not exist in site/package.json (app root) or package.json (repository root).',
+      },
+    ]);
+  });
+});

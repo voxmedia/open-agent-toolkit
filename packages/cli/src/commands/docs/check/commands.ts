@@ -144,6 +144,38 @@ export async function checkCommands(
   );
   if (!docs.length) return;
   const manifests = await packages(target);
+  // A framework app's own contributing pages usually speak from the app
+  // directory. Its package is tried first; the repository root remains the
+  // fallback context, so pages written from the repository root still resolve.
+  // Literal Markdown roots keep the repository-root context only.
+  const appContext =
+    target.framework !== 'markdown' &&
+    target.appRoot !== target.repoRoot &&
+    manifests.some((item) => item.root === target.appRoot)
+      ? target.appRoot
+      : undefined;
+  const manifestName = (pkg: Package, labelled: boolean): string => {
+    const name =
+      posix(relative(target.repoRoot, join(pkg.root, 'package.json'))) ||
+      'package.json';
+    if (!labelled) return name;
+    return pkg.root === target.appRoot
+      ? `${name} (app root)`
+      : pkg.root === target.repoRoot
+        ? `${name} (repository root)`
+        : name;
+  };
+  const lookup = async (root: string | undefined) => {
+    if (!root || !inside(target.repoRoot, root) || !(await present(root)))
+      return undefined;
+    let current = root;
+    while (inside(target.repoRoot, current)) {
+      const pkg = manifests.find((item) => item.root === current);
+      if (pkg || current === target.repoRoot) return pkg;
+      current = dirname(current);
+    }
+    return undefined;
+  };
   for (const p of docs)
     for (const node of p.nodes) {
       if (node.type !== 'code' && node.type !== 'inlineCode') continue;
@@ -155,7 +187,11 @@ export async function checkCommands(
         )
       )
         continue;
-      let cwd: string | undefined = target.repoRoot;
+      // Each block starts in the repository-root context and, for framework
+      // apps, also in the app-root context; literal `cd` moves both.
+      let contexts: Array<string | undefined> = appContext
+        ? [appContext, target.repoRoot]
+        : [target.repoRoot];
       const start = node.position?.start;
       const openingLine =
         p.source.split(/\r?\n/).at((start?.line ?? 1) - 1) ?? '';
@@ -176,33 +212,36 @@ export async function checkCommands(
           if (!segment || segment.startsWith('#')) continue;
           const words = tokens(segment);
           if (words[0] === 'cd') {
-            cwd =
+            contexts = contexts.map((cwd) =>
               words[1] && !illustrative(words[1]) && cwd
                 ? resolve(cwd, words[1])
-                : undefined;
+                : undefined,
+            );
             continue;
           }
           const manager = words.findIndex((w) => w === 'pnpm' || w === 'npm');
           if (manager < 0) continue;
           const kind = words[manager]!;
-          let root = cwd;
+          const moves: Array<(root: string | undefined) => string | undefined> =
+            [];
           let filter: string | undefined;
           let index = manager + 1;
           while (words[index]?.startsWith('-')) {
             const option = words[index++]!;
             if (['-w', '--workspace-root'].includes(option))
-              root = target.repoRoot;
+              moves.push(() => target.repoRoot);
             else if (option === '--filter' || option === '-F')
               filter = words[index++];
             else if (option.startsWith('--filter=')) filter = option.slice(9);
             else if (['--dir', '-C', '--prefix'].includes(option)) {
               const dir = words[index++];
-              root =
+              moves.push((root) =>
                 root && dir && !illustrative(dir)
                   ? resolve(root, dir)
-                  : undefined;
+                  : undefined,
+              );
             } else if (['-r', '--recursive', '--workspace'].includes(option))
-              root = undefined;
+              moves.push(() => undefined);
           }
           let script = words[index];
           if (!script) continue;
@@ -226,7 +265,7 @@ export async function checkCommands(
             (filter && illustrative(filter))
           )
             continue;
-          let pkg: Package | undefined;
+          const candidates: Package[] = [];
           if (filter) {
             const selected = manifests.filter(
               (item) =>
@@ -235,20 +274,19 @@ export async function checkCommands(
                   posix(relative(target.repoRoot, item.root)) ===
                     filter.slice(2)),
             );
-            if (selected.length === 1) pkg = selected[0];
-          } else if (
-            root &&
-            inside(target.repoRoot, root) &&
-            (await present(root))
-          ) {
-            let current = root;
-            while (inside(target.repoRoot, current)) {
-              pkg = manifests.find((item) => item.root === current);
-              if (pkg || current === target.repoRoot) break;
-              current = dirname(current);
+            if (selected.length === 1) candidates.push(selected[0]!);
+          } else {
+            for (const cwd of contexts) {
+              const pkg = await lookup(
+                moves.reduce<string | undefined>(
+                  (root, move) => move(root),
+                  cwd,
+                ),
+              );
+              if (pkg && !candidates.includes(pkg)) candidates.push(pkg);
             }
           }
-          if (!pkg)
+          if (!candidates.length) {
             report(
               'commands',
               'error',
@@ -256,7 +294,14 @@ export async function checkCommands(
               `Cannot resolve package context for ${kind} ${script}${filter ? ` (--filter ${filter})` : ''}; use literal cd, -w or --filter.`,
               line,
             );
-          else if (!Object.hasOwn(pkg.scripts ?? {}, script)) {
+            continue;
+          }
+          let pkg: Package | undefined;
+          for (const candidate of candidates) {
+            if (Object.hasOwn(candidate.scripts ?? {}, script)) {
+              pkg = candidate;
+              break;
+            }
             // pnpm shorthand can invoke an installed local binary. Explicit run
             // remains script-only; never execute a binary or search system PATH.
             const installedBinary =
@@ -267,25 +312,37 @@ export async function checkCommands(
               script !== '..' &&
               (
                 await Promise.all(
-                  [pkg.root, target.repoRoot].map((binRoot) =>
+                  [candidate.root, target.repoRoot].map((binRoot) =>
                     present(join(binRoot, 'node_modules/.bin', script)),
                   ),
                 )
               ).some(Boolean);
-            if (!installedBinary)
-              report(
-                'commands',
-                'error',
-                p.path,
-                `Script "${script}" does not exist in ${posix(relative(target.repoRoot, join(pkg.root, 'package.json'))) || 'package.json'}.`,
-                line,
-              );
-          } else if (/^\s*echo(?:\s|$)/.test(pkg.scripts![script]!))
+            if (installedBinary) {
+              pkg = candidate;
+              break;
+            }
+          }
+          if (!pkg)
+            report(
+              'commands',
+              'error',
+              p.path,
+              `Script "${script}" does not exist in ${candidates
+                .map((candidate) =>
+                  manifestName(candidate, candidates.length > 1),
+                )
+                .join(' or ')}.`,
+              line,
+            );
+          else if (
+            Object.hasOwn(pkg.scripts ?? {}, script) &&
+            /^\s*echo(?:\s|$)/.test(pkg.scripts![script]!)
+          )
             report(
               'commands',
               'warn',
               p.path,
-              `Script "${script}" is an echo stub in ${posix(relative(target.repoRoot, join(pkg.root, 'package.json')))}.`,
+              `Script "${script}" is an echo stub in ${manifestName(pkg, false)}.`,
               line,
             );
         }
