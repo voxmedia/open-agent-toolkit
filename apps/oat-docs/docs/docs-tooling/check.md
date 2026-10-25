@@ -61,7 +61,8 @@ docs root never shows its own index in the sidebar, so a root `pagesIndex` does
 not count; list `index` or link to `/`. Folders with `root` set get no implicit
 index either. Only
 folders the sidebar attaches from the docs root count: a link to a folder's URL
-reaches its landing page, not its other pages. Every
+reaches its landing page, not its other pages. A `"...name"` extraction inlines a folder's
+index and pages and never names a page. Every
 `pages` or `nav` entry must name an existing page or folder, and listed pages keep
 their Contents order. Separators and their labels, MkDocs section labels and
 nesting, link items, rest entries and borrowed pages are presentation and are

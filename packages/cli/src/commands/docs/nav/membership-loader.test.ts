@@ -203,11 +203,44 @@ describe('hand-authored membership against the installed Fumadocs loader', () =>
       },
       [],
     ],
+    // Extraction inlines a folder's index and children.
+    [
+      'extracted folder',
+      { 'meta.json': { pages: ['index', 'guide', '...section'] } },
+      [],
+    ],
   ] as const)('%s', async (_name, metas, missing) => {
     const docsRoot = await writeDocs(roots, metas);
     // The literal expectation matches the loaded tree, and so does membership.
     const visible = await loaderVisiblePages(docsRoot);
     expect(ALL_PAGES.filter((page) => !visible.has(page))).toEqual(missing);
     expect(await membershipMissingPages(docsRoot)).toEqual(missing);
+  });
+
+  it('reports a page extraction as a missing target and the page as unreachable', async () => {
+    const docsRoot = await writeDocs(roots, {
+      'meta.json': { pages: ['index', '...guide', 'section'] },
+    });
+    expect(await loaderVisiblePages(docsRoot)).not.toContain('guide.md');
+    const { metaFiles } = await syncFumadocsNavigation({
+      docsRoot,
+      check: true,
+    });
+    expect(
+      (await compareFumadocsMembership(docsRoot, metaFiles)).map(
+        ({ kind, line, message }) => [kind, line, message],
+      ),
+    ).toEqual([
+      [
+        'dangling',
+        4,
+        'Missing target: pages entry "...guide" extracts no folder; "..." inlines a folder\'s pages, so list a page by its name instead.',
+      ],
+      [
+        'missing',
+        2,
+        'Missing reader page: "guide" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.',
+      ],
+    ]);
   });
 });

@@ -109,6 +109,7 @@ type PagesItem =
   | { kind: 'rest' }
   | { kind: 'exclude'; key: string }
   | { kind: 'link'; url: string | null }
+  | { kind: 'extract'; key: string }
   | { kind: 'path'; key: string };
 
 /** Read one `pages` item with the fumadocs-core page-tree grammar. */
@@ -125,8 +126,9 @@ function classify(dir: string, item: string): PagesItem {
   }
   if (item.startsWith('!'))
     return { kind: 'exclude', key: posix.join(dir, item.slice(1)) };
+  // `...folder` inlines a folder's index and children; it never names a page.
   if (item.startsWith('...'))
-    return { kind: 'path', key: posix.join(dir, item.slice(3)) };
+    return { kind: 'extract', key: posix.join(dir, item.slice(3)) };
   return { kind: 'path', key: posix.join(dir, item) };
 }
 
@@ -211,6 +213,16 @@ export async function compareFumadocsMembership(
   const resolveTarget = createTargetResolver(docsRoot);
   for (const actual of actuals)
     for (const { raw, item } of actual.items) {
+      if (item.kind === 'extract') {
+        if (!(await resolveTarget(item.key)).folder)
+          issues.push({
+            path: actual.file.path,
+            kind: 'dangling',
+            message: `Missing target: pages entry "${raw}" extracts no folder; "..." inlines a folder's pages, so list a page by its name instead.`,
+            line: lineOf(actual.source, JSON.stringify(raw)),
+          });
+        continue;
+      }
       if (item.kind !== 'path') continue;
       if (!(await resolveTarget(item.key)).exists)
         issues.push({
@@ -318,7 +330,11 @@ export async function compareFumadocsMembership(
     for (const { item } of meta.items) {
       if (item.kind === 'rest') await reachAll();
       else if (item.kind === 'link' && item.url) reachedUrls.add(item.url);
-      else if (item.kind === 'path') {
+      else if (item.kind === 'extract') {
+        // Like buildFolder for `...x`: a folder's index and children are
+        // inlined; a page target extracts nothing.
+        if ((await resolveTarget(item.key)).folder) await visit(item.key);
+      } else if (item.kind === 'path') {
         const target = await resolveTarget(item.key);
         if (!target.exists) continue;
         if (target.folder) await visit(item.key);
@@ -347,6 +363,10 @@ export async function compareFumadocsMembership(
         excluded.add((await resolveTarget(item.key)).id);
       else if (item.kind === 'path')
         listed.push((await resolveTarget(item.key)).id);
+      else if (item.kind === 'extract') {
+        const target = await resolveTarget(item.key);
+        if (target.folder) listed.push(target.id);
+      }
     }
     const pagesLine = lineOf(actual.source, '"pages"');
     // A nested folder's landing page is implicit (never in generated pages),
