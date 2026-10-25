@@ -21,6 +21,8 @@ external_plans: []
 
 oat docs generate-index can only write its output file. Freshness checks therefore regenerate the committed manifest and diff it (the repository's own gate runs generate-index then git diff --exit-code), which dirties the working tree and cannot run read-only, for example inside oat-docs-analyze. Add a --check mode (exit 1 and name the output when it would change, writing nothing) or a stdout mode, mirroring oat docs nav sync --check.
 
+Since 0.3.32, manifest links are relative to `--output`, so regenerating into `/tmp` and diffing (a common read-only workaround) produces links such as `../../<absolute path>/docs/index.md` and cannot show the real in-repository diff; a same-layout copy is needed. A check or stdout mode must compute links relative to the configured output location, not the temporary one.
+
 Found while piloting the OAT docs tooling 0.3.31 rollout on a pilot consumer repository; follow-up to [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](BL-261024-roll-out-the-shipped-oat-docs.md) and issue #367.
 
 ## Acceptance Criteria
@@ -28,3 +30,4 @@ Found while piloting the OAT docs tooling 0.3.31 rollout on a pilot consumer rep
 - `oat docs generate-index` offers a mode that compares the would-be output with the existing file and writes nothing, exiting 1 and naming the output when it is stale (or prints the manifest to stdout for external comparison).
 - The repository gate and docs (`AGENTS.md` step 9, docs-tooling commands page) use the new mode where it replaces regenerate-and-diff.
 - oat-docs-analyze can check manifest freshness without writing.
+- The comparison uses links relative to the configured output path, so it works without writing to that path.

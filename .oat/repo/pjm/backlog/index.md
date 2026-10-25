@@ -467,6 +467,8 @@
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                              | open   | medium   | task       | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                   | open   | medium   | feature    | M        |
 | BL-261013-classify-review-findings       | Classify review findings against the contract at every receive                                           | open   | medium   | task       | M        |
+| BL-261025-close-gaps-in-the-oat-docs     | Close gaps in the oat-docs-bootstrap PR CI recipe                                                        | open   | medium   | task       | S        |
+| BL-261025-close-oat-docs-check-reader    | Close oat docs check reader-rule gaps: per-group width limits and a title rule                           | open   | medium   | task       | S        |
 | BL-261002-commit-a-headless-rendered     | Commit a headless rendered-site QA tour for the docs app                                                 | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                            | open   | medium   | initiative | M        |
 | BL-260928-settle-codex-read-authority    | Confirm /recon launches Codex worker lanes as contract-enforced on the released CLI                      | open   | medium   | task       | S        |
@@ -486,23 +488,27 @@
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                               | open   | medium   | feature    | M        |
 | BL-261002-fix-oat-config-describe-gaps   | Fix oat config describe gaps and make config unset reach the layer that holds the key                    | open   | medium   | task       | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan           | open   | medium   | task       | M        |
+| BL-261025-flag-the-source-config-change  | Flag the source-config change nonReaderPaths needs to stop rendering                                     | open   | medium   | task       | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                        | open   | medium   | feature    | L        |
 | BL-260927-give-gate-receipts-portable    | Give gate receipts portable ownership, path-neutral identities, and a shipped ignore rule                | open   | medium   | feature    | M        |
 | BL-261011-guard-goal-brief-amendments    | Guard goal brief amendments against an open delivery head branch                                         | open   | medium   | task       | M        |
 | BL-261002-honor-the-requested-scope      | Honor the requested scope for every pack in tools install and init --setup                               | open   | medium   | task       | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                   | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                       | open   | medium   | feature    | M        |
+| BL-261025-keep-files-oat-writes-or       | Keep files OAT writes or rewrites stable under the repository formatter                                  | open   | medium   | task       | M        |
 | BL-261025-keep-oat-docs-analyze-tracking | Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently                  | open   | medium   | task       | S        |
 | BL-261025-let-oat-docs-analyze-propose   | Let oat-docs-analyze propose candidate IA structures when no IA is recorded                              | open   | medium   | task       | M        |
 | BL-261002-let-plans-declare-an-evidence  | Let plans declare an evidence tier per phase and reconcile tracking on driver takeover                   | open   | medium   | feature    | L        |
 | BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |
+| BL-261025-make-markdown-oat-docs-init    | Make Markdown oat docs init --adopt formatter-stable and complete                                        | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                            | open   | medium   | feature    | M        |
 | BL-261002-make-explainer-kit-accept-or   | Make explainer-kit accept or reject source-code inputs explicitly                                        | open   | medium   | task       | S        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                        | open   | medium   | feature    | L        |
 | BL-261002-make-the-copy-sync-strategy    | Make the copy sync strategy checkout-independent and settable from the CLI                               | open   | medium   | task       | M        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions     | open   | medium   | task       | S        |
 | BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                               | open   | medium   | feature    | M        |
+| BL-261025-narrow-the-oat-docs-check      | Narrow the oat docs check provenance rule and allow line or pattern exceptions                           | open   | medium   | task       | S        |
 | BL-261002-offer-a-strict-gate-reviewer   | Offer a strict gate-reviewer independence mode and align gate skill wording and decision records         | open   | medium   | feature    | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                              | open   | medium   | bug        | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                        | open   | medium   | task       | M        |
@@ -538,23 +544,28 @@
 | BL-261011-add-brief-to-the-legacy        | Add brief to the legacy generate-oat-state.sh mode table                                                 | open   | low      | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                  | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                              | open   | low      | feature    | L        |
+| BL-261025-align-oat-docs-apply           | Align oat docs apply with the analyze next-step message                                                  | open   | low      | task       | XS       |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                               | open   | low      | task       | XS       |
 | BL-261012-archive-metadata-reads-map     | Archive metadata reads map EACCES to a missing file                                                      | open   | low      | task       | XS       |
 | BL-261011-automate-goal-phase-extraction | Automate goal phase extraction into a child project                                                      | open   | low      | feature    | M        |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                              | open   | low      | idea       | M        |
+| BL-261025-cite-decision-records-as-code  | Cite decision records as code text on Markdown reader pages in oat-docs-apply                            | open   | low      | task       | XS       |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                              | open   | low      | task       | M        |
 | BL-261011-clean-up-the-isolated-home     | Clean up the isolated HOME directories that evidence-grade test runs leave under TMPDIR                  | open   | low      | task       | S        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                        | open   | low      | task       | S        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                    | open   | low      | task       | M        |
 | BL-261012-convert-legacy-journals        | Convert legacy journals on a working copy                                                                | open   | low      | task       | M        |
 | BL-261002-correct-misleading-init-status | Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync | open   | low      | task       | S        |
+| BL-261025-correct-oat-docs-generate      | Correct oat docs generate-index counts, header wording and drift guidance                                | open   | low      | task       | S        |
 | BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                                   | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                          | open   | low      | idea       | L        |
+| BL-261025-define-and-validate-the-base   | Define and validate the base of documentation.ia track paths                                             | open   | low      | task       | S        |
 | BL-261013-documentation-sync-after       | Documentation sync after closeout silently stales the exit gate                                          | open   | low      | task       | S        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                   | open   | low      | feature    | M        |
 | BL-261002-fix-brainstorm-and-pjm         | Fix brainstorm and PJM template contract gaps for lite mode and archive-dated                            | open   | low      | task       | S        |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                 | open   | low      | task       | S        |
 | BL-260928-harden-the-backlog-reference   | Harden the backlog reference rewriter's atomic replace edge cases                                        | open   | low      | task       | S        |
+| BL-261025-let-oat-config-get-read        | Let oat config get read the whole documentation block                                                    | open   | low      | task       | XS       |
 | BL-261002-let-skills-declare-their-side  | Let skills declare their side effects in metadata                                                        | open   | low      | feature    | M        |
 | BL-260909-make-findsection-comment-aware | Make findSection comment-aware in the bundled-docs contract test                                         | open   | low      | task       | S        |
 | BL-261001-make-recon-controller-setup    | Make recon controller setup and preflight self-serve                                                     | open   | low      | feature    | M        |
@@ -570,14 +581,17 @@
 | BL-261012-regenerate-the-archive-aware   | Regenerate the archive-aware PR body on a synced archive resume                                          | open   | low      | task       | S        |
 | BL-261012-rename-the-project-retro       | Rename the project retro to retro.md                                                                     | open   | low      | task       | S        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                              | open   | low      | task       | S        |
+| BL-261025-report-accurate-lines-for-oat  | Report accurate lines for oat docs check structural and separator findings                               | open   | low      | task       | S        |
 | BL-261005-resolve-deferred-wave-5        | Resolve deferred Wave 5 maintenance edge cases                                                           | open   | low      | task       | L        |
 | BL-260908-restructure-the-authoring      | Restructure the authoring skills for progressive disclosure and decide proactive invocation              | open   | low      | feature    | M        |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                           | open   | low      | task       | M        |
 | BL-261011-route-a-standalone-out         | Route a standalone Out of Scope brief section into discovery on promotion                                | open   | low      | task       | S        |
 | BL-260909-show-the-brainstorm-pack       | Show the brainstorm pack in the oat-doctor dashboard example and pack enumeration                        | open   | low      | task       | XS       |
+| BL-261025-skip-diagram-freshness-when    | Skip diagram-freshness when only Mermaid accessibility metadata changes                                  | open   | low      | task       | S        |
 | BL-261002-split-the-tool-packs-page      | Split the Tool Packs page and restructure the Workflow Gates and Dispatch Policy pages                   | open   | low      | task       | M        |
 | BL-261002-theme-mermaid-diagrams         | Theme Mermaid diagrams and keep them readable on phones                                                  | open   | low      | task       | M        |
 | BL-260909-use-handle-bound-traversal     | Use handle-bound traversal in the managed-copy and manifest filesystem readers                           | open   | low      | task       | M        |
+| BL-261025-verify-nav-sync-cross          | Verify nav sync cross-directory link items under a docs base path                                        | open   | low      | task       | S        |
 | BL-260909-wave-7-review-polish-leftovers | Wave-7 review polish leftovers                                                                           | open   | low      | task       | S        |
 | BL-261012-wrap-up-pr-cross-reference     | Wrap-up PR cross-reference without a pr/ directory                                                       | open   | low      | task       | S        |
 | BL-261012-complete-state-json-refusals   | complete-state --json refusals carry structured reason codes                                             | open   | low      | task       | S        |
