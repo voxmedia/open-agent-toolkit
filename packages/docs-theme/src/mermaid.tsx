@@ -58,7 +58,7 @@ export function Mermaid({ chart }: MermaidProps) {
         ref={containerRef}
         className='mermaid'
         style={sitePeleTheme}
-        // oxlint-disable-next-line react/no-danger -- Pele escapes diagram text and filters links and styles
+        // oxlint-disable-next-line react/no-danger -- Pele escapes diagram text and filters links and styles; KaTeX escapes math with trust off
         dangerouslySetInnerHTML={{ __html: svg.inline }}
       />
     </ZoomFrame>

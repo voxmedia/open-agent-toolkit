@@ -28,6 +28,8 @@ async function loadMath(measure: MeasureMath): Promise<MathResolver> {
     const html = katex.renderToString(tex, {
       output: 'mathml',
       throwOnError: false,
+      // Pele inserts this markup unsanitized; keep KaTeX's escaping strict.
+      trust: false,
     });
     const box = measure(html, size);
     return box ? { html, ...box } : null;
