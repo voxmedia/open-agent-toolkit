@@ -455,7 +455,7 @@ Use the `analysis` target:
 Follow the canonical loop exactly:
 
 1. Resolve `workflow.autoArtifactReview.analysis`; missing config means enabled, and only explicit `false` skips the loop.
-2. Resolve `oat_orchestration_retry_limit`; default to `2` if unavailable.
+2. Resolve the retry bound from `oat_orchestration_retry_limit` in the active OAT project's `state.md` frontmatter; it is not an `oat config` key. Default to `2` when no project is active or the value is absent or invalid.
 3. Dispatch `oat-reviewer` in structured mode via Tier 1 subagent when available, falling back to the same reviewer prompt inline when needed.
 4. Apply Critical and High fixes when they are local to the analysis artifact, companion bundle, and unambiguous.
 5. Offer Medium and Low fixes rather than applying them silently.
