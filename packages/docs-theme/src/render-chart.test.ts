@@ -24,4 +24,16 @@ describe('renderChart', () => {
       expect(svg).not.toContain('katex-error');
     }
   });
+
+  it('still renders equations when the host cannot be measured', async () => {
+    const { inline } = await renderChart(
+      'flowchart LR\n  A["Area $$x^2$$"] --> B',
+      { idPrefix: 't', measure: () => null },
+    );
+
+    expect(inline).toMatch(
+      /<math xmlns="http:\/\/www\.w3\.org\/1998\/Math\/MathML"/,
+    );
+    expect(inline).not.toContain('$$x^2');
+  });
 });

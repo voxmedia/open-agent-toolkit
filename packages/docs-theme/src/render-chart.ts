@@ -33,8 +33,16 @@ async function loadMath(measure: MeasureMath): Promise<MathResolver> {
       // Pele inserts this markup unsanitized; keep KaTeX's escaping strict.
       trust: false,
     });
-    const box = measure(html, size);
-    return box ? { html, ...box } : null;
+    // A host that is not laid out yet (a hidden tab or collapsed section)
+    // measures 0x0; estimate from the source so the equation still renders.
+    return { html, ...(measure(html, size) ?? estimateBox(tex, size)) };
+  };
+}
+
+function estimateBox(tex: string, size: number) {
+  return {
+    width: Math.ceil(tex.length * size * 0.6),
+    height: Math.ceil(size * 1.5),
   };
 }
 
