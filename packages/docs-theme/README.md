@@ -66,7 +66,9 @@ export function Page({ toc, chart }) {
 each diagram type on demand. Diagrams take their colors from the site's
 Fumadocs color tokens (`--color-fd-*`) through Pele's `--pele-*` CSS variables,
 so they follow light and dark mode without re-rendering, and open in the same
-full-screen view when clicked.
+full-screen view when clicked. To recolor diagrams, set the `--color-fd-*`
+tokens: the component sets `--pele-*` inline, which overrides any `--pele-*`
+values in a stylesheet.
 
 ## Docs
 

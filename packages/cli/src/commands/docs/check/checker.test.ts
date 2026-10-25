@@ -1318,9 +1318,10 @@ describe('installed Mermaid parser, actual SVG files and Git changes', () => {
     const [invalid] = await f.run('mermaid');
     expect(invalid?.severity).toBe('error');
     // One concise line with the diagram-relative position, not the parser's
-    // multi-line source excerpt and caret.
+    // multi-line source excerpt and caret. The parser reports the missing
+    // target at end of input: line 3, column 1 of this two-line diagram.
     expect(invalid?.message).toMatch(
-      /^Invalid Mermaid: [^\n]+ \(diagram line \d+, column \d+\)$/,
+      /^Invalid Mermaid: [^\n]+ \(diagram line 3, column 1\)$/,
     );
     await f.write('guide.md', diagram('flowchart TD\n A --> B'));
     expect(
