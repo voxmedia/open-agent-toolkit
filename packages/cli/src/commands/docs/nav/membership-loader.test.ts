@@ -235,6 +235,45 @@ describe('hand-authored membership against the installed Fumadocs loader', () =>
     expect(await membershipMissingPages(docsRoot)).toEqual(missing);
   });
 
+  it.each(['leaf.md', 'leaf'])(
+    'keeps pagesIndex %s a page distinct from a same-named folder',
+    async (pagesIndex) => {
+      const docsRoot = await mkdtemp(join(tmpdir(), 'oat-membership-loader-'));
+      roots.push(docsRoot);
+      const files: Record<string, string> = {
+        'index.md': contents('Home', ['[Section](section/index.md)']),
+        'section/index.md': contents('Section', [
+          '[Leaf page](leaf.md)',
+          '[Leaf section](leaf/index.md)',
+        ]),
+        'section/leaf.md': '# Leaf page\n',
+        'section/leaf/index.md': contents('Leaf section', ['[Deep](deep.md)']),
+        'section/leaf/deep.md': '# Deep\n',
+        'meta.json': `${JSON.stringify({ pages: ['index', 'section'] })}\n`,
+        // leaf.md is the section index; "leaf" names the same-named folder.
+        'section/meta.json': `${JSON.stringify({ pagesIndex, pages: ['index', 'leaf'] })}\n`,
+      };
+      for (const [path, text] of Object.entries(files)) {
+        await mkdir(dirname(join(docsRoot, path)), { recursive: true });
+        await writeFile(join(docsRoot, path), text);
+      }
+      const visible = await loaderVisiblePages(docsRoot);
+      for (const page of [
+        'index.md',
+        'section/index.md',
+        'section/leaf.md',
+        'section/leaf/index.md',
+        'section/leaf/deep.md',
+      ])
+        expect(visible).toContain(page);
+      const { metaFiles } = await syncFumadocsNavigation({
+        docsRoot,
+        check: true,
+      });
+      expect(await compareFumadocsMembership(docsRoot, metaFiles)).toEqual([]);
+    },
+  );
+
   it('reports a page extraction as a missing target and the page as unreachable', async () => {
     const docsRoot = await writeDocs(roots, {
       'meta.json': { pages: ['index', '...guide', 'section'] },

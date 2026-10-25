@@ -278,16 +278,26 @@ export async function compareFumadocsMembership(
     meta:
       | { pagesIndex?: string; metadata: Record<string, unknown> }
       | undefined,
-  ): Promise<string | undefined> => {
+  ): Promise<{ id: string; flat: string } | undefined> => {
+    // buildFolder resolves an index as a page (resolveFlattenPath(..., 'page')),
+    // never as a same-named folder, so keep the page identity here; the
+    // flattened key is only for excluding the page from rest expansion.
+    const page = async (key: string) => {
+      const extension = extname(key);
+      const candidates = PAGE_EXTENSIONS.includes(extension)
+        ? [key]
+        : PAGE_EXTENSIONS.map((candidate) => `${key}${candidate}`);
+      for (const candidate of candidates)
+        if ((await entryType(docsRoot, candidate)) === 'file')
+          return { id: `page:${stripPage(key)}`, flat: stripPage(key) };
+      return undefined;
+    };
     if (meta?.pagesIndex !== undefined) {
       const index = classify(dir, meta.pagesIndex);
-      if (index.kind !== 'path') return undefined;
-      const target = await resolveTarget(index.key);
-      return target.exists && !target.folder ? stripPage(index.key) : undefined;
+      return index.kind === 'path' ? page(index.key) : undefined;
     }
     if (!hasImplicitIndex(dir, meta?.metadata ?? null)) return undefined;
-    const key = posix.join(dir, 'index');
-    return (await resolveTarget(key)).exists ? key : undefined;
+    return page(posix.join(dir, 'index'));
   };
   const visit = async (dir: string): Promise<void> => {
     if (visited.has(dir)) return;
@@ -316,8 +326,8 @@ export async function compareFumadocsMembership(
       if (dir !== '.' && index.kind === 'link' && index.url)
         reachedUrls.add(index.url);
     }
-    if (dir !== '.' && indexSource !== undefined && !excluded(indexSource))
-      reachedIds.add((await resolveTarget(indexSource)).id);
+    if (dir !== '.' && indexSource !== undefined && !excluded(indexSource.flat))
+      reachedIds.add(indexSource.id);
     const reachAll = async (): Promise<void> => {
       let entries;
       try {
@@ -335,7 +345,7 @@ export async function compareFumadocsMembership(
           entry.isFile() &&
           PAGE_EXTENSIONS.includes(extname(entry.name)) &&
           !excluded(key) &&
-          stripPage(key) !== indexSource
+          stripPage(key) !== indexSource?.flat
         )
           reachedIds.add(`page:${stripPage(key)}`);
       }
@@ -388,10 +398,7 @@ export async function compareFumadocsMembership(
     const pagesLine = lineOf(actual.source, '"pages"');
     // A rest entry never shows the folder's reserved index page.
     const indexSource = await folderIndexSource(actual.dir, actual);
-    const reservedId =
-      indexSource === undefined
-        ? undefined
-        : (await resolveTarget(indexSource)).id;
+    const reservedId = indexSource?.id;
     // A nested folder's landing page is implicit (never in generated pages),
     // so only an explicit exclusion can hide it.
     const landing = await resolveTarget(posix.join(actual.dir, 'index'));
