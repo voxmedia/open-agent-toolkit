@@ -1,18 +1,15 @@
 #!/usr/bin/env node
 // Read-only, offline comparison used by oat-docs-analyze. No package resolution or install.
-import { readFile, realpath } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { open, readFile, realpath } from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const shellQuote = (value) =>
   `'${value.replaceAll("'", String.fromCharCode(39, 92, 39, 39))}'`;
 
-async function versionsForCli(executable) {
-  if (!executable)
-    throw new Error(
-      'Provide --cli with the installed oat executable or --versions with its bundled public-package-versions.json.',
-    );
-  let directory = dirname(await realpath(executable));
+// Walk up from a real file to the installed CLI package root.
+async function cliPackageFor(file) {
+  let directory = dirname(file);
   for (;;) {
     try {
       const pkg = JSON.parse(
@@ -24,12 +21,58 @@ async function versionsForCli(executable) {
       if (error.code !== 'ENOENT') throw error;
     }
     const parent = dirname(directory);
-    if (parent === directory)
-      throw new Error(
-        'Cannot locate the running CLI bundle through this wrapper; supply --versions from that installed CLI.',
-      );
+    if (parent === directory) return null;
     directory = parent;
   }
+}
+
+// Package-manager shims (pnpm, cmd-shim) are POSIX shell scripts. Parse them as
+// text and never execute them: the `# cmd-shim-target=` comment names the
+// absolute entry; `exec` lines name it relative to the shim's real directory.
+async function shimTargets(file) {
+  const handle = await open(file, 'r');
+  let text;
+  try {
+    const { size } = await handle.stat();
+    if (size > 65536) return [];
+    text = await handle.readFile('utf8');
+  } finally {
+    await handle.close();
+  }
+  const [shebang = ''] = text.split(/\r?\n/, 1);
+  if (!/^#!.*\b(?:sh|bash|dash|ksh|zsh)\b/.test(shebang)) return [];
+  const base = dirname(file);
+  const targets = [];
+  for (const match of text.matchAll(/^#\s*cmd-shim-target=(.+?)\s*$/gm))
+    targets.push(isAbsolute(match[1]) ? match[1] : resolve(base, match[1]));
+  for (const match of text.matchAll(/"\$basedir\/([^"$`\\]+\.(?:c|m)?js)"/g))
+    targets.push(resolve(base, match[1]));
+  return [...new Set(targets)];
+}
+
+async function versionsForCli(executable) {
+  if (!executable)
+    throw new Error(
+      'Provide --cli with the installed oat executable or --versions with its bundled public-package-versions.json.',
+    );
+  const file = await realpath(executable);
+  const targets = await shimTargets(file);
+  // Direct installs resolve to the bundle entry itself; shims are never walked
+  // from their own location, which can sit above an unrelated package.
+  for (const target of targets.length > 0 ? targets : [file]) {
+    let entry;
+    try {
+      entry = await realpath(target);
+    } catch (error) {
+      if (error.code === 'ENOENT' || error.code === 'ENOTDIR') continue;
+      throw error;
+    }
+    const found = await cliPackageFor(entry);
+    if (found) return found;
+  }
+  throw new Error(
+    'Cannot locate the running CLI bundle through this wrapper; supply --versions from that installed CLI.',
+  );
 }
 
 try {
@@ -58,6 +101,8 @@ try {
     for (const [name, declared] of Object.entries(manifest[section] ?? {})) {
       if (
         ![
+          // The app-local CLI runs generate-index in predev/prebuild.
+          '@open-agent-toolkit/cli',
           '@open-agent-toolkit/docs-config',
           '@open-agent-toolkit/docs-theme',
           '@open-agent-toolkit/docs-transforms',

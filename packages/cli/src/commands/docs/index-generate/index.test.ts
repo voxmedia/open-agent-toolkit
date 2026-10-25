@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import {
   mkdir,
   mkdtemp,
@@ -9,7 +10,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -19,6 +20,8 @@ import type { OatConfig } from '@config/oat-config';
 import { dirExists } from '@fs/io';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GenerateIndexOptions, IndexEntry } from './generator';
@@ -993,10 +996,10 @@ describe('createDocsGenerateIndexCommand', () => {
         expect(
           manifest.split('\n').filter((line) => line.startsWith('- ')),
         ).toEqual([
-          '- [Docs](index.md)',
-          '- [Alpha](a.md) [unlisted in Contents]',
-          '- [Guide](guide.md) — How to [unlisted in Contents]',
-          '- [Zulu](z.md) [unlisted in Contents]',
+          '- [Docs](apps/docs/docs/index.md)',
+          '- [Alpha](apps/docs/docs/a.md) [unlisted in Contents]',
+          '- [Guide](apps/docs/docs/guide.md) — How to [unlisted in Contents]',
+          '- [Zulu](apps/docs/docs/z.md) [unlisted in Contents]',
         ]);
       },
     );
@@ -1044,7 +1047,10 @@ describe('createDocsGenerateIndexCommand', () => {
       const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
       expect(
         manifest.split('\n').filter((line) => line.startsWith('- ')),
-      ).toEqual(['- [Docs](index.md)', '- [Guide](guide.md) — How to']);
+      ).toEqual([
+        '- [Docs](docs/index.md)',
+        '- [Guide](docs/guide.md) — How to',
+      ]);
     });
 
     it('writes the real manifest, preserves authored bytes, and records a repo-relative index', async () => {
@@ -1098,6 +1104,136 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(await readFile(outputPath, 'utf8')).toBe(handAuthored);
     });
 
+    // The manifest is read where it is written (an app root, or anywhere
+    // outside a Markdown content root), so each link must resolve from there.
+    it.each([
+      ['the Fumadocs app root', [], 'apps/docs/index.md'],
+      [
+        'a separate directory',
+        ['--output', 'out/manifest.md'],
+        'out/manifest.md',
+      ],
+    ])(
+      'writes manifest links that resolve from %s',
+      async (_name, args, output) => {
+        const repo = await createRealRepo({
+          root: 'apps/docs',
+          tooling: 'fumadocs',
+        });
+        await mkdir(join(repo.appRoot, 'docs', 'nested'), { recursive: true });
+        await writeFile(
+          join(repo.appRoot, 'docs', 'nested', 'index.md'),
+          '---\ntitle: Nested\n---\n\n# Nested\n',
+        );
+        await mkdir(join(repo.repoRoot, 'out'), { recursive: true });
+
+        await runCommand(repo.command, args);
+
+        expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+        const manifestPath = join(repo.repoRoot, output);
+        const manifest = await readFile(manifestPath, 'utf8');
+        const targets = [...manifest.matchAll(/\]\(([^)]+)\)/g)].map(
+          (match) => match[1]!,
+        );
+        expect(targets).toHaveLength(3);
+        for (const target of targets) {
+          const absolute = resolve(dirname(manifestPath), target);
+          expect(existsSync(absolute), target).toBe(true);
+          expect(absolute, target).not.toBe(manifestPath);
+        }
+      },
+    );
+
+    // A Markdown parser is the oracle: a space ends a link destination and `#`
+    // starts a fragment, so a raw prefix such as `My Docs#1/` breaks links.
+    it('encodes manifest link destinations that a Markdown parser must resolve', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      const docs = join(repo.repoRoot, 'My Docs#1&copy;');
+      await mkdir(docs, { recursive: true });
+      await writeFile(join(docs, 'index.md'), '# Docs\n');
+      await writeFile(join(docs, 'a guide.md'), '# Guide\n');
+
+      await runCommand(repo.command, [
+        '--docs-dir',
+        'My Docs#1&copy;',
+        '--output',
+        'manifest.md',
+      ]);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifest = await readFile(
+        join(repo.repoRoot, 'manifest.md'),
+        'utf8',
+      );
+      const urls: string[] = [];
+      const visit = (node: {
+        type: string;
+        url?: string;
+        children?: unknown[];
+      }) => {
+        if (node.type === 'link' && node.url) urls.push(node.url);
+        for (const child of node.children ?? []) visit(child as typeof node);
+      };
+      visit(unified().use(remarkParse).parse(manifest));
+      expect(urls).toHaveLength(2);
+      for (const url of urls)
+        expect(
+          existsSync(join(repo.repoRoot, decodeURIComponent(url))),
+          url,
+        ).toBe(true);
+    });
+
+    // Non-ASCII whitespace must be escaped as UTF-8 bytes; a UTF-16 code unit
+    // escape (`%A0`, `%3000`) does not decode back to the filename.
+    it('encodes non-ASCII whitespace in manifest links as UTF-8', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      const docs = join(repo.appRoot, 'docs');
+      await writeFile(join(docs, 'non\u00a0breaking.md'), '# NBSP\n');
+      await writeFile(join(docs, 'wide\u3000space.md'), '# Wide\n');
+
+      await runCommand(repo.command, []);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifestPath = join(repo.appRoot, 'index.md');
+      const manifest = await readFile(manifestPath, 'utf8');
+      const targets = [...manifest.matchAll(/\]\(([^)]+)\)/g)].map(
+        (match) => match[1]!,
+      );
+      expect(targets).toContain('docs/non%C2%A0breaking.md');
+      expect(targets).toContain('docs/wide%E3%80%80space.md');
+      for (const target of targets)
+        expect(
+          existsSync(
+            resolve(dirname(manifestPath), decodeURIComponent(target)),
+          ),
+          target,
+        ).toBe(true);
+    });
+
+    // The prefix comes from where the manifest is actually written, not from a
+    // symlinked directory alias in --output.
+    it('writes the same manifest links through a symlinked output directory', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      await symlink(repo.appRoot, join(repo.repoRoot, 'alias'), 'dir');
+
+      await runCommand(repo.command, ['--output', 'alias/index.md']);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
+      expect(
+        [...manifest.matchAll(/\]\(([^)]+)\)/g)].map((match) => match[1]),
+      ).toEqual(['docs/index.md', 'docs/guide.md']);
+    });
+
     it('requires explicit Markdown output and indexes the full literal root', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',
@@ -1129,8 +1265,8 @@ describe('createDocsGenerateIndexCommand', () => {
       );
       expect(manifest).toContain('Markdown has no automatic manifest hooks');
       expect(manifest).not.toContain('predev/prebuild');
-      expect(manifest).toContain('[Handbook](index.md)');
-      expect(manifest).toContain('[Guide](docs/guide.md)');
+      expect(manifest).toContain('[Handbook](apps/docs/index.md)');
+      expect(manifest).toContain('[Guide](apps/docs/docs/guide.md)');
       await expect(
         readFile(join(repo.repoRoot, '.oat', 'config.json'), 'utf8'),
       ).resolves.toBe(beforeConfig);
@@ -1336,6 +1472,37 @@ describe('createDocsGenerateIndexCommand', () => {
       // manifest transition is ineligible and config is untouched.
       const config = await repo.readConfig();
       expect(config.documentation?.index).toBe('apps/docs/index.md');
+      // Links resolve from the configured path the manifest is read through.
+      for (const [, target] of written.matchAll(/\]\(([^)]+)\)/g))
+        expect(existsSync(join(repo.appRoot, target!)), target).toBe(true);
+    });
+    // When the run records a file-symlink target in `documentation.index`,
+    // links resolve from that recorded path, which is where readers open it.
+    it('writes links that resolve from a recorded file-symlink target', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/index.md',
+      });
+      const linkTarget = join(repo.appRoot, 'generated', 'manifest.md');
+      await mkdir(join(repo.appRoot, 'generated'), { recursive: true });
+      await symlink(linkTarget, join(repo.appRoot, 'index.md'));
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const config = await repo.readConfig();
+      expect(config.documentation?.index).toBe(
+        'apps/docs/generated/manifest.md',
+      );
+      const written = await readFile(linkTarget, 'utf8');
+      const targets = [...written.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]!);
+      expect(targets.length).toBeGreaterThan(0);
+      for (const target of targets)
+        expect(
+          existsSync(resolve(repo.repoRoot, 'apps/docs/generated', target)),
+          target,
+        ).toBe(true);
     });
   });
 

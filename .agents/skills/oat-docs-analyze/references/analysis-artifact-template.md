@@ -47,12 +47,15 @@ Do not invent missing audiences or choose an IA without approval.
 - Bundle metadata: {running CLI public-package-versions.json path or unverified}
 - Docs app manifest: {path; Markdown: not applicable}
 
-| Package                       | Declared / installed                | Bundled   | Status                                 | Exact upgrade command                                                          | Recommendation ID                                       |
-| ----------------------------- | ----------------------------------- | --------- | -------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| {@open-agent-toolkit/docs-\*} | {range / actual version or missing} | {version} | {current / drift / ahead / unverified} | {drift only: helper upgrade command adapted to actual manager; otherwise none} | {drift only: R-NNN; approval: explicit; otherwise none} |
+| Package                                       | Declared / installed                | Bundled   | Status                                 | Exact upgrade command                                                          | Recommendation ID                                       |
+| --------------------------------------------- | ----------------------------------- | --------- | -------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| {@open-agent-toolkit/docs-\* or declared cli} | {range / actual version or missing} | {version} | {current / drift / ahead / unverified} | {drift only: helper upgrade command adapted to actual manager; otherwise none} | {drift only: R-NNN; approval: explicit; otherwise none} |
 
 Only older installed packages (`drift`) receive a package-upgrade command and
-stable recommendation ID with `approval: explicit`. `current` needs no tooling
+stable recommendation ID with `approval: explicit`. Docs-package drift and
+app-local `@open-agent-toolkit/cli` drift share one `tooling-update` ID, each row
+keeping its own dependency section in its command; apply then regenerates the
+manifest with the upgraded app-local CLI. `current` needs no tooling
 recommendation, even if the helper emits a reinstall command. For `ahead`, select
 or update the intended CLI installation, then re-analyze; do not recommend a docs
 package downgrade. `unverified` requires manual verification before a package

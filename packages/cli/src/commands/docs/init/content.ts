@@ -1,17 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-export const IA_PRESETS = [
-  'product-engineering-qa',
-  'consumer-maintainer',
-  'domain-engineering',
-  'task-type',
-  'toolkit-cli',
-  'flat-small',
-] as const;
-export type IaPreset = (typeof IA_PRESETS)[number];
+import { IA_PRESET_IDS, type IaPresetId } from '@config/documentation-ia';
 export interface PresetSelection {
-  iaPreset?: IaPreset;
+  iaPreset?: IaPresetId;
   plannedPages?: number;
 }
 
@@ -23,9 +15,9 @@ export function resolvePresetSelection(
   if (preset === undefined && count === undefined) return {};
   if (preset === undefined || count === undefined)
     throw new Error('--ia-preset and --planned-pages are required together.');
-  if (!IA_PRESETS.includes(preset as IaPreset))
+  if (!IA_PRESET_IDS.includes(preset as IaPresetId))
     throw new Error(
-      `Unknown IA preset "${preset}". Choose: ${IA_PRESETS.join(', ')}.`,
+      `Unknown IA preset "${preset}". Choose: ${IA_PRESET_IDS.join(', ')}.`,
     );
   if (
     !/^\d+$/.test(String(count)) ||
@@ -35,7 +27,7 @@ export function resolvePresetSelection(
     throw new Error(
       '--planned-pages must be an integer of at least 1 (anticipated reader pages only).',
     );
-  return { iaPreset: preset as IaPreset, plannedPages: Number(count) };
+  return { iaPreset: preset as IaPresetId, plannedPages: Number(count) };
 }
 
 interface Track {
@@ -67,7 +59,7 @@ const engineering: Track = {
     ],
   ],
 };
-const TRACKS: Record<IaPreset, Track[]> = {
+const TRACKS: Record<IaPresetId, Track[]> = {
   'product-engineering-qa': [
     {
       path: 'product',

@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(command -v:*), Bash(sed:*), Bash(npm root -g:*), Bash(test:*), Bash(oat --version), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.7.5'
+  version: '1.8.0'
 ---
 
 # Docs Analysis
@@ -323,7 +323,9 @@ In `full` mode, evaluate the whole docs surface.
 Read the authored IA decision and `## Information architecture` section in the
 docs-app AGENTS.md (Fumadocs/MkDocs) or contributing page (Markdown).
 `documentation.ia` is a repository-only mirror: compare preset, decision path,
-tracks/principles and verification overlay to those authored sources. The
+tracks/principles and verification overlay to those authored sources. A preset
+ID and its approved label (for example `flat-small` and Flat Small) name the
+same preset, not a contradiction. The
 authored record is authoritative; missing/broken records or contradictory
 mirrors become `ask_user` findings. No recorded IA means `ask_user` to choose
 and record one, not an inferred preset. Keep ordinary contract analysis useful
@@ -556,7 +558,10 @@ suppressions or automatic navigation ownership.
 
 If a generated root index or manifest exists:
 
-1. Compare generated entries with the authored `## Contents` graph.
+1. Compare generated entries with the authored `## Contents` graph. Current
+   manifests link relative to the manifest file (an app-root manifest links
+   `docs/<page>.md`); links relative to the docs directory instead mean an older
+   CLI wrote it, so cite the CLI that regenerates it rather than content drift.
 2. Flag generated output that is missing, ignored/local-only when local guidance
    expects a tracked artifact, stale, ordered differently from authored maps, or
    unclear because generator semantics are undocumented.
@@ -616,18 +621,23 @@ record whether app migration is relevant only when evidence or user intent suppo
 
 For framework apps read their package.json and installed docs packages against
 the running CLI's bundled `assets/public-package-versions.json`, without network.
+The helper covers the `@open-agent-toolkit/docs-*` packages and, when the app
+declares it in any dependency section, the app-local `@open-agent-toolkit/cli`
+whose `oat docs generate-index` runs in `predev`/`prebuild`; a stale local CLI
+writes a different manifest than the running CLI.
 Run this skill's production helper after resolving this skill's own directory:
 
 ```bash
 node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --cli "$(command -v oat)"
 ```
 
-If a package-manager wrapper prevents locating the CLI root, discover the bundle
-from that invoked installation offline. Inspect `command -v oat` and, for a shell
-shim, read its `exec` lines or `cmd-shim-target` comment (for example,
-`sed -n '1,160p' "$(command -v oat)"`). Resolve a relative JavaScript target from
-the shim's directory; do not evaluate copied shell text. Locate that target's
-package root containing `package.json` named `@open-agent-toolkit/cli` and
+`--cli` follows a direct install to its package root. For a POSIX shell shim,
+such as a pnpm global `oat`, the helper reads the shim as text without executing
+it: the `# cmd-shim-target=` comment first, then relative `exec` targets resolved
+from the shim's real directory. If the helper still reports that it cannot
+locate the running CLI bundle (a wrapper it cannot parse), locate the invoked
+installation offline without evaluating wrapper text: find its JavaScript entry
+and that entry's package root containing `package.json` named `@open-agent-toolkit/cli` and
 `assets/public-package-versions.json`. `pnpm root -g` or `npm root -g` can help
 locate it, but newer pnpm installations may nest it in a hashed directory; use
 the actual shim target, never another checkout's bundle. Bind the inspected paths:
@@ -655,8 +665,11 @@ The helper reports declared and installed versions, target versions and commands
 for orderable targets. If the app uses a different package manager, translate the
 command to its documented equivalent preserving package, exact target and
 dependency section. Cite the manifest, installed package path, bundle path and
-exact command. Report older-package drift as `tooling-update`, `approval: explicit`;
-describe unsupported scaffold repairs separately as `manual`. Markdown has no
+exact command. Report older docs-package drift and older app-local CLI drift
+together as one `tooling-update`, `approval: explicit`, listing each drifting
+package's exact command in its own dependency section; apply's approved tooling
+update bumps them and regenerates the manifest with the upgraded app-local CLI.
+Describe unsupported scaffold repairs separately as `manual`. Markdown has no
 app-package drift check. This helper reads only and never upgrades anything.
 
 ### Step 7: Severity-Rate Findings
@@ -672,9 +685,10 @@ Use these defaults:
 
 Give every recommendation a unique stable ID (`R-001`, etc.) and
 `approval: explicit | default`; preserve IDs through review and never reuse a
-retired ID for a different change. `explicit` covers docs-package updates,
-restructure blocks and anything outside the Markdown scope (including authored
-IA decision/config writes). `default` covers ordinary in-scope content repairs.
+retired ID for a different change. `explicit` covers tooling updates (docs
+packages and the app-local CLI), restructure blocks and anything outside the
+Markdown scope (including authored IA decision/config writes). `default` covers
+ordinary in-scope content repairs.
 Missing evidence, `omit` and `ask_user` remain independent blockers regardless
 of approval class. Capture exact targets and commands; an explicit class is not
 permission to perform unsupported work. Apply's one input is this artifact plus
@@ -723,7 +737,7 @@ Use the `analysis` target:
 Follow the canonical loop exactly:
 
 1. Resolve `workflow.autoArtifactReview.analysis`; missing config means enabled, and only explicit `false` skips the loop.
-2. Resolve `oat_orchestration_retry_limit`; default to `2` if unavailable.
+2. Resolve the retry bound from `oat_orchestration_retry_limit` in the active OAT project's `state.md` frontmatter; it is not an `oat config` key. Default to `2` when no project is active or the value is absent or invalid.
 3. Dispatch `oat-reviewer` in structured mode via Tier 1 subagent when available, falling back to the same reviewer prompt inline when needed.
 4. Apply Critical and High fixes when they are local to the analysis artifact and unambiguous.
 5. Offer Medium and Low fixes rather than applying them silently.

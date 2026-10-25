@@ -38,8 +38,8 @@ Use this checklist when evaluating a docs surface.
 
 - Opening code fences have language identifiers.
 - Shell command examples follow the repo's documented fence convention; default
-  to `sh` unless local guidance uses `bash` or the block requires Bash-only
-  syntax.
+  to `bash` unless the example is POSIX-only (`sh`) or local guidance requires
+  another fence.
 - Headings are non-empty.
 - Each authored page has at most one document-level H1 unless the file is an
   intentional imported README or generated/imported artifact.

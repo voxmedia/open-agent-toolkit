@@ -85,8 +85,9 @@ blocked pending a fresh analysis rather than guessed.
 
 - Record IA: {adoption.state from target pjm doctor; decision command/path;
   framework AGENTS or Markdown contributing section; shared mirror JSON}
-- Tooling update: {individually approved ID; exact docs-app docs-\* upgrade
-  command; supported migrate conversions; existing build verifier}
+- Tooling update: {individually approved ID; exact docs-app docs-\* and declared
+  app-local cli upgrade commands; manifest regeneration with that cli; supported
+  migrate conversions; existing build verifier}
 - Unsupported app config/routes/scripts: {manual required changes; no edits}
 
 ## Summary of Actions

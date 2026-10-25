@@ -14,6 +14,10 @@ import {
   normalizeDocumentationCheck,
   type DocumentationCheckConfig,
 } from './documentation-check';
+import {
+  DocumentationIaPresetError,
+  isDocumentationIaPreset,
+} from './documentation-ia';
 import { parseJsonConfig } from './json';
 import { resolveUserSyncConfig } from './user-sync-config';
 
@@ -2584,8 +2588,11 @@ export function normalizeDocumentationIa(
       `Invalid documentation.ia in ${configPath}: expected { preset, decision (repo-relative path), tracks?: [{ path, principle }], verification?: triad|agent-only|none }. Repair with oat config set documentation.ia '<JSON>' or oat config unset documentation.ia --shared.`,
     );
   }
+  const preset = value.preset.trim();
+  if (!isDocumentationIaPreset(preset))
+    throw new DocumentationIaPresetError(configPath, preset);
   return {
-    preset: value.preset.trim(),
+    preset,
     decision: value.decision.trim(),
     ...(value.tracks !== undefined
       ? {

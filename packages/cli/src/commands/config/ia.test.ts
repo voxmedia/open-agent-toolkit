@@ -271,6 +271,61 @@ describe('repository IA mirrors through real command and storage', () => {
     expect(await readFile(f.repoPath, 'utf8')).toBe(before);
   });
 
+  // The six IDs are `oat docs init --ia-preset` values; the labels are the
+  // approved authoring-docs preset names already used in recorded mirrors.
+  it.each([
+    'product-engineering-qa',
+    'consumer-maintainer',
+    'domain-engineering',
+    'task-type',
+    'toolkit-cli',
+    'flat-small',
+    'Product/Engineering/QA',
+    'Consumer and Maintainer',
+    'Domain Engineering',
+    'Task Type',
+    'Toolkit and CLI',
+    'Flat Small',
+  ])('accepts the canonical IA preset %s', async (preset) => {
+    const f = await fixture();
+    expect(
+      await f.command(
+        'set',
+        'documentation.ia',
+        JSON.stringify({ ...ia, preset }),
+      ),
+    ).toMatchObject({ status: 'ok', value: { ...ia, preset } });
+  });
+
+  it.each(['Bogus', 'flat small', 'Flat-Small', 'custom'])(
+    'rejects unknown IA preset %s with the canonical IDs and without writing',
+    async (preset) => {
+      const f = await fixture();
+      const before = await readFile(f.repoPath, 'utf8');
+      expect(
+        await f.command(
+          'set',
+          'documentation.ia',
+          JSON.stringify({ ...ia, preset }),
+        ),
+      ).toMatchObject({
+        status: 'error',
+        message: `Invalid documentation.ia value: unknown preset "${preset}"; expected one of product-engineering-qa, consumer-maintainer, domain-engineering, task-type, toolkit-cli, flat-small (or its approved label).`,
+      });
+      expect(await readFile(f.repoPath, 'utf8')).toBe(before);
+      await writeFile(
+        f.repoPath,
+        JSON.stringify({
+          version: 1,
+          documentation: { root: 'docs', ia: { ...ia, preset } },
+        }),
+      );
+      await expect(readOatConfig(f.repo)).rejects.toThrow(
+        `unknown preset "${preset}"`,
+      );
+    },
+  );
+
   it.each(['ia', 'navOwner'])(
     'treats stored null %s as undeclared without blocking unrelated reads',
     async (key) => {

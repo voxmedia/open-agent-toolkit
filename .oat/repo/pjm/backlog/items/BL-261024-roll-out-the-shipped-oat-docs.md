@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-24T18:59:55.490Z
+updated: 2026-10-25T04:05:00.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -47,7 +47,7 @@ target or a claim that Markdown proves framework drift.
 - [ ] In pntr, change exactly `scripts/github-actions/oat-docs-update/config.mjs` so its blanket phrase “treat this workflow configuration as approval to apply all recommendations” expressly excludes every `approval: explicit` recommendation. Retain its `targetPaths` documentation-only boundary (`docs/` and `.oat/`) and existing path gate; do not broaden it to app packages/build config.
 - [ ] Verify real automation handoff honors per-recommendation approval classes. Blanket/unattended approval applies only eligible default content repairs; explicit recommendations are skipped and reported by ID/reason, even if IDs are supplied unattended. No docs-app package bump under `apps/<docs-app>/` may pass pntr's existing path gate. Preserve an allowed default repair as the accepted control.
 - [ ] Where a framework consumer is actually present/selected, verify offline drift compares installed docs-\* versions with that invoked CLI's bundled `public-package-versions.json`, with source/version evidence and exact upgrade command for genuine older-package drift; no registry-latest lookup. Under automation the explicit upgrade is skipped/reported, never performed. If named Markdown consumers have no docs app, record package drift as not applicable there; root/rollout must select an appropriate framework acceptance target rather than invent packages or claim a Markdown run proves drift. Hoisted-only installs currently return unverified; do not imply a fix.
-- [ ] Where interactive tooling approval is actually exercised, allow only docs-app docs-\* dependency updates/resulting lockfile, already-supported migrate admonition/frontmatter conversion and build verification. Unsupported config/routes/package scripts remain manual; don't transfer the old “template shape changed” wording as permission for an unshipped generic migrator. Retain individually approved versus blanket/unattended outcomes separately.
+- [ ] Where interactive tooling approval is actually exercised, allow only docs-app docs-\* dependency updates, the app's own declared `@open-agent-toolkit/cli` update in its existing dependency section (resulting lockfile included) and manifest regeneration with that upgraded CLI (DR-261025-approved-docs-tooling-updates), already-supported migrate admonition/frontmatter conversion and build verification. Unsupported config/routes/package scripts remain manual; don't transfer the old “template shape changed” wording as permission for an unshipped generic migrator. Retain individually approved versus blanket/unattended outcomes separately.
 - [ ] Record actual consumer commits/PRs, invoked CLI version/bundle, commands, categorical outcomes and remaining owner decisions. OAT's merged PRs/synthetic tests prove shipped capability, not these consumer runs. Apply ordinary existing regression/approval-boundary proof standards, without expanding into an unrelated broad rollout campaign.
 
 ## Scope and retained limits
@@ -67,3 +67,13 @@ project discovery remains separate.
 Open: all consumer acceptance is unperformed. The OAT-side capability is merged
 in the linked phase PRs; this item records no consumer commit/PR, publication,
 deployment or acceptance. Record those delivery facts only when observed.
+
+## Pilot follow-ups
+
+A 0.3.31 pilot on a pilot consumer repository surfaced tooling defects (fixed
+for the next release) and four follow-ups tracked separately:
+
+- [BL-261025-add-a-check-or-stdout-mode — Add a check or stdout mode to oat docs generate-index](BL-261025-add-a-check-or-stdout-mode.md)
+- [BL-261025-keep-oat-docs-analyze-tracking — Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently](BL-261025-keep-oat-docs-analyze-tracking.md)
+- [BL-261025-let-oat-docs-analyze-propose — Let oat-docs-analyze propose candidate IA structures when no IA is recorded](BL-261025-let-oat-docs-analyze-propose.md)
+- [BL-261025-add-an-adoption-path-for-pre-0 — Add an adoption path for pre-0.3.31 Fumadocs apps whose guidance assumes nav sync](BL-261025-add-an-adoption-path-for-pre-0.md)
