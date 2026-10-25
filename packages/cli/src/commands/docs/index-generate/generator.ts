@@ -227,12 +227,13 @@ export interface RenderIndexOptions {
 
 /**
  * Percent-encode the characters that end or split a CommonMark link
- * destination (whitespace, `#`, `?`, parentheses, angle brackets) and `%`
+ * destination (whitespace, `#`, `?`, parentheses, angle brackets, `&` entity
+ * starts, `\\` escapes) and `%`
  * itself as UTF-8 bytes, so any supported filesystem path renders as a
  * resolvable link.
  */
 function linkDestination(path: string): string {
-  return path.replace(/[%\s#?()<>]/g, (char) =>
+  return path.replace(/[%\s#?()<>&\\]/g, (char) =>
     [...Buffer.from(char, 'utf8')]
       .map((byte) => `%${byte.toString(16).toUpperCase().padStart(2, '0')}`)
       .join(''),

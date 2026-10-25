@@ -1151,14 +1151,14 @@ describe('createDocsGenerateIndexCommand', () => {
         root: 'apps/docs',
         tooling: 'fumadocs',
       });
-      const docs = join(repo.repoRoot, 'My Docs#1');
+      const docs = join(repo.repoRoot, 'My Docs#1&copy;');
       await mkdir(docs, { recursive: true });
       await writeFile(join(docs, 'index.md'), '# Docs\n');
       await writeFile(join(docs, 'a guide.md'), '# Guide\n');
 
       await runCommand(repo.command, [
         '--docs-dir',
-        'My Docs#1',
+        'My Docs#1&copy;',
         '--output',
         'manifest.md',
       ]);
