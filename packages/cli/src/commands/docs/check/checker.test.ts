@@ -1315,12 +1315,13 @@ describe('installed Mermaid parser, actual SVG files and Git changes', () => {
       ),
     ).toEqual([]);
     await f.write('guide.md', diagram('flowchart TD\n  A -->'));
-    expect(
-      (await f.run('mermaid')).some(
-        (v) =>
-          v.severity === 'error' && v.message.startsWith('Invalid Mermaid:'),
-      ),
-    ).toBe(true);
+    const [invalid] = await f.run('mermaid');
+    expect(invalid?.severity).toBe('error');
+    // One concise line with the diagram-relative position, not the parser's
+    // multi-line source excerpt and caret.
+    expect(invalid?.message).toMatch(
+      /^Invalid Mermaid: [^\n]+ \(diagram line \d+, column \d+\)$/,
+    );
     await f.write('guide.md', diagram('flowchart TD\n A --> B'));
     expect(
       (await f.run('diagram-accessibility')).map((v) => v.severity),
@@ -1431,16 +1432,14 @@ describe('installed Mermaid parser, actual SVG files and Git changes', () => {
 });
 
 describe('parser/runtime and boundary composition', () => {
-  it('accepts labeled class/sequence/HTML diagrams repeatedly, restores globals and keeps fenced examples literal', async () => {
+  it('accepts labeled class/sequence/HTML diagrams repeatedly and keeps fenced examples literal', async () => {
     const f = await fixture();
-    const windowBefore = Object.getOwnPropertyDescriptor(globalThis, 'window');
-    const documentBefore = Object.getOwnPropertyDescriptor(
-      globalThis,
-      'document',
-    );
     for (const source of [
       'classDiagram\naccTitle: Animals\naccDescr: The animal hierarchy.\nAnimal <|-- Duck\nAnimal : +int age',
       'sequenceDiagram\naccTitle: Greeting\naccDescr: Alice greets Bob.\nAlice->>Bob: Hello',
+      // Regression: the jsdom-backed Mermaid parser rejected sequence `box`
+      // blocks with "Option is not defined".
+      'sequenceDiagram\naccTitle: Grouped greeting\naccDescr: Alice and Bob sit in one box.\nbox Aqua Team\n  participant Alice\n  participant Bob\nend\nAlice->>Bob: Hello',
       'flowchart TD\naccTitle: Guide\naccDescr: A guide.\nA["<b>Start</b>"] --> B[Finish]',
     ]) {
       await f.write(
@@ -1451,12 +1450,6 @@ describe('parser/runtime and boundary composition', () => {
       );
       expect(await f.run('mermaid')).toEqual([]);
     }
-    expect(Object.getOwnPropertyDescriptor(globalThis, 'window')).toEqual(
-      windowBefore,
-    );
-    expect(Object.getOwnPropertyDescriptor(globalThis, 'document')).toEqual(
-      documentBefore,
-    );
   });
   it('reports missing long descriptions and accepts associated visible HTML descriptions', async () => {
     const f = await pairedFixture();

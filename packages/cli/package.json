@@ -49,11 +49,10 @@
     "commander": "^12.1.0",
     "entities": "6.0.1",
     "github-slugger": "2.0.0",
-    "jsdom": "29.1.1",
     "jsonc-parser": "3.2.1",
-    "mermaid": "11.12.3",
     "ora": "^9.0.0",
     "parse5": "7.3.0",
+    "pele": "1.10.0",
     "remark-gfm": "4.0.1",
     "remark-parse": "11.0.0",
     "unified": "11.0.5",
@@ -61,7 +60,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/jsdom": "28.0.3",
     "@types/node": "^22.10.0",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.21.0",
