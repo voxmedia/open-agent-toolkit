@@ -221,9 +221,22 @@ function expandBraces(pattern) {
     );
 }
 
+// Glob syntax evaluated here: `*`, `**`, `?`, braces (expanded first) and
+// positive character classes. Extglobs, negated classes, escapes and
+// unbalanced brackets are not, and never count as a non-match.
+function unsupportedGlob(pattern) {
+  return (
+    /[+@!?*]\(/.test(pattern) ||
+    /\[[!^]/.test(pattern) ||
+    pattern.includes('\\') ||
+    /\[(?![^\]]*\])/.test(pattern) ||
+    /\[\]/.test(pattern)
+  );
+}
+
 function globToRegExp(pattern) {
   const source = pattern
-    .split(/(\*\*\/|\*\*|\*|\?)/)
+    .split(/(\*\*\/|\*\*|\*|\?|\[[^\]]+\])/)
     .map((part) =>
       part === '**/'
         ? '(?:.*/)?'
@@ -233,43 +246,77 @@ function globToRegExp(pattern) {
             ? '[^/]*'
             : part === '?'
               ? '[^/]'
-              : part.replace(/[.+^${}()|[\]\\]/g, '\\$&'),
+              : part.startsWith('[') && part.endsWith(']')
+                ? `(?!/)[${part.slice(1, -1).replace(/[\\\]]/g, '\\$&')}]`
+                : part.replace(/[.+^${}()|[\]\\]/g, '\\$&'),
     )
     .join('');
   return new RegExp(`^${source}$`);
 }
 
 // pnpm finds members by globbing `<pattern>/package.json`, so a trailing
-// globstar also matches the directory itself; negations exclude.
+// globstar also matches the directory itself; negations exclude. Returns
+// true or false, or `{ unsupported: pattern }` when a pattern whose result
+// matters cannot be evaluated.
 function workspaceIncludes(patterns, rel) {
   const target = `${rel}/package.json`;
-  const matches = (pattern) =>
-    expandBraces(pattern.replace(/^\.\//, '').replace(/\/+$/, '')).some(
-      (expanded) => globToRegExp(`${expanded}/package.json`).test(target),
+  const evaluate = (pattern) => {
+    const expanded = expandBraces(
+      pattern.replace(/^\.\//, '').replace(/\/+$/, ''),
     );
-  const positives = patterns.filter((pattern) => !pattern.startsWith('!'));
-  const negatives = patterns
-    .filter((pattern) => pattern.startsWith('!'))
-    .map((pattern) => pattern.slice(1));
-  return positives.some(matches) && !negatives.some(matches);
+    if (expanded.some(unsupportedGlob)) return { unsupported: pattern };
+    return expanded.some((glob) =>
+      globToRegExp(`${glob}/package.json`).test(target),
+    );
+  };
+  const any = (list) => {
+    let unknown = null;
+    for (const pattern of list) {
+      const result = evaluate(pattern);
+      if (result === true) return true;
+      if (result !== false && unknown === null) unknown = result;
+    }
+    return unknown ?? false;
+  };
+  const included = any(patterns.filter((pattern) => !pattern.startsWith('!')));
+  if (included !== true) return included;
+  const excluded = any(
+    patterns
+      .filter((pattern) => pattern.startsWith('!'))
+      .map((pattern) => pattern.slice(1)),
+  );
+  return excluded === true ? false : excluded === false ? true : excluded;
 }
 
-// A nested app below an ancestor pnpm workspace whose `packages` globs do not
-// include it (and with no workspace file of its own) must be installed with
-// --ignore-workspace. Lockfile presence is not evidence: a member can keep its
-// own lockfile with shared-workspace-lockfile=false.
-async function isStandaloneNestedApp(appPath) {
-  if (await exists(join(appPath, 'pnpm-workspace.yaml'))) return false;
+// The app's relation to the nearest pnpm workspace: its own root, a member of
+// an ancestor workspace, standalone (the ancestor's `packages` globs exclude
+// it, so installs need --ignore-workspace), or undetermined when a pattern
+// cannot be evaluated. Lockfile presence is not evidence: a member can keep
+// its own lockfile with shared-workspace-lockfile=false.
+async function workspaceMembership(appPath) {
+  if (await exists(join(appPath, 'pnpm-workspace.yaml')))
+    return { root: appPath, membership: 'root', reason: null };
   for (const directory of ancestors(dirname(appPath))) {
     const file = join(directory, 'pnpm-workspace.yaml');
     if (!(await exists(file))) continue;
     const rel = relative(directory, appPath).split(sep).join('/');
-    return !workspaceIncludes(
+    const included = workspaceIncludes(
       workspacePatterns(await readFile(file, 'utf8')),
       rel,
     );
+    if (typeof included === 'boolean')
+      return {
+        root: directory,
+        membership: included ? 'member' : 'standalone',
+        reason: null,
+      };
+    return {
+      root: directory,
+      membership: 'undetermined',
+      reason: `pnpm-workspace.yaml pattern "${included.unsupported}" uses glob syntax this helper does not evaluate; workspace membership is unknown, so the command omits --ignore-workspace. Confirm membership with pnpm -r ls before running it.`,
+    };
   }
-  return false;
+  return { root: null, membership: null, reason: null };
 }
 
 try {
@@ -316,9 +363,11 @@ try {
     packageManager && !packageManager.startsWith('pnpm@')
       ? packageManager
       : null;
-  const ignoreWorkspace = (await isStandaloneNestedApp(appPath))
-    ? ' --ignore-workspace'
-    : '';
+  // A nested app the ancestor workspace does not include must be installed
+  // with --ignore-workspace; an undetermined result never adds the flag.
+  const workspace = await workspaceMembership(appPath);
+  const ignoreWorkspace =
+    workspace.membership === 'standalone' ? ' --ignore-workspace' : '';
   const packages = [];
   for (const section of [
     'dependencies',
@@ -390,7 +439,7 @@ try {
     }
   }
   process.stdout.write(
-    `${JSON.stringify({ versionsPath, appPath, applicable: true, packageManager, packages }, null, 2)}\n`,
+    `${JSON.stringify({ versionsPath, appPath, applicable: true, packageManager, workspace, packages }, null, 2)}\n`,
   );
 } catch (error) {
   process.stderr.write(`${error.message}\n`);

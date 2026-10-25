@@ -572,3 +572,92 @@ test('workspace membership follows valid YAML and pnpm globs', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// Character classes and extglobs: pnpm 10.13.1 (`pnpm -r ls`) lists apps/docs
+// for apps/[dw]* and apps/+(docs|web), and does not negate apps/[!x]*.
+// Unsupported syntax must never be read as non-membership.
+test('workspace membership supports classes and never guesses unsupported globs', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-glob-'));
+  const script = new URL('../scripts/package-drift.mjs', import.meta.url)
+    .pathname;
+  try {
+    const versions = join(root, 'public-package-versions.json');
+    await writeFile(versions, JSON.stringify({ 'docs-config': '0.3.32' }));
+    const run = (app) =>
+      JSON.parse(
+        execFileSync(
+          process.execPath,
+          [script, '--app', app, '--versions', versions],
+          { encoding: 'utf8' },
+        ),
+      );
+    const app = async (workspace, path) => {
+      const dir = join(workspace, path);
+      const installed = join(
+        dir,
+        'node_modules/@open-agent-toolkit/docs-config',
+      );
+      await mkdir(installed, { recursive: true });
+      await writeFile(
+        join(dir, 'package.json'),
+        JSON.stringify({
+          dependencies: { '@open-agent-toolkit/docs-config': '^0.3.0' },
+        }),
+      );
+      await writeFile(
+        join(installed, 'package.json'),
+        JSON.stringify({ version: '0.3.0' }),
+      );
+      return dir;
+    };
+    const classes = join(root, 'classes');
+    await mkdir(classes);
+    await writeFile(
+      join(classes, 'pnpm-workspace.yaml'),
+      "packages:\n  - 'apps/[dw]*'\n",
+    );
+    const member = await app(classes, 'apps/docs');
+    const outsider = await app(classes, 'site');
+    assert.deepEqual(run(member).workspace, {
+      root: classes,
+      membership: 'member',
+      reason: null,
+    });
+    assert.equal(
+      run(member).packages[0].upgradeCommand,
+      `pnpm --dir '${member}' add @open-agent-toolkit/docs-config@0.3.32`,
+    );
+    assert.equal(run(outsider).workspace.membership, 'standalone');
+    assert.match(
+      run(outsider).packages[0].upgradeCommand,
+      / --ignore-workspace /,
+    );
+
+    for (const pattern of ['apps/+(docs|web)', 'apps/[!x]*']) {
+      const workspace = join(root, pattern.replace(/[^a-z]/g, '_'));
+      await mkdir(workspace);
+      await writeFile(
+        join(workspace, 'pnpm-workspace.yaml'),
+        `packages:\n  - '${pattern}'\n`,
+      );
+      const docs = await app(workspace, 'apps/docs');
+      const result = run(docs);
+      assert.deepEqual(
+        result.workspace,
+        {
+          root: workspace,
+          membership: 'undetermined',
+          reason: `pnpm-workspace.yaml pattern "${pattern}" uses glob syntax this helper does not evaluate; workspace membership is unknown, so the command omits --ignore-workspace. Confirm membership with pnpm -r ls before running it.`,
+        },
+        pattern,
+      );
+      assert.equal(
+        result.packages[0].upgradeCommand,
+        `pnpm --dir '${docs}' add @open-agent-toolkit/docs-config@0.3.32`,
+        pattern,
+      );
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
