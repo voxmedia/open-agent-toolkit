@@ -3,7 +3,7 @@
 // package manifests the way Node resolves packages (the app's node_modules,
 // then each ancestor's) and never installs, fetches or executes anything.
 import { access, open, readFile, realpath } from 'node:fs/promises';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const shellQuote = (value) =>
@@ -125,13 +125,62 @@ async function packageManagerFor(appPath) {
   return null;
 }
 
-// A nested app with its own lockfile and no workspace file of its own, below
-// an ancestor pnpm workspace, must not be installed through that workspace.
+// The `packages` globs of a pnpm-workspace.yaml, read as text (block or
+// flow list). A file without them (settings only) declares no members.
+function workspacePatterns(text) {
+  const flow = text.match(/^packages:\s*\[([^\]]*)\]/m);
+  const raw = flow
+    ? flow[1].split(',')
+    : (
+        text.match(
+          /^packages:\s*\n((?:[ \t]+-[^\n]*\n?|[ \t]*#[^\n]*\n?|[ \t]*\n)*)/m,
+        )?.[1] ?? ''
+      )
+        .split('\n')
+        .map((line) => line.match(/^\s+-\s*(.+?)\s*$/)?.[1] ?? '');
+  return raw
+    .map((entry) => entry.trim().replace(/^['"]|['"]$/g, ''))
+    .filter((entry) => entry.length > 0 && !entry.startsWith('#'));
+}
+
+function globToRegExp(pattern) {
+  const trimmed = pattern.replace(/^\.\//, '').replace(/\/+$/, '');
+  // A trailing globstar also matches zero segments (`packages/**` includes
+  // `packages`), as in pnpm's own package discovery.
+  const zeroOrMore = /\/\*\*$/.test(trimmed);
+  const source = (zeroOrMore ? trimmed.slice(0, -3) : trimmed)
+    .split(/(\*\*\/?|\*)/)
+    .map((part) =>
+      part === '**/' || part === '**'
+        ? '(?:.*/)?'
+        : part === '*'
+          ? '[^/]*'
+          : part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'),
+    )
+    .join('');
+  return new RegExp(
+    `^${source.replace(/\(\?:\.\*\/\)\?$/, '.*')}${zeroOrMore ? '(?:/.*)?' : ''}$`,
+  );
+}
+
+// A nested app below an ancestor pnpm workspace whose `packages` globs do not
+// include it (and with no workspace file of its own) must be installed with
+// --ignore-workspace. Lockfile presence is not evidence: a member can keep its
+// own lockfile with shared-workspace-lockfile=false.
 async function isStandaloneNestedApp(appPath) {
-  if (!(await exists(join(appPath, 'pnpm-lock.yaml')))) return false;
   if (await exists(join(appPath, 'pnpm-workspace.yaml'))) return false;
-  for (const directory of ancestors(dirname(appPath)))
-    if (await exists(join(directory, 'pnpm-workspace.yaml'))) return true;
+  for (const directory of ancestors(dirname(appPath))) {
+    const file = join(directory, 'pnpm-workspace.yaml');
+    if (!(await exists(file))) continue;
+    const rel = relative(directory, appPath).split(sep).join('/');
+    let member = false;
+    for (const pattern of workspacePatterns(await readFile(file, 'utf8'))) {
+      const negated = pattern.startsWith('!');
+      if (globToRegExp(negated ? pattern.slice(1) : pattern).test(rel))
+        member = !negated;
+    }
+    return !member;
+  }
   return false;
 }
 

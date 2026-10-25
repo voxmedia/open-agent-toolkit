@@ -445,7 +445,18 @@ test('drift resolves hoisted installs, pins the declared package manager and exp
       ],
     );
 
-    // A nested app with its own lockfile is outside the root workspace.
+    // A workspace member keeps the workspace even with its own lockfile
+    // (shared-workspace-lockfile=false), so workspace:* deps still resolve.
+    await writeFile(
+      join(hoisted, 'pnpm-lock.yaml'),
+      "lockfileVersion: '9.0'\n",
+    );
+    assert.equal(
+      run(hoisted).packages[0].upgradeCommand,
+      `npx --yes pnpm@10.13.1 --dir '${hoisted}' add @open-agent-toolkit/docs-config@0.3.32`,
+    );
+
+    // A nested app outside the root workspace's packages patterns is standalone.
     const standalone = join(workspace, 'site');
     const local = join(standalone, 'node_modules/@open-agent-toolkit/cli');
     await mkdir(local, { recursive: true });

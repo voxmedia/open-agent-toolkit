@@ -676,8 +676,9 @@ and target versions, and an `upgradeCommand` only for `drift`. The command pins
 the `packageManager` of the app or its nearest ancestor (`npx --yes pnpm@<version>`,
 which works without Corepack; `corepack pnpm@<version>` is equivalent where
 Corepack is installed) and adds
-`--ignore-workspace` for a nested app with its own lockfile below a root
-workspace. Run it as given: a global pnpm of another major can rewrite the app's
+`--ignore-workspace` for a nested app that the ancestor `pnpm-workspace.yaml`
+`packages` globs do not include (its own lockfile alone does not make it
+standalone). Run it as given: a global pnpm of another major can rewrite the app's
 `pnpm-workspace.yaml` settings and leave `node_modules` linked to a different
 store version (`ERR_PNPM_UNEXPECTED_STORE`); recover by reinstalling with the
 pinned version, not by switching managers. Without a `packageManager`, the
