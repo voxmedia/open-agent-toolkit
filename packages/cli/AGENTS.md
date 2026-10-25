@@ -42,6 +42,7 @@ Maintain consistent, safe CLI behavior across commands and modules.
 
 - `pnpm run cli:source -- docs check --target-dir <root>` is read-only and does not build a site.
 - Preserve exact G5 JSON and stable rule IDs in `src/config/documentation-check.ts`; config normalization and real config commands must retain checker policy.
+- Hand-authored/undeclared navigation semantics live only in `src/commands/docs/nav/membership.ts`, shared by the `navigation` rule and `docs nav sync --check`; never compare those owners with generator output (`DR-261025-hand-authored-navigation-is`). Writing nav sync refuses `hand-authored`.
 - Mermaid syntax checks lazily initialize the pinned real Node DOM with strict sanitization. Do not render, enable scripts/resources, or bypass the sanitizer.
 
 ## Triad literal evidence

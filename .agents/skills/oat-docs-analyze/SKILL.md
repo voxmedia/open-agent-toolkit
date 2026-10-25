@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat docs nav sync --check:*), Bash(oat docs check:*), Bash(oat docs literals:*), Bash(pnpm:*), Bash(bash:*), Bash(jq:*), Bash(node:*), Bash(command -v:*), Bash(sed:*), Bash(npm root -g:*), Bash(test:*), Bash(oat --version), Bash(mkdir:*), Bash(date:*), Bash(echo:*), Bash(cd:*), Bash(pwd:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: '1.8.0'
+  version: '1.9.0'
 ---
 
 # Docs Analysis
@@ -599,9 +599,14 @@ For a Fumadocs app with recorded `navOwner: nav-sync`, compare generated
 
 For `hand-authored` or undeclared Fumadocs navigation, compare current meta.json
 membership/order with Contents without assuming strict generator output; do not
-flag rest entries merely because they are hand-authored. Report missing reader
-routes and differences with local ownership evidence; recommend no automatic
-regeneration. For nav-sync-owned MkDocs, use the same explicit-target read-only
+flag rest entries merely because they are hand-authored. `oat docs check` runs
+this comparison for both: a Contents page must be reachable (listed, shown by a
+rest entry, borrowed by another folder or linked by URL), every pages entry must
+name an existing page or folder, and listed pages keep Contents order.
+Separators, labels, link items and borrowed pages are not compared. For
+`hand-authored`, `oat docs nav sync --check` uses the same comparison and the
+writing form refuses to run. Report missing reader routes and differences with
+local ownership evidence; recommend no automatic regeneration. For nav-sync-owned MkDocs, use the same explicit-target read-only
 `oat docs nav sync --check --target-dir <docs-app-dir>`.
 
 If `mkdocs.yml` exists:
@@ -651,9 +656,14 @@ test "$(node "$OAT_INSTALLED_ENTRY" --version)" = "$(oat --version)" &&
   node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --versions "$OAT_INSTALLED_ROOT/assets/public-package-versions.json"
 ```
 
-Never substitute registry latest or this target repo's package version. Missing
-bundle metadata, missing installed packages, or non-orderable versions (including
-prereleases) mean unverified, never an upgrade. The helper compares stable numeric
+Never substitute registry latest or this target repo's package version. The
+helper finds installed packages with Node's lookup: the app's `node_modules`,
+then each ancestor's, so hoisted installs (pnpm `node-linker=hoisted`, npm or yarn
+workspaces) resolve. A docs directory without `package.json` (Markdown) returns
+`applicable: false` with exit 0. Missing bundle metadata, missing installed
+packages, or non-orderable versions (including prereleases) mean unverified,
+never an upgrade; each `unverified` row carries a `reason` (for example, not
+installed: run the app's install first, then re-run the helper). The helper compares stable numeric
 version components: older installed packages are `drift`; equal versions are
 `current`; newer installed packages are `ahead`, with no upgrade command. For
 `ahead`, report that the running CLI is stale and ask the operator to update or
@@ -661,10 +671,24 @@ select the intended CLI installation before re-analysis; do not recommend a docs
 package downgrade. `unverified` also has no package command and needs manual
 verification. Neither status authorizes a tooling update.
 
-The helper reports declared and installed versions, target versions and commands
-for orderable targets. If the app uses a different package manager, translate the
-command to its documented equivalent preserving package, exact target and
-dependency section. Cite the manifest, installed package path, bundle path and
+The helper reports declared and installed versions, the installed manifest path
+and target versions, and an `upgradeCommand` only for `drift`. The command pins
+the `packageManager` of the app or its nearest ancestor (`npx --yes pnpm@<version>`,
+which works without Corepack; `corepack pnpm@<version>` is equivalent where
+Corepack is installed) and adds
+`--ignore-workspace` for a nested app that the ancestor `pnpm-workspace.yaml`
+`packages` globs do not include (its own lockfile alone does not make it
+standalone). The output's `workspace` field reports `member`, `standalone`,
+`root` or `undetermined`; for `undetermined` (glob syntax the helper does not
+evaluate) the command omits `--ignore-workspace` and `reason` asks you to
+confirm membership with `pnpm -r ls` first. Run it as given: a global pnpm of another major can rewrite the app's
+`pnpm-workspace.yaml` settings and leave `node_modules` linked to a different
+store version (`ERR_PNPM_UNEXPECTED_STORE`); recover by reinstalling with the
+pinned version, not by switching managers. Without a `packageManager`, the
+command uses bare `pnpm`; confirm its version matches the lockfile before
+running it. When `packageManager` names another manager, the row has no command
+and its `reason` asks for the equivalent add command; translate it preserving
+package, exact target and dependency section. Cite the manifest, installed package path, bundle path and
 exact command. Report older docs-package drift and older app-local CLI drift
 together as one `tooling-update`, `approval: explicit`, listing each drifting
 package's exact command in its own dependency section; apply's approved tooling

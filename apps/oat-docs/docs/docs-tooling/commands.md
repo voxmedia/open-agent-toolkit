@@ -297,9 +297,27 @@ site nav generation. Framework apps generate navigation as follows:
   generated `meta.json` files.
 
 Use `--check` in builds and CI. It computes the same navigation, writes
-nothing, and exits 1 when any generated file would change or, for Fumadocs,
-any page or folder is unlisted, naming each one (`stale` and `unlisted` in
+nothing, and exits 1 when any generated file is missing or would change or, for
+Fumadocs, any page or folder is unlisted. It names each one and separates
+missing files from differing ones (`stale`, `missing` and `unlisted` in
 `--json`). Fresh Fumadocs `prebuild` and MkDocs `docs:build` scripts run it with explicit app selection, preserving external `oat` versus source-workspace CLI commands and quoting paths with spaces. This repository's `apps/oat-docs` `prebuild` also runs it, so `pnpm build:docs` fails on stale navigation.
+
+Without `--target-dir`, the command uses the configured `documentation.root`,
+like `oat docs check`, and falls back to the current directory only when no root
+is configured. With `documentation.tooling: markdown` it exits 1 and says nav
+sync does not apply: Markdown Contents maps are the navigation, so validate
+them with `oat docs check`.
+
+The command reads `documentation.navOwner` when the target is the configured root:
+
+| Owner           | Writing run                                                                               | `--check`                                                                                                                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nav-sync`      | Regenerates navigation.                                                                   | Strict: generated files must match.                                                                                                                                              |
+| `hand-authored` | Refuses with exit 1 and writes nothing. Edit the navigation directly or change the owner. | Membership and order only, as in [`oat docs check`](check.md#results-and-repair): every Contents page reachable, no entry naming a missing page, listed pages in Contents order. |
+| undeclared      | Regenerates navigation and warns you to declare an owner.                                 | Strict, with the same warning.                                                                                                                                                   |
+
+Fresh `oat docs init` framework scaffolds declare `nav-sync` and run their first
+sync directly, so they are unaffected.
 
 Shared `documentation.nonReaderPaths` uses the exclusion grammar above, relative to the configured content root. Navigation inventory, explicit Contents links, `--check` and manifests omit matches; excluded metadata is never cleaned or rewritten. An unrelated explicit target does not inherit the setting. `documentation.excludes` stays manifest-only. OAT Fumadocs source collections omit non-readers from rendering too; pinned MkDocs 1.4.2 omits them from nav/manifest but still renders their routes (no rendering-exclusion support).
 

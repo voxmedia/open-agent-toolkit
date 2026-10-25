@@ -56,10 +56,10 @@ stable recommendation ID with `approval: explicit`. Docs-package drift and
 app-local `@open-agent-toolkit/cli` drift share one `tooling-update` ID, each row
 keeping its own dependency section in its command; apply then regenerates the
 manifest with the upgraded app-local CLI. `current` needs no tooling
-recommendation, even if the helper emits a reinstall command. For `ahead`, select
+recommendation and has no command. For `ahead`, select
 or update the intended CLI installation, then re-analyze; do not recommend a docs
 package downgrade. `unverified` requires manual verification before a package
-recommendation.
+recommendation; record the helper's `reason` (for example, not installed).
 
 Unsupported app config/routes/scripts: {manual changes required; never automatic}.
 

@@ -4832,6 +4832,88 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(1);
       expect(capture.error.at(-1)).toContain('documentation.nonReaderPaths');
     });
+
+    it.each(['documentation.nonReaderPaths', 'documentation.excludes'])(
+      '%s accepts a JSON string array and rejects other JSON-looking input',
+      async (key) => {
+        const root = await createRepoRoot();
+        await writeSharedConfig(root, { documentation: { root: 'docs' } });
+        const { command, capture } = realHarness(root);
+        const field = key.slice('documentation.'.length);
+        const stored = async () =>
+          JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8'))
+            .documentation[field];
+        await runCommand(command, [
+          'set',
+          key,
+          '["**/AGENTS.md", "drafts/{a,b}/**"]',
+        ]);
+        expect(process.exitCode).toBe(0);
+        expect(await stored()).toEqual(['**/AGENTS.md', 'drafts/{a,b}/**']);
+        for (const invalid of ['["ok", 3]', '{"glob":"x"}', '[unterminated']) {
+          process.exitCode = undefined;
+          await runCommand(command, ['set', key, invalid]);
+          expect(process.exitCode).toBe(1);
+          expect(capture.error.at(-1)).toContain(
+            `Invalid ${key} value: a value starting with [ or { must be a JSON array of non-empty strings; otherwise use comma-separated globs.`,
+          );
+          expect(await stored()).toEqual(['**/AGENTS.md', 'drafts/{a,b}/**']);
+        }
+      },
+    );
+  });
+
+  describe('documentation.index', () => {
+    it('is a catalogued key that get, describe and set accept', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat/config.json'),
+        JSON.stringify({
+          documentation: { root: 'apps/docs', index: 'apps/docs/index.md' },
+        }),
+      );
+      const capture = createLoggerCapture();
+      const command = createConfigCommand({
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          cwd: root,
+          home: root,
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          interactive: false,
+          logger: capture.logger,
+        }),
+        resolveProjectRoot: async () => root,
+      });
+      await runCommand(command, ['get', 'documentation.index'], ['--json']);
+      expect(process.exitCode).toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        key: 'documentation.index',
+        value: 'apps/docs/index.md',
+        source: 'shared',
+      });
+      await runCommand(
+        command,
+        ['describe', 'documentation.index'],
+        ['--json'],
+      );
+      expect(process.exitCode).toBe(0);
+      expect(capture.jsonPayloads.at(-1)).toMatchObject({
+        status: 'ok',
+        entries: [expect.objectContaining({ key: 'documentation.index' })],
+      });
+      await runCommand(command, [
+        'set',
+        'documentation.index',
+        'apps/docs/llms.md',
+      ]);
+      expect(process.exitCode).toBe(0);
+      expect(
+        JSON.parse(await readFile(join(root, '.oat/config.json'), 'utf8'))
+          .documentation,
+      ).toEqual({ root: 'apps/docs', index: 'apps/docs/llms.md' });
+    });
   });
 
   describe('documentation.excludes', () => {
@@ -5060,7 +5142,7 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('Type: string[]');
       expect(capture.info[0]).toContain('File: .oat/config.json');
       expect(capture.info[0]).toContain(
-        'Owning command: oat config set documentation.excludes <glob[,glob...]>',
+        'Owning command: oat config set documentation.excludes <glob[,glob...]|JSON-array>',
       );
       expect(process.exitCode).toBe(0);
     });

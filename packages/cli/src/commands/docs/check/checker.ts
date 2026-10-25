@@ -20,6 +20,8 @@ export async function checkDocs(options: {
   cwd: string;
   targetDir?: string;
   rules?: string[];
+  /** Receives human notices; they never enter the JSON result. */
+  onNotice?: (message: string) => void;
 }): Promise<DocsCheckResult> {
   const unknown = options.rules?.find(
     (rule) => !DOCS_CHECK_RULES.includes(rule as DocsCheckRule),
@@ -29,6 +31,7 @@ export async function checkDocs(options: {
       `Unknown docs check rule "${unknown}". Choose: ${DOCS_CHECK_RULES.join(', ')}.`,
     );
   const target = await resolveCheckTarget(options.cwd, options.targetDir);
+  for (const notice of target.notices) options.onNotice?.(notice);
   const policy = target.documentation.check;
   const findings: DocsFinding[] = [];
   const exceptions =

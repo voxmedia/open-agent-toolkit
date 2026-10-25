@@ -1072,9 +1072,11 @@ describe('help output snapshots', () => {
 
       Options:
         --target-dir <path>  Docs app directory containing mkdocs.yml or
-                             source.config.ts
-        --check              Write nothing; exit 1 if any navigation file is stale or
-                             any page is unlisted
+                             source.config.ts (default: documentation.root, else the
+                             current directory)
+        --check              Write nothing; exit 1 if any navigation file is missing
+                             or stale or any page is unlisted (hand-authored
+                             navigation: membership and order only)
         -h, --help           display help for command
 
       Global Options:

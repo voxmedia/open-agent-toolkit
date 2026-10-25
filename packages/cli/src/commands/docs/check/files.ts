@@ -52,6 +52,8 @@ export interface CheckTarget {
   framework: 'markdown' | 'fumadocs' | 'mkdocs';
   documentation: OatDocumentationConfig;
   matcher: ExclusionMatcher;
+  /** Human notices about how an explicit target was interpreted. */
+  notices: string[];
 }
 export async function resolveCheckTarget(
   cwd: string,
@@ -113,6 +115,21 @@ export async function resolveCheckTarget(
   const matchesContent =
     configuredContentPath !== undefined && configuredContentPath === appRoot;
   const documentation = matching || matchesContent ? doc : {};
+  const notices: string[] = [];
+  if (targetDir !== undefined && configured && doc.root && !matching) {
+    const configuredTooling =
+      doc.tooling === 'fumadocs' || doc.tooling === 'mkdocs'
+        ? doc.tooling
+        : undefined;
+    if (matchesContent && configuredTooling && framework === 'markdown')
+      notices.push(
+        `Notice: --target-dir ${targetDir} is the content directory of the configured ${configuredTooling} app ${doc.root}; it is checked as Markdown, so navigation is skipped. Pass --target-dir ${doc.root} to include navigation.`,
+      );
+    else if (!matchesContent)
+      notices.push(
+        `Notice: --target-dir ${targetDir} is not the configured documentation.root (${doc.root}); checking it as ${framework === 'markdown' ? 'a literal Markdown root' : `a ${framework} app`} without the configured documentation policy. Omit --target-dir to check ${doc.root}.`,
+      );
+  }
   return {
     repoRoot,
     appRoot,
@@ -120,6 +137,7 @@ export async function resolveCheckTarget(
     framework,
     documentation,
     matcher: createExclusionMatcher(documentation.nonReaderPaths ?? []),
+    notices,
   };
 }
 export async function readerFiles(target: CheckTarget): Promise<string[]> {
@@ -132,6 +150,13 @@ export async function readerFiles(target: CheckTarget): Promise<string[]> {
       a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
     )) {
       const path = posix(join(dir, e.name));
+      // Installed dependencies and hidden tool state (.git, .oat, .next, ...)
+      // are never reader content, even under a broad explicit target.
+      if (
+        e.isDirectory() &&
+        (e.name === 'node_modules' || e.name.startsWith('.'))
+      )
+        continue;
       if (e.isDirectory() && !isExcludedPath(target.matcher, path, true))
         await walk(path);
       else if (

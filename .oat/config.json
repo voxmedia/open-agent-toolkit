@@ -32,7 +32,8 @@
     "tooling": "fumadocs",
     "config": "apps/oat-docs/next.config.js",
     "index": "apps/oat-docs/index.md",
-    "requireForProjectCompletion": true
+    "requireForProjectCompletion": true,
+    "navOwner": "nav-sync"
   },
   "localPaths": [
     ".oat/**/analysis",
