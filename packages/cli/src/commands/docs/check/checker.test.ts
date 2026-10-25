@@ -210,6 +210,25 @@ describe('calibrated reader rules through real files and config', () => {
       );
     },
   );
+  // Line oracles come from the fixture construction: line N is the first
+  // physical line past a limit, and page() puts H3 number k on line 8 + 2k.
+  it('locates page-length findings at the first line past each limit', async () => {
+    const f = await fixture();
+    await f.write('guide.md', `${page().trimEnd()}\n${'x\n'.repeat(600)}`);
+    expect(await f.run('page-length')).toEqual([
+      expect.objectContaining({ path: 'guide.md', line: 501 }),
+    ]);
+    await f.write('guide.md', page());
+    await f.write(
+      'reference/guide.md',
+      page(
+        `# Guide\n${Array.from({ length: 41 }, (_, i) => `\n### Heading ${i}\n`).join('')}`,
+      ),
+    );
+    expect(await f.run('page-length')).toEqual([
+      expect.objectContaining({ path: 'reference/guide.md', line: 88 }),
+    ]);
+  });
   it.each([0, 39, 40, 41, 159, 160, 161])(
     'description length %i',
     async (count) => {

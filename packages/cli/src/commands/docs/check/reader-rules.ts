@@ -264,16 +264,21 @@ export async function checkReaders(
         'warn',
         p.path,
         `Page has ${lines} physical source lines; limit ${limit}${reference ? ' for reference pages' : ''}.`,
+        // The first physical line past the limit.
+        limit + 1,
       );
-    const h3 = p.nodes.filter(
+    const h3Nodes = p.nodes.filter(
       (n) => n.type === 'heading' && n.depth === 3,
-    ).length;
+    );
+    const h3 = h3Nodes.length;
     if (reference && h3 > t.referenceH3)
       report(
         'page-length',
         'warn',
         p.path,
         `Reference page has ${h3} real H3 headings; limit ${t.referenceH3}.`,
+        // The first H3 past the limit.
+        h3Nodes[t.referenceH3]?.position?.start.line ?? 1,
       );
     for (const link of p.links) {
       const href = link.href;
