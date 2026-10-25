@@ -526,6 +526,7 @@
 | BL-261002-route-validated-archive        | Route validated archive receipts from oat-project-complete-auto to the interactive resume tail           | open   | medium   | task       | M        |
 | BL-261002-settle-dispatch-policy         | Settle dispatch policy precedence and stop legacy presets overwriting ladder columns                     | open   | medium   | task       | M        |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests      | open   | medium   | task       | S        |
+| BL-261025-stop-nav-sync-adding-index     | Stop nav sync adding index beside a link-form pagesIndex                                                 | open   | medium   | task       | S        |
 | BL-261002-stop-oat-sync-from-changing    | Stop oat sync from changing user values in .codex/config.toml                                            | open   | medium   | task       | S        |
 | BL-260911-support-per-tool-scope         | Support per-tool scope migration in oat tools migrate                                                    | open   | medium   | task       | S        |
 | BL-260909-surface-config-warnings        | Surface config warnings on every reader path and document the warnings field                             | open   | medium   | task       | M        |
