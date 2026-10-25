@@ -56,7 +56,10 @@ requiring generated display labels, title fields or YAML formatting; do not
 silently regenerate it. A page listed in Contents must be reachable from some
 sidebar entry: its own folder's `pages`, a rest entry, a borrow from another
 folder such as `"../install"`, a root-relative link item to its URL, or the
-folder's `pagesIndex` (a page path, or a link to the folder's own URL). Only
+folder's `pagesIndex` (a page path, or a link to the folder's own URL). The
+docs root never shows its own index in the sidebar, so a root `pagesIndex` does
+not count; list `index` or link to `/`. Folders with `root` set get no implicit
+index either. Only
 folders the sidebar attaches from the docs root count: a link to a folder's URL
 reaches its landing page, not its other pages. Every
 `pages` or `nav` entry must name an existing page or folder, and listed pages keep

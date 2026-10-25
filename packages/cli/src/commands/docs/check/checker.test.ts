@@ -1574,13 +1574,6 @@ describe('hand-authored navigation membership, not generator equality', () => {
       await f.write('section/meta.json', meta(reaches));
       expect(await f.run('navigation'), reaches).toEqual([]);
     }
-    // At the docs root the loader attaches the landing page only through a
-    // path-form pagesIndex (or a listed "index").
-    await f.write(
-      'meta.json',
-      `${JSON.stringify({ pagesIndex: 'index', pages: ['guide', 'section'] })}\n`,
-    );
-    expect(await f.run('navigation')).toEqual([]);
     await f.write('meta.json', pretty(['index', 'guide', 'section']));
     await f.write('section/meta.json', meta('[Overview](/elsewhere)'));
     expect(await f.run('navigation')).toEqual([

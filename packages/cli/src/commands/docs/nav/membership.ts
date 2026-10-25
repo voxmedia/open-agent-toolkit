@@ -8,6 +8,7 @@ import {
   FUMADOCS_LINK,
   FUMADOCS_REST_ITEMS,
   FUMADOCS_SEPARATOR,
+  hasImplicitIndex,
   pageUrl,
   type FumadocsMetaFile,
 } from './fumadocs';
@@ -136,6 +137,8 @@ interface ActualMeta {
   items: Array<{ raw: string; item: PagesItem }>;
   /** Author-owned `pagesIndex`, when it is a string. */
   pagesIndex?: string;
+  /** The parsed metadata, for the loader's index rules (`root`, `pagesIndex`). */
+  metadata: Record<string, unknown>;
 }
 
 /**
@@ -194,6 +197,7 @@ export async function compareFumadocsMembership(
       file,
       dir,
       source,
+      metadata: parsed as Record<string, unknown>,
       ...(typeof pagesIndex === 'string' && pagesIndex.trim()
         ? { pagesIndex: pagesIndex.trim() }
         : {}),
@@ -242,6 +246,7 @@ export async function compareFumadocsMembership(
       return undefined;
     const pagesIndex = (parsed as Record<string, unknown>).pagesIndex;
     return {
+      metadata: parsed as Record<string, unknown>,
       items: (pages as string[]).map((raw) => ({
         raw,
         item: classify(dir, raw),
@@ -264,15 +269,23 @@ export async function compareFumadocsMembership(
     const excluded = (key: string): boolean => excludedKeys.has(stripPage(key));
     // Folder index: a path-form pagesIndex attaches that page unless pages
     // excludes it; a link-form one routes the folder to its URL (compared
-    // like any link item); otherwise a non-root folder attaches index.
+    // like any link item). Without pagesIndex, only a folder the generator
+    // also treats as non-root (hasImplicitIndex: not the docs root, no `root`)
+    // attaches index. The docs root's own index never enters the sidebar
+    // tree (the loader drops the root folder's index), so the root reaches
+    // its landing page only through pages, a rest entry or a link.
     if (meta?.pagesIndex !== undefined) {
-      const index = classify(dir, meta.pagesIndex);
-      if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
-      else if (index.kind === 'path') {
-        const target = await resolveTarget(index.key);
-        if (target.exists && !excluded(index.key)) reachedIds.add(target.id);
+      if (dir === '.') {
+        // Dropped by the loader with the root folder node.
+      } else {
+        const index = classify(dir, meta.pagesIndex);
+        if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
+        else if (index.kind === 'path') {
+          const target = await resolveTarget(index.key);
+          if (target.exists && !excluded(index.key)) reachedIds.add(target.id);
+        }
       }
-    } else if (dir !== '.') {
+    } else if (hasImplicitIndex(dir, meta?.metadata ?? null)) {
       const key = posix.join(dir, 'index');
       const landing = await resolveTarget(key);
       if (landing.exists && !excluded(key)) reachedIds.add(landing.id);

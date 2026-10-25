@@ -237,7 +237,7 @@ function hrefFragment(href: string): string {
  * and no `pagesIndex` names a different page. Otherwise the page is shown
  * only if `pages` lists it.
  */
-function hasImplicitIndex(
+export function hasImplicitIndex(
   relativeDir: string,
   existing: Record<string, unknown> | null,
 ): boolean {
