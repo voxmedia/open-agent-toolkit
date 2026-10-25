@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261025-approved-docs-tooling-updates  | 2026-10-25 | accepted   | Approved docs tooling updates include the app-local CLI                                                | -       |
 | DR-261024-authored-ia-with-config-mirror | 2026-10-24 | accepted   | Authored IA with config mirror                                                                         | -       |
 | DR-261024-explicit-docs-apply-approvals  | 2026-10-24 | accepted   | Explicit docs apply approvals                                                                          | -       |
 | DR-261024-guidance-driven-ia-selection   | 2026-10-24 | accepted   | Guidance-driven IA selection                                                                           | -       |
