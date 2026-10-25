@@ -323,7 +323,9 @@ In `full` mode, evaluate the whole docs surface.
 Read the authored IA decision and `## Information architecture` section in the
 docs-app AGENTS.md (Fumadocs/MkDocs) or contributing page (Markdown).
 `documentation.ia` is a repository-only mirror: compare preset, decision path,
-tracks/principles and verification overlay to those authored sources. The
+tracks/principles and verification overlay to those authored sources. A preset
+ID and its approved label (for example `flat-small` and Flat Small) name the
+same preset, not a contradiction. The
 authored record is authoritative; missing/broken records or contradictory
 mirrors become `ask_user` findings. No recorded IA means `ask_user` to choose
 and record one, not an inferred preset. Keep ordinary contract analysis useful

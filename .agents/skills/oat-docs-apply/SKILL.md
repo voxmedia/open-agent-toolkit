@@ -276,6 +276,9 @@ a conflict with config becomes `ask_user`, never a config-driven rewrite.
 Mirror the accepted record using shared repo config only:
 `oat config set documentation.ia '<JSON>'`, with exactly `{preset, decision,
 tracks?: [{path, principle}], verification?: 'triad'|'agent-only'|'none'}`.
+Write `preset` as the canonical ID (`product-engineering-qa`,
+`consumer-maintainer`, `domain-engineering`, `task-type`, `toolkit-cli` or
+`flat-small`) of the approved label.
 `decision` is repo-relative; preserve guidance and unrelated config. For a
 framework surface, separately record the operator's approved sidebar owner via
 `oat config set documentation.navOwner nav-sync` or `hand-authored`. Missing

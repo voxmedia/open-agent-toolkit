@@ -1,15 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-export const IA_PRESETS = [
-  'product-engineering-qa',
-  'consumer-maintainer',
-  'domain-engineering',
-  'task-type',
-  'toolkit-cli',
-  'flat-small',
-] as const;
-export type IaPreset = (typeof IA_PRESETS)[number];
+import { IA_PRESET_IDS, type IaPresetId } from '@config/documentation-ia';
+
+export const IA_PRESETS = IA_PRESET_IDS;
+export type IaPreset = IaPresetId;
 export interface PresetSelection {
   iaPreset?: IaPreset;
   plannedPages?: number;

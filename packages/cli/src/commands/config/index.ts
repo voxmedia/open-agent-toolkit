@@ -29,6 +29,7 @@ import {
   managedDispatchPolicyValueList,
 } from '@config/dispatch-policy-options';
 import { normalizeDocumentationCheck } from '@config/documentation-check';
+import { DocumentationIaPresetError } from '@config/documentation-ia';
 import { parseJsonConfig } from '@config/json';
 import {
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
@@ -2510,6 +2511,10 @@ async function setConfigValue(
       }
     } catch (error) {
       if (key === 'documentation.check') throw error;
+      if (error instanceof DocumentationIaPresetError)
+        throw new Error(`Invalid ${key} value: ${error.detail}.`, {
+          cause: error,
+        });
       throw new Error(
         `Invalid ${key} value: ${key === 'documentation.ia' ? 'expected IA JSON with preset, repo-relative decision, optional tracks and verification' : key === 'documentation.navOwner' ? 'expected nav-sync or hand-authored' : 'expected a non-empty path/URL string or ordered non-empty string array'}.`,
         { cause: error },
