@@ -17,7 +17,9 @@ import { inside, posix, type CheckTarget } from './files';
  * P21/G5): separators, labels, links, rest entries and borrowed pages are the
  * author's presentation, never generator output to match.
  *
- * `reported` tells whether a finding already exists for a rule, path and line.
+ * `reported` tells whether an error-severity finding already exists for a
+ * rule, path and line. A policy-downgraded finding does not count: the defect
+ * still stops navigation, so navigation keeps reporting it as an error.
  */
 export async function checkNavigation(
   target: CheckTarget,
@@ -85,9 +87,10 @@ export async function checkNavigation(
     ) {
       // Navigation stops at the first invalid Contents map. directory-index
       // resolves every map the same way and reports each defect at its own
-      // index.md, so repeat it here only when that rule did not: it was not
-      // selected, or the defect is framework-only (MkDocs nav accepts only
-      // .md targets, while the reader check also accepts .mdx).
+      // index.md, so repeat it here only when that rule did not report it as
+      // an error: it was not selected, policy downgraded it, or the defect is
+      // framework-only (MkDocs nav accepts only .md targets, while the reader
+      // check also accepts .mdx).
       const path = posix(relative(target.contentRoot, error.indexPath));
       if (!reported('directory-index', path, error.line))
         report('navigation', 'error', path, error.message, error.line);

@@ -81,7 +81,11 @@ export async function checkDocs(options: {
   if (!options.rules?.length || options.rules.includes('navigation'))
     await checkNavigation(target, report, (ruleId, path, line) =>
       findings.some(
-        (f) => f.ruleId === ruleId && f.path === path && f.line === line,
+        (f) =>
+          f.severity === 'error' &&
+          f.ruleId === ruleId &&
+          f.path === path &&
+          f.line === line,
       ),
     );
   if (!options.rules?.length || options.rules.includes('commands'))

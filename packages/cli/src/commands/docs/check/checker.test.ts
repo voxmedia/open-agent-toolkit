@@ -958,6 +958,68 @@ describe('index-only leaves: single-page sections with in-page Contents', () => 
       { ruleId: 'navigation', ...defect },
     ]);
   });
+  it('still errors in navigation when a policy exception downgrades the Contents defect', async () => {
+    const f = await leafTree('fumadocs');
+    const source = map(
+      'Architecture',
+      [
+        '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+        '- [Overview](overview.md) - The system shape.',
+        '- [Principles](#principles) - Rules every change follows.',
+      ],
+      '\n## Principles\n\nText.\n',
+    );
+    await f.write('architecture/index.md', source);
+    await f.config({
+      exceptions: [
+        {
+          rule: 'directory-index',
+          path: 'architecture/index.md',
+          reason: 'Fixture downgrade.',
+          severity: 'warn',
+        },
+      ],
+    });
+    // The downgraded finding is not an error, so navigation must not defer to it.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'architecture/index.md',
+        line: lineOf(source, '(#principles)'),
+        message: expect.stringContaining(
+          'Contents link "#principles" in ',
+        ) as string,
+      },
+    ]);
+  });
+  it('reports a framework-only Contents defect once, from navigation at its own index', async () => {
+    const f = await leafTree('mkdocs');
+    await f.config({}, { navOwner: 'nav-sync' });
+    await f.write('architecture/extra.mdx', page());
+    const source = map('Architecture', [
+      '- [Multi-brand](multi-brand/index.md) - Brands share a deployment.',
+      '- [Overview](overview.md) - The system shape.',
+      '- [Extra](extra.mdx) - A page MkDocs does not render.',
+    ]);
+    await f.write('architecture/index.md', source);
+    // The reader check accepts .mdx; MkDocs navigation accepts only .md.
+    expect(
+      (await f.run()).filter((finding) => finding.severity === 'error'),
+    ).toEqual([
+      {
+        ruleId: 'navigation',
+        severity: 'error',
+        path: 'architecture/index.md',
+        line: lineOf(source, '(extra.mdx)'),
+        message: expect.stringContaining(
+          'must point to a Markdown file or directory index',
+        ) as string,
+      },
+    ]);
+  });
 });
 
 describe('contributing commands resolve actual literal package contexts', () => {
