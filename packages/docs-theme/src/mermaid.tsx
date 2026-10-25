@@ -3,21 +3,16 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import { sitePeleTheme } from './pele-theme.js';
+import { measureIn, renderChart, type RenderedChart } from './render-chart.js';
 import { ZoomFrame } from './zoom-frame.js';
-import { fillWidth } from './zoom-svg.js';
 
 export interface MermaidProps {
   chart: string;
 }
 
-interface Rendered {
-  inline: string;
-  zoomed: string;
-}
-
 export function Mermaid({ chart }: MermaidProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<Rendered>({ inline: '', zoomed: '' });
+  const [svg, setSvg] = useState<RenderedChart>({ inline: '', zoomed: '' });
   // Unique per instance so the inline and full-screen copies of every diagram
   // on a page get distinct element IDs (title, desc, markers).
   const idPrefix = `pele-${useId().replace(/[^\w-]/g, '')}`;
@@ -26,18 +21,16 @@ export function Mermaid({ chart }: MermaidProps) {
     let cancelled = false;
 
     async function render() {
-      const { renderAsync } = await import('pele/lazy');
-      const fontFamily = containerRef.current
-        ? getComputedStyle(containerRef.current).fontFamily
-        : undefined;
-      const inline = await renderAsync(chart, { idPrefix, fontFamily });
-      const zoomed = await renderAsync(chart, {
-        idPrefix: `${idPrefix}-zoom`,
-        fontFamily,
+      const host = containerRef.current;
+      if (!host) return;
+      const rendered = await renderChart(chart, {
+        idPrefix,
+        fontFamily: getComputedStyle(host).fontFamily,
+        measure: measureIn(host),
       });
 
       if (!cancelled) {
-        setSvg({ inline: inline.svg, zoomed: fillWidth(zoomed.svg) });
+        setSvg(rendered);
       }
     }
 

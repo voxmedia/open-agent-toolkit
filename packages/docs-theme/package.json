@@ -43,6 +43,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "katex": "0.19.1",
     "pele": "1.10.0"
   },
   "devDependencies": {
