@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, posix } from 'node:path';
 
 import YAML from 'yaml';
@@ -205,32 +205,10 @@ export async function compareFumadocsMembership(
   }
 
   const resolveTarget = createTargetResolver(docsRoot);
-  const reachedIds = new Set<string>();
-  const reachedUrls = new Set<string>();
-  for (const actual of actuals) {
-    // fumadocs-core 16.10.2 `buildFolder`: a path-form pagesIndex attaches
-    // that page as the folder index unless pages excludes it; a link-form
-    // pagesIndex makes the link the folder index, so the folder routes to its
-    // URL (compared like any link item).
-    if (actual.pagesIndex !== undefined) {
-      const index = classify(actual.dir, actual.pagesIndex);
-      if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
-      else if (index.kind === 'path') {
-        const target = await resolveTarget(index.key);
-        const excludedHere = actual.items.some(
-          ({ raw }) =>
-            raw.startsWith('!') &&
-            posix.join(actual.dir, raw.slice(1)) === index.key,
-        );
-        if (target.exists && !excludedHere) reachedIds.add(target.id);
-      }
-    }
+  for (const actual of actuals)
     for (const { raw, item } of actual.items) {
-      if (item.kind === 'link' && item.url) reachedUrls.add(item.url);
       if (item.kind !== 'path') continue;
-      const target = await resolveTarget(item.key);
-      reachedIds.add(target.id);
-      if (!target.exists)
+      if (!(await resolveTarget(item.key)).exists)
         issues.push({
           path: actual.file.path,
           kind: 'dangling',
@@ -238,7 +216,104 @@ export async function compareFumadocsMembership(
           line: lineOf(actual.source, JSON.stringify(raw)),
         });
     }
-  }
+
+  // Walk the sidebar the way fumadocs-core 16.10.2 `buildFolder` does, from
+  // the docs root through attached folders only: a meta.json in a folder the
+  // tree never attaches contributes nothing, and a URL link to a folder's
+  // landing page reaches that page but does not attach the folder.
+  const reachedIds = new Set<string>();
+  const reachedUrls = new Set<string>();
+  const byDir = new Map(actuals.map((actual) => [actual.dir, actual]));
+  const visited = new Set<string>();
+  const stripPage = (key: string): string => key.replace(/\.mdx?$/, '');
+  const pagesMetaFor = async (dir: string) => {
+    const known = byDir.get(dir);
+    if (known) return known;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(
+        await readFile(join(docsRoot, dir, 'meta.json'), 'utf8'),
+      );
+    } catch {
+      return undefined;
+    }
+    const pages = isPlainObject(parsed) ? parsed.pages : undefined;
+    if (!Array.isArray(pages) || pages.some((p) => typeof p !== 'string'))
+      return undefined;
+    const pagesIndex = (parsed as Record<string, unknown>).pagesIndex;
+    return {
+      items: (pages as string[]).map((raw) => ({
+        raw,
+        item: classify(dir, raw),
+      })),
+      ...(typeof pagesIndex === 'string' && pagesIndex.trim()
+        ? { pagesIndex: pagesIndex.trim() }
+        : {}),
+    };
+  };
+  const visit = async (dir: string): Promise<void> => {
+    if (visited.has(dir)) return;
+    visited.add(dir);
+    reachedIds.add(`folder:${dir}`);
+    const meta = await pagesMetaFor(dir);
+    const excludedKeys = new Set(
+      (meta?.items ?? []).flatMap(({ item }) =>
+        item.kind === 'exclude' ? [stripPage(item.key)] : [],
+      ),
+    );
+    const excluded = (key: string): boolean => excludedKeys.has(stripPage(key));
+    // Folder index: a path-form pagesIndex attaches that page unless pages
+    // excludes it; a link-form one routes the folder to its URL (compared
+    // like any link item); otherwise a non-root folder attaches index.
+    if (meta?.pagesIndex !== undefined) {
+      const index = classify(dir, meta.pagesIndex);
+      if (index.kind === 'link' && index.url) reachedUrls.add(index.url);
+      else if (index.kind === 'path') {
+        const target = await resolveTarget(index.key);
+        if (target.exists && !excluded(index.key)) reachedIds.add(target.id);
+      }
+    } else if (dir !== '.') {
+      const key = posix.join(dir, 'index');
+      const landing = await resolveTarget(key);
+      if (landing.exists && !excluded(key)) reachedIds.add(landing.id);
+    }
+    const reachAll = async (): Promise<void> => {
+      let entries;
+      try {
+        entries = await readdir(join(docsRoot, dir), { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const entry of entries) {
+        if (entry.name.startsWith('.') || entry.name === 'node_modules')
+          continue;
+        const key = posix.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (!excluded(key)) await visit(key);
+        } else if (
+          entry.isFile() &&
+          PAGE_EXTENSIONS.includes(extname(entry.name)) &&
+          !excluded(key)
+        )
+          reachedIds.add(`page:${stripPage(key)}`);
+      }
+    };
+    if (!meta) {
+      await reachAll();
+      return;
+    }
+    for (const { item } of meta.items) {
+      if (item.kind === 'rest') await reachAll();
+      else if (item.kind === 'link' && item.url) reachedUrls.add(item.url);
+      else if (item.kind === 'path') {
+        const target = await resolveTarget(item.key);
+        if (!target.exists) continue;
+        if (target.folder) await visit(item.key);
+        else reachedIds.add(target.id);
+      }
+    }
+  };
+  await visit('.');
 
   for (const actual of actuals) {
     const expected: Array<{ name: string; target: Target }> = [];
@@ -275,7 +350,7 @@ export async function compareFumadocsMembership(
         (listed.includes(target.id) && !excluded.has(target.id)) ||
         (rest && !excluded.has(target.id)) ||
         reachedIds.has(target.id) ||
-        reachedUrls.has(target.url)
+        (!target.folder && reachedUrls.has(target.url))
       )
         continue;
       issues.push({
@@ -349,12 +424,14 @@ export async function compareMkDocsMembership(options: {
         line: navLine,
       },
     ];
+  // A page two Contents maps list appears twice in generated nav; compare
+  // first occurrences on both sides.
   const expected = flattenNav(
     await buildDocsNavTree({
       docsRoot: options.docsRoot,
       nonReaderPaths: options.nonReaderPaths,
     }),
-  );
+  ).filter((path, index, all) => all.indexOf(path) === index);
   const actual: string[] = [];
   for (const entry of flattenNav(config.nav)) {
     if (

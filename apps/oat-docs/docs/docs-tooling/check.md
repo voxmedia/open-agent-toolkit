@@ -56,7 +56,9 @@ requiring generated display labels, title fields or YAML formatting; do not
 silently regenerate it. A page listed in Contents must be reachable from some
 sidebar entry: its own folder's `pages`, a rest entry, a borrow from another
 folder such as `"../install"`, a root-relative link item to its URL, or the
-folder's `pagesIndex` (a page path, or a link to the folder's own URL). Every
+folder's `pagesIndex` (a page path, or a link to the folder's own URL). Only
+folders the sidebar attaches from the docs root count: a link to a folder's URL
+reaches its landing page, not its other pages. Every
 `pages` or `nav` entry must name an existing page or folder, and listed pages keep
 their Contents order. Separators and their labels, MkDocs section labels and
 nesting, link items, rest entries and borrowed pages are presentation and are

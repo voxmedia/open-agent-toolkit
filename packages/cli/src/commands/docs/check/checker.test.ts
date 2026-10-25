@@ -1594,6 +1594,61 @@ describe('hand-authored navigation membership, not generator equality', () => {
       },
     ]);
   });
+  it('only folders reachable from the sidebar root count their entries; a URL link does not attach a folder', async () => {
+    const f = await fixture('fumadocs');
+    await f.config({}, { navOwner: 'hand-authored' });
+    await f.write(
+      'index.md',
+      contentsPage('Home', [
+        '- [Guide](guide.md) - Complete description for this reader.',
+        '- [Section](section/index.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write(
+      'section/index.md',
+      contentsPage('Section', [
+        '- [Leaf](leaf.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write('section/leaf.md', page());
+    await f.write('meta.json', pretty(['index', '[Section](/section)']));
+    await f.write('section/meta.json', pretty(['leaf', '../guide']));
+    const missing = (kind: string, name: string) => ({
+      ruleId: 'navigation',
+      severity: 'error',
+      path: 'meta.json',
+      line: 2,
+      message: `Missing reader ${kind}: "${name}" is listed in index.md Contents but no meta.json pages entry reaches it; add it to pages or remove it from Contents.`,
+    });
+    expect(await f.run('navigation')).toEqual([
+      missing('folder', 'section'),
+      missing('page', 'guide'),
+    ]);
+    // Listing the folder attaches it, and its borrow then reaches guide.
+    await f.write('meta.json', pretty(['index', 'section']));
+    expect(await f.run('navigation')).toEqual([]);
+  });
+  it('hand-authored MkDocs nav identical to generated output passes when two maps list one page', async () => {
+    const f = await fixture('mkdocs');
+    await f.write(
+      'index.md',
+      contentsPage('Home', [
+        '- [Guide](guide.md) - Complete description for this reader.',
+        '- [Section](section/index.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write(
+      'section/index.md',
+      contentsPage('Section', [
+        '- [Leaf](leaf.md) - Complete description for this reader.',
+        '- [Guide again](../guide.md) - Complete description for this reader.',
+      ]),
+    );
+    await f.write('section/leaf.md', page());
+    await syncDocsNavigation({ appRoot: f.app });
+    await f.config({}, { navOwner: 'hand-authored' });
+    expect(await f.run('navigation')).toEqual([]);
+  });
   it('hand-authored MkDocs nav compares page membership, not section labels or links', async () => {
     const f = await fixture('mkdocs');
     await f.config({}, { navOwner: 'hand-authored' });
