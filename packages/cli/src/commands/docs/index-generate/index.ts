@@ -694,8 +694,11 @@ async function runIndexGenerate(
     excludes: resolved.excludes,
   });
   // Links are written relative to the manifest file, which always sits outside
-  // the docs directory it indexes.
-  const linkBase = normalizeToPosixPath(relative(dirname(outputPath), docsDir));
+  // the docs directory it indexes. Canonical paths keep the prefix independent
+  // of any symlinked alias the operator supplied.
+  const linkBase = normalizeToPosixPath(
+    relative(dirname(canonical.outputPath), canonical.docsDir),
+  );
   const content = buildGeneratedIndexOutput(
     deps.renderIndex(entries, { linkBase }),
     resolved.config.documentation?.tooling,

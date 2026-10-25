@@ -1186,6 +1186,54 @@ describe('createDocsGenerateIndexCommand', () => {
         ).toBe(true);
     });
 
+    // Non-ASCII whitespace must be escaped as UTF-8 bytes; a UTF-16 code unit
+    // escape (`%A0`, `%3000`) does not decode back to the filename.
+    it('encodes non-ASCII whitespace in manifest links as UTF-8', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      const docs = join(repo.appRoot, 'docs');
+      await writeFile(join(docs, 'non\u00a0breaking.md'), '# NBSP\n');
+      await writeFile(join(docs, 'wide\u3000space.md'), '# Wide\n');
+
+      await runCommand(repo.command, []);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifestPath = join(repo.appRoot, 'index.md');
+      const manifest = await readFile(manifestPath, 'utf8');
+      const targets = [...manifest.matchAll(/\]\(([^)]+)\)/g)].map(
+        (match) => match[1]!,
+      );
+      expect(targets).toContain('docs/non%C2%A0breaking.md');
+      expect(targets).toContain('docs/wide%E3%80%80space.md');
+      for (const target of targets)
+        expect(
+          existsSync(
+            resolve(dirname(manifestPath), decodeURIComponent(target)),
+          ),
+          target,
+        ).toBe(true);
+    });
+
+    // The prefix comes from where the manifest is actually written, not from a
+    // symlinked directory alias in --output.
+    it('writes the same manifest links through a symlinked output directory', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+      });
+      await symlink(repo.appRoot, join(repo.repoRoot, 'alias'), 'dir');
+
+      await runCommand(repo.command, ['--output', 'alias/index.md']);
+
+      expect(process.exitCode, repo.capture.error.join('\n')).toBe(0);
+      const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
+      expect(
+        [...manifest.matchAll(/\]\(([^)]+)\)/g)].map((match) => match[1]),
+      ).toEqual(['docs/index.md', 'docs/guide.md']);
+    });
+
     it('requires explicit Markdown output and indexes the full literal root', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',
