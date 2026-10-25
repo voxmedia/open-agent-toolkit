@@ -68,12 +68,17 @@ Open: all consumer acceptance is unperformed. The OAT-side capability is merged
 in the linked phase PRs; this item records no consumer commit/PR, publication,
 deployment or acceptance. Record those delivery facts only when observed.
 
-## Pilot follow-ups
+## Rollout follow-ups
 
 A 0.3.31 pilot on a pilot consumer repository surfaced tooling defects (fixed
-for the next release) and four follow-ups tracked separately:
+for the next release) and four follow-ups; read-only 0.3.32 conformance runs on
+consumer repositories added fifteen more. All nineteen were consolidated on
+2026-10-25 into three items whose checklists keep every source acceptance
+criterion (the archived source records keep their original wording):
 
-- [BL-261025-add-a-check-or-stdout-mode — Add a check or stdout mode to oat docs generate-index](BL-261025-add-a-check-or-stdout-mode.md)
-- [BL-261025-keep-oat-docs-analyze-tracking — Keep oat-docs-analyze tracking from dirtying consumer repositories and failing silently](BL-261025-keep-oat-docs-analyze-tracking.md)
-- [BL-261025-let-oat-docs-analyze-propose — Let oat-docs-analyze propose candidate IA structures when no IA is recorded](BL-261025-let-oat-docs-analyze-propose.md)
-- [BL-261025-add-an-adoption-path-for-pre-0 — Add an adoption path for pre-0.3.31 Fumadocs apps whose guidance assumes nav sync](BL-261025-add-an-adoption-path-for-pre-0.md)
+- [BL-261025-tighten-oat-docs-check-rules — Tighten oat docs check rules and diagnostics](BL-261025-tighten-oat-docs-check-rules.md)
+- [BL-261025-make-oat-docs-generators — Make OAT docs generators and writers predictable](BL-261025-make-oat-docs-generators.md)
+  (includes the pilot's generate-index check or stdout mode)
+- [BL-261025-close-docs-skill-workflow-gaps — Close docs skill workflow gaps found in the consumer rollout](BL-261025-close-docs-skill-workflow-gaps.md)
+  (includes the pilot's analyze tracking, analyze IA candidates and pre-0.3.31
+  nav-sync adoption follow-ups)

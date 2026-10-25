@@ -1,7 +1,7 @@
 ---
 id: BL-261025-stop-nav-sync-adding-index
 title: Stop nav sync adding index beside a link-form pagesIndex
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-25T06:02:14.425Z
-updated: 2026-10-25T06:02:14.425Z
+updated: '2026-10-25T13:59:22Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/367
@@ -23,10 +23,18 @@ external_plans: []
 
 The hand-authored membership comparison already treats a link-form `pagesIndex` to the folder's own URL as reaching the landing page (`DR-261025-hand-authored-navigation-is`); only nav-sync generation is affected.
 
-Found by read-only conformance runs of OAT docs tooling 0.3.32 on consumer repositories; follow-up to [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](BL-261024-roll-out-the-shipped-oat-docs.md) and issue #367.
+Found by read-only conformance runs of OAT docs tooling 0.3.32 on consumer repositories; follow-up to [BL-261024-roll-out-the-shipped-oat-docs — Roll out the shipped OAT docs front door and approval policy to consumer repositories](../items/BL-261024-roll-out-the-shipped-oat-docs.md) and issue #367.
 
 ## Acceptance Criteria
 
 - A built or loader-level fixture confirms the duplicate row.
 - Nav sync omits `"index"` when a link-form `pagesIndex` points at the folder's own URL (and keeps current behavior for path-form values), with `--check` freshness consistent.
 - oat-docs-analyze's expected-output description (Step 6, nav-sync `meta.json`) covers the link-form `pagesIndex` case.
+
+## Disposition
+
+Consolidated on 2026-10-25 into
+[BL-261025-make-oat-docs-generators — Make OAT docs generators and writers predictable](../items/BL-261025-make-oat-docs-generators.md),
+which carries every acceptance criterion above verbatim. Archived as `wont_do`
+only because the backlog CLI has no superseded status; the work remains open in
+the consolidated item.
