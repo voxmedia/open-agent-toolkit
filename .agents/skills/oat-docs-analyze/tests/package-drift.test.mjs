@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import {
+  chmod,
+  mkdtemp,
+  mkdir,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -126,6 +134,149 @@ test('offline drift uses installed docs packages and bundled versions, with exac
     const prereleaseTarget = run().packages[0];
     assert.equal(prereleaseTarget.status, 'unverified');
     assert.equal(prereleaseTarget.upgradeCommand, null);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// Shim fixture derived from a captured pnpm 12.11 global install (global/v11
+// layout): the POSIX `sh` wrapper body, its `exec` lines and trailing
+// `# cmd-shim-target=` comment are verbatim apart from the store hash and the
+// absolute install prefix. The package directory is a symlink into the store,
+// as in the real install.
+const STORE_HASH = 'c7e802ae';
+function pnpmShim(prefix, { targetComment }) {
+  const rel = `../global/v11/${STORE_HASH}/node_modules/@open-agent-toolkit/cli/dist/index.js`;
+  const lines = [
+    '#!/bin/sh',
+    "# Resolve $0 through symlinks so basedir is the shim's real directory.",
+    'link="$0"',
+    'hops=0',
+    'while [ -L "$link" ] && [ "$hops" -lt 40 ]; do',
+    '  hops=$((hops+1))',
+    '  target=$(readlink "$link")',
+    '  case "$target" in',
+    '    /*) link="$target" ;;',
+    '    *)  link="$(dirname "$link")/$target" ;;',
+    '  esac',
+    'done',
+    'basedir=$(dirname "$(echo "$link" | sed -e \'s,\\\\,/,g\')")',
+    'basedir_win="$basedir"',
+    'exe=""',
+    'if [ -n "$exe" ] && [ -x "$basedir/node.exe" ]; then',
+    `  exec "$basedir/node.exe"  "$basedir_win/${rel}" "$@"`,
+    'elif [ -x "$basedir/node" ]; then',
+    `  exec "$basedir/node"  "$basedir/${rel}" "$@"`,
+    'else',
+    `  exec node  "$basedir/${rel}" "$@"`,
+    'fi',
+  ];
+  if (targetComment)
+    lines.push(
+      `# cmd-shim-target=${prefix}/global/v11/${STORE_HASH}/node_modules/@open-agent-toolkit/cli/dist/index.js`,
+    );
+  return `${lines.join('\n')}\n`;
+}
+
+async function pnpmGlobalInstall(root, { targetComment }) {
+  const prefix = join(root, 'pnpm home');
+  const store = join(
+    prefix,
+    'store/v11/links/@open-agent-toolkit/cli/0.3.31/abc/node_modules/@open-agent-toolkit/cli',
+  );
+  await mkdir(join(store, 'dist'), { recursive: true });
+  await mkdir(join(store, 'assets'), { recursive: true });
+  await writeFile(
+    join(store, 'package.json'),
+    JSON.stringify({ name: '@open-agent-toolkit/cli', version: '0.3.31' }),
+  );
+  await writeFile(join(store, 'dist/index.js'), '#!/usr/bin/env node\n');
+  await writeFile(
+    join(store, 'assets/public-package-versions.json'),
+    JSON.stringify({ 'docs-config': '0.3.31' }),
+  );
+  const scope = join(
+    prefix,
+    `global/v11/${STORE_HASH}/node_modules/@open-agent-toolkit`,
+  );
+  await mkdir(scope, { recursive: true });
+  await symlink(store, join(scope, 'cli'));
+  // With the absolute target comment, place the shim where its relative exec
+  // lines cannot resolve, so only the comment can locate the bundle.
+  const bin = targetComment ? join(root, 'relocated bin') : join(prefix, 'bin');
+  await mkdir(bin, { recursive: true });
+  const shim = join(bin, 'oat');
+  await writeFile(shim, pnpmShim(prefix, { targetComment }));
+  await chmod(shim, 0o755);
+  return { shim, store };
+}
+
+test('--cli follows a pnpm global shell shim to the installed CLI bundle without executing it', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-shim-'));
+  try {
+    const app = join(root, 'app');
+    await mkdir(app);
+    await writeFile(
+      join(app, 'package.json'),
+      JSON.stringify({
+        dependencies: { '@open-agent-toolkit/docs-config': '^0.3.30' },
+      }),
+    );
+    for (const targetComment of [true, false]) {
+      const base = join(root, targetComment ? 'with-comment' : 'exec-only');
+      await mkdir(base);
+      const { shim, store } = await pnpmGlobalInstall(base, { targetComment });
+      const result = JSON.parse(
+        execFileSync(
+          process.execPath,
+          [
+            new URL('../scripts/package-drift.mjs', import.meta.url).pathname,
+            '--app',
+            app,
+            '--cli',
+            shim,
+          ],
+          { encoding: 'utf8' },
+        ),
+      );
+      assert.equal(
+        result.versionsPath,
+        join(await realpath(store), 'assets/public-package-versions.json'),
+        `targetComment=${targetComment}`,
+      );
+      assert.equal(result.packages[0].bundled, '0.3.31');
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('--cli keeps resolving a direct install whose executable is the bundle entry', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-direct-'));
+  try {
+    const { store } = await pnpmGlobalInstall(root, { targetComment: true });
+    const bin = join(root, 'npm-bin-oat');
+    await symlink(join(store, 'dist/index.js'), bin);
+    const app = join(root, 'app');
+    await mkdir(app);
+    await writeFile(join(app, 'package.json'), JSON.stringify({}));
+    const result = JSON.parse(
+      execFileSync(
+        process.execPath,
+        [
+          new URL('../scripts/package-drift.mjs', import.meta.url).pathname,
+          '--app',
+          app,
+          '--cli',
+          bin,
+        ],
+        { encoding: 'utf8' },
+      ),
+    );
+    assert.equal(
+      result.versionsPath,
+      join(await realpath(store), 'assets/public-package-versions.json'),
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }

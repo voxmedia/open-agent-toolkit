@@ -622,8 +622,12 @@ Run this skill's production helper after resolving this skill's own directory:
 node "$SKILL_DIR/scripts/package-drift.mjs" --app "<docs-app-dir>" --cli "$(command -v oat)"
 ```
 
-If a package-manager wrapper prevents locating the CLI root, discover the bundle
-from that invoked installation offline. Inspect `command -v oat` and, for a shell
+`--cli` follows a direct install to its package root. For a POSIX shell shim,
+such as a pnpm global `oat`, the helper reads the shim as text without executing
+it: the `# cmd-shim-target=` comment first, then relative `exec` targets resolved
+from the shim's real directory. If the helper still reports that it cannot
+locate the running CLI bundle, discover the bundle from that invoked installation
+offline. Inspect `command -v oat` and, for a shell
 shim, read its `exec` lines or `cmd-shim-target` comment (for example,
 `sed -n '1,160p' "$(command -v oat)"`). Resolve a relative JavaScript target from
 the shim's directory; do not evaluate copied shell text. Locate that target's
