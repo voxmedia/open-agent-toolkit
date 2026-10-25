@@ -945,6 +945,21 @@ describe('index-only leaves: single-page sections with in-page Contents', () => 
         },
       ]);
     }
+    // Balanced and escaped parentheses are real links to a custom heading ID,
+    // although the Contents href capture stops at the first `)`.
+    for (const valid of ['#setup(foo)', '#setup\\(foo\\)']) {
+      await f.write(
+        'ads/index.md',
+        map(
+          'Ads',
+          [`- [Setup](${valid}) - Configure ad slots.`],
+          '\n## Setup {#setup(foo)}\n\nText.\n',
+        ),
+      );
+      expect(
+        (await f.run()).filter((finding) => finding.severity === 'error'),
+      ).toEqual([]);
+    }
   });
   it('keeps anchor Contents an error beside child pages, reported once at its own index', async () => {
     const f = await leafTree('fumadocs');

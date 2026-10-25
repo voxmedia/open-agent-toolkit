@@ -24,6 +24,11 @@ export interface DocsContentsEntry {
   line?: number;
   description?: string;
   separator?: string;
+  /**
+   * The authored line from the link's opening `[` onward. `href` is captured
+   * only up to the first `)`, so Markdown-level validation reads this instead.
+   */
+  source?: string;
   group?: { title: string; line: number };
 }
 
@@ -119,27 +124,33 @@ interface InlineNode {
   type: string;
   url?: string;
   children?: InlineNode[];
+  position?: { start: { offset?: number } };
 }
 
 const inlineMarkdown = unified().use(remarkParse);
 
 /**
- * Whether a Contents entry is one real Markdown link to a same-page fragment.
+ * Whether a Contents entry is a real Markdown link to a same-page fragment.
  * The Contents grammar is line-based, so it captures destinations such as
  * `#a b`, `#a(b` or `#a\` that Markdown does not parse as links; those render
  * as plain text and no link rule would ever validate them. The CommonMark
- * parser the reader check uses decides instead of a growing regex.
+ * parser the reader check uses decides, over the authored link text rather
+ * than the `href` truncated at the first `)`, so balanced `#a(b)` and escaped
+ * `#a\(b\)` fragments stay links. The links rule then checks the URL remark
+ * parsed against the page's headings.
  */
 function isMarkdownSamePageLink(entry: DocsContentsEntry): boolean {
   const tree = inlineMarkdown.parse(
-    `[${entry.title}](${entry.href})`,
+    entry.source ?? `[${entry.title}](${entry.href})`,
   ) as InlineNode;
   const paragraph = tree.children?.length === 1 ? tree.children[0] : undefined;
   const link =
-    paragraph?.type === 'paragraph' && paragraph.children?.length === 1
-      ? paragraph.children[0]
-      : undefined;
-  return link?.type === 'link' && (link.url ?? '').startsWith('#');
+    paragraph?.type === 'paragraph' ? paragraph.children?.[0] : undefined;
+  return (
+    link?.type === 'link' &&
+    link.position?.start.offset === 0 &&
+    (link.url ?? '').startsWith('#')
+  );
 }
 
 /** Mask fenced examples without changing authored source line numbers. */
@@ -231,6 +242,7 @@ export function parseIndexContents(
                 .replace(/^\s*[-–—:]\s*/, '')
                 .trim(),
               separator: /^\s*([-–—:])/.exec(line.slice(match[0].length))?.[1],
+              source: line.slice(match[0].indexOf('[')),
             }
           : {}),
       });
