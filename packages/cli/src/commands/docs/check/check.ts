@@ -32,6 +32,7 @@ export function createDocsCheckCommand(): Command {
             cwd: context.cwd,
             targetDir: options.targetDir,
             rules: options.rule,
+            onNotice: (message) => context.logger.warn(message),
           });
           process.exitCode = result.summary.errors ? 1 : 0;
         } catch (error) {

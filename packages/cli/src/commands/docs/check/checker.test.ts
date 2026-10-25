@@ -1581,3 +1581,47 @@ describe('framework app contributing commands use the app package first', () => 
     ]);
   });
 });
+
+describe('explicit targets that differ from the configured documentation root', () => {
+  it('never walks node_modules or hidden directories and explains the mode it used', async () => {
+    const f = await fixture('fumadocs');
+    for (const junk of [
+      'node_modules/pkg/readme.md',
+      'site/node_modules/pkg/index.md',
+      '.cache/notes.md',
+    ])
+      await f.put(junk, '# Junk\n');
+    const notices: string[] = [];
+    const repoWide = await checkDocs({
+      cwd: f.root,
+      targetDir: '.',
+      onNotice: (message) => notices.push(message),
+    });
+    expect(
+      repoWide.findings.filter(
+        (finding) =>
+          /(?:^|\/)node_modules\//.test(finding.path) ||
+          finding.path.startsWith('.cache/'),
+      ),
+    ).toEqual([]);
+    expect(notices).toEqual([
+      'Notice: --target-dir . is not the configured documentation.root (site); checking it as a literal Markdown root without the configured documentation policy. Omit --target-dir to check site.',
+    ]);
+    notices.length = 0;
+    await checkDocs({
+      cwd: f.root,
+      targetDir: 'site/docs',
+      onNotice: (message) => notices.push(message),
+    });
+    expect(notices).toEqual([
+      'Notice: --target-dir site/docs is the content directory of the configured fumadocs app site; it is checked as Markdown, so navigation is skipped. Pass --target-dir site to include navigation.',
+    ]);
+    notices.length = 0;
+    await checkDocs({
+      cwd: f.root,
+      targetDir: 'site',
+      onNotice: (message) => notices.push(message),
+    });
+    expect(notices).toEqual([]);
+  });
+});
