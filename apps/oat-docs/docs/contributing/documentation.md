@@ -13,7 +13,7 @@ Documentation should ship with the code it explains. This page covers the core d
 - Each `index.md` must include a `## Contents` section.
 - The `## Contents` section is the machine-readable local map for sibling pages and child directories.
 - Use `.md`-suffixed relative links in `## Contents`: `[Page](page.md)` for leaf pages and `[Section](subdir/index.md)` for child directories.
-- A directory whose `index.md` is its only page may instead list same-page heading anchors (`[Setup](#setup)`) as an in-page table of contents; anywhere else, Contents links must target pages or sections.
+- A directory whose `index.md` is its only reader page, with no child sections, may instead list same-page heading anchors (`[Setup](#setup)`) as an in-page table of contents; anywhere else, Contents links must target pages or sections.
 - Fumadocs and MkDocs share this authored contract, but they regenerate different artifacts.
 
 Within Contents, use dash-only link bullets with optional descriptions. A `### Label` introduces a group containing at least one authored entry; entries before the first group stay ungrouped. `*`/`+` link bullets and empty groups produce file/line errors. The map ends at the next level-two heading, and fenced examples are ignored. A self-index link retains landing-page behavior. Missing Contents retains deterministic manifest fallback, while strict nav still requires maps and reports unlisted reader pages.

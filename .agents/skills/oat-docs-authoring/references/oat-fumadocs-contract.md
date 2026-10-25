@@ -30,8 +30,8 @@ Use file-path-friendly relative Markdown links:
 - avoid extensionless local docs links for new authored navigation entries;
 - preserve anchors only when the target heading exists and the local renderer
   supports the anchor;
-- index-only leaf (its `index.md` is the directory's only reader page): may
-  list same-page heading anchors such as `[Setup](#setup)` as an in-page table
+- index-only leaf (its `index.md` is the directory's only reader page and it
+  has no child sections): may list same-page heading anchors such as `[Setup](#setup)` as an in-page table
   of contents. They add no navigation entry, and `oat docs check` warns
   (`leaf-size`) that the section could be flattened. Anywhere else a same-page
   anchor in Contents is an error.
