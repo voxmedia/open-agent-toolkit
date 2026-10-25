@@ -15,7 +15,9 @@ Use this checklist when evaluating a docs surface.
 - Parent `## Contents` maps include immediate child directories that contain
   docs.
 - Single-page directories still expose a useful `index.md` entrypoint or local
-  section map.
+  section map. An index-only leaf may list same-page heading anchors in
+  `## Contents`; treat it as a flattening suggestion (`leaf-size` warning), not
+  a broken map.
 - Asset-only directories are exempt when they contain no Markdown content and
   are not linked as navigable docs sections.
 - `overview.md` is not used as the directory entrypoint.

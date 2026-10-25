@@ -39,6 +39,7 @@ Notes:
 - A group with no authored entries is an error with its file and line; add a dash link or remove the empty heading. A `*` or `+` link bullet is also an error with file and line; replace it with `-`.
 - Child directories should link to their `index.md`.
 - Leaf pages should link to their `.md` filename.
+- An index-only leaf, a directory whose `index.md` is its only reader page, may list same-page heading anchors such as `[Setup](#setup)` as an in-page table of contents. Nav sync adds no navigation entry for them, `oat docs check` reports an anchor whose heading does not exist, and the `leaf-size` rule warns that the section could be flattened. In any other directory a same-page anchor in Contents is an error: link a page or section instead.
 - Prose outside `## Contents` is ignored by nav generation and remains freeform; it can explain scope, reader paths, or migration status.
 
 ## Plain Markdown Ownership
