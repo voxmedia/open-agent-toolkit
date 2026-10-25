@@ -73,6 +73,13 @@ and issue #367. The archived source records keep their original wording:
   and demands SVG regeneration, so applying the `diagram-accessibility` fix
   always produces freshness warnings for diagrams with light/dark SVG pairs.
 
+### Install-dependent command results
+
+- The `commands` rule accepts pnpm shorthand for a local binary (`pnpm tsx …`)
+  only when that binary is present in `node_modules/.bin`, so the same page
+  passes locally and fails in a docs-only CI install that skips repository-root
+  dependencies (observed in the consumer rollout).
+
 ## Acceptance Criteria
 
 None of the four sources was high priority. Each group names its source
@@ -100,3 +107,7 @@ Finding lines and output (low):
 Diagram freshness (low):
 
 - [ ] Changes limited to Mermaid accessibility metadata lines do not require SVG changes, covered by a test at the `checkDocs` boundary with a real Git comparison.
+
+Install-dependent command results (medium):
+
+- [ ] `oat docs check` gives the same `commands` result for pnpm local-binary shorthand regardless of which `node_modules` trees are installed, either by resolving declared dependency bins from `package.json` or by reporting the shorthand consistently with an `pnpm exec` suggestion.
