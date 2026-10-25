@@ -107,9 +107,13 @@ export function isIndexOnlyLeaf(
   return hasIndex;
 }
 
-/** A link to a heading on the same page, such as `#feature-config`. */
+/**
+ * A link to a heading on the same page, such as `#feature-config`. A fragment
+ * with whitespace is not one: Markdown does not parse `[x](#a b)` as a link,
+ * so no other rule would validate it.
+ */
 export function isSamePageAnchor(href: string): boolean {
-  return /^#\S/.test(href.trim());
+  return /^#\S+$/.test(href.trim());
 }
 
 /** Mask fenced examples without changing authored source line numbers. */
