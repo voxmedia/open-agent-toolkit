@@ -62,9 +62,15 @@ export function Page({ toc, chart }) {
     `@source '../node_modules/@open-agent-toolkit/docs-theme/dist/**/*.js';`
     to your Tailwind CSS so those theme classes are generated.
 
-`Mermaid` diagrams take their colors from the site's Fumadocs color tokens
-(`--color-fd-*`) in light and dark mode, and open in the same full-screen view
-when clicked.
+`Mermaid` renders Mermaid diagram source with [Pele](https://pele.run), loading
+each diagram type on demand. Diagrams take their colors from the site's
+Fumadocs color tokens (`--color-fd-*`) through Pele's `--pele-*` CSS variables,
+so they follow light and dark mode without re-rendering, and open in the same
+full-screen view when clicked. To recolor diagrams, set the `--color-fd-*`
+tokens: the component sets `--pele-*` inline, which overrides any `--pele-*`
+values in a stylesheet. Equations written as `$$...$$` in labels and messages
+render as MathML through KaTeX, which loads only for diagrams that contain
+them; no KaTeX stylesheet is needed.
 
 ## Docs
 

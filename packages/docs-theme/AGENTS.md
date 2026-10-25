@@ -20,6 +20,8 @@ Maintain `@open-agent-toolkit/docs-theme` — shared React components for OAT-po
 - This is the one OAT package authored primarily in React `.tsx` — component source differs from the otherwise `.ts`-only repo.
 - Keep components presentational and Fumadocs-compatible; the consuming app provides the Fumadocs and React peer dependencies.
 - This is a publishable package in the lockstep public set — see the root `AGENTS.md` "Package Management" section before changing shipped behavior.
+- `pele` is pinned to an exact version. A bump needs a visual check of Mermaid diagrams in light, dark and zoomed views, plus `src/zoom-svg.test.ts`, which depends on the shape of Pele's root `<svg>` style attribute.
+- `katex` is pinned to an exact version and must keep `trust: false`, because Pele inserts its markup unsanitized. A bump needs `src/render-chart.test.ts` and a check that `$$` labels still render.
 
 ## Completion checks
 

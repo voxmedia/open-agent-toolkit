@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-theme",
-  "version": "0.3.34",
+  "version": "0.3.35",
   "private": false,
   "description": "Theme components for OAT documentation sites",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-theme",
@@ -43,8 +43,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "mermaid": "^11.6.0",
-    "next-themes": "^0.4.6"
+    "katex": "0.19.1",
+    "pele": "1.10.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

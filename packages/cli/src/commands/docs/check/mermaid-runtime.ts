@@ -1,62 +1,37 @@
-import type { JSDOM } from 'jsdom';
-import type { Mermaid } from 'mermaid';
+import type { PeleError } from 'pele';
 
-let runtime: Promise<{ dom: JSDOM; mermaid: Mermaid }> | undefined;
-let queue: Promise<unknown> = Promise.resolve();
+type Pele = typeof import('pele');
 
-async function withDom<T>(dom: JSDOM, action: () => Promise<T>): Promise<T> {
-  const keys = ['window', 'document'] as const;
-  const saved = keys.map((key) =>
-    Object.getOwnPropertyDescriptor(globalThis, key),
-  );
-  Object.defineProperty(globalThis, 'window', {
-    configurable: true,
-    value: dom.window,
-  });
-  Object.defineProperty(globalThis, 'document', {
-    configurable: true,
-    value: dom.window.document,
-  });
-  try {
-    return await action();
-  } finally {
-    keys.forEach((key, index) => {
-      const descriptor = saved[index];
-      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
-      else Reflect.deleteProperty(globalThis, key);
-    });
-  }
+let runtime: Promise<Pele> | undefined;
+
+/**
+ * Pele reports syntax errors in Mermaid's multi-line form: a "Parse error on
+ * line N:" header, the offending source line, a caret line and the expected
+ * tokens. Keep only the explanation and append the diagram-relative position.
+ */
+function conciseMessage(error: PeleError): string {
+  const message = error.snippet
+    ? error.message.replace(error.snippet, '')
+    : error.message;
+  const detail = message
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && !/^Parse error on line \d+:?$/.test(line))
+    .join(' ');
+  return error.line > 0
+    ? `${detail} (diagram line ${error.line}, column ${error.column})`
+    : detail;
 }
-async function loadRuntime(): Promise<{ dom: JSDOM; mermaid: Mermaid }> {
-  const { JSDOM } = await import('jsdom');
-  // Defaults intentionally disable script execution and external resources.
-  const dom = new JSDOM('');
+
+/** Mermaid syntax check with the pinned, DOM-free Pele parser. Never renders. */
+export async function parseMermaid(source: string): Promise<void> {
+  runtime ??= import('pele');
+  const pele = await runtime;
   try {
-    const mermaid = await withDom(
-      dom,
-      async () => (await import('mermaid')).default,
-    );
-    process.once('beforeExit', () => dom.window.close());
-    return { dom, mermaid };
+    pele.parse(source);
   } catch (error) {
-    dom.window.close();
+    if (error instanceof pele.PeleError)
+      throw new Error(conciseMessage(error), { cause: error });
     throw error;
   }
-}
-/** Lazy, real Node DOM for Mermaid syntax parsing only. Never renders SVG. */
-export async function parseMermaid(source: string): Promise<void> {
-  const result = queue.then(async () => {
-    runtime ??= loadRuntime();
-    const { dom, mermaid } = await runtime;
-    await withDom(dom, async () => {
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: 'strict',
-        logLevel: 'fatal',
-      });
-      await mermaid.parse(source);
-    });
-  });
-  queue = result.catch(() => undefined);
-  await result;
 }

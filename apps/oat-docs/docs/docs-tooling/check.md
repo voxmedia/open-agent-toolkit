@@ -107,7 +107,7 @@ recursive tabs participate.
 | `contents-separator`    | Warn when Contents descriptions mix separators in a tree.                                                                                                                                                                                                                                                                           |
 | `navigation`            | Error for explicit navigation drift. Nav-sync freshness stays strict; hand-authored/undeclared compare membership and order only (separators, labels, links and borrows are not compared), and absent optional meta/pages/nav skips comparison. Markdown skips it.                                                                  |
 | `commands`              | Error for missing literal contributor scripts; framework app targets try the app package first, then the repository root. Implicit pnpm shorthand also accepts installed package/workspace `.bin` entries. Explicit pnpm run/npm run stays script-only; unresolved context errors; echo scripts warn.                               |
-| `mermaid`               | Parse every real Mermaid fence using the pinned Mermaid parser. Invalid syntax errors.                                                                                                                                                                                                                                              |
+| `mermaid`               | Parse every real Mermaid fence with the pinned Pele parser. Invalid syntax errors, with the diagram line and column.                                                                                                                                                                                                                |
 | `diagram-pairs`         | Diagram light/dark SVG siblings and both page references are required. Conventional diagram paths and explicit paired references participate; ordinary logos are not diagrams.                                                                                                                                                      |
 | `diagram-accessibility` | Mermaid missing `accTitle`/`accDescr` warns. SVGs require `role="img"`, nonempty title/desc. Rendered diagrams without page-visible explanatory text or an associated long description warn.                                                                                                                                        |
 | `diagram-freshness`     | Warn when changed Mermaid lacks both associated SVG changes; association follows the actual section/tab group. Missing usable Git comparison is explicitly unverified.                                                                                                                                                              |
@@ -140,9 +140,9 @@ binary shorthand may be reported missing. Use `pnpm exec` for explicit binary ex
 
 ## Diagram comparison and limits
 
-Syntax validation lazily loads the pinned Mermaid parser with a real Node DOM
-and strict sanitization; script execution and resource loading stay disabled.
-It does not render or prove semantic/visual correctness. Inspect both themes
+Syntax validation lazily loads the pinned Pele parser, which reads Mermaid
+syntax without a DOM and never renders, runs scripts or loads resources.
+It does not prove semantic/visual correctness. Inspect both themes
 for important diagrams. Put meaningful `accTitle` and `accDescr` in Mermaid,
 keep SVG title/desc and page explanations, and change both theme SVGs with source.
 

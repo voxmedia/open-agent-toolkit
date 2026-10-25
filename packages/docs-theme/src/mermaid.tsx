@@ -1,9 +1,9 @@
 'use client';
 
-import { useTheme } from 'next-themes';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
-import { siteMermaidThemeVariables } from './mermaid-theme.js';
+import { sitePeleTheme } from './pele-theme.js';
+import { measureIn, renderChart, type RenderedChart } from './render-chart.js';
 import { ZoomFrame } from './zoom-frame.js';
 
 export interface MermaidProps {
@@ -12,26 +12,22 @@ export interface MermaidProps {
 
 export function Mermaid({ chart }: MermaidProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [svg, setSvg] = useState<string>('');
-  const { resolvedTheme } = useTheme();
+  const [svg, setSvg] = useState<RenderedChart>({ inline: '', zoomed: '' });
+  // Unique per instance so the inline and full-screen copies of every diagram
+  // on a page get distinct element IDs (title, desc, markers).
+  const idPrefix = `pele-${useId().replace(/[^\w-]/g, '')}`;
 
   useEffect(() => {
     let cancelled = false;
 
     async function render() {
-      const mermaid = (await import('mermaid')).default;
-
-      const dark = resolvedTheme === 'dark';
-      const themeVariables = siteMermaidThemeVariables(dark);
-      mermaid.initialize({
-        startOnLoad: false,
-        ...(themeVariables
-          ? { theme: 'base', themeVariables }
-          : { theme: dark ? 'dark' : 'default' }),
+      const host = containerRef.current;
+      if (!host) return;
+      const rendered = await renderChart(chart, {
+        idPrefix,
+        fontFamily: getComputedStyle(host).fontFamily,
+        measure: measureIn(host),
       });
-
-      const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`;
-      const { svg: rendered } = await mermaid.render(id, chart);
 
       if (!cancelled) {
         setSvg(rendered);
@@ -43,30 +39,27 @@ export function Mermaid({ chart }: MermaidProps) {
     return () => {
       cancelled = true;
     };
-  }, [chart, resolvedTheme]);
+  }, [chart, idPrefix]);
 
   return (
     <ZoomFrame
       label='Diagram'
-      disabled={!svg}
+      disabled={!svg.inline}
       zoomed={
         <div
           className='mermaid'
-          // oxlint-disable-next-line react/no-danger -- same trusted SVG as above
-          dangerouslySetInnerHTML={{
-            __html: svg.replace(
-              /<svg\b([^>]*?)\sstyle="[^"]*"/,
-              '<svg$1 style="width:100%;height:auto;max-width:none"',
-            ),
-          }}
+          style={sitePeleTheme}
+          // oxlint-disable-next-line react/no-danger -- same trusted source as above
+          dangerouslySetInnerHTML={{ __html: svg.zoomed }}
         />
       }
     >
       <div
         ref={containerRef}
         className='mermaid'
-        // oxlint-disable-next-line react/no-danger -- mermaid renders SVG from trusted chart definitions
-        dangerouslySetInnerHTML={{ __html: svg }}
+        style={sitePeleTheme}
+        // oxlint-disable-next-line react/no-danger -- Pele escapes diagram text and filters links and styles; KaTeX escapes math with trust off
+        dangerouslySetInnerHTML={{ __html: svg.inline }}
       />
     </ZoomFrame>
   );
