@@ -15,6 +15,8 @@ import {
   type ExclusionMatcher,
 } from '@commands/docs/shared/exclusions';
 import { dirExists, fileExists } from '@fs/io';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 
 export interface DocsContentsEntry {
   title: string;
@@ -108,13 +110,36 @@ export function isIndexOnlyLeaf(
   return hasIndex;
 }
 
-/**
- * A link to a heading on the same page, such as `#feature-config`. A fragment
- * with whitespace is not one: Markdown does not parse `[x](#a b)` as a link,
- * so no other rule would validate it.
- */
+/** A Contents href naming a heading on the same page, such as `#setup`. */
 export function isSamePageAnchor(href: string): boolean {
-  return /^#\S+$/.test(href.trim());
+  return href.trim().startsWith('#');
+}
+
+interface InlineNode {
+  type: string;
+  url?: string;
+  children?: InlineNode[];
+}
+
+const inlineMarkdown = unified().use(remarkParse);
+
+/**
+ * Whether a Contents entry is one real Markdown link to a same-page fragment.
+ * The Contents grammar is line-based, so it captures destinations such as
+ * `#a b`, `#a(b` or `#a\` that Markdown does not parse as links; those render
+ * as plain text and no link rule would ever validate them. The CommonMark
+ * parser the reader check uses decides instead of a growing regex.
+ */
+function isMarkdownSamePageLink(entry: DocsContentsEntry): boolean {
+  const tree = inlineMarkdown.parse(
+    `[${entry.title}](${entry.href})`,
+  ) as InlineNode;
+  const paragraph = tree.children?.length === 1 ? tree.children[0] : undefined;
+  const link =
+    paragraph?.type === 'paragraph' && paragraph.children?.length === 1
+      ? paragraph.children[0]
+      : undefined;
+  return link?.type === 'link' && (link.url ?? '').startsWith('#');
 }
 
 /** Mask fenced examples without changing authored source line numbers. */
@@ -272,15 +297,20 @@ export async function resolveEntryTarget(
     throw new DocsContentsError(message, indexPath, entry.line);
   };
   if (isSamePageAnchor(entry.href)) {
-    if (options.indexOnlyLeaf) {
-      return {
-        kind: 'anchor',
-        path: toPosixPath(posix.join(dirRelativePath, 'index.md')),
-      };
+    if (!options.indexOnlyLeaf) {
+      fail(
+        `Contents link "${entry.href}" in ${indexPath} is a same-page anchor; Contents must link pages or sections unless index.md is the only reader page in its directory and it has no child sections.`,
+      );
     }
-    fail(
-      `Contents link "${entry.href}" in ${indexPath} is a same-page anchor; Contents must link pages or sections unless index.md is the only page in its directory.`,
-    );
+    if (!isMarkdownSamePageLink(entry)) {
+      fail(
+        `Contents link "${entry.href}" in ${indexPath} is not a valid Markdown link; fix its destination (escape or remove spaces and unbalanced parentheses).`,
+      );
+    }
+    return {
+      kind: 'anchor',
+      path: toPosixPath(posix.join(dirRelativePath, 'index.md')),
+    };
   }
   const href = entry.href.split('#', 1)[0]?.trim() ?? '';
   if (!href) {

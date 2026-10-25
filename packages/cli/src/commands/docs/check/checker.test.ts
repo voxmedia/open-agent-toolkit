@@ -924,11 +924,27 @@ describe('index-only leaves: single-page sections with in-page Contents', () => 
         message: 'Unresolved anchor "#missing".',
       },
     ]);
-    // Not a Markdown link, so only strict Contents resolution can catch it.
-    await f.write('ads/index.md', source.replace('(#missing)', '(#set up)'));
-    expect((await f.run('directory-index')).map((v) => v.message)).toEqual([
-      expect.stringContaining('Invalid contents link "#set up"'),
-    ]);
+    // Not Markdown links, so the links rule never sees them; only strict
+    // Contents resolution can keep them errors.
+    for (const malformed of ['#set up', '#missing(foo', '#missing\\']) {
+      await f.write(
+        'ads/index.md',
+        source.replace('(#missing)', `(${malformed})`),
+      );
+      expect(
+        (await f.run()).filter((finding) => finding.severity === 'error'),
+      ).toEqual([
+        {
+          ruleId: 'directory-index',
+          severity: 'error',
+          path: 'ads/index.md',
+          line: lineOf(source, '(#missing)'),
+          message: expect.stringContaining(
+            `Contents link "${malformed}" in `,
+          ) as string,
+        },
+      ]);
+    }
   });
   it('keeps anchor Contents an error beside child pages, reported once at its own index', async () => {
     const f = await leafTree('fumadocs');
