@@ -94,10 +94,8 @@ test('offline drift uses installed docs packages and bundled versions, with exac
       result.packages[0].upgradeCommand,
       `pnpm --dir '${app}' add @open-agent-toolkit/docs-config@0.3.25`,
     );
-    assert.equal(
-      result.packages[1].upgradeCommand,
-      `pnpm --dir '${app}' add --save-dev @open-agent-toolkit/docs-theme@0.3.25`,
-    );
+    // Only drift proposes an upgrade; a current package needs none.
+    assert.equal(result.packages[1].upgradeCommand, null);
     await writeFile(
       join(app, 'node_modules/@open-agent-toolkit/docs-config/package.json'),
       JSON.stringify({ version: '0.3.25' }),
@@ -320,7 +318,7 @@ test('drift covers an app-declared @open-agent-toolkit/cli in its own dependency
       );
     for (const [section, flag, installed, status] of [
       ['devDependencies', ' --save-dev', '0.3.25', 'drift'],
-      ['dependencies', '', '0.3.31', 'current'],
+      ['dependencies', null, '0.3.31', 'current'],
       ['devDependencies', null, '0.3.32', 'ahead'],
     ]) {
       const app = join(root, `${section}-${installed}`);
@@ -354,6 +352,149 @@ test('drift covers an app-declared @open-agent-toolkit/cli in its own dependency
     await mkdir(bare);
     await writeFile(join(bare, 'package.json'), JSON.stringify({}));
     assert.deepEqual(run(bare), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+// Layouts captured from consumer repositories: a pnpm node-linker=hoisted
+// workspace (packages only in the root node_modules), a standalone nested app
+// with its own lockfile below a root workspace, and a Markdown docs directory
+// with no package.json.
+test('drift resolves hoisted installs, pins the declared package manager and explains unverified results', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-drift-layout-'));
+  const script = new URL('../scripts/package-drift.mjs', import.meta.url)
+    .pathname;
+  try {
+    const versions = join(root, 'public-package-versions.json');
+    await writeFile(
+      versions,
+      JSON.stringify({ cli: '0.3.32', 'docs-config': '0.3.32' }),
+    );
+    const run = (app) =>
+      JSON.parse(
+        execFileSync(
+          process.execPath,
+          [script, '--app', app, '--versions', versions],
+          { encoding: 'utf8' },
+        ),
+      );
+    const workspace = join(root, 'repo');
+    await mkdir(join(workspace, 'apps/docs'), { recursive: true });
+    await writeFile(
+      join(workspace, 'package.json'),
+      JSON.stringify({ packageManager: 'pnpm@10.13.1+sha512.0123abcd' }),
+    );
+    await writeFile(
+      join(workspace, 'pnpm-workspace.yaml'),
+      'packages:\n  - apps/*\n',
+    );
+    const hoisted = join(workspace, 'apps/docs');
+    await writeFile(
+      join(hoisted, 'package.json'),
+      JSON.stringify({
+        dependencies: { '@open-agent-toolkit/docs-config': '^0.1.1' },
+        devDependencies: { '@open-agent-toolkit/cli': '^0.3.26' },
+      }),
+    );
+    const hoistedPackage = join(
+      workspace,
+      'node_modules/@open-agent-toolkit/docs-config',
+    );
+    await mkdir(hoistedPackage, { recursive: true });
+    await writeFile(
+      join(hoistedPackage, 'package.json'),
+      JSON.stringify({ version: '0.1.1' }),
+    );
+    assert.deepEqual(
+      run(hoisted).packages.map(
+        ({
+          name,
+          installed,
+          installedPath,
+          status,
+          reason,
+          upgradeCommand,
+        }) => ({
+          name,
+          installed,
+          installedPath,
+          status,
+          reason,
+          upgradeCommand,
+        }),
+      ),
+      [
+        {
+          name: '@open-agent-toolkit/docs-config',
+          installed: '0.1.1',
+          installedPath: join(hoistedPackage, 'package.json'),
+          status: 'drift',
+          reason: null,
+          upgradeCommand: `npx --yes pnpm@10.13.1 --dir '${hoisted}' add @open-agent-toolkit/docs-config@0.3.32`,
+        },
+        {
+          name: '@open-agent-toolkit/cli',
+          installed: null,
+          installedPath: null,
+          status: 'unverified',
+          reason:
+            'not installed: no node_modules/@open-agent-toolkit/cli found from the app or its ancestors; run the app install first',
+          upgradeCommand: null,
+        },
+      ],
+    );
+
+    // A nested app with its own lockfile is outside the root workspace.
+    const standalone = join(workspace, 'site');
+    const local = join(standalone, 'node_modules/@open-agent-toolkit/cli');
+    await mkdir(local, { recursive: true });
+    await writeFile(
+      join(standalone, 'pnpm-lock.yaml'),
+      "lockfileVersion: '9.0'\n",
+    );
+    await writeFile(
+      join(standalone, 'package.json'),
+      JSON.stringify({
+        devDependencies: { '@open-agent-toolkit/cli': '^0.3.26' },
+      }),
+    );
+    await writeFile(
+      join(local, 'package.json'),
+      JSON.stringify({ version: '0.3.26' }),
+    );
+    assert.equal(
+      run(standalone).packages[0].upgradeCommand,
+      `npx --yes pnpm@10.13.1 --dir '${standalone}' add --ignore-workspace --save-dev @open-agent-toolkit/cli@0.3.32`,
+    );
+
+    // Another package manager gets no pnpm command, only a reason.
+    await writeFile(
+      join(standalone, 'package.json'),
+      JSON.stringify({
+        packageManager: 'npm@10.9.0',
+        devDependencies: { '@open-agent-toolkit/cli': '^0.3.26' },
+      }),
+    );
+    const npmRow = run(standalone).packages[0];
+    assert.equal(npmRow.status, 'drift');
+    assert.equal(npmRow.upgradeCommand, null);
+    assert.equal(
+      npmRow.reason,
+      'packageManager is npm@10.9.0; translate the upgrade to its add command, preserving the dependency section and exact version',
+    );
+
+    // A Markdown docs directory has no app package to compare.
+    const markdown = join(root, 'markdown-docs');
+    await mkdir(markdown);
+    assert.deepEqual(run(markdown), {
+      versionsPath: null,
+      appPath: markdown,
+      applicable: false,
+      reason:
+        'No package.json in the docs directory: Markdown docs have no app-package drift check.',
+      packages: [],
+    });
   } finally {
     await rm(root, { recursive: true, force: true });
   }

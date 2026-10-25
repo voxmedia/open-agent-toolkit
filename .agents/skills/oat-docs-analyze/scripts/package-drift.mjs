@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Read-only, offline comparison used by oat-docs-analyze. No package resolution or install.
-import { open, readFile, realpath } from 'node:fs/promises';
+// Read-only, offline comparison used by oat-docs-analyze. It reads installed
+// package manifests the way Node resolves packages (the app's node_modules,
+// then each ancestor's) and never installs, fetches or executes anything.
+import { access, open, readFile, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -75,6 +77,64 @@ async function versionsForCli(executable) {
   );
 }
 
+async function exists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return false;
+    throw error;
+  }
+}
+
+async function readJson(path) {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return null;
+    throw error;
+  }
+}
+
+function ancestors(directory) {
+  const list = [];
+  for (let current = directory; ; current = dirname(current)) {
+    list.push(current);
+    if (dirname(current) === current) return list;
+  }
+}
+
+// Node package lookup: <dir>/node_modules/<name> from the app upward, so
+// hoisted installs (pnpm node-linker=hoisted, npm/yarn workspaces) resolve.
+async function installedManifest(appPath, name) {
+  for (const directory of ancestors(appPath)) {
+    const path = join(directory, 'node_modules', name, 'package.json');
+    const manifest = await readJson(path);
+    if (manifest !== null) return { path, manifest };
+  }
+  return null;
+}
+
+// The app's own packageManager wins, then the nearest ancestor's.
+async function packageManagerFor(appPath) {
+  for (const directory of ancestors(appPath)) {
+    const manifest = await readJson(join(directory, 'package.json'));
+    if (typeof manifest?.packageManager === 'string')
+      return manifest.packageManager.trim();
+  }
+  return null;
+}
+
+// A nested app with its own lockfile and no workspace file of its own, below
+// an ancestor pnpm workspace, must not be installed through that workspace.
+async function isStandaloneNestedApp(appPath) {
+  if (!(await exists(join(appPath, 'pnpm-lock.yaml')))) return false;
+  if (await exists(join(appPath, 'pnpm-workspace.yaml'))) return false;
+  for (const directory of ancestors(dirname(appPath)))
+    if (await exists(join(directory, 'pnpm-workspace.yaml'))) return true;
+  return false;
+}
+
 try {
   const { values } = parseArgs({
     options: {
@@ -84,14 +144,44 @@ try {
     },
   });
   if (!values.app) throw new Error('Required: --app <docs-app-directory>.');
+  const appPath = resolve(values.app);
+  const manifest = await readJson(join(appPath, 'package.json'));
+  if (manifest === null) {
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          versionsPath: null,
+          appPath,
+          applicable: false,
+          reason:
+            'No package.json in the docs directory: Markdown docs have no app-package drift check.',
+          packages: [],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    process.exit(0);
+  }
   const versionsPath = resolve(
     values.versions ?? (await versionsForCli(values.cli)),
   );
   const versions = JSON.parse(await readFile(versionsPath, 'utf8'));
-  const appPath = resolve(values.app);
-  const manifest = JSON.parse(
-    await readFile(join(appPath, 'package.json'), 'utf8'),
+  const packageManager = await packageManagerFor(appPath);
+  const pinned = packageManager?.match(
+    /^pnpm@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)(?:\+.*)?$/,
   );
+  // Run the repository's pinned pnpm rather than whatever global pnpm is on
+  // PATH: a different major can rewrite workspace settings or reject the store.
+  // npx ships with npm on every Node line; Corepack is absent from Node 25+.
+  const pnpm = pinned ? `npx --yes pnpm@${pinned[1]}` : 'pnpm';
+  const otherManager =
+    packageManager && !packageManager.startsWith('pnpm@')
+      ? packageManager
+      : null;
+  const ignoreWorkspace = (await isStandaloneNestedApp(appPath))
+    ? ' --ignore-workspace'
+    : '';
   const packages = [];
   for (const section of [
     'dependencies',
@@ -116,29 +206,22 @@ try {
       )
         throw new Error(`Missing/invalid bundled version for ${name}.`);
       // Report installed package bytes when available, not just a declared range.
-      let installed = null;
-      try {
-        const installedManifest = JSON.parse(
-          await readFile(
-            join(appPath, 'node_modules', name, 'package.json'),
-            'utf8',
-          ),
-        );
-        if (typeof installedManifest.version !== 'string')
-          throw new Error(`Invalid installed version for ${name}.`);
-        installed = installedManifest.version;
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-      }
+      const found = await installedManifest(appPath, name);
+      if (found !== null && typeof found.manifest.version !== 'string')
+        throw new Error(`Invalid installed version for ${name}.`);
+      const installed = found?.manifest.version ?? null;
       // Only stable numeric releases are orderable here; prereleases and other
       // package-manager version forms need manual verification, never an upgrade.
       const stable = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
       let status = 'unverified';
-      if (
-        installed !== null &&
-        stable.test(installed) &&
-        stable.test(bundled)
-      ) {
+      let reason = null;
+      if (installed === null)
+        reason = `not installed: no node_modules/${name} found from the app or its ancestors; run the app install first`;
+      else if (!stable.test(installed))
+        reason = `installed version ${installed} is not a stable release; verify it manually`;
+      else if (!stable.test(bundled))
+        reason = `bundled version ${bundled} is a prerelease; verify it manually`;
+      else {
         const left = installed.split('.').map(BigInt);
         const right = bundled.split('.').map(BigInt);
         const differing = left.findIndex(
@@ -151,22 +234,26 @@ try {
               ? 'drift'
               : 'ahead';
       }
+      let upgradeCommand = null;
+      if (status === 'drift' && otherManager)
+        reason = `packageManager is ${otherManager}; translate the upgrade to its add command, preserving the dependency section and exact version`;
+      else if (status === 'drift')
+        upgradeCommand = `${pnpm} --dir ${shellQuote(appPath)} add${ignoreWorkspace}${section === 'devDependencies' ? ' --save-dev' : section === 'optionalDependencies' ? ' --save-optional' : ''} ${name}@${bundled}`;
       packages.push({
         name,
         section,
         declared,
         installed,
+        installedPath: found?.path ?? null,
         bundled,
         status,
-        upgradeCommand:
-          status === 'drift' || status === 'current'
-            ? `pnpm --dir ${shellQuote(appPath)} add${section === 'devDependencies' ? ' --save-dev' : section === 'optionalDependencies' ? ' --save-optional' : ''} ${name}@${bundled}`
-            : null,
+        reason,
+        upgradeCommand,
       });
     }
   }
   process.stdout.write(
-    `${JSON.stringify({ versionsPath, appPath, packages }, null, 2)}\n`,
+    `${JSON.stringify({ versionsPath, appPath, applicable: true, packageManager, packages }, null, 2)}\n`,
   );
 } catch (error) {
   process.stderr.write(`${error.message}\n`);

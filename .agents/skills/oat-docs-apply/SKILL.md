@@ -324,6 +324,8 @@ approval, its out-of-Markdown allowance is only these four operations:
    app's own `@open-agent-toolkit/cli` dependency when the app declares it, to the
    bundled versions using the artifact's exact upgrade commands (preserve each
    dependency section and the package manager; include the resulting lockfile only).
+   Run the pinned package-manager form the command gives; a global pnpm of another
+   major can rewrite workspace settings and break the store link.
    Never downgrade an installed version: `ahead` or `unverified` requires CLI
    selection/update or manual verification before re-analysis, not a tooling update.
 2. After a CLI bump, regenerate the app's generated manifest (`index.md`) with that
