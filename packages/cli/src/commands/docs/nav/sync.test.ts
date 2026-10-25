@@ -893,3 +893,151 @@ describe('docs nav sync command (Fumadocs)', () => {
     ]);
   });
 });
+
+describe('docs nav sync ownership, default target and Markdown', () => {
+  const createdRoots: string[] = [];
+  let originalExitCode: typeof process.exitCode;
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+  afterEach(async () => {
+    process.exitCode = originalExitCode;
+    const { rm } = await import('node:fs/promises');
+    await Promise.all(
+      createdRoots
+        .splice(0)
+        .map((root) => rm(root, { recursive: true, force: true })),
+    );
+  });
+  async function repo(
+    documentation: Record<string, unknown>,
+    files: Record<string, string> = {},
+  ): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-nav-owner-'));
+    createdRoots.push(root);
+    await mkdir(join(root, '.git'));
+    await writeTree(root, {
+      '.oat/config.json': `${JSON.stringify({ version: 1, documentation })}\n`,
+      'app/source.config.ts': 'export default {};\n',
+      'app/docs/index.md': indexPage('Home', ['[Page](page.md)']),
+      'app/docs/page.md': '# Page\n',
+      ...files,
+    });
+    return root;
+  }
+  async function run(cwd: string, json: boolean, args: string[]) {
+    const capture = createLoggerCapture();
+    const command = createDocsNavSyncCommand({
+      buildCommandContext: () => ({
+        scope: 'project',
+        dryRun: false,
+        verbose: false,
+        json,
+        cwd,
+        home: cwd,
+        interactive: false,
+        logger: capture.logger,
+      }),
+    });
+    const program = new Command().name('oat').exitOverride();
+    program.addCommand(command);
+    await program.parseAsync(['sync', ...args], { from: 'user' });
+    return capture;
+  }
+  const handMeta = `${JSON.stringify({ pages: ['index', '---My Own Label---', 'page'] }, null, 2)}\n`;
+
+  it('refuses to overwrite hand-authored navigation and checks it by membership', async () => {
+    const root = await repo(
+      { root: 'app', tooling: 'fumadocs', navOwner: 'hand-authored' },
+      { 'app/docs/meta.json': handMeta },
+    );
+    const metaPath = join(root, 'app/docs/meta.json');
+
+    const refused = await run(root, false, ['--target-dir', 'app']);
+    expect(process.exitCode).toBe(1);
+    expect(refused.error.join('\n')).toContain(
+      'documentation.navOwner is hand-authored, so oat docs nav sync will not overwrite the navigation in app.',
+    );
+    await expect(readFile(metaPath, 'utf8')).resolves.toBe(handMeta);
+
+    process.exitCode = undefined;
+    await run(root, false, ['--check']);
+    expect(process.exitCode).toBe(0);
+
+    await writeFile(metaPath, JSON.stringify({ pages: ['index'] }));
+    process.exitCode = undefined;
+    const drift = await run(root, false, ['--check']);
+    expect(process.exitCode).toBe(1);
+    expect(drift.error.join('\n')).toContain(
+      'Missing reader page: "page" is listed in index.md Contents',
+    );
+  });
+
+  it('writes undeclared navigation from the configured root with a warning to declare ownership', async () => {
+    const root = await repo({ root: 'app', tooling: 'fumadocs' });
+
+    const capture = await run(root, false, []);
+
+    expect(process.exitCode).toBe(0);
+    expect(capture.warn.join('\n')).toContain(
+      'No documentation.navOwner is declared for app, so nav sync regenerated the navigation as its owner.',
+    );
+    await expect(readMeta(join(root, 'app/docs'), '.')).resolves.toEqual({
+      title: 'Home',
+      pages: ['index', 'page'],
+    });
+  });
+
+  it('--check separates missing generated files from differing ones and omits the unlisted hint', async () => {
+    const root = await repo(
+      { root: 'app', tooling: 'fumadocs', navOwner: 'nav-sync' },
+      {
+        'app/docs/index.md': indexPage('Home', [
+          '[Page](page.md)',
+          '[Section](section/index.md)',
+        ]),
+        'app/docs/meta.json': '{"pages":["index","page"]}\n',
+        'app/docs/section/index.md': indexPage('Section', ['[Deep](deep.md)']),
+        'app/docs/section/deep.md': '# Deep\n',
+      },
+    );
+
+    const text = await run(root, false, ['--check']);
+    expect(process.exitCode).toBe(1);
+    const output = text.error.join('\n');
+    expect(output).toContain(
+      '1 generated file(s) are missing:\n    section/meta.json',
+    );
+    expect(output).toContain(
+      '1 generated file(s) differ from the index.md Contents maps:\n    meta.json',
+    );
+    expect(output).not.toContain('List every page');
+
+    const json = await run(root, true, ['--check']);
+    expect(json.jsonPayloads.at(-1)).toMatchObject({
+      status: 'drift',
+      stale: ['meta.json', 'section/meta.json'],
+      missing: ['section/meta.json'],
+      unlisted: [],
+    });
+  });
+
+  it('reports Markdown docs as not applicable instead of an undetected framework', async () => {
+    const root = await repo({ root: 'docs', tooling: 'markdown' });
+    await writeTree(root, {
+      'docs/index.md': indexPage('Home', ['[Page](page.md)']),
+      'docs/page.md': '# Page\n',
+    });
+    for (const args of [[], ['--check'], ['--target-dir', 'docs', '--check']]) {
+      process.exitCode = undefined;
+      const capture = await run(root, true, args);
+      expect(process.exitCode).toBe(1);
+      expect(capture.jsonPayloads.at(-1)).toEqual({
+        status: 'error',
+        message:
+          'oat docs nav sync is not applicable to Markdown docs (documentation.tooling: markdown): the index.md Contents maps are the navigation and nothing is generated. Use oat docs check to validate them.',
+      });
+    }
+  });
+});

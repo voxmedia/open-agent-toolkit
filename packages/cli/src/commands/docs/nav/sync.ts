@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -15,6 +15,11 @@ import YAML from 'yaml';
 
 import { buildDocsNavTree, type DocsNavTree } from './contents';
 import { syncFumadocsNavigation, type FumadocsMetaFile } from './fumadocs';
+import {
+  compareFumadocsMembership,
+  compareMkDocsMembership,
+  type NavMembershipIssue,
+} from './membership';
 
 export type DocsNavFramework = 'fumadocs' | 'mkdocs';
 
@@ -59,16 +64,36 @@ type SyncDocsNavigationResult =
   | MkDocsNavigationResult
   | FumadocsNavigationResult;
 
+/** The repository's `documentation` block, when it names a root. */
+interface ConfiguredDocumentation {
+  /** Absolute configured app or content root. */
+  root: string;
+  /** Repository-relative root as configured. */
+  configuredRoot: string;
+  tooling: string | null;
+  navOwner?: 'nav-sync' | 'hand-authored';
+  nonReaderPaths: string[];
+}
+
+interface HandAuthoredNavigationResult {
+  framework: DocsNavFramework;
+  appRoot: string;
+  docsRoot: string;
+  issues: NavMembershipIssue[];
+  unlisted: string[];
+}
+
 interface DocsNavSyncDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
-  resolveConfiguredTooling: (
+  resolveConfiguredDocumentation: (
     cwd: string,
-    appRoot: string,
-  ) => Promise<string | null>;
-  resolveNonReaderPaths?: (cwd: string, appRoot: string) => Promise<string[]>;
+  ) => Promise<ConfiguredDocumentation | null>;
   syncDocsNavigation: (
     options: SyncDocsNavigationOptions,
   ) => Promise<SyncDocsNavigationResult>;
+  checkHandAuthoredNavigation: (
+    options: SyncDocsNavigationOptions,
+  ) => Promise<HandAuthoredNavigationResult>;
 }
 
 const MKDOCS_MARKERS = ['mkdocs.yml'];
@@ -117,45 +142,71 @@ export async function detectDocsNavFramework(
   );
 }
 
-async function resolveConfiguredTooling(
+async function resolveConfiguredDocumentation(
   cwd: string,
-  appRoot: string,
-): Promise<string | null> {
-  try {
-    const repoRoot = await resolveProjectRoot(cwd);
-    const config = await readOatConfig(repoRoot);
-    const root = config.documentation?.root?.trim();
-    if (!root || resolve(repoRoot, root) !== appRoot) {
-      return null;
-    }
-    return config.documentation?.tooling?.trim() || null;
-  } catch {
-    return null;
-  }
-}
-
-async function resolveNonReaderPaths(
-  cwd: string,
-  appRoot: string,
-): Promise<string[]> {
+): Promise<ConfiguredDocumentation | null> {
   let repoRoot: string;
   try {
     repoRoot = await resolveProjectRoot(cwd);
   } catch {
-    return [];
+    return null;
   } // Explicit app targets also work outside a configured repository.
-  const config = await readOatConfig(repoRoot);
-  const root = config.documentation?.root?.trim();
-  return root && resolve(repoRoot, root) === appRoot
-    ? (config.documentation?.nonReaderPaths ?? [])
-    : [];
+  const documentation = (await readOatConfig(repoRoot)).documentation;
+  const configuredRoot = documentation?.root?.trim();
+  if (!configuredRoot) return null;
+  return {
+    root: resolve(repoRoot, configuredRoot),
+    configuredRoot,
+    tooling: documentation?.tooling?.trim() || null,
+    navOwner: documentation?.navOwner,
+    nonReaderPaths: documentation?.nonReaderPaths ?? [],
+  };
+}
+
+/**
+ * Read-only comparison for `navOwner: hand-authored`: the same
+ * membership-and-order semantics as the `oat docs check` navigation rule,
+ * never strict generator output.
+ */
+export async function checkHandAuthoredNavigation(
+  options: SyncDocsNavigationOptions,
+): Promise<HandAuthoredNavigationResult> {
+  const docsRoot = join(options.appRoot, 'docs');
+  const framework = await detectDocsNavFramework(
+    options.appRoot,
+    options.configuredTooling,
+  );
+  if (framework === 'mkdocs')
+    return {
+      framework,
+      appRoot: options.appRoot,
+      docsRoot,
+      issues: await compareMkDocsMembership({
+        appRoot: options.appRoot,
+        docsRoot,
+        nonReaderPaths: options.nonReaderPaths,
+      }),
+      unlisted: [],
+    };
+  const generated = await syncFumadocsNavigation({
+    docsRoot,
+    check: true,
+    nonReaderPaths: options.nonReaderPaths,
+  });
+  return {
+    framework,
+    appRoot: options.appRoot,
+    docsRoot,
+    issues: await compareFumadocsMembership(docsRoot, generated.metaFiles),
+    unlisted: generated.unlisted,
+  };
 }
 
 const DEFAULT_DEPENDENCIES: DocsNavSyncDependencies = {
   buildCommandContext,
-  resolveConfiguredTooling,
-  resolveNonReaderPaths,
+  resolveConfiguredDocumentation,
   syncDocsNavigation,
+  checkHandAuthoredNavigation,
 };
 
 function replaceTopLevelYamlSection(
@@ -240,6 +291,7 @@ function reportFumadocsResult(
   context: CommandContext,
   targetDir: string,
   result: FumadocsNavigationResult,
+  warnings: string[],
 ): void {
   if (context.json) {
     context.logger.json({
@@ -250,6 +302,7 @@ function reportFumadocsResult(
       metaFiles: result.metaFiles,
       written: result.written,
       unlisted: result.unlisted,
+      ...(warnings.length ? { warnings } : {}),
     });
     return;
   }
@@ -274,20 +327,24 @@ function reportFumadocsResult(
       context.logger.warn(`    ${path}`);
     }
   }
+  for (const warning of warnings) context.logger.warn(warning);
 }
 
 /**
  * `--check`: report drift without writing. Fails (exit 1) when any generated
- * navigation file would change or, for Fumadocs, any page or folder is
- * unlisted, since strict navigation hides it from the sidebar.
+ * navigation file is missing or would change or, for Fumadocs, any page or
+ * folder is unlisted, since strict navigation hides it from the sidebar.
  */
 function reportCheckResult(
   context: CommandContext,
   targetDir: string,
   result: SyncDocsNavigationResult,
+  missing: string[],
+  warnings: string[],
 ): boolean {
   const unlisted = result.framework === 'fumadocs' ? result.unlisted : [];
   const current = result.stale.length === 0 && unlisted.length === 0;
+  const differing = result.stale.filter((path) => !missing.includes(path));
 
   if (context.json) {
     context.logger.json({
@@ -297,24 +354,29 @@ function reportCheckResult(
       appRoot: result.appRoot,
       docsRoot: result.docsRoot,
       stale: result.stale,
+      missing,
       unlisted,
+      ...(warnings.length ? { warnings } : {}),
     });
     return current;
   }
 
+  for (const warning of warnings) context.logger.warn(warning);
   if (current) {
     context.logger.info(`Docs navigation is up to date in ${targetDir}`);
     return current;
   }
 
   context.logger.error(`Docs navigation is out of date in ${targetDir}`);
-  if (result.stale.length > 0) {
+  if (missing.length > 0) {
+    context.logger.error(`  ${missing.length} generated file(s) are missing:`);
+    for (const path of missing) context.logger.error(`    ${path}`);
+  }
+  if (differing.length > 0) {
     context.logger.error(
-      `  ${result.stale.length} generated file(s) differ from the index.md Contents maps:`,
+      `  ${differing.length} generated file(s) differ from the index.md Contents maps:`,
     );
-    for (const path of result.stale) {
-      context.logger.error(`    ${path}`);
-    }
+    for (const path of differing) context.logger.error(`    ${path}`);
   }
   if (unlisted.length > 0) {
     context.logger.error(
@@ -324,12 +386,65 @@ function reportCheckResult(
     for (const path of unlisted) {
       context.logger.error(`    ${path}`);
     }
+    context.logger.error(
+      `  List every page in its directory's ## Contents, then run \`oat docs nav sync --target-dir ${targetDir}\`.`,
+    );
+  } else {
+    context.logger.error(
+      `  Run \`oat docs nav sync --target-dir ${targetDir}\` to regenerate the navigation.`,
+    );
+  }
+  return current;
+}
+
+function reportHandAuthoredCheck(
+  context: CommandContext,
+  targetDir: string,
+  result: HandAuthoredNavigationResult,
+): boolean {
+  const current = result.issues.length === 0 && result.unlisted.length === 0;
+  if (context.json) {
+    context.logger.json({
+      status: current ? 'ok' : 'drift',
+      check: true,
+      navOwner: 'hand-authored',
+      framework: result.framework,
+      appRoot: result.appRoot,
+      docsRoot: result.docsRoot,
+      stale: [...new Set(result.issues.map((issue) => issue.path))].sort(),
+      missing: [],
+      unlisted: result.unlisted,
+      issues: result.issues,
+    });
+    return current;
+  }
+  if (current) {
+    context.logger.info(
+      `Hand-authored docs navigation matches the index.md Contents maps in ${targetDir} (membership and order).`,
+    );
+    return current;
   }
   context.logger.error(
-    `  List every page in its directory's ## Contents, then run \`oat docs nav sync --target-dir ${targetDir}\`.`,
+    `Hand-authored docs navigation differs from the index.md Contents maps in ${targetDir}:`,
+  );
+  for (const issue of result.issues)
+    context.logger.error(
+      `  ${issue.path}${issue.line === undefined ? '' : `:${issue.line}`} ${issue.message}`,
+    );
+  if (result.unlisted.length > 0) {
+    context.logger.error(
+      `  ${result.unlisted.length} path(s) are not listed in any index.md Contents map:`,
+    );
+    for (const path of result.unlisted) context.logger.error(`    ${path}`);
+  }
+  context.logger.error(
+    '  Edit the hand-authored navigation or the Contents maps; nav sync does not regenerate hand-authored navigation.',
   );
   return current;
 }
+
+const MARKDOWN_NOT_APPLICABLE =
+  'oat docs nav sync is not applicable to Markdown docs (documentation.tooling: markdown): the index.md Contents maps are the navigation and nothing is generated. Use oat docs check to validate them.';
 
 async function runDocsNavSyncCommand(
   context: CommandContext,
@@ -337,28 +452,71 @@ async function runDocsNavSyncCommand(
   dependencies: DocsNavSyncDependencies,
 ): Promise<void> {
   try {
-    const targetDir = options.targetDir ?? '.';
+    const configured = await dependencies.resolveConfiguredDocumentation(
+      context.cwd,
+    );
+    // Like `oat docs check`, an omitted target is the configured root.
+    const targetDir =
+      options.targetDir ??
+      (configured ? relative(context.cwd, configured.root) || '.' : '.');
     const appRoot = resolve(context.cwd, targetDir);
-    const result = await dependencies.syncDocsNavigation({
+    const documentation = configured?.root === appRoot ? configured : null;
+    if (documentation?.tooling?.toLowerCase() === 'markdown')
+      throw new Error(MARKDOWN_NOT_APPLICABLE);
+    const navOwner = documentation?.navOwner;
+    const syncOptions: SyncDocsNavigationOptions = {
       appRoot,
-      configuredTooling: await dependencies.resolveConfiguredTooling(
-        context.cwd,
-        appRoot,
-      ),
+      configuredTooling: documentation?.tooling ?? null,
       check: options.check === true,
-      nonReaderPaths: await dependencies.resolveNonReaderPaths?.(
-        context.cwd,
-        appRoot,
-      ),
-    });
+      nonReaderPaths: documentation?.nonReaderPaths ?? [],
+    };
+
+    if (navOwner === 'hand-authored') {
+      if (!options.check)
+        throw new Error(
+          `documentation.navOwner is hand-authored, so oat docs nav sync will not overwrite the navigation in ${targetDir}. ` +
+            'Edit meta.json (Fumadocs) or the mkdocs.yml nav (MkDocs) directly and run oat docs check, ' +
+            'or compare it with `oat docs nav sync --check`. To hand navigation to nav sync, first run ' +
+            '`oat config set documentation.navOwner nav-sync`.',
+        );
+      const result =
+        await dependencies.checkHandAuthoredNavigation(syncOptions);
+      process.exitCode = reportHandAuthoredCheck(context, targetDir, result)
+        ? 0
+        : 1;
+      return;
+    }
+
+    const warnings =
+      navOwner === undefined
+        ? [
+            options.check
+              ? `No documentation.navOwner is declared for ${targetDir}, so this check compares with strict nav sync output. Declare ownership with \`oat config set documentation.navOwner nav-sync\`, or \`hand-authored\` for a membership-and-order comparison.`
+              : `No documentation.navOwner is declared for ${targetDir}, so nav sync regenerated the navigation as its owner. Declare ownership with \`oat config set documentation.navOwner nav-sync\`, or \`hand-authored\` to protect hand-written navigation from regeneration.`,
+          ]
+        : [];
+    const result = await dependencies.syncDocsNavigation(syncOptions);
 
     if (options.check) {
-      process.exitCode = reportCheckResult(context, targetDir, result) ? 0 : 1;
+      const missing: string[] = [];
+      if (result.framework === 'fumadocs')
+        for (const path of result.stale)
+          if (!(await fileExists(join(result.docsRoot, path))))
+            missing.push(path);
+      process.exitCode = reportCheckResult(
+        context,
+        targetDir,
+        result,
+        missing,
+        warnings,
+      )
+        ? 0
+        : 1;
       return;
     }
 
     if (result.framework === 'fumadocs') {
-      reportFumadocsResult(context, targetDir, result);
+      reportFumadocsResult(context, targetDir, result, warnings);
     } else if (context.json) {
       context.logger.json({
         status: 'ok',
@@ -366,11 +524,13 @@ async function runDocsNavSyncCommand(
         docsRoot: result.docsRoot,
         mkdocsPath: result.mkdocsPath,
         nav: result.nav,
+        ...(warnings.length ? { warnings } : {}),
       });
     } else {
       context.logger.info(`Synced docs navigation in ${targetDir}`);
       context.logger.info(`  MkDocs config: ${result.mkdocsPath}`);
       context.logger.info(`  Docs root: ${result.docsRoot}`);
+      for (const warning of warnings) context.logger.warn(warning);
     }
 
     process.exitCode = 0;
@@ -400,13 +560,13 @@ export function createDocsNavSyncCommand(
     .addOption(
       new Option(
         '--target-dir <path>',
-        'Docs app directory containing mkdocs.yml or source.config.ts',
+        'Docs app directory containing mkdocs.yml or source.config.ts (default: documentation.root, else the current directory)',
       ),
     )
     .addOption(
       new Option(
         '--check',
-        'Write nothing; exit 1 if any navigation file is stale or any page is unlisted',
+        'Write nothing; exit 1 if any navigation file is missing or stale or any page is unlisted (hand-authored navigation: membership and order only)',
       ),
     )
     .action(async (options: DocsNavSyncCommandOptions, command: Command) => {
