@@ -13,11 +13,8 @@ metadata:
     - title: GitHub Repository
       url: https://github.com/voxmedia/open-agent-toolkit
       icon: github
-    - title: "Docs Tooling"
-      url: https://voxmedia.github.io/open-agent-toolkit/docs-tooling
-      icon: docs
-    - title: "documentation"
-      url: https://voxmedia.github.io/open-agent-toolkit/
+    - title: "Documentation"
+      url: "https://voxmedia.github.io/open-agent-toolkit"
       icon: docs
 spec:
   type: library
