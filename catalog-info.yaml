@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: open-agent-toolkit
+  namespace: production
+  description: "An open-source toolkit for portable, provider-agnostic agent tooling and workflows."
+  annotations:
+    github.com/project-slug: voxmedia/open-agent-toolkit
+    backstage.io/source-location: url:https://github.com/voxmedia/open-agent-toolkit
+  tags:
+    - typescript
+  links:
+    - title: GitHub Repository
+      url: https://github.com/voxmedia/open-agent-toolkit
+      icon: github
+spec:
+  type: library
+  lifecycle: production
+  owner: default/developers
