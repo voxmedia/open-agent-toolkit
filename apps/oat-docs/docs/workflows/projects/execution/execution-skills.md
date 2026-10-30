@@ -70,7 +70,7 @@ The second begins execution. These are agent skill invocations, not `oat`
 terminal subcommands; use the invocation syntax your host supports.
 
 The skill is model-invokable when you ask to implement an approved plan, or
-when you confirm an offered implementation step. A ready `plan.md` is not that
+when you accept an offered implementation step. A ready `plan.md` is not that
 ask. The agent does not start implementation on its own just because the plan
 is ready.
 
