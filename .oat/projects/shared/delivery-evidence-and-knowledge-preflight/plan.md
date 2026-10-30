@@ -605,15 +605,16 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | -------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending         | -          | -        | -             | -          | -           |
-| p02   | code     | pending         | -          | -        | -             | -          | -           |
-| p03   | code     | pending         | -          | -        | -             | -          | -           |
-| p04   | code     | pending         | -          | -        | -             | -          | -           |
-| p05   | code     | pending         | -          | -        | -             | -          | -           |
-| final | code     | pending         | -          | -        | -             | -          | -           |
-| plan  | artifact | fixes_completed | 2026-10-30 | -        | -             | auto       | -           |
+| Scope | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01   | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p02   | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p03   | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p04   | code     | pending         | -          | -                                                  | -             | -          | -           |
+| p05   | code     | pending         | -          | -                                                  | -             | -          | -           |
+| final | code     | pending         | -          | -                                                  | -             | -          | -           |
+| plan  | artifact | fixes_completed | 2026-10-30 | -                                                  | -             | auto       | -           |
+| plan  | artifact | received        | 2026-10-30 | reviews/artifact-plan-review-2026-10-30T235710Z.md | -             | -          | -           |
 
 Plan artifact review (structured, `oat-reviewer-claude-opus-5-5-high`, ceiling exception; `Dispatch: scope=plan action=review role=reviewer provider=cursor variant=oat-reviewer-claude-opus-5-5-high policy=high source=project-state`): attempt 1 returned 3 High, 7 Medium and 8 Low; attempt 2 confirmed all 18 resolved and raised 2 Medium and 3 Low; attempt 3 confirmed those resolved and raised 1 Low (design wording drift on extraction markers). That Low was fixed after the retry bound (`oat_orchestration_retry_limit` default 2) was exhausted and was not re-reviewed; no residual findings remain open.
 
