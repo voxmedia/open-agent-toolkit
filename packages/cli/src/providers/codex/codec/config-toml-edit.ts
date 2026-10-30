@@ -631,12 +631,13 @@ function isBlankLine(line: string): boolean {
   return /^[ \t]*(?:\r?\n)?$/.test(line);
 }
 
-/**
- * Comments above a header belong to it only when a blank line or the file
- * start separates them from earlier content; otherwise they may close another
- * tool's marker block.
+/*
+ * Other tools wrap tables in marker comments. A comment run with content
+ * directly on both sides may be the `# END` of the block above or the
+ * `# BEGIN` of the block below, so the two helpers below return null rather
+ * than guess, and the caller appends at the end of the file instead.
  */
-function leadingCommentStart(text: string, lineStart: number): number {
+function leadingCommentStart(text: string, lineStart: number): number | null {
   let start = lineStart;
   for (;;) {
     const previous = previousLineStart(text, start);
@@ -645,18 +646,13 @@ function leadingCommentStart(text: string, lineStart: number): number {
     }
     const line = text.slice(previous, start);
     if (!isCommentLine(line)) {
-      return isBlankLine(line) ? start : lineStart;
+      return isBlankLine(line) || start === lineStart ? start : null;
     }
     start = previous;
   }
 }
 
-/**
- * Comments after a table's last line belong to it unless they lead straight
- * into the next header, so insertions never split a trailing marker comment
- * from the block it closes.
- */
-function trailingCommentEnd(text: string, contentEnd: number): number {
+function trailingCommentEnd(text: string, contentEnd: number): number | null {
   let end = contentEnd;
   let cursor = lineEndIncludingNewline(text, contentEnd);
   while (cursor < text.length) {
@@ -664,7 +660,7 @@ function trailingCommentEnd(text: string, contentEnd: number): number {
     const next = newline < 0 ? text.length : newline + 1;
     const line = text.slice(cursor, next);
     if (!isCommentLine(line)) {
-      return isBlankLine(line) ? end : contentEnd;
+      return isBlankLine(line) || end === contentEnd ? end : null;
     }
     end = cursor + line.replace(/\r?\n$/, '').length;
     cursor = next;
@@ -688,19 +684,28 @@ function insertSection(
   const firstSubTable = headers.find((section) =>
     isStrictPrefix(tablePath, section.path),
   );
-  if (firstSubTable) {
-    const start = leadingCommentStart(text, firstSubTable.header.lineStart);
+  const start = firstSubTable
+    ? leadingCommentStart(text, firstSubTable.header.lineStart)
+    : null;
+  if (start !== null) {
     return splice(text, start, start, `${block}${eol}${eol}`);
   }
 
-  for (let depth = tablePath.length - 1; depth >= 1; depth--) {
+  for (
+    let depth = tablePath.length - 1;
+    !firstSubTable && depth >= 1;
+    depth--
+  ) {
     const family = tablePath.slice(0, depth);
     const lastInFamily = findLast(headers, (section) =>
       startsWithPath(section.path, family),
     );
     if (lastInFamily) {
       const end = trailingCommentEnd(text, lastInFamily.lastEnd);
-      return splice(text, end, end, `${eol}${eol}${block}`);
+      if (end !== null) {
+        return splice(text, end, end, `${eol}${eol}${block}`);
+      }
+      break;
     }
   }
 

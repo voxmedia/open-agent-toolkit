@@ -138,9 +138,15 @@ export function mergeCodexConfig({
   const features = requireTableOrAbsent(parsed.features, 'features');
   const agents = requireTableOrAbsent(parsed.agents, 'agents');
   const roles = new Map(desiredRoles.map((role) => [role.roleName, role]));
+  const stale = new Set(staleManagedRoles);
   requireNotTable(features.multi_agent, 'features.multi_agent');
-  requireNotTable(agents.max_depth, 'agents.max_depth');
+  if (!stale.has('max_depth')) {
+    requireNotTable(agents.max_depth, 'agents.max_depth');
+  }
   for (const roleName of roles.keys()) {
+    if (stale.has(roleName)) {
+      continue;
+    }
     const role = requireTableOrAbsent(agents[roleName], `agents.${roleName}`);
     requireNotTable(role.description, `agents.${roleName}.description`);
     requireNotTable(role.config_file, `agents.${roleName}.config_file`);
