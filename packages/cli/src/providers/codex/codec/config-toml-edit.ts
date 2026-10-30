@@ -1,13 +1,8 @@
 import { CliError } from '@errors/index';
 
 /*
- * Format-preserving edits for `.codex/config.toml`.
- *
- * The document is lexed into headers and key/value entries with exact source
- * offsets; every edit splices only the affected value, line, inline-table
- * entry, or table, so comments, blank lines, ordering, and formatting of all
- * other content stay byte for byte. Input must already parse as TOML: the
- * lexer locates structure and does not validate. Callers re-parse the result.
+ * Input must already parse as TOML: the lexer locates structure and does not
+ * validate it. Callers re-parse every edited result.
  */
 
 type KeyPath = readonly string[];
@@ -223,7 +218,6 @@ class TomlLexer {
     this.pos += token.length;
   }
 
-  /** Consumes trailing whitespace and comment; returns the line content end. */
   private finishLine(): number {
     this.skipInlineWhitespace();
     if (this.peek() === '#') {
@@ -629,16 +623,53 @@ function insertAfterStatement(
   );
 }
 
-/** Start of the comment lines directly above a line, so they stay attached. */
+function isCommentLine(line: string): boolean {
+  return /^[ \t]*#/.test(line);
+}
+
+function isBlankLine(line: string): boolean {
+  return /^[ \t]*(?:\r?\n)?$/.test(line);
+}
+
+/**
+ * Comments above a header belong to it only when a blank line or the file
+ * start separates them from earlier content; otherwise they may close another
+ * tool's marker block.
+ */
 function leadingCommentStart(text: string, lineStart: number): number {
   let start = lineStart;
   for (;;) {
     const previous = previousLineStart(text, start);
-    if (previous === null || !/^[ \t]*#/.test(text.slice(previous, start))) {
+    if (previous === null) {
       return start;
+    }
+    const line = text.slice(previous, start);
+    if (!isCommentLine(line)) {
+      return isBlankLine(line) ? start : lineStart;
     }
     start = previous;
   }
+}
+
+/**
+ * Comments after a table's last line belong to it unless they lead straight
+ * into the next header, so insertions never split a trailing marker comment
+ * from the block it closes.
+ */
+function trailingCommentEnd(text: string, contentEnd: number): number {
+  let end = contentEnd;
+  let cursor = lineEndIncludingNewline(text, contentEnd);
+  while (cursor < text.length) {
+    const newline = text.indexOf('\n', cursor);
+    const next = newline < 0 ? text.length : newline + 1;
+    const line = text.slice(cursor, next);
+    if (!isCommentLine(line)) {
+      return isBlankLine(line) ? end : contentEnd;
+    }
+    end = cursor + line.replace(/\r?\n$/, '').length;
+    cursor = next;
+  }
+  return end;
 }
 
 function insertSection(
@@ -668,12 +699,8 @@ function insertSection(
       startsWithPath(section.path, family),
     );
     if (lastInFamily) {
-      return splice(
-        text,
-        lastInFamily.lastEnd,
-        lastInFamily.lastEnd,
-        `${eol}${eol}${block}`,
-      );
+      const end = trailingCommentEnd(text, lastInFamily.lastEnd);
+      return splice(text, end, end, `${eol}${eol}${block}`);
     }
   }
 
@@ -684,10 +711,7 @@ function insertSection(
   return splice(text, contentEnd, contentEnd, `${eol}${eol}${block}`);
 }
 
-/**
- * Sets a key to an already-rendered TOML value, editing only the existing
- * value or inserting one key into the table's existing definition.
- */
+/** `renderedValue` must already be a valid TOML value literal. */
 export function setTomlValue(
   text: string,
   path: KeyPath,
@@ -784,7 +808,6 @@ function removeInlineEntry(text: string, entry: TomlEntry): string {
   return splice(text, table.entries[index - 1]!.valueEnd, entry.valueEnd, '');
 }
 
-/** Removes a table and everything nested under it, one definition at a time. */
 export function removeTomlTable(text: string, path: KeyPath): string {
   let current = text;
   for (let pass = 0; pass < MAX_EDIT_PASSES; pass++) {

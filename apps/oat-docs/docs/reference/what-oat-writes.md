@@ -46,10 +46,12 @@ agents, templates and scripts that `oat tools install` adds.
 
 Where a file already existed, OAT appended its own marked block instead of
 replacing it. This held for `.gitignore`, `.gitattributes` and an existing
-`pre-commit` hook. An existing `.codex/config.toml` is edited in place: OAT
-changes only its own keys and tables, and comments, blank lines, table order
-and your other settings stay as they were (see the
-[provider table](#syncing-provider-views)). A pre-existing
+`pre-commit` hook. From version 0.3.37, an existing `.codex/config.toml` is
+edited in place: OAT changes only `multi_agent`, `max_depth` and its own
+`[agents.<name>]` tables, and comments, blank lines, table order and your other
+settings stay as they were (see the
+[provider table](#syncing-provider-views)). Earlier versions rewrote the whole
+file and dropped its comments. A pre-existing
 `~/.claude/settings.json` was left untouched.
 
 ### Setting up

@@ -81,6 +81,14 @@ function requireTableOrAbsent(value: unknown, label: string): TomlObject {
   return value;
 }
 
+function requireNotTable(value: unknown, label: string): void {
+  if (isTable(value)) {
+    throw new CliError(
+      `Refusing to rewrite .codex/config.toml: ${label} must not be a table. Fix it by hand and rerun sync.`,
+    );
+  }
+}
+
 function getFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
@@ -116,12 +124,9 @@ export function readCodexMaxDepth(content: string | null): number | null {
 }
 
 /**
- * Merges managed Codex roles and required shared agent configuration.
- *
- * Only `features.multi_agent`, `agents.max_depth`, and managed role
- * `description`/`config_file` keys are edited, and stale managed role tables
- * removed, in the existing text. Everything else, including comments that
- * other tools use as ownership markers, is preserved byte for byte.
+ * Merges managed Codex roles and required shared agent configuration in place:
+ * other tools keep ownership markers in this file's comments, so unmanaged
+ * content must survive byte for byte.
  */
 export function mergeCodexConfig({
   existingContent,
@@ -133,8 +138,12 @@ export function mergeCodexConfig({
   const features = requireTableOrAbsent(parsed.features, 'features');
   const agents = requireTableOrAbsent(parsed.agents, 'agents');
   const roles = new Map(desiredRoles.map((role) => [role.roleName, role]));
+  requireNotTable(features.multi_agent, 'features.multi_agent');
+  requireNotTable(agents.max_depth, 'agents.max_depth');
   for (const roleName of roles.keys()) {
-    requireTableOrAbsent(agents[roleName], `agents.${roleName}`);
+    const role = requireTableOrAbsent(agents[roleName], `agents.${roleName}`);
+    requireNotTable(role.description, `agents.${roleName}.description`);
+    requireNotTable(role.config_file, `agents.${roleName}.config_file`);
   }
 
   const maxDepth = Math.max(
