@@ -110,7 +110,15 @@ existing "own artifacts come from Reviews rows" rule.
 4. **#383 heads:** A stack's exit carrier is judged against the tip member's
    observed head; lower members must be ancestors of the tip. `kind: pr` and
    `null` keep every-member evaluation.
-5. **One PR, one lockstep bump.** All five public packages are bumped once;
+5. **#384 binding (deviation from the backlog wording):** gate artifacts are
+   admitted by the row's `Invocation: gate` and a `Reviewed Head` equal to the
+   carrier's, not by the artifact's `oat_review_phase_ids` (Option A above).
+6. **#383 registration is attach-only:** pr-progress records an existing
+   gh-stack base to tip; it does not create stacks.
+7. **#385 boundaries:** the comparison runs at `implement-preflight` and
+   `review`, not at `completion`, so `complete-state` and `--at completion`
+   keep judging identical bytes.
+8. **One PR, one lockstep bump.** All five public packages are bumped once;
    every changed canonical skill bumps its own `metadata.version`.
 
 ## Constraints
@@ -120,7 +128,7 @@ existing "own artifacts come from Reviews rows" rule.
   Reviews rows.
 - No change to single-member `kind: pr` behavior.
 - Negative controls for evidence rules run through the production scope
-  builder (§12.8 requirement), not hand-assembled scopes.
+  builder and the built CLI (§12.8 requirement), not hand-assembled scopes.
 - Skill edits must keep the pinned contract tests in
   `packages/cli/src/validation` and `commands/init/tools/shared` green.
 - External-integration research (autonomous Step 3): none required; the work
@@ -161,6 +169,10 @@ existing "own artifacts come from Reviews rows" rule.
 
 - None blocking. Exact helper names and fixture layout are implementation
   choices recorded in `design.md` and the plan.
+- **Pack dependency (operator decision, not taken here):** after #355,
+  `oat-repo-knowledge-index` (workflows pack) needs the utility pack's dispatch
+  skills; the skill names the recovery command, but declaring a
+  workflows→utility dependency is left for operator sign-off.
 
 ## Assumptions
 

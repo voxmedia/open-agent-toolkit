@@ -63,17 +63,29 @@ journal check  ──►  evaluateJournal()  +  journalRewrites(HEAD blob, worki
   tip's; a violation yields `freshness: stale` with a distinct
   `stack-order` reason, and an unobserved member (`null` head) stays stale as
   today.
-- **Interfaces:** used by `check.ts`, `refresh.ts` and
-  `closeout-check/index.ts` in place of the three inline
-  `delivery.members.map((m) => m.observed_head)` expressions passed to
-  `evaluateGateCarrier`. `evaluateDeliveryReview` is unchanged (per-member
-  review already works for stacks).
-- **Milestone/delivery agreement:** for a milestone subject whose milestone
-  has a registered, non-superseded delivery, `check.ts` builds the evidence
-  scope with `deliveryEvidenceScope` for that delivery (reusing the existing
-  latest-non-superseded selection that `refresh.ts` applies) so the milestone
-  scope carries `ownEvidenceArtifacts`. A milestone with no registered
-  delivery keeps today's `mNN`-row scope.
+- **Interfaces:** one exported wrapper (for example
+  `evaluateDeliveryExitCarrier(carrier, expected, { git, scope, delivery })`)
+  runs the stack-order check and then `evaluateGateCarrier`, so no caller can
+  take tip-only heads without the order check. `check.ts`, `refresh.ts` and
+  `closeout-check/index.ts` call it in place of their inline
+  `delivery.members.map((m) => m.observed_head)` evaluations.
+  `SubjectEvidenceReport.publishedHeads` keeps reporting every member's head.
+  `evaluateDeliveryReview` is unchanged (per-member review already works for
+  stacks).
+- **Milestone/delivery agreement:** an extracted
+  `latestDeliveryForMilestone(deliveries, milestone)` returns the last registry
+  entry for the milestone with status `open` or `at_endpoint` (refresh's current
+  inline selection; `registering` and `superseded` excluded). `refresh.ts` uses
+  it, and `check.ts`'s milestone branch builds the evidence scope with
+  `deliveryEvidenceScope` for that delivery when one exists, so the milestone
+  scope carries `ownEvidenceArtifacts`. A milestone with no such delivery keeps
+  today's `mNN`-row scope.
+- **Registration (attach-only):** pr-progress registers `kind: stack` by
+  attaching an existing gh-stack set rather than creating one: members are
+  recorded base to tip, `lookup.head_branch` names the tip layer, and a
+  `registering` resume re-lists each layer, stopping to reconcile on any zero
+  or multiple match. Bookkeeping after review lands on the tip branch; a
+  mis-ordered stack is replaced by supersession.
 - **Refresh write:** unchanged mechanism; once heads are tip-based, refresh no
   longer writes a `not-ancestor` reason that only applied to a lower layer.
 
@@ -112,13 +124,19 @@ carrier)`) called where scopes are built: the milestone branch of
   (`journalRewrites(before, after)` returning line text plus kind: rewritten
   line or extraction marker), with `judgeJournalChange` returning the first as
   its `Verdict`. Behavior of the delivery evaluator is unchanged.
-- **Journal check:** for goal projects only (state `oat_workflow_mode: goal`),
+- **Journal check:** for goal projects only (state `oat_workflow_mode: goal`)
+  and only at the `implement-preflight` and `review` boundaries,
   `oat project journal check` reads `HEAD:<projectDir>/implementation.md`
   through an injectable git dependency and adds one
   `journal-line-rewritten` reason per offending line (path
-  `implementation.md`, line `null` or the working-file line when locatable).
-  No committed version (new file, or no repository HEAD) adds no reason. Other
-  workflow modes are unaffected.
+  `implementation.md`, line `null` or the working-file line when locatable,
+  owner as sibling journal reasons), recomputing `status` so an added reason
+  refuses (exit 1). No committed version (untracked file or unborn HEAD) adds
+  no reason. `--at completion` and `complete-state` are unchanged: at
+  completion the journal is committed, so working and HEAD agree, and
+  `complete-state` keeps evaluating the same bytes as `--at completion`. The
+  check reports uncommitted rewrites only; rewrites already committed remain
+  delivery check's to reject. Other workflow modes are unaffected.
 - **Reason code:** add `journal-line-rewritten` to `JournalReasonCode` and
   whatever reason registry/docs enumerate codes.
 
@@ -137,7 +155,15 @@ carrier)`) called where scopes are built: the milestone branch of
   `authorization-required` (ask once for all mapper lanes), or
   `unresolved-or-unsupported`. Only `available` (after any authorization)
   continues; otherwise stop with an actionable message before Step 2, leaving
-  generated and manual knowledge unchanged.
+  generated and manual knowledge unchanged. A probe miss names the missing
+  skill and gives `oat tools install utility --scope <user|project>` or
+  `oat tools update --pack utility --scope <user|project>`: the skill ships in
+  the workflows pack, while the dispatch skills ship in utility. Declaring a
+  workflows→utility pack dependency is out of scope and needs operator
+  sign-off.
+- **Role projection:** per-provider routes launch the installed provider
+  projection of `oat-codebase-mapper`; inlined portable role text is never
+  presented as a registered native role.
 - **Write mode:** the background write-permission probe moves ahead of Step 2
   and runs only on a resolved route. A probe worker that did not launch is a
   route failure (stop), not read-only mode; read-only fallback requires a
@@ -177,6 +203,11 @@ refresh` and `closeout-check` through the production scope builder (§12.8
   member's reviewed head moves with a new own artifact; `journal check` on a
   goal fixture with an in-place edit reports `journal-line-rewritten`, an
   append passes, and a quick project is unaffected.
+- **Built CLI:** after `pnpm --filter @open-agent-toolkit/cli build`, run
+  `node packages/cli/dist/index.js --json project delivery check` against
+  preserved scratch fixtures (matching gate row, manual `final` row,
+  mismatched-head gate row, non-ancestor stack layer) and record the
+  categorical outcomes (§12.8).
 - **Can-fail proof:** for each P0 guard (tip selection, stack order, gate
   head binding, own-evidence isolation, journal rewrite), neutralize the guard,
   confirm the test fails, restore — reported in `implementation.md`.
