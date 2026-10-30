@@ -209,6 +209,350 @@ describe('mergeCodexConfig', () => {
   });
 });
 
+describe('mergeCodexConfig preserves user-owned content', () => {
+  const lines = (...content: string[]) => content.join('\n');
+
+  it('edits only managed keys and keeps comments, router markers, and table order', () => {
+    const existing = lines(
+      '# Codex user config',
+      'model = "gpt-5.6-sol" # default model',
+      '',
+      '[features]',
+      '# experimental flags',
+      'web_search = true',
+      '',
+      '# BEGIN codex-router-managed',
+      '[model_providers.codex-router] # codex-router-provider-managed',
+      'name = "codex-router"',
+      'base_url = "http://127.0.0.1:8787/v1"',
+      '',
+      '[model_providers.codex-router-signed] # codex-router-signed-provider-managed',
+      'name = "codex-router-signed"',
+      '# END codex-router-managed',
+      '',
+      '[agents]',
+      'max_depth = 1 # raised by oat',
+      '',
+      '[agents.oat-reviewer]',
+      '# reviewer tuning',
+      'description = "Old reviewer" # managed',
+      'config_file = "agents/oat-reviewer.toml"',
+      'model = "custom" # user key',
+      '',
+      '# retired role below',
+      '[agents.oat-old]',
+      'description = "Old"',
+      'config_file = "agents/oat-old.toml"',
+      '',
+      '[zeta]',
+      'a = 1',
+      '',
+    );
+
+    const result = mergeCodexConfig({
+      existingContent: existing,
+      desiredRoles: [
+        managedRole,
+        {
+          roleName: 'oat-mapper',
+          description: 'Mapper',
+          configFile: 'agents/oat-mapper.toml',
+        },
+      ],
+      staleManagedRoles: ['oat-old'],
+    });
+
+    expect(result.mergedContent).toBe(
+      lines(
+        '# Codex user config',
+        'model = "gpt-5.6-sol" # default model',
+        '',
+        '[features]',
+        '# experimental flags',
+        'web_search = true',
+        'multi_agent = true',
+        '',
+        '# BEGIN codex-router-managed',
+        '[model_providers.codex-router] # codex-router-provider-managed',
+        'name = "codex-router"',
+        'base_url = "http://127.0.0.1:8787/v1"',
+        '',
+        '[model_providers.codex-router-signed] # codex-router-signed-provider-managed',
+        'name = "codex-router-signed"',
+        '# END codex-router-managed',
+        '',
+        '[agents]',
+        'max_depth = 2 # raised by oat',
+        '',
+        '[agents.oat-reviewer]',
+        '# reviewer tuning',
+        'description = "Reviewer" # managed',
+        'config_file = "agents/oat-reviewer.toml"',
+        'model = "custom" # user key',
+        '',
+        '[agents.oat-mapper]',
+        'description = "Mapper"',
+        'config_file = "agents/oat-mapper.toml"',
+        '',
+        '# retired role below',
+        '',
+        '[zeta]',
+        'a = 1',
+        '',
+      ),
+    );
+    expect(result.changed).toBe(true);
+    expect(result.removedRoles).toEqual(['oat-old']);
+  });
+
+  it.each([
+    {
+      label: 'comments and LF endings',
+      existing: lines(
+        '# keep me',
+        '[features]',
+        'multi_agent = true # on',
+        '',
+        '[agents]',
+        'max_depth = 3',
+        '[agents.oat-reviewer] # managed',
+        "description = 'Reviewer'",
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'CRLF endings',
+      existing:
+        '[features]\r\nmulti_agent = true\r\n\r\n[agents]\r\nmax_depth = 2\r\n\r\n[agents.oat-reviewer]\r\ndescription = "Reviewer"\r\nconfig_file = "agents/oat-reviewer.toml"\r\n',
+    },
+    {
+      label: 'no trailing newline',
+      existing:
+        'agents.max_depth = 2\nagents.oat-reviewer = { description = "Reviewer", config_file = "agents/oat-reviewer.toml" }\nfeatures.multi_agent = true',
+    },
+    {
+      label: 'indented legacy output',
+      existing: lines(
+        '[features]',
+        'multi_agent = true',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '  [agents.oat-reviewer]',
+        '  description = "Reviewer"',
+        '  config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+  ])(
+    'returns the input byte for byte when managed state matches ($label)',
+    ({ existing }) => {
+      const result = mergeCodexConfig({
+        existingContent: existing,
+        desiredRoles: [managedRole],
+        staleManagedRoles: ['oat-absent'],
+      });
+
+      expect(result.mergedContent).toBe(existing);
+      expect(result.changed).toBe(false);
+      expect(result.removedRoles).toEqual([]);
+    },
+  );
+
+  it.each([
+    {
+      label: 'top-level dotted keys',
+      existing: lines(
+        'features.multi_agent = false # toggled',
+        'agents.max_depth = 1',
+        '',
+        '[zeta]',
+        'a = 1',
+        '',
+      ),
+      expected: lines(
+        'features.multi_agent = true # toggled',
+        'agents.max_depth = 2',
+        'agents.oat-reviewer.description = "Reviewer"',
+        'agents.oat-reviewer.config_file = "agents/oat-reviewer.toml"',
+        '',
+        '[zeta]',
+        'a = 1',
+        '',
+      ),
+    },
+    {
+      label: 'inline tables with a stale role',
+      existing: lines(
+        'features = { web_search = true }',
+        'agents = { max_depth = 3, oat-old = { description = "Old" }, custom = { description = "Keep" } }',
+        '',
+      ),
+      expected: lines(
+        'features = { web_search = true, multi_agent = true }',
+        'agents = { max_depth = 3, custom = { description = "Keep" }, oat-reviewer = { description = "Reviewer", config_file = "agents/oat-reviewer.toml" } }',
+        '',
+      ),
+    },
+    {
+      label: 'quoted role names',
+      existing: lines(
+        '[features]',
+        'multi_agent = true',
+        '[agents]',
+        'max_depth = 2',
+        '[agents."oat-reviewer"] # quoted',
+        "description = 'Old'",
+        'extra = true',
+        "[agents.'oat-old']",
+        'config_file = "agents/oat-old.toml"',
+        '',
+      ),
+      expected: lines(
+        '[features]',
+        'multi_agent = true',
+        '[agents]',
+        'max_depth = 2',
+        '[agents."oat-reviewer"] # quoted',
+        'description = "Reviewer"',
+        'extra = true',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'CRLF endings',
+      existing: '# crlf\r\n[features]\r\nother = 1\r\n',
+      expected:
+        '# crlf\r\n[features]\r\nother = 1\r\nmulti_agent = true\r\n\r\n[agents]\r\nmax_depth = 2\r\n\r\n[agents.oat-reviewer]\r\ndescription = "Reviewer"\r\nconfig_file = "agents/oat-reviewer.toml"\r\n',
+    },
+    {
+      label: 'a multiline string that contains table headers',
+      existing: lines(
+        'notes = """',
+        '[agents]',
+        'max_depth = 9',
+        '[agents.oat-old]',
+        '"""',
+        '[agents]',
+        '# depth comment',
+        'max_depth = 1',
+        '',
+        '[agents.oat-old]',
+        'description = "Old"',
+        '',
+      ),
+      expected: lines(
+        'notes = """',
+        '[agents]',
+        'max_depth = 9',
+        '[agents.oat-old]',
+        '"""',
+        '[agents]',
+        '# depth comment',
+        'max_depth = 2',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+        '[features]',
+        'multi_agent = true',
+        '',
+      ),
+    },
+    {
+      label: 'no trailing newline',
+      existing: '[features]\nmulti_agent = true\n[agents]\nmax_depth = 2',
+      expected:
+        '[features]\nmulti_agent = true\n[agents]\nmax_depth = 2\n\n[agents.oat-reviewer]\ndescription = "Reviewer"\nconfig_file = "agents/oat-reviewer.toml"',
+    },
+    {
+      label: 'a parent table defined only by its sub-tables',
+      existing: lines(
+        '# about custom',
+        '[agents.custom]',
+        'description = "Keep"',
+        '',
+      ),
+      expected: lines(
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '# about custom',
+        '[agents.custom]',
+        'description = "Keep"',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+        '[features]',
+        'multi_agent = true',
+        '',
+      ),
+    },
+  ])('edits $label in place', ({ existing, expected }) => {
+    const first = mergeCodexConfig({
+      existingContent: existing,
+      desiredRoles: [managedRole],
+      staleManagedRoles: ['oat-old'],
+    });
+    const second = mergeCodexConfig({
+      existingContent: first.mergedContent,
+      desiredRoles: [managedRole],
+      staleManagedRoles: ['oat-old'],
+    });
+
+    expect(first.mergedContent).toBe(expected);
+    expect(second.changed).toBe(false);
+  });
+
+  it('round-trips descriptions that need escaping', () => {
+    const description =
+      'Says "hi"\\ then\nwraps\ttabs and \u0007 bell — ünïcode';
+    const result = mergeCodexConfig({
+      existingContent: '[features]\nmulti_agent = true # keep\n',
+      desiredRoles: [{ ...managedRole, description }],
+    });
+
+    const parsed = TOML.parse(result.mergedContent) as Record<string, unknown>;
+    const agents = parsed.agents as Record<string, Record<string, unknown>>;
+    expect(agents['oat-reviewer']!.description).toBe(description);
+    expect(result.mergedContent).toContain('multi_agent = true # keep\n');
+  });
+
+  it.each([
+    { label: 'features is not a table', existing: 'features = true\n' },
+    {
+      label: 'agents is an array of tables',
+      existing: '[[agents]]\nname = "x"\n',
+    },
+    {
+      label: 'a managed role is not a table',
+      existing: '[agents]\noat-reviewer = "x"\n',
+    },
+  ])('refuses to rewrite the file when $label', ({ existing }) => {
+    expect(() =>
+      mergeCodexConfig({
+        existingContent: existing,
+        desiredRoles: [managedRole],
+      }),
+    ).toThrow('Refusing to rewrite .codex/config.toml');
+  });
+
+  it('keeps the parse error contract for invalid TOML', () => {
+    expect(() =>
+      mergeCodexConfig({
+        existingContent: '# comment\n[agents\nmax_depth = 2\n',
+        desiredRoles: [managedRole],
+      }),
+    ).toThrow('Failed to parse .codex/config.toml:');
+  });
+});
+
 describe('readCodexMaxDepth', () => {
   it.each([
     { content: null, expected: null },
