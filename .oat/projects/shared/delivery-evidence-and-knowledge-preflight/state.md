@@ -95,6 +95,10 @@ oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-10-30T23:32:02Z'
 ---
 
 # Project State: delivery-evidence-and-knowledge-preflight
