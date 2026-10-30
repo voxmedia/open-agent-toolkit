@@ -1,10 +1,10 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: approved
+status: pr_open
 scope: Seven untriaged open GitHub issues (#353, #354, #355, #360, #383, #384, #385)
 baseline_sha: 3f425e7f35702e78b8460543599c9c18b7a82e78
-triage_pr: null
+triage_pr: https://github.com/voxmedia/open-agent-toolkit/pull/388
 created: 2026-10-30
 updated: 2026-10-30
 ---
@@ -59,7 +59,7 @@ Approved by the user on 2026-10-30 as one set: repository changes, the triage PR
 
 Proposed post-merge comment:
 
-> Confirmed on current main: the delivery check, delivery refresh and closeout check all test the exit carrier against every member head, so a stack reviewed at its tip is always `not-ancestor` against lower layers, and the milestone-subject scope omits the delivery's own evidence artifacts. The documented registration flow writes single-member `kind: pr` deliveries, so stacks are accepted but undocumented. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-evaluate-stacked-goal-delivery.md: evaluate stacks against the tip, align the two subjects, and document `kind: stack`. Triage PR: PENDING.
+> Confirmed on current main: the delivery check, delivery refresh and closeout check all test the exit carrier against every member head, so a stack reviewed at its tip is always `not-ancestor` against lower layers, and the milestone-subject scope omits the delivery's own evidence artifacts. The documented registration flow writes single-member `kind: pr` deliveries, so stacks are accepted but undocumented. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-evaluate-stacked-goal-delivery.md: evaluate stacks against the tip, align the two subjects, and document `kind: stack`. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-384 — Admit goal exit-gate review artifacts as milestone bookkeeping evidence
 
@@ -79,7 +79,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed on current main: the configured exit gate's `final` row is not in the milestone evidence allowlist, so its own artifact commit reads as `disallowed-path`, and relabelling changes row identity. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-admit-goal-exit-gate-review.md: admit gate-originated artifacts whose phase ids equal the milestone scope as bookkeeping only, without letting them stand in for the integrated review or unlock set-once fields, and remove the placeholder step. Triage PR: PENDING.
+> Confirmed on current main: the configured exit gate's `final` row is not in the milestone evidence allowlist, so its own artifact commit reads as `disallowed-path`, and relabelling changes row identity. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-admit-goal-exit-gate-review.md: admit gate-originated artifacts whose phase ids equal the milestone scope as bookkeeping only, without letting them stand in for the integrated review or unlock set-once fields, and remove the placeholder step. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-385 — Flag rewritten committed journal lines in journal check
 
@@ -99,7 +99,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed: `journal check` reads only current files, while delivery evidence rejects any rewrite of a committed journal line, so the two disagree until delivery check. The append-only rule is intended; the gap is an early warning. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-flag-rewritten-committed.md: compare against the committed journal with the same rule delivery check applies. Relabelled as an enhancement. Triage PR: PENDING.
+> Confirmed: `journal check` reads only current files, while delivery evidence rejects any rewrite of a committed journal line, so the two disagree until delivery check. The append-only rule is intended; the gap is an early warning. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-flag-rewritten-committed.md: compare against the committed journal with the same rule delivery check applies. Relabelled as an enhancement. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-353 — Report gate project-log finalization in the terminal JSON envelope
 
@@ -119,7 +119,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed: the terminal JSON is flushed before project-log finalization runs, so finalization status reaches only stderr and the durable receipt. The #213 work and DR-260907 deliberately excluded the envelope, so this is new contract scope. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-report-gate-project-log.md with your acceptance criteria; planning starts by amending that decision record. Triage PR: PENDING.
+> Confirmed: the terminal JSON is flushed before project-log finalization runs, so finalization status reaches only stderr and the durable receipt. The #213 work and DR-260907 deliberately excluded the envelope, so this is new contract scope. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-report-gate-project-log.md with your acceptance criteria; planning starts by amending that decision record. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-355 — Preflight knowledge-index mapper dispatch before replacing generated knowledge
 
@@ -139,7 +139,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed on current main (static): ownership cleanup and the thin-index write run before the first, Claude-specific mapper launch, and a failed launch is read as read-only mode. Step 6b also hard-codes a maintainer-specific temp path. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-preflight-knowledge-index.md with your acceptance criteria; the generic-dispatcher versus Claude-only choice remains a planning decision. Live Amp behavior was not reproduced. Triage PR: PENDING.
+> Confirmed on current main (static): ownership cleanup and the thin-index write run before the first, Claude-specific mapper launch, and a failed launch is read as read-only mode. Step 6b also hard-codes a maintainer-specific temp path. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-preflight-knowledge-index.md with your acceptance criteria; the generic-dispatcher versus Claude-only choice remains a planning decision. Live Amp behavior was not reproduced. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-360 — Decide whether a no-op sync should restamp the manifest oatVersion
 
@@ -159,7 +159,7 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Investigation result: the no-op restamp is documented and pinned by tests, and `oatVersion` is the producing-version evidence for the skew advisory. A same-version no-op writes identical bytes, so the churn is CLI-version skew, consistent with your `0.3.13 -> 0.3.16` observation. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-decide-whether-a-no-op-sync.md as a semantics decision first, with no storage migration. Triage PR: PENDING.
+> Investigation result: the no-op restamp is documented and pinned by tests, and `oatVersion` is the producing-version evidence for the skew advisory. A same-version no-op writes identical bytes, so the churn is CLI-version skew, consistent with your `0.3.13 -> 0.3.16` observation. Tracked in https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-261030-decide-whether-a-no-op-sync.md as a semantics decision first, with no storage migration. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ### GH-354 — Refine BL-260706-front-load-recurring-gate with recurring families in repair briefs
 
@@ -178,14 +178,13 @@ Proposed post-merge comment:
 
 Proposed post-merge comment:
 
-> Confirmed that repair briefs carry only the current round; recurring families surface only at budget exhaustion through the complexity review. Folded into the existing owner https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-260706-front-load-recurring-gate.md as within-loop acceptance criteria, leaving budgets and complexity-review authority unchanged. Triage PR: PENDING.
+> Confirmed that repair briefs carry only the current round; recurring families surface only at budget exhaustion through the complexity review. Folded into the existing owner https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/pjm/backlog/items/BL-260706-front-load-recurring-gate.md as within-loop acceptance criteria, leaving budgets and complexity-review authority unchanged. Triage PR: https://github.com/voxmedia/open-agent-toolkit/pull/388.
 
 ## Open concerns
 
 - #383: the user chose to make stacked deliveries a documented, supported shape rather than reject multi-member registration.
 - `BL-260927-share-one-hook-safe-exact-path` is archived as closed while GitHub #306 remains OPEN. Outside this run's scope; noted for a later resolution sweep.
 - Records 2026-09-26 and 2026-10-02 still read `pr_open` although their post-merge labels are applied; by design their resume results live in PR receipt comments.
-- `Triage PR: PENDING` in each comment is replaced with the triage PR URL by the PR-binding commit, before any comment is posted.
 
 ## Applied repository changes and validation
 
@@ -198,4 +197,12 @@ Proposed post-merge comment:
 
 ## Resume instructions
 
-Not yet applicable; the triage PR has not been opened.
+The approved repository changes are in [PR #388](https://github.com/voxmedia/open-agent-toolkit/pull/388); this PR-binding commit records that reference. Keep all issue mutations deferred until merge.
+
+After PR #388 merges, invoke:
+
+```text
+/triage-oat-issues resume post-merge PR #388
+```
+
+On resume: verify the merged record and backlog links, re-read each live issue, apply unchanged actions idempotently, and post a completion receipt on PR #388. Apply the #385 label swap only if the #385 row records the user's approval; any other changed action needs row-specific approval.
