@@ -69,6 +69,11 @@ synced project. It is not proof that implementation or its tests have passed.
 The second begins execution. These are agent skill invocations, not `oat`
 terminal subcommands; use the invocation syntax your host supports.
 
+The skill is model-invokable when you ask to implement an approved plan, or
+when you confirm an offered implementation step. A ready `plan.md` is not that
+ask. The agent does not start implementation on its own just because the plan
+is ready.
+
 The number of fix attempts after a failed review comes from
 `oat_orchestration_retry_limit` in the project's `state.md` (default 2, range
 0–5). The skill's argument hint also lists `--retry-limit`, but no step reads
