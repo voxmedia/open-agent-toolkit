@@ -129,7 +129,9 @@ carrier)`) called where scopes are built: the milestone branch of
   and only at the `implement-preflight` and `review` boundaries,
   `oat project journal check` reads `HEAD:<projectDir>/implementation.md`
   through an injectable git dependency and adds one
-  `journal-line-rewritten` reason per offending line (path
+  `journal-line-rewritten` reason per rewritten or removed committed line; new
+  extraction markers are not reported (delivery evidence still rejects them)
+  (path
   `implementation.md`, line `null` or the working-file line when locatable,
   owner as sibling journal reasons), recomputing `status` so an added reason
   refuses (exit 1). No committed version (untracked file or unborn HEAD) adds
