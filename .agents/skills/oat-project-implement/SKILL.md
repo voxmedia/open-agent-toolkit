@@ -1,13 +1,13 @@
 ---
 name: oat-project-implement
-description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
+description: Use when the user explicitly asks to implement an approved OAT plan — e.g. "implement the plan", "start implementation", or accepts a previously offered implementation step. Do NOT auto-invoke just because plan.md is ready. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
-disable-model-invocation: true
+disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 2.3.21
+  version: 2.3.22
 ---
 
 # Implementation Phase
