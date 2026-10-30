@@ -291,8 +291,9 @@ None.
 **Step 4: Verify**
 
 Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check && pnpm --filter @open-agent-toolkit/cli type-check`
-Then the built-CLI negative controls: `pnpm --filter @open-agent-toolkit/cli build` and
-`node packages/cli/dist/index.js --json project delivery check --project <scratch goal fixture> --subject m01`
+Then the built-CLI negative controls, using the shared-conventions invocation
+(build once, capture `REPO`, `cd` into each scratch fixture repository, run
+`node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject m01`)
 against preserved fixtures for (a) a matching gate row (expect ok, fresh),
 (b) a manual `final` row (expect undeliverable, `disallowed-path`), (c) a
 mismatched-head gate row (expect undeliverable, `disallowed-path`), and a
@@ -605,16 +606,16 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p02   | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p03   | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p04   | code     | pending         | -          | -                                                  | -             | -          | -           |
-| p05   | code     | pending         | -          | -                                                  | -             | -          | -           |
-| final | code     | pending         | -          | -                                                  | -             | -          | -           |
-| plan  | artifact | fixes_completed | 2026-10-30 | -                                                  | -             | auto       | -           |
-| plan  | artifact | received        | 2026-10-30 | reviews/artifact-plan-review-2026-10-30T235710Z.md | -             | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
+| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
+| p01   | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p02   | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p03   | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p04   | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| p05   | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| final | code     | pending         | -          | -                                                           | -             | -          | -                 |
+| plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -             | auto       | -                 |
+| plan  | artifact | passed          | 2026-10-30 | reviews/archived/artifact-plan-review-2026-10-30T235710Z.md | -             | gate       | codex-6-sol-xhigh |
 
 Plan artifact review (structured, `oat-reviewer-claude-opus-5-5-high`, ceiling exception; `Dispatch: scope=plan action=review role=reviewer provider=cursor variant=oat-reviewer-claude-opus-5-5-high policy=high source=project-state`): attempt 1 returned 3 High, 7 Medium and 8 Low; attempt 2 confirmed all 18 resolved and raised 2 Medium and 3 Low; attempt 3 confirmed those resolved and raised 1 Low (design wording drift on extraction markers). That Low was fixed after the retry bound (`oat_orchestration_retry_limit` default 2) was exhausted and was not re-reviewed; no residual findings remain open.
 

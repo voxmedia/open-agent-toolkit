@@ -98,6 +98,19 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+### Review Received: plan
+
+**Date:** 2026-10-30
+**Review artifact (local-only):** reviews/archived/artifact-plan-review-2026-10-30T235710Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- L1 (Low): the p02-t01 built-CLI example ran `node packages/cli/dist/index.js` from the checkout, which resolves the checkout repository → resolve_in_artifact; p02-t01 Step 4 now uses the shared-conventions invocation from inside each scratch repository.
+
+**Outcome:** passed
+
+- Gate `oat-project-quick-start` (QS-12, auto-resolved): run 0820f334-2a3e-4915-aebf-0044c16a37da, target codex-6-sol-xhigh (gpt-6.1-sol xhigh), attempt 1 of 2, status ok, receiveEligible true, reviewed head f0d269c93185aa68080eca06fd85416d1f4630e2 → allowed/passed.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->

@@ -92,6 +92,12 @@ oat_workflow_origin: native # native | imported
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   reviewed_head: null # full SHA of the commit the gate reviewed; provenance only
 #   decided_at: null # ISO 8601 UTC
+oat_quick_start_gate:
+  status: allowed
+  disposition: passed
+  config_fingerprint: 'sha256:88fb6a53c33aabb45f8ac7441bbb99f66460afa281e7a5e1f347537080cfa853'
+  reviewed_head: f0d269c93185aa68080eca06fd85416d1f4630e2
+  decided_at: '2026-10-30T23:59:11Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
