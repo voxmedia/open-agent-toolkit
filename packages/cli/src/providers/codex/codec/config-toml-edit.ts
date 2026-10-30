@@ -691,11 +691,8 @@ function insertSection(
     return splice(text, start, start, `${block}${eol}${eol}`);
   }
 
-  for (
-    let depth = tablePath.length - 1;
-    !firstSubTable && depth >= 1;
-    depth--
-  ) {
+  const familyDepth = firstSubTable ? 0 : tablePath.length - 1;
+  for (let depth = familyDepth; depth >= 1; depth--) {
     const family = tablePath.slice(0, depth);
     const lastInFamily = findLast(headers, (section) =>
       startsWithPath(section.path, family),
