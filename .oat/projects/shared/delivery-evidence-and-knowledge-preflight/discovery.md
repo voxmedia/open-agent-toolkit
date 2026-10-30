@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-10-30
 oat_generated: false
@@ -8,135 +8,180 @@ oat_generated: false
 
 # Discovery: delivery-evidence-and-knowledge-preflight
 
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
-
 ## Initial Request
 
-{Copy of user's initial request}
+Fix four triaged issues in one PR, run autonomously in quick mode at the High
+dispatch ceiling, with no project recap:
+
+- GitHub #383 — backlog `BL-261030-evaluate-stacked-goal-delivery` (Evaluate
+  stacked goal-delivery exit carriers against the stack tip).
+- GitHub #384 — backlog `BL-261030-admit-goal-exit-gate-review` (Admit goal
+  exit-gate review artifacts as milestone bookkeeping evidence).
+- GitHub #385 — backlog `BL-261030-flag-rewritten-committed` (Flag rewritten
+  committed journal lines in journal check).
+- GitHub #355 — backlog `BL-261030-preflight-knowledge-index` (Preflight
+  knowledge-index mapper dispatch before replacing generated knowledge).
+
+Each claim was verified against `main` during the 2026-10-30 triage
+(`.oat/repo/pjm/triage/2026-10-30-untriaged-issues.md`, merged in PR #388).
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Stacked deliveries
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Make `kind: stack` deliveries a documented, supported shape, or reject
+multi-member registration?
+**A:** User: support stacks.
+**Decision:** Document `kind: stack` and judge a stack's exit carrier against
+its tip.
+
+### Question 2: Knowledge-index mapper routing
+
+**Q:** Route mapper workers through the generic dispatcher, or gate the skill
+to Claude only?
+**A:** User: generic; it must work on Codex and Cursor as well.
+**Decision:** Route through `oat-dispatch-subagents`, with the Claude-specific
+arguments confined to the Claude route.
+
+### Question 3: Delivery topology and ceiling
+
+**Q:** One PR or several; which dispatch ceiling?
+**A:** User: one PR, High ceiling, no recap.
+**Decision:** One branch and one final PR; `oat_dispatch_policy` managed/high;
+`oat_project_recap` persisted as `skip/interactive`.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+The approach for each fix is settled by the backlog acceptance criteria; the
+remaining choices are mechanism choices resolved below and in `design.md`.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Identify gate-originated rows by Invocation and reviewed head (#384)
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Admit a code-review row's artifact as bookkeeping when the row
+records `Invocation: gate` and its `Reviewed Head` equals the exit carrier's
+`reviewed_head`.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Uses tracked, append-only Reviews-row cells; no artifact frontmatter read.
+- Binds the admission to the exact gate run that produced the carrier.
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Requires the gate's row to carry the Invocation and Reviewed Head columns,
+  which review-provide already writes for code reviews.
 
-**Chosen:** {A/B/Neither}
+### Option B: Read the artifact's `oat_review_phase_ids` frontmatter (#384)
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Description:** Admit the artifact when its frontmatter phase IDs equal the
+milestone scope.
+
+**Pros:**
+
+- Matches the issue's proposal literally.
+
+**Cons:**
+
+- Reads a file the judged commit can itself rewrite; contradicts the §12.8
+  rule that unlocks come only from tracked append-only rows.
+
+**Chosen:** A
+
+**Summary:** The row-based binding is stronger and consistent with the
+existing "own artifacts come from Reviews rows" rule.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **QS-03 (auto-resolved from repository evidence):** Discovery questions
+   were answered by the user (Questions 1–3) or from verified source evidence;
+   no material product ambiguity remains.
+2. **QS-04 (auto-resolved): lightweight design.** Discovery surfaced
+   component-boundary decisions in shared evidence code (#383/#384) and a
+   cross-provider routing design (#355); a short `design.md` records them
+   before planning. Spec-driven promotion is not warranted: requirements are
+   fixed by four approved backlog items.
+3. **#385 scope: goal projects only.** Only goal mode enforces the
+   append-only journal rule (brief contract §12.8, `judgeJournalChange`).
+   Brief projects have no consumer that rejects rewrites, so flagging them
+   would create false positives. This narrows the backlog item's "at least
+   goal and brief" wording; recorded as a deviation.
+4. **#383 heads:** A stack's exit carrier is judged against the tip member's
+   observed head; lower members must be ancestors of the tip. `kind: pr` and
+   `null` keep every-member evaluation.
+5. **One PR, one lockstep bump.** All five public packages are bumped once;
+   every changed canonical skill bumps its own `metadata.version`.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve fail-closed bookkeeping-successor semantics (§12.8): unknown paths
+  stay disallowed; set-once delivery fields unlock only from a delivery's own
+  Reviews rows.
+- No change to single-member `kind: pr` behavior.
+- Negative controls for evidence rules run through the production scope
+  builder (§12.8 requirement), not hand-assembled scopes.
+- Skill edits must keep the pinned contract tests in
+  `packages/cli/src/validation` and `commands/init/tools/shared` green.
+- External-integration research (autonomous Step 3): none required; the work
+  touches only this repository's CLI, control-plane types and canonical skills.
+  Evidence sources are the checked-out source at `e66894ab` and the triage
+  record.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A linear stack reviewed at its tip is deliverable under `delivery check`,
+  `delivery refresh` and the closeout check; a lower layer that is not an
+  ancestor of the tip is not.
+- Milestone and delivery subjects agree on the same commit after registration.
+- A configured exit gate's own artifact commit no longer stales the milestone
+  carrier, while a non-gate or mismatched-head `final` row still does, and gate
+  rows never become integrated-review rows or own-evidence unlocks.
+- `journal check` reports a rewritten committed journal line in a goal
+  project before delivery check would reject it.
+- `oat-repo-knowledge-index` resolves a mapper route before any cleanup or
+  index write, stops untouched when none resolves, and contains no
+  Claude-only launch argument outside the Claude route or any hard-coded
+  maintainer path.
+- All CI gates in AGENTS.md pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- #353, #354 and #360 (separate backlog items).
+- A commit-time journal guard in `oat internal commit-paths` and a journal
+  append helper (optional follow-ons in the #385 item).
+- An Amp provider adapter or automatic inline mapper fallback.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Journal append helper (`oat project journal append`) — optional follow-on
+  named by the backlog item; not required to close #385.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- None blocking. Exact helper names and fixture layout are implementation
+  choices recorded in `design.md` and the plan.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Gate-run Reviews rows record `Invocation: gate` and a `Reviewed Head`
+  (review-provide contract, `SKILL.md` Reviews-row rules).
+- Stack members are recorded base to tip in `members` order.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Widening the bookkeeping allowlist (#384):** an over-broad admission could
+  let a non-gate change pass as bookkeeping.
+  - **Likelihood:** Low
+  - **Impact:** High
+  - **Mitigation Ideas:** bind to Invocation and exact reviewed head; negative
+    controls for manual rows, mismatched heads, and own-evidence isolation.
+- **Pinned skill prose (#355):** contract tests pin skill sentences verbatim.
+  - **Likelihood:** Medium
+  - **Impact:** Low
+  - **Mitigation Ideas:** run the shared and validation suites after each
+    skill edit.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Quick mode → lightweight design (QS-04), then plan.
