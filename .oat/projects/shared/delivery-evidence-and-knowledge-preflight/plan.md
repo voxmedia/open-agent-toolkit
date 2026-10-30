@@ -33,7 +33,7 @@ oat_template: true
 - Docs lint: `pnpm --filter oat-docs exec markdownlint-cli2 docs/<page>.md` (paths relative to `apps/oat-docs`; the root has no `markdownlint-cli2`).
 - Commit with the exact task file list through `oat internal commit-paths` (hooks enabled).
 - P0 guards (stack tip selection, stack order at every call site, gate head binding, own-evidence isolation, journal rewrite detection) need a can-fail proof: neutralize the guard, confirm the new test fails, restore, and record it in `implementation.md`.
-- Evidence negative controls run through the production scope builder **and the built CLI** (brief contract §12.8): `pnpm --filter @open-agent-toolkit/cli build`, then `node packages/cli/dist/index.js --json project delivery check …` against preserved scratch fixtures, with commands, fixture provenance and expected/observed categorical outcomes recorded in `implementation.md`.
+- Evidence negative controls run through the production scope builder **and the built CLI** (brief contract §12.8): `pnpm --filter @open-agent-toolkit/cli build`, then run from inside each scratch fixture repository with the absolute dist path — `REPO=$(git rev-parse --show-toplevel); (cd <scratch-root> && node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject m01)` — because `delivery check` resolves the repository root from the working directory. Assert `status` and the exact reason code, and record the commands, how each fixture is regenerated (the `goal-repo.ts` builder plus the listed commits; no large tracked baselines), and expected/observed categorical outcomes in `implementation.md`.
 
 ## Planning Checklist
 
@@ -75,7 +75,8 @@ tests: (a) a linear 3-member `kind: stack` delivery whose carrier was reviewed
 at the tip evaluates `fresh`; (b) a stack whose lower member head is not an
 ancestor of the tip is `stale` with a `stack-order` reason; (c) a stack with an
 unobserved lower member (`observed_head: null`) is `stale`; (d) a multi-member
-`kind: pr` delivery keeps every-member evaluation (unchanged behavior).
+`kind: pr` delivery keeps every-member evaluation (unchanged behavior); (e) a
+`kind: stack` delivery with no members is `stale` (`member-missing`).
 
 Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery/evidence.test.ts`
 Expected: new cases fail (RED)
@@ -86,8 +87,9 @@ Add one exported wrapper that callers cannot bypass, for example
 `evaluateDeliveryExitCarrier(carrier, expected, { git, scope, delivery })`: for
 `kind: stack` it first verifies each lower member's `observed_head` is the tip's
 or an ancestor of it (a violation or unobserved member returns a stale
-`CarrierEvaluation` with a `stack-order` or unobserved reason), then calls
-`evaluateGateCarrier` with only the tip head; for any other `kind` it calls
+`CarrierEvaluation` with a `stack-order` or unobserved reason; a stack with no
+members returns stale `member-missing` without calling `evaluateGateCarrier`),
+then calls `evaluateGateCarrier` with only the tip head; for any other `kind` it calls
 `evaluateGateCarrier` with every member head exactly as today. Keep
 `evaluateDeliveryReview` unchanged.
 
@@ -152,7 +154,9 @@ every member's observed head (public JSON field unchanged). Extract
 `latestDeliveryForMilestone(deliveries, milestone)` — the last registry entry
 for that milestone with status `open` or `at_endpoint` (`registering` and
 `superseded` excluded), matching refresh's current inline selection — use it in
-`refresh.ts`, and in `check.ts`'s milestone branch build the evidence scope with
+`refresh.ts` over the observed delivery list (the `observedById` copies carrying
+this run's fresh `gh` observations, never the raw registry entries), and in
+`check.ts`'s milestone branch, over the persisted registry, build the evidence scope with
 `deliveryEvidenceScope` for that delivery when one exists; otherwise keep the
 `mNN`-row scope.
 
@@ -202,12 +206,13 @@ place.
 
 pr-progress registration (attach-only for stacks): item 4 writes `kind: pr` for
 a single pull request or `kind: stack` when the milestone is delivered as an
-existing gh-stack; `lookup.head_branch` names the tip layer's branch. Item 5
-for a stack attaches the already-created layer pull requests (it does not
-create a stack); item 6 records every member (`url`, `base`, `reviewed_head`)
-in base-to-tip order. A `registering` stack on resume re-lists each layer's
-pull request; any layer with zero or several matches stops and routes to
-`oat-project-reconcile`. In `cli-reference.md`, note that stacked deliveries
+existing gh-stack; `lookup.head_branch` names the tip layer's branch, and
+because the layer pull requests already exist, item 4 records every member's
+`url` in base-to-tip order in the same `registering` write. Item 5 for a stack
+attaches those pull requests (it never creates a stack); item 6 fills each
+member's `base` and `reviewed_head`. A `registering` stack on resume re-checks
+each recorded URL with `gh pr view`; a missing, closed-unmerged, or
+re-targeted layer stops and routes to `oat-project-reconcile`. In `cli-reference.md`, note that stacked deliveries
 are judged at the tip.
 
 **Step 3: Refactor**
@@ -417,9 +422,13 @@ Expected: new cases fail (RED)
 Add `journal-line-rewritten` to `JournalReasonCode`. Add an injectable Git
 dependency to journal check; for `oat_workflow_mode: goal` at the
 `implement-preflight` and `review` boundaries, read
-`HEAD:<projectDir>/implementation.md` and append one reason per lister entry
-(path `implementation.md`, the owner used by sibling journal reasons, e.g.
-`oat-project-implement`), recomputing `status` so an added reason refuses.
+`HEAD:<projectDir>/implementation.md` and append one reason per rewritten or
+removed lister entry (path `implementation.md`, the owner used by sibling
+journal reasons, e.g. `oat-project-implement`), recomputing `status` so an
+added reason refuses. New extraction markers are not reported here (they are
+not rewrites of committed lines and remain delivery evidence's to judge); add a
+test that an uncommitted new extraction marker adds no
+`journal-line-rewritten` reason.
 Keep `evaluateJournal` pure and leave `complete-state` unchanged (at
 completion the journal is committed, so working and HEAD agree). Update
 `cli-reference.md` to say the check reports uncommitted rewrites of committed

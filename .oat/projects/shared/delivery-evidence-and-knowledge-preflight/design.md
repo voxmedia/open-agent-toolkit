@@ -81,10 +81,11 @@ journal check  ──►  evaluateJournal()  +  journalRewrites(HEAD blob, worki
   scope carries `ownEvidenceArtifacts`. A milestone with no such delivery keeps
   today's `mNN`-row scope.
 - **Registration (attach-only):** pr-progress registers `kind: stack` by
-  attaching an existing gh-stack set rather than creating one: members are
-  recorded base to tip, `lookup.head_branch` names the tip layer, and a
-  `registering` resume re-lists each layer, stopping to reconcile on any zero
-  or multiple match. Bookkeeping after review lands on the tip branch; a
+  attaching an existing gh-stack set rather than creating one:
+  `lookup.head_branch` names the tip layer, every member `url` is recorded base
+  to tip in the same `registering` write, and a `registering` resume re-checks
+  each recorded URL, stopping to reconcile on a missing or re-targeted layer.
+  A stack with no members is stale (`member-missing`). Bookkeeping after review lands on the tip branch; a
   mis-ordered stack is replaced by supersession.
 - **Refresh write:** unchanged mechanism; once heads are tip-based, refresh no
   longer writes a `not-ancestor` reason that only applied to a lower layer.
@@ -204,8 +205,9 @@ refresh` and `closeout-check` through the production scope builder (§12.8
   goal fixture with an in-place edit reports `journal-line-rewritten`, an
   append passes, and a quick project is unaffected.
 - **Built CLI:** after `pnpm --filter @open-agent-toolkit/cli build`, run
-  `node packages/cli/dist/index.js --json project delivery check` against
-  preserved scratch fixtures (matching gate row, manual `final` row,
+  `node "$REPO/packages/cli/dist/index.js" --json project delivery check` from
+  inside each scratch fixture repository (the command resolves its repository
+  root from the working directory) against preserved fixtures (matching gate row, manual `final` row,
   mismatched-head gate row, non-ancestor stack layer) and record the
   categorical outcomes (§12.8).
 - **Can-fail proof:** for each P0 guard (tip selection, stack order, gate
