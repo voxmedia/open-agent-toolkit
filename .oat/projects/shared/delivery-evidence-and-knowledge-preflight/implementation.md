@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | in_progress | 3     | 0/3       |
+| Phase 1 (p01) | in_progress | 3     | 3/3       |
 | Phase 2 (p02) | pending     | 2     | 0/2       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 0/10 tasks completed
+**Total:** 3/10 tasks completed
 
 ---
 
@@ -35,18 +35,61 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p01-t01: Add a stack-aware exit-carrier wrapper
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ddead69d44a61addba9efd7bba6e403b5a4b862a
+
+**Outcome (required when completed):**
+
+- Stacked (`kind: stack`) deliveries now judge their exit carrier at the tip member's observed head, after verifying every lower member is the tip or its ancestor (`stack-order` stale otherwise); a stack with no members is stale `member-missing`.
+- Every other delivery kind keeps every-member evaluation unchanged.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts` - `evaluateDeliveryExitCarrier` wrapper
+- `packages/cli/src/commands/project/delivery/evidence.test.ts` - stack, unobserved, empty-stack and `kind: pr` cases
+- `packages/cli/src/commands/project/delivery/__tests__/goal-repo.ts` - multi-member and `kind` fixture options
+
+**Verification:** delivery evidence suite 45 passed; scoped oxlint clean; CLI type-check passed.
 
 ### Task p01-t02: Use the wrapper in check, refresh and closeout; align the milestone subject scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 60c9e8bd26ebb4b5f97af13305bc9a4a43e12feb
+
+**Outcome (required when completed):**
+
+- `delivery check`, `delivery refresh` and the closeout check all evaluate exit carriers through the wrapper; `publishedHeads` still reports every member head.
+- The milestone subject builds its evidence scope from the latest observable (`open`/`at_endpoint`) delivery, so milestone and delivery subjects agree; refresh selects from its freshly observed copies.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/check.ts`, `refresh.ts`, `evidence.ts` - wrapper adoption and `latestDeliveryForMilestone`
+- `packages/cli/src/commands/project/closeout-check/index.ts` - wrapper adoption
+- `check.test.ts`, `refresh.test.ts`, `closeout-check/goal-boundary.test.ts` - command-level positive and negative controls
+
+**Verification:** delivery and closeout-check suites 158 passed (root rerun matched); type-check passed.
 
 ### Task p01-t03: Document stacked deliveries and their registration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** f52f9f5c3a77b711a890bcd35fea0eb0ae77b9d6
+
+**Outcome (required when completed):**
+
+- Brief contract §12.7 documents `kind: pr | stack`, tip evaluation, ancestor order, tip-branch bookkeeping and supersession for mis-ordered stacks.
+- pr-progress registers stacks attach-only, recording every member URL base to tip in the `registering` write and re-checking each on resume; the CLI reference notes tip judgment.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-brief/references/brief-contract.md`
+- `.agents/skills/oat-project-pr-progress/SKILL.md`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** shared and validation contract suites 1,088 passed; docs markdownlint, `pnpm lint` and `pnpm format` passed.
+
+**Can-fail proofs (p01):** each guard was neutralized, its focused test failed, and the guard was restored: stack tip selection (linear stack went stale `not-ancestor`); stack-order wrapper (non-ancestor case went falsely fresh); check, refresh and closeout call sites (each expected `stack-order`, received legacy `not-ancestor`); milestone/delivery agreement (milestone went stale on the delivery's own new artifact).
+
+**Built-CLI controls (p01):** linear stack → exit 0, `status: ok`, fresh; mis-ordered stack → exit 1, `status: undeliverable`, `stack-order`.
 
 ---
 
@@ -119,6 +162,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- orchestration-runs-start -->
 
+- run/v1 · request=dedkp-p01-implementation · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 - Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
@@ -149,9 +194,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact        | Planned / Documented                            | Actual / Accepted                                                                                                                                                         | Reason                                                                           | Source of Truth | Follow-up |
+| ------------- | ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------- | --------- |
+| -             | -                      | -                                               | -                                                                                                                                                                         | -                                                                                | -               | -         |
+| p01-t02       | plan.md p01-t02 Step 1 | Unobserved lower member stale at each call site | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there | Mechanically derived: the observation step precedes evaluation in those commands | Implementation  | None      |
 
 ## Final Summary (for PR/docs)
 
