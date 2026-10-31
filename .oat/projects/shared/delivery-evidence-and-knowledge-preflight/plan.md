@@ -320,6 +320,35 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 
 ---
 
+### Task p01-t07: (review) Scope the stack-order rule to configured code carriers in docs
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Understand the issue**
+
+Review finding: L1 (round 2) — after p01-t04, null and unreviewed-resolution carriers (`no_gate`, `project_disabled`) are evaluated before stack topology, so a mis-ordered stack with such a carrier is fresh, exactly as on `kind: pr`. Brief contract §12.7 "Stacked deliveries" and the `delivery check` entry in `cli-reference.md` still say every mis-ordered stack is refused.
+Location: see `reviews/archived/p01-review-2026-10-31T004233Z.md`.
+
+**Step 2: Implement fix**
+
+State in both places that the tip/ancestor rule applies to configured code carriers bound to a reviewed head; null and unreviewed-resolution carriers follow the same evaluation as `kind: pr`. (The root aligns `design.md` itself.)
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && pnpm --filter oat-docs exec markdownlint-cli2 docs/reference/cli-reference.md`
+Expected: pass.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p01-t07" --message "fix(p01-t07): scope the stack-order rule to configured code carriers in docs" -- <exact files changed>
+```
+
+---
+
 ## Phase 2: Gate-originated artifact admission (#384)
 
 ### Task p02-t01: Admit the exit gate's own artifact as bookkeeping
@@ -697,6 +726,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01   | code     | fixes_completed | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
+| p01   | code     | passed          | 2026-10-31 | reviews/archived/p01-review-2026-10-31T004233Z.md           | b9c8c436e274083bc1bd994d99cce3cb26320d75 | auto       | -                 |
 | p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -721,13 +751,13 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 6 tasks - Stack-aware delivery exit carriers (#383), including 3 review-fix tasks
+- Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 2 tasks - Gate-originated artifact admission (#384)
 - Phase 3: 2 tasks - Journal rewrite detection (#385)
 - Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 13 tasks**
+**Total: 14 tasks**
 
 Ready for code review and merge.
 

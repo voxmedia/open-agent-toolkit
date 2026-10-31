@@ -58,9 +58,11 @@ journal check  ──►  evaluateJournal()  +  journalRewrites(HEAD blob, worki
 - **Purpose:** judge a stack's exit carrier against the stack tip.
 - **Responsibilities:** a shared helper in `delivery/evidence.ts` returns the
   heads an exit carrier is evaluated against: for `kind: stack`, only the last
-  member's `observed_head`; otherwise every member's (unchanged). For a stack,
-  each lower member's `observed_head` must be an ancestor of (or equal to) the
-  tip's; a violation yields `freshness: stale` with a distinct
+  member's `observed_head`; otherwise every member's (unchanged). For a stack whose
+  carrier is a configured code carrier bound to a reviewed head, each lower
+  member's `observed_head` must be an ancestor of (or equal to) the tip's
+  (null and unreviewed-resolution carriers are evaluated exactly as for
+  `kind: pr`); a violation yields `freshness: stale` with a distinct
   `stack-order` reason, and an unobserved member (`null` head) stays stale as
   today.
 - **Interfaces:** one exported wrapper (for example
