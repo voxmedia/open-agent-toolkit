@@ -1,7 +1,7 @@
 ---
 id: BL-261030-flag-rewritten-committed
 title: Flag rewritten committed journal lines in journal check
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - goal-mode
 assignee: null
 created: 2026-10-30T22:27:34.311Z
-updated: 2026-10-30T22:27:34.311Z
+updated: '2026-10-31T12:08:23Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/385

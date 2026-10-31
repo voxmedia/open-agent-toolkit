@@ -1,7 +1,7 @@
 ---
 id: BL-261030-preflight-knowledge-index
 title: Preflight knowledge-index mapper dispatch before replacing generated knowledge
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-10-30T22:27:34.886Z
-updated: 2026-10-30T22:27:34.886Z
+updated: '2026-10-31T12:08:25Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/355
