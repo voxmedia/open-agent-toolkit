@@ -244,7 +244,8 @@ changing knowledge and may ask once for authorization covering the write probe
 and four mapper lanes. It offers read-only fallback only after a launched probe
 verifies that writes are blocked. It preserves manual notes while preparing and
 generating the eight owned outputs. It commits only the exact owned paths with
-hooks enabled, then updates the tracking dashboard without pushing.
+hooks enabled, leaving unrelated staged and unstaged work intact, then updates
+the tracking dashboard without pushing.
 
 **Expected output:** Eight files under `.oat/repo/knowledge/`:
 `project-index.md`, `stack.md`, `architecture.md`, `structure.md`,

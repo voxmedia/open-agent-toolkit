@@ -2935,11 +2935,13 @@ describe('skills bundled docs contract', () => {
   });
 
   it('preflights every knowledge-index mapper route before mutating knowledge', () => {
-    const content = readFileSync(
-      join(SKILLS_DIR, 'oat-repo-knowledge-index', 'SKILL.md'),
-      'utf8',
-    );
     const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
+    const content = collapse(
+      readFileSync(
+        join(SKILLS_DIR, 'oat-repo-knowledge-index', 'SKILL.md'),
+        'utf8',
+      ),
+    );
     const preflight = content.indexOf(
       '### Dispatch-Route Preflight: Resolve Before Mutation',
     );
