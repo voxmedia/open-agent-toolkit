@@ -12,6 +12,7 @@ import YAML from 'yaml';
 import {
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
   goalState,
   PROJECT_REL,
   registryYaml,
@@ -60,6 +61,11 @@ function stubGh(observe: () => Observation | 'fail'): GhRunner & {
       });
     },
   };
+}
+
+function sequenceGh(observations: readonly Observation[]): GhRunner {
+  let index = 0;
+  return stubGh(() => observations[index++] ?? 'fail');
 }
 
 async function refresh(
@@ -150,6 +156,70 @@ describe('oat project delivery refresh', () => {
     return chain;
   }
 
+  async function registeredStack(topology: 'linear' | 'misordered') {
+    repo = await createGoalRepo();
+    let lower: string;
+    if (topology === 'misordered') {
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+    } else {
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      lower = repo.commitAll('feat: lower layer');
+    }
+    await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+    const middle = repo.commitAll('feat: middle layer');
+    await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+    const tip = repo.commitAll('feat: tip layer');
+    await repo.write(
+      'state.md',
+      goalState(
+        `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+          reviewed: tip,
+          base: repo.baseSha,
+          kind: 'stack',
+          members: [
+            {
+              url: 'https://github.com/owner/name/pull/1',
+              reviewedHead: lower,
+            },
+            {
+              url: 'https://github.com/owner/name/pull/2',
+              reviewedHead: middle,
+            },
+            {
+              url: 'https://github.com/owner/name/pull/3',
+              reviewedHead: tip,
+            },
+          ],
+          exit: `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${tip}'
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`,
+        })}`,
+      ),
+    );
+    repo.commitAll(`chore(oat): register ${topology} stack`);
+    return {
+      lower,
+      middle,
+      tip,
+      gh: sequenceGh(
+        [lower, middle, tip].map((head) => ({
+          state: 'OPEN' as const,
+          head,
+          base: repo!.baseSha,
+        })),
+      ),
+    };
+  }
+
   it('records observations for an open member and leaves fresh evidence untouched', async () => {
     const chain = await registered();
     const gh = stubGh(() => ({
@@ -184,6 +254,62 @@ describe('oat project delivery refresh', () => {
     expect(frontmatter(content)).toMatchObject({
       oat_milestone_status: 'delivered',
       oat_goal_recovery: null,
+    });
+  });
+
+  it('keeps review and carrier fresh across a matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    const chain = await gateArtifactScenario(repo);
+
+    await refresh(
+      repo,
+      stubGh(() => ({
+        state: 'OPEN',
+        head: chain.gateCommit,
+        base: repo!.baseSha,
+      })),
+    );
+
+    const content = await repo.read('state.md');
+    expect(d01(content)['integrated_review']).toMatchObject({
+      disposition: 'passed',
+    });
+    const gates = frontmatter(content)['oat_milestone_gates'] as Record<
+      string,
+      Record<string, Record<string, unknown>>
+    >;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'fresh',
+      freshness_reason: null,
+    });
+  });
+
+  it('marks review and carrier stale for a mismatched-head gate artifact', async () => {
+    repo = await createGoalRepo();
+    const chain = await gateArtifactScenario(repo, {
+      reviewedHead: 'mismatched',
+    });
+
+    await refresh(
+      repo,
+      stubGh(() => ({
+        state: 'OPEN',
+        head: chain.gateCommit,
+        base: repo!.baseSha,
+      })),
+    );
+
+    const content = await repo.read('state.md');
+    expect(d01(content)['integrated_review']).toMatchObject({
+      disposition: 'stale',
+    });
+    const gates = frontmatter(content)['oat_milestone_gates'] as Record<
+      string,
+      Record<string, Record<string, unknown>>
+    >;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'stale',
+      freshness_reason: expect.stringContaining('disallowed-path'),
     });
   });
 
@@ -427,6 +553,34 @@ describe('oat project delivery refresh', () => {
       oat_goal_recovery: null,
     });
     expect(payload).toMatchObject({ status: 'ok' });
+  });
+
+  it('keeps a linear stack carrier fresh when its lower members precede the tip', async () => {
+    const stack = await registeredStack('linear');
+
+    await refresh(repo!, stack.gh);
+
+    const gates = frontmatter(await repo!.read('state.md'))[
+      'oat_milestone_gates'
+    ] as Record<string, Record<string, Record<string, unknown>>>;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'fresh',
+      freshness_reason: null,
+    });
+  });
+
+  it('writes a stack-order reason when a lower member is not an ancestor of the tip', async () => {
+    const stack = await registeredStack('misordered');
+
+    await refresh(repo!, stack.gh);
+
+    const gates = frontmatter(await repo!.read('state.md'))[
+      'oat_milestone_gates'
+    ] as Record<string, Record<string, Record<string, unknown>>>;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'stale',
+      freshness_reason: expect.stringContaining('stack-order'),
+    });
   });
 
   it('keeps both shared-member deliveries passed across the sibling review records (M2)', async () => {

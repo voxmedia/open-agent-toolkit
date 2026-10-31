@@ -299,7 +299,13 @@ milestone's `plan` carrier, `oat_milestone_gates[mNN].plan`, written with
 for a re-alignment amendment it is the only approval evidence. The implement
 exit gate at milestone closeout writes `oat_milestone_gates[mNN].exit` (never
 `oat_implement_exit_gate`, which goal uses only at terminal closeout). It runs
-before the milestone's integrated review and runs again after queued fixes.
+the configured command verbatim with `--review-scope final`, before the
+milestone's integrated review, and runs again after queued fixes. Its own
+Type `code`, Invocation `gate` Reviews row and artifact count as bookkeeping
+only when the row's non-placeholder Reviewed Head equals the carrier's
+`reviewed_head` and the artifact's project-relative path is under `reviews/`
+(including `reviews/archived/`). That row never serves as the integrated review
+or unlocks delivery fields, and no placeholder row is required before the gate runs.
 `oat project delivery check` reports the exit carrier's freshness, and
 `oat project delivery refresh` marks it stale when delivery evidence no longer
 holds.

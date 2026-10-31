@@ -143,7 +143,9 @@ deliveries exist and registers only when
 `oat project delivery check --subject <mNN|dNN>` reports `status: ok`. It
 commits a `registering` registry entry before creating anything, then creates
 the PR, or on resume attaches the single PR that `gh pr list` finds for the
-head branch (more than one match stops at `oat-project-reconcile`). It then
+head branch (more than one match stops at `oat-project-reconcile`). For a
+stacked milestone, registration instead records `kind: stack` and attaches its
+existing layer pull requests base to tip; it never creates a stack. It then
 records the member, `status: open`, and `oat_milestone_status: delivered`, and
 appends one structural project-log entry. Stale review or exit-gate evidence
 stops before registration: for the active milestone the skill writes

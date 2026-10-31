@@ -1,7 +1,7 @@
 ---
 id: BL-261030-admit-goal-exit-gate-review
 title: Admit goal exit-gate review artifacts as milestone bookkeeping evidence
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - gates
 assignee: null
 created: 2026-10-30T22:27:34.021Z
-updated: 2026-10-30T22:27:34.021Z
+updated: '2026-10-31T12:08:19Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/384

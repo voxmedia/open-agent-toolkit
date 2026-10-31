@@ -14,6 +14,9 @@ import {
   ARCHIVED_REVIEW_ARTIFACT,
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
+  GATE_REVIEW_ARTIFACT,
+  goalJournal,
   goalPlan,
   OUTCOME,
   PROJECT_REL,
@@ -27,9 +30,13 @@ import {
 import {
   classifyPath,
   deliveryEvidenceScope,
+  evaluateDeliveryExitCarrier,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
+  journalRewrites,
+  latestDeliveryForMilestone,
+  reviewRowsFor,
   type EvidenceScope,
 } from './evidence';
 
@@ -44,13 +51,21 @@ const git = defaultGitRunner;
 async function productionScope(
   target: GoalRepo,
   deliveryId: string,
+  includeMilestoneCarrier = false,
 ): Promise<EvidenceScope> {
   const state = await getProjectState(target.projectPath);
   const deliveries = state.deliveries ?? [];
   const entry = deliveries.find((item) => item.delivery_id === deliveryId);
   expect(entry, deliveryId).toBeDefined();
   return deliveryEvidenceScope(
-    { repoRoot: target.root, projectDir: PROJECT_REL, state },
+    {
+      repoRoot: target.root,
+      projectDir: PROJECT_REL,
+      state,
+      ...(includeMilestoneCarrier
+        ? { evidenceCarrier: state.milestoneGates?.['m01']?.exit ?? null }
+        : {}),
+    },
     deliveries,
     entry!,
   );
@@ -181,12 +196,66 @@ function delivery(
   };
 }
 
+function deliveryWithHeads(
+  kind: GoalDelivery['kind'],
+  heads: readonly (string | null)[],
+  base: string,
+): GoalDelivery {
+  const result = delivery({});
+  result.kind = kind;
+  result.members = heads.map((head, index) => ({
+    url: `https://github.com/owner/name/pull/${index + 1}`,
+    base,
+    reviewed_head: head,
+    observed_head: head,
+    observed_base: base,
+    status: 'open',
+  }));
+  result.integrated_review!.bound_revisions = result.members.map(
+    (member, index) => ({
+      member: index,
+      base: member.base,
+      head: member.reviewed_head,
+    }),
+  );
+  return result;
+}
+
 describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', () => {
   let repo: GoalRepo | undefined;
 
   afterEach(async () => {
     await removeRepo(repo);
     repo = undefined;
+  });
+
+  describe('latest milestone delivery selection', () => {
+    it('excludes superseded and registering entries after the latest open delivery', () => {
+      const open = delivery({});
+      const superseded = {
+        ...delivery({}),
+        delivery_id: 'd02',
+        status: 'superseded' as const,
+      };
+      const registering = {
+        ...delivery({}),
+        delivery_id: 'd03',
+        status: 'registering' as const,
+      };
+
+      expect(
+        latestDeliveryForMilestone([open, superseded, registering], 'm01'),
+      ).toBe(open);
+    });
+
+    it('selects an at-endpoint delivery as current milestone evidence', () => {
+      const atEndpoint = {
+        ...delivery({}),
+        status: 'at_endpoint' as const,
+      };
+
+      expect(latestDeliveryForMilestone([atEndpoint], 'm01')).toBe(atEndpoint);
+    });
   });
 
   describe('valid control and positive regression', () => {
@@ -322,6 +391,76 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
   });
 
   describe('A2 negative controls', () => {
+    it('lists every recorded-line rewrite and new extraction marker', () => {
+      const before = `---
+---
+
+# Journal
+
+Recorded alpha.
+Recorded beta.
+**Status:** pending
+**Owner:** -
+`;
+      const after = `---
+---
+
+# Journal
+
+Recorded alpha rewritten.
+**Status:** completed
+**Owner:** oat-project-implement
+**Extracted to:** child
+`;
+
+      expect(journalRewrites(before, after)).toEqual([
+        { kind: 'recorded-line-rewritten', line: 'Recorded alpha.' },
+        { kind: 'recorded-line-rewritten', line: 'Recorded beta.' },
+        { kind: 'extraction-marker', line: '**Extracted to:** child' },
+      ]);
+    });
+
+    it('does not list append-only additions or mutable progress updates', () => {
+      const before = `---
+---
+
+# Journal
+
+Recorded.
+**Status:** pending
+`;
+      const after = `---
+---
+
+# Journal
+
+Recorded.
+**Status:** completed
+
+Appended observation.
+`;
+
+      expect(journalRewrites(before, after)).toEqual([]);
+    });
+
+    it('signals unparseable frontmatter instead of reporting no rewrites', () => {
+      const malformed = `---
+[
+---
+
+Recorded.
+`;
+      const valid = `---
+---
+
+Recorded rewritten.
+`;
+
+      expect(journalRewrites(malformed, valid)).toEqual([
+        { kind: 'frontmatter-unparseable', line: '', side: 'before' },
+      ]);
+    });
+
     it('rejects an Outcome change inside allowed plan.md that a paths-only evaluator accepts', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);
@@ -1210,6 +1349,151 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
     });
   });
 
+  describe('gate-originated artifact admission', () => {
+    it('admits only a matching gate artifact into shared evidence, never own evidence or integrated-review selection', async () => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo);
+      const scope = await productionScope(repo, 'd01', true);
+      const state = await getProjectState(repo.projectPath);
+
+      expect(scope.evidenceArtifacts).toContain(GATE_REVIEW_ARTIFACT);
+      expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+        GATE_REVIEW_ARTIFACT,
+      );
+      expect(
+        reviewRowsFor(state.reviews, ['m01', 'd01']).map(
+          (review) => review.artifact,
+        ),
+      ).not.toContain(GATE_REVIEW_ARTIFACT);
+      await expect(
+        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+      ).resolves.toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+    });
+
+    it('refuses to replace integrated-review identity with the gate artifact', async () => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo);
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+          `artifact: ${GATE_REVIEW_ARTIFACT}`,
+        ),
+      );
+      const swapped = repo.commitAll(
+        'chore(oat): point d01 at the final gate artifact',
+      );
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).toContain(GATE_REVIEW_ARTIFACT);
+      const result = await evaluateSuccessor(
+        git,
+        scope,
+        chain.gateCommit,
+        swapped,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        path: `${PROJECT_REL}/state.md`,
+      });
+      expect(result.reason).toContain(
+        'changed its integrated review artifact without recording a new review artifact',
+      );
+    });
+
+    it.each([
+      ['manual final row', { invocation: 'manual' }],
+      ['mismatched reviewed head', { reviewedHead: 'mismatched' as const }],
+      ['placeholder reviewed head', { reviewedHead: 'placeholder' as const }],
+      ['artifact-type gate row', { type: 'artifact' }],
+    ])('does not admit a %s', async (_label, options) => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo, options);
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
+      await expect(
+        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+      ).resolves.toMatchObject({
+        fresh: false,
+        code: 'disallowed-path',
+        path: `${PROJECT_REL}/${GATE_REVIEW_ARTIFACT}`,
+      });
+    });
+
+    it('does not admit a matching gate row that names design.md as its artifact', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const reviewed = repo.commitAll('feat(p01-p02): implement milestone');
+      const gateCarrier = `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${reviewed}'
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`;
+
+      await repo.write(
+        ARCHIVED_REVIEW_ARTIFACT,
+        '# m01 integrated review\n\nNo findings.\n',
+      );
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: reviewRow(
+            'passed',
+            ARCHIVED_REVIEW_ARTIFACT,
+            reviewed,
+            'm01',
+          ),
+        }),
+      );
+      await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+      await repo.write(
+        'state.md',
+        goalState(
+          `oat_milestone: m01\noat_milestone_status: reviewing\n${registryYaml({
+            reviewed,
+            base: repo.baseSha,
+            deliveryExitGate: gateCarrier,
+            exit: gateCarrier,
+          })}`,
+        ),
+      );
+      repo.commitAll('chore(oat): record exit carrier');
+
+      await repo.write('design.md', '# Forged final gate artifact\n');
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, reviewed, 'm01'),
+            reviewRow('passed', 'design.md', reviewed, 'final', 'gate'),
+          ].join('\n'),
+        }),
+      );
+      const forged = repo.commitAll(
+        'chore(oat): record forged final gate artifact',
+      );
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).not.toContain('design.md');
+      await expect(
+        evaluateSuccessor(git, scope, reviewed, forged),
+      ).resolves.toMatchObject({
+        fresh: false,
+        code: 'disallowed-path',
+        path: `${PROJECT_REL}/design.md`,
+      });
+    });
+  });
+
   describe('guard goal-carrier-subject (gate carriers: outcome versus freshness)', () => {
     it('keeps unchanged no_gate and project_disabled carriers fresh with null reviewed heads', async () => {
       await expect(
@@ -1365,6 +1649,225 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       });
       expect(stale).toMatchObject({ outcome: 'allowed', freshness: 'stale' });
       expect(stale.reason).toMatch(/^disallowed-path/);
+    });
+  });
+
+  describe('stack-aware delivery exit carriers', () => {
+    const configuredCarrier = (reviewedHead: string) =>
+      carrier({
+        resolution: 'configured',
+        disposition: 'passed',
+        reviewed_head: reviewedHead,
+      });
+    const expected = { kind: 'code' as const, scope: ['p01', 'p02'] };
+
+    it('judges a linear stack against its tip after validating member order', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const middle = repo.commitAll('feat: middle layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const tip = repo.commitAll('feat: tip layer');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads(
+            'stack',
+            [lower, middle, tip],
+            repo.baseSha,
+          ),
+        }),
+      ).resolves.toMatchObject({ freshness: 'fresh', reason: null });
+    });
+
+    it('rejects a stack whose lower member is not an ancestor of its tip', async () => {
+      repo = await createGoalRepo();
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      const lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+      await repo.writeRepo('src/tip.ts', 'export const tip = 1;\n');
+      const tip = repo.commitAll('feat: tip layer');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [lower, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(
+          /^stack-order: member 0 head .* is not an ancestor of tip /,
+        ),
+      });
+    });
+
+    it.each([
+      ['tip', [null, 'missing'] as const],
+      ['lower', ['missing', null] as const],
+    ])(
+      'reports an unavailable %s stack head as missing-object',
+      async (_label, positions) => {
+        repo = await createGoalRepo();
+        const available = repo.git(['rev-parse', 'HEAD']);
+        const missing = 'f'.repeat(40);
+        const heads = positions.map((position) =>
+          position === 'missing' ? missing : available,
+        );
+
+        await expect(
+          evaluateDeliveryExitCarrier(configuredCarrier(available), expected, {
+            git,
+            scope: scopeFor(repo),
+            delivery: deliveryWithHeads('stack', heads, repo.baseSha),
+          }),
+        ).resolves.toMatchObject({
+          freshness: 'stale',
+          reason: `missing-object: commit ${missing} is not available locally`,
+        });
+      },
+    );
+
+    it('preserves the null-carrier result before checking stack topology', async () => {
+      repo = await createGoalRepo();
+      const head = repo.git(['rev-parse', 'HEAD']);
+
+      await expect(
+        evaluateDeliveryExitCarrier(null, expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [head, null], repo.baseSha),
+        }),
+      ).resolves.toEqual({
+        outcome: 'missing',
+        freshness: 'stale',
+        reason: 'no carrier is recorded',
+      });
+    });
+
+    it('keeps an unreviewed carrier identical for stack and pr topologies', async () => {
+      repo = await createGoalRepo();
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      const lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+      const tip = repo.git(['rev-parse', 'HEAD']);
+      const unreviewed = carrier();
+      const stack = await evaluateDeliveryExitCarrier(unreviewed, expected, {
+        git,
+        scope: scopeFor(repo),
+        delivery: deliveryWithHeads('stack', [lower, tip], repo.baseSha),
+      });
+      const pr = await evaluateDeliveryExitCarrier(unreviewed, expected, {
+        git,
+        scope: scopeFor(repo),
+        delivery: deliveryWithHeads('pr', [lower, tip], repo.baseSha),
+      });
+
+      expect(stack).toEqual(pr);
+      expect(stack).toEqual({
+        outcome: 'allowed',
+        freshness: 'fresh',
+        reason: null,
+      });
+    });
+
+    it('classifies ancestry command and thrown failures as inspection-failed', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip layer');
+      const stackDelivery = deliveryWithHeads(
+        'stack',
+        [lower, tip],
+        repo.baseSha,
+      );
+      const failing: GitRunner = {
+        run: (args, options) =>
+          args[0] === 'merge-base'
+            ? Promise.resolve({
+                code: 128,
+                stdout: '',
+                stderr: 'fatal: inspection failed',
+              })
+            : git.run(args, options),
+      };
+      const throwing: GitRunner = {
+        run: (args, options) =>
+          args[0] === 'merge-base'
+            ? Promise.reject(new Error('spawn git ENOENT'))
+            : git.run(args, options),
+      };
+
+      for (const runner of [failing, throwing]) {
+        await expect(
+          evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+            git: runner,
+            scope: scopeFor(repo),
+            delivery: stackDelivery,
+          }),
+        ).resolves.toMatchObject({
+          freshness: 'stale',
+          reason: expect.stringMatching(/^inspection-failed:/),
+        });
+      }
+    });
+
+    it('rejects an unobserved lower stack member', async () => {
+      repo = await createGoalRepo();
+      const tip = repo.git(['rev-parse', 'HEAD']);
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [null, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^member-unobserved/),
+      });
+    });
+
+    it('keeps multi-member pr delivery evaluation on every member head', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower member');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip member');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('pr', [lower, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^not-ancestor/),
+      });
+    });
+
+    it('rejects a stack with no members without evaluating a carrier head', async () => {
+      repo = await createGoalRepo();
+      const tip = repo.git(['rev-parse', 'HEAD']);
+      const empty = deliveryWithHeads('stack', [], repo.baseSha);
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: empty,
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^member-missing/),
+      });
     });
   });
 });

@@ -54,7 +54,7 @@ Approved by the user on 2026-10-30 as one set: repository changes, the triage PR
 - Acceptance proposal: Document `kind: stack` as a supported delivery shape in the brief contract and pr-progress registration. For a stack, evaluate the exit carrier against the tip member's head at all three call sites and require each lower member to be an ancestor of the tip. Build the milestone-subject scope with the delivery's own evidence artifacts when the milestone has a registered, non-superseded delivery, so both subjects agree. Add multi-member fixtures for check, refresh and closeout; single-member `kind: pr` behavior is unchanged.
 - Priority and size rationale: Blocks the deliverability verdict and goal closeout for every stacked delivery; the workaround is a recorded deviation, and the documented flow is single-member. M for three call sites, a scope builder, contract and registration docs, and multi-member fixtures.
 - Approval: approved by the user on 2026-10-30.
-- Applied backlog reference: [BL-261030-evaluate-stacked-goal-delivery — Evaluate stacked goal-delivery exit carriers against the stack tip](../backlog/items/BL-261030-evaluate-stacked-goal-delivery.md).
+- Applied backlog reference: [BL-261030-evaluate-stacked-goal-delivery — Evaluate stacked goal-delivery exit carriers against the stack tip](../backlog/archived/BL-261030-evaluate-stacked-goal-delivery.md).
 - Post-merge result: not started.
 
 Proposed post-merge comment:
@@ -74,7 +74,7 @@ Proposed post-merge comment:
 - Acceptance proposal: Admit the artifact commit of a gate-originated row whose artifact's `oat_review_phase_ids` equals the milestone scope into the bookkeeping allowlist only. Keep such rows out of integrated-review row selection (`rows.at(-1)` for `mNN`) and out of `ownEvidenceArtifacts`, so a gate row can neither stand in for the integrated review nor unlock set-once delivery fields. Reconcile the goal closeout wording with the verbatim gate command. Remove the need for a placeholder row; keep unlisted review files rejected.
 - Priority and size rationale: Every goal-mode exit-gate generation stales its own carrier, and a miss costs a whole new generation; an undocumented workaround exists. M rather than S because the safe admission must not widen integrated-review or set-once evidence, which needs negative controls.
 - Approval: approved by the user on 2026-10-30.
-- Applied backlog reference: [BL-261030-admit-goal-exit-gate-review — Admit goal exit-gate review artifacts as milestone bookkeeping evidence](../backlog/items/BL-261030-admit-goal-exit-gate-review.md).
+- Applied backlog reference: [BL-261030-admit-goal-exit-gate-review — Admit goal exit-gate review artifacts as milestone bookkeeping evidence](../backlog/archived/BL-261030-admit-goal-exit-gate-review.md).
 - Post-merge result: not started.
 
 Proposed post-merge comment:
@@ -94,7 +94,7 @@ Proposed post-merge comment:
 - Acceptance proposal: `journal check` compares the working `implementation.md` with its `HEAD` version using the same rule as `judgeJournalChange` (shared, not copied) and reports a distinct reason for each removed or rewritten line, at least for goal and brief projects. A pre-commit guard in `commit-paths` and a `journal append` helper are optional follow-ons, not required by this item.
 - Priority and size rationale: Twice cost a gate generation or forced an append-only correction after merge, with no warning; the rule already exists, so the fix reuses it. S for one reason code, shared judge, and fixtures.
 - Approval: approved by the user on 2026-10-30.
-- Applied backlog reference: [BL-261030-flag-rewritten-committed — Flag rewritten committed journal lines in journal check](../backlog/items/BL-261030-flag-rewritten-committed.md).
+- Applied backlog reference: [BL-261030-flag-rewritten-committed — Flag rewritten committed journal lines in journal check](../backlog/archived/BL-261030-flag-rewritten-committed.md).
 - Post-merge result: not started.
 
 Proposed post-merge comment:
@@ -134,7 +134,7 @@ Proposed post-merge comment:
 - Acceptance proposal: the issue's acceptance criteria, plus removal of the hard-coded `/private/tmp/claude-502/...` path. Classify the route before Step 2 using the `oat-repo-improve` capability classes; a worker that did not launch is `unresolved-or-unsupported`, not read-only. Whether to route through `oat-dispatch-subagents` or gate explicitly to Claude stays a planning decision. Bump the skill version and the lockstep packages.
 - Priority and size rationale: Can destroy downstream generated knowledge on an unsupported host; mitigated by user confirmation, manual-note protection and recoverable tracked files here. S for reordering, a preflight and route labelling in one skill (M if routed through the generic dispatcher).
 - Approval: approved by the user on 2026-10-30.
-- Applied backlog reference: [BL-261030-preflight-knowledge-index — Preflight knowledge-index mapper dispatch before replacing generated knowledge](../backlog/items/BL-261030-preflight-knowledge-index.md).
+- Applied backlog reference: [BL-261030-preflight-knowledge-index — Preflight knowledge-index mapper dispatch before replacing generated knowledge](../backlog/archived/BL-261030-preflight-knowledge-index.md).
 - Post-merge result: not started.
 
 Proposed post-merge comment:

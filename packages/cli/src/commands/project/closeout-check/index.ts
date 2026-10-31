@@ -5,8 +5,8 @@ import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { loadGoalDeliveryProject } from '@commands/project/delivery/check';
 import {
   deliveryEvidenceScope,
+  evaluateDeliveryExitCarrier,
   evaluateDeliveryReview,
-  evaluateGateCarrier,
 } from '@commands/project/delivery/evidence';
 import { observeMember } from '@commands/project/delivery/refresh';
 import {
@@ -281,7 +281,11 @@ export async function loadGoalCloseoutInputs(
   for (const terminal of graph.terminals) {
     const { delivery, effectiveScope } = terminal;
     if (delivery.status === 'registering') continue;
-    const evidenceScope = deliveryEvidenceScope(project, observed, delivery);
+    const evidenceScope = deliveryEvidenceScope(
+      { ...project, evidenceCarrier: delivery.exit_gate },
+      observed,
+      delivery,
+    );
     const fact: DeliveryEvidenceFact = {
       scope: effectiveScope,
       review: await evaluateDeliveryReview(
@@ -292,7 +296,7 @@ export async function loadGoalCloseoutInputs(
       ),
       // The accepted exit-gate binding persisted with the delivery's evidence,
       // never the milestone's current working carrier.
-      exit: await evaluateGateCarrier(
+      exit: await evaluateDeliveryExitCarrier(
         delivery.exit_gate,
         {
           kind: 'code',
@@ -300,13 +304,7 @@ export async function loadGoalCloseoutInputs(
           match: 'covers',
           overrideDisabled: project.exitGateDisabled,
         },
-        {
-          git: dependencies.git,
-          scope: evidenceScope,
-          publishedHeads: delivery.members.map(
-            (member) => member.observed_head,
-          ),
-        },
+        { git: dependencies.git, scope: evidenceScope, delivery },
       ),
     };
     inputs.evidence[delivery.delivery_id] = fact;

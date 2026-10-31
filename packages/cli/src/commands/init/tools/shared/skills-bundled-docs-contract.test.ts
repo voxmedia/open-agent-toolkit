@@ -2506,6 +2506,11 @@ describe('skills bundled docs contract', () => {
         'utility',
       ],
       [
+        'oat-repo-knowledge-index',
+        '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+        'utility',
+      ],
+      [
         'oat-review-provide-remote',
         '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
         'utility',
@@ -2927,6 +2932,91 @@ describe('skills bundled docs contract', () => {
     expect(content).not.toMatch(
       /\$\{SKILLS_ROOT\}\/(?:oat-dispatch-subagents|subagent-orchestration)/,
     );
+  });
+
+  it('preflights every knowledge-index mapper route before mutating knowledge', () => {
+    const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
+    const content = collapse(
+      readFileSync(
+        join(SKILLS_DIR, 'oat-repo-knowledge-index', 'SKILL.md'),
+        'utf8',
+      ),
+    );
+    const preflight = content.indexOf(
+      '### Dispatch-Route Preflight: Resolve Before Mutation',
+    );
+    const prepare = content.indexOf(
+      '### Step 2: Prepare Only Owned Generated Outputs',
+    );
+    const claude = content.indexOf('#### Claude route');
+    const codex = content.indexOf('#### Codex route');
+    const cursor = content.indexOf('#### Cursor route');
+    const probeHeading = content.indexOf(
+      '#### Write-Permission Probe (all providers)',
+    );
+    const probeBody = content.indexOf(
+      'With the route resolved, run a non-mutating `lstat` check',
+    );
+    const step1 = content.slice(
+      content.indexOf('### Step 1: Check Existing Knowledge'),
+      preflight,
+    );
+    const claudeRoute = content.slice(claude, codex);
+    const outsideClaudeRoute = content.slice(0, claude) + content.slice(codex);
+    const step4b = content.slice(
+      content.indexOf('### Step 4b:'),
+      content.indexOf('### Step 5:'),
+    );
+    const directWrite = content.slice(
+      content.indexOf('### Step 5a:'),
+      content.indexOf('### Step 5b:'),
+    );
+    const readOnly = content.slice(
+      content.indexOf('### Step 5b:'),
+      content.indexOf('### Step 6:'),
+    );
+    const step2 = content.slice(
+      prepare,
+      content.indexOf('### Step 3:', prepare),
+    );
+
+    const orderedSections = [
+      preflight,
+      claude,
+      codex,
+      cursor,
+      probeHeading,
+      probeBody,
+      prepare,
+    ];
+    expect(orderedSections.every((index) => index >= 0)).toBe(true);
+    expect(orderedSections).toEqual(
+      [...orderedSections].sort((left, right) => left - right),
+    );
+    expect(step1.match(/dispatch-route preflight/g)).toHaveLength(2);
+    expect({
+      model: /model:\s*['"]haiku['"]/.test(claudeRoute),
+      background: claudeRoute.includes('run_in_background'),
+      explore: claudeRoute.includes('Explore'),
+    }).toEqual({ model: true, background: true, explore: true });
+    expect(collapse(outsideClaudeRoute)).not.toMatch(
+      /model:\s*['"]haiku['"]|run_in_background|subagent_type:\s*['"]Explore['"]/,
+    );
+    expect(collapse(step2)).toMatch(
+      /Run this step only with the accepted, file-verified probe result and `WRITE_MODE` retained by the dispatch-route preflight\. Otherwise stop before deleting anything\./,
+    );
+    expect(collapse(step4b)).toMatch(
+      /A missing accepted probe handle or result is a route failure, not evidence for read-only mode; stop without launching mapper lanes\./,
+    );
+    expect({
+      generator: directWrite.match(/class: generator/g)?.length ?? 0,
+      recon: directWrite.match(/class: recon/g)?.length ?? 0,
+    }).toEqual({ generator: 4, recon: 0 });
+    expect({
+      generator: readOnly.match(/class: generator/g)?.length ?? 0,
+      recon: readOnly.match(/class: recon/g)?.length ?? 0,
+    }).toEqual({ generator: 0, recon: 4 });
+    expect(content).not.toContain('/private/tmp/claude-');
   });
 
   it("keeps external-plan writes on the caller's model class", () => {

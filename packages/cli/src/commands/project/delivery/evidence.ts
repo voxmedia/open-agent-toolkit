@@ -856,6 +856,15 @@ function placeholder(cell: string): boolean {
   return cell === '' || cell === '-' || cell === '—';
 }
 
+function reviewArtifactPath(cell: string): boolean {
+  const artifact = cell.replace(/^\.\//, '');
+  return (
+    !posix.isAbsolute(artifact) &&
+    posix.normalize(artifact) === artifact &&
+    artifact.startsWith('reviews/')
+  );
+}
+
 /**
  * Review rows record evidence: rows may be added and their status, date and
  * lineage cells updated, but no row disappears and an existing row's
@@ -892,24 +901,29 @@ const PLACEHOLDER_FIELD =
   /^(?:-[ \t]+)?\*\*[^*\n]+:\*\*\s*(?:-|—|pending|tbd|null)?\s*$/i;
 const EXTRACTION_MARKER = /^\*\*(?:Status:\*\*\s+extracted|Extracted to:\*\*)/;
 
-/**
- * The journal is append-mostly: progress fields and placeholders may be
- * rewritten and tables re-rendered, but no recorded observation is removed
- * or rewritten, and marking a phase extracted changes scope.
- */
-function judgeJournalChange(before: string, after: string): Verdict {
-  const previous = splitFrontmatter(before);
-  const next = splitFrontmatter(after);
-  if (previous === null || next === null) {
-    return refuse('implementation.md frontmatter could not be parsed');
-  }
+export type JournalRewrite =
+  | {
+      kind: 'recorded-line-rewritten' | 'extraction-marker';
+      line: string;
+    }
+  | {
+      kind: 'frontmatter-unparseable';
+      line: '';
+      side: 'before' | 'after' | 'both';
+    };
+
+function listJournalRewrites(
+  previousBody: string,
+  nextBody: string,
+): JournalRewrite[] {
+  const rewrites: JournalRewrite[] = [];
   const remaining = new Map<string, number>();
-  for (const line of next.body.split('\n')) {
+  for (const line of nextBody.split('\n')) {
     const key = line.trimEnd();
     remaining.set(key, (remaining.get(key) ?? 0) + 1);
   }
   const previousLines = new Set<string>();
-  for (const line of previous.body.split('\n')) {
+  for (const line of previousBody.split('\n')) {
     const key = line.trimEnd();
     previousLines.add(key.trim());
     const count = remaining.get(key) ?? 0;
@@ -926,16 +940,65 @@ function judgeJournalChange(before: string, after: string): Verdict {
       (progress !== null &&
         !(progress[1] === 'Status' && /^extracted\b/.test(progress[2] ?? '')));
     if (!mutable) {
-      return refuse(
-        `recorded journal line "${trimmed}" was removed or rewritten`,
-      );
+      rewrites.push({ kind: 'recorded-line-rewritten', line: trimmed });
     }
   }
-  for (const line of next.body.split('\n')) {
+  for (const line of nextBody.split('\n')) {
     const trimmed = line.trim();
     if (EXTRACTION_MARKER.test(trimmed) && !previousLines.has(trimmed)) {
-      return refuse(`"${trimmed}" marks a phase extracted`);
+      rewrites.push({ kind: 'extraction-marker', line: trimmed });
     }
+  }
+  return rewrites;
+}
+
+/**
+ * List every recorded journal line removed or rewritten by `after`, followed
+ * by every newly introduced extraction marker. Mutable progress fields,
+ * placeholders, table rendering, and append-only additions are excluded.
+ */
+export function journalRewrites(
+  before: string,
+  after: string,
+): JournalRewrite[] {
+  const previous = splitFrontmatter(before);
+  const next = splitFrontmatter(after);
+  if (previous === null || next === null) {
+    return [
+      {
+        kind: 'frontmatter-unparseable',
+        line: '',
+        side:
+          previous === null && next === null
+            ? 'both'
+            : previous === null
+              ? 'before'
+              : 'after',
+      },
+    ];
+  }
+  return listJournalRewrites(previous.body, next.body);
+}
+
+/**
+ * The journal is append-mostly: progress fields and placeholders may be
+ * rewritten and tables re-rendered, but no recorded observation is removed
+ * or rewritten, and marking a phase extracted changes scope.
+ */
+function judgeJournalChange(before: string, after: string): Verdict {
+  const previous = splitFrontmatter(before);
+  const next = splitFrontmatter(after);
+  if (previous === null || next === null) {
+    return refuse('implementation.md frontmatter could not be parsed');
+  }
+  const [first] = listJournalRewrites(previous.body, next.body);
+  if (first?.kind === 'recorded-line-rewritten') {
+    return refuse(
+      `recorded journal line "${first.line}" was removed or rewritten`,
+    );
+  }
+  if (first?.kind === 'extraction-marker') {
+    return refuse(`"${first.line}" marks a phase extracted`);
   }
   return OK;
 }
@@ -1094,6 +1157,100 @@ export async function evaluateGateCarrier(
     }
   }
   return { outcome, freshness: 'fresh', reason: null };
+}
+
+/**
+ * Evaluate a delivery's exit carrier without letting callers bypass stack
+ * topology. A stack is recorded base to tip: every lower observed head must
+ * be the tip or its ancestor, then only the tip is published to the carrier.
+ * Missing and unreviewed carriers delegate before topology because they are
+ * not head-bound. Other delivery kinds retain every-member evaluation.
+ */
+export async function evaluateDeliveryExitCarrier(
+  carrier: MilestoneGateCarrier | null,
+  expected: CarrierExpectation,
+  successor: {
+    git: GitRunner;
+    scope: EvidenceScope;
+    delivery: GoalDelivery;
+  },
+): Promise<CarrierEvaluation> {
+  const { delivery, git, scope } = successor;
+  const publishedHeads = delivery.members.map((member) => member.observed_head);
+  if (carrier === null || isUnreviewedResolution(carrier)) {
+    return evaluateGateCarrier(carrier, expected, {
+      git,
+      scope,
+      publishedHeads,
+    });
+  }
+  if (delivery.kind !== 'stack') {
+    return evaluateGateCarrier(carrier, expected, {
+      git,
+      scope,
+      publishedHeads,
+    });
+  }
+
+  const stale = (reason: string): CarrierEvaluation => ({
+    outcome: carrier.status === 'allowed' ? 'allowed' : 'blocked',
+    freshness: 'stale',
+    reason,
+  });
+  if (publishedHeads.length === 0) {
+    return stale('member-missing: the stack has no members');
+  }
+  const unobserved = publishedHeads.findIndex((head) => head === null);
+  if (unobserved >= 0) {
+    return stale(
+      `member-unobserved: stack member ${unobserved} has no observed head`,
+    );
+  }
+
+  const resolvedHeads: string[] = [];
+  try {
+    for (const head of publishedHeads) {
+      const resolved = await resolveCommit(git, scope.repoRoot, head!);
+      if (resolved === null) {
+        return stale(`missing-object: commit ${head} is not available locally`);
+      }
+      resolvedHeads.push(resolved);
+    }
+  } catch (error) {
+    return stale(
+      `inspection-failed: commit resolution failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const tip = resolvedHeads.at(-1)!;
+  try {
+    for (const [index, lower] of resolvedHeads.slice(0, -1).entries()) {
+      const ancestry = await git.run(
+        ['merge-base', '--is-ancestor', lower, tip],
+        { cwd: scope.repoRoot, allowFailure: true },
+      );
+      if (ancestry.code === 1) {
+        return stale(
+          `stack-order: member ${index} head ${lower} is not an ancestor of tip ${tip}`,
+        );
+      }
+      if (ancestry.code !== 0) {
+        return stale(
+          `inspection-failed: ancestry inspection failed for member ${index}: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
+        );
+      }
+    }
+  } catch (error) {
+    return stale(
+      `inspection-failed: ancestry inspection failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  return evaluateGateCarrier(carrier, expected, {
+    git,
+    scope,
+    publishedHeads: [tip],
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1256,11 +1413,61 @@ export function reviewRowsFor(
   });
 }
 
+/**
+ * Artifacts emitted by the configured gate run that produced `carrier`.
+ * These join the shared bookkeeping allowlist only; they never join a
+ * delivery's own evidence set or integrated-review selection.
+ */
+export function gateEvidenceArtifacts(
+  reviews: readonly ReviewStatus[],
+  carrier: MilestoneGateCarrier | null,
+): string[] {
+  if (
+    carrier?.reviewed_head === null ||
+    carrier?.reviewed_head === undefined ||
+    placeholder(carrier.reviewed_head)
+  ) {
+    return [];
+  }
+  return reviews
+    .filter(
+      (review) =>
+        review.type === 'code' &&
+        review.invocation === 'gate' &&
+        review.reviewedHead === carrier.reviewed_head &&
+        reviewArtifactPath(review.artifact) &&
+        !placeholder(review.artifact),
+    )
+    .map((review) => review.artifact);
+}
+
+/**
+ * The newest active registry entry for a milestone. Registration-in-progress
+ * and superseded entries cannot carry the milestone's current evidence.
+ */
+export function latestDeliveryForMilestone(
+  deliveries: readonly GoalDelivery[],
+  milestone: string,
+): GoalDelivery | undefined {
+  for (let index = deliveries.length - 1; index >= 0; index -= 1) {
+    const delivery = deliveries[index]!;
+    if (
+      delivery.milestone === milestone &&
+      (delivery.status === 'open' || delivery.status === 'at_endpoint')
+    ) {
+      return delivery;
+    }
+  }
+  return undefined;
+}
+
 /** The project facts the evidence scope of a delivery is built from. */
 export interface DeliveryEvidenceProject {
   repoRoot: string;
   projectDir: string;
   state: { reviews: readonly ReviewStatus[] };
+  /** Carrier whose own gate artifact may join shared bookkeeping evidence. */
+  evidenceCarrier?: MilestoneGateCarrier | null;
 }
 
 /**
@@ -1296,11 +1503,17 @@ export function deliveryEvidenceScope(
   return {
     repoRoot: project.repoRoot,
     projectDir: project.projectDir,
-    evidenceArtifacts: deliveryEvidenceArtifacts(
-      delivery,
-      reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
-      sharing,
-    ),
+    evidenceArtifacts: [
+      ...deliveryEvidenceArtifacts(
+        delivery,
+        reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
+        sharing,
+      ),
+      ...gateEvidenceArtifacts(
+        project.state.reviews,
+        project.evidenceCarrier ?? null,
+      ),
+    ],
     ownEvidenceArtifacts,
   };
 }
