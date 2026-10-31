@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status   | Tasks | Completed |
-| ------------- | -------- | ----- | --------- |
-| Phase 1 (p01) | complete | 7     | 7/7       |
-| Phase 2 (p02) | complete | 7     | 7/7       |
-| Phase 3 (p03) | pending  | 2     | 0/2       |
-| Phase 4 (p04) | pending  | 1     | 0/1       |
-| Phase 5 (p05) | pending  | 2     | 0/2       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | complete    | 7     | 7/7       |
+| Phase 2 (p02) | complete    | 7     | 7/7       |
+| Phase 3 (p03) | in_progress | 2     | 2/2       |
+| Phase 4 (p04) | pending     | 1     | 0/1       |
+| Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 14/19 tasks completed
+**Total:** 16/19 tasks completed
 
 ---
 
@@ -402,18 +402,44 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 3: Journal rewrite detection (#385)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-31
 
 ### Task p03-t01: Export a journal-rewrite lister from delivery evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ead6a3a2215fac92ffb428e9baad6da0b375297a
+
+**Outcome (required when completed):**
+
+- The journal append-only rule lives in an exported `journalRewrites` lister that reports every rewritten or removed recorded line and every new extraction marker; `judgeJournalChange` returns its first entry with unchanged refusal messages.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts`
+- `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Verification:** delivery and closeout suites 184 passed; type-check and oxlint passed.
 
 ### Task p03-t02: Report rewritten committed journal lines in goal projects
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c439d61392ebb885f303559a22a1fa7132b3b51c
+
+**Outcome (required when completed):**
+
+- In goal projects, `oat project journal check --at implement-preflight|review` compares the working `implementation.md` with `HEAD` and reports one `journal-line-rewritten` reason per rewritten or removed committed line, refusing with exit 1.
+- Appends, extraction markers, untracked journals, unborn HEAD, non-goal projects and `--at completion` add no reason; other Git failures are command errors; `complete-state` is unchanged.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts`, `types.ts` - HEAD comparison and reason code
+- `packages/cli/src/commands/project/journal-check/index.test.ts` - parity fixture and boundary cases
+- `apps/oat-docs/docs/reference/cli-reference.md` - reason and boundary note
+
+**Verification:** phase suites 182 passed; root rerun of journal-check, delivery, closeout and complete-state 271 passed; type-check, docs markdownlint and `pnpm check` passed.
+
+**Can-fail neutralization (p03):** inserted `.filter(() => false)` after `journalRewrites(...)` in journal check; the parity test failed (expected exit 1, received exit 0). Removed before commit.
 
 ---
 
@@ -471,6 +497,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p02-review-2 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p02-fix-2 · scope=p02-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p02-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-implementation · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
