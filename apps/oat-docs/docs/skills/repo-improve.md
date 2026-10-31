@@ -209,15 +209,17 @@ explicitly save a report before asking another workflow to consume its path.
 so use the slash or `$` form rather than relying on the agent to pick it. It
 does not require a project name or an active-project pointer.
 
-**Prerequisites:** A Git repository, the OAT CLI, and the `utility` tool pack
-(`oat tools install utility --scope user`). Before changing knowledge on
-either a first generation or a refresh, the skill resolves
-`oat-dispatch-subagents` and `subagent-orchestration`, then checks that the
-active Claude, Codex, or Cursor provider can launch its installed
-`oat-codebase-mapper` projection. Missing capability or declined authorization
-stops before cleanup, thin-index creation, or a write probe. Needs an active
-OAT project: no. If a knowledge directory already exists, choose whether to
-refresh it or skip the run.
+**Prerequisites:** A Git repository, the OAT CLI, the utility-pack dispatch
+skills, and an installed `oat-codebase-mapper` provider projection. Before
+changing knowledge on either a first generation or a refresh, the skill
+resolves `oat-dispatch-subagents` and `subagent-orchestration`, then checks that
+the active Claude, Codex, or Cursor provider can launch its mapper projection.
+A missing dispatch skill reports the utility-pack install/update commands; a
+missing mapper projection reports the workflows-pack commands or `oat sync`.
+An unsupported host or declined authorization reports that limitation without
+irrelevant install advice. Every failure stops before cleanup, thin-index
+creation, or a write probe. Needs an active OAT project: no. If a knowledge
+directory already exists, choose whether to refresh it or skip the run.
 Refresh removes only regular Markdown files marked `oat_generated: true` and
 regenerates the eight named outputs. Hand-written notes survive; an unmarked
 expected-output collision stops the run before deletion so you can decide how
@@ -240,13 +242,16 @@ answered.
 **What it does without asking:** It asks refresh-or-skip when knowledge files
 already exist and may ask once for authorization covering the write probe and
 four mapper lanes. After a mapper route is accepted, a launched probe checks
-whether that route can write its one test file. `WRITE_OK` selects
-direct-to-file mappers; the read-only fallback is available only when the
-launched probe returns `WRITE_BLOCKED` and the route can launch independently
-usable read-only lanes. A worker that never launches is a route failure, not
-read-only evidence. The skill then prepares owned outputs, creates the thin
-index, launches four mapper lanes through the provider-neutral dispatcher, and
-writes the knowledge files. It runs `oat internal commit-paths` on your current
+the knowledge path for symlinks, then checks whether that route can write its
+one test file. `WRITE_OK` is accepted only when the file exists with the
+expected bytes; `WRITE_BLOCKED` requires its absence. The probe directory is
+removed on every exit path. The read-only fallback is available only after a
+verified blocked write and when the route can launch independently usable
+read-only lanes. A worker that never launches is a route failure, not read-only
+evidence. The skill then prepares owned outputs, creates the thin index,
+launches four mapper lanes through the provider-neutral dispatcher, and writes
+the knowledge files. Read-only returned text travels through scratch files
+outside the repository. It runs `oat internal commit-paths` on your current
 branch with the exact generated output/deletion paths and enabled hooks.
 Unrelated staged and unstaged work remains intact.
 Afterwards it records the run in `.oat/tracking.json` and regenerates the

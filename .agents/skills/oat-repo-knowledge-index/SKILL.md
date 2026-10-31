@@ -77,13 +77,22 @@ from `${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/`, followed
 by the matching mechanics reference from
 `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/`.
 
+Verify that the active provider exposes the installed
+`oat-codebase-mapper` projection. If the projection is missing, stop before
+Step 2 and name that missing role. Recover the workflows pack with
+`oat tools install workflows --scope <user|project>` or
+`oat tools update --pack workflows --scope <user|project>`, or refresh
+provider projections with `oat sync --scope all`. Do not prescribe the utility
+pack for a missing mapper projection.
+
 Classify mapper dispatch capability as `available`,
 `authorization-required`, or `unresolved-or-unsupported`. If authorization is
 required, ask once for all five mapper launches in this run (one write probe
 and four mapper lanes), then re-probe and lock that decision. Continue only
-with an available, authorized route. An unresolved or unsupported route stops
-before Step 2 with the provider, missing capability, and the utility-pack
-recovery commands above. Do not delete generated output, create the thin
+with an available, authorized route. Declined authorization stops before Step
+2 and reports the declined scope without install advice. An unresolved or
+unsupported host stops before Step 2 with the provider and missing capability,
+also without install advice. Do not delete generated output, create the thin
 index, or launch a write probe.
 
 Every request names role `oat-codebase-mapper`, a bounded focus and output
@@ -117,9 +126,13 @@ Launch the installed Codex provider projection of `oat-codebase-mapper` as the
 exact registered `agent_type` shown by the live native catalog. Preserve
 model, reasoning effort, reasoning mode, service tier, fork behavior, sandbox,
 and writable roots as independent controls. The direct-write probe and lanes
-must have only the repository and declared knowledge outputs writable; the
-read-only response lanes use a read-only sandbox. A native role-selection
-rejection before child start is a route failure.
+must have only `.oat/repo/knowledge/` writable, including `.preflight/` for the
+probe; the rest of the repository remains read-only. Read-only response lanes
+use a read-only sandbox. When the native surface exposes no per-spawn sandbox
+override, use the prompt constraint for a read-only lane only when the dispatch
+engine accepts that boundary; otherwise classify the route
+`unresolved-or-unsupported`. A native role-selection rejection before child
+start is a route failure.
 
 #### Cursor route
 
@@ -130,8 +143,11 @@ exact agent type, model selector when exposed, service tier, authority, and
 accepted handle. A CLI or SDK catalog does not establish native role
 availability, and no alternate route may be improvised after acceptance.
 
-With the route resolved, create only
-`.oat/repo/knowledge/.preflight`, then launch the bounded write-permission
+With the route resolved, run a non-mutating `lstat` check of `.oat`,
+`.oat/repo`, and `.oat/repo/knowledge` before creating anything. Stop if any
+existing component is a symlink or a non-directory. Only after that check,
+create `.oat/repo/knowledge/.preflight`, then launch the bounded
+write-permission
 probe with class `generator` before Step 2. Its only write authority is
 `.oat/repo/knowledge/.preflight/test.txt`, with content `test`; it returns
 `WRITE_OK` or `WRITE_BLOCKED`. Before removing `.preflight`, require
@@ -141,9 +157,12 @@ Any disagreement is a malformed result and route failure; stop before Step 2.
 A verified `WRITE_OK` selects direct-write mode. The read-only fallback is
 allowed only when the launched probe has a verified `WRITE_BLOCKED` and the
 same resolved route can launch independently usable read-only response lanes.
-Any missing handle, malformed result, or launch failure stops before Step 2
-and leaves existing knowledge unchanged. Retain the resolved route,
-authorization, mode, and accepted probe result for the four mapper requests.
+Remove the exact `.preflight` directory on every probe exit path—success,
+blocked write, malformed result, launch failure, or stop—before continuing or
+reporting. Refuse cleanup if that exact path was replaced by a symlink. Any
+missing handle, malformed result, or launch failure stops before Step 2 and
+leaves existing knowledge unchanged. Retain the resolved route, authorization,
+mode, and accepted probe result for the four mapper requests.
 
 ### Step 2: Prepare Only Owned Generated Outputs
 
@@ -231,7 +250,7 @@ launch the installed provider projection of `oat-codebase-mapper`.
 
 **Approach:**
 
-- Mapper agents write documents directly to `.oat/repo/knowledge/` using the Write tool
+- Mapper agents write only their declared outputs with the host's file-write capability
 - Each agent returns only a brief confirmation (not document contents)
 - This reduces context transfer and improves performance
 
@@ -268,7 +287,8 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ---
 
 Instructions:
-- Write documents directly to `.oat/repo/knowledge/` using the Write tool
+- Write only the declared documents under `.oat/repo/knowledge/` with your
+  host's file-write capability
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -308,7 +328,8 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ---
 
 Instructions:
-- Write documents directly to `.oat/repo/knowledge/` using the Write tool
+- Write only the declared documents under `.oat/repo/knowledge/` with your
+  host's file-write capability
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -348,7 +369,8 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ---
 
 Instructions:
-- Write documents directly to `.oat/repo/knowledge/` using the Write tool
+- Write only the declared documents under `.oat/repo/knowledge/` with your
+  host's file-write capability
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -387,7 +409,8 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ---
 
 Instructions:
-- Write documents directly to `.oat/repo/knowledge/` using the Write tool
+- Write only the declared documents under `.oat/repo/knowledge/` with your
+  host's file-write capability
 - Follow the oat-codebase-mapper agent instructions for exploration and writing
 - Use templates from .agents/skills/oat-repo-knowledge-index/references/templates/
 - Include frontmatter with both SHA fields in every document
@@ -405,7 +428,7 @@ native controls.
 
 **Approach:**
 
-- Agents do NOT use Write or Bash tools
+- Agents do not modify files or run mutating commands
 - Agents return complete markdown contents in their response
 - Orchestrator extracts markdown and writes files
 - More compatible but larger context transfer
@@ -440,7 +463,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 ---
 
 Constraints:
-- Do NOT use Write or Bash tools.
+- Do not modify files or run mutating commands.
 - Return the complete markdown contents in your final response.
 - Format as:
 
@@ -491,7 +514,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 Constraints:
 
-- Do NOT use Write or Bash tools.
+- Do not modify files or run mutating commands.
 - Return the complete markdown contents in your final response.
 - Format as:
 
@@ -543,7 +566,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 Constraints:
 
-- Do NOT use Write or Bash tools.
+- Do not modify files or run mutating commands.
 - Return the complete markdown contents in your final response.
 - Format as:
 
@@ -594,7 +617,7 @@ oat_warning: "GENERATED FILE - Do not edit manually. Regenerate with oat-repo-kn
 
 Constraints:
 
-- Do NOT use Write or Bash tools.
+- Do not modify files or run mutating commands.
 - Return the complete markdown contents in your final response.
 - Format as:
 
@@ -626,39 +649,37 @@ Constraints:
 ### Step 6b: Extract and Write Files (Read-Only Mode Only)
 
 If using read-only mode, collect each accepted handle through the dispatch
-engine and extract markdown from its returned output. Never guess a provider
-transcript or temporary-file path.
+engine. Save each accepted handle's returned output text verbatim to a
+distinct scratch file outside the repository, retaining the handle-to-path
+mapping. Never guess a provider transcript path and never splice returned text
+into source code.
 
-Use Python to extract markdown blocks:
+Pass the four exact scratch paths as arguments, in lane order, to Python:
 
 ````python
 import re
+import sys
+from pathlib import Path
 
-agents = [
-    {
-        'returned_output': ACCEPTED_HANDLE_1_OUTPUT,
-        'files': ['stack.md', 'integrations.md'],
-    },
-    {
-        'returned_output': ACCEPTED_HANDLE_2_OUTPUT,
-        'files': ['architecture.md', 'structure.md'],
-    },
-    {
-        'returned_output': ACCEPTED_HANDLE_3_OUTPUT,
-        'files': ['conventions.md', 'testing.md'],
-    },
-    {'returned_output': ACCEPTED_HANDLE_4_OUTPUT, 'files': ['concerns.md']},
+if len(sys.argv) != 5:
+    raise RuntimeError('expected four accepted-handle scratch paths')
+
+outputs = [
+    ['stack.md', 'integrations.md'],
+    ['architecture.md', 'structure.md'],
+    ['conventions.md', 'testing.md'],
+    ['concerns.md'],
 ]
 
-for agent in agents:
-    text = agent['returned_output']
+for output_path, files in zip(sys.argv[1:], outputs, strict=True):
+    text = Path(output_path).read_text(encoding='utf8')
     pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
     matches = re.findall(pattern, text, re.DOTALL)
     if not matches:
         alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
         matches = re.findall(alt_pattern, text, re.DOTALL)
 
-    expected = set(agent['files'])
+    expected = set(files)
     actual = {filename for filename, _ in matches}
     if actual != expected:
         raise RuntimeError(f'accepted handle returned {actual}, expected {expected}')
@@ -669,7 +690,8 @@ for agent in agents:
         print(f"✓ Wrote {filename}")
 ````
 
-This extracts markdown and writes all 7 knowledge files.
+This extracts markdown and writes all 7 knowledge files. Remove the four
+scratch files after successful extraction or on any failure.
 
 ### Step 7: Verify All Documents Created
 
