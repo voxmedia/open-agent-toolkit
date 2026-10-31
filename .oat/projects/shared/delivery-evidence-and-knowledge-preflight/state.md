@@ -113,7 +113,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T15:19:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:25:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -136,15 +136,15 @@ oat_implement_exit_gate:
   freshness_head: '6dc94fa8d4d6d46076fed5ad9abcc17bb1411758'
   freshness_fingerprint: 'sha256:effective-delta-v2:d49a7c17e4ace137749b2305adb15e41b320210b02574963df40b1870e5316cd'
   waivers: []
-  launch_state: 'intent_persisted'
+  launch_state: 'result_persisted'
   launch_attempt_id: '8f901146-f38c-46ae-850c-f520d22f0008'
   launch_started_at: '2026-10-31T15:19:01Z'
   launch_result_receipt: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/implement-exit-gate-8f901146-f38c-46ae-850c-f520d22f0008.stdout.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
+  gate_run_marker: '/var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/2fc8f86e-4a13-4a50-bfdf-34cf37848dff.json'
+  gate_run_id: '2fc8f86e-4a13-4a50-bfdf-34cf37848dff'
+  envelope_status: 'ok'
+  artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md before treating this gate review as consumed.'
   receive_state: 'not_started'
   receive_correlation: null
   receive_source_artifact: null
@@ -152,10 +152,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-31T15:19:01Z'
+  updated_at: '2026-10-31T15:25:26Z'
   decided_at: null
 ---
 
