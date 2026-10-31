@@ -15,6 +15,7 @@ import { join, relative } from 'node:path';
 
 import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
+import { inProcessSyncDependencies } from '@commands/tools/shared/in-process-sync';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@inquirer/prompts', () => ({
@@ -118,6 +119,41 @@ function canonicalAgent(name: string): string {
   return `---\nname: ${name}\ndescription: ${name} role\n---\n\n# ${name}\n`;
 }
 
+async function codexAgentTables(root: string): Promise<string[]> {
+  const config = await readFile(join(root, '.codex', 'config.toml'), 'utf8');
+  return [...config.matchAll(/^\[agents\.([^\]]+)\]$/gmu)]
+    .map((match) => match[1]!)
+    .sort();
+}
+
+/** Codex state sync must leave alone: a user table and an ownerless role. */
+async function seedCodexNeighbours(root: string): Promise<void> {
+  await writeFile(
+    join(root, '.codex', 'agents', 'legacy-agent.toml'),
+    '# oat-managed: true\n# oat-role: legacy-agent\ndeveloper_instructions = "old"\n',
+  );
+  const config = await readFile(join(root, '.codex', 'config.toml'), 'utf8');
+  await writeFile(
+    join(root, '.codex', 'config.toml'),
+    `${config}\n[agents.custom]\ndescription = "mine"\nconfig_file = "agents/custom.toml"\n\n[agents.legacy-agent]\ndescription = "old"\nconfig_file = "agents/legacy-agent.toml"\n`,
+  );
+}
+
+async function expectCodexCleaned(
+  root: string,
+  remaining: string[],
+): Promise<void> {
+  expect(await pathExists(join(root, '.codex/agents/agent-one.toml'))).toBe(
+    false,
+  );
+  expect(await pathExists(join(root, '.codex/agents/legacy-agent.toml'))).toBe(
+    true,
+  );
+  expect(await codexAgentTables(root)).toEqual(
+    ['custom', 'legacy-agent', ...remaining].sort(),
+  );
+}
+
 describe('sync after a canonical agent is deleted or renamed', () => {
   const tempDirs: string[] = [];
   const previousHome = process.env.HOME;
@@ -172,6 +208,12 @@ describe('sync after a canonical agent is deleted or renamed', () => {
     for (const view of agentViews('agent-one')) {
       expect(await pathExists(join(root, view)), view).toBe(true);
     }
+    await expect(
+      readFile(join(root, '.codex', 'agents', 'agent-one.toml'), 'utf8'),
+    ).resolves.toMatch(
+      /^# oat-managed: true\n# oat-role: agent-one\n# oat-owner: project-config\n/,
+    );
+    await seedCodexNeighbours(root);
     return root;
   }
 
@@ -210,6 +252,14 @@ describe('sync after a canonical agent is deleted or renamed', () => {
         plans: Array<{
           removals: Array<{ providerPath: string; operation: string }>;
         }>;
+        codexExtensions: Array<{
+          operations: Array<{
+            action: string;
+            target: string;
+            path: string;
+            reason: string;
+          }>;
+        }>;
       };
       const removals = payload.plans
         .flatMap((plan) => plan.removals)
@@ -217,7 +267,71 @@ describe('sync after a canonical agent is deleted or renamed', () => {
         .map(({ providerPath }) => relative(root, providerPath))
         .sort();
       expect(removals).toEqual(agentViews('agent-one').sort());
+      const codexOperations = payload.codexExtensions.flatMap(
+        ({ operations }) => operations,
+      );
+      expect(
+        codexOperations
+          .filter(({ action }) => action === 'remove')
+          .map(({ path }) => path),
+      ).toEqual(['.codex/agents/agent-one.toml']);
+      expect(
+        codexOperations.find(({ target }) => target === 'config'),
+      ).toMatchObject({
+        action: 'update',
+        reason: expect.stringContaining(
+          'removes stale role tables: agents.agent-one',
+        ),
+      });
+
+      const human = await runCli(root, [
+        'sync',
+        '--scope',
+        'project',
+        '--dry-run',
+      ]);
+      expect(human.exitCode, human.stderr).toBe(0);
+      expect(human.stdout).toContain(
+        'codex:role:remove .codex/agents/agent-one.toml',
+      );
+      expect(human.stdout).toContain('agents.agent-one');
       expect(await snapshotTree(root)).toEqual(before);
+    },
+  );
+
+  it.each(['some', 'the last'] as const)(
+    'pack removal of %s canonical agent removes its views, Codex role, and table',
+    async (label) => {
+      const root = await syncedRepository();
+      if (label === 'some') {
+        await writeFile(
+          join(root, '.agents', 'agents', 'agent-keep.md'),
+          canonicalAgent('agent-keep'),
+        );
+        const sync = await runCli(root, ['sync', '--scope', 'project']);
+        expect(sync.exitCode, sync.stderr).toBe(0);
+      }
+      await rm(join(root, '.agents', 'agents', 'agent-one.md'));
+
+      const previousExitCode = process.exitCode;
+      const evidence = await inProcessSyncDependencies.runSync({
+        scope: 'project',
+        cwd: root,
+        home: process.env.HOME!,
+        removedCanonicalPaths: ['.agents/agents/agent-one.md'],
+      });
+      process.exitCode = previousExitCode;
+
+      expect(evidence?.failedOperations ?? 0).toBe(0);
+      for (const view of agentViews('agent-one')) {
+        expect(await pathExists(join(root, view)), view).toBe(false);
+      }
+      await expectCodexCleaned(root, label === 'some' ? ['agent-keep'] : []);
+      if (label === 'some') {
+        expect(
+          await pathExists(join(root, '.codex/agents/agent-keep.toml')),
+        ).toBe(true);
+      }
     },
   );
 
@@ -239,6 +353,10 @@ describe('sync after a canonical agent is deleted or renamed', () => {
           change === 'rename',
         );
       }
+      await expectCodexCleaned(root, change === 'rename' ? ['agent-two'] : []);
+      expect(await pathExists(join(root, '.codex/agents/agent-two.toml'))).toBe(
+        change === 'rename',
+      );
 
       const second = await runCli(root, [
         '--json',
