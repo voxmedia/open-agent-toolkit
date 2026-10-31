@@ -1079,6 +1079,39 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 
 ---
 
+### Task p04-t07: (review) Simplify the knowledge-index preflight machinery
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Operator disposition `simplify` at the p04 review-cycle cap, applying the accepted ledger of the complexity review (`reviews/archived/complexity-p04-2026-10-31T025003Z.md`, verdict Partially compliant). The pre-Step-10 stray-change check is unsupported by the contract and caused round-3 M1; the contract pin has grown to verbatim, line-wrapped sentence pins that shape the prose; the Codex route and docs restate internals and drift.
+
+**Step 2: Implement fix**
+
+- Delete the pre-Step-10 `git status --porcelain` stray-change check, its pin and its docs clause (round-3 M1 dissolves; reintroduction trigger: a real mapper run on any provider leaves a write outside its declared outputs — then add it with a baseline captured before `.preflight` is created, on every provider).
+- Rewrite the Codex route writable-roots text as: narrow writable roots to `.oat/repo/knowledge/` when the surface exposes it; otherwise use the projection's `workspace-write` sandbox writing only declared outputs; otherwise follow the Codex mechanics reference. Drop the "must".
+- Trim the contract pin to about ten structural assertions matched against whitespace-collapsed text: preflight before Step 2; both Step 1 branches name the preflight; Claude controls only inside the Claude route slice; probe heading and body between the provider routes and Step 2; Step 2 gate; Step 4b route failure; `generator`/`recon` lane counts; no `/private/tmp/claude-`. Drop verbatim sentence pins, and rejoin the one-word line around the probe sentence into normal prose.
+- Shorten the `apps/oat-docs/docs/skills/repo-improve.md` "what it does without asking" paragraph to 3–4 sentences: the run resolves a route before any change, asks once for authorization, falls back to read-only only after a verified blocked write, and commits only exact owned paths.
+- Keep everything else the ledger marks Keep (preflight, Claude route, probe before Step 2, Step 2 gate, Step 4b route failure, `lstat` and stale-`.preflight` guard, Step 6b scratch files, `generator`/`recon` labels).
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass. Can-fail: one seeded regression per remaining P0 clause (preflight after Step 2; Claude controls outside the Claude route; Step 2 gate removed; Step 4b treating a missing probe as read-only) each fails the trimmed pin.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t07" --message "fix(p04-t07): simplify the knowledge-index preflight machinery" -- <exact files changed>
+```
+
+---
+
 ## Phase 5: Release bookkeeping and gates
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
@@ -1089,7 +1122,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 - Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (1.3.5 → 1.3.6)
 - Modify: `.agents/skills/oat-project-implement/SKILL.md` (2.3.22 → 2.3.23)
 - Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md` (1.3.3 → 1.4.0)
-- Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` (0.3.36 → 0.3.37)
+- Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` (0.3.37 → 0.3.38; `main` reached 0.3.37 in #389 during this run)
 - Modify: `packages/cli/assets/public-package-versions.json`
 
 Bump only skills whose bundled files actually changed in the final diff
@@ -1116,7 +1149,7 @@ Expected: each exits 0
 **Step 5: Commit**
 
 ```bash
-oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t01" --message "chore(p05-t01): bump public packages to 0.3.37 and changed skills" -- <exact files above>
+oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t01" --message "chore(p05-t01): bump public packages to 0.3.38 and changed skills" -- <exact files above>
 ```
 
 ---
@@ -1201,10 +1234,10 @@ cell; never truncate a widened row back to five columns.
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
 - Phase 3: 7 tasks - Journal rewrite detection (#385), including 5 review-fix tasks
-- Phase 4: 6 tasks - Knowledge-index dispatch preflight (#355), including 5 review-fix tasks
+- Phase 4: 7 tasks - Knowledge-index dispatch preflight (#355), including 6 review-fix tasks
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 29 tasks**
+**Total: 30 tasks**
 
 Ready for code review and merge.
 

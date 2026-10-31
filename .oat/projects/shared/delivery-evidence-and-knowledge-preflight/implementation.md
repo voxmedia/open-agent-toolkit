@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t07
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 6     | 6/6       |
+| Phase 4 (p04) | in_progress | 7     | 6/7       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 27/29 tasks completed
+**Total:** 27/30 tasks completed
 
 ---
 
@@ -683,7 +683,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Outcome (required when completed):**
 
-- The write probe has its own `Write-Permission Probe (all providers)` heading after the provider routes; Step 2 runs only with the accepted, file-verified probe result; a pre-existing `.preflight` stops the run (or is removed only when it is a real directory holding only `test.txt`) before a fresh one is created.
+- The write probe has its own `Write-Permission Probe (all providers)` heading after the provider routes; Step 2 runs only with the accepted, file-verified probe result; a pre-existing `.preflight` stops the run before a fresh one is created.
 
 **Files changed:**
 
@@ -745,7 +745,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L1 (Low): the contract pin checks the probe heading position, not the probe paragraph → disposition pending operator.
 - L2 (Low): the p04-t05 journal entry describes a stale-`.preflight` removal option the skill does not implement (it only stops) → disposition pending operator.
 
-**Outcome:** received; three-cycle review cap reached for p04 (Step 8). Complexity review dispatched; disposition awaits the operator.
+**Outcome:** received; three-cycle review cap reached for p04 (Step 8). Operator chose `simplify` → fix task p04-t07; L1 declined; L2 corrected by the root.
+
+### Task p04-t07: (review) Simplify the knowledge-index preflight machinery
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -827,7 +832,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
-- Review-cycle cap reached for p04 (oat-project-review-receive Step 8, 3 cycles: 1C/1H/2M/5L → 0C/0H/2M/2L → 0C/0H/1M/2L). Complexity review `dedkp-p04-complexity-1` (installed complexity-review method): verdict Partially compliant; recommended disposition simplify; report `reviews/archived/complexity-p04-2026-10-31T025003Z.md` (local). Operator disposition: pending — autonomous run stopped at this boundary; no disposition chosen on the operator's behalf.
+- Review-cycle cap reached for p04 (oat-project-review-receive Step 8, 3 cycles: 1C/1H/2M/5L → 0C/0H/2M/2L → 0C/0H/1M/2L). Complexity review `dedkp-p04-complexity-1` (installed complexity-review method): verdict Partially compliant; recommended disposition simplify; report `reviews/archived/complexity-p04-2026-10-31T025003Z.md` (local). Operator disposition (2026-10-31, recorded on resume): **simplify** — apply the complexity review's accepted ledger as fix task p04-t07, then one fresh p04 review of the simplified work; round-3 L1 declined (override at the cap; the pinned Step 2 gate already stops the failure); round-3 L2 corrected in the journal by the root. Pack dependency (workflows→utility) left out of this PR by operator discussion: `workflows` already depends on these utility skills undeclared, and a same-scope declaration would conflict with documented mixed-scope installs.
 
 ### Review Received: plan
 
@@ -852,11 +857,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                | Source of Truth | Follow-up                        |
-| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------- | -------------------------------- |
-| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                     | -               | -                                |
-| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                      | Implementation  | None                             |
-| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics | Implementation  | Retracted by p02-t03 (review H1) |
+| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                                      | Source of Truth      | Follow-up                        |
+| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
+| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                                           | -                    | -                                |
+| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                                            | Implementation       | None                             |
+| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics                       | Implementation       | Retracted by p02-t03 (review H1) |
+| plan p05-t01  | plan.md p05-t01                      | Lockstep bump 0.3.36 → 0.3.37                             | 0.3.37 → 0.3.38                                                                                                                                                                       | `main` reached 0.3.37 in #389 (merged into this branch at befc083); the gate requires versions strictly above `origin/main` | plan.md (retargeted) | None                             |
 
 ## Final Summary (for PR/docs)
 
