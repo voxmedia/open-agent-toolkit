@@ -696,7 +696,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01   | code     | fixes_added     | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
+| p01   | code     | fixes_completed | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
 | p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |

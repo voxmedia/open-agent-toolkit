@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | in_progress | 6     | 3/6       |
+| Phase 1 (p01) | in_progress | 6     | 6/6       |
 | Phase 2 (p02) | pending     | 2     | 0/2       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 3/13 tasks completed
+**Total:** 6/13 tasks completed
 
 ---
 
@@ -97,18 +97,63 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p01-t04: (review) Classify stack inspection failures separately from stack-order
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a93758aa5230846da70951826e81b0530a5f62e9
+
+**Outcome (required when completed):**
+
+- Stack ancestry now resolves member heads first (`missing-object` for an unavailable commit), maps other Git failures to `inspection-failed`, and reserves `stack-order` for a genuine non-ancestor.
+- A `null` or unreviewed-resolution carrier on a stack is evaluated exactly as on `kind: pr`, before any topology check.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts` - head resolution, failure classification, carrier-first precedence
+- `packages/cli/src/commands/project/delivery/evidence.test.ts` - missing tip and lower head, null and `no_gate` carrier parity
+
+**Verification:** delivery and closeout suites 163 passed; focused evidence 50 passed; type-check and oxlint passed. Can-fail: disabling only the `code === 1` branch turned all four mis-ordered tests red.
+
+**Notes / Decisions:**
+
+- Review-fix task for p01 review M1 and L1 (fix request `dedkp-p01-fix-1`, continuation `cont-delivery-evidence-p01-fix-1`).
 
 ### Task p01-t05: (review) Align contract registration wording for stacked deliveries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7fb2b4d4b23730fc3d9e9f899ba3dbc3a05a9ea4
+
+**Outcome (required when completed):**
+
+- §12.7 Idempotent registration now covers stacks (attach-only, every member URL in the `registering` write, per-URL resume re-check); pr-progress names `oat-project-reconcile` and projects `oat_pr_url` from the tip member.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-brief/references/brief-contract.md`
+- `.agents/skills/oat-project-pr-progress/SKILL.md`
+
+**Verification:** shared and validation contract suites 1,088 passed; `pnpm lint` and `pnpm format` passed.
+
+**Notes / Decisions:**
+
+- Review-fix task for p01 review L2. An exact-text contract pin required keeping the phrase "more than one stops and routes"; semantics unchanged.
 
 ### Task p01-t06: (review) Pin latestDeliveryForMilestone exclusions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cff5bf2db6ce10bc6b479d25bb42d91de51820ae
+
+**Outcome (required when completed):**
+
+- `latestDeliveryForMilestone` is pinned to skip `registering` and `superseded` entries and to select `at_endpoint`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Verification:** focused evidence 52 passed; delivery and closeout suites 165 passed (root rerun matched).
+
+**Notes / Decisions:**
+
+- Review-fix task for p01 review L3.
 
 ### Review Received: p01
 
@@ -123,7 +168,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L2 (Low): §12.7 Idempotent registration and pr-progress items 5–6 wording lags stack registration → fix task p01-t05.
 - L3 (Low): `latestDeliveryForMilestone` exclusions are unpinned → fix task p01-t06.
 
-**Outcome:** fixes queued: p01-t04, p01-t05, p01-t06 (auto-disposition; reviewer request `dedkp-p01-review-1`, `oat-reviewer-claude-opus-5-5-high`, 0 Critical / 0 High — phase gate passed).
+**Outcome:** fixes completed: p01-t04, p01-t05, p01-t06; awaiting re-review. Original queue: p01-t04, p01-t05, p01-t06 (auto-disposition; reviewer request `dedkp-p01-review-1`, `oat-reviewer-claude-opus-5-5-high`, 0 Critical / 0 High — phase gate passed).
 
 ---
 
@@ -197,6 +242,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 <!-- orchestration-runs-start -->
 
 - run/v1 · request=dedkp-p01-implementation · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p01-fix-1 · scope=p01-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p01-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
