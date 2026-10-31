@@ -1019,6 +1019,66 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 
 ---
 
+### Task p04-t05: (review) Give the write probe its own heading and gate Step 2 on its result
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Review finding: M1 (round 2) — the write-probe paragraph (lstat guard, `.preflight` creation, probe launch, file verification, cleanup) has no heading and sits under `#### Cursor route`, so a Claude or Codex host reading only its route skips it, and Step 2 does not require a probe result. L1 (round 2) — a pre-existing `.preflight` (stale `test.txt` or a symlink) is not guarded before creation and could satisfy the file check or redirect the write. L2 (round 2) — `repo-improve.md` says the probe checks for symlinks; the orchestrator does.
+Location: see `reviews/archived/p04-review-2026-10-31T023107Z.md`.
+
+**Step 2: Implement fix**
+
+Move the probe paragraph under its own preflight-level heading (for example `#### Write-Permission Probe (all providers)`) after the provider routes. Open Step 2 with a gate sentence: run it only with the accepted, file-verified probe result and `WRITE_MODE` retained by the preflight; otherwise stop before deleting anything. Extend the `lstat` guard to `.oat/repo/knowledge/.preflight`: if it exists, stop and name it (or remove it only when it is a real directory holding nothing but `test.txt`), then create it fresh. Reword the docs sentence. Pin the heading placement (outside every provider route slice), the Step 2 gate sentence, and the `.preflight` absence guard; can-fail: seed "probe paragraph moved inside the Claude route", "Step 2 gate removed" and "`.preflight` guard removed" and confirm each fails.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass; record every can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t05" --message "fix(p04-t05): give the write probe its own heading and gate Step 2 on its result" -- <exact files changed>
+```
+
+---
+
+### Task p04-t06: (review) State the Codex direct-write rule when writable roots cannot be narrowed
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Review finding: M2 (round 2) — the Codex route requires only `.oat/repo/knowledge/` writable for the probe and direct-write lanes, but the shipped projection pins `workspace-write` and the skill gives no direct-write rule when writable roots cannot be narrowed per spawn, so Codex direct-write may be unrunnable.
+Location: see `reviews/archived/p04-review-2026-10-31T023107Z.md`.
+
+**Step 2: Implement fix**
+
+Add the direct-write counterpart: when per-spawn writable roots cannot be narrowed, the probe and direct-write lanes run under the projection's `workspace-write` sandbox constrained by the prompt to their declared outputs; before Step 10, check `git status --porcelain` and stop, naming the paths, if anything outside `.oat/repo/knowledge/` changed; Step 10 still commits only the retained affected paths and `refresh-owned.mjs --verify` checks them. Mirror one sentence in `repo-improve.md`. Pin the rule; can-fail: remove the sentence and confirm the pin fails.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass; record every can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t06" --message "fix(p04-t06): state the Codex direct-write rule when writable roots cannot be narrowed" -- <exact files changed>
+```
+
+---
+
 ## Phase 5: Release bookkeeping and gates
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
@@ -1115,6 +1175,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p03   | code     | fixes_completed | 2026-10-31 | reviews/archived/p03-review-2026-10-31T014304Z.md           | 55f83e676b328c30fbd721eb800a842c9521b378 | auto       | -                 |
 | p03   | code     | passed          | 2026-10-31 | reviews/archived/p03-review-2026-10-31T015808Z.md           | 373d70cf23049ae9ba2ca4d863465404db3a5ec4 | auto       | -                 |
 | p04   | code     | fixes_completed | 2026-10-31 | reviews/archived/p04-review-2026-10-31T021449Z.md           | cff79cf176a0aa2db4430eb15666db6ad8bc3c6b | auto       | -                 |
+| p04   | code     | fixes_added     | 2026-10-31 | reviews/archived/p04-review-2026-10-31T023107Z.md           | d368f9d94db50bbce2e11fc6de0e33736adc1a97 | auto       | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
@@ -1139,10 +1200,10 @@ cell; never truncate a widened row back to five columns.
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
 - Phase 3: 7 tasks - Journal rewrite detection (#385), including 5 review-fix tasks
-- Phase 4: 4 tasks - Knowledge-index dispatch preflight (#355), including 3 review-fix tasks
+- Phase 4: 6 tasks - Knowledge-index dispatch preflight (#355), including 5 review-fix tasks
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 27 tasks**
+**Total: 29 tasks**
 
 Ready for code review and merge.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 4     | 4/4       |
+| Phase 4 (p04) | in_progress | 6     | 4/6       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 25/27 tasks completed
+**Total:** 25/29 tasks completed
 
 ---
 
@@ -675,6 +675,31 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L1–L5 (Low): Claude tool names in neutral prompts; Codex writable roots; recovery advice per failure kind; `.preflight` ordering and cleanup; Step 6b source splicing → fix task p04-t04.
 
 **Outcome:** fixes completed: p04-t02, p04-t03, p04-t04 (implementation request `dedkp-p04-implementation-2` on the original handle and target); awaiting re-review. Original queue: p04-t02, p04-t03, p04-t04 (blocking Critical/High; reviewer request `dedkp-p04-review-1`).
+
+### Task p04-t05: (review) Give the write probe its own heading and gate Step 2 on its result
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t06: (review) State the Codex direct-write rule when writable roots cannot be narrowed
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p04 (round 2)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-31T023107Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 2
+
+- Round-1 C1, H1, M1, M2 and L1–L5 verified resolved; all six original seeded regressions and three new seeds now fail the pin; no path mutates knowledge before the route is resolved and authorized.
+- M1 (Medium): the write-probe paragraph sits under the Cursor route heading and Step 2 does not require a probe result → fix task p04-t05.
+- M2 (Medium): no Codex direct-write rule when writable roots cannot be narrowed → fix task p04-t06 (workspace-write constrained to declared outputs plus a pre-commit stray-change check; Codex support is a discovery requirement).
+- L1 (Low): a pre-existing `.preflight` is not guarded → fix task p04-t05.
+- L2 (Low): docs attribute the symlink check to the probe → fix task p04-t05.
+
+**Outcome:** fixes queued: p04-t05, p04-t06 (reviewer request `dedkp-p04-review-2`; 0 Critical / 0 High; review cycle 2 of 3).
 
 ---
 
