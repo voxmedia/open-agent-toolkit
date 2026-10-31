@@ -315,9 +315,9 @@ async function runJournalCheck(
                 code: 'journal-frontmatter-malformed',
                 path: 'implementation.md',
                 line: null,
-                owner: 'oat-project-implement',
+                owner: 'oat-project-reconcile',
                 message:
-                  'Committed implementation.md frontmatter could not be parsed.',
+                  'Committed implementation.md frontmatter could not be parsed; repair the frontmatter and commit it before re-running.',
               },
             ];
           }

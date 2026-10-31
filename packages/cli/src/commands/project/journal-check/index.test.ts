@@ -3,8 +3,8 @@ import {
   mkdir,
   mkdtemp,
   readFile,
-  realpath,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -288,23 +288,38 @@ describe('oat project journal check', () => {
     });
   });
 
-  it('accepts an absolute project path spelled through a filesystem alias', async () => {
+  it('refuses a committed-line rewrite through a symlinked absolute project path', async () => {
     const fixture = await project(GOAL_JOURNAL, {
       plan: GOAL_PLAN,
       state: GOAL_STATE,
     });
     initializeGit(fixture);
+    await writeFile(
+      join(fixture.projectPath, 'implementation.md'),
+      GOAL_JOURNAL.replace(
+        'Verified with the reader tests.',
+        'Verified with rewritten reader tests.',
+      ),
+      'utf8',
+    );
+    const aliasRoot = await mkdtemp(join(tmpdir(), 'oat-journal-alias-'));
+    tempDirs.push(aliasRoot);
+    const aliasPath = join(aliasRoot, 'project');
+    await symlink(fixture.projectPath, aliasPath, 'dir');
 
     const result = await run(fixture, [
       '--project',
-      await realpath(fixture.projectPath),
+      aliasPath,
       '--at',
       'review',
       '--scope',
       'p01',
     ]);
-    expect(result.exitCode).toBe(0);
-    expect(result.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(result.exitCode).toBe(1);
+    expect(result.capture.jsonPayloads[0]).toMatchObject({
+      status: 'refused',
+      reasons: [{ code: 'journal-line-rewritten' }],
+    });
   });
 
   it('refuses when the committed journal frontmatter is unparseable', async () => {
@@ -333,9 +348,9 @@ describe('oat project journal check', () => {
         {
           code: 'journal-frontmatter-malformed',
           path: 'implementation.md',
-          owner: 'oat-project-implement',
+          owner: 'oat-project-reconcile',
           message: expect.stringContaining(
-            'Committed implementation.md frontmatter could not be parsed',
+            'repair the frontmatter and commit it before re-running',
           ),
         },
       ],
