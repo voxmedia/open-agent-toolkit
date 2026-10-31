@@ -41,6 +41,18 @@ oat_phase_recovery_policy:
     p02:
       used_attempts: 1
       pending_attempt: null
+    p05:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: dedkp-p05-recovery-02
+        original_request_id: dedkp-p05-implementation
+        original_task_id: p05-t01
+        original_commit: 001e059460f506dfbefec472244a668ac7aec292
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 8df2933fc2463962ed4d2e61e40185bcbabdbeae
+        status: pending
 oat_dispatch_policy:
   mode: managed
   policy: high
