@@ -618,9 +618,11 @@ changes only permitted bookkeeping:
   for the deliveries that share it; each delivery is still judged on its own
   frozen scope, reviewed revisions and `exit_gate`. The artifact of a Reviews
   row with Type `code`, Invocation `gate`, and a non-placeholder Reviewed Head
-  equal to the judged carrier's `reviewed_head` is also admitted for that
-  carrier only. The gate row is never integrated-review evidence and its
-  artifact never joins a delivery's own review-artifact set, so it cannot
+  equal to the judged carrier's `reviewed_head` is also admitted in evidence
+  scopes built for that carrier (its review and exit evaluations), provided
+  its project-relative artifact path is under `reviews/` (including
+  `reviews/archived/`). The gate row is never integrated-review evidence and
+  its artifact never joins a delivery's own review-artifact set, so it cannot
   unlock set-once fields. `summary.md` is derived
   institutional memory, never the authority for outcomes, approach,
   constraints, decisions or endpoint, which live in the brief; any change to
