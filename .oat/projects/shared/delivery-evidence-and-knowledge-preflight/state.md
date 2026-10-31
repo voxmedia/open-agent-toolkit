@@ -108,12 +108,12 @@ oat_quick_start_gate:
   config_fingerprint: 'sha256:88fb6a53c33aabb45f8ac7441bbb99f66460afa281e7a5e1f347537080cfa853'
   reviewed_head: f0d269c93185aa68080eca06fd85416d1f4630e2
   decided_at: '2026-10-30T23:59:11Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T15:31:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:33:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
