@@ -1017,24 +1017,40 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- **Stacked goal deliveries (#383):** a `kind: stack` delivery's exit carrier is judged at the stack tip, after every lower layer is confirmed to be the tip or its ancestor (`stack-order`); missing commits report `missing-object`/`inspection-failed` instead of `stack-order`; null and unreviewed-resolution carriers behave exactly as for `kind: pr`. `delivery check`, `delivery refresh` and the closeout check share one wrapper, and milestone and delivery subjects build the same evidence scope once a delivery is registered. `kind: stack` is documented, with attach-only registration in pr-progress.
+- **Exit-gate bookkeeping (#384):** the configured exit gate's own artifact commit is a bookkeeping successor of the carrier it produced when its Reviews row is Type `code`, Invocation `gate`, carries the carrier's reviewed head, and names an artifact under `reviews/`. The artifact never becomes integrated-review evidence or unlocks set-once delivery fields; no placeholder row is needed.
+- **Journal rewrite detection (#385):** in goal projects, `oat project journal check --at implement-preflight|review` compares the working journal with `HEAD` using the same rule delivery evidence applies and refuses (exit 1) with one `journal-line-rewritten` reason per rewritten or removed committed line; unparseable committed frontmatter also refuses; aliased absolute paths resolve correctly and a dangling `HEAD` is a command error.
+- **Knowledge-index preflight (#355):** `oat-repo-knowledge-index` resolves and authorizes a mapper route through `oat-dispatch-subagents` before any knowledge is deleted or written, on both the first-run and Refresh paths, with labelled Claude, Codex and Cursor routes, a file-verified write probe, a route-failure (not read-only) interpretation of a launch that never happened, and no maintainer-specific temp path.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `delivery check`/`refresh` and closeout accept a correctly ordered stacked delivery that previously always read stale, and report `stack-order` for a mis-ordered one.
+- A goal milestone's exit carrier stays fresh across the gate's own artifact commit.
+- `journal check` now refuses uncommitted rewrites of committed journal lines in goal projects, with a corrective message.
+- The knowledge-index skill stops cleanly, without touching knowledge, when no mapper route can be launched, and runs on Codex and Cursor as well as Claude.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/delivery/evidence.ts` - `evaluateDeliveryExitCarrier`, `latestDeliveryForMilestone`, `gateEvidenceArtifacts`, exported `journalRewrites`
+- `packages/cli/src/commands/project/delivery/check.ts`, `refresh.ts`, `closeout-check/index.ts` - wrapper and scope adoption
+- `packages/cli/src/commands/project/journal-check/index.ts`, `types.ts` - HEAD comparison and `journal-line-rewritten`
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md` - dispatch-route preflight, provider routes, write probe
+- `.agents/skills/oat-project-brief/references/brief-contract.md` (§12.7–12.8), `oat-project-pr-progress/SKILL.md`, `oat-project-implement/references/completion-and-closeout.md` - contract and guidance
+- `apps/oat-docs/docs/reference/cli-reference.md`, `docs/workflows/advanced/workflow-gates.md`, `docs/skills/repo-improve.md` - user docs
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts` - knowledge-index structural pins
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Full Definition of Done gate list at p05 (`pnpm check`, `type-check`, `test`, `build`, `check:skill-bumps`, `release:check-versions`, `release:validate`, `build:docs`, docs index freshness, `lint`, `format`): every exit code 0.
+- Per-phase root reviews by `oat-reviewer-claude-opus-5-5-high` (cross-family from the GPT-5.6 Sol implementers), with can-fail proofs for every P0 guard and built-CLI negative controls for the delivery-evidence rules (see each phase section).
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- #385 is goal-mode only and runs at implement-preflight and review boundaries (only goal enforces the append-only rule; completion keeps judging the same bytes as `complete-state`).
+- #384 binds admission to Reviews-row cells (Invocation `gate`, reviewed head) rather than artifact frontmatter, and restricts gate artifacts to `reviews/`.
+- #383 stack registration is attach-only; the milestone subject keeps branch-head carrier evaluation (a p02 deviation toward stored member heads was retracted after review).
+- #355 was simplified at the review-cycle cap by operator choice: the stray-change check was removed (reintroduction trigger recorded) and the contract pin trimmed to structural assertions. The workflows→utility pack dependency is intentionally not declared.
+- Lockstep version 0.3.38 (main reached 0.3.37 during the run).
 
 ## References
 
