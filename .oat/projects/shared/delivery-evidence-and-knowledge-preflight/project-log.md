@@ -47,6 +47,10 @@ Impact: one wasted dispatch, and Medium/Low review-fix tasks must run as a new i
 Recommendation: have implement route Medium/Low review-fix plan tasks through mode: implement (or let fix mode accept queued review-fix tasks explicitly), and align the phase-implementer contract with review-receive auto-disposition.
 Uncertainty: whether the p01/p02 acceptance was a contract violation or the p03 rejection was over-strict.
 
+### 2026-10-31 · structural · oat-project-implement · p03
+
+Phase p03 (#385 journal rewrite detection) complete: 7 tasks (2 planned, 5 review-fix); review round 1 0C/0H/1M/4L, round 2 passed 0C/0H/0M/3L; fix-mode rejection rerouted as implementation; recovery attempts 0/10; delivery-evidence-p03-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

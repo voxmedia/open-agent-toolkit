@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p03-t07
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status      | Tasks | Completed |
-| ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | in_progress | 7     | 6/7       |
-| Phase 4 (p04) | pending     | 1     | 0/1       |
-| Phase 5 (p05) | pending     | 2     | 0/2       |
+| Phase         | Status   | Tasks | Completed |
+| ------------- | -------- | ----- | --------- |
+| Phase 1 (p01) | complete | 7     | 7/7       |
+| Phase 2 (p02) | complete | 7     | 7/7       |
+| Phase 3 (p03) | complete | 7     | 7/7       |
+| Phase 4 (p04) | pending  | 1     | 0/1       |
+| Phase 5 (p05) | pending  | 2     | 0/2       |
 
-**Total:** 20/24 tasks completed
+**Total:** 21/24 tasks completed
 
 ---
 
@@ -402,7 +402,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 3: Journal rewrite detection (#385)
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-10-31
 
 ### Task p03-t01: Export a journal-rewrite lister from delivery evidence
@@ -538,8 +538,23 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p03-t07: (review) Align the committed-frontmatter reason and make the alias test portable
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b06129631c5b46e9f14df01aaf60088ad316c6ea
+
+**Outcome (required when completed):**
+
+- The committed-frontmatter refusal uses owner `oat-project-reconcile` with a remedy and is documented; a portable alias test builds its own symlink and asserts a refused rewrite through it.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts`, `index.test.ts`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** journal-check 49 passed; root rerun journal-check + delivery 145 passed; type-check and markdownlint passed. Can-fail: restoring the lexical lookup made the symlink test exit 2 instead of 1.
+
+**Notes / Decisions:**
+
+- Review-fix for p03 round-2 L1 and L2 (request `dedkp-p03-implementation-3`).
 
 ### Review Received: p03 (round 2)
 
@@ -553,7 +568,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L2 (Low): alias test cannot fail on Linux CI → fix task p03-t07.
 - L3 (Low): `design.md` describes two lister result kinds; the code has a third (unparseable frontmatter) → aligned by the root in this bookkeeping commit.
 
-**Outcome:** passed (reviewer request `dedkp-p03-review-2`); Lows converted to p03-t07 and a design alignment.
+**Outcome:** passed (reviewer request `dedkp-p03-review-2`); Lows converted to p03-t07 (completed in b061296) and a design alignment.
+
+**Phase p03 outcome:** complete. Review round 1 (`dedkp-p03-review-1`) 0C/0H/1M/4L → 4 tasks (fix-mode request blocked; ran as implementation request 2); round 2 (`dedkp-p03-review-2`) 0C/0H/0M/3L → passed, 1 task plus a design alignment. Recovery attempts 0/10. Phase range `fabbdd4be614c069ce32ce70473e6aef817d8a04..b06129631c5b46e9f14df01aaf60088ad316c6ea`.
 
 ---
 
@@ -619,6 +636,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p03-fix-1 · scope=p03-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
 
 - run/v1 · request=dedkp-p03-implementation-2 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-review-2 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-implementation-3 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
