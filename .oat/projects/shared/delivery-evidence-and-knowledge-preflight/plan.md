@@ -718,6 +718,125 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p03-t02" --message "feat(
 
 ---
 
+### Task p03-t03: (review) Resolve the committed journal path through Git from the project directory
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/index.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: M1 — `readCommittedJournal` computes the Git path lexically with `relative(repoRoot, …)`; an absolute `--project` spelled through a symlink alias (macOS `/var` vs `/private/var`) yields an outside-repository path and exit 2 on a valid goal project.
+Location: see `reviews/archived/p03-review-2026-10-31T014304Z.md`.
+
+**Step 2: Implement fix**
+
+Run the HEAD lookups with `cwd: projectDir` (`git ls-tree --full-name -z HEAD -- implementation.md`, `git show HEAD:./implementation.md`), or realpath both sides before `relative`. Add a test passing the realpath of the fixture project directory while the root is the logical tmpdir path (expect `ok`).
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/delivery && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p03-t03" --message "fix(p03-t03): resolve the committed journal path through Git from the project directory" -- <exact files changed>
+```
+
+---
+
+### Task p03-t04: (review) Fail closed on a dangling HEAD and cover each Git failure branch
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/index.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: L1 — any exit 1 from `git rev-parse --verify --quiet HEAD^{commit}` is treated as an unborn HEAD, so a branch ref naming a missing object silently skips the comparison. L4 — the injected-failure test fails every Git call, so the `ls-tree` and `show` failure branches have no test of their own; the parity assertion does not pin the rewritten-line reason; no lister case for a pure deletion.
+Location: see `reviews/archived/p03-review-2026-10-31T014304Z.md`.
+
+**Step 2: Implement fix**
+
+On exit 1, return "no committed version" only when `git symbolic-ref -q HEAD` names a ref that `git show-ref --verify --quiet` cannot resolve; otherwise raise the same `CliError(…, 2)`. Add a runner that fails only the Nth Git call, once for each of the three calls; add `reason: expect.stringContaining(<rewritten line>)` to the parity assertion; add a lister case for a removed line with no replacement.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/delivery && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p03-t04" --message "fix(p03-t04): fail closed on a dangling HEAD and cover each Git failure branch" -- <exact files changed>
+```
+
+---
+
+### Task p03-t05: (review) Signal unparseable committed frontmatter from the shared journal rule
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/evidence.ts`
+- Modify: `packages/cli/src/commands/project/delivery/evidence.test.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: L2 — `journalRewrites` returns `[]` when either side's frontmatter cannot be parsed, so a committed journal with broken frontmatter plus a body rewrite passes journal check while delivery evidence refuses the same pair.
+Location: see `reviews/archived/p03-review-2026-10-31T014304Z.md`.
+
+**Step 2: Implement fix**
+
+Have the lister return a distinct entry (for example `kind: 'frontmatter-unparseable'`) when either side cannot be split; keep `judgeJournalChange`'s existing refusal message for that case; map the committed-side case in journal check to a reason (reuse `journal-frontmatter-malformed` or the rewrite reason with an explicit message). Add lister and journal-check cases.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/delivery && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p03-t05" --message "fix(p03-t05): signal unparseable committed frontmatter from the shared journal rule" -- <exact files changed>
+```
+
+---
+
+### Task p03-t06: (review) Make the journal-line-rewritten message actionable
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/index.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.test.ts`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Understand the issue**
+
+Review finding: L3 — the refusal states the fact but not the correction, unlike sibling reasons.
+Location: see `reviews/archived/p03-review-2026-10-31T014304Z.md`.
+
+**Step 2: Implement fix**
+
+Append the requirement (for example `; the journal is append-only — restore the committed line and append the correction`), update any assertion on the message, and note in `cli-reference.md` that the comparison base is `HEAD`, so an already-committed rewrite is left to `delivery check`.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check src/commands/project/delivery && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter oat-docs exec markdownlint-cli2 docs/reference/cli-reference.md`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p03-t06" --message "fix(p03-t06): make the journal-line-rewritten message actionable" -- <exact files changed>
+```
+
+---
+
 ## Phase 4: Knowledge-index dispatch preflight (#355)
 
 ### Task p04-t01: Resolve a mapper route before mutating knowledge
@@ -875,7 +994,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p01   | code     | passed          | 2026-10-31 | reviews/archived/p01-review-2026-10-31T004233Z.md           | b9c8c436e274083bc1bd994d99cce3cb26320d75 | auto       | -                 |
 | p02   | code     | fixes_completed | 2026-10-31 | reviews/archived/p02-review-2026-10-31T010236Z.md           | 6abea4b392bf44a9535cc74fda4769366d86ee5b | auto       | -                 |
 | p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-review-2026-10-31T012557Z.md           | 42db803d4ef78d7bcb5c1b8c04ddbfd08709a008 | auto       | -                 |
-| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03   | code     | fixes_added     | 2026-10-31 | reviews/archived/p03-review-2026-10-31T014304Z.md           | 55f83e676b328c30fbd721eb800a842c9521b378 | auto       | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -900,11 +1019,11 @@ cell; never truncate a widened row back to five columns.
 
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
-- Phase 3: 2 tasks - Journal rewrite detection (#385)
+- Phase 3: 6 tasks - Journal rewrite detection (#385), including 4 review-fix tasks
 - Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 19 tasks**
+**Total: 23 tasks**
 
 Ready for code review and merge.
 

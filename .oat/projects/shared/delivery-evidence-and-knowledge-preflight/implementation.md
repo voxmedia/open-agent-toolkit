@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | in_progress | 2     | 2/2       |
+| Phase 3 (p03) | in_progress | 6     | 2/6       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 16/19 tasks completed
+**Total:** 16/23 tasks completed
 
 ---
 
@@ -440,6 +440,41 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Verification:** phase suites 182 passed; root rerun of journal-check, delivery, closeout and complete-state 271 passed; type-check, docs markdownlint and `pnpm check` passed.
 
 **Can-fail neutralization (p03):** inserted `.filter(() => false)` after `journalRewrites(...)` in journal check; the parity test failed (expected exit 1, received exit 0). Removed before commit.
+
+### Task p03-t03: (review) Resolve the committed journal path through Git from the project directory
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t04: (review) Fail closed on a dangling HEAD and cover each Git failure branch
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t05: (review) Signal unparseable committed frontmatter from the shared journal rule
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t06: (review) Make the journal-line-rewritten message actionable
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p03
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-31T014304Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 4
+
+- M1 (Medium): an aliased absolute `--project` path fails as an outside-repository command error → fix task p03-t03.
+- L1 (Low): a dangling HEAD ref is treated as unborn and skips the comparison → fix task p03-t04.
+- L2 (Low): unparseable committed frontmatter makes the shared lister return no rewrites → fix task p03-t05.
+- L3 (Low): the refusal message omits the correction → fix task p03-t06.
+- L4 (Low): Git failure branches and the parity reason are covered only indirectly → fix task p03-t04.
+
+**Outcome:** fixes queued: p03-t03, p03-t04, p03-t05, p03-t06 (reviewer request `dedkp-p03-review-1`; 0 Critical / 0 High).
 
 ---
 
