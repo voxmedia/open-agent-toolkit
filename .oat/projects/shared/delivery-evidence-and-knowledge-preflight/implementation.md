@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status   | Tasks | Completed |
-| ------------- | -------- | ----- | --------- |
-| Phase 1 (p01) | complete | 7     | 7/7       |
-| Phase 2 (p02) | complete | 7     | 7/7       |
-| Phase 3 (p03) | complete | 7     | 7/7       |
-| Phase 4 (p04) | pending  | 1     | 0/1       |
-| Phase 5 (p05) | pending  | 2     | 0/2       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | complete    | 7     | 7/7       |
+| Phase 2 (p02) | complete    | 7     | 7/7       |
+| Phase 3 (p03) | complete    | 7     | 7/7       |
+| Phase 4 (p04) | in_progress | 1     | 1/1       |
+| Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 21/24 tasks completed
+**Total:** 22/24 tasks completed
 
 ---
 
@@ -576,13 +576,29 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 4: Knowledge-index dispatch preflight (#355)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-31
 
 ### Task p04-t01: Resolve a mapper route before mutating knowledge
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8b270dccc94f7a6a391fc11c343904d0cb4a69c5
+
+**Outcome (required when completed):**
+
+- `oat-repo-knowledge-index` resolves and authorizes a mapper route through `oat-dispatch-subagents` before Step 2 deletes or writes anything; a missing dispatch skill or unresolved route stops with the utility-pack recovery commands and leaves knowledge untouched.
+- Mapper launches are provider-neutral requests with labelled Claude, Codex and Cursor routes that launch the installed `oat-codebase-mapper` projection; Claude-only controls live only in the Claude route; a probe that did not launch is a route failure, not read-only mode; the maintainer-specific temp path is gone.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts` - ordering, route and recovery pins
+- `packages/cli/src/validation/named-skill-load-contract.test.ts` - refreshed line citations
+
+**Verification:** shared and validation contract suites 1,089 passed; `refresh-owned.test.mjs`, skill oxlint, `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format` and repo-improve markdownlint passed. Can-fail: moving the preflight after Step 2 failed `expect(prepare).toBeGreaterThan(preflight)`.
+
+**Phase p04 notes:** skill `metadata.version` bump deferred to p05-t01 by plan; one no-edit `pnpm format` retry after a concurrent asset-bundling race (no attempt consumed).
 
 ---
 
@@ -640,6 +656,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p03-review-2 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p03-implementation-3 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-implementation · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
