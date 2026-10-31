@@ -113,7 +113,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T15:25:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:25:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -145,17 +145,23 @@ oat_implement_exit_gate:
   envelope_status: 'ok'
   artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md before treating this gate review as consumed.'
-  receive_state: 'not_started'
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: 'intent_persisted'
+  receive_correlation:
+    gate_run_id: '2fc8f86e-4a13-4a50-bfdf-34cf37848dff'
+    handoff: 'oat-project-review-receive'
+    source_artifact: 'reviews/final-review-2026-10-31T152346Z.md'
+    scope: 'final'
+    type: 'code'
+    source_filename: 'final-review-2026-10-31T152346Z.md'
+  receive_source_artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md'
+  receive_archived_artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/final-review-2026-10-31T152346Z.md'
+  receive_event_identity: 'final|code|final-review-2026-10-31T152346Z.md'
+  receive_pre_head: '68783368ef7017073fa87769369c9c81a81725b8'
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-10-31T15:25:26Z'
+  updated_at: '2026-10-31T15:25:55Z'
   decided_at: null
 ---
 
