@@ -113,36 +113,36 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T15:18:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:19:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-30T23:32:02Z'
 oat_implement_exit_gate:
-  status: 'stale'
+  status: 'pending'
   resolution: 'configured'
   disposition: null
-  config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
-  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
-  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  config_fingerprint: 'sha256:134ceb98adefae1e6d8cce8a7dafc286d93236601c49825ca6b66a2def4f43fa'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important --avoid same-runtime "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits. (local override: prefer the Sol gate target over same-family selection)'
   project_override: null
   on_failure: 'block'
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: '8ccbb53adda27311032380209692e62a055a26e7'
+  reviewed_head: '6dc94fa8d4d6d46076fed5ad9abcc17bb1411758'
   implementation_base_ref: 'refs/remotes/origin/main'
   implementation_fingerprint: 'sha256:effective-delta-v2:d49a7c17e4ace137749b2305adb15e41b320210b02574963df40b1870e5316cd'
-  freshness_head: '8ccbb53adda27311032380209692e62a055a26e7'
+  freshness_head: '6dc94fa8d4d6d46076fed5ad9abcc17bb1411758'
   freshness_fingerprint: 'sha256:effective-delta-v2:d49a7c17e4ace137749b2305adb15e41b320210b02574963df40b1870e5316cd'
   waivers: []
-  launch_state: 'result_persisted'
-  launch_attempt_id: 'a36a03fa-e6a8-4bd2-b59a-6e31179e99c8'
-  launch_started_at: '2026-10-31T12:37:03Z'
-  launch_result_receipt: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/implement-exit-gate-a36a03fa-e6a8-4bd2-b59a-6e31179e99c8.stdout.json'
-  gate_run_marker: '/var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/e77017c2-3b44-4995-93c6-5609706696dd.json'
-  gate_run_id: 'e77017c2-3b44-4995-93c6-5609706696dd'
-  envelope_status: 'review_failed'
+  launch_state: 'intent_persisted'
+  launch_attempt_id: '8f901146-f38c-46ae-850c-f520d22f0008'
+  launch_started_at: '2026-10-31T15:19:01Z'
+  launch_result_receipt: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/implement-exit-gate-8f901146-f38c-46ae-850c-f520d22f0008.stdout.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
   artifact: null
   handoff: null
   receive_state: 'not_started'
@@ -154,11 +154,9 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure:
-    class: 'retired-by-operator'
-    detail: 'Operator directed switching the exit gate from the Opus target to the Sol target (local override: --avoid same-runtime, Claude targets disabled locally); prior run e77017c2 review_failed on a Claude weekly limit, no attempt consumed'
-  updated_at: '2026-10-31T15:18:57Z'
-  decided_at: '2026-10-31T12:38:13Z'
+  failure: null
+  updated_at: '2026-10-31T15:19:01Z'
+  decided_at: null
 ---
 
 # Project State: delivery-evidence-and-knowledge-preflight
