@@ -4,13 +4,16 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  ARCHIVED_REVIEW_ARTIFACT,
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
   goalPlan,
   goalState,
   PROJECT_REL,
   registryYaml,
   removeRepo,
+  reviewRow,
   type GoalRepo,
 } from './__tests__/goal-repo';
 import { createProjectDeliveryCheckCommand } from './check';
@@ -20,6 +23,7 @@ interface CheckPayload {
   subject?: string;
   kind?: string;
   scope?: string[];
+  publishedHeads?: (string | null)[];
   review?: {
     fresh: boolean;
     disposition: string | null;
@@ -111,6 +115,77 @@ describe('oat project delivery check', () => {
     });
   }
 
+  async function registeredStack(
+    topology: 'linear' | 'misordered' | 'unobserved',
+  ) {
+    repo = await createGoalRepo();
+    let lower: string;
+    if (topology === 'misordered') {
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+    } else {
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      lower = repo.commitAll('feat: lower layer');
+    }
+    await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+    const middle = repo.commitAll('feat: middle layer');
+    await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+    const tip = repo.commitAll('feat: tip layer');
+    await repo.write(
+      ARCHIVED_REVIEW_ARTIFACT,
+      '# d01 stack review\n\nNo findings.\n',
+    );
+    await repo.write(
+      'plan.md',
+      goalPlan({
+        reviews: reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, tip, 'd01'),
+      }),
+    );
+    await repo.write(
+      'state.md',
+      goalState(
+        `oat_milestone: m01\noat_milestone_status: delivered\n${registryYaml({
+          reviewed: tip,
+          base: repo.baseSha,
+          kind: 'stack',
+          members: [
+            {
+              url: 'https://github.com/owner/name/pull/1',
+              reviewedHead: lower,
+              observedHead: topology === 'unobserved' ? null : lower,
+              observedBase: repo.baseSha,
+            },
+            {
+              url: 'https://github.com/owner/name/pull/2',
+              reviewedHead: middle,
+              observedHead: middle,
+              observedBase: repo.baseSha,
+            },
+            {
+              url: 'https://github.com/owner/name/pull/3',
+              reviewedHead: tip,
+              observedHead: tip,
+              observedBase: repo.baseSha,
+            },
+          ],
+          exit: `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${tip}'
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`,
+        })}`,
+      ),
+    );
+    repo.commitAll(`chore(oat): register ${topology} stack`);
+    return { lower, middle, tip };
+  }
+
   it('reports a milestone fresh across the bookkeeping chain', async () => {
     const chain = await receivedMilestone();
     const before = snapshot(repo!);
@@ -135,6 +210,84 @@ describe('oat project delivery check', () => {
     expect(snapshot(repo!)).toBe(before);
     expect(chain.registered).toBe(repo!.git(['rev-parse', 'HEAD']));
   });
+
+  it('keeps a milestone fresh across its matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo);
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, reason: null },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it('rejects a gate artifact whose reviewed head differs from the carrier', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo, { reviewedHead: 'mismatched' });
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'undeliverable',
+      review: {
+        fresh: false,
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      exit: {
+        freshness: 'stale',
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      deliverable: false,
+    });
+    expect(exitCode).toBe(1);
+  });
+
+  it('keeps an unregistered milestone fresh across its matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo, { registered: false });
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, disposition: 'passed', reason: null },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it.each([
+    ['manual', { invocation: 'manual' }],
+    ['mismatched-head', { reviewedHead: 'mismatched' as const }],
+  ])(
+    'rejects an unregistered milestone with a %s gate row',
+    async (_label, options) => {
+      repo = await createGoalRepo();
+      await gateArtifactScenario(repo, { ...options, registered: false });
+
+      const { payload, exitCode } = await check(repo, 'm01');
+
+      expect(payload).toMatchObject({
+        status: 'undeliverable',
+        review: {
+          fresh: false,
+          reason: expect.stringMatching(/^disallowed-path/),
+        },
+        exit: {
+          freshness: 'stale',
+          reason: expect.stringMatching(/^disallowed-path/),
+        },
+        deliverable: false,
+      });
+      expect(exitCode).toBe(1);
+    },
+  );
 
   it('reports a milestone stale for a substantive successor and writes nothing', async () => {
     await receivedMilestone();
@@ -255,6 +408,117 @@ describe('oat project delivery check', () => {
     });
     expect(exitCode).toBe(0);
     expect(reviewedSha).toHaveLength(40);
+  });
+
+  it('judges a linear registered stack at its tip while reporting every published head', async () => {
+    const heads = await registeredStack('linear');
+
+    const { payload, exitCode } = await check(repo!, 'd01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      publishedHeads: [heads.lower, heads.middle, heads.tip],
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it('keeps a registered stack milestone undeliverable after a substantive post-carrier commit and passing re-review', async () => {
+    const heads = await registeredStack('linear');
+    await repo!.writeRepo('src/app.ts', 'export const value = 5;\n');
+    const substantive = repo!.commitAll('feat: ungated post-carrier change');
+    const second = 'reviews/archived/m01-code-review-2.md';
+    await repo!.write(second, '# m01 re-review\n\nNo findings.\n');
+    await repo!.write(
+      'plan.md',
+      goalPlan({
+        reviews: [
+          reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, heads.tip, 'd01'),
+          reviewRow('passed', second, substantive, 'm01'),
+        ].join('\n'),
+      }),
+    );
+    repo!.commitAll('chore(oat): record passing m01 re-review');
+
+    const { payload, exitCode } = await check(repo!, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'undeliverable',
+      review: { fresh: true, disposition: 'passed', reason: null },
+      exit: {
+        freshness: 'stale',
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      deliverable: false,
+    });
+    expect(payload.exit?.reason).toContain(substantive);
+    expect(exitCode).toBe(1);
+  });
+
+  it.each([
+    ['misordered', /^stack-order/],
+    ['unobserved', /^member-unobserved/],
+  ] as const)(
+    'fails closed for a %s lower stack member',
+    async (topology, reason) => {
+      await registeredStack(topology);
+
+      const { payload, exitCode } = await check(repo!, 'd01');
+
+      expect(payload.exit).toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(reason),
+      });
+      expect(payload.status).toBe('undeliverable');
+      expect(exitCode).toBe(1);
+    },
+  );
+
+  it('keeps milestone and delivery subjects aligned after a new own review moves a member revision', async () => {
+    repo = await createGoalRepo();
+    const chain = await bookkeepingChain(repo);
+    const second = 'reviews/archived/d01-code-review-2.md';
+    await repo.write(second, '# d01 re-review\n\nNo findings.\n');
+    await repo.write(
+      'plan.md',
+      goalPlan({
+        reviews: [
+          reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, chain.reviewed, 'm01'),
+          reviewRow('passed', second, chain.registered, 'd01'),
+        ].join('\n'),
+      }),
+    );
+    await repo.write(
+      'state.md',
+      (await repo.read('state.md'))
+        .replace(`artifact: ${ARCHIVED_REVIEW_ARTIFACT}`, `artifact: ${second}`)
+        .replace(
+          `head: '${chain.reviewed}' }]`,
+          `head: '${chain.registered}' }]`,
+        )
+        .replace(
+          `reviewed_head: '${chain.reviewed}'`,
+          `reviewed_head: '${chain.registered}'`,
+        )
+        .replace('observed_head: null', `observed_head: '${chain.registered}'`)
+        .replace('observed_base: null', `observed_base: '${repo.baseSha}'`),
+    );
+    repo.commitAll('chore(oat): record the d01 re-review');
+
+    const milestone = await check(repo, 'm01');
+    process.exitCode = undefined;
+    const delivery = await check(repo, 'd01');
+
+    expect(milestone.payload.review).toMatchObject({
+      fresh: true,
+      reason: null,
+    });
+    expect(delivery.payload.review).toMatchObject({
+      fresh: true,
+      reason: null,
+    });
+    expect(milestone.payload.status).toBe(delivery.payload.status);
   });
 
   it('refuses an unknown subject and invalid membership', async () => {

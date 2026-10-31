@@ -209,15 +209,22 @@ explicitly save a report before asking another workflow to consume its path.
 so use the slash or `$` form rather than relying on the agent to pick it. It
 does not require a project name or an active-project pointer.
 
-**Prerequisites:** A Git repository, the OAT CLI, and the ability to dispatch
-the `oat-codebase-mapper` subagent. A preflight checks whether background
-agents can write files and switches to a read-only fallback if they cannot.
-Needs an active OAT project: no. If a knowledge directory already exists,
-choose whether to refresh it or skip the run. Refresh removes only regular
-Markdown files marked `oat_generated: true` and regenerates the eight named
-outputs. Hand-written notes survive; an unmarked expected-output collision
-stops the run before deletion so you can decide how to preserve it. Symlinked
-knowledge directories and output collisions are refused.
+**Prerequisites:** A Git repository, the OAT CLI, the utility-pack dispatch
+skills, and an installed `oat-codebase-mapper` provider projection. Before
+changing knowledge on either a first generation or a refresh, the skill
+resolves `oat-dispatch-subagents` and `subagent-orchestration`, then checks that
+the active Claude, Codex, or Cursor provider can launch its mapper projection.
+A missing dispatch skill reports the utility-pack install/update commands; a
+missing mapper projection reports the workflows-pack commands or `oat sync`.
+An unsupported host or declined authorization reports that limitation without
+irrelevant install advice. Every failure stops before cleanup, thin-index
+creation, or a write probe. Needs an active OAT project: no. If a knowledge
+directory already exists, choose whether to refresh it or skip the run.
+Refresh removes only regular Markdown files marked `oat_generated: true` and
+regenerates the eight named outputs. Hand-written notes survive; an unmarked
+expected-output collision stops the run before deletion so you can decide how
+to preserve it. Symlinked knowledge directories and output collisions are
+refused.
 
 **Example scenario:** A new teammate needs to understand which packages own
 the CLI, how shared configuration reaches applications, and which test
@@ -232,16 +239,13 @@ index is an onboarding and retrieval aid, not a declaration that all
 architecture concerns have been fixed or that every future question is
 answered.
 
-**What it does without asking:** The only question is refresh-or-skip when
-knowledge files already exist. Otherwise it creates `.oat/repo/knowledge/`,
-starts a test subagent and then four `oat-codebase-mapper` subagents in the
-background, and writes the knowledge files. It then runs
-`oat internal commit-paths` on your current branch with the exact generated
-output/deletion paths and enabled hooks. Unrelated staged and unstaged work
-remains intact.
-Afterwards it records the run in `.oat/tracking.json` and regenerates the
-`.oat/state.md` dashboard with `oat state refresh`; those two files are not
-part of the commit. It does not push.
+**What it does without asking:** The run resolves a usable mapper route before
+changing knowledge and may ask once for authorization covering the write probe
+and four mapper lanes. It offers read-only fallback only after a launched probe
+verifies that writes are blocked. It preserves manual notes while preparing and
+generating the eight owned outputs. It commits only the exact owned paths with
+hooks enabled, leaving unrelated staged and unstaged work intact, then updates
+the tracking dashboard without pushing.
 
 **Expected output:** Eight files under `.oat/repo/knowledge/`:
 `project-index.md`, `stack.md`, `architecture.md`, `structure.md`,

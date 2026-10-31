@@ -6,6 +6,8 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { journalRewrites } from '@commands/project/delivery/evidence';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -49,6 +51,7 @@ export interface JournalCheckDependencies {
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   dirExists: (path: string) => Promise<boolean>;
   fileExists: (path: string) => Promise<boolean>;
+  git: GitRunner;
 }
 
 const DEFAULT_DEPENDENCIES: JournalCheckDependencies = {
@@ -58,6 +61,7 @@ const DEFAULT_DEPENDENCIES: JournalCheckDependencies = {
   readFile: (path, encoding) => defaultReadFile(path, encoding),
   dirExists,
   fileExists,
+  git: defaultGitRunner,
 };
 
 /**
@@ -121,6 +125,71 @@ function readWorkflowMode(stateContent: string): string {
   const mode =
     metadata.state === 'ok' ? metadata.record.oat_workflow_mode : undefined;
   return typeof mode === 'string' && mode.length > 0 ? mode : 'spec-driven';
+}
+
+async function readCommittedJournal(
+  projectDir: string,
+  git: GitRunner,
+): Promise<string | null> {
+  const head = await git.run(
+    ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'],
+    { cwd: projectDir, allowFailure: true },
+  );
+  if (head.code === 1) {
+    const symbolic = await git.run(['symbolic-ref', '-q', 'HEAD'], {
+      cwd: projectDir,
+      allowFailure: true,
+    });
+    if (symbolic.code !== 0 || symbolic.stdout === '') {
+      throw new CliError(
+        `Unable to inspect the committed journal: HEAD does not resolve and its branch could not be identified${symbolic.stderr ? `: ${symbolic.stderr}` : ''}`,
+        2,
+      );
+    }
+    const branch = await git.run(
+      ['show-ref', '--verify', '--quiet', symbolic.stdout],
+      { cwd: projectDir, allowFailure: true },
+    );
+    if (branch.code === 1) {
+      return null;
+    }
+    throw new CliError(
+      `Unable to inspect the committed journal: HEAD does not resolve${branch.stderr ? `: ${branch.stderr}` : ''}`,
+      2,
+    );
+  }
+  if (head.code !== 0) {
+    throw new CliError(
+      `Unable to inspect the committed journal: ${head.stderr || `git exited ${head.code}`}`,
+      2,
+    );
+  }
+
+  const entry = await git.run(
+    ['ls-tree', '--full-name', '-z', 'HEAD', '--', 'implementation.md'],
+    { cwd: projectDir, allowFailure: true },
+  );
+  if (entry.code !== 0) {
+    throw new CliError(
+      `Unable to inspect the committed journal path: ${entry.stderr || `git exited ${entry.code}`}`,
+      2,
+    );
+  }
+  if (entry.stdout === '') {
+    return null;
+  }
+
+  const blob = await git.run(['show', 'HEAD:./implementation.md'], {
+    cwd: projectDir,
+    allowFailure: true,
+  });
+  if (blob.code !== 0) {
+    throw new CliError(
+      `Unable to read the committed journal: ${blob.stderr || `git exited ${blob.code}`}`,
+      2,
+    );
+  }
+  return blob.stdout;
 }
 
 export function formatJournalReason(reason: JournalCheckReason): string {
@@ -212,7 +281,57 @@ async function runJournalCheck(
               : 'task',
           )
         : null;
-    const result = evaluateJournal({ boundary, scope, ...files });
+    let result = evaluateJournal({ boundary, scope, ...files });
+    if (
+      workflowMode === 'goal' &&
+      (boundary === 'implement-preflight' || boundary === 'review')
+    ) {
+      const committed = await readCommittedJournal(
+        projectDir,
+        dependencies.git,
+      );
+      if (committed !== null) {
+        const reasons: JournalCheckReason[] = journalRewrites(
+          committed,
+          files.journalContent,
+        ).flatMap((rewrite): JournalCheckReason[] => {
+          if (rewrite.kind === 'recorded-line-rewritten') {
+            return [
+              {
+                code: 'journal-line-rewritten',
+                path: 'implementation.md',
+                line: null,
+                owner: 'oat-project-implement',
+                message: `Committed journal line "${rewrite.line}" was removed or rewritten; the journal is append-only — restore the committed line and append the correction.`,
+              },
+            ];
+          }
+          if (
+            rewrite.kind === 'frontmatter-unparseable' &&
+            rewrite.side !== 'after'
+          ) {
+            return [
+              {
+                code: 'journal-frontmatter-malformed',
+                path: 'implementation.md',
+                line: null,
+                owner: 'oat-project-reconcile',
+                message:
+                  'Committed implementation.md frontmatter could not be parsed; repair the frontmatter and commit it before re-running.',
+              },
+            ];
+          }
+          return [];
+        });
+        if (reasons.length > 0) {
+          result = {
+            ...result,
+            status: 'refused',
+            reasons: [...result.reasons, ...reasons],
+          };
+        }
+      }
+    }
 
     if (context.json) {
       context.logger.json({ ...result, projectPath: projectDir });

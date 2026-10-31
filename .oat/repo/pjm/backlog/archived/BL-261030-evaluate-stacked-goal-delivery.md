@@ -1,7 +1,7 @@
 ---
 id: BL-261030-evaluate-stacked-goal-delivery
 title: Evaluate stacked goal-delivery exit carriers against the stack tip
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -10,7 +10,7 @@ labels:
   - goal-mode
 assignee: null
 created: 2026-10-30T22:27:33.721Z
-updated: 2026-10-30T22:27:33.721Z
+updated: '2026-10-31T12:08:17Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/383

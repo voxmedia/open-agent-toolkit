@@ -112,19 +112,28 @@ goal fields:
   its milestone, frozen phase scope, agreed endpoint, status, member pull
   requests and their observed revisions, the integrated review it was
   delivered on, its exit-gate binding and the first observed endpoint
-  attainment. A delivery's `status` is `registering`, `open`, `at_endpoint`,
+  attainment. A delivery's `kind` is `pr` for one pull request or `stack` for
+  an existing gh-stack, whose members are recorded base to tip; a stack's
+  configured code exit carrier is judged at the tip member, and every lower
+  member's observed head must be an ancestor of the tip (`stack-order`
+  otherwise). A delivery's `status` is `registering`, `open`, `at_endpoint`,
   or `superseded`, and its agreed `endpoint` is `open` or `merged`. A
   replacement delivery names its one direct predecessor in `covers_scope_of`,
   and the predecessor's `superseded_by` points back; only a delivery that never
   reached its agreed endpoint may be replaced. A correction of a delivery that
   did reach it is additive (`corrects_delivery_id`, new phase IDs, no inherited
   coverage). `oat_pr_status` and `oat_pr_url` project the latest member pull
-  request.
+  request, which is the tip member for a stack.
 
 Delivery evidence stays fresh across later commits that change only bookkeeping:
 `state.md`, `plan.md` (outside its approved content), `implementation.md`,
 `project-log.md` appends, `summary.md`, and the review artifacts of the
-delivery and of any delivery sharing its pull request.
+delivery and of any delivery sharing its pull request. In evidence scopes built
+for an exit carrier, the gate's own artifact also counts as bookkeeping if its
+`## Reviews` row has Type `code`, Invocation `gate` and a non-placeholder
+Reviewed Head equal to the carrier's `reviewed_head`, and the artifact is under `reviews/`
+(including `reviews/archived/`). That artifact is never integrated-review
+evidence and never one of a delivery's own review artifacts.
 
 A delivery's evidence identity is set once: its `exit_gate`, its
 `integrated_review` identity (`artifact`, `scope`, `bound_revisions`), and each

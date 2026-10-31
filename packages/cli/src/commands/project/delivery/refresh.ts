@@ -32,8 +32,9 @@ import {
 } from './check';
 import {
   deliveryEvidenceScope,
+  evaluateDeliveryExitCarrier,
   evaluateDeliveryReview,
-  evaluateGateCarrier,
+  latestDeliveryForMilestone,
   type CarrierEvaluation,
   type EvidenceScope,
   type ReviewEvaluation,
@@ -380,18 +381,18 @@ export async function planDeliveryRefresh(
   // registered delivery. Refresh records only staleness: it never upgrades a
   // carrier to fresh, which only implement's scoped closeout writes.
   const exitCarriers: RefreshReport['exitCarriers'] = [];
-  const latestByMilestone = new Map<string, GoalDelivery>();
-  for (const delivery of deliveries) {
-    const observed = observedById.get(delivery.delivery_id);
-    if (observed && observed.milestone !== null) {
-      latestByMilestone.set(observed.milestone, observed);
-    }
-  }
-  for (const [milestone, delivery] of latestByMilestone) {
+  const observedDeliveries = [...observedById.values()];
+  const milestones = new Set(
+    observedDeliveries
+      .map((delivery) => delivery.milestone)
+      .filter((milestone): milestone is string => milestone !== null),
+  );
+  for (const milestone of milestones) {
+    const delivery = latestDeliveryForMilestone(observedDeliveries, milestone)!;
     const carrier = project.state.milestoneGates?.[milestone]?.exit ?? null;
     if (carrier === null) continue;
     const scope = evidenceScope(project, delivery);
-    const evaluation = await evaluateGateCarrier(
+    const evaluation = await evaluateDeliveryExitCarrier(
       carrier,
       {
         kind: 'code',
@@ -399,11 +400,7 @@ export async function planDeliveryRefresh(
         match: 'covers',
         overrideDisabled: project.exitGateDisabled,
       },
-      {
-        git: runners.git,
-        scope,
-        publishedHeads: delivery.members.map((member) => member.observed_head),
-      },
+      { git: runners.git, scope, delivery },
     );
     exitCarriers.push({
       milestone,
@@ -438,8 +435,12 @@ function evidenceScope(
   project: GoalDeliveryProject,
   delivery: GoalDelivery,
 ): EvidenceScope {
+  const evidenceCarrier =
+    delivery.milestone === null
+      ? null
+      : (project.state.milestoneGates?.[delivery.milestone]?.exit ?? null);
   return deliveryEvidenceScope(
-    project,
+    { ...project, evidenceCarrier },
     project.state.deliveries ?? [],
     delivery,
   );

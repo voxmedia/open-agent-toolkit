@@ -5,6 +5,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { createProjectCompleteStateCommand } from '@commands/project/complete-state/index';
 import {
   createGoalRepo,
+  GATE_REVIEW_ARTIFACT,
   goalState,
   OUTCOME as GOAL_REPO_OUTCOME,
   PROJECT_REL,
@@ -77,8 +78,8 @@ oat_template: false
 
 ## Reviews
 
-| Scope | Type | Status | Date | Artifact | Reviewed Head |
-| ----- | ---- | ------ | ---- | -------- | ------------- |
+| Scope | Type | Status | Date | Artifact | Reviewed Head | Invocation |
+| ----- | ---- | ------ | ---- | -------- | ------------- | ---------- |
 ${reviews}
 `;
 }
@@ -263,7 +264,9 @@ interface Scenario {
  * records the head, the passed review, the registry and the closeout.
  */
 async function scenario(
-  options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> = {},
+  options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> & {
+    gateArtifact?: 'matching' | 'mismatched';
+  } = {},
 ): Promise<Scenario> {
   const repo = await createGoalRepo('oat-goal-boundary-');
   await repo.writeRepo(
@@ -284,14 +287,144 @@ async function scenario(
     plan(`| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} |`),
   );
   await repo.write('implementation.md', journal('completed', reviewed));
+  const { gateArtifact, ...stateOptions } = options;
+  const configuredCarrier = `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${reviewed}'
+      subject: { kind: code, scope: [p01, p02, p03] }
+      decided_at: '2026-10-11T11:00:00Z'`;
   await repo.write(
     'state.md',
-    state({ reviewed, base: repo.baseSha, ...options }),
+    state({
+      reviewed,
+      base: repo.baseSha,
+      ...stateOptions,
+      ...(gateArtifact === undefined ? {} : { exitGate: configuredCarrier }),
+    }),
   );
-  const published = repo.commitAll(
+  let published = repo.commitAll(
     'chore(oat): record, receive and register d02',
   );
+  if (gateArtifact !== undefined) {
+    await repo.write(
+      GATE_REVIEW_ARTIFACT,
+      '# final gate review\n\nNo findings.\n',
+    );
+    await repo.write(
+      'plan.md',
+      plan(
+        [
+          `| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} | auto |`,
+          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${gateArtifact === 'matching' ? reviewed : published} | gate |`,
+        ].join('\n'),
+      ),
+    );
+    published = repo.commitAll('chore(oat): record final gate review');
+  }
   return { repo, reviewed, published };
+}
+
+async function stackedScenario(topology: 'linear' | 'misordered'): Promise<{
+  repo: GoalRepo;
+  gh: GhRunner;
+}> {
+  const target = await createGoalRepo('oat-goal-stack-boundary-');
+  await target.writeRepo(
+    '.oat/projects/shared/child-goal/state.md',
+    '---\noat_lifecycle: complete\noat_workflow_mode: quick\noat_extracted_from: goal\n---\n',
+  );
+  await target.write('plan.md', plan());
+  await target.write('implementation.md', journal('in_progress'));
+  await target.write('state.md', state(null));
+  target.commitAll('chore(oat): goal brief and child');
+
+  let lower: string;
+  if (topology === 'misordered') {
+    target.git(['checkout', '-q', '-b', 'lower']);
+    await target.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+    lower = target.commitAll('feat: unrelated lower layer');
+    target.git(['checkout', '-q', 'main']);
+  } else {
+    await target.writeRepo('src/app.ts', 'export const value = 2;\n');
+    lower = target.commitAll('feat: lower layer');
+  }
+  await target.writeRepo('src/app.ts', 'export const value = 3;\n');
+  const middle = target.commitAll('feat: middle layer');
+  await target.writeRepo('src/app.ts', 'export const value = 4;\n');
+  const tip = target.commitAll('feat: tip layer');
+
+  await target.write(REVIEW, '# d02 stack review\n\nNo findings.\n');
+  await target.write(
+    'plan.md',
+    plan(`| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${tip} |`),
+  );
+  await target.write('implementation.md', journal('completed', tip));
+  const stackEntry = `  - delivery_id: d02
+    milestone: m01
+    scope: [p03]
+    endpoint: merged
+    kind: stack
+    status: open
+    superseded_by: null
+    corrects_delivery_id: null
+    covers_scope_of: d01
+    members:
+      - url: https://github.com/owner/name/pull/2
+        base: '${target.baseSha}'
+        reviewed_head: '${lower}'
+        observed_head: null
+        observed_base: null
+        status: open
+      - url: https://github.com/owner/name/pull/3
+        base: '${target.baseSha}'
+        reviewed_head: '${middle}'
+        observed_head: null
+        observed_base: null
+        status: open
+      - url: https://github.com/owner/name/pull/4
+        base: '${target.baseSha}'
+        reviewed_head: '${tip}'
+        observed_head: null
+        observed_base: null
+        status: open
+    integrated_review:
+      artifact: ${REVIEW}
+      scope: [p01, p02, p03]
+      bound_revisions:
+        - { member: 0, base: '${target.baseSha}', head: '${lower}' }
+        - { member: 1, base: '${target.baseSha}', head: '${middle}' }
+        - { member: 2, base: '${target.baseSha}', head: '${tip}' }
+      disposition: passed
+    exit_gate:
+      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${tip}'
+      subject: { kind: code, scope: [p01, p02, p03] }
+      decided_at: '2026-10-11T11:00:00Z'
+`;
+  await target.write(
+    'state.md',
+    state({ reviewed: tip, base: target.baseSha }).replace(
+      /  - delivery_id: d02[\s\S]*?(?=oat_milestone_gates:)/,
+      stackEntry,
+    ),
+  );
+  target.commitAll(`chore(oat): register ${topology} stack`);
+
+  const observations = [lower, middle, tip];
+  let index = 0;
+  return {
+    repo: target,
+    gh: stubGh(() => ({
+      state: 'MERGED',
+      head: observations[index++]!,
+      base: target.baseSha,
+    })),
+  };
 }
 
 describe('goal closeout boundary (end to end)', () => {
@@ -470,6 +603,30 @@ describe('goal closeout boundary (end to end)', () => {
     });
   });
 
+  it('keeps a delivery exit binding fresh across its matching gate artifact commit', async () => {
+    const built = await scenario({ gateArtifact: 'matching' });
+    repo = built.repo;
+
+    const checked = await closeoutCheck(observed(() => built.published));
+
+    expect(checked.payload).toMatchObject({ status: 'complete' });
+    expect(checked.exitCode).toBe(0);
+  });
+
+  it('rejects a delivery gate artifact whose reviewed head differs from the binding', async () => {
+    const built = await scenario({ gateArtifact: 'mismatched' });
+    repo = built.repo;
+
+    const checked = await closeoutCheck(observed(() => built.published));
+
+    expect(checked.payload).toMatchObject({
+      status: 'incomplete',
+      invariant: 'goal_coverage_incomplete',
+    });
+    expect(JSON.stringify(checked.payload)).toContain('disallowed-path');
+    expect(checked.exitCode).toBe(1);
+  });
+
   it('refuses a substantive successor of the reviewed revision and names the review owner', async () => {
     const built = await scenario();
     repo = built.repo;
@@ -481,6 +638,30 @@ describe('goal closeout boundary (end to end)', () => {
       invariant: 'goal_coverage_incomplete',
       route: 'oat-project-review-provide',
     });
+  });
+
+  it('accepts a linear terminal stack whose exit carrier was reviewed at the tip', async () => {
+    const built = await stackedScenario('linear');
+    repo = built.repo;
+
+    const checked = await closeoutCheck(built.gh);
+
+    expect(checked.payload).toMatchObject({ status: 'complete' });
+    expect(checked.exitCode).toBe(0);
+  });
+
+  it('refuses a terminal stack whose lower member is not an ancestor of the tip', async () => {
+    const built = await stackedScenario('misordered');
+    repo = built.repo;
+
+    const checked = await closeoutCheck(built.gh);
+
+    expect(checked.payload).toMatchObject({
+      status: 'incomplete',
+      invariant: 'goal_coverage_incomplete',
+    });
+    expect(JSON.stringify(checked.payload)).toContain('stack-order');
+    expect(checked.exitCode).toBe(1);
   });
 
   it('refuses an open member against a merged endpoint', async () => {

@@ -259,9 +259,9 @@ interface FenceDefect {
  * wrong in both directions. It misses the two three-backtick defects
  * (`create-agnostic-skill/references/skill-template.md` and
  * `oat-agent-instructions-apply/references/instruction-file-templates/glob-scoped-rule.md`),
- * and it falsely reports the three legitimate bare four-backtick agent-prompt
- * blocks in `.agents/skills/oat-repo-knowledge-index/SKILL.md` at `:373`,
- * `:424`, and `:475`, whose bodies open on `subagent_type: "Explore"` and
+ * and it falsely reports the legitimate bare four-backtick mapper-prompt
+ * blocks in `.agents/skills/oat-repo-knowledge-index/SKILL.md`, whose bodies
+ * open on the provider-neutral `role: oat-codebase-mapper` request and
  * legitimately contain `## Include frontmatter:`. The first-body-line rule
  * separates the corpus exactly, and it also spares the two legitimate printed
  * console templates whose bodies open on a `━━━` rule:
@@ -4183,8 +4183,8 @@ describe('named-skill execution contract', () => {
 
     // The executable disproof of the source item's acceptance criterion 2. A
     // `ticks >= 4` discriminator reports this block, which is exactly the shape
-    // of the three repaired agent-prompt templates in
-    // `oat-repo-knowledge-index/SKILL.md` at `:373`, `:424`, and `:475`.
+    // of the repaired provider-neutral mapper-prompt templates in
+    // `oat-repo-knowledge-index/SKILL.md`.
     await expect(
       assertContractCurrent(root, FIXTURE_MATRIX),
     ).resolves.toBeUndefined();

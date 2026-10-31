@@ -531,7 +531,8 @@ root commits shared routing, registry, gate and acceptance records.
 
 `oat_deliveries` entries carry `delivery_id` (`dNN`, unique), `milestone`, a
 `scope` frozen on registration, the agreed `endpoint` (`open | merged`),
-`kind: pr`, `status` (`registering | open | at_endpoint | superseded`), the
+`kind: pr | stack`, `status`
+(`registering | open | at_endpoint | superseded`), the
 supersession links `superseded_by` and `covers_scope_of`, an additive
 `corrects_delivery_id`, persisted `lookup` keys (`repository`, `head_branch`,
 `head_sha_at_registration`), `members` (`url`, `base`, `reviewed_head`,
@@ -540,12 +541,26 @@ supersession links `superseded_by` and `covers_scope_of`, an additive
 binding `exit_gate`, and the first observed `endpoint_attainment`.
 
 - **Idempotent registration.** The registration owner writes the entry with
-  `status: registering` and its `lookup` keys and commits before creating the
-  pull request, then records the URL and `status: open`. A `registering` entry
-  on resume runs `gh pr list --repo <repository> --head <head_branch> --state
-all --json url,headRefOid`: exactly one match is attached without creating a
-  duplicate; zero matches create once; more than one stops and routes to
-  `oat-project-reconcile`.
+  `status: registering` and its `lookup` keys. For `kind: pr`, it commits
+  before creating the pull request, then records the URL and `status: open`; on
+  resume, `gh pr list --repo <repository> --head <head_branch> --state all
+--json url,headRefOid` attaches exactly one match, creates once for zero
+  matches, and stops for more than one. For `kind: stack`, registration is
+  attach-only: the `registering` write records every existing member URL in
+  base-to-tip order, and resume re-checks each URL rather than creating a
+  stack. For a PR lookup, more than one stops and routes to
+  `oat-project-reconcile`; a missing, closed-unmerged or re-targeted stack
+  layer follows the same stop-and-route.
+- **Stacked deliveries.** A stack records members base to tip. For a configured
+  code carrier bound to a reviewed head, the exit carrier is judged against
+  the tip member's observed head, and every lower member's observed head must
+  be an ancestor of the tip (`stack-order` otherwise). Null carriers and
+  unreviewed-resolution carriers (`no_gate`, `project_disabled`) are evaluated
+  exactly as for `kind: pr`; the integrated review remains per member.
+  Post-review bookkeeping lands on the tip member's branch, because a commit
+  on a lower layer changes upper members' bases and stales their review. A stack
+  that fails the configured-carrier order check is never repaired in place:
+  replace it through supersession with `covers_scope_of`.
 - **Prerequisites.** Before registration the owner runs
   `oat project delivery refresh --project <path>` and
   `oat project delivery check --project <path> --subject <mNN|dNN> --json`; it
@@ -562,7 +577,8 @@ all --json url,headRefOid`: exactly one match is attached without creating a
   share their member pull request (`gh` allows one open pull request per head
   and base), so one member URL may appear in several deliveries. Coverage
   judges each delivery's own frozen scope and bound evidence, never the shared
-  member alone; `oat_pr_url` and `oat_pr_status` project the latest member.
+  member alone; `oat_pr_url` and `oat_pr_status` project the latest member,
+  which is the tip member for a stack.
 - **Evidence capture.** The exit-gate result accepted for the delivery is
   persisted as its `exit_gate` with the delivery evidence; overwriting the
   milestone's working carrier for a correction never relabels another
@@ -600,7 +616,14 @@ changes only permitted bookkeeping:
   the evidence being recorded or archived, and, for a delivery whose member
   pull request is shared (12.7, Shared members), the review artifacts recorded
   for the deliveries that share it; each delivery is still judged on its own
-  frozen scope, reviewed revisions and `exit_gate`. `summary.md` is derived
+  frozen scope, reviewed revisions and `exit_gate`. The artifact of a Reviews
+  row with Type `code`, Invocation `gate`, and a non-placeholder Reviewed Head
+  equal to the judged carrier's `reviewed_head` is also admitted in evidence
+  scopes built for that carrier (its review and exit evaluations), provided
+  its project-relative artifact path is under `reviews/` (including
+  `reviews/archived/`). The gate row is never integrated-review evidence and
+  its artifact never joins a delivery's own review-artifact set, so it cannot
+  unlock set-once fields. `summary.md` is derived
   institutional memory, never the authority for outcomes, approach,
   constraints, decisions or endpoint, which live in the brief; any change to
   it is bookkeeping. Path membership alone is insufficient for the other

@@ -6,10 +6,10 @@
 
 - 2026-10-30: triage of #353–#385 adds a goal-mode delivery-evidence cluster
   from one stacked-milestone run:
-  [BL-261030-evaluate-stacked-goal-delivery — Evaluate stacked goal-delivery exit carriers against the stack tip](items/BL-261030-evaluate-stacked-goal-delivery.md),
-  [BL-261030-admit-goal-exit-gate-review — Admit goal exit-gate review artifacts as milestone bookkeeping evidence](items/BL-261030-admit-goal-exit-gate-review.md)
+  [BL-261030-evaluate-stacked-goal-delivery — Evaluate stacked goal-delivery exit carriers against the stack tip](archived/BL-261030-evaluate-stacked-goal-delivery.md),
+  [BL-261030-admit-goal-exit-gate-review — Admit goal exit-gate review artifacts as milestone bookkeeping evidence](archived/BL-261030-admit-goal-exit-gate-review.md)
   and
-  [BL-261030-flag-rewritten-committed — Flag rewritten committed journal lines in journal check](items/BL-261030-flag-rewritten-committed.md).
+  [BL-261030-flag-rewritten-committed — Flag rewritten committed journal lines in journal check](archived/BL-261030-flag-rewritten-committed.md).
   They touch the same delivery evidence code and are best planned together.
   Record: [2026-10-30 triage](../triage/2026-10-30-untriaged-issues.md).
 
@@ -479,7 +479,6 @@
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                          | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                       | open   | medium   | feature    | M        |
 | BL-260830-add-remote-review-respond      | Add remote review respond and summarize skill set                                                        | open   | medium   | feature    | L        |
-| BL-261030-admit-goal-exit-gate-review    | Admit goal exit-gate review artifacts as milestone bookkeeping evidence                                  | open   | medium   | task       | M        |
 | BL-261002-align-implement-complete       | Align implement, complete, and pr-final skill contracts with their actual behavior                       | open   | medium   | task       | S        |
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                           | open   | medium   | feature    | M        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                              | open   | medium   | task       | M        |
@@ -501,11 +500,9 @@
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                               | open   | medium   | feature    | M        |
 | BL-261003-enforce-reconnaissance         | Enforce reconnaissance evidence and reconcile original-run review receipts                               | open   | medium   | bug        | M        |
 | BL-260912-evaluate-replacing-explainer   | Evaluate replacing Explainer Kit authoring guidance with a pinned Effective HTML subset                  | open   | medium   | task       | M        |
-| BL-261030-evaluate-stacked-goal-delivery | Evaluate stacked goal-delivery exit carriers against the stack tip                                       | open   | medium   | task       | M        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                               | open   | medium   | feature    | M        |
 | BL-261002-fix-oat-config-describe-gaps   | Fix oat config describe gaps and make config unset reach the layer that holds the key                    | open   | medium   | task       | S        |
 | BL-261002-fix-project-planning-skill     | Fix project planning skill handoffs and inputs across discover, spec, promote, split, and plan           | open   | medium   | task       | M        |
-| BL-261030-flag-rewritten-committed       | Flag rewritten committed journal lines in journal check                                                  | open   | medium   | task       | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                        | open   | medium   | feature    | L        |
 | BL-260927-give-gate-receipts-portable    | Give gate receipts portable ownership, path-neutral identities, and a shipped ignore rule                | open   | medium   | feature    | M        |
 | BL-261011-guard-goal-brief-amendments    | Guard goal brief amendments against an open delivery head branch                                         | open   | medium   | task       | M        |
@@ -525,7 +522,6 @@
 | BL-261002-offer-a-strict-gate-reviewer   | Offer a strict gate-reviewer independence mode and align gate skill wording and decision records         | open   | medium   | feature    | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                              | open   | medium   | bug        | M        |
 | BL-261002-port-the-complexity-review     | Port the complexity-review skill into an OAT pack                                                        | open   | medium   | task       | M        |
-| BL-261030-preflight-knowledge-index      | Preflight knowledge-index mapper dispatch before replacing generated knowledge                           | open   | medium   | task       | S        |
 | BL-261002-provide-a-complete-oat         | Provide a complete OAT uninstall path and make pack removal clean up after itself                        | open   | medium   | feature    | L        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                   | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                        | open   | medium   | feature    | L        |
