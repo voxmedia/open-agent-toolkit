@@ -125,7 +125,7 @@ carrier)`) called where scopes are built: the milestone branch of
 - **Shared rule:** refactor `judgeJournalChange` in `delivery/evidence.ts`
   into an exported function that lists every offending line
   (`journalRewrites(before, after)` returning line text plus kind: rewritten
-  line or extraction marker), with `judgeJournalChange` returning the first as
+  line, extraction marker, or unparseable frontmatter on either side), with `judgeJournalChange` returning the first as
   its `Verdict`. Behavior of the delivery evaluator is unchanged.
 - **Journal check:** for goal projects only (state `oat_workflow_mode: goal`)
   and only at the `implement-preflight` and `review` boundaries,

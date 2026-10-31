@@ -837,6 +837,36 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 
 ---
 
+### Task p03-t07: (review) Align the committed-frontmatter reason and make the alias test portable
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/journal-check/index.ts`
+- Modify: `packages/cli/src/commands/project/journal-check/index.test.ts`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Understand the issue**
+
+Review findings (round 2): L1 — the committed-frontmatter refusal reuses `journal-frontmatter-malformed` with owner `oat-project-implement`, while the existing reason with that code uses `oat-project-reconcile`; the message gives no remedy and the CLI reference does not mention it. L2 — the alias test relies on the macOS temp-directory symlink, so on Ubuntu CI it cannot fail, and it passes if the lookup silently finds nothing.
+Location: see `reviews/archived/p03-review-2026-10-31T015808Z.md`.
+
+**Step 2: Implement fix**
+
+Use the same owner as the existing `journal-frontmatter-malformed` reason (`oat-project-reconcile`) and append a remedy to the committed-frontmatter message; mention the case in the journal check entry of `cli-reference.md`. Replace or add an alias test that creates its own symlink to the fixture project directory and asserts a committed-line rewrite is refused with `journal-line-rewritten` through the symlinked absolute path (so it fails if the lookup finds nothing).
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/journal-check && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter oat-docs exec markdownlint-cli2 docs/reference/cli-reference.md`
+Expected: pass; can-fail: restore the lexical path and the new symlink test fails on any platform.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p03-t07" --message "fix(p03-t07): align the committed-frontmatter reason and make the alias test portable" -- <exact files changed>
+```
+
+---
+
 ## Phase 4: Knowledge-index dispatch preflight (#355)
 
 ### Task p04-t01: Resolve a mapper route before mutating knowledge
@@ -995,6 +1025,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p02   | code     | fixes_completed | 2026-10-31 | reviews/archived/p02-review-2026-10-31T010236Z.md           | 6abea4b392bf44a9535cc74fda4769366d86ee5b | auto       | -                 |
 | p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-review-2026-10-31T012557Z.md           | 42db803d4ef78d7bcb5c1b8c04ddbfd08709a008 | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-10-31 | reviews/archived/p03-review-2026-10-31T014304Z.md           | 55f83e676b328c30fbd721eb800a842c9521b378 | auto       | -                 |
+| p03   | code     | passed          | 2026-10-31 | reviews/archived/p03-review-2026-10-31T015808Z.md           | 373d70cf23049ae9ba2ca4d863465404db3a5ec4 | auto       | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -1019,11 +1050,11 @@ cell; never truncate a widened row back to five columns.
 
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
-- Phase 3: 6 tasks - Journal rewrite detection (#385), including 4 review-fix tasks
+- Phase 3: 7 tasks - Journal rewrite detection (#385), including 5 review-fix tasks
 - Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 

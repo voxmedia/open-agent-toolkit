@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t07
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | in_progress | 6     | 6/6       |
+| Phase 3 (p03) | in_progress | 7     | 6/7       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 20/23 tasks completed
+**Total:** 20/24 tasks completed
 
 ---
 
@@ -535,6 +535,25 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L4 (Low): Git failure branches and the parity reason are covered only indirectly → fix task p03-t04.
 
 **Outcome:** fixes completed: p03-t03, p03-t04, p03-t05, p03-t06 (fix-mode request `dedkp-p03-fix-1` returned BLOCKED because fix mode accepts only Critical/High; the queued plan tasks ran as implementation request `dedkp-p03-implementation-2` on the same handle and target); awaiting re-review. Original queue: p03-t03, p03-t04, p03-t05, p03-t06 (reviewer request `dedkp-p03-review-1`; 0 Critical / 0 High).
+
+### Task p03-t07: (review) Align the committed-frontmatter reason and make the alias test portable
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p03 (round 2)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p03-review-2026-10-31T015808Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+
+- Round-1 M1, L1, L2, L3 and L4 verified resolved (aliased-path and dangling-HEAD probes, 30,000-pair differential of `judgeJournalChange`).
+- L1 (Low): committed-frontmatter refusal owner, remedy and docs → fix task p03-t07.
+- L2 (Low): alias test cannot fail on Linux CI → fix task p03-t07.
+- L3 (Low): `design.md` describes two lister result kinds; the code has a third (unparseable frontmatter) → aligned by the root in this bookkeeping commit.
+
+**Outcome:** passed (reviewer request `dedkp-p03-review-2`); Lows converted to p03-t07 and a design alignment.
 
 ---
 
