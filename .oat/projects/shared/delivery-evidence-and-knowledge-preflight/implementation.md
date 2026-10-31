@@ -808,18 +808,35 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 5: Release bookkeeping and gates
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-31
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** in_progress
+**Commit:** 001e059460f506dfbefec472244a668ac7aec292 (version bumps; stale pins pending recovery)
 
 ### Task p05-t02: Close out backlog items and run the full gate list
 
 **Status:** pending
 **Commit:** -
+
+### Recovery Event dedkp-p05-recovery-01
+
+- Phase/task: p05 / p05-t01
+- Original request: dedkp-p05-implementation
+- Original commit: 001e059460f506dfbefec472244a668ac7aec292
+- Defect class: test
+- Discovered by: pnpm test
+- Disposition: direction-required
+- Authorization: phase-standing
+- Attempt: 0/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: -
+- Verification: `pnpm test` exit 1 — 9 stale skill-version pins in `packages/cli/src/validation/skills.test.ts` plus 2 Markdown-scan failures caused by uncommitted archive moves (the archive writes were rolled back; tree clean).
+- Reason: the p05 Phase Scope omitted the recovery-ledger exception for `state.md`, so no attempt could be reserved; no reservation, edit or recovery commit occurred.
+
+**Root direction (p05):** the stop came from a root scope omission, not from the work. Amended plan p05-t01 to include the mechanically derived pin file and p05-t02 to commit the archive before the gates (see Deviations); the continuation request `dedkp-p05-implementation-2` authorizes the `oat_phase_recovery_policy` ledger write for a phase-standing recovery of the stale pins.
 
 ---
 
@@ -880,6 +897,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p04-review-4 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p04-implementation-5 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p05-implementation · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

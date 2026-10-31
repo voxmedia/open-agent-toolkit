@@ -1153,6 +1153,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 - Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md` (1.3.3 → 1.4.0)
 - Modify: `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json` (0.3.37 → 0.3.38; `main` reached 0.3.37 in #389 during this run)
 - Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/src/validation/skills.test.ts` (version pins that must equal the bumped skills; mechanically derived)
 
 Bump only skills whose bundled files actually changed in the final diff
 (`git diff --name-only origin/main...HEAD -- .agents/skills`); adjust the list
@@ -1210,7 +1211,9 @@ None.
 
 **Step 4: Verify**
 
-Run the AGENTS.md Definition of Done gates in order, each with an explicit exit
+Commit the archive operation first (Step 5), because the Markdown scan in
+`pnpm test` cannot read tracked paths that are deleted but uncommitted. Then
+run the AGENTS.md Definition of Done gates in order, each with an explicit exit
 code: `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
 `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
 `pnpm release:validate`, `pnpm build:docs`, then
