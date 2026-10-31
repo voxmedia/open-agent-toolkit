@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status      | Tasks | Completed |
-| ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | complete    | 8     | 8/8       |
-| Phase 5 (p05) | in_progress | 3     | 2/3       |
+| Phase         | Status   | Tasks | Completed |
+| ------------- | -------- | ----- | --------- |
+| Phase 1 (p01) | complete | 7     | 7/7       |
+| Phase 2 (p02) | complete | 7     | 7/7       |
+| Phase 3 (p03) | complete | 7     | 7/7       |
+| Phase 4 (p04) | complete | 8     | 8/8       |
+| Phase 5 (p05) | complete | 3     | 3/3       |
 
-**Total:** 31/32 tasks completed
+**Total:** 32/32 tasks completed
 
 ---
 
@@ -908,8 +908,24 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p05-t03: (review) Align stack and registration wording in user docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 708a517e5d9297dd3e64da39dfff8f4e1ddda461
+
+**Outcome (required when completed):**
+
+- The CLI reference scopes the stack tip/ancestor rule to configured code carriers for delivery subjects (`dNN`), and the closeout and lifecycle pages describe attach-only `kind: stack` registration.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/reference/cli-reference.md`
+- `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+- `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Verification:** markdownlint exit 0; docs index regeneration and diff exit 0/0; `pnpm format` exit 0.
+
+**Notes / Decisions:**
+
+- Final-review fix for L1 and L2 (request `dedkp-p05-implementation-3`).
 
 ---
 
@@ -978,6 +994,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-final-review-1 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p05-implementation-3 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p05-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
