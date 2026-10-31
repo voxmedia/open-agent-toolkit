@@ -303,8 +303,9 @@ the configured command verbatim with `--review-scope final`, before the
 milestone's integrated review, and runs again after queued fixes. Its own
 Type `code`, Invocation `gate` Reviews row and artifact count as bookkeeping
 only when the row's non-placeholder Reviewed Head equals the carrier's
-`reviewed_head`. That row never serves as the integrated review or unlocks
-delivery fields, and no placeholder row is required before the gate runs.
+`reviewed_head` and the artifact's project-relative path is under `reviews/`
+(including `reviews/archived/`). That row never serves as the integrated review
+or unlocks delivery fields, and no placeholder row is required before the gate runs.
 `oat project delivery check` reports the exit carrier's freshness, and
 `oat project delivery refresh` marks it stale when delivery evidence no longer
 holds.
