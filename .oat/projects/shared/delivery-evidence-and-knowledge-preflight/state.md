@@ -49,7 +49,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm lint
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: 26ddb708f7b9bdbe8a17507c1f348b3be6331157
-        status: pending
+        status: completed
 oat_dispatch_policy:
   mode: managed
   policy: high

@@ -1358,7 +1358,7 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       repo = await createGoalRepo();
       await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
       const reviewed = repo.commitAll('feat(p01-p02): implement milestone');
-      const carrier = `      status: allowed
+      const gateCarrier = `      status: allowed
       resolution: configured
       disposition: passed
       config_fingerprint: null
@@ -1390,8 +1390,8 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
           `oat_milestone: m01\noat_milestone_status: reviewing\n${registryYaml({
             reviewed,
             base: repo.baseSha,
-            deliveryExitGate: carrier,
-            exit: carrier,
+            deliveryExitGate: gateCarrier,
+            exit: gateCarrier,
           })}`,
         ),
       );
