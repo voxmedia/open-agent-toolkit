@@ -31,6 +31,7 @@ import {
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
+  latestDeliveryForMilestone,
   type EvidenceScope,
 } from './evidence';
 
@@ -213,6 +214,35 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
   afterEach(async () => {
     await removeRepo(repo);
     repo = undefined;
+  });
+
+  describe('latest milestone delivery selection', () => {
+    it('excludes superseded and registering entries after the latest open delivery', () => {
+      const open = delivery({});
+      const superseded = {
+        ...delivery({}),
+        delivery_id: 'd02',
+        status: 'superseded' as const,
+      };
+      const registering = {
+        ...delivery({}),
+        delivery_id: 'd03',
+        status: 'registering' as const,
+      };
+
+      expect(
+        latestDeliveryForMilestone([open, superseded, registering], 'm01'),
+      ).toBe(open);
+    });
+
+    it('selects an at-endpoint delivery as current milestone evidence', () => {
+      const atEndpoint = {
+        ...delivery({}),
+        status: 'at_endpoint' as const,
+      };
+
+      expect(latestDeliveryForMilestone([atEndpoint], 'm01')).toBe(atEndpoint);
+    });
   });
 
   describe('valid control and positive regression', () => {
