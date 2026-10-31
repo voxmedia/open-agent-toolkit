@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t07
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 7     | 6/7       |
+| Phase 4 (p04) | in_progress | 7     | 7/7       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 27/30 tasks completed
+**Total:** 28/30 tasks completed
 
 ---
 
@@ -749,8 +749,25 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p04-t07: (review) Simplify the knowledge-index preflight machinery
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 67de100f2884c73384ff68fb409bcc4288d0ba64
+
+**Outcome (required when completed):**
+
+- The pre-Step-10 stray-change check, its pin and docs clause are removed (round-3 M1 dissolved; reintroduction trigger recorded in the complexity report).
+- The Codex route narrows writable roots when exposed and otherwise uses the projection's `workspace-write` sandbox writing only declared outputs; the contract pin is 10 structural assertions on whitespace-collapsed text (was 38); the docs paragraph is 3–4 sentences; the skill is 859 lines (was 872).
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Verification:** contract suites 1,089 passed (root rerun matched); `refresh-owned.test.mjs` 6/6, skill oxlint, `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format`, docs markdownlint passed. Can-fail: preflight after Step 2, Claude controls outside the Claude route, Step 2 gate removed, and Step 4b read-only on a missing probe each failed the trimmed pin.
+
+**Notes / Decisions:**
+
+- Operator `simplify` disposition at the p04 review-cycle cap (request `dedkp-p04-implementation-4`).
 
 ---
 
@@ -822,6 +839,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p04-review-3 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p04-complexity-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-implementation-4 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
