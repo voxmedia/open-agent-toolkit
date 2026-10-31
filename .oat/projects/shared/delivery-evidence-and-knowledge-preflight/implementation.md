@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p01-t07
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -16,21 +16,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status      | Tasks | Completed |
-| ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | in_progress | 7     | 6/7       |
-| Phase 2 (p02) | pending     | 2     | 0/2       |
-| Phase 3 (p03) | pending     | 2     | 0/2       |
-| Phase 4 (p04) | pending     | 1     | 0/1       |
-| Phase 5 (p05) | pending     | 2     | 0/2       |
+| Phase         | Status   | Tasks | Completed |
+| ------------- | -------- | ----- | --------- |
+| Phase 1 (p01) | complete | 7     | 7/7       |
+| Phase 2 (p02) | pending  | 2     | 0/2       |
+| Phase 3 (p03) | pending  | 2     | 0/2       |
+| Phase 4 (p04) | pending  | 1     | 0/1       |
+| Phase 5 (p05) | pending  | 2     | 0/2       |
 
-**Total:** 6/14 tasks completed
+**Total:** 7/14 tasks completed
 
 ---
 
 ## Phase 1: Stack-aware delivery exit carriers (#383)
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-10-30
 
 ### Task p01-t01: Add a stack-aware exit-carrier wrapper
@@ -172,8 +172,23 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p01-t07: (review) Scope the stack-order rule to configured code carriers in docs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a18cb86f62c4157623ab05fe4678135523d6e80e
+
+**Outcome (required when completed):**
+
+- Brief contract §12.7 and the `delivery check` CLI reference scope the tip/ancestor rule to configured code carriers bound to a reviewed head; null and unreviewed-resolution carriers are evaluated exactly as for `kind: pr`.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-brief/references/brief-contract.md`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** shared and validation contract suites 1,088 passed; docs markdownlint passed.
+
+**Notes / Decisions:**
+
+- Review-fix task for p01 round-2 L1 (fix request `dedkp-p01-fix-2`).
 
 ### Review Received: p01 (round 2)
 
@@ -185,7 +200,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Round-1 M1, M2, L1, L2 and L3 verified resolved; probe M1 (only `code === 1` disabled) now fails at all four call sites, and missing tip or lower heads report `missing-object`.
 - L1 (Low): §12.7, the `delivery check` CLI reference and `design.md` still say every mis-ordered stack is refused, but null and unreviewed-resolution carriers are now evaluated as on `kind: pr` → fix task p01-t07 (contract and CLI reference); `design.md` aligned by the root in this bookkeeping commit.
 
-**Outcome:** passed (reviewer request `dedkp-p01-review-2`); Low converted to p01-t07.
+**Outcome:** passed (reviewer request `dedkp-p01-review-2`); Low converted to p01-t07, completed in a18cb86.
+
+**Phase p01 outcome:** complete. Root-owned review round 1 (`dedkp-p01-review-1`) 0C/0H/2M/3L → 3 fix tasks; round 2 (`dedkp-p01-review-2`) 0C/0H/0M/1L → passed, 1 fix task; every review disposition is settled and no phase gate is selected. Phase range `6d40f5f10431c3f427d6cfb2aa938410a842bcd7..a18cb86f62c4157623ab05fe4678135523d6e80e`; fix rounds used 2 of `oat_orchestration_retry_limit` 2 (round 2 was a passing review's Low conversion, not a blocking loop); recovery attempts 0/10.
 
 ---
 
@@ -263,6 +280,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p01-fix-1 · scope=p01-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p01-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p01-review-2 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p01-fix-2 · scope=p01-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p01-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
