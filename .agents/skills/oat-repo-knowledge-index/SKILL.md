@@ -48,7 +48,98 @@ EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -
 
 **If `$EXISTING_MD` is empty (no content or only .gitkeep):**
 
-- Continue to Step 2
+- Continue to the dispatch-route preflight
+
+### Dispatch-Route Preflight: Resolve Before Mutation
+
+Resolve and authorize a usable mapper route before Step 2 deletes or writes
+anything. Set `SKILL_DIR` to the absolute directory containing this loaded
+`SKILL.md`. Independently probe each required `<name>/SKILL.md` in order:
+`${SKILL_DIR}/..`, `${HOME}/.agents/skills`, then
+`<repo-root>/.agents/skills`. Bind each first match to its own root:
+`${DISPATCH_SKILLS_ROOT}` for `oat-dispatch-subagents` and
+`${ORCHESTRATION_SKILLS_ROOT}` for `subagent-orchestration`; never use ambient
+discovery.
+
+On a miss, name the missing skill and stop before Step 2. Leave generated and
+manual knowledge unchanged and give both intended-scope recovery commands:
+
+```text
+oat tools install utility --scope <user|project>
+oat tools update --pack utility --scope <user|project>
+```
+
+Read `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md`, then
+`${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md`.
+Resolve the active provider and read exactly one matching selection reference
+from `${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/`, followed
+by the matching mechanics reference from
+`${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/`.
+
+Classify mapper dispatch capability as `available`,
+`authorization-required`, or `unresolved-or-unsupported`. If authorization is
+required, ask once for all five mapper launches in this run (one write probe
+and four mapper lanes), then re-probe and lock that decision. Continue only
+with an available, authorized route. An unresolved or unsupported route stops
+before Step 2 with the provider, missing capability, and the utility-pack
+recovery commands above. Do not delete generated output, create the thin
+index, or launch a write probe.
+
+The request always names role `oat-codebase-mapper`, class `recon`, a bounded
+focus and output list, exact read/write authority, verification evidence,
+deadline, retry limit, and no post-acceptance fallback. Launch the installed
+provider projection; portable role text is instructions, not a registered
+native role. Build the complete dispatch record before launch, launch once,
+and retain every accepted handle through collection. A launch surface that
+did not launch a child is a route failure: record the pre-start rejection and
+stop before Step 2. Do not reinterpret it as read-only mode.
+
+#### Claude route
+
+Launch the installed Claude provider projection of `oat-codebase-mapper`
+through the native Task surface. The exact Claude controls are:
+
+```yaml
+subagent_type: 'oat-codebase-mapper'
+model: 'haiku'
+run_in_background: true
+```
+
+Do not substitute the native `Explore` role for the installed mapper
+projection in read-only mode. Preserve the accepted handle; background is
+awaited, never fire-and-forget.
+
+#### Codex route
+
+Launch the installed Codex provider projection of `oat-codebase-mapper` as the
+exact registered `agent_type` shown by the live native catalog. Preserve
+model, reasoning effort, reasoning mode, service tier, fork behavior, sandbox,
+and writable roots as independent controls. The direct-write probe and lanes
+must have only the repository and declared knowledge outputs writable; the
+read-only response lanes use a read-only sandbox. A native role-selection
+rejection before child start is a route failure.
+
+#### Cursor route
+
+Launch the installed Cursor provider projection of `oat-codebase-mapper` as
+the exact agent type advertised by the current native Task/Subagent schema.
+Treat that catalog as specific to this dispatcher invocation. Preserve the
+exact agent type, model selector when exposed, service tier, authority, and
+accepted handle. A CLI or SDK catalog does not establish native role
+availability, and no alternate route may be improvised after acceptance.
+
+With the route resolved, create only
+`.oat/repo/knowledge/.preflight`, then launch the bounded write-permission
+probe before Step 2. Its only write authority is
+`.oat/repo/knowledge/.preflight/test.txt`, with content `test`; it returns
+`WRITE_OK` or `WRITE_BLOCKED`. Remove `.preflight` after collecting the
+accepted handle. A launched probe reporting `WRITE_OK` selects direct-write
+mode. The read-only fallback is allowed only when that launched worker reports
+`WRITE_BLOCKED` and the same resolved route can launch independently usable
+read-only response lanes. Any missing handle, malformed result, or launch
+failure stops before Step 2 and leaves existing knowledge unchanged. Retain
+the resolved route, authorization, mode, and accepted probe result for the
+four mapper requests.
 
 ### Step 2: Prepare Only Owned Generated Outputs
 
@@ -107,47 +198,13 @@ This script:
 - Mappers can run in parallel without blocking on index generation
 - Index gets enriched with full details after mappers complete
 
-### Step 4b: Pre-flight Check - Test Background Write Permission
+### Step 4b: Reuse the Accepted Preflight Result
 
-Test if the runtime allows Write tool in background agents.
-
-```bash
-# Create test directory
-mkdir -p .oat/repo/knowledge/.preflight
-```
-
-Spawn a test agent to check Write permission (must use the same subagent type as the mapper agents):
-
-```
-subagent_type: "oat-codebase-mapper"
-model: "haiku"
-run_in_background: true
-description: "Test write permissions"
-prompt: |
-  Test if Write tool works in background mode.
-
-  Try to write a test file:
-  - File: .oat/repo/knowledge/.preflight/test.txt
-  - Content: "test"
-
-  If Write succeeds, return: "WRITE_OK"
-  If Write fails or is blocked, return: "WRITE_BLOCKED"
-```
-
-**Check result:**
-
-```bash
-if [ -f .oat/repo/knowledge/.preflight/test.txt ]; then
-  echo "✓ Write works in background agents - using direct-write approach"
-  WRITE_MODE="direct"
-  rm -rf .oat/repo/knowledge/.preflight
-else
-  echo "⚠ Write blocked in background agents - using read-only fallback"
-  WRITE_MODE="readonly"
-fi
-```
-
-Store `$WRITE_MODE` for use in Step 5.
+Do not launch another permission probe here. Reuse the resolved route,
+authorization, and `WRITE_OK` or `WRITE_BLOCKED` result retained by the
+dispatch-route preflight. Store the corresponding `WRITE_MODE` (`direct` or
+`readonly`) for Step 5. A missing accepted probe handle or result is a route
+failure, not evidence for read-only mode; stop without launching mapper lanes.
 
 ### Step 5: Spawn Parallel Mapper Agents
 
@@ -165,7 +222,8 @@ Use the approach determined by Step 4b pre-flight check.
 
 ### Step 5a: Direct Write Approach
 
-Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=true`.
+Dispatch each provider-neutral mapper request through the resolved route and
+launch the installed provider projection of `oat-codebase-mapper`.
 
 **Approach:**
 
@@ -175,11 +233,12 @@ Use Task tool with `subagent_type="oat-codebase-mapper"` and `run_in_background=
 
 **Agent 1: Tech Focus**
 
-```
-subagent_type: "oat-codebase-mapper"
-model: "haiku"
-run_in_background: true
-description: "Map codebase tech stack"
+```yaml
+role: oat-codebase-mapper
+class: recon
+focus: tech
+outputs: [stack.md, integrations.md]
+authority: write-declared-outputs
 ```
 
 Prompt:
@@ -214,11 +273,12 @@ Instructions:
 
 **Agent 2: Architecture Focus**
 
-```
-subagent_type: "oat-codebase-mapper"
-model: "haiku"
-run_in_background: true
-description: "Map codebase architecture"
+```yaml
+role: oat-codebase-mapper
+class: recon
+focus: arch
+outputs: [architecture.md, structure.md]
+authority: write-declared-outputs
 ```
 
 Prompt:
@@ -253,11 +313,12 @@ Instructions:
 
 **Agent 3: Quality Focus**
 
-```
-subagent_type: "oat-codebase-mapper"
-model: "haiku"
-run_in_background: true
-description: "Map codebase conventions"
+```yaml
+role: oat-codebase-mapper
+class: recon
+focus: quality
+outputs: [conventions.md, testing.md]
+authority: write-declared-outputs
 ```
 
 Prompt:
@@ -292,11 +353,12 @@ Instructions:
 
 **Agent 4: Concerns Focus**
 
-```
-subagent_type: "oat-codebase-mapper"
-model: "haiku"
-run_in_background: true
-description: "Map codebase concerns"
+```yaml
+role: oat-codebase-mapper
+class: recon
+focus: concerns
+outputs: [concerns.md]
+authority: write-declared-outputs
 ```
 
 Prompt:
@@ -332,7 +394,10 @@ Instructions:
 
 ### Step 5b: Read-Only Fallback Approach
 
-Use Task tool with `subagent_type="Explore"` and `run_in_background=true`.
+Dispatch the same four provider-neutral mapper requests through the resolved
+route with read-only authority. Each request still launches the installed
+provider projection of `oat-codebase-mapper`; the provider route decides its
+native controls.
 
 **Approach:**
 
@@ -344,10 +409,11 @@ Use Task tool with `subagent_type="Explore"` and `run_in_background=true`.
 **Agent 1: Tech Focus**
 
 ````
-subagent_type: "Explore"
-model: "haiku"
-run_in_background: true
-description: "Map codebase tech stack"
+role: oat-codebase-mapper
+class: recon
+focus: tech
+outputs: [stack.md, integrations.md]
+authority: read-only-response
 
 Prompt:
 Focus: tech
@@ -391,10 +457,11 @@ Constraints:
 
 ````
 
-subagent_type: "Explore"
-model: "haiku"
-run_in_background: true
-description: "Map codebase architecture"
+role: oat-codebase-mapper
+class: recon
+focus: arch
+outputs: [architecture.md, structure.md]
+authority: read-only-response
 
 Prompt:
 Focus: arch
@@ -442,10 +509,11 @@ Constraints:
 
 ````
 
-subagent_type: "Explore"
-model: "haiku"
-run_in_background: true
-description: "Map codebase conventions"
+role: oat-codebase-mapper
+class: recon
+focus: quality
+outputs: [conventions.md, testing.md]
+authority: read-only-response
 
 Prompt:
 Focus: quality
@@ -493,10 +561,11 @@ Constraints:
 
 ````
 
-subagent_type: "Explore"
-model: "haiku"
-run_in_background: true
-description: "Map codebase concerns"
+role: oat-codebase-mapper
+class: recon
+focus: concerns
+outputs: [concerns.md]
+authority: read-only-response
 
 Prompt:
 Focus: concerns
@@ -552,52 +621,48 @@ Constraints:
 
 ### Step 6b: Extract and Write Files (Read-Only Mode Only)
 
-If using read-only mode, extract markdown from agent outputs and write to files.
+If using read-only mode, collect each accepted handle through the dispatch
+engine and extract markdown from its returned output. Never guess a provider
+transcript or temporary-file path.
 
 Use Python to extract markdown blocks:
 
 ````python
-import json
 import re
 
 agents = [
-    {'id': 'AGENT_ID_1', 'files': ['stack.md', 'integrations.md']},
-    {'id': 'AGENT_ID_2', 'files': ['architecture.md', 'structure.md']},
-    {'id': 'AGENT_ID_3', 'files': ['conventions.md', 'testing.md']},
-    {'id': 'AGENT_ID_4', 'files': ['concerns.md']}
+    {
+        'returned_output': ACCEPTED_HANDLE_1_OUTPUT,
+        'files': ['stack.md', 'integrations.md'],
+    },
+    {
+        'returned_output': ACCEPTED_HANDLE_2_OUTPUT,
+        'files': ['architecture.md', 'structure.md'],
+    },
+    {
+        'returned_output': ACCEPTED_HANDLE_3_OUTPUT,
+        'files': ['conventions.md', 'testing.md'],
+    },
+    {'returned_output': ACCEPTED_HANDLE_4_OUTPUT, 'files': ['concerns.md']},
 ]
 
 for agent in agents:
-    output_path = f"/private/tmp/claude-502/-Users-thomas-stang-Code-open-agent-toolkit/tasks/{agent['id']}.output"
+    text = agent['returned_output']
+    pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
+    matches = re.findall(pattern, text, re.DOTALL)
+    if not matches:
+        alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
+        matches = re.findall(alt_pattern, text, re.DOTALL)
 
-    with open(output_path, 'r') as f:
-        lines = f.readlines()
+    expected = set(agent['files'])
+    actual = {filename for filename, _ in matches}
+    if actual != expected:
+        raise RuntimeError(f'accepted handle returned {actual}, expected {expected}')
 
-    # Find the last JSON message with agent response
-    for line in reversed(lines):
-        if line.strip().startswith('{') and '"message"' in line:
-            data = json.loads(line)
-            if 'message' in data and 'content' in data['message']:
-                content = data['message']['content']
-                if isinstance(content, list) and len(content) > 0:
-                    text = content[0].get('text', '')
-
-                    # Extract markdown blocks - handle both formats
-                    # Standard: --- filename.md ---
-                    pattern = r'---\s+(\w+\.md)\s+---\s*\n\s*```markdown\n(.*?)\n```'
-                    matches = re.findall(pattern, text, re.DOTALL)
-
-                    # Alternative: ## filename.md (fallback)
-                    if not matches:
-                        alt_pattern = r'##\s+(\w+\.md)\s*\n\s*```markdown\n(.*?)\n```'
-                        matches = re.findall(alt_pattern, text, re.DOTALL)
-
-                    for filename, markdown in matches:
-                        with open(f'.oat/repo/knowledge/{filename}', 'w') as out:
-                            out.write(markdown)
-                        print(f"✓ Wrote {filename}")
-
-                    break
+    for filename, markdown in matches:
+        with open(f'.oat/repo/knowledge/{filename}', 'w') as out:
+            out.write(markdown)
+        print(f"✓ Wrote {filename}")
 ````
 
 This extracts markdown and writes all 7 knowledge files.

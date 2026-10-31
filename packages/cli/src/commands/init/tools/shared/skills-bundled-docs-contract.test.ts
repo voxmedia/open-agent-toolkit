@@ -2506,6 +2506,11 @@ describe('skills bundled docs contract', () => {
         'utility',
       ],
       [
+        'oat-repo-knowledge-index',
+        '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+        'utility',
+      ],
+      [
         'oat-review-provide-remote',
         '${REVIEW_PROVIDE_SKILLS_ROOT}/oat-review-provide/references/review-artifact-template.md',
         'utility',
@@ -2927,6 +2932,66 @@ describe('skills bundled docs contract', () => {
     expect(content).not.toMatch(
       /\$\{SKILLS_ROOT\}\/(?:oat-dispatch-subagents|subagent-orchestration)/,
     );
+  });
+
+  it('preflights every knowledge-index mapper route before mutating knowledge', () => {
+    const content = readFileSync(
+      join(SKILLS_DIR, 'oat-repo-knowledge-index', 'SKILL.md'),
+      'utf8',
+    );
+    const preflight = content.indexOf(
+      '### Dispatch-Route Preflight: Resolve Before Mutation',
+    );
+    const prepare = content.indexOf(
+      '### Step 2: Prepare Only Owned Generated Outputs',
+    );
+    const claude = content.indexOf('#### Claude route');
+    const codex = content.indexOf('#### Codex route');
+    const cursor = content.indexOf('#### Cursor route');
+    const afterRoutes = content.indexOf('### Step 2:', cursor);
+    const nonClaudeRoutes = content.slice(codex, afterRoutes);
+
+    expect(preflight).toBeGreaterThan(-1);
+    expect(prepare).toBeGreaterThan(preflight);
+    expect(content).toContain(
+      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    );
+    expect(content).toContain(
+      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
+    );
+    expect(content).toContain(
+      'oat tools install utility --scope <user|project>',
+    );
+    expect(content).toContain(
+      'oat tools update --pack utility --scope <user|project>',
+    );
+    expect(claude).toBeGreaterThan(preflight);
+    expect(codex).toBeGreaterThan(claude);
+    expect(cursor).toBeGreaterThan(codex);
+    expect(content.slice(claude, codex)).toMatch(/model:\s*['"]haiku['"]/);
+    expect(content.slice(claude, codex)).toContain('run_in_background');
+    expect(content.slice(claude, codex)).toContain('Explore');
+    expect(nonClaudeRoutes).not.toMatch(/model:\s*['"]haiku['"]/);
+    expect(nonClaudeRoutes).not.toContain('run_in_background');
+    expect(nonClaudeRoutes).not.toContain('Explore');
+    expect(content).not.toContain('/private/tmp/claude-');
+    expect(content).toMatch(
+      /did not launch[\s\S]{0,120}route failure[\s\S]{0,120}stop before Step 2/i,
+    );
+    expect(content).toMatch(
+      /read-only fallback[\s\S]{0,180}launched[\s\S]{0,120}WRITE_BLOCKED/i,
+    );
+    for (const provider of ['Claude', 'Codex', 'Cursor']) {
+      expect(content).toMatch(
+        new RegExp(
+          `#### ${provider} route[\\s\\S]*?installed ${provider} provider projection[\\s\\S]*?\`oat-codebase-mapper\``,
+        ),
+      );
+    }
+    expect(content).toContain(
+      'portable role text is instructions, not a registered\nnative role',
+    );
+    expect(content).toMatch(/accepted handle[\s\S]{0,120}returned output/i);
   });
 
   it("keeps external-plan writes on the caller's model class", () => {
