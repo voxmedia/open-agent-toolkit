@@ -174,7 +174,8 @@ carrier)`) called where scopes are built: the milestone branch of
   route failure (stop), not read-only mode; read-only fallback requires a
   launched worker that reported `WRITE_BLOCKED`.
 - **Routes:** mapper launch blocks become provider-neutral requests (role
-  `oat-codebase-mapper`, class `recon`, bounded objective, output file,
+  `oat-codebase-mapper`, class `generator` for the write probe and direct-write
+  lanes and `recon` for read-only response lanes, bounded objective, output file,
   deadline) dispatched through the engine. Claude-specific controls (`haiku`,
   `run_in_background`, `Explore`) appear only in a labelled Claude route; Codex
   and Cursor use the installed role projection and the engine's mechanics

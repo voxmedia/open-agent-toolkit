@@ -931,6 +931,94 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p04-t01" --message "fix(p
 
 ---
 
+### Task p04-t02: (review) Route the refresh branch through the preflight and make the pins fail on regressions
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Review finding: C1 — Step 1's Refresh branch still says "Continue to the owned-output preflight in Step 2", so a refresh deletes generated knowledge before any route is resolved. H1 — the new pin only scans the Codex/Cursor route paragraphs: re-adding Claude-only controls to Step 5a or 5b, reverting the empty-knowledge branch, or making Step 4b treat a missing probe as read-only mode all stay green.
+Location: see `reviews/archived/p04-review-2026-10-31T021449Z.md`.
+
+**Step 2: Implement fix**
+
+Change the Refresh branch to continue to the dispatch-route preflight, then Step 2. Assert that `model: 'haiku'`, `run_in_background` and `subagent_type: 'Explore'` occur nowhere outside the Claude route slice; that both Step 1 branches name the dispatch-route preflight; and that Step 4b keeps the route-failure (not read-only) sentence. Can-fail: seed each of the reviewer's six regressions (Claude controls in 5a, in 5b, empty branch reverted, refresh branch reverted, Step 4b read-only, preflight after Step 2) and confirm each turns the pin red. Keep `repo-improve.md` accurate ("before changing knowledge" on refresh too).
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass; record every can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t02" --message "fix(p04-t02): route the refresh branch through the preflight and make the pins fail on regressions" -- <exact files changed>
+```
+
+---
+
+### Task p04-t03: (review) Use the generator class for write lanes and verify the probe file
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: M1 — the write probe and `write-declared-outputs` lanes are labelled `class: recon`, which `oat-dispatch-subagents` defines as read-only. M2 — direct-write mode now rests on the worker's `WRITE_OK` self-report; the observable `.preflight/test.txt` check was dropped.
+Location: see `reviews/archived/p04-review-2026-10-31T021449Z.md`.
+
+**Step 2: Implement fix**
+
+Label the write probe and direct-write lanes `generator` and keep `recon` only for read-only response lanes. Before removing `.preflight`, require `WRITE_OK` to coincide with `.preflight/test.txt` existing with content `test` and `WRITE_BLOCKED` with its absence; any disagreement is a malformed result (route failure, stop before Step 2). Pin both.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills`
+Expected: pass; record every can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t03" --message "fix(p04-t03): use the generator class for write lanes and verify the probe file" -- <exact files changed>
+```
+
+---
+
+### Task p04-t04: (review) Make mapper instructions provider-neutral and harden probe handling
+
+**Files:**
+
+- Modify: `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Review finding: L1 — Step 5a/5b prompts name Claude tools ("Write tool", "Write or Bash tools"). L2 — the Codex route's writable-roots sentence makes the whole repository writable and gives no rule when per-spawn sandbox controls are not exposed. L3 — every unresolved-route stop prescribes the utility-pack install, even when the mapper projection (workflows pack) or host capability is what is missing. L4 — `.preflight` is created before Step 2's symlink guard and is not removed on a failed probe. L5 — Step 6b asks the orchestrator to splice worker output into Python source.
+Location: see `reviews/archived/p04-review-2026-10-31T021449Z.md`.
+
+**Step 2: Implement fix**
+
+Use neutral wording ("write only your declared outputs with your host's file-write capability"; "do not modify files or run mutating commands"). Limit Codex writable roots to `.oat/repo/knowledge/` (plus `.preflight/` for the probe) and state that without a per-spawn sandbox override read-only lanes rely on the prompt constraint or the route is `unresolved-or-unsupported`. Give utility commands only on a dispatch-skill probe miss, the workflows pack or `oat sync` for a missing mapper projection, and no install advice for an unsupported host or declined authorization (align `repo-improve.md`). Run a non-mutating `lstat` check of the knowledge chain before creating `.preflight` and remove `.preflight` on every probe exit path. Have Step 6b read each accepted handle's returned text from a scratch file outside the repository instead of a source literal.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && node --test .agents/skills/oat-repo-knowledge-index/tests/refresh-owned.test.mjs && pnpm exec oxlint .agents/skills/oat-repo-knowledge-index && pnpm oat:validate-skills && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass; record every can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t04" --message "fix(p04-t04): make mapper instructions provider-neutral and harden probe handling" -- <exact files changed>
+```
+
+---
+
 ## Phase 5: Release bookkeeping and gates
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
@@ -1026,7 +1114,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-review-2026-10-31T012557Z.md           | 42db803d4ef78d7bcb5c1b8c04ddbfd08709a008 | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-10-31 | reviews/archived/p03-review-2026-10-31T014304Z.md           | 55f83e676b328c30fbd721eb800a842c9521b378 | auto       | -                 |
 | p03   | code     | passed          | 2026-10-31 | reviews/archived/p03-review-2026-10-31T015808Z.md           | 373d70cf23049ae9ba2ca4d863465404db3a5ec4 | auto       | -                 |
-| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04   | code     | fixes_added     | 2026-10-31 | reviews/archived/p04-review-2026-10-31T021449Z.md           | cff79cf176a0aa2db4430eb15666db6ad8bc3c6b | auto       | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
@@ -1051,10 +1139,10 @@ cell; never truncate a widened row back to five columns.
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
 - Phase 3: 7 tasks - Journal rewrite detection (#385), including 5 review-fix tasks
-- Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
+- Phase 4: 4 tasks - Knowledge-index dispatch preflight (#355), including 3 review-fix tasks
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 24 tasks**
+**Total: 27 tasks**
 
 Ready for code review and merge.
 

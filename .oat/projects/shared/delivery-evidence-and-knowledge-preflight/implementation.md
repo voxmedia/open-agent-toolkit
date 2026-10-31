@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 1     | 1/1       |
+| Phase 4 (p04) | in_progress | 4     | 1/4       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 22/24 tasks completed
+**Total:** 22/27 tasks completed
 
 ---
 
@@ -599,6 +599,36 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Verification:** shared and validation contract suites 1,089 passed; `refresh-owned.test.mjs`, skill oxlint, `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format` and repo-improve markdownlint passed. Can-fail: moving the preflight after Step 2 failed `expect(prepare).toBeGreaterThan(preflight)`.
 
 **Phase p04 notes:** skill `metadata.version` bump deferred to p05-t01 by plan; one no-edit `pnpm format` retry after a concurrent asset-bundling race (no attempt consumed).
+
+### Task p04-t02: (review) Route the refresh branch through the preflight and make the pins fail on regressions
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t03: (review) Use the generator class for write lanes and verify the probe file
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t04: (review) Make mapper instructions provider-neutral and harden probe handling
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p04
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-31T021449Z.md
+
+**Findings:** Critical 1 · High 1 · Medium 2 · Low 5
+
+- C1 (Critical): the Refresh branch routes around the dispatch-route preflight, so a refresh deletes generated knowledge before a route is resolved → fix task p04-t02.
+- H1 (High): the contract pin stays green for four of six seeded regressions → fix task p04-t02.
+- M1 (Medium): write probe and write lanes labelled `recon` (read-only by contract) → fix task p04-t03; `design.md` aligned by the root.
+- M2 (Medium): direct-write mode trusts the worker's `WRITE_OK` without the file check → fix task p04-t03.
+- L1–L5 (Low): Claude tool names in neutral prompts; Codex writable roots; recovery advice per failure kind; `.preflight` ordering and cleanup; Step 6b source splicing → fix task p04-t04.
+
+**Outcome:** fixes queued: p04-t02, p04-t03, p04-t04 (blocking Critical/High; reviewer request `dedkp-p04-review-1`).
 
 ---
 

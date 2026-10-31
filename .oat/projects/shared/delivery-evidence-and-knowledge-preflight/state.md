@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t01
+oat_current_task: p04-t02
 oat_last_commit: 8b270dccc94f7a6a391fc11c343904d0cb4a69c5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -110,7 +110,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T02:08:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T02:17:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
