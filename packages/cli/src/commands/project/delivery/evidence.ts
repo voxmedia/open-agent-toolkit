@@ -1332,6 +1332,26 @@ export function reviewRowsFor(
   });
 }
 
+/**
+ * The newest active registry entry for a milestone. Registration-in-progress
+ * and superseded entries cannot carry the milestone's current evidence.
+ */
+export function latestDeliveryForMilestone(
+  deliveries: readonly GoalDelivery[],
+  milestone: string,
+): GoalDelivery | undefined {
+  for (let index = deliveries.length - 1; index >= 0; index -= 1) {
+    const delivery = deliveries[index]!;
+    if (
+      delivery.milestone === milestone &&
+      (delivery.status === 'open' || delivery.status === 'at_endpoint')
+    ) {
+      return delivery;
+    }
+  }
+  return undefined;
+}
+
 /** The project facts the evidence scope of a delivery is built from. */
 export interface DeliveryEvidenceProject {
   repoRoot: string;

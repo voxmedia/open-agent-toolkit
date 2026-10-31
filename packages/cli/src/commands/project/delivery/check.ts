@@ -26,10 +26,12 @@ import { Command } from 'commander';
 
 import {
   deliveryEvidenceScope,
-  reviewRowsFor,
+  evaluateDeliveryExitCarrier,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
+  latestDeliveryForMilestone,
+  reviewRowsFor,
   type CarrierEvaluation,
   type EvidenceScope,
   type ReviewEvaluation,
@@ -173,7 +175,7 @@ export async function evaluateSubjectEvidence(
       (member) => member.observed_head,
     );
     const review = await evaluateDeliveryReview(git, evidence, delivery, scope);
-    const exitEvaluation = await evaluateGateCarrier(
+    const exitEvaluation = await evaluateDeliveryExitCarrier(
       milestoneId === null
         ? null
         : (project.state.milestoneGates?.[milestoneId]?.exit ?? null),
@@ -183,7 +185,7 @@ export async function evaluateSubjectEvidence(
         match: 'covers',
         overrideDisabled: project.exitGateDisabled,
       },
-      { git, scope: evidence, publishedHeads },
+      { git, scope: evidence, delivery },
     );
     const exit = { ...exitEvaluation, source: 'milestone-carrier' as const };
     return {
@@ -230,13 +232,17 @@ export async function evaluateSubjectEvidence(
   const publishedHead = head.code === 0 ? head.stdout.trim() : null;
   const rows = reviewRowsFor(project.state.reviews, [milestoneId]);
   const row = rows.at(-1) ?? null;
-  const evidence: EvidenceScope = {
-    repoRoot: project.repoRoot,
-    projectDir: project.projectDir,
-    evidenceArtifacts: rows
-      .map((entry) => entry.artifact)
-      .filter((artifact) => artifact !== '' && artifact !== '-'),
-  };
+  const milestoneDelivery = latestDeliveryForMilestone(deliveries, milestoneId);
+  const evidence: EvidenceScope =
+    milestoneDelivery === undefined
+      ? {
+          repoRoot: project.repoRoot,
+          projectDir: project.projectDir,
+          evidenceArtifacts: rows
+            .map((entry) => entry.artifact)
+            .filter((artifact) => artifact !== '' && artifact !== '-'),
+        }
+      : deliveryEvidenceScope(project, deliveries, milestoneDelivery);
 
   let review: ReviewEvaluation;
   if (row === null || row.artifact === '' || row.artifact === '-') {
