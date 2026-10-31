@@ -34,6 +34,22 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits: {}
+  phase_attempt_usage:
+    p02:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: dedkp-p02-recovery-1
+        original_request_id: dedkp-p02-implementation
+        original_task_id: p02-t05
+        original_commit: 26ddb708f7b9bdbe8a17507c1f348b3be6331157
+        discovered_by: pnpm lint
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 26ddb708f7b9bdbe8a17507c1f348b3be6331157
+        status: pending
 oat_dispatch_policy:
   mode: managed
   policy: high
