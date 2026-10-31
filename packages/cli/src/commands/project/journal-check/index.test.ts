@@ -237,6 +237,9 @@ describe('oat project journal check', () => {
           code: 'journal-line-rewritten',
           path: 'implementation.md',
           owner: 'oat-project-implement',
+          message: expect.stringContaining(
+            'restore the committed line and append the correction',
+          ),
         },
       ],
     });

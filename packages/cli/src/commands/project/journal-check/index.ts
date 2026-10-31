@@ -302,7 +302,7 @@ async function runJournalCheck(
                 path: 'implementation.md',
                 line: null,
                 owner: 'oat-project-implement',
-                message: `Committed journal line "${rewrite.line}" was removed or rewritten.`,
+                message: `Committed journal line "${rewrite.line}" was removed or rewritten; the journal is append-only — restore the committed line and append the correction.`,
               },
             ];
           }
