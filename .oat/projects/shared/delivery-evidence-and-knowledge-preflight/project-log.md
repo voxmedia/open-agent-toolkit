@@ -67,6 +67,10 @@ Phase p05 (release bookkeeping) complete: 0.3.38 lockstep and four skill bumps, 
 
 target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=e77017c2-3b44-4995-93c6-5609706696dd
 
+### 2026-10-31 · structural · oat-project-implement · exit-gate
+
+STOP at implementation exit gate: run e77017c2 selected claude-opus-5-5-high, whose Claude runtime hit its weekly usage limit; review_failed, no attempt consumed; operator must choose a runnable gate target or wait for the reset; delivery-evidence-exit-gate-runtime-stop
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

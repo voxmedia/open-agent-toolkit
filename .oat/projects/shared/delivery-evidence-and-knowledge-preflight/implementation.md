@@ -1006,6 +1006,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+- **Gate:** oat-project-implement exit gate · **Scope:** final · **Outcome:** blocked (runtime unavailable: run `e77017c2-3b44-4995-93c6-5609706696dd` selected `claude-opus-5-5-high`, which hit its Claude weekly usage limit; envelope `review_failed`/`unexpected_post_selection_failure`) · attempt 0 of 2 consumed (infrastructure failure consumes none); gate IMPLEMENT-18 stop regardless of `on_failure`; operator action required.
+
 ### Review Received: final
 
 **Date:** 2026-10-31
