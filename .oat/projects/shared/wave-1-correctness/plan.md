@@ -62,7 +62,9 @@ Each item's acceptance criteria are the requirement; do not expand scope.
   suite forced, with a self-removing isolated HOME:
   `H=$(mktemp -d); HOME="$H" pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli; S=$?; rm -rf "$H"; echo "exit=$S"`.
   Fix failures inside the phase boundary; report any failure in a file
-  another phase owns instead of editing it (p05-t05 owns cross-phase fixes).
+  another phase owns instead of editing it (p05's cross-phase reconciliation
+  owns those fixes). Phase 5 replaces this check with the Definition of Done
+  gates.
 - Stay inside the phase's **File boundary**. If a needed change falls outside
   it, stop and report instead of editing (another parallel phase owns it).
 
@@ -84,7 +86,7 @@ the group merges.
   `README.md` and `packages/cli/README.md` belong to `p05`.
 - **Cross-phase test expectations** (for example a `p02`-owned test fixture
   that pins the old Codex base-role header) surface only after the merge;
-  `p05-t05` owns reconciling them.
+  p05's cross-phase reconciliation owns them.
 - **Verification is independent.** Each phase's tests run against its own
   code; none depends on another phase's behavior.
 - **`p05` depends on all four:** its docs describe the shipped behavior, its
@@ -113,7 +115,7 @@ needed for output), `packages/cli/src/commands/providers/codex/**`,
 the base-role owner header), and **new** test files under
 `packages/cli/src/commands/status/` (do not edit `commands/status/index.ts`
 or `index.test.ts`). Fixture breakage in files p02 owns (status, init, doctor
-tests) is reported for p05-t05, not edited here. No docs edits (p05 owns
+tests) is reported for p05's cross-phase reconciliation, not edited here. No docs edits (p05 owns
 them).
 
 ### Task p01-t01: Skip dangling agent links in the Cursor collision scan
@@ -272,8 +274,9 @@ every pack in tools install and init --setup; and
 BL-261002-correct-misleading-init-status — Correct misleading init, status,
 and doctor messages and stop scripts from defaulting to user-scope sync.
 
-**File boundary:** `packages/cli/src/commands/init/**`,
-`packages/cli/src/commands/tools/install/**`,
+**File boundary:** `packages/cli/src/commands/init/**` except the
+skill-sentence contract tests `packages/cli/src/commands/init/tools/shared/*.test.ts`
+(p03 owns those), `packages/cli/src/commands/tools/install/**`,
 `packages/cli/src/commands/tools/shared/**` (except `auto-sync*`, which p01
 may test), `packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts`,
 `packages/cli/src/commands/shared/scope-option.ts` (only if the help change
@@ -530,6 +533,10 @@ resolve `BASE_BRANCH` with the same chain `oat-project-pr-final` uses —
 explicit argument when the skill accepts one, `git.defaultBranch`,
 `origin/HEAD`, then `main` — and use it in `gh pr create`; mention the
 resolved base in the manual-PR fallback; `metadata.version` 1.7.18 → 1.7.19).
+Keep the `### Step 11: Open PR in GitHub (Conditional)` heading, the
+`**Skip if SHOULD_OPEN_PR is false.**` line, and the `gh pr create` call,
+which `packages/cli/src/commands/init/tools/shared/complete-auto-contracts.test.ts`
+pins.
 
 **Verify:** `grep -n -- '--base main' .agents/skills/oat-project-complete/SKILL.md`
 returns nothing; skill validation and contract tests as in p03-t01.
@@ -597,15 +604,29 @@ and accepted control.
 
 **Real-hook probe (acceptance criterion 3):** this repository's pre-commit
 hook runs lint-staged, which matches `*.md` and re-stages task files with its
-own `git add` (no `-f`), so a scratch hook is not enough evidence. In a
-throwaway worktree of this repository at the task's HEAD
-(`git worktree add <tmp> HEAD`, hooks installed as in the main checkout),
-modify `packages/cli/assets/templates/plan-lite.md` and commit it with the
-branch-built `node packages/cli/dist/index.js internal commit-paths`. Record
-the outcome, then remove the worktree. If the hook's re-stage fails, fix it
-within this phase's boundary (lint-staged config or hook script) so a tracked
-file under `packages/cli/assets/templates/` commits with hooks enabled and no
-`git add -f`, and re-run the probe.
+own `git add` (no `-f`), so a scratch hook is not enough evidence. Note that
+`tools/git-hooks/pre-commit` does not check lint-staged's exit status and
+ends in `|| true`, so a successful commit alone proves nothing. Procedure:
+
+1. `git worktree add <tmp> HEAD`, then in `<tmp>` run
+   `pnpm install --frozen-lockfile --offline` (or `pnpm install`) so
+   lint-staged is available; the installed hook is shared through the common
+   Git directory.
+2. Make an unformatted change to `packages/cli/assets/templates/plan-lite.md`
+   (one oxfmt would rewrite, if oxfmt formats that path; otherwise any change).
+3. Commit it from `<tmp>` with this phase worktree's build by absolute path:
+   `node <phase-worktree>/packages/cli/dist/index.js --json internal commit-paths --identity probe-<n> --message probe -- packages/cli/assets/templates/plan-lite.md`.
+4. Pass only when all hold: the outcome is `committed`; the hook output shows
+   lint-staged running the `*.md` task; the committed blob
+   (`git show HEAD:packages/cli/assets/templates/plan-lite.md`) is the
+   expected (formatted, where applicable) content; `git status --short` is
+   clean. "lint-staged did not run" is a probe failure, not a pass.
+5. Remove the worktree (`git worktree remove --force <tmp>`) and delete the
+   probe branch state; nothing from the probe is pushed.
+
+If the hook's re-stage fails, fix it within this phase's boundary (lint-staged
+config or hook script) so a tracked file under `packages/cli/assets/templates/`
+commits with hooks enabled and no `git add -f`, and re-run the probe.
 
 Update the cli-reference paragraph to say tracked files under ignored
 directories are committed and untracked ignored paths are rejected.
@@ -648,8 +669,9 @@ pages that describe the fixed behavior, root `README.md` and
 `packages/cli/README.md`, this repository's generated provider views and
 `.oat/sync/manifest.json`, the five public `package.json` files and
 `packages/cli/assets/public-package-versions.json`, the `.oat/repo/**` paths
-returned in `oat backlog archive` `affectedPaths`, and (p05-t05 only) any file
-needed to fix a cross-phase gate failure.
+returned in `oat backlog archive` `affectedPaths`, and (only under the
+cross-phase reconciliation rule at the end of this phase) any file needed to
+fix a cross-phase gate failure.
 
 ### Task p05-t01: Update docs that describe the fixed behavior
 
@@ -746,9 +768,12 @@ drift; the delivered items are under `.oat/repo/pjm/backlog/archived/`.
 
 ---
 
-### Task p05-t05: Run the Definition of Done gates and fix cross-phase breakage
+### Phase 5 phase-end check: Definition of Done gates
 
-**Steps:** Run the nine root AGENTS.md Definition of Done gates in CI order,
+This replaces the forced-CLI-only phase-end check for p05. It is a check, not
+a task: it creates no commit unless the reconciliation rule below fires.
+
+Run the nine root AGENTS.md Definition of Done gates in CI order,
 capturing each exit code (`pnpm <gate> > /tmp/wave1-<gate>.log 2>&1; echo "exit=$?"`):
 `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
 `pnpm run check:skill-bumps`, `git fetch origin main` then
@@ -760,15 +785,18 @@ evidence-grade suite through `pnpm test:evidence`, `pnpm lint`, and
 `pnpm format` (this delivery changes `.agents/skills`). Confirm `pnpm test`
 actually executed (no `>>> FULL TURBO` replay for changed packages).
 
-Fix any failure that comes from combining the parallel phases (for example a
-test outside p01's boundary that pins the old Codex base-role header), each fix
-within the failing component, and re-run the failing gate and every later
-gate. Report every gate's exit code; the root records them in
+Report every gate's exit code and log path; the root records them in
 `implementation.md`.
 
-**Commit** — `fix(p05-t05): reconcile cross-phase test expectations` when a
-fix was needed. When every gate passes on the first run there is nothing to
-commit: report that, with the gate log paths, and make no empty commit.
+**Cross-phase reconciliation rule:** if a gate fails because of combining the
+parallel phases (for example a p02-owned test fixture that pins the old Codex
+base-role header), append the next free task ID to Phase 5 —
+`### Task p05-t05: Reconcile cross-phase test expectations` — with the
+failing gate, the files fixed, and its verification; fix each failure within
+the failing component; commit it as
+`fix(p05-t05): reconcile cross-phase test expectations`; update
+Implementation Complete; then re-run the failing gate and every later gate.
+When every gate passes, no task is appended and nothing is committed.
 
 ---
 
@@ -809,9 +837,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
 - Phase 3: 3 tasks - Lifecycle skill contracts (item 5)
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
-- Phase 5: 5 tasks - Docs, generated views, version bump, backlog close-out, Definition of Done gates
+- Phase 5: 4 tasks - Docs, generated views, version bump, backlog close-out (Definition of Done gates run as its phase-end check)
 
-**Total: 20 tasks**
+**Total: 19 tasks**
 
 Ready for code review and merge.
 
