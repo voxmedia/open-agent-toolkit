@@ -1,4 +1,4 @@
-import { lstat, readFile, readdir } from 'node:fs/promises';
+import { lstat, readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CanonicalAgentDocument } from '@agents/canonical';
@@ -123,6 +123,18 @@ async function readPathStats(path: string) {
   }
 }
 
+async function isDanglingLink(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return false;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return true;
+    }
+    throw error;
+  }
+}
+
 function readDeclaredCursorAgentName(content: string): string | null {
   const normalized = content.startsWith('\uFEFF') ? content.slice(1) : content;
   const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(normalized);
@@ -181,6 +193,11 @@ export async function assertNoUnmanagedCursorAgentCollisions(
         continue;
       }
       if (fileStats.isSymbolicLink()) {
+        // A dangling link cannot define a role, and the main sync plan
+        // removes the manifest-tracked view it was created as.
+        if (await isDanglingLink(absolutePath)) {
+          continue;
+        }
         try {
           await validateRealPathWithinScope(absolutePath, scopeRoot);
         } catch {

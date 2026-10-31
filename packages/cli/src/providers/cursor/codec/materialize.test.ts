@@ -299,4 +299,38 @@ describe('cursor markdown materializer', () => {
       assertNoUnmanagedCursorAgentCollisions(root, [roleName]),
     ).rejects.toThrow(/\.codex\/agents/);
   });
+
+  it('skips dangling agent links but still refuses an existing target outside the scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-cursor-dangling-'));
+    tempDirs.push(root);
+    const roleName = 'oat-reviewer-gpt-5-6-sol-high';
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    for (const directory of ['.cursor/agents', '.claude/agents']) {
+      await mkdir(join(root, directory), { recursive: true });
+      await symlink(
+        '../../.agents/agents/gone.md',
+        join(root, directory, 'gone.md'),
+      );
+    }
+
+    await expect(
+      assertNoUnmanagedCursorAgentCollisions(root, [roleName]),
+    ).resolves.toBeUndefined();
+    await expect(
+      assertNoUnmanagedCursorAgentCollisions(root, ['gone']),
+    ).resolves.toBeUndefined();
+
+    const external = await mkdtemp(join(tmpdir(), 'oat-cursor-dangling-ext-'));
+    tempDirs.push(external);
+    await writeFile(join(external, 'outside.md'), 'unmanaged');
+    await symlink(
+      join(external, 'outside.md'),
+      join(root, '.cursor', 'agents', 'outside.md'),
+    );
+    await expect(
+      assertNoUnmanagedCursorAgentCollisions(root, [roleName]),
+    ).rejects.toThrow(
+      'Cursor agent definition is a symbolic link at .cursor/agents/outside.md whose target escapes the sync scope.',
+    );
+  });
 });
