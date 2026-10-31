@@ -1395,7 +1395,10 @@ export function createInitCommand(
   return withProjectGuidanceOptions(withScopeOption(new Command('init')))
     .description('Initialize canonical directories, manifest, and tool packs')
     .option('--hook', 'Install optional pre-commit hook')
-    .option('--no-hook', 'Skip optional pre-commit hook install')
+    .option(
+      '--no-hook',
+      'Remove an installed optional pre-commit hook and skip installing one',
+    )
     .option('--setup', 'Run guided setup after initialization')
     .addCommand(createInitToolsCommand())
     .action(async (_options, command: Command) => {

@@ -203,7 +203,8 @@ describe('help output snapshots', () => {
                                or print a manual patch
         --no-project-guidance  Decline repository AGENTS.md tool guidance
         --hook                 Install optional pre-commit hook
-        --no-hook              Skip optional pre-commit hook install
+        --no-hook              Remove an installed optional pre-commit hook and skip
+                               installing one
         --setup                Run guided setup after initialization
         -h, --help             display help for command
 
