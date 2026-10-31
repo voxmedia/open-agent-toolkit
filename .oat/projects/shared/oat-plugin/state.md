@@ -76,11 +76,11 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-19T23:43:42.389Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: 2026-08-20T19:44:50.201Z # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: 2026-10-31T22:09:55.585Z # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: paused
-oat_pause_timestamp: 2026-08-20T19:44:50.201Z
-oat_pause_reason: Codex native plugin packaging does not currently support the required OAT agent experience; priority shifted to user-scope support for all tool packs.
+oat_pause_timestamp: 2026-10-31T22:09:55.585Z
+oat_pause_reason: Deferred for later consideration (operator, 2026-10-31) - early implementation surfaced problems with the native-plugin approach that make it not worth pursuing now; keep open, do not close. Earlier pause (2026-08-20) - Codex plugin packaging lacked the required OAT agent experience.
 ---
 
 # Project State: oat-plugin
