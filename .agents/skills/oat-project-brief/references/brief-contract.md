@@ -551,12 +551,15 @@ binding `exit_gate`, and the first observed `endpoint_attainment`.
   stack. For a PR lookup, more than one stops and routes to
   `oat-project-reconcile`; a missing, closed-unmerged or re-targeted stack
   layer follows the same stop-and-route.
-- **Stacked deliveries.** A stack records members base to tip. Its exit carrier
-  is judged against the tip member's observed head, and every lower member's
-  observed head must be an ancestor of the tip (`stack-order` otherwise); the
-  integrated review remains per member. Post-review bookkeeping lands on the
-  tip member's branch, because a commit on a lower layer changes upper members'
-  bases and stales their review. A misordered stack is never repaired in place:
+- **Stacked deliveries.** A stack records members base to tip. For a configured
+  code carrier bound to a reviewed head, the exit carrier is judged against
+  the tip member's observed head, and every lower member's observed head must
+  be an ancestor of the tip (`stack-order` otherwise). Null carriers and
+  unreviewed-resolution carriers (`no_gate`, `project_disabled`) are evaluated
+  exactly as for `kind: pr`; the integrated review remains per member.
+  Post-review bookkeeping lands on the tip member's branch, because a commit
+  on a lower layer changes upper members' bases and stales their review. A stack
+  that fails the configured-carrier order check is never repaired in place:
   replace it through supersession with `covers_scope_of`.
 - **Prerequisites.** Before registration the owner runs
   `oat project delivery refresh --project <path>` and
