@@ -1495,6 +1495,67 @@ describe('codex sync extension', () => {
     ).resolves.toContain('multi_agent = true');
   });
 
+  it('preserves user config comments through a user sync and then skips the config', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-codex-user-comments-'));
+    tempDirs.push(home);
+    const canonicalDir = join(home, '.agents', 'agents');
+    await mkdir(canonicalDir, { recursive: true });
+    const canonicalFile = join(canonicalDir, 't-agent.md');
+    await writeFile(canonicalFile, canonicalAgentFileContent('t-agent'));
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      JSON.stringify({ version: 1 }),
+    );
+    const configPath = join(home, '.codex', 'config.toml');
+    const userConfig = [
+      '# personal settings',
+      'model = "gpt-5.6-sol"',
+      '',
+      '# BEGIN codex-router-managed',
+      '[model_providers.codex-router] # codex-router-provider-managed',
+      'name = "codex-router"',
+      '# END codex-router-managed',
+      '',
+    ].join('\n');
+    await mkdir(join(home, '.codex'), { recursive: true });
+    await writeFile(configPath, userConfig);
+    const canonicalEntries: CanonicalEntry[] = [
+      {
+        name: 't-agent.md',
+        type: 'agent',
+        canonicalPath: canonicalFile,
+        isFile: true,
+      },
+    ];
+    const options = { userConfigDir: join(home, '.oat') };
+
+    const plan = await computeCodexProjectExtensionPlan(
+      home,
+      canonicalEntries,
+      undefined,
+      options,
+    );
+    expect((await applyCodexProjectExtensionPlan(home, plan)).failed).toBe(0);
+    const synced = await readFile(configPath, 'utf8');
+
+    expect(synced).toBe(
+      `${userConfig}\n[features]\nmulti_agent = true\n\n[agents]\nmax_depth = 2\n\n[agents.t-agent]\ndescription = "t-agent description"\nconfig_file = "agents/t-agent.toml"\n`,
+    );
+
+    const secondPlan = await computeCodexProjectExtensionPlan(
+      home,
+      canonicalEntries,
+      undefined,
+      options,
+    );
+    expect(
+      secondPlan.operations.find((operation) => operation.target === 'config'),
+    ).toMatchObject({ action: 'skip' });
+    await applyCodexProjectExtensionPlan(home, secondPlan);
+    await expect(readFile(configPath, 'utf8')).resolves.toBe(synced);
+  });
+
   it('keeps project and user materialized codex paths isolated for the same canonical role', async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), 'oat-codex-dup-project-'));
     const userRoot = await mkdtemp(join(tmpdir(), 'oat-codex-dup-user-'));

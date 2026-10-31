@@ -45,10 +45,13 @@ agents, templates and scripts that `oat tools install` adds.
 ## What each command writes
 
 Where a file already existed, OAT appended its own marked block instead of
-replacing it. This held for `.gitignore`, `.gitattributes`, an existing
-`pre-commit` hook and the other settings in an existing `.codex/config.toml`
-(OAT does change `multi_agent` and `max_depth` there; see the
-[provider table](#syncing-provider-views)). A pre-existing
+replacing it. This held for `.gitignore`, `.gitattributes` and an existing
+`pre-commit` hook. From version 0.3.37, an existing `.codex/config.toml` is
+edited in place: OAT changes only `multi_agent`, `max_depth` and its own
+`[agents.<name>]` tables, and comments, blank lines, table order and your other
+settings stay as they were (see the
+[provider table](#syncing-provider-views)). Earlier versions rewrote the whole
+file and dropped its comments. A pre-existing
 `~/.claude/settings.json` was left untouched.
 
 ### Setting up
@@ -82,13 +85,13 @@ views OAT manages. A provider does not have to be enabled: an existing
 `.claude/` directory in the repository, or `~/.claude/` in your home directory,
 is enough for `oat sync` to create Claude views.
 
-| Provider | Repository views created by `oat sync --scope project`                                                                                                                                                                                                                                                |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude   | `.claude/skills/<name>` and `.claude/agents/<name>.md`, relative symlinks into `.agents/`                                                                                                                                                                                                             |
-| Cursor   | `.cursor/agents/`: relative symlinks for agents, plus generated model-variant files marked `# oat-managed: true`                                                                                                                                                                                      |
-| Copilot  | `.github/agents/`, relative symlinks                                                                                                                                                                                                                                                                  |
-| Codex    | `.codex/agents/*.toml` and `.codex/config.toml`, generated files. In an existing `config.toml`, OAT adds its `[agents.<name>]` tables and sets `[features] multi_agent = true` and `[agents] max_depth` to at least 2, changing those two values if you had set them lower; your other settings stay. |
-| Gemini   | Nothing                                                                                                                                                                                                                                                                                               |
+| Provider | Repository views created by `oat sync --scope project`                                                                                                                                                                                                                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude   | `.claude/skills/<name>` and `.claude/agents/<name>.md`, relative symlinks into `.agents/`                                                                                                                                                                                                                                                           |
+| Cursor   | `.cursor/agents/`: relative symlinks for agents, plus generated model-variant files marked `# oat-managed: true`                                                                                                                                                                                                                                    |
+| Copilot  | `.github/agents/`, relative symlinks                                                                                                                                                                                                                                                                                                                |
+| Codex    | `.codex/agents/*.toml` and `.codex/config.toml`, generated files. In an existing `config.toml`, OAT adds its `[agents.<name>]` tables and sets `[features] multi_agent = true` and `[agents] max_depth` to at least 2, changing those two values if you had set them lower; your other settings and comments stay byte for byte (0.3.37 and later). |
+| Gemini   | Nothing                                                                                                                                                                                                                                                                                                                                             |
 
 OAT creates skill views only for Claude. It reports the other providers' skill
 support as `native-read` and creates no skill views for them. No generated

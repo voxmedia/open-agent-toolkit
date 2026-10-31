@@ -1,7 +1,11 @@
 import { CliError } from '@errors/index';
 import TOML from '@iarna/toml';
 
-import { stringifyToml } from './shared';
+import {
+  removeTomlTable,
+  renderTomlString,
+  setTomlValue,
+} from './config-toml-edit';
 
 export interface CodexManagedRoleConfig {
   roleName: string;
@@ -30,63 +34,6 @@ export interface CodexConfigMergeResult {
 }
 
 type TomlObject = Record<string, unknown>;
-type MultilineStringDelimiter = '"""' | "'''";
-
-function isEscapedBasicStringDelimiter(line: string, index: number): boolean {
-  let backslashCount = 0;
-  for (let cursor = index - 1; cursor >= 0 && line[cursor] === '\\'; cursor--) {
-    backslashCount += 1;
-  }
-  return backslashCount % 2 === 1;
-}
-
-function scanMultilineStringDelimiter(
-  line: string,
-  initialDelimiter: MultilineStringDelimiter | null,
-): MultilineStringDelimiter | null {
-  let delimiter = initialDelimiter;
-
-  for (let index = 0; index < line.length - 2; index++) {
-    if (delimiter === null) {
-      const candidate = line.slice(index, index + 3);
-      if (
-        (candidate === '"""' && !isEscapedBasicStringDelimiter(line, index)) ||
-        candidate === "'''"
-      ) {
-        delimiter = candidate;
-        index += 2;
-      }
-      continue;
-    }
-
-    if (
-      line.startsWith(delimiter, index) &&
-      (delimiter === "'''" || !isEscapedBasicStringDelimiter(line, index))
-    ) {
-      delimiter = null;
-      index += 2;
-    }
-  }
-
-  return delimiter;
-}
-
-function normalizeCodexConfigIndentation(content: string): string {
-  let multilineDelimiter: MultilineStringDelimiter | null = null;
-
-  return content
-    .split('\n')
-    .map((line) => {
-      const normalizedLine =
-        multilineDelimiter === null ? line.trimStart() : line;
-      multilineDelimiter = scanMultilineStringDelimiter(
-        normalizedLine,
-        multilineDelimiter,
-      );
-      return normalizedLine;
-    })
-    .join('\n');
-}
 
 function parseConfig(content: string | null): TomlObject {
   if (!content || content.trim() === '') {
@@ -109,16 +56,64 @@ function parseConfig(content: string | null): TomlObject {
   }
 }
 
+function isTable(value: unknown): value is TomlObject {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
 function getObject(value: unknown): TomlObject {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  return isTable(value) ? { ...value } : {};
+}
+
+function requireTableOrAbsent(value: unknown, label: string): TomlObject {
+  if (value === undefined) {
     return {};
   }
+  if (!isTable(value)) {
+    throw new CliError(
+      `Refusing to rewrite .codex/config.toml: ${label} must be a table. Fix it by hand and rerun sync.`,
+    );
+  }
+  return value;
+}
 
-  return { ...(value as TomlObject) };
+function requireNotTable(value: unknown, label: string): void {
+  if (isTable(value)) {
+    throw new CliError(
+      `Refusing to rewrite .codex/config.toml: ${label} must not be a table. Fix it by hand and rerun sync.`,
+    );
+  }
 }
 
 function getFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function canonicalTomlValue(value: unknown): unknown {
+  if (value instanceof Date) {
+    return { $date: value.toISOString() };
+  }
+  if (Array.isArray(value)) {
+    return value.map(canonicalTomlValue);
+  }
+  if (typeof value === 'bigint') {
+    return { $bigint: value.toString() };
+  }
+  if (typeof value === 'number' && !Number.isFinite(value)) {
+    return { $number: String(value) };
+  }
+  if (isTable(value)) {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonicalTomlValue(value[key])]),
+    );
+  }
+  return value;
 }
 
 /** Reads a valid numeric agents.max_depth value from Codex TOML content. */
@@ -128,7 +123,11 @@ export function readCodexMaxDepth(content: string | null): number | null {
   return getFiniteNumber(agents.max_depth);
 }
 
-/** Merges managed Codex roles and required shared agent configuration. */
+/**
+ * Merges managed Codex roles and required shared agent configuration in place:
+ * other tools keep ownership markers in this file's comments, so unmanaged
+ * content must survive byte for byte.
+ */
 export function mergeCodexConfig({
   existingContent,
   desiredRoles,
@@ -136,50 +135,116 @@ export function mergeCodexConfig({
   inheritedMaxDepth,
 }: CodexConfigMergeArgs): CodexConfigMergeResult {
   const parsed = parseConfig(existingContent);
-  const features = getObject(parsed.features);
-  const agents = getObject(parsed.agents);
-  const targetMaxDepth = getFiniteNumber(agents.max_depth);
-  const validInheritedMaxDepth = getFiniteNumber(inheritedMaxDepth);
+  const features = requireTableOrAbsent(parsed.features, 'features');
+  const agents = requireTableOrAbsent(parsed.agents, 'agents');
+  const roles = new Map(desiredRoles.map((role) => [role.roleName, role]));
+  const stale = new Set(staleManagedRoles);
+  requireNotTable(features.multi_agent, 'features.multi_agent');
+  if (!stale.has('max_depth')) {
+    requireNotTable(agents.max_depth, 'agents.max_depth');
+  }
+  for (const roleName of roles.keys()) {
+    if (stale.has(roleName)) {
+      continue;
+    }
+    const role = requireTableOrAbsent(agents[roleName], `agents.${roleName}`);
+    requireNotTable(role.description, `agents.${roleName}.description`);
+    requireNotTable(role.config_file, `agents.${roleName}.config_file`);
+  }
 
-  agents.max_depth = Math.max(
+  const maxDepth = Math.max(
     2,
-    targetMaxDepth ?? 2,
-    validInheritedMaxDepth ?? 2,
+    getFiniteNumber(agents.max_depth) ?? 2,
+    getFiniteNumber(inheritedMaxDepth) ?? 2,
   );
 
-  const nextConfig: TomlObject = {
-    ...parsed,
-    features: {
-      ...features,
-      multi_agent: true,
-    },
-    agents,
-  };
-
-  for (const role of desiredRoles) {
-    agents[role.roleName] = {
+  const expectedAgents: TomlObject = { ...agents, max_depth: maxDepth };
+  for (const role of roles.values()) {
+    expectedAgents[role.roleName] = {
       ...getObject(agents[role.roleName]),
       description: role.description,
       config_file: role.configFile,
     };
   }
-
   const removedRoles: string[] = [];
   for (const staleRole of staleManagedRoles) {
-    if (staleRole in agents) {
-      delete agents[staleRole];
+    if (Object.hasOwn(expectedAgents, staleRole)) {
+      delete expectedAgents[staleRole];
       removedRoles.push(staleRole);
     }
   }
+  const removed = new Set(removedRoles);
 
-  const mergedContent = normalizeCodexConfigIndentation(
-    stringifyToml(nextConfig),
-  );
-  const changed = (existingContent ?? '').trimEnd() !== mergedContent.trimEnd();
+  const original =
+    existingContent !== null && existingContent.trim() !== ''
+      ? existingContent
+      : '';
+  let mergedContent = original;
+
+  if (features.multi_agent !== true) {
+    mergedContent = setTomlValue(
+      mergedContent,
+      ['features', 'multi_agent'],
+      'true',
+    );
+  }
+  if (agents.max_depth !== maxDepth && !removed.has('max_depth')) {
+    mergedContent = setTomlValue(
+      mergedContent,
+      ['agents', 'max_depth'],
+      String(maxDepth),
+    );
+  }
+
+  for (const staleRole of removedRoles) {
+    mergedContent = removeTomlTable(mergedContent, ['agents', staleRole]);
+  }
+
+  for (const role of roles.values()) {
+    if (removed.has(role.roleName)) {
+      continue;
+    }
+    const current = getObject(agents[role.roleName]);
+    if (current.description !== role.description) {
+      mergedContent = setTomlValue(
+        mergedContent,
+        ['agents', role.roleName, 'description'],
+        renderTomlString(role.description),
+      );
+    }
+    if (current.config_file !== role.configFile) {
+      mergedContent = setTomlValue(
+        mergedContent,
+        ['agents', role.roleName, 'config_file'],
+        renderTomlString(role.configFile),
+      );
+    }
+  }
+
+  const expected: TomlObject = {
+    ...parsed,
+    features: { ...features, multi_agent: true },
+    agents: expectedAgents,
+  };
+  let actual: TomlObject | null;
+  try {
+    actual = parseConfig(mergedContent);
+  } catch {
+    actual = null;
+  }
+  if (
+    actual === null ||
+    JSON.stringify(canonicalTomlValue(actual)) !==
+      JSON.stringify(canonicalTomlValue(expected))
+  ) {
+    throw new CliError(
+      'Refusing to write .codex/config.toml: the in-place edit did not produce the expected managed configuration. Edit the file by hand and rerun sync.',
+    );
+  }
 
   return {
     mergedContent,
-    changed,
+    changed: mergedContent !== (existingContent ?? ''),
     removedRoles,
   };
 }
