@@ -1112,6 +1112,35 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 
 ---
 
+### Task p04-t08: (review) Collapse the probe anchor and restore the unrelated-work guarantee in docs
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- Modify: `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Step 1: Understand the issue**
+
+Review findings (post-simplify): L1 — the write-probe paragraph anchor in the trimmed pin matches raw text rather than whitespace-collapsed text, so a rewrap breaks CI. L2 — the shortened "What it does without asking" paragraph dropped the guarantee that unrelated staged and unstaged work stays intact, which the skill still makes.
+Location: see `reviews/archived/p04-review-2026-10-31T115235Z.md`.
+
+**Step 2: Implement fix**
+
+Match the probe anchor against the same whitespace-collapsed text as the other assertions; fold the unrelated-work guarantee into the docs paragraph's fourth sentence.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts && pnpm --filter oat-docs exec markdownlint-cli2 docs/skills/repo-improve.md`
+Expected: pass; a rewrap of the probe sentence no longer fails the pin, and removing the probe paragraph still does.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p04-t08" --message "fix(p04-t08): collapse the probe anchor and restore the unrelated-work guarantee in docs" -- <exact files changed>
+```
+
+---
+
 ## Phase 5: Release bookkeeping and gates
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
@@ -1210,6 +1239,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p04   | code     | fixes_completed | 2026-10-31 | reviews/archived/p04-review-2026-10-31T021449Z.md           | cff79cf176a0aa2db4430eb15666db6ad8bc3c6b | auto       | -                 |
 | p04   | code     | fixes_completed | 2026-10-31 | reviews/archived/p04-review-2026-10-31T023107Z.md           | d368f9d94db50bbce2e11fc6de0e33736adc1a97 | auto       | -                 |
 | p04   | code     | received        | 2026-10-31 | reviews/archived/p04-review-2026-10-31T024404Z.md           | a03cecd16b71a45d0c34633f3a4cfe838e828c79 | auto       | -                 |
+| p04   | code     | passed          | 2026-10-31 | reviews/archived/p04-review-2026-10-31T115235Z.md           | 90311a4078e7db408dd44be52b8db729889577de | auto       | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
@@ -1234,10 +1264,10 @@ cell; never truncate a widened row back to five columns.
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
 - Phase 2: 7 tasks - Gate-originated artifact admission (#384), including 5 review-fix tasks
 - Phase 3: 7 tasks - Journal rewrite detection (#385), including 5 review-fix tasks
-- Phase 4: 7 tasks - Knowledge-index dispatch preflight (#355), including 6 review-fix tasks
+- Phase 4: 8 tasks - Knowledge-index dispatch preflight (#355), including 7 review-fix tasks
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 30 tasks**
+**Total: 31 tasks**
 
 Ready for code review and merge.
 

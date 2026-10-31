@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t01
+oat_current_task_id: p04-t08
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 7     | 7/7       |
+| Phase 4 (p04) | in_progress | 8     | 7/8       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 28/30 tasks completed
+**Total:** 28/31 tasks completed
 
 ---
 
@@ -755,7 +755,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Outcome (required when completed):**
 
 - The pre-Step-10 stray-change check, its pin and docs clause are removed (round-3 M1 dissolved; reintroduction trigger recorded in the complexity report).
-- The Codex route narrows writable roots when exposed and otherwise uses the projection's `workspace-write` sandbox writing only declared outputs; the contract pin is 10 structural assertions on whitespace-collapsed text (was 38); the docs paragraph is 3–4 sentences; the skill is 859 lines (was 872).
+- The Codex route narrows writable roots when exposed and otherwise uses the projection's `workspace-write` sandbox writing only declared outputs; the contract pin is 10 structural assertions, nine on whitespace-collapsed text (was 38; the probe anchor is collapsed in p04-t08); the docs paragraph is 3–4 sentences; the skill is 859 lines (was 872).
 
 **Files changed:**
 
@@ -768,6 +768,24 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Notes / Decisions:**
 
 - Operator `simplify` disposition at the p04 review-cycle cap (request `dedkp-p04-implementation-4`).
+
+### Task p04-t08: (review) Collapse the probe anchor and restore the unrelated-work guarantee in docs
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p04 (post-simplify)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-31T115235Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+- The simplification applied the accepted ledger faithfully and kept every Keep item; no path mutates knowledge before an authorized route and a file-verified probe; Claude, Codex and Cursor routes are each runnable (the Codex projection already uses `workspace-write`); 13 seeded regressions across every remaining P0 clause failed the trimmed pin.
+- L1 (Low): the probe-paragraph anchor matches raw rather than whitespace-collapsed text (the p04-t07 journal overstated "all assertions") → fix task p04-t08.
+- L2 (Low): the docs paragraph dropped the unrelated-work guarantee → fix task p04-t08.
+
+**Outcome:** passed (reviewer request `dedkp-p04-review-4`); Lows converted to p04-t08.
 
 ---
 
