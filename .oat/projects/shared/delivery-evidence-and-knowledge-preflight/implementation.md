@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t07
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | in_progress | 6     | 6/6       |
+| Phase 2 (p02) | in_progress | 7     | 6/7       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 13/18 tasks completed
+**Total:** 13/19 tasks completed
 
 ---
 
@@ -363,6 +363,23 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Reason: mechanically bounded `no-shadow` rename in the forged-artifact test; no behavior change; reservation commit 328a85e249564656dee7be3a8c57cef65a627ffb touched only state.md.
 
 **Built-CLI controls (p02 fix round):** mis-ordered stack — `createGoalRepo`, lower branch `feat: unrelated lower layer`, main `feat: tip layer`, m01 review, `registryYaml({ kind: 'stack' })`, registration commit; `node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject d01` → expected and observed exit 1, `undeliverable`, `stack-order`. Unregistered milestone — `createGoalRepo` + `gateArtifactScenario(repo, { registered: false })`; same command with `--subject m01` → expected and observed exit 0, `ok`, review and exit fresh.
+
+### Task p02-t07: (review) Add the reviews/ restriction to exit-gate guidance
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p02 (round 2)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p02-review-2026-10-31T012557Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+
+- Round-1 H1, M1, L1 (path part), L2 and L3 verified resolved with built-CLI probes and neutralizations; the L1 Invocation-identity deferral was accepted; the recovery event and ledger settlement match the contract.
+- L1 (Low): `completion-and-closeout.md` and `workflow-gates.md` omit the `reviews/` restriction → fix task p02-t07.
+
+**Outcome:** passed (reviewer request `dedkp-p02-review-2`); Low converted to p02-t07.
 
 ---
 
