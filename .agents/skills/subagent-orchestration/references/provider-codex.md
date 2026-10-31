@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-10-01
-last_verified: 2026-10-01
-review_after: 2026-12-30
+guidance_version: 2026-10-31
+last_verified: 2026-10-31
+review_after: 2027-01-30
 ---
 
 # Codex and OpenAI Model Selection
@@ -13,16 +13,21 @@ model examples below. Launch mechanics for OAT dispatch live in
 
 ## Current Families
 
-Use `gpt-6.1-sol` for new Sol routes and `gpt-6-luna` for bounded Luna work.
-This Sol selector migration preserves the existing task-class effort guidance;
-it does not claim a newly measured workload advantage. GPT-6 Astra
+Use `gpt-6.1-terra` low for mechanical recon and medium for scoped
+intelligent recon, `gpt-6.1-sol` for implementation, and `gpt-6-luna` for
+checked input-heavy work. This is a user-directed placement. It does not
+claim a newly measured OAT workload advantage. These Codex ids are not Cursor
+selectors: Cursor does not list GPT models past 5.6. GPT-6 Astra
 is a supported Frontier candidate:
 
 - `gpt-6-astra`: Frontier candidate for especially demanding work; the bundled
   recommendation uses high and xhigh, while the supported catalogue also
   permits low, medium, and max;
+- `gpt-6.1-terra`: mechanical recon at low and scoped intelligent recon at
+  medium. The supported catalogue also permits high and xhigh. It does not
+  include max;
 - `gpt-6.1-sol`: high-capability implementation and reasoning route;
-- `gpt-6-luna`: cost-sensitive, bounded work.
+- `gpt-6-luna`: checked input-heavy, bounded work.
 
 The earlier public engineering benchmarks show task-dependent Astra gains
 over GPT-6 Sol, with
@@ -56,8 +61,8 @@ model/effort pairs are in the local Codex catalogue.
 
 | Task class               | Default                                      | Escalation                                                            | Floor notes                                                                   |
 | ------------------------ | -------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `mechanical-recon`       | `gpt-6-luna`, high                           | `gpt-6.1-sol`, medium                                                 | Lower effort is suitable only when a miss is cheap and mechanically detected. |
-| `intelligent-recon`      | `gpt-6.1-sol`, medium                        | Sol high                                                              | Preserve verification for silent-miss-prone reconnaissance.                   |
+| `mechanical-recon`       | `gpt-6.1-terra`, low                         | `gpt-6-luna`, high                                                    | Lower effort is suitable only when a miss is cheap and mechanically detected. |
+| `intelligent-recon`      | `gpt-6.1-terra`, medium                      | `gpt-6.1-sol`, medium                                                 | Preserve verification for silent-miss-prone reconnaissance.                   |
 | `default-implementation` | `gpt-6.1-sol`, medium                        | Sol high                                                              | Luna is for independently bounded, strongly verified work.                    |
 | `hard-reasoning`         | `gpt-6.1-sol`, high                          | Sol xhigh                                                             | Narrow the problem before raising effort.                                     |
 | `consequential`          | `gpt-6.1-sol`, high, plus independent review | Sol xhigh for a reasoning-depth bottleneck; max only after evaluation | The root retains consequential authorization.                                 |

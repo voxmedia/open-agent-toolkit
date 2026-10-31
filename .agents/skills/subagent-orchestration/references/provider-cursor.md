@@ -1,12 +1,13 @@
 ---
-guidance_version: 2026-10-01
-last_verified: 2026-10-01
-review_after: 2026-12-30
+guidance_version: 2026-10-31
+last_verified: 2026-10-31
+review_after: 2027-01-30
 catalog_basis:
   Cursor desktop 3.21.18 resolved Grok 4.6 and Fable 5.1 effort selectors in
   native subagent hooks, and Grok 4.7 only as bare flat IDs; Cursor desktop
-  3.20.14 resolved all five Opus 5.5 effort selectors; GPT-6 Sol/Luna were
-  absent from the observed Cursor catalog; the 2026-10-01 CLI catalog lists
+  3.20.14 resolved all five Opus 5.5 effort selectors; GPT-6 Sol/Luna and
+  GPT-6.1 Sol/Terra were absent from the observed Cursor catalog, and Cursor
+  does not support GPT models past 5.6; the 2026-10-01 CLI catalog lists
   Sonnet 5.5 flat IDs; Cursor desktop 3.22.12 matched five exact-ID Sonnet
   5.5 pins while every bracket-form Sonnet 5.5 probe fell back
 ---
@@ -53,8 +54,9 @@ Cursor desktop 3.20.14 resolved all five `claude-opus-5-5[effort=...]`
 selectors to corresponding flat IDs in native hooks; on 2026-09-25, Cursor
 desktop 3.21.18 did the same for Grok 4.6 and Fable 5.1. See the
 probe records at `packages/cli/src/providers/cursor/codec/__fixtures__/README.md`.
-GPT-6 Sol/Luna and GPT-6.1 Sol were absent from the 2026-10-01 Cursor CLI
-catalogue, so their Codex availability does not authorize Cursor routes.
+GPT-6 Sol/Luna, GPT-6.1 Sol, and GPT-6.1 Terra were absent from the Cursor
+catalogue. Cursor does not support GPT models past 5.6, so Codex availability
+does not authorize those Cursor routes. Keep the GPT-5.6 selectors below.
 
 | Task class               | Default                                                             | Economy                                            | Escalation                                                  | Floor notes                                                                                                      |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |

@@ -1,9 +1,14 @@
 {
-  "version": "2026-10-01.1",
+  "version": "2026-10-31.1",
   "providers": {
     "codex": {
       "economy": {
         "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-terra",
+            "effort": "low"
+          },
           {
             "harness": "codex",
             "model": "gpt-6-luna",
@@ -23,6 +28,11 @@
       },
       "balanced": {
         "candidates": [
+          {
+            "harness": "codex",
+            "model": "gpt-6.1-terra",
+            "effort": "medium"
+          },
           {
             "harness": "codex",
             "model": "gpt-6-luna",
