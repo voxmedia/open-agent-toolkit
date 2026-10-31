@@ -113,16 +113,16 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T15:25:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:26:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-30T23:32:02Z'
 oat_implement_exit_gate:
-  status: 'pending'
+  status: 'allowed'
   resolution: 'configured'
-  disposition: null
+  disposition: 'passed'
   config_fingerprint: 'sha256:134ceb98adefae1e6d8cce8a7dafc286d93236601c49825ca6b66a2def4f43fa'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important --avoid same-runtime "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits. (local override: prefer the Sol gate target over same-family selection)'
@@ -145,7 +145,7 @@ oat_implement_exit_gate:
   envelope_status: 'ok'
   artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/final-review-2026-10-31T152346Z.md before treating this gate review as consumed.'
-  receive_state: 'intent_persisted'
+  receive_state: 'completed'
   receive_correlation:
     gate_run_id: '2fc8f86e-4a13-4a50-bfdf-34cf37848dff'
     handoff: 'oat-project-review-receive'
@@ -157,12 +157,12 @@ oat_implement_exit_gate:
   receive_archived_artifact: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/final-review-2026-10-31T152346Z.md'
   receive_event_identity: 'final|code|final-review-2026-10-31T152346Z.md'
   receive_pre_head: '68783368ef7017073fa87769369c9c81a81725b8'
-  receive_commit: null
+  receive_commit: '1299430b423fdac79751921f77fa39cd8dc01cf6'
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-10-31T15:25:55Z'
-  decided_at: null
+  updated_at: '2026-10-31T15:26:22Z'
+  decided_at: '2026-10-31T15:26:22Z'
 ---
 
 # Project State: delivery-evidence-and-knowledge-preflight
