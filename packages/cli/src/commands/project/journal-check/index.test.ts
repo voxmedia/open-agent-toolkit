@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -274,6 +281,25 @@ describe('oat project journal check', () => {
       code: 'substantive-change',
       path: `${PROJECT_REL}/implementation.md`,
     });
+  });
+
+  it('accepts an absolute project path spelled through a filesystem alias', async () => {
+    const fixture = await project(GOAL_JOURNAL, {
+      plan: GOAL_PLAN,
+      state: GOAL_STATE,
+    });
+    initializeGit(fixture);
+
+    const result = await run(fixture, [
+      '--project',
+      await realpath(fixture.projectPath),
+      '--at',
+      'review',
+      '--scope',
+      'p01',
+    ]);
+    expect(result.exitCode).toBe(0);
+    expect(result.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
   });
 
   it('keeps append-only goal changes and extraction markers out of rewrite reasons', async () => {

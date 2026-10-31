@@ -1,5 +1,5 @@
 import { readFile as defaultReadFile } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 
 import {
   buildCommandContext,
@@ -128,13 +128,12 @@ function readWorkflowMode(stateContent: string): string {
 }
 
 async function readCommittedJournal(
-  repoRoot: string,
   projectDir: string,
   git: GitRunner,
 ): Promise<string | null> {
   const head = await git.run(
     ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'],
-    { cwd: repoRoot, allowFailure: true },
+    { cwd: projectDir, allowFailure: true },
   );
   if (head.code === 1) {
     return null;
@@ -146,12 +145,9 @@ async function readCommittedJournal(
     );
   }
 
-  const repoPath = relative(repoRoot, join(projectDir, 'implementation.md'))
-    .split(sep)
-    .join('/');
   const entry = await git.run(
-    ['ls-tree', '--full-tree', '-z', 'HEAD', '--', repoPath],
-    { cwd: repoRoot, allowFailure: true },
+    ['ls-tree', '--full-name', '-z', 'HEAD', '--', 'implementation.md'],
+    { cwd: projectDir, allowFailure: true },
   );
   if (entry.code !== 0) {
     throw new CliError(
@@ -163,8 +159,8 @@ async function readCommittedJournal(
     return null;
   }
 
-  const blob = await git.run(['show', `HEAD:${repoPath}`], {
-    cwd: repoRoot,
+  const blob = await git.run(['show', 'HEAD:./implementation.md'], {
+    cwd: projectDir,
     allowFailure: true,
   });
   if (blob.code !== 0) {
@@ -271,7 +267,6 @@ async function runJournalCheck(
       (boundary === 'implement-preflight' || boundary === 'review')
     ) {
       const committed = await readCommittedJournal(
-        repoRoot,
         projectDir,
         dependencies.git,
       );
