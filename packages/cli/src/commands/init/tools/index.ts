@@ -52,6 +52,7 @@ import {
   notRunProviderSyncOutcome,
   providerSyncOutcomeFromAutoSync,
   resolveAdditivePackScopeSelection,
+  resolveExplicitPackScopeSelection,
   type PackLifecycleOutcome,
 } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
@@ -706,17 +707,13 @@ async function resolvePackScopes(
     return scopes as PackScopeMap;
   }
 
-  // Explicit --scope is additive for regular tools installs: union the
-  // requested scope with the pack's current placement so installing at one
-  // scope never removes another. Guided setup passes `scopeSelection`, which
-  // intentionally takes precedence over this global init scope.
+  // An explicit --scope project|user limits writes to that scope. A placement
+  // in the other scope is neither reconciled nor removed. A guided-setup
+  // `scopeSelection` mode takes precedence over this scope.
   const explicitScope = explicitRequestedScope(context);
   if (explicitScope !== null) {
     for (const pack of eligiblePacks) {
-      scopes[pack] = unionScopeWithCurrent(
-        installedPackStates[pack].location,
-        explicitScope,
-      );
+      scopes[pack] = explicitScope;
     }
     return scopes as PackScopeMap;
   }
@@ -1282,16 +1279,25 @@ export async function runInitTools(
       initialPackStates,
       dependencies,
     );
-    attemptedSelections = selectedPacks.map((pack) =>
-      resolveAdditivePackScopeSelection({
-        pack,
-        requested: pack === 'core' ? 'user' : packScopes[pack],
-        knownRealizedScopes: scopesForLocation(
-          initialPackStates[pack].location,
-        ),
-        unknownScopes: [],
-      }),
-    );
+    const explicitScope = explicitRequestedScope(context);
+    attemptedSelections = selectedPacks.map((pack) => {
+      const knownRealizedScopes = scopesForLocation(
+        initialPackStates[pack].location,
+      );
+      return explicitScope !== null
+        ? resolveExplicitPackScopeSelection({
+            pack,
+            requested: explicitScope,
+            knownRealizedScopes,
+            unknownScopes: [],
+          })
+        : resolveAdditivePackScopeSelection({
+            pack,
+            requested: pack === 'core' ? 'user' : packScopes[pack],
+            knownRealizedScopes,
+            unknownScopes: [],
+          });
+    });
 
     function scopeRoot(scope: ConcreteScope): string {
       if (scope === 'user') return userRoot;
@@ -1883,6 +1889,9 @@ export async function runInitToolsWithDefaults(
  * stays at project scope instead of gaining a second copy at the pack's
  * `defaultScope`. Falls back to the configured default only when placement
  * cannot be observed (no inventory dependency, or an inventory failure).
+ *
+ * An explicit `--scope project|user` targets only that scope; `--scope all`
+ * targets both scopes the pack allows.
  */
 async function resolvePackCommandSelection(
   pack: ToolPack,
@@ -1929,12 +1938,18 @@ async function resolvePackCommandSelection(
     evidence.knownRealizedScopes.length === 2
       ? 'both'
       : (evidence.knownRealizedScopes[0] ?? definition.defaultScope);
-  const selection = resolveAdditivePackScopeSelection({
+  const scopeInput = {
     pack,
-    requested: requested ?? defaultRequest,
     knownRealizedScopes: evidence.knownRealizedScopes,
     unknownScopes: evidence.unknownScopes,
-  });
+  };
+  const selection =
+    requested === 'project' || requested === 'user'
+      ? resolveExplicitPackScopeSelection({ ...scopeInput, requested })
+      : resolveAdditivePackScopeSelection({
+          ...scopeInput,
+          requested: requested ?? defaultRequest,
+        });
   return {
     ...selection,
     targetScopes: selection.targetScopes.filter((scope) =>

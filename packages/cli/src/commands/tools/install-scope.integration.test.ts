@@ -14,6 +14,7 @@ import { join, relative } from 'node:path';
 import { createProgram } from '@app/create-program';
 import { registerCommands } from '@commands/index';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
+import { reconcilePackLifecycle } from '@commands/tools/shared/pack-lifecycle';
 import { PACK_NAMES } from '@commands/tools/shared/pack-manifest';
 import type { PackName } from '@commands/tools/shared/types';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -139,6 +140,49 @@ async function completenessAt(
 
 const NON_CORE_PACKS = PACK_NAMES.filter((pack) => pack !== 'core');
 
+/**
+ * Installs `pack` at `scope` directly through the lifecycle (no localPaths or
+ * `.gitignore` step), then deletes one managed skill so that any later
+ * reconcile of this scope would be a visible write.
+ */
+async function preinstallIncomplete(
+  pack: PackName,
+  scope: ConcreteScope,
+  roots: ScratchRoots,
+): Promise<void> {
+  const scopeRoot = scope === 'project' ? roots.repo : roots.home;
+  await reconcilePackLifecycle({
+    pack,
+    scope,
+    scopeRoot,
+    assetsRoot,
+    action: 'install',
+  });
+  const inventory = await inventoryScopedPack({
+    pack,
+    scope,
+    scopeRoot,
+    assetsRoot,
+  });
+  const skill = inventory.assets.find(
+    ({ definition }) =>
+      definition.kind === 'skill' && definition.ownership[scope] === 'managed',
+  )!;
+  await rm(join(scopeRoot, skill.definition.destination), {
+    recursive: true,
+    force: true,
+  });
+  expect(await completenessAt(pack, scope, roots)).toBe('partial');
+}
+
+async function readOptional(path: string): Promise<string> {
+  try {
+    return await readFile(path, 'utf8');
+  } catch {
+    return '';
+  }
+}
+
 describe('tools install honors the scope it was given', () => {
   it('refuses core at project scope and writes nothing anywhere', async () => {
     const roots = await createScratchRoots();
@@ -252,4 +296,72 @@ describe('tools install honors the scope it was given', () => {
     ]);
     expect(await snapshotTree(roots.home)).toEqual(homeBefore);
   }, 60_000);
+
+  it.each([
+    { label: 'aggregate', args: ['tools', 'install', '--scope', 'user'] },
+    {
+      label: 'single-pack',
+      args: ['tools', 'install', 'workflows', '--scope', 'user'],
+    },
+  ])(
+    '$label --scope user leaves a project workflows install untouched',
+    async ({ args }) => {
+      const roots = await createScratchRoots();
+      await preinstallIncomplete('workflows', 'project', roots);
+      const repoBefore = await snapshotTree(roots.repo);
+
+      const run = await runCli(roots, args);
+
+      expect(run.exitCode).toBe(0);
+      expect(await snapshotTree(roots.repo)).toEqual(repoBefore);
+      expect(await readOptional(join(roots.repo, '.gitignore'))).not.toContain(
+        '# OAT local paths',
+      );
+      expect(
+        await readOptional(join(roots.repo, '.oat', 'config.json')),
+      ).not.toContain('localPaths');
+      expect(await completenessAt('workflows', 'project', roots)).toBe(
+        'partial',
+      );
+      expect(await completenessAt('workflows', 'user', roots)).toBe('complete');
+    },
+    60_000,
+  );
+
+  it('repairs the existing placement when no scope is given (accepted control)', async () => {
+    const roots = await createScratchRoots();
+    await preinstallIncomplete('workflows', 'project', roots);
+    const homeBefore = await snapshotTree(roots.home);
+
+    const run = await runCli(roots, ['tools', 'install', 'workflows']);
+
+    expect(run.exitCode).toBe(0);
+    expect(await completenessAt('workflows', 'project', roots)).toBe(
+      'complete',
+    );
+    expect(await snapshotTree(roots.home)).toEqual(homeBefore);
+  }, 60_000);
+
+  it.each([
+    { label: 'aggregate', args: ['tools', 'install', '--scope', 'project'] },
+    {
+      label: 'single-pack',
+      args: ['tools', 'install', 'docs', '--scope', 'project'],
+    },
+  ])(
+    '$label --scope project leaves a user docs install untouched',
+    async ({ args }) => {
+      const roots = await createScratchRoots();
+      await preinstallIncomplete('docs', 'user', roots);
+      const homeBefore = await snapshotTree(roots.home);
+
+      const run = await runCli(roots, args);
+
+      expect(run.exitCode).toBe(0);
+      expect(await snapshotTree(roots.home)).toEqual(homeBefore);
+      expect(await completenessAt('docs', 'user', roots)).toBe('partial');
+      expect(await completenessAt('docs', 'project', roots)).toBe('complete');
+    },
+    60_000,
+  );
 });
