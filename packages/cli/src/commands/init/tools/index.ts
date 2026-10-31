@@ -321,6 +321,54 @@ function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
   return USER_ELIGIBLE_PACKS.has(pack);
 }
 
+/**
+ * The concrete scope an aggregate install was explicitly limited to, or
+ * `null` when placement follows per-pack defaults (no flag, `--scope all`, or
+ * a guided-setup scope-selection mode).
+ */
+function explicitRequestedScope(context: CommandContext): InstallScope | null {
+  if (context.scopeSelection !== undefined) return null;
+  return context.scope === 'project' || context.scope === 'user'
+    ? context.scope
+    : null;
+}
+
+interface SkippedPack {
+  pack: ToolPack;
+  reason: string;
+}
+
+function scopeOnlyDescription(pack: ToolPack): string {
+  return `${pack} is ${getPackDefinition(pack).allowedScopes.join(' and ')}-scope only`;
+}
+
+/**
+ * Packs an explicit aggregate `--scope` cannot place, because the pack's
+ * manifest does not allow that scope.
+ */
+function packsSkippedForScope(scope: InstallScope | null): SkippedPack[] {
+  if (scope === null) return [];
+  return ALL_TOOL_PACKS.filter(
+    (pack) => !getPackDefinition(pack).allowedScopes.includes(scope),
+  ).map((pack) => ({
+    pack,
+    reason: `${scopeOnlyDescription(pack)}, so --scope ${scope} does not install it. Run \`oat tools install ${pack}\` to install it at ${getPackDefinition(pack).defaultScope} scope.`,
+  }));
+}
+
+class PackScopeNotAllowedError extends Error {
+  readonly command: string;
+
+  constructor(pack: ToolPack, requested: readonly ConcreteScope[]) {
+    const definition = getPackDefinition(pack);
+    const command = `oat tools install ${pack} --scope ${definition.defaultScope}`;
+    super(
+      `${scopeOnlyDescription(pack)}; nothing was installed for --scope ${requested.join(', ')}. Run \`${command}\` instead.`,
+    );
+    this.command = command;
+  }
+}
+
 async function loadPackEvidence(
   pack: ToolPack,
   projectRoot: string | null,
@@ -662,15 +710,12 @@ async function resolvePackScopes(
   // requested scope with the pack's current placement so installing at one
   // scope never removes another. Guided setup passes `scopeSelection`, which
   // intentionally takes precedence over this global init scope.
-  if (
-    scopeSelection !== 'interactive' &&
-    (context.scope === 'project' || context.scope === 'user')
-  ) {
-    const requested: InstallScope = context.scope;
+  const explicitScope = explicitRequestedScope(context);
+  if (explicitScope !== null) {
     for (const pack of eligiblePacks) {
       scopes[pack] = unionScopeWithCurrent(
         installedPackStates[pack].location,
-        requested,
+        explicitScope,
       );
     }
     return scopes as PackScopeMap;
@@ -801,9 +846,11 @@ function reportSuccess(
   adoptedPacks: ToolPack[],
   lifecycle: readonly PackLifecycleOutcome[],
   projectGuidance: AgentsGuidancePlan,
+  skippedPacks: readonly SkippedPack[],
 ): void {
   const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
+    const skipped = skippedPacks.length > 0 ? { skippedPacks } : {};
     if (
       projectGuidance.action === 'blocked' ||
       projectGuidance.action === 'manual-required'
@@ -811,6 +858,7 @@ function reportSuccess(
       context.logger.json({
         status: 'partial',
         installedPacks: packs,
+        ...skipped,
         syncScopes,
         lifecycle: lifecycle.map(({ selection, status }) => ({
           pack: selection.pack,
@@ -823,6 +871,7 @@ function reportSuccess(
     context.logger.json({
       status: 'ok',
       installedPacks: packs,
+      ...skipped,
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
       lifecycle,
@@ -1183,24 +1232,34 @@ export async function runInitTools(
       assetsRoot,
       dependencies,
     );
-    const selectedPacks: ToolPack[] = context.interactive
-      ? ((await dependencies.selectManyWithAbort(
-          'Select tool packs to install',
-          buildPackChoices(initialPackStates),
-          { interactive: context.interactive },
-        )) ?? [])
-      : [
-          'core',
-          'ideas',
-          'docs',
-          'workflows',
-          'utility',
-          'research',
-          'brainstorm',
-        ];
+    const skippedPacks = packsSkippedForScope(explicitRequestedScope(context));
+    const isSkipped = (pack: ToolPack): boolean =>
+      skippedPacks.some((skipped) => skipped.pack === pack);
+    const selectedPacks: ToolPack[] = (
+      context.interactive
+        ? ((await dependencies.selectManyWithAbort(
+            'Select tool packs to install',
+            buildPackChoices(initialPackStates).filter(
+              ({ value }) => !isSkipped(value),
+            ),
+            { interactive: context.interactive },
+          )) ?? [])
+        : ([
+            'core',
+            'ideas',
+            'docs',
+            'workflows',
+            'utility',
+            'research',
+            'brainstorm',
+            'project-management',
+          ] satisfies ToolPack[])
+    ).filter((pack) => !isSkipped(pack));
 
-    if (!context.interactive) {
-      selectedPacks.push('project-management');
+    if (!context.json) {
+      for (const { pack, reason } of skippedPacks) {
+        context.logger.info(`Skipped ${pack}: ${reason}`);
+      }
     }
     attemptedPacks = selectedPacks;
     if (selectedPacks.length === 0) {
@@ -1749,6 +1808,7 @@ export async function runInitTools(
       adoptedPacks,
       lifecycleOutcomes,
       guidancePlan,
+      skippedPacks,
     );
     process.exitCode =
       lifecycleOutcomes.some(({ status }) => status !== 'complete') ||
@@ -1933,6 +1993,18 @@ function createReconciledPackCommand(
               ? requestedScope
               : undefined,
         );
+        const requestedScopes: ConcreteScope[] =
+          selection.requested === 'both'
+            ? ['project', 'user']
+            : [selection.requested];
+        if (
+          !requestedScopes.some((scope) =>
+            definition.allowedScopes.includes(scope),
+          )
+        ) {
+          selection = { ...selection, targetScopes: [] };
+          throw new PackScopeNotAllowedError(pack, requestedScopes);
+        }
         const scopes = [...selection.targetScopes];
         for (const scope of scopes) {
           if (!definition.allowedScopes.includes(scope)) {
@@ -2129,6 +2201,7 @@ function createReconciledPackCommand(
             : 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        const scopeRefused = error instanceof PackScopeNotAllowedError;
         lifecycleOutcome ??= {
           schemaVersion: 1,
           selection: selection ?? {
@@ -2137,18 +2210,27 @@ function createReconciledPackCommand(
             retainedRealizedScopes: [],
             targetScopes: [],
           },
-          canonical: { status: 'failed', results: [] },
+          canonical: {
+            status: scopeRefused ? 'unchanged' : 'failed',
+            results: [],
+          },
           sync: notRunProviderSyncOutcome(
             lifecycleProviderEvidence({
               pack,
               scopedInventories: [],
               providerContexts,
             }),
-            'Canonical apply failed before auto-sync',
+            scopeRefused
+              ? 'The requested scope is not allowed for this pack'
+              : 'Canonical apply failed before auto-sync',
           ),
           finalEvidence: null,
           status: 'failed',
-          recovery: [{ code: 'canonical-apply-failed', message }],
+          recovery: [
+            scopeRefused
+              ? { code: 'scope-not-allowed', command: error.command, message }
+              : { code: 'canonical-apply-failed', message },
+          ],
         };
         if (context.json)
           context.logger.json({
