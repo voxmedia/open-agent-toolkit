@@ -612,7 +612,9 @@ from a first–last range. `oat-project-pr-progress` registers a delivery only
 when `oat project delivery check --subject <mNN|dNN>` reports `status: ok`,
 writing the `oat_deliveries` entry (`registering`) before it creates the pull
 request so an interrupted run resumes by `gh pr list` instead of opening a
-duplicate.
+duplicate. For a stacked milestone, registration instead records `kind: stack`
+and attaches its existing layer pull requests base to tip; it never creates a
+stack.
 
 **Freshness.** Evidence keeps the revision actually reviewed. Commits after it
 count as bookkeeping only when they touch the project's tracking files in
