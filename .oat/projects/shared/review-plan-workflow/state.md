@@ -71,8 +71,11 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T14:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: 2026-10-31T22:29:09.296Z # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: paused
+oat_pause_timestamp: 2026-10-31T22:29:09.296Z
+oat_pause_reason: Deferred for reconsideration (operator, 2026-10-31) - the added review complexity may not be worth it; keep open with PR 190.
 ---
 
 # Project State: review-plan-workflow
