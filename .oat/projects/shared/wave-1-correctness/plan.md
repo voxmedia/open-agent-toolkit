@@ -611,16 +611,23 @@ ends in `|| true`, so a successful commit alone proves nothing. Procedure:
 1. `git worktree add <tmp> HEAD`, then in `<tmp>` run
    `pnpm install --frozen-lockfile --offline` (or `pnpm install`) so
    lint-staged is available; the installed hook is shared through the common
-   Git directory.
+   Git directory and runs `<tmp>/tools/git-hooks/pre-commit`. commit-paths
+   discards hook output on success, so make lint-staged observable: in
+   `<tmp>` only (uncommitted, before running commit-paths), change that
+   script's lint-staged call to
+   `run_pnpm exec lint-staged --verbose >"$PROBE_LOG" 2>&1; echo "lint-staged-exit=$?" >>"$PROBE_LOG"`
+   with `PROBE_LOG` exported to a path outside the repository.
 2. Make an unformatted change to `packages/cli/assets/templates/plan-lite.md`
    (one oxfmt would rewrite, if oxfmt formats that path; otherwise any change).
 3. Commit it from `<tmp>` with this phase worktree's build by absolute path:
    `node <phase-worktree>/packages/cli/dist/index.js --json internal commit-paths --identity probe-<n> --message probe -- packages/cli/assets/templates/plan-lite.md`.
-4. Pass only when all hold: the outcome is `committed`; the hook output shows
-   lint-staged running the `*.md` task; the committed blob
-   (`git show HEAD:packages/cli/assets/templates/plan-lite.md`) is the
-   expected (formatted, where applicable) content; `git status --short` is
-   clean. "lint-staged did not run" is a probe failure, not a pass.
+4. Pass only when all hold: the outcome is `committed`; `$PROBE_LOG` shows
+   the `*.md` task ran on `plan-lite.md` and ends with `lint-staged-exit=0`;
+   the committed blob (`git show HEAD:packages/cli/assets/templates/plan-lite.md`)
+   is the expected content; `git status --short` shows only the probe's own
+   edit to `tools/git-hooks/pre-commit`. A missing log or a nonzero
+   `lint-staged-exit` is a probe failure, not a pass. Quote the log lines in
+   the task report.
 5. Remove the worktree (`git worktree remove --force <tmp>`) and delete the
    probe branch state; nothing from the probe is pushed.
 
@@ -795,22 +802,38 @@ base-role header), append the next free task ID to Phase 5 —
 failing gate, the files fixed, and its verification; fix each failure within
 the failing component; commit it as
 `fix(p05-t05): reconcile cross-phase test expectations`; update
-Implementation Complete; then re-run the failing gate and every later gate.
+Implementation Complete; add the matching `### Task p05-t05` block under
+Phase 5 in `implementation.md` (status, commit SHA, outcome, files,
+verification) and update its Progress Overview row and total; run
+`oat project journal check --project <project> --at review`; then re-run the
+failing gate and every later gate.
 When every gate passes, no task is appended and nothing is committed.
 
 ---
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| p02   | code     | pending | -    | -        | -             | -          | -           |
-| p03   | code     | pending | -    | -        | -             | -          | -           |
-| p04   | code     | pending | -    | -        | -             | -          | -           |
-| p05   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | --------------- | ---------- | -------- | ---------------------------------------- | ---------- | ----------- |
+| p01   | code     | pending         | -          | -        | -                                        | -          | -           |
+| p02   | code     | pending         | -          | -        | -                                        | -          | -           |
+| p03   | code     | pending         | -          | -        | -                                        | -          | -           |
+| p04   | code     | pending         | -          | -        | -                                        | -          | -           |
+| p05   | code     | pending         | -          | -        | -                                        | -          | -           |
+| final | code     | pending         | -          | -        | -                                        | -          | -           |
+| plan  | artifact | fixes_completed | 2026-10-31 | -        | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -           |
+
+Plan artifact review disposition (Auto Artifact-Review Loop, structured
+mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
+the `high` reviewer ceiling; requests `wave1-plan-artifact-review-1..3`; retry
+bound 2 exhausted): cycle 1 returned F1–F9 (2 High), cycle 2 confirmed them and
+returned R1 (High), R2, R3, cycle 3 confirmed R1–R3 and returned M1 (Medium:
+real-hook probe evidence not observable through commit-paths) and L1 (Low:
+appended reconciliation task needs its journal block). M1 and L1 were applied
+as unambiguous in-bundle fixes under autonomy gate `QS-11` after the last
+cycle, so they have not been re-reviewed by this loop; the configured
+cross-family quick-start gate reviews the resulting plan. No Critical or High
+finding remains open.
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
