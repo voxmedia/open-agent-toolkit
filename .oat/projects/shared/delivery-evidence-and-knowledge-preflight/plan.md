@@ -1243,7 +1243,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p04   | code     | fixes_completed | 2026-10-31 | reviews/archived/p04-review-2026-10-31T023107Z.md           | d368f9d94db50bbce2e11fc6de0e33736adc1a97 | auto       | -                 |
 | p04   | code     | received        | 2026-10-31 | reviews/archived/p04-review-2026-10-31T024404Z.md           | a03cecd16b71a45d0c34633f3a4cfe838e828c79 | auto       | -                 |
 | p04   | code     | passed          | 2026-10-31 | reviews/archived/p04-review-2026-10-31T115235Z.md           | 90311a4078e7db408dd44be52b8db729889577de | auto       | -                 |
-| p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05   | code     | passed          | 2026-10-31 | reviews/archived/p05-review-2026-10-31T121727Z.md           | ad93669bfdc45f140a404630e67938de9a8550fb | auto       | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-30 | reviews/archived/artifact-plan-review-2026-10-30T235710Z.md | -                                        | gate       | codex-6-sol-xhigh |

@@ -16,13 +16,13 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status      | Tasks | Completed |
-| ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | complete    | 8     | 8/8       |
-| Phase 5 (p05) | in_progress | 2     | 2/2       |
+| Phase         | Status   | Tasks | Completed |
+| ------------- | -------- | ----- | --------- |
+| Phase 1 (p01) | complete | 7     | 7/7       |
+| Phase 2 (p02) | complete | 7     | 7/7       |
+| Phase 3 (p03) | complete | 7     | 7/7       |
+| Phase 4 (p04) | complete | 8     | 8/8       |
+| Phase 5 (p05) | complete | 2     | 2/2       |
 
 **Total:** 31/31 tasks completed
 
@@ -808,7 +808,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 5: Release bookkeeping and gates
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-10-31
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
@@ -891,6 +891,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Verification: focused pin suite 274 passed before and after the commit; phase `pnpm test` passed before and after (9,214 CLI tests); root rerun of the pin suite passed.
 - Reason: the amended p05-t01 boundary authorized mechanical propagation of the bumped skill versions into the contract pins; reservation commit 8ec3add8d59bc2c2f09b71a8781ca79db5881a82 touched only state.md.
 
+### Review Received: p05
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p05-review-2026-10-31T121727Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+- Verified: lockstep 0.3.38 strictly above `origin/main` 0.3.37; exactly the four changed skills bumped once, no agent role changed; recovery contract followed (one `direction-required` and one `recovered` event, settled ledger); Backlog Lifecycle followed for all four items; reviewer reran `check:skill-bumps`, `release:check-versions` and `release:validate` (exit 0) and confirmed the docs index is fresh.
+- L1 (Low): the p05 plan amendments were not in the Deviations table → resolved by the root in this bookkeeping commit (row matched by cell content after the earlier padded-table anchor missed).
+- L2 (Low): issue comments posted at triage link the pre-archive `backlog/items/` paths, which 404 after merge → accepted for PR closeout: the final PR description and any post-merge issue comments link the `backlog/archived/` paths; the quoted triage record text is historical and stays unchanged.
+
+**Outcome:** passed (reviewer request `dedkp-p05-review-1`).
+
+**Phase p05 outcome:** complete. Two tasks; one direction-required stop from a root scope omission (corrected), one phase-standing recovery (1/10) for the version pins; review passed 0C/0H/0M/2L, both resolved by the root. Phase range `eed4d90e98dd9509af7a1d382aacaeec5dadb7ad..ad93669bfdc45f140a404630e67938de9a8550fb`.
+
 ---
 
 ## Orchestration Runs
@@ -955,6 +970,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - run/v1 · request=dedkp-p05-implementation-2 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p05-implementation · observed=~ · match=~
 
+- run/v1 · request=dedkp-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 - Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
@@ -989,12 +1006,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                                      | Source of Truth      | Follow-up                        |
-| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
-| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                                           | -                    | -                                |
-| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                                            | Implementation       | None                             |
-| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics                       | Implementation       | Retracted by p02-t03 (review H1) |
-| plan p05-t01  | plan.md p05-t01                      | Lockstep bump 0.3.36 → 0.3.37                             | 0.3.37 → 0.3.38                                                                                                                                                                       | `main` reached 0.3.37 in #389 (merged into this branch at befc083); the gate requires versions strictly above `origin/main` | plan.md (retargeted) | None                             |
+| Task / Review    | Source Artifact                      | Planned / Documented                                                                                                 | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                                       | Source of Truth      | Follow-up                        |
+| ---------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------- |
+| p01-t02          | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site                                                                      | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                                             | Implementation       | None                             |
+| p02-t01          | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks                                                            | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics                        | Implementation       | Retracted by p02-t03 (review H1) |
+| plan p05-t01     | plan.md p05-t01                      | Lockstep bump 0.3.36 → 0.3.37                                                                                        | 0.3.37 → 0.3.38                                                                                                                                                                       | `main` reached 0.3.37 in #389 (merged into this branch at befc083); the gate requires versions strictly above `origin/main`  | plan.md (retargeted) | None                             |
+| p05-t01, p05-t02 | plan.md p05 (amended at 8df2933)     | p05-t01 files excluded `packages/cli/src/validation/skills.test.ts`; p05-t02 ran gates before committing the archive | Pin file added to p05-t01 (repaired by recovery dedkp-p05-recovery-02); archive committed before the gates                                                                            | The pins must equal the bumped skill versions; `pnpm test`'s Markdown scan cannot read deleted-but-uncommitted tracked paths | plan.md (amended)    | None                             |
 
 ## Final Summary (for PR/docs)
 
