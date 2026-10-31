@@ -123,18 +123,12 @@ awaited, never fire-and-forget.
 #### Codex route
 
 Launch the installed Codex provider projection of `oat-codebase-mapper` as the
-exact registered `agent_type` shown by the live native catalog. Preserve
-model, reasoning effort, reasoning mode, service tier, fork behavior, sandbox,
-and writable roots as independent controls. The direct-write probe and lanes
-must have only `.oat/repo/knowledge/` writable, including `.preflight/` for the
-probe; the rest of the repository remains read-only. Read-only response lanes
-use a read-only sandbox. When the native surface exposes no per-spawn sandbox
-override, use the prompt constraint for a read-only lane only when the dispatch
-engine accepts that boundary; otherwise classify the route
-`unresolved-or-unsupported`. When per-spawn writable roots cannot be narrowed,
-run the probe and direct-write lanes under the projection's `workspace-write`
-sandbox, constrained by the prompt to their declared outputs. A native
-role-selection rejection before child start is a route failure.
+exact registered `agent_type` shown by the live native catalog, following the
+Codex mechanics reference for launch controls. Narrow writable roots to
+`.oat/repo/knowledge/` when the surface exposes that control; otherwise use the
+projection's `workspace-write` sandbox and write only declared outputs. Use a
+read-only sandbox for read-only response lanes. A native role-selection
+rejection before child start is a route failure.
 
 #### Cursor route
 
@@ -153,9 +147,8 @@ With the route resolved, run a non-mutating `lstat` check of `.oat`,
 path if any existing component is a symlink or a non-directory. If
 `.preflight` already exists as any file type, stop and name it; do not let
 stale bytes satisfy the probe. Only after proving `.preflight` is absent,
-create it fresh, then launch the bounded
-write-permission
-probe with class `generator` before Step 2. Its only write authority is
+create it fresh, then launch the bounded write-permission probe with class
+`generator` before Step 2. Its only write authority is
 `.oat/repo/knowledge/.preflight/test.txt`, with content `test`; it returns
 `WRITE_OK` or `WRITE_BLOCKED`. Before removing `.preflight`, require
 `WRITE_OK` to coincide with `.preflight/test.txt` existing with exact content
@@ -775,12 +768,6 @@ cat .oat/repo/knowledge/project-index.md | head -50
 ```
 
 Expected: Complete overview with frontmatter and links
-
-Immediately before Step 10, run
-`git status --porcelain --untracked-files=all`. If it reports any path outside
-`.oat/repo/knowledge/`, stop and name every such path; do not commit. This
-stray-change check is mandatory when Codex probe or direct-write lanes used
-the projection's `workspace-write` sandbox.
 
 ### Step 10: Commit Only Generated Knowledge Paths
 

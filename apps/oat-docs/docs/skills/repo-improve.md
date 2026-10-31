@@ -239,29 +239,12 @@ index is an onboarding and retrieval aid, not a declaration that all
 architecture concerns have been fixed or that every future question is
 answered.
 
-**What it does without asking:** It asks refresh-or-skip when knowledge files
-already exist and may ask once for authorization covering the write probe and
-four mapper lanes. After a mapper route is accepted, the skill checks the
-knowledge path and `.preflight` for symlinks or stale entries, then launches
-one probe to test whether that route can write its test file. `WRITE_OK` is
-accepted only when the file exists with the expected bytes; `WRITE_BLOCKED`
-requires its absence. The probe directory is removed on every exit path, and
-owned-output preparation requires the accepted, file-verified result. The
-read-only fallback is available only after a verified blocked write and when
-the route can launch independently usable read-only lanes. A worker that never
-launches is a route failure, not read-only evidence. The skill then prepares
-owned outputs, creates the thin index, launches four mapper lanes through the
-provider-neutral dispatcher, and writes the knowledge files. On Codex, if
-per-spawn writable roots cannot be narrowed, the probe and direct-write lanes
-use the projection's `workspace-write` sandbox with prompts constrained to
-their declared outputs; a pre-commit status check stops on changes outside the
-knowledge directory. Read-only returned text travels through scratch files
-outside the repository. It runs `oat internal commit-paths` on your current
-branch with the exact generated output/deletion paths and enabled hooks.
-Unrelated staged and unstaged work remains intact.
-Afterwards it records the run in `.oat/tracking.json` and regenerates the
-`.oat/state.md` dashboard with `oat state refresh`; those two files are not
-part of the commit. It does not push.
+**What it does without asking:** The run resolves a usable mapper route before
+changing knowledge and may ask once for authorization covering the write probe
+and four mapper lanes. It offers read-only fallback only after a launched probe
+verifies that writes are blocked. It preserves manual notes while preparing and
+generating the eight owned outputs. It commits only the exact owned paths with
+hooks enabled, then updates the tracking dashboard without pushing.
 
 **Expected output:** Eight files under `.oat/repo/knowledge/`:
 `project-index.md`, `stack.md`, `architecture.md`, `structure.md`,

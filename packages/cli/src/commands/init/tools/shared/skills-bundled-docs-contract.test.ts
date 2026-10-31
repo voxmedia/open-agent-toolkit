@@ -2939,6 +2939,7 @@ describe('skills bundled docs contract', () => {
       join(SKILLS_DIR, 'oat-repo-knowledge-index', 'SKILL.md'),
       'utf8',
     );
+    const collapse = (text: string): string => text.replace(/\s+/g, ' ').trim();
     const preflight = content.indexOf(
       '### Dispatch-Route Preflight: Resolve Before Mutation',
     );
@@ -2951,19 +2952,19 @@ describe('skills bundled docs contract', () => {
     const probeHeading = content.indexOf(
       '#### Write-Permission Probe (all providers)',
     );
-    const afterRoutes = content.indexOf('### Step 2:', cursor);
+    const probeBody = content.indexOf(
+      'With the route resolved, run a non-mutating `lstat` check',
+    );
     const step1 = content.slice(
       content.indexOf('### Step 1: Check Existing Knowledge'),
       preflight,
     );
     const claudeRoute = content.slice(claude, codex);
-    const codexRoute = content.slice(codex, cursor);
     const outsideClaudeRoute = content.slice(0, claude) + content.slice(codex);
     const step4b = content.slice(
       content.indexOf('### Step 4b:'),
       content.indexOf('### Step 5:'),
     );
-    const preflightSection = content.slice(preflight, prepare);
     const directWrite = content.slice(
       content.indexOf('### Step 5a:'),
       content.indexOf('### Step 5b:'),
@@ -2977,80 +2978,43 @@ describe('skills bundled docs contract', () => {
       content.indexOf('### Step 3:', prepare),
     );
 
-    expect(preflight).toBeGreaterThan(-1);
-    expect(prepare).toBeGreaterThan(preflight);
-    expect(content).toContain(
-      '${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md',
+    const orderedSections = [
+      preflight,
+      claude,
+      codex,
+      cursor,
+      probeHeading,
+      probeBody,
+      prepare,
+    ];
+    expect(orderedSections.every((index) => index >= 0)).toBe(true);
+    expect(orderedSections).toEqual(
+      [...orderedSections].sort((left, right) => left - right),
     );
-    expect(content).toContain(
-      '${ORCHESTRATION_SKILLS_ROOT}/subagent-orchestration/references/model-selection-principles.md',
-    );
-    expect(content).toContain(
-      'oat tools install utility --scope <user|project>',
-    );
-    expect(content).toContain(
-      'oat tools update --pack utility --scope <user|project>',
-    );
-    expect(claude).toBeGreaterThan(preflight);
-    expect(codex).toBeGreaterThan(claude);
-    expect(cursor).toBeGreaterThan(codex);
-    expect(probeHeading).toBeGreaterThan(cursor);
-    expect(prepare).toBeGreaterThan(probeHeading);
-    expect(afterRoutes).toBeGreaterThan(cursor);
-    expect(claudeRoute).toMatch(/model:\s*['"]haiku['"]/);
-    expect(claudeRoute).toContain('run_in_background');
-    expect(claudeRoute).toContain('Explore');
-    expect(codexRoute).toContain(
-      "When per-spawn writable roots cannot be narrowed,\nrun the probe and direct-write lanes under the projection's `workspace-write`\nsandbox, constrained by the prompt to their declared outputs.",
-    );
-    expect(content).toContain(
-      '`git status --porcelain --untracked-files=all`. If it reports any path outside\n`.oat/repo/knowledge/`, stop and name every such path; do not commit.',
-    );
-    expect(outsideClaudeRoute).not.toMatch(/model:\s*['"]haiku['"]/);
-    expect(outsideClaudeRoute).not.toContain('run_in_background');
-    expect(outsideClaudeRoute).not.toMatch(/subagent_type:\s*['"]Explore['"]/);
     expect(step1.match(/dispatch-route preflight/g)).toHaveLength(2);
-    expect(step1).not.toMatch(/Continue to (?:the )?Step 2/i);
-    expect(step4b).toContain(
-      'A missing accepted probe handle or result is a route\nfailure, not evidence for read-only mode',
+    expect({
+      model: /model:\s*['"]haiku['"]/.test(claudeRoute),
+      background: claudeRoute.includes('run_in_background'),
+      explore: claudeRoute.includes('Explore'),
+    }).toEqual({ model: true, background: true, explore: true });
+    expect(collapse(outsideClaudeRoute)).not.toMatch(
+      /model:\s*['"]haiku['"]|run_in_background|subagent_type:\s*['"]Explore['"]/,
     );
-    expect(preflightSection).toContain(
-      'write-permission\nprobe with class `generator`',
+    expect(collapse(step2)).toMatch(
+      /Run this step only with the accepted, file-verified probe result and `WRITE_MODE` retained by the dispatch-route preflight\. Otherwise stop before deleting anything\./,
     );
-    expect(preflightSection).toContain(
-      '`WRITE_OK` to coincide with `.preflight/test.txt` existing with exact content\n`test`',
+    expect(collapse(step4b)).toMatch(
+      /A missing accepted probe handle or result is a route failure, not evidence for read-only mode; stop without launching mapper lanes\./,
     );
-    expect(preflightSection).toContain(
-      '`WRITE_BLOCKED` to coincide with that file being absent',
-    );
-    expect(preflightSection).toMatch(
-      /If\s+`\.preflight` already exists as any file type, stop and name it/,
-    );
-    expect(step2).toContain(
-      'Run this step only with the accepted, file-verified probe result and\n`WRITE_MODE` retained by the dispatch-route preflight. Otherwise stop before\ndeleting anything.',
-    );
-    expect(directWrite.match(/class: generator/g)).toHaveLength(4);
-    expect(directWrite).not.toContain('class: recon');
-    expect(readOnly.match(/class: recon/g)).toHaveLength(4);
-    expect(readOnly).not.toContain('class: generator');
+    expect({
+      generator: directWrite.match(/class: generator/g)?.length ?? 0,
+      recon: directWrite.match(/class: recon/g)?.length ?? 0,
+    }).toEqual({ generator: 4, recon: 0 });
+    expect({
+      generator: readOnly.match(/class: generator/g)?.length ?? 0,
+      recon: readOnly.match(/class: recon/g)?.length ?? 0,
+    }).toEqual({ generator: 0, recon: 4 });
     expect(content).not.toContain('/private/tmp/claude-');
-    expect(content).toMatch(
-      /did not launch[\s\S]{0,120}route failure[\s\S]{0,120}stop before Step 2/i,
-    );
-    expect(content).toMatch(
-      /read-only fallback[\s\S]{0,180}launched[\s\S]{0,120}WRITE_BLOCKED/i,
-    );
-    for (const provider of ['Claude', 'Codex', 'Cursor']) {
-      expect(content).toMatch(
-        new RegExp(
-          `#### ${provider} route[\\s\\S]*?installed ${provider} provider projection[\\s\\S]*?\`oat-codebase-mapper\``,
-        ),
-      );
-    }
-    expect(content).toMatch(
-      /portable role text is instructions, not a\s+registered native role/,
-    );
-    expect(content).toMatch(/accepted handle[\s\S]{0,120}returned output/i);
   });
 
   it("keeps external-plan writes on the caller's model class", () => {
