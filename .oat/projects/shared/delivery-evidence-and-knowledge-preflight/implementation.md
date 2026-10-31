@@ -816,6 +816,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - run/v1 · request=dedkp-p04-review-3 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+- run/v1 · request=dedkp-p04-complexity-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 - Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
@@ -824,6 +826,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 ## Reviews and Gates
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+- Review-cycle cap reached for p04 (oat-project-review-receive Step 8, 3 cycles: 1C/1H/2M/5L → 0C/0H/2M/2L → 0C/0H/1M/2L). Complexity review `dedkp-p04-complexity-1` (installed complexity-review method): verdict Partially compliant; recommended disposition simplify; report `reviews/archived/complexity-p04-2026-10-31T025003Z.md` (local). Operator disposition: pending — autonomous run stopped at this boundary; no disposition chosen on the operator's behalf.
 
 ### Review Received: plan
 
