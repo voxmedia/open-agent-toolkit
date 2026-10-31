@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261031-bind-gate-artifact-admission   | 2026-10-31 | accepted   | Bind gate-artifact admission to tracked Reviews-row cells                                              | -       |
+| DR-261031-judge-stacked-delivery-exit    | 2026-10-31 | accepted   | Judge stacked delivery exit carriers at the stack tip                                                  | -       |
+| DR-261031-limit-journal-rewrite          | 2026-10-31 | accepted   | Limit journal rewrite detection to goal projects                                                       | -       |
+| DR-261031-route-knowledge-index-mappers  | 2026-10-31 | accepted   | Route knowledge-index mappers through the generic dispatcher                                           | -       |
 | DR-261025-approved-docs-tooling-updates  | 2026-10-25 | accepted   | Approved docs tooling updates include the app-local CLI                                                | -       |
 | DR-261025-framework-app-contributor      | 2026-10-25 | accepted   | Framework app contributor commands resolve against the app package first                               | -       |
 | DR-261025-hand-authored-navigation-is    | 2026-10-25 | accepted   | Hand-authored navigation is checked by membership and order, never regenerated                         | -       |
