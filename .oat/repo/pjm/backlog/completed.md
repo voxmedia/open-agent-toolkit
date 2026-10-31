@@ -8,6 +8,9 @@
 
 ## Completed Items
 
+- 2026-10-31 — BL-260830-add-per-claude-md-adoption-opt — Add per-CLAUDE.md adoption opt-out for instruction sync — Per-path instructions.claude.excludes opt-out shared by instructions sync and validate (#332, #356)
+- 2026-10-31 — BL-260827-refresh-provider-codex-md — Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags — Superseded by #315, #317 and #334 (provider-codex.md guidance_version 2026-10-01); the remaining codex exec resume flag note carries to the next model-guidance refresh
+- 2026-10-31 — BL-260708-verify-cursor-gpt-5-6-subagent — Verify Cursor GPT-5.6 subagent model slugs — Cursor GPT-5.6 subagent pins live-probed and approved in 734bf4189 and shipped in packages/cli/src/providers/cursor/codec/catalog.ts
 - 2026-10-31 — BL-261030-preflight-knowledge-index — Preflight knowledge-index mapper dispatch before replacing generated knowledge — knowledge-index resolves a provider-neutral mapper route through oat-dispatch-subagents before any mutation, with Claude, Codex and Cursor routes and a file-verified write probe
 - 2026-10-31 — BL-261030-flag-rewritten-committed — Flag rewritten committed journal lines in journal check — journal check reports rewritten committed journal lines in goal projects at implement-preflight and review (narrowed to goal mode: only goal enforces the append-only rule)
 - 2026-10-31 — BL-261030-admit-goal-exit-gate-review — Admit goal exit-gate review artifacts as milestone bookkeeping evidence — the exit gate's own reviews/ artifact is bookkeeping when its Reviews row has Invocation gate and the carrier's reviewed head (binding by row cells, not artifact frontmatter), isolated from own evidence and integrated-review selection

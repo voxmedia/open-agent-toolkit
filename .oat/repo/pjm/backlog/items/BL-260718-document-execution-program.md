@@ -11,7 +11,7 @@ labels:
   - docs
 assignee: null
 created: 2026-07-18T17:31:56.101Z
-updated: 2026-07-18T17:31:56.101Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -26,6 +26,10 @@ decision to keep current documentation descriptive only.
 
 **Owner:** the repo operator is the accountable owner for prioritizing and
 scheduling this deferred work.
+
+**Trigger fired (2026-10-31):** the second consumer shipped: the explainer-kit
+`program-recap` recipe (#161), which takes the program as its required
+`program` source role (`.agents/skills/explainer-kit/recipes/program-recap.json`).
 
 ## Acceptance Criteria
 

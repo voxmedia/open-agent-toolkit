@@ -12,7 +12,7 @@ labels:
   - gates
 assignee: null
 created: 2026-08-20T00:51:34.444Z
-updated: 2026-10-02T03:10:18Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -25,10 +25,19 @@ check covers the current head. Persist source-head identity for closeout evidenc
 and fail closed when the evidence no longer matches the current PR head. Source:
 [GitHub issue #201](https://github.com/voxmedia/open-agent-toolkit/issues/201).
 
+**Delivery status (2026-10-31):** Landed: exit-gate freshness. The exit gate
+persists an effective-delta implementation fingerprint against the logical
+integration base and survives base-only updates (#164;
+`.agents/skills/oat-project-implement/references/completion-and-closeout.md:505-548`).
+Remaining: the other closeout receipts (reviews, checks, and the summary,
+document and PR steps) are not bound to the head they covered, and PR progress
+and final closeout do not compare them with the current head.
+
 ## Acceptance Criteria
 
-- Every closeout-relevant review, check, and gate receipt records the exact source
-  head (or an equivalent immutable revision identity) that it covered.
+- Every closeout-relevant review, check, and gate receipt beyond the exit gate
+  records the exact source head (or an equivalent immutable revision identity)
+  that it covered; the exit gate keeps its effective-delta fingerprint.
 - PR progress and final closeout compare every required receipt with the current
   head and report which evidence became stale after subsequent commits.
 - Terminal completion fails closed while required evidence is absent or stale;

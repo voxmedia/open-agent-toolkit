@@ -12,7 +12,7 @@ labels:
   - residue
 assignee: null
 created: 2026-09-03T00:55:58.261Z
-updated: 2026-09-03T00:55:58.261Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -35,5 +35,18 @@ Low priority. Reopen only if these surfaces cause real confusion in practice.
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `oat tools list` and `oat tools info` human output and `oat status` JSON
+  report realized placement, so a declared-but-absent pack no longer reads
+  `project`; the deprecated `PackInventory.placement` is removed or no longer
+  printed.
+- Each of the six pack-evidence diagnostic codes with no production emission
+  site is either emitted where its condition occurs or removed, and
+  `provider-materialization-missing` populates its `provider` field and
+  restart flag.
+- Sync fails closed with a recovery path, using `unsupportedReason`, when a
+  provider content type has no mapping, instead of skipping it.
+- Regression tests cover declared-but-absent to `User scope` on the evidence
+  path (`useLifecycle: true`) for ideas, utility, research and brainstorm, and
+  the lifecycle-path changed-only-sync gate.
+- The docs explain `realizedPlacement` and the picker's intent-versus-installation
+  distinction.

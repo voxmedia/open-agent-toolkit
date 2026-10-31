@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T05:35:29.546Z
-updated: 2026-09-09T10:50:01.000Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -23,8 +23,17 @@ Wave-7 p15 (`2026-09-08-converge-copy-strategy-skill-projections.md`) hardened `
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Under `packages/cli/src/`, `engine/managed-copy-hash.ts`,
+  `manifest/hash.ts` (`computeDirectoryHash`),
+  `drift/detector.ts`, and the retirement classifier in
+  `engine/compute-plan.ts` hash from handles (root opened with
+  `O_DIRECTORY | O_NOFOLLOW`, entries walked `openat`-style) instead of
+  pathname reads after `lstat`.
+- Controls race a swap of an entry between check and read for each reader and
+  show the swap is rejected or cannot change what is hashed; the destructive
+  retirement `remove` path is covered.
+- The accepted file-mode and empty-directory bounds in the Notes stay out of
+  scope unless the projection contract is tightened.
 
 ## Notes
 

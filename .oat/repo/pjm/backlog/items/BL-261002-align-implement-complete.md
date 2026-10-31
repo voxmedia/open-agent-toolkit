@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:06.018Z
-updated: 2026-10-02T18:41:06.018Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -49,6 +49,5 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - `oat-project-pr-final` usage text matches its behavior, or it actually asks
   before pushing and creating the PR.
 - Each changed skill's `metadata.version` is bumped, and the `--retry-limit`
-  note on the docs branch `docs-overhaul-readme-visual`
-  (`workflows/projects/execution/execution-skills.md:74`) is removed once
-  fixed.
+  note in `apps/oat-docs/docs/workflows/projects/execution/execution-skills.md:79`
+  is removed once fixed.

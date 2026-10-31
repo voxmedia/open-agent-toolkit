@@ -11,7 +11,7 @@ labels:
   - consumer-rollout
 assignee: null
 created: 2026-10-24T18:59:55.490Z
-updated: 2026-10-25T14:01:29.000Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -38,6 +38,11 @@ current facts. No external repository was accessed for this transfer. Consumer
 execution requires its owner's authorization and local rules. Selecting the
 framework acceptance consumer is a future rollout-owner choice, not an invented
 target or a claim that Markdown proves framework drift.
+
+**Delivery status (2026-10-31):** Landed: OAT rollout fixes in #378 and #379
+(0.3.32, 0.3.33) and four consumer docs surfaces brought to conformance (see
+[Delivery status](#delivery-status) below). Remaining: every checkbox below.
+Each still has unmet clauses as listed there, so the criteria stay as written.
 
 ## Acceptance Criteria
 

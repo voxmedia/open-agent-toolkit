@@ -11,7 +11,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:09.757Z
-updated: 2026-10-02T18:41:09.757Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -45,4 +45,4 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - The `codebase` role's constraints are enforced (or removed from the recipe),
   with a test for a file passed where a directory is expected.
 - The skill's `metadata.version` is bumped and the engineer-tour guidance on
-  the docs branch `docs-overhaul-readme-visual` (`skills/explainer-kit.md:198-214`) matches the behavior.
+  `apps/oat-docs/docs/skills/explainer-kit.md:198-214` matches the behavior.

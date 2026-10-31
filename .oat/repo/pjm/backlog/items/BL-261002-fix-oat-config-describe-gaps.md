@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:03.872Z
-updated: 2026-10-02T18:41:03.872Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -53,5 +53,5 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   currently supplies the value or exits non-zero naming that layer; it never
   reports success after changing nothing. A regression test covers a
   user-level and a shared-level key.
-- `reference/configuration.md` and `reference/cli-reference.md` on the docs branch `docs-overhaul-readme-visual`
-  match the fixed behavior.
+- `apps/oat-docs/docs/reference/configuration.md` and
+  `apps/oat-docs/docs/reference/cli-reference.md` match the fixed behavior.

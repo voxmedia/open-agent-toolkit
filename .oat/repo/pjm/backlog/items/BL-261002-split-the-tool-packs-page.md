@@ -11,7 +11,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:14.885Z
-updated: 2026-10-02T18:41:14.885Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -33,7 +33,8 @@ Why it matters: new users land on a specification when they expect a
 getting-started guide, and the gate and dispatch pages bury the decisions a
 user has to make.
 
-Applies to the docs branch `docs-overhaul-readme-visual` (or `main` once merged).
+Applies to `apps/oat-docs/docs/getting-started/tool-packs.md` on `main` (the
+docs overhaul branch merged in #342).
 
 Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/references/product-defects-found.md` (docs-improvement-overhaul project, 2026-10-02), entry G1, G2.
 

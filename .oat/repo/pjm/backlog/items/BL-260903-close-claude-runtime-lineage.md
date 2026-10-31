@@ -13,7 +13,7 @@ labels:
   - residue
 assignee: null
 created: 2026-09-03T00:55:45.819Z
-updated: 2026-09-03T00:55:45.819Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -32,5 +32,13 @@ Reopen only if this becomes a recurring problem in practice. Claude's on-disk tr
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Claude lineage stays the `isSidechain` binary unless a captured real
+  artifact shows agent-to-agent lineage; no depth taxonomy is built on
+  `parentUuid`.
+- The Claude stream-json path (`system`/`init` and `result` records) and the
+  four UNVERIFIED Codex field paths are each either verified against a
+  captured real artifact, with its provenance in the fixture header, or
+  removed.
+- FR9 names both `missing` and `not-comparable`, corpus statistics in code
+  comments carry capture-environment provenance, and the `record.ts`
+  docstring no longer says "sanitized".

@@ -12,7 +12,7 @@ labels:
   - state
 assignee: null
 created: 2026-09-27T03:35:36.887Z
-updated: 2026-10-02T03:10:18Z
+updated: 2026-10-31T21:08:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/305
@@ -25,9 +25,17 @@ external_plans: []
 
 Review, phase, and routing status are duplicated across the `## Reviews` table, implementation and state prose, routing fields, and counters. Several skills maintain them through prose instructions, with no transition helper. Downstream runs spent extra review cycles on stale or reintroduced status (#305). Project summaries also go stale after review-fix phases, publication, rebases, or merges: the summary skill detects task and revision staleness only when re-run, and nothing tracks publication heads (#310). Routing does not read `summary.md`. Related: `BL-260820-bind-each-gate-review` (exact event binding and single-row upsert), `BL-260711-skip-re-review-for-bookkeeping`, and `BL-260820-track-pr-closeout-evidence`. Sources: GitHub issues #305 and #310.
 
+**Delivery status (2026-10-31):** Landed: artifact-cleanup (#365,
+`DR-261012-journal-slots-and-state-owned`) made `state.md` own gate
+transitions and added `oat project journal check`, which refuses
+`state-status-disagrees` at completion. Remaining: no single authority or
+transition helper owns review, phase, and publication status, and summary
+staleness after review-fix phases, publication, rebases or merges is still
+untracked.
+
 ## Acceptance Criteria
 
-- One transition helper or structured authority owns current review, phase, and publication status; plan, implementation, and state views are derived from it or updated atomically with it.
+- One transition helper or structured authority owns current review, phase, and publication status (gate transitions are already `state.md`-owned); plan, implementation, and state views are derived from it or updated atomically with it.
 - A pre-review invariant rejects stale or contradictory current status before a reviewer is dispatched.
 - Append-ordered review provenance stays immutable and distinguishable from current state.
 - Adding a review-fix phase, or publishing, rebasing, or merging a tracked PR, invalidates or updates the affected summary fields.

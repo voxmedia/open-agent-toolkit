@@ -12,7 +12,7 @@ labels:
   - guidance
 assignee: null
 created: 2026-09-06T13:28:16.084Z
-updated: 2026-09-06T13:28:16.084Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,15 +21,22 @@ external_plans: []
 
 Re-evaluate DR-260714-flexible-plan-task-bodies and every shared plan template, planning skill, implementer contract, reviewer contract, documentation surface, and contract test that treats RED/GREEN/refactor or automated tests as the preferred default. Define one risk-proportionate proof policy that preserves objective evidence without encouraging low-value fixtures, bespoke harnesses, or test theater. Keep strict controls for bug reproduction, user-interface visual proof, and security, provenance, approval, receipt, publication, or other assurance-sensitive contracts.
 
+**Delivery status (2026-10-31):** Landed for Lite only:
+`DR-260906-use-proportionate-proof` (`3d3759a37`) requires each Lite task to
+declare a proof strategy proportionate to its risk. Remaining: every other
+mode and shared contract; `oat-project-implement/SKILL.md:104` and `:243`
+still say "TDD discipline".
+
 ## Acceptance Criteria
 
 - Inventory every plan template, planning skill, implementer contract, reviewer
   contract, documentation surface, and contract test that prescribes
   RED/GREEN/refactor or automated testing.
 - Re-evaluate `DR-260714-flexible-plan-task-bodies` and record the resulting
-  universal decision. Define objective, risk-proportionate proof as the
-  invariant instead of naming one development sequence as the default for all
-  work.
+  universal decision, extending or superseding the Lite-only
+  `DR-260906-use-proportionate-proof`. Define objective, risk-proportionate
+  proof as the invariant instead of naming one development sequence as the
+  default for all work.
 - Define selection guidance for test-first development,
   characterization-first work, implementation followed by focused regression,
   static or build checks, and manual or computer-use visual proof. Require a

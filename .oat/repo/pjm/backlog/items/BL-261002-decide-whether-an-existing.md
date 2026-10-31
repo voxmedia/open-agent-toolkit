@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:55.303Z
-updated: 2026-10-02T18:40:55.303Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -47,4 +47,4 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - If detection is dropped: an unset provider is not synced until enabled, with
   a migration note for repositories that relied on detection, and tests cover
   both scopes.
-- `provider-sync/config.md:161` on the docs branch `docs-overhaul-readme-visual` matches the decision.
+- `apps/oat-docs/docs/provider-sync/config.md:161` matches the decision.

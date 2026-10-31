@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:51.027Z
-updated: 2026-10-02T18:40:51.027Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -47,6 +47,8 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - Absent keys may still be added, and the output names each key added.
 - A regression test seeds `multi_agent = false` and `max_depth = 1` and asserts
   the chosen behavior; it fails if the silent rewrite returns.
-- The docs branch `docs-overhaul-readme-visual` pages describing Codex config (`reference/what-oat-writes.md:90`,
-  `provider-sync/pilot-with-a-team.md:184`, `provider-sync/providers.md:60-73`)
-  match the shipped behavior.
+- The docs pages describing Codex config
+  (`apps/oat-docs/docs/reference/what-oat-writes.md:49-50` and `:93`,
+  `apps/oat-docs/docs/provider-sync/pilot-with-a-team.md:184`,
+  `apps/oat-docs/docs/provider-sync/providers.md:60-75`) match the shipped
+  behavior.

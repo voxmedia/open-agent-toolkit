@@ -12,7 +12,7 @@ labels:
   - follow-up
 assignee: null
 created: 2026-07-19T13:42:05.701Z
-updated: 2026-07-19T13:42:05.701Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -20,6 +20,8 @@ external_plans: []
 ## Description
 
 After the narrow merge-only optimization ships and has usage evidence, evaluate whether a broader freshness-policy redesign is necessary. Measure how far the small change gets us before adding complexity; consider base-sensitive interactions, persisted fingerprint compatibility, in-flight generations, and risk-based invalidation only if observed gaps justify them. CI, Bugbot, and lifecycle self-review remain the expected safety layer for ordinary base updates.
+
+**Trigger fired (2026-10-31):** the narrow optimization shipped in #164 ("preserve exit gate across base-only updates"); the usage-evidence half of the first criterion still has to be gathered.
 
 ## Acceptance Criteria
 

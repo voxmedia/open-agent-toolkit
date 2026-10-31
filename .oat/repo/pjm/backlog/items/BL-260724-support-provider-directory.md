@@ -12,7 +12,7 @@ labels:
   - safety
 assignee: null
 created: 2026-07-24T16:10:37.662Z
-updated: 2026-08-28T23:46:00.000Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -67,32 +67,31 @@ constrains the `AGENTS.md` work in `BL-260903-close-manual-only-agents-md`.
 
 The reduction was documented, not silent: see `design.md:504-517` in that project.
 
+**Delivery status (2026-10-31):** Landed: adopt-only and detach-only collection
+aliases with inherited-entry manifest tracking, reconciliation, fail-closed
+unsafe-link handling and documentation (tool-pack-scope-provider-truthfulness,
+#255). Remaining: alias creation and strategy transitions.
+`collectionAliasCreationAvailable` still defaults to `false`
+(`packages/cli/src/engine/compute-plan.ts:628`), and the creation path waits
+on a `symlinkat`-class primitive that Node does not expose. The criteria below
+cover only that remaining scope; the original adoption, reconciliation,
+fail-closed and documentation criteria are met.
+
 ## Acceptance Criteria
 
 - `auto` prefers a collection directory symlink for supported provider/content
   mappings when the provider collection is absent or otherwise has no unmanaged
-  divergence, while an explicit per-entry strategy remains available.
-- An existing provider collection symlink is treated as a full inherited sync
-  only when its resolved target exactly matches the corresponding canonical OAT
-  collection root; relative links are supported.
-- Before creating or adopting an alias, OAT detects non-empty unmanaged provider
-  content, conflicting paths, broken links, external targets, and other stray
+  divergence, while an explicit per-entry strategy remains available
+  (switching an adopted alias to an explicit `symlink` or `copy` strategy takes
+  effect instead of being inert).
+- Before creating an alias, OAT detects non-empty unmanaged provider content,
+  conflicting paths, broken links, external targets, and other stray
   divergence. It preserves those entries and uses per-entry synchronization
   rather than replacing or hiding them behind the alias.
-- Sync planning and execution update manifest state for every canonical entry
-  visible through the collection alias without creating, replacing, or removing
-  child paths through that alias.
-- Canonical additions and removals reconcile inherited manifest entries
-  deterministically, and disabling or changing a provider detaches ownership
-  without deleting canonical content.
-- Broken, external, mismatched, nested, or race-swapped directory symlinks fail
-  closed with actionable diagnostics; divergence never causes OAT to follow an
-  unsafe alias or silently delete provider or canonical content. Ordinary
-  per-entry managed symlinks retain their existing behavior.
-- Focused and integration tests cover initial adoption, repeated no-op sync,
-  canonical entry addition/removal, provider disablement, incorrect targets,
-  unmanaged strays/divergence, automatic preference, explicit per-entry
-  fallback, and apply-time ancestry changes.
-- User-facing tool-pack/provider-sync documentation explains collection-alias
-  behavior, the low-churn preference, divergence/fallback behavior, and
-  recovery for rejected directory symlinks.
+- Creation uses an identity-bound parent-relative primitive
+  (`symlinkat`-class), and a production caller enables
+  `collectionAliasCreationAvailable` only once that primitive exists; a guard
+  test asserts no production caller enables the flag before then.
+- A lifecycle test starts from adoption rather than injected creation, and
+  focused tests cover automatic preference and explicit per-entry fallback
+  through the real `oat sync` command.

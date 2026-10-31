@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:59.560Z
-updated: 2026-10-02T18:40:59.560Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -74,6 +74,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - DR-260621 and DR-260706 are superseded or amended through
   `oat-pjm-decision` / `oat decision new`, and the decision index is
   regenerated.
-- The independence caveat on the docs branch `docs-overhaul-readme-visual`
-  (`workflows/advanced/workflow-gates.md:21-25`) is updated to describe the
-  strict option.
+- The independence caveat in
+  `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` (`:23-27`, and the
+  "How independent the reviewer must be" section at `:1295`) is updated to
+  describe the strict option.

@@ -13,7 +13,7 @@ labels:
   - retro
 assignee: null
 created: 2026-09-03T17:54:40.692Z
-updated: 2026-09-03T17:54:40.692Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -30,5 +30,10 @@ Suggested direction: have the skill recommend a re-run when a shipped contract c
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `oat-project-document` recommends a re-run when a shipped contract changed
+  after the last documentation sync, detected from `oat_docs_updated`
+  predating the most recent review-fix commits or from a Deviations-table
+  entry added after that timestamp.
+- No re-run is recommended when no review-fix commit or Deviations entry
+  postdates the last sync.
+- A fixture covers both cases, and the skill's `metadata.version` is bumped.
