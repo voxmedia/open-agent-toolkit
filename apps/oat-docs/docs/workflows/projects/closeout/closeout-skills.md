@@ -192,10 +192,10 @@ generates or refreshes a missing or stale `summary.md` through
 decision-record promotion also happen. It then writes the PR description,
 pushes the current branch with `git push -u origin`, and runs
 `gh pr create`. For a synced project, it also publishes the project artifacts
-with `oat project push` before and after creating the PR. Besides the PR title
-and base branch when you did not pass them, the only question it asks is
-whether to continue when the latest final review has not passed. It never
-merges the PR.
+with `oat project push` before and after creating the PR. When you do not pass
+a PR title or base branch, it fills them from the defaults without asking. The
+only question it asks is whether to continue when the latest final review has
+not passed. It never merges the PR.
 
 **Goal projects:** in a goal project this skill is the terminal delivery
 registration owner, not a second project PR. It runs its own registration step
