@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -18,13 +18,13 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | in_progress | 3     | 3/3       |
+| Phase 1 (p01) | in_progress | 6     | 3/6       |
 | Phase 2 (p02) | pending     | 2     | 0/2       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 3/10 tasks completed
+**Total:** 3/13 tasks completed
 
 ---
 
@@ -90,6 +90,40 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Can-fail proofs (p01):** each guard was neutralized, its focused test failed, and the guard was restored: stack tip selection (linear stack went stale `not-ancestor`); stack-order wrapper (non-ancestor case went falsely fresh); check, refresh and closeout call sites (each expected `stack-order`, received legacy `not-ancestor`); milestone/delivery agreement (milestone went stale on the delivery's own new artifact).
 
 **Built-CLI controls (p01):** linear stack → exit 0, `status: ok`, fresh; mis-ordered stack → exit 1, `status: undeliverable`, `stack-order`.
+
+**Built-CLI controls (p01, reproducible):** build with `pnpm --filter @open-agent-toolkit/cli build`; fixtures come from `registeredStack('linear' | 'misordered' | 'unobserved')` in `packages/cli/src/commands/project/delivery/check.test.ts` (the `goal-repo.ts` builder with `registryYaml({ kind: 'stack', members })`); from inside each scratch repository run `node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject d01`. Expected and observed: linear → exit 0, `status: ok`, fresh; mis-ordered → exit 1, `status: undeliverable`, stale `stack-order`; unobserved → exit 1, `status: undeliverable`, stale `member-unobserved`.
+
+**Can-fail neutralizations (p01):** tip selection — evaluate every head instead of `[tip]` (linear cases red at all four sites); order check — skip the lower-member loop (mis-ordered cases red at evidence, check, refresh, closeout); refresh copies — evaluate raw registry entries instead of `observedById` (both stack refresh tests red); milestone alignment — always use the `mNN`-row scope (agreement test red); kind dispatch — route every kind through the stack path (multi-member `pr` test red). Disabling only the `code === 1` branch stayed green, which review finding M1 queues as p01-t04.
+
+### Task p01-t04: (review) Classify stack inspection failures separately from stack-order
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: (review) Align contract registration wording for stacked deliveries
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t06: (review) Pin latestDeliveryForMilestone exclusions
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p01
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p01-review-2026-10-31T002508Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 2 · Low 3
+
+- M1 (Medium): stack ancestry inspection failures are reported as `stack-order` and tests cannot distinguish them → fix task p01-t04; an unfetched commit must not steer an operator to supersession.
+- M2 (Medium): the built-CLI controls and can-fail proofs lacked commands and fixture provenance → resolved in this journal (artifact alignment; the reproducible commands and neutralizations above).
+- L1 (Low): stack topology checks precede the carrier's own checks, diverging from `kind: pr` for null and unreviewed carriers → fix task p01-t04 (same function as M1).
+- L2 (Low): §12.7 Idempotent registration and pr-progress items 5–6 wording lags stack registration → fix task p01-t05.
+- L3 (Low): `latestDeliveryForMilestone` exclusions are unpinned → fix task p01-t06.
+
+**Outcome:** fixes queued: p01-t04, p01-t05, p01-t06 (auto-disposition; reviewer request `dedkp-p01-review-1`, `oat-reviewer-claude-opus-5-5-high`, 0 Critical / 0 High — phase gate passed).
 
 ---
 

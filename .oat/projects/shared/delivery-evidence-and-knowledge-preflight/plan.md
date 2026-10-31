@@ -234,6 +234,92 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p01-t03" --message "docs(
 
 ---
 
+### Task p01-t04: (review) Classify stack inspection failures separately from stack-order
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/evidence.ts`
+- Modify: `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: M1 — `evaluateDeliveryExitCarrier` maps every non-zero `git merge-base --is-ancestor` exit to `stack-order`, so an unfetched commit reads as a mis-ordered stack (which the docs route to supersession); tests assert only `/^stack-order/`, so disabling the genuine non-ancestor branch leaves them green. L1 — stack topology checks run before the carrier's own checks, so a `null` carrier reports `stack-order` instead of `no carrier is recorded`, and unreviewed (`no_gate`/`project_disabled`) carriers go stale on topology where `kind: pr` stays fresh.
+Location: see `reviews/archived/p01-review-2026-10-31T002508Z.md`.
+
+**Step 2: Implement fix**
+
+Resolve each member head first the way `evaluateSuccessor` does (`resolveCommit` → `missing-object`); map exit codes other than 0/1 and thrown errors to `inspection-failed:`; keep `stack-order:` only for exit code 1 (assert the "is not an ancestor of tip" text). Delegate to `evaluateGateCarrier` first (no topology checks) when the carrier is `null` or an unreviewed resolution, so outcome and reason match `kind: pr`. Add tests: unavailable tip and unavailable lower head (`'f'.repeat(40)`) → `missing-object`; null carrier on a stack → `no carrier is recorded`; `no_gate` carrier on a mis-ordered stack → same result as `kind: pr`. Prove the classification can fail: disable only the `code === 1` branch and confirm the mis-ordered tests fail.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p01-t04" --message "fix(p01-t04): classify stack inspection failures separately from stack-order" -- <exact files changed>
+```
+
+---
+
+### Task p01-t05: (review) Align contract registration wording for stacked deliveries
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md`
+- Modify: `.agents/skills/oat-project-pr-progress/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: L2 — the §12.7 "Idempotent registration" bullet still reads as create-once for every kind; pr-progress item 6 does not say which member `oat_pr_url` projects for a stack, and item 5 points to "the preceding reconciliation route" instead of naming `oat-project-reconcile`.
+Location: see `reviews/archived/p01-review-2026-10-31T002508Z.md`.
+
+**Step 2: Implement fix**
+
+Qualify the Idempotent registration bullet for `kind: stack` (attach-only; every member URL in the `registering` write; resume re-checks each URL); state that `oat_pr_url`/`oat_pr_status` project the tip member for a stack; name `oat-project-reconcile` directly in item 5.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p01-t05" --message "fix(p01-t05): align contract registration wording for stacked deliveries" -- <exact files changed>
+```
+
+---
+
+### Task p01-t06: (review) Pin latestDeliveryForMilestone exclusions
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: L3 — no test covers the cases `latestDeliveryForMilestone` excludes (`registering`, `superseded`) or the `at_endpoint` selection.
+Location: see `reviews/archived/p01-review-2026-10-31T002508Z.md`.
+
+**Step 2: Implement fix**
+
+Add a unit test over `[open d01, superseded d02, registering d03]` for one milestone expecting `d01`, and an `at_endpoint` case that is selected.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery/evidence.test.ts`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p01-t06" --message "fix(p01-t06): pin latestDeliveryForMilestone exclusions" -- <exact files changed>
+```
+
+---
+
 ## Phase 2: Gate-originated artifact admission (#384)
 
 ### Task p02-t01: Admit the exit gate's own artifact as bookkeeping
@@ -608,16 +694,16 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target       |
-| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------------- |
-| p01   | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p02   | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p03   | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p04   | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| p05   | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| final | code     | pending         | -          | -                                                           | -             | -          | -                 |
-| plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -             | auto       | -                 |
-| plan  | artifact | passed          | 2026-10-30 | reviews/archived/artifact-plan-review-2026-10-30T235710Z.md | -             | gate       | codex-6-sol-xhigh |
+| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01   | code     | fixes_added     | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
+| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
+| plan  | artifact | passed          | 2026-10-30 | reviews/archived/artifact-plan-review-2026-10-30T235710Z.md | -                                        | gate       | codex-6-sol-xhigh |
 
 Plan artifact review (structured, `oat-reviewer-claude-opus-5-5-high`, ceiling exception; `Dispatch: scope=plan action=review role=reviewer provider=cursor variant=oat-reviewer-claude-opus-5-5-high policy=high source=project-state`): attempt 1 returned 3 High, 7 Medium and 8 Low; attempt 2 confirmed all 18 resolved and raised 2 Medium and 3 Low; attempt 3 confirmed those resolved and raised 1 Low (design wording drift on extraction markers). That Low was fixed after the retry bound (`oat_orchestration_retry_limit` default 2) was exhausted and was not re-reviewed; no residual findings remain open.
 
@@ -635,13 +721,13 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 3 tasks - Stack-aware delivery exit carriers (#383)
+- Phase 1: 6 tasks - Stack-aware delivery exit carriers (#383), including 3 review-fix tasks
 - Phase 2: 2 tasks - Gate-originated artifact admission (#384)
 - Phase 3: 2 tasks - Journal rewrite detection (#385)
 - Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 10 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge.
 
