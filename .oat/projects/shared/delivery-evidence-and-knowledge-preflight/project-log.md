@@ -55,6 +55,10 @@ Phase p03 (#385 journal rewrite detection) complete: 7 tasks (2 planned, 5 revie
 
 STOP at p04 review-cycle cap (3 cycles); complexity review verdict Partially compliant, recommended simplify; operator disposition required before p04 can complete; delivery-evidence-p04-cap-stop
 
+### 2026-10-31 · structural · oat-project-implement · p04
+
+Phase p04 (#355 knowledge-index dispatch preflight) complete: 8 tasks (1 planned, 7 review-fix); three-cycle cap reached, complexity review recommended simplify, operator chose simplify; post-simplify review passed 0C/0H/0M/2L; recovery 0/10; delivery-evidence-p04-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
