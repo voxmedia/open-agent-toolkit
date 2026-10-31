@@ -210,13 +210,14 @@ so use the slash or `$` form rather than relying on the agent to pick it. It
 does not require a project name or an active-project pointer.
 
 **Prerequisites:** A Git repository, the OAT CLI, and the `utility` tool pack
-(`oat tools install utility --scope user`). Before changing knowledge, the
-skill resolves `oat-dispatch-subagents` and `subagent-orchestration`, then
-checks that the active Claude, Codex, or Cursor provider can launch its
-installed `oat-codebase-mapper` projection. Missing capability or declined
-authorization stops with recovery commands before cleanup, thin-index
-creation, or a write probe. Needs an active OAT project: no. If a knowledge
-directory already exists, choose whether to refresh it or skip the run.
+(`oat tools install utility --scope user`). Before changing knowledge on
+either a first generation or a refresh, the skill resolves
+`oat-dispatch-subagents` and `subagent-orchestration`, then checks that the
+active Claude, Codex, or Cursor provider can launch its installed
+`oat-codebase-mapper` projection. Missing capability or declined authorization
+stops before cleanup, thin-index creation, or a write probe. Needs an active
+OAT project: no. If a knowledge directory already exists, choose whether to
+refresh it or skip the run.
 Refresh removes only regular Markdown files marked `oat_generated: true` and
 regenerates the eight named outputs. Hand-written notes survive; an unmarked
 expected-output collision stops the run before deletion so you can decide how

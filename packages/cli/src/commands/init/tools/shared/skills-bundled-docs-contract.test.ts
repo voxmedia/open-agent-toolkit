@@ -2949,7 +2949,16 @@ describe('skills bundled docs contract', () => {
     const codex = content.indexOf('#### Codex route');
     const cursor = content.indexOf('#### Cursor route');
     const afterRoutes = content.indexOf('### Step 2:', cursor);
-    const nonClaudeRoutes = content.slice(codex, afterRoutes);
+    const step1 = content.slice(
+      content.indexOf('### Step 1: Check Existing Knowledge'),
+      preflight,
+    );
+    const claudeRoute = content.slice(claude, codex);
+    const outsideClaudeRoute = content.slice(0, claude) + content.slice(codex);
+    const step4b = content.slice(
+      content.indexOf('### Step 4b:'),
+      content.indexOf('### Step 5:'),
+    );
 
     expect(preflight).toBeGreaterThan(-1);
     expect(prepare).toBeGreaterThan(preflight);
@@ -2968,12 +2977,18 @@ describe('skills bundled docs contract', () => {
     expect(claude).toBeGreaterThan(preflight);
     expect(codex).toBeGreaterThan(claude);
     expect(cursor).toBeGreaterThan(codex);
-    expect(content.slice(claude, codex)).toMatch(/model:\s*['"]haiku['"]/);
-    expect(content.slice(claude, codex)).toContain('run_in_background');
-    expect(content.slice(claude, codex)).toContain('Explore');
-    expect(nonClaudeRoutes).not.toMatch(/model:\s*['"]haiku['"]/);
-    expect(nonClaudeRoutes).not.toContain('run_in_background');
-    expect(nonClaudeRoutes).not.toContain('Explore');
+    expect(afterRoutes).toBeGreaterThan(cursor);
+    expect(claudeRoute).toMatch(/model:\s*['"]haiku['"]/);
+    expect(claudeRoute).toContain('run_in_background');
+    expect(claudeRoute).toContain('Explore');
+    expect(outsideClaudeRoute).not.toMatch(/model:\s*['"]haiku['"]/);
+    expect(outsideClaudeRoute).not.toContain('run_in_background');
+    expect(outsideClaudeRoute).not.toMatch(/subagent_type:\s*['"]Explore['"]/);
+    expect(step1.match(/dispatch-route preflight/g)).toHaveLength(2);
+    expect(step1).not.toMatch(/Continue to (?:the )?Step 2/i);
+    expect(step4b).toContain(
+      'A missing accepted probe handle or result is a route\nfailure, not evidence for read-only mode',
+    );
     expect(content).not.toContain('/private/tmp/claude-');
     expect(content).toMatch(
       /did not launch[\s\S]{0,120}route failure[\s\S]{0,120}stop before Step 2/i,

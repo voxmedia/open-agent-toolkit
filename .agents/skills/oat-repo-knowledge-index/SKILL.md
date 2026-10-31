@@ -43,7 +43,8 @@ EXISTING_MD=$(find .oat/repo/knowledge -name "*.md" -type f 2>/dev/null | head -
 
 - List current files: `ls -la .oat/repo/knowledge/*.md 2>/dev/null`
 - Ask: "Refresh generated knowledge or Skip? Hand-written files will be kept; unmarked output-name collisions stop refresh."
-- If Refresh: Continue to the owned-output preflight in Step 2; do not delete files by a wildcard.
+- If Refresh: Continue to the dispatch-route preflight, then Step 2's
+  owned-output preflight; do not delete files by a wildcard.
 - If Skip: Exit
 
 **If `$EXISTING_MD` is empty (no content or only .gitkeep):**
