@@ -616,7 +616,12 @@ changes only permitted bookkeeping:
   the evidence being recorded or archived, and, for a delivery whose member
   pull request is shared (12.7, Shared members), the review artifacts recorded
   for the deliveries that share it; each delivery is still judged on its own
-  frozen scope, reviewed revisions and `exit_gate`. `summary.md` is derived
+  frozen scope, reviewed revisions and `exit_gate`. The artifact of a Reviews
+  row with Type `code`, Invocation `gate`, and a non-placeholder Reviewed Head
+  equal to the judged carrier's `reviewed_head` is also admitted for that
+  carrier only. The gate row is never integrated-review evidence and its
+  artifact never joins a delivery's own review-artifact set, so it cannot
+  unlock set-once fields. `summary.md` is derived
   institutional memory, never the authority for outcomes, approach,
   constraints, decisions or endpoint, which live in the brief; any change to
   it is bookkeeping. Path membership alone is insufficient for the other
