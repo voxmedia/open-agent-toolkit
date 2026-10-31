@@ -63,6 +63,10 @@ Phase p04 (#355 knowledge-index dispatch preflight) complete: 8 tasks (1 planned
 
 Phase p05 (release bookkeeping) complete: 0.3.38 lockstep and four skill bumps, four backlog items archived, full gate list green; one direction-required stop from a root scope omission, one recovery 1/10; review passed 0C/0H/0M/2L; delivery-evidence-p05-outcome
 
+### 2026-10-31 · structural · oat gate review · final
+
+target=claude-opus-5-5-high threshold=high exit=1 status=review_failed run=e77017c2-3b44-4995-93c6-5609706696dd
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
