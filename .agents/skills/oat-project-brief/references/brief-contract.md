@@ -541,12 +541,16 @@ supersession links `superseded_by` and `covers_scope_of`, an additive
 binding `exit_gate`, and the first observed `endpoint_attainment`.
 
 - **Idempotent registration.** The registration owner writes the entry with
-  `status: registering` and its `lookup` keys and commits before creating the
-  pull request, then records the URL and `status: open`. A `registering` entry
-  on resume runs `gh pr list --repo <repository> --head <head_branch> --state
-all --json url,headRefOid`: exactly one match is attached without creating a
-  duplicate; zero matches create once; more than one stops and routes to
-  `oat-project-reconcile`.
+  `status: registering` and its `lookup` keys. For `kind: pr`, it commits
+  before creating the pull request, then records the URL and `status: open`; on
+  resume, `gh pr list --repo <repository> --head <head_branch> --state all
+--json url,headRefOid` attaches exactly one match, creates once for zero
+  matches, and stops for more than one. For `kind: stack`, registration is
+  attach-only: the `registering` write records every existing member URL in
+  base-to-tip order, and resume re-checks each URL rather than creating a
+  stack. For a PR lookup, more than one stops and routes to
+  `oat-project-reconcile`; a missing, closed-unmerged or re-targeted stack
+  layer follows the same stop-and-route.
 - **Stacked deliveries.** A stack records members base to tip. Its exit carrier
   is judged against the tip member's observed head, and every lower member's
   observed head must be an ancestor of the tip (`stack-order` otherwise); the
@@ -570,7 +574,8 @@ all --json url,headRefOid`: exactly one match is attached without creating a
   share their member pull request (`gh` allows one open pull request per head
   and base), so one member URL may appear in several deliveries. Coverage
   judges each delivery's own frozen scope and bound evidence, never the shared
-  member alone; `oat_pr_url` and `oat_pr_status` project the latest member.
+  member alone; `oat_pr_url` and `oat_pr_status` project the latest member,
+  which is the tip member for a stack.
 - **Evidence capture.** The exit-gate result accepted for the delivery is
   persisted as its `exit_gate` with the delivery evidence; overwriting the
   milestone's working carrier for a correction never relabels another

@@ -419,16 +419,17 @@ entry is not registered yet and resumes at item 5.
    On resume, first run
    `gh pr list --repo <repository> --head <head_branch> --state all --json url,headRefOid`:
    exactly one match is attached without creating a duplicate; zero matches
-   create once; more than one stops and routes to `oat-project-reconcile`. For
-   `kind: stack`, attach the already-created pull requests; never create a
-   stack. On resume, re-check every recorded member URL with `gh pr view`; a
-   missing, closed-unmerged, or re-targeted layer stops under the preceding
-   reconciliation route.
+   create once. For `kind: stack`, attach the already-created pull requests;
+   never create a stack. On resume, re-check every recorded member URL with
+   `gh pr view`. For a PR lookup, more than one stops and routes to
+   `oat-project-reconcile`; a missing, closed-unmerged, or re-targeted stack
+   layer follows the same stop-and-route.
 6. **Record.** For a stack, fill every member's `base` and `reviewed_head`;
    for one pull request, write its member (`url`, `base`, `reviewed_head`).
    Then write `status: open`, `oat_milestone_status: delivered` for the active
-   milestone, `oat_pr_status: open`, `oat_pr_url`, and
-   `oat_phase_status: pr_open`; commit this registration bookkeeping.
+   milestone, `oat_pr_status: open`, `oat_pr_url` (projected from the tip
+   member for a stack), and `oat_phase_status: pr_open`; commit this
+   registration bookkeeping.
 7. **Log.** After that registration commit, append exactly one structural
    entry and commit it in this same step:
    `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-progress --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered <dNN> for <mNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.
