@@ -131,8 +131,10 @@ probe; the rest of the repository remains read-only. Read-only response lanes
 use a read-only sandbox. When the native surface exposes no per-spawn sandbox
 override, use the prompt constraint for a read-only lane only when the dispatch
 engine accepts that boundary; otherwise classify the route
-`unresolved-or-unsupported`. A native role-selection rejection before child
-start is a route failure.
+`unresolved-or-unsupported`. When per-spawn writable roots cannot be narrowed,
+run the probe and direct-write lanes under the projection's `workspace-write`
+sandbox, constrained by the prompt to their declared outputs. A native
+role-selection rejection before child start is a route failure.
 
 #### Cursor route
 
@@ -773,6 +775,12 @@ cat .oat/repo/knowledge/project-index.md | head -50
 ```
 
 Expected: Complete overview with frontmatter and links
+
+Immediately before Step 10, run
+`git status --porcelain --untracked-files=all`. If it reports any path outside
+`.oat/repo/knowledge/`, stop and name every such path; do not commit. This
+stray-change check is mandatory when Codex probe or direct-write lanes used
+the projection's `workspace-write` sandbox.
 
 ### Step 10: Commit Only Generated Knowledge Paths
 

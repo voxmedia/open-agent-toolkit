@@ -251,11 +251,14 @@ read-only fallback is available only after a verified blocked write and when
 the route can launch independently usable read-only lanes. A worker that never
 launches is a route failure, not read-only evidence. The skill then prepares
 owned outputs, creates the thin index, launches four mapper lanes through the
-provider-neutral dispatcher, and writes the knowledge files. Read-only
-returned text travels through scratch files outside the repository. It runs
-`oat internal commit-paths` on your current branch with the exact generated
-output/deletion paths and enabled hooks. Unrelated staged and unstaged work
-remains intact.
+provider-neutral dispatcher, and writes the knowledge files. On Codex, if
+per-spawn writable roots cannot be narrowed, the probe and direct-write lanes
+use the projection's `workspace-write` sandbox with prompts constrained to
+their declared outputs; a pre-commit status check stops on changes outside the
+knowledge directory. Read-only returned text travels through scratch files
+outside the repository. It runs `oat internal commit-paths` on your current
+branch with the exact generated output/deletion paths and enabled hooks.
+Unrelated staged and unstaged work remains intact.
 Afterwards it records the run in `.oat/tracking.json` and regenerates the
 `.oat/state.md` dashboard with `oat state refresh`; those two files are not
 part of the commit. It does not push.

@@ -2957,6 +2957,7 @@ describe('skills bundled docs contract', () => {
       preflight,
     );
     const claudeRoute = content.slice(claude, codex);
+    const codexRoute = content.slice(codex, cursor);
     const outsideClaudeRoute = content.slice(0, claude) + content.slice(codex);
     const step4b = content.slice(
       content.indexOf('### Step 4b:'),
@@ -2999,6 +3000,12 @@ describe('skills bundled docs contract', () => {
     expect(claudeRoute).toMatch(/model:\s*['"]haiku['"]/);
     expect(claudeRoute).toContain('run_in_background');
     expect(claudeRoute).toContain('Explore');
+    expect(codexRoute).toContain(
+      "When per-spawn writable roots cannot be narrowed,\nrun the probe and direct-write lanes under the projection's `workspace-write`\nsandbox, constrained by the prompt to their declared outputs.",
+    );
+    expect(content).toContain(
+      '`git status --porcelain --untracked-files=all`. If it reports any path outside\n`.oat/repo/knowledge/`, stop and name every such path; do not commit.',
+    );
     expect(outsideClaudeRoute).not.toMatch(/model:\s*['"]haiku['"]/);
     expect(outsideClaudeRoute).not.toContain('run_in_background');
     expect(outsideClaudeRoute).not.toMatch(/subagent_type:\s*['"]Explore['"]/);
