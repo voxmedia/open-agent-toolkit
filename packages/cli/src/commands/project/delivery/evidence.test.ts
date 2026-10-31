@@ -1442,8 +1442,122 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
         }),
       ).resolves.toMatchObject({
         freshness: 'stale',
-        reason: expect.stringMatching(/^stack-order/),
+        reason: expect.stringMatching(
+          /^stack-order: member 0 head .* is not an ancestor of tip /,
+        ),
       });
+    });
+
+    it.each([
+      ['tip', [null, 'missing'] as const],
+      ['lower', ['missing', null] as const],
+    ])(
+      'reports an unavailable %s stack head as missing-object',
+      async (_label, positions) => {
+        repo = await createGoalRepo();
+        const available = repo.git(['rev-parse', 'HEAD']);
+        const missing = 'f'.repeat(40);
+        const heads = positions.map((position) =>
+          position === 'missing' ? missing : available,
+        );
+
+        await expect(
+          evaluateDeliveryExitCarrier(configuredCarrier(available), expected, {
+            git,
+            scope: scopeFor(repo),
+            delivery: deliveryWithHeads('stack', heads, repo.baseSha),
+          }),
+        ).resolves.toMatchObject({
+          freshness: 'stale',
+          reason: `missing-object: commit ${missing} is not available locally`,
+        });
+      },
+    );
+
+    it('preserves the null-carrier result before checking stack topology', async () => {
+      repo = await createGoalRepo();
+      const head = repo.git(['rev-parse', 'HEAD']);
+
+      await expect(
+        evaluateDeliveryExitCarrier(null, expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [head, null], repo.baseSha),
+        }),
+      ).resolves.toEqual({
+        outcome: 'missing',
+        freshness: 'stale',
+        reason: 'no carrier is recorded',
+      });
+    });
+
+    it('keeps an unreviewed carrier identical for stack and pr topologies', async () => {
+      repo = await createGoalRepo();
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      const lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+      const tip = repo.git(['rev-parse', 'HEAD']);
+      const unreviewed = carrier();
+      const stack = await evaluateDeliveryExitCarrier(unreviewed, expected, {
+        git,
+        scope: scopeFor(repo),
+        delivery: deliveryWithHeads('stack', [lower, tip], repo.baseSha),
+      });
+      const pr = await evaluateDeliveryExitCarrier(unreviewed, expected, {
+        git,
+        scope: scopeFor(repo),
+        delivery: deliveryWithHeads('pr', [lower, tip], repo.baseSha),
+      });
+
+      expect(stack).toEqual(pr);
+      expect(stack).toEqual({
+        outcome: 'allowed',
+        freshness: 'fresh',
+        reason: null,
+      });
+    });
+
+    it('classifies ancestry command and thrown failures as inspection-failed', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip layer');
+      const stackDelivery = deliveryWithHeads(
+        'stack',
+        [lower, tip],
+        repo.baseSha,
+      );
+      const failing: GitRunner = {
+        run: (args, options) =>
+          args[0] === 'merge-base'
+            ? Promise.resolve({
+                code: 128,
+                stdout: '',
+                stderr: 'fatal: inspection failed',
+              })
+            : git.run(args, options),
+      };
+      const throwing: GitRunner = {
+        run: (args, options) =>
+          args[0] === 'merge-base'
+            ? Promise.reject(new Error('spawn git ENOENT'))
+            : git.run(args, options),
+      };
+
+      for (const runner of [failing, throwing]) {
+        await expect(
+          evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+            git: runner,
+            scope: scopeFor(repo),
+            delivery: stackDelivery,
+          }),
+        ).resolves.toMatchObject({
+          freshness: 'stale',
+          reason: expect.stringMatching(/^inspection-failed:/),
+        });
+      }
     });
 
     it('rejects an unobserved lower stack member', async () => {

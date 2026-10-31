@@ -1100,7 +1100,8 @@ export async function evaluateGateCarrier(
  * Evaluate a delivery's exit carrier without letting callers bypass stack
  * topology. A stack is recorded base to tip: every lower observed head must
  * be the tip or its ancestor, then only the tip is published to the carrier.
- * Other delivery kinds retain every-member carrier evaluation.
+ * Missing and unreviewed carriers delegate before topology because they are
+ * not head-bound. Other delivery kinds retain every-member evaluation.
  */
 export async function evaluateDeliveryExitCarrier(
   carrier: MilestoneGateCarrier | null,
@@ -1113,6 +1114,13 @@ export async function evaluateDeliveryExitCarrier(
 ): Promise<CarrierEvaluation> {
   const { delivery, git, scope } = successor;
   const publishedHeads = delivery.members.map((member) => member.observed_head);
+  if (carrier === null || isUnreviewedResolution(carrier)) {
+    return evaluateGateCarrier(carrier, expected, {
+      git,
+      scope,
+      publishedHeads,
+    });
+  }
   if (delivery.kind !== 'stack') {
     return evaluateGateCarrier(carrier, expected, {
       git,
@@ -1122,12 +1130,7 @@ export async function evaluateDeliveryExitCarrier(
   }
 
   const stale = (reason: string): CarrierEvaluation => ({
-    outcome:
-      carrier === null
-        ? 'missing'
-        : carrier.status === 'allowed'
-          ? 'allowed'
-          : 'blocked',
+    outcome: carrier.status === 'allowed' ? 'allowed' : 'blocked',
     freshness: 'stale',
     reason,
   });
@@ -1141,11 +1144,26 @@ export async function evaluateDeliveryExitCarrier(
     );
   }
 
-  const tip = publishedHeads.at(-1)!;
+  const resolvedHeads: string[] = [];
   try {
-    for (const [index, lower] of publishedHeads.slice(0, -1).entries()) {
+    for (const head of publishedHeads) {
+      const resolved = await resolveCommit(git, scope.repoRoot, head!);
+      if (resolved === null) {
+        return stale(`missing-object: commit ${head} is not available locally`);
+      }
+      resolvedHeads.push(resolved);
+    }
+  } catch (error) {
+    return stale(
+      `inspection-failed: commit resolution failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  const tip = resolvedHeads.at(-1)!;
+  try {
+    for (const [index, lower] of resolvedHeads.slice(0, -1).entries()) {
       const ancestry = await git.run(
-        ['merge-base', '--is-ancestor', lower!, tip!],
+        ['merge-base', '--is-ancestor', lower, tip],
         { cwd: scope.repoRoot, allowFailure: true },
       );
       if (ancestry.code === 1) {
@@ -1155,13 +1173,13 @@ export async function evaluateDeliveryExitCarrier(
       }
       if (ancestry.code !== 0) {
         return stale(
-          `stack-order: ancestry inspection failed for member ${index}: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
+          `inspection-failed: ancestry inspection failed for member ${index}: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
         );
       }
     }
   } catch (error) {
     return stale(
-      `stack-order: ancestry inspection failed: ${error instanceof Error ? error.message : String(error)}`,
+      `inspection-failed: ancestry inspection failed: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
