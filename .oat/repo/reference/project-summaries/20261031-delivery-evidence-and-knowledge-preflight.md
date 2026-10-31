@@ -63,11 +63,11 @@ The 2026-10-30 triage confirmed four defects against `main`, and this project fi
 
 ### Agent-instruction updates
 
-- Add an explicit kickoff skip source for `projectRecap` in `oat-project-autonomous` Step 2.5, mirroring `generate/kickoff_prompt` for `projectExplainer`, and state that an operator instruction outranks the forced autonomous recap. Rationale: honoring the operator's kickoff skip meant persisting `skip/interactive` against the skill text. Still uncertain whether the forced recap was meant to override explicit operator instructions or only preferences such as `never`. oat-project:delivery-evidence-and-knowledge-preflight#2026-10-30-feedback-operator-recap-skip-vs-autonomous-forced-recap-1
+- Add an explicit kickoff skip source for `projectRecap` in `oat-project-autonomous` Step 2.5, mirroring `generate/kickoff_prompt` for `projectExplainer`, and state that an operator instruction outranks the forced autonomous recap. Rationale: honoring the operator's kickoff skip meant persisting `skip/interactive` against the skill text. Still uncertain whether the forced recap was meant to override explicit operator instructions or only preferences such as `never`. oat-archive:20261031-delivery-evidence-and-knowledge-preflight#2026-10-30-feedback-operator-recap-skip-vs-autonomous-forced-recap-1
 
 ### Workflow issues
 
-- Route Medium/Low review-fix plan tasks through `mode: implement`, or let fix mode accept queued review-fix tasks explicitly, and align the phase-implementer contract with review-receive auto-disposition. Rationale: one dispatch was wasted when the p03 implementer rejected the tasks in fix mode, while p01 and p02 implementers accepted the same shape. Still uncertain which side was out of contract. oat-project:delivery-evidence-and-knowledge-preflight#2026-10-31-friction-fix-mode-rejects-medium-low-review-fix-tasks-1
+- Route Medium/Low review-fix plan tasks through `mode: implement`, or let fix mode accept queued review-fix tasks explicitly, and align the phase-implementer contract with review-receive auto-disposition. Rationale: one dispatch was wasted when the p03 implementer rejected the tasks in fix mode, while p01 and p02 implementers accepted the same shape. Still uncertain which side was out of contract. oat-archive:20261031-delivery-evidence-and-knowledge-preflight#2026-10-31-friction-fix-mode-rejects-medium-low-review-fix-tasks-1
 
 ## Explainer Outcome
 
@@ -89,10 +89,10 @@ The 2026-10-30 triage confirmed four defects against `main`, and this project fi
 
 ## Workflow Observations
 
-- **2026-10-31 · friction · Fix mode rejects Medium/Low review-fix tasks** (project, gotcha) `oat-project:delivery-evidence-and-knowledge-preflight#2026-10-31-friction-fix-mode-rejects-medium-low-review-fix-tasks-1`
+- **2026-10-31 · friction · Fix mode rejects Medium/Low review-fix tasks** (project, gotcha) `oat-archive:20261031-delivery-evidence-and-knowledge-preflight#2026-10-31-friction-fix-mode-rejects-medium-low-review-fix-tasks-1`
   review-receive in auto-disposition mode converts Medium and Low findings into plan fix tasks, and the implement fix loop resumes the phase implementer in mode: fix; the p03 implementer (gpt-5.6-sol-medium) returned BLOCKED because its fix-mode contract accepts only Critical/High findings, while the p01 and p02 implementers (gpt-5.6-sol-high) accepted the same shape.
   Uncertainty: whether the p01/p02 acceptance was a contract violation or the p03 rejection was over-strict.
-- **2026-10-30 · feedback · Operator recap skip vs autonomous forced recap** (project, decision) `oat-project:delivery-evidence-and-knowledge-preflight#2026-10-30-feedback-operator-recap-skip-vs-autonomous-forced-recap-1`
+- **2026-10-30 · feedback · Operator recap skip vs autonomous forced recap** (project, decision) `oat-archive:20261031-delivery-evidence-and-knowledge-preflight#2026-10-30-feedback-operator-recap-skip-vs-autonomous-forced-recap-1`
   The operator explicitly asked at kickoff to skip the project recap, but oat-project-autonomous Step 2.5 forces projectRecap generate/autonomous_policy and the lifecycle contract ranks lifecycle mode policy above project state; no kickoff-skip source exists for projectRecap.
   Uncertainty: Whether the forced recap was meant to override explicit operator instructions or only workflow preferences such as never.
 

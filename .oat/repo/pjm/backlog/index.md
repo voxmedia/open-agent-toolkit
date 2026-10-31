@@ -513,11 +513,11 @@
 | BL-261002-list-pending-required-reviews  | List pending required reviews when a project reaches a pull request                                      | open   | medium   | feature    | S        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                             | open   | medium   | task       | M        |
 | BL-261025-make-oat-docs-generators       | Make OAT docs generators and writers predictable                                                         | open   | medium   | feature    | L        |
-| BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                            | open   | medium   | feature    | M        |
 | BL-261002-make-explainer-kit-accept-or   | Make explainer-kit accept or reject source-code inputs explicitly                                        | open   | medium   | task       | S        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                        | open   | medium   | feature    | L        |
 | BL-261002-make-the-copy-sync-strategy    | Make the copy sync strategy checkout-independent and settable from the CLI                               | open   | medium   | task       | M        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions     | open   | medium   | task       | S        |
+| BL-260830-make-documentation-aware       | Make the knowledge index optional by default for discovery and planning                                  | open   | medium   | feature    | M        |
 | BL-260927-mark-gate-findings-as-new-or   | Mark gate findings as new or carried over between attempts                                               | open   | medium   | feature    | M        |
 | BL-261002-offer-a-strict-gate-reviewer   | Offer a strict gate-reviewer independence mode and align gate skill wording and decision records         | open   | medium   | feature    | M        |
 | BL-261003-persist-separate-review        | Persist separate review artifacts and validate plain-file ledger references                              | open   | medium   | bug        | M        |
