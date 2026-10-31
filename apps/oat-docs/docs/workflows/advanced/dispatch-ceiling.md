@@ -150,9 +150,11 @@ Run the same command without `--dry-run` to replace bundled cells. Use
 `--shared` or `--local` instead when that scope owns the ladder. Add
 `--keep-existing` to fill only missing cells and preserve existing choices.
 
-Version `2026-10-01.1` is the current bundled recommendation. It prefers
-GPT-6 Luna and GPT-6.1 Sol in Codex, then Sol 6.1 xhigh, Astra high, and Astra xhigh in
-Codex Frontier. OAT's maintainers added the Astra entries as a preference:
+Version `2026-10-31.1` is the current bundled recommendation. It prefers
+GPT-6.1 Terra low in Codex Economy and Terra medium in Codex Balanced, then
+GPT-6 Luna and GPT-6.1 Sol, and Sol 6.1 xhigh, Astra high, and Astra xhigh in
+Codex Frontier. Cursor stays on GPT-5.6 selectors; that runtime does not list
+GPT-6 or GPT-6.1. OAT's maintainers added the Astra entries as a preference:
 public benchmarks show task-dependent gains for Astra over GPT-6 Sol, but OAT
 has not tested Astra on its own workloads, and the maintainers' separate
 model-selection review has not yet confirmed the choice. Sonnet 5.5 medium replaces Sonnet 5 medium
