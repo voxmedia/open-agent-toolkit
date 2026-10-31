@@ -113,12 +113,50 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T12:35:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T12:37:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-30T23:32:02Z'
+oat_implement_exit_gate:
+  status: 'pending'
+  resolution: 'configured'
+  disposition: null
+  config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  project_override: null
+  on_failure: 'block'
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: '8ccbb53adda27311032380209692e62a055a26e7'
+  implementation_base_ref: 'refs/remotes/origin/main'
+  implementation_fingerprint: 'sha256:effective-delta-v2:d49a7c17e4ace137749b2305adb15e41b320210b02574963df40b1870e5316cd'
+  freshness_head: '8ccbb53adda27311032380209692e62a055a26e7'
+  freshness_fingerprint: 'sha256:effective-delta-v2:d49a7c17e4ace137749b2305adb15e41b320210b02574963df40b1870e5316cd'
+  waivers: []
+  launch_state: 'intent_persisted'
+  launch_attempt_id: 'a36a03fa-e6a8-4bd2-b59a-6e31179e99c8'
+  launch_started_at: '2026-10-31T12:37:03Z'
+  launch_result_receipt: '.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/archived/implement-exit-gate-a36a03fa-e6a8-4bd2-b59a-6e31179e99c8.stdout.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: 'not_started'
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-10-31T12:37:03Z'
+  decided_at: null
 ---
 
 # Project State: delivery-evidence-and-knowledge-preflight
