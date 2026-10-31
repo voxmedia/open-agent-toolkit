@@ -223,6 +223,7 @@ export function reviewRow(
 
 export interface GateArtifactScenarioOptions {
   invocation?: string;
+  registered?: boolean;
   reviewedHead?: 'matching' | 'mismatched' | 'placeholder';
   type?: string;
 }
@@ -263,15 +264,23 @@ export async function gateArtifactScenario(
     }),
   );
   await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+  const evidence = registryYaml({
+    reviewed,
+    base: repo.baseSha,
+    deliveryExitGate: carrier,
+    exit: carrier,
+  });
   await repo.write(
     'state.md',
     goalState(
-      `oat_milestone: m01\noat_milestone_status: reviewing\n${registryYaml({
-        reviewed,
-        base: repo.baseSha,
-        deliveryExitGate: carrier,
-        exit: carrier,
-      })}`,
+      `oat_milestone: m01\noat_milestone_status: reviewing\n${
+        options.registered === false
+          ? evidence.replace(
+              /^oat_deliveries:[\s\S]*?(?=^oat_milestone_gates:)/m,
+              '',
+            )
+          : evidence
+      }`,
     ),
   );
   const carrierCommit = repo.commitAll('chore(oat): record exit carrier');

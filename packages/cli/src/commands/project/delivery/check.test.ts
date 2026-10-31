@@ -247,6 +247,48 @@ describe('oat project delivery check', () => {
     expect(exitCode).toBe(1);
   });
 
+  it('keeps an unregistered milestone fresh across its matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo, { registered: false });
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, disposition: 'passed', reason: null },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it.each([
+    ['manual', { invocation: 'manual' }],
+    ['mismatched-head', { reviewedHead: 'mismatched' as const }],
+  ])(
+    'rejects an unregistered milestone with a %s gate row',
+    async (_label, options) => {
+      repo = await createGoalRepo();
+      await gateArtifactScenario(repo, { ...options, registered: false });
+
+      const { payload, exitCode } = await check(repo, 'm01');
+
+      expect(payload).toMatchObject({
+        status: 'undeliverable',
+        review: {
+          fresh: false,
+          reason: expect.stringMatching(/^disallowed-path/),
+        },
+        exit: {
+          freshness: 'stale',
+          reason: expect.stringMatching(/^disallowed-path/),
+        },
+        deliverable: false,
+      });
+      expect(exitCode).toBe(1);
+    },
+  );
+
   it('reports a milestone stale for a substantive successor and writes nothing', async () => {
     await receivedMilestone();
     await repo!.writeRepo('src/app.ts', 'export const value = 9;\n');

@@ -1301,6 +1301,38 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       });
     });
 
+    it('refuses to replace integrated-review identity with the gate artifact', async () => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo);
+      await repo.write(
+        'state.md',
+        (await repo.read('state.md')).replace(
+          `artifact: ${ARCHIVED_REVIEW_ARTIFACT}`,
+          `artifact: ${GATE_REVIEW_ARTIFACT}`,
+        ),
+      );
+      const swapped = repo.commitAll(
+        'chore(oat): point d01 at the final gate artifact',
+      );
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).toContain(GATE_REVIEW_ARTIFACT);
+      const result = await evaluateSuccessor(
+        git,
+        scope,
+        chain.gateCommit,
+        swapped,
+      );
+      expect(result).toMatchObject({
+        fresh: false,
+        code: 'substantive-change',
+        path: `${PROJECT_REL}/state.md`,
+      });
+      expect(result.reason).toContain(
+        'changed its integrated review artifact without recording a new review artifact',
+      );
+    });
+
     it.each([
       ['manual final row', { invocation: 'manual' }],
       ['mismatched reviewed head', { reviewedHead: 'mismatched' as const }],
