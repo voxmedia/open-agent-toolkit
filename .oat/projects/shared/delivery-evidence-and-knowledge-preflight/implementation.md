@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t02
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 4     | 1/4       |
+| Phase 4 (p04) | in_progress | 4     | 4/4       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 22/27 tasks completed
+**Total:** 25/27 tasks completed
 
 ---
 
@@ -602,18 +602,64 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p04-t02: (review) Route the refresh branch through the preflight and make the pins fail on regressions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 10a37325243d7c152f0d14efbd3513cddecbf70c
+
+**Outcome (required when completed):**
+
+- Both Step 1 branches (Refresh and empty knowledge) enter the dispatch-route preflight before Step 2; the contract pin rejects Claude-only controls anywhere outside the Claude route, reverted branches, a read-only Step 4b, and a preflight after Step 2.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Verification:** contract suites 1,089 passed (root rerun matched). Can-fail: each of the reviewer's six seeded regressions (Claude controls in 5a, in 5b, empty branch reverted, Refresh branch reverted, Step 4b read-only, preflight after Step 2) failed the pin; each restored.
+
+**Notes / Decisions:**
+
+- Review-fix for p04 review C1 and H1 (request `dedkp-p04-implementation-2`).
 
 ### Task p04-t03: (review) Use the generator class for write lanes and verify the probe file
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b64c74e83a413cc62b9a03f9e360e70193ee90c6
+
+**Outcome (required when completed):**
+
+- The write probe and direct-write lanes are `generator` requests (read-only response lanes stay `recon`); direct-write mode requires `WRITE_OK` and an observed `.preflight/test.txt` with content `test`, and any disagreement stops before Step 2.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Verification:** contract suites passed. Can-fail: removing the probe's `generator` label and replacing the file check with trust in the report each failed the pin.
+
+**Notes / Decisions:**
+
+- Review-fix for p04 review M1 and M2.
 
 ### Task p04-t04: (review) Make mapper instructions provider-neutral and harden probe handling
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2cb165ec8d9f22ee3d6a85a955ca8cd7cca2dcdd
+
+**Outcome (required when completed):**
+
+- Mapper prompts use provider-neutral write and read-only wording; Codex writable roots are limited to the knowledge outputs; recovery advice depends on what is missing; `.preflight` is created only after a non-mutating `lstat` guard and removed on every probe exit; Step 6b reads returned output from a scratch file.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Verification:** contract suites, `refresh-owned.test.mjs` 6/6, skill oxlint, `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format` and docs markdownlint passed.
+
+**Notes / Decisions:**
+
+- Review-fix for p04 review L1-L5.
 
 ### Review Received: p04
 
@@ -628,7 +674,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - M2 (Medium): direct-write mode trusts the worker's `WRITE_OK` without the file check → fix task p04-t03.
 - L1–L5 (Low): Claude tool names in neutral prompts; Codex writable roots; recovery advice per failure kind; `.preflight` ordering and cleanup; Step 6b source splicing → fix task p04-t04.
 
-**Outcome:** fixes queued: p04-t02, p04-t03, p04-t04 (blocking Critical/High; reviewer request `dedkp-p04-review-1`).
+**Outcome:** fixes completed: p04-t02, p04-t03, p04-t04 (implementation request `dedkp-p04-implementation-2` on the original handle and target); awaiting re-review. Original queue: p04-t02, p04-t03, p04-t04 (blocking Critical/High; reviewer request `dedkp-p04-review-1`).
 
 ---
 
@@ -688,6 +734,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p03-implementation-3 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
 
 - run/v1 · request=dedkp-p04-implementation · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-review-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-implementation-2 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 

@@ -1114,7 +1114,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-review-2026-10-31T012557Z.md           | 42db803d4ef78d7bcb5c1b8c04ddbfd08709a008 | auto       | -                 |
 | p03   | code     | fixes_completed | 2026-10-31 | reviews/archived/p03-review-2026-10-31T014304Z.md           | 55f83e676b328c30fbd721eb800a842c9521b378 | auto       | -                 |
 | p03   | code     | passed          | 2026-10-31 | reviews/archived/p03-review-2026-10-31T015808Z.md           | 373d70cf23049ae9ba2ca4d863465404db3a5ec4 | auto       | -                 |
-| p04   | code     | fixes_added     | 2026-10-31 | reviews/archived/p04-review-2026-10-31T021449Z.md           | cff79cf176a0aa2db4430eb15666db6ad8bc3c6b | auto       | -                 |
+| p04   | code     | fixes_completed | 2026-10-31 | reviews/archived/p04-review-2026-10-31T021449Z.md           | cff79cf176a0aa2db4430eb15666db6ad8bc3c6b | auto       | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
