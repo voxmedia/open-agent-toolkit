@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status   | Tasks | Completed |
-| ------------- | -------- | ----- | --------- |
-| Phase 1 (p01) | complete | 7     | 7/7       |
-| Phase 2 (p02) | complete | 7     | 7/7       |
-| Phase 3 (p03) | complete | 7     | 7/7       |
-| Phase 4 (p04) | complete | 8     | 8/8       |
-| Phase 5 (p05) | pending  | 2     | 0/2       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | complete    | 7     | 7/7       |
+| Phase 2 (p02) | complete    | 7     | 7/7       |
+| Phase 3 (p03) | complete    | 7     | 7/7       |
+| Phase 4 (p04) | complete    | 8     | 8/8       |
+| Phase 5 (p05) | in_progress | 2     | 2/2       |
 
-**Total:** 29/31 tasks completed
+**Total:** 31/31 tasks completed
 
 ---
 
@@ -813,13 +813,51 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p05-t01: Bump changed skills and lockstep package versions
 
-**Status:** in_progress
-**Commit:** 001e059460f506dfbefec472244a668ac7aec292 (version bumps; stale pins pending recovery)
+**Status:** completed
+**Commit:** 001e059460f506dfbefec472244a668ac7aec292
+
+**Outcome (required when completed):**
+
+- The five public packages and `public-package-versions.json` are at 0.3.38; `oat-project-brief` 1.0.4, `oat-project-implement` 2.3.23, `oat-project-pr-progress` 1.3.6 and `oat-repo-knowledge-index` 1.4.0 are bumped once each.
+- The skill-version pins in `packages/cli/src/validation/skills.test.ts` match (recovery commit b5300aa87d66e3cc9ef19ecb3fe217aa0f12b64e).
+
+**Files changed:**
+
+- `.agents/skills/{oat-project-brief,oat-project-implement,oat-project-pr-progress,oat-repo-knowledge-index}/SKILL.md`
+- `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`
+- `packages/cli/src/validation/skills.test.ts` (recovery)
+
+**Verification:** `check:skill-bumps`, `release:check-versions`, `release:validate` exit 0; pin suite 274 passed before and after the recovery commit.
 
 ### Task p05-t02: Close out backlog items and run the full gate list
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 02f3139b01f9417bcb02e773df2759bb910b5840
+
+**Outcome (required when completed):**
+
+- `BL-261030-evaluate-stacked-goal-delivery`, `BL-261030-admit-goal-exit-gate-review`, `BL-261030-flag-rewritten-committed` and `BL-261030-preflight-knowledge-index` are archived as closed with completed-ledger entries; the index and triage record links are rewritten.
+- The full Definition of Done gate list passes (table below).
+
+**Files changed:**
+
+- `.oat/repo/pjm/backlog/items/` → `.oat/repo/pjm/backlog/archived/` (four items), `.oat/repo/pjm/backlog/completed.md`, `.oat/repo/pjm/backlog/index.md`, `.oat/repo/pjm/triage/2026-10-30-untriaged-issues.md`
+
+**Verification:** archive committed first (plan amendment), then every gate:
+
+| Gate                                         | Exit  | Cache notes                                       |
+| -------------------------------------------- | ----- | ------------------------------------------------- |
+| `pnpm check`                                 | 0     | no replay reported                                |
+| `pnpm type-check`                            | 0     | 5 dependency build replays                        |
+| `pnpm test`                                  | 0     | 5 build replays; tests executed (9,214 CLI tests) |
+| `pnpm build`                                 | 0     | full Turbo replay                                 |
+| `pnpm run check:skill-bumps`                 | 0     | 4 changed skills validated                        |
+| `pnpm release:check-versions`                | 0     | —                                                 |
+| `pnpm release:validate`                      | 0     | 5 packages at 0.3.38                              |
+| `pnpm build:docs`                            | 0     | full Turbo replay                                 |
+| docs generate-index + `git diff --exit-code` | 0 / 0 | index unchanged                                   |
+| `pnpm lint`                                  | 0     | 5 build replays                                   |
+| `pnpm format`                                | 0     | 5 build replays                                   |
 
 ### Recovery Event dedkp-p05-recovery-01
 
@@ -837,6 +875,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Reason: the p05 Phase Scope omitted the recovery-ledger exception for `state.md`, so no attempt could be reserved; no reservation, edit or recovery commit occurred.
 
 **Root direction (p05):** the stop came from a root scope omission, not from the work. Amended plan p05-t01 to include the mechanically derived pin file and p05-t02 to commit the archive before the gates (see Deviations); the continuation request `dedkp-p05-implementation-2` authorizes the `oat_phase_recovery_policy` ledger write for a phase-standing recovery of the stale pins.
+
+### Recovery Event dedkp-p05-recovery-02
+
+- Phase/task: p05 / p05-t01
+- Original request: dedkp-p05-implementation
+- Original commit: 001e059460f506dfbefec472244a668ac7aec292
+- Defect class: test
+- Discovered by: pnpm test
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: b5300aa87d66e3cc9ef19ecb3fe217aa0f12b64e
+- Verification: focused pin suite 274 passed before and after the commit; phase `pnpm test` passed before and after (9,214 CLI tests); root rerun of the pin suite passed.
+- Reason: the amended p05-t01 boundary authorized mechanical propagation of the bumped skill versions into the contract pins; reservation commit 8ec3add8d59bc2c2f09b71a8781ca79db5881a82 touched only state.md.
 
 ---
 
@@ -899,6 +952,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p04-implementation-5 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
 
 - run/v1 · request=dedkp-p05-implementation · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p05-implementation-2 · scope=p05 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p05-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
