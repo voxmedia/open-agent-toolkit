@@ -42,9 +42,23 @@ interface TomlEntry {
   table: TomlInlineTable | null;
 }
 
+interface TomlComment {
+  lineStart: number;
+  start: number;
+  end: number;
+}
+
+interface MarkerBlock {
+  label: string;
+  beginLineStart: number;
+  beginEnd: number;
+  endLineStart: number;
+}
+
 interface TomlDocument {
   sections: TomlSection[];
   entries: TomlEntry[];
+  blocks: MarkerBlock[];
 }
 
 type TomlDefinition =
@@ -116,6 +130,7 @@ class TomlLexer {
   private pos = 0;
   private readonly sections: TomlSection[] = [];
   private readonly entries: TomlEntry[] = [];
+  private readonly comments: TomlComment[] = [];
 
   constructor(private readonly text: string) {}
 
@@ -139,7 +154,9 @@ class TomlLexer {
         continue;
       }
       if (this.peek() === '#') {
+        const start = this.pos;
         this.skipComment();
+        this.comments.push({ lineStart, start, end: this.pos });
         continue;
       }
 
@@ -164,7 +181,11 @@ class TomlLexer {
       section.lastEnd = entry.end;
     }
 
-    return { sections: this.sections, entries: this.entries };
+    return {
+      sections: this.sections,
+      entries: this.entries,
+      blocks: findMarkerBlocks(this.text, this.comments),
+    };
   }
 
   private peek(offset = 0): string | undefined {
@@ -599,9 +620,15 @@ function findDefinition(
 
 function insertIntoInlineTable(
   text: string,
+  document: TomlDocument,
   table: TomlInlineTable,
+  path: KeyPath,
   member: string,
 ): string {
+  const block = markerBlockAt(document, table.close);
+  if (block) {
+    throw insideMarkerBlock(path, block);
+  }
   const last = table.entries.at(-1);
   if (!last) {
     return splice(text, table.open + 1, table.close, ` ${member} `);
@@ -621,6 +648,100 @@ function insertAfterStatement(
     contentEnd,
     `${detectEol(text)}${lineIndentAt(text, lineStart)}${line}`,
   );
+}
+
+/*
+ * Other tools own `# BEGIN <label>` ... `# END <label>` blocks and delete every
+ * line between the pair, so nothing OAT writes may be inserted inside one.
+ * Only standalone comment lines count; text inside strings is not a marker.
+ */
+const MARKER_PATTERN = /^#[ \t]*(BEGIN|END)[ \t]+(\S(?:.*\S)?)[ \t]*$/;
+
+function findMarkerBlocks(
+  text: string,
+  comments: readonly TomlComment[],
+): MarkerBlock[] {
+  const markers = comments.map((comment) => ({
+    comment,
+    match: MARKER_PATTERN.exec(text.slice(comment.start, comment.end)),
+  }));
+  const blocks: MarkerBlock[] = [];
+  markers.forEach(({ comment, match }, index) => {
+    if (match?.[1] !== 'BEGIN') {
+      return;
+    }
+    const label = match[2]!;
+    const end = markers
+      .slice(index + 1)
+      .find(
+        (candidate) =>
+          candidate.match?.[1] === 'END' && candidate.match[2] === label,
+      );
+    if (end) {
+      blocks.push({
+        label,
+        beginLineStart: comment.lineStart,
+        beginEnd: comment.end,
+        endLineStart: end.comment.lineStart,
+      });
+    }
+  });
+  return blocks;
+}
+
+function markerBlockAt(
+  document: TomlDocument,
+  offset: number,
+): MarkerBlock | undefined {
+  return document.blocks.find(
+    (block) => block.beginEnd <= offset && offset <= block.endLineStart,
+  );
+}
+
+function outsideMarkerBlocks(
+  document: TomlDocument,
+  offset: number | null,
+): number | null {
+  return offset !== null && markerBlockAt(document, offset) ? null : offset;
+}
+
+function insideMarkerBlock(path: KeyPath, block: MarkerBlock): CliError {
+  return unsupported(
+    `${renderKeyPath(path)} would be written inside the "# BEGIN ${block.label}" block`,
+  );
+}
+
+/** Appends after `anchor`, or after the last statement before a marker block. */
+function insertIntoSection(
+  text: string,
+  document: TomlDocument,
+  section: TomlSection,
+  anchor: { lineStart: number; end: number },
+  path: KeyPath,
+  line: string,
+): string {
+  let { lineStart, end } = anchor;
+  for (;;) {
+    const block = markerBlockAt(document, end);
+    if (!block) {
+      return insertAfterStatement(text, lineStart, end, line);
+    }
+    const previous = findLast(
+      document.entries,
+      (entry) =>
+        entry.section === section &&
+        entry.inline === null &&
+        entry.end <= block.beginLineStart,
+    );
+    const header = section.header;
+    if (previous) {
+      ({ lineStart, end } = previous);
+    } else if (header && header.end <= block.beginLineStart) {
+      ({ lineStart, end } = header);
+    } else {
+      throw insideMarkerBlock(path, block);
+    }
+  }
 }
 
 function isCommentLine(line: string): boolean {
@@ -685,7 +806,10 @@ function insertSection(
     isStrictPrefix(tablePath, section.path),
   );
   const start = firstSubTable
-    ? leadingCommentStart(text, firstSubTable.header.lineStart)
+    ? outsideMarkerBlocks(
+        document,
+        leadingCommentStart(text, firstSubTable.header.lineStart),
+      )
     : null;
   if (start !== null) {
     return splice(text, start, start, `${block}${eol}${eol}`);
@@ -698,7 +822,10 @@ function insertSection(
       startsWithPath(section.path, family),
     );
     if (lastInFamily) {
-      const end = trailingCommentEnd(text, lastInFamily.lastEnd);
+      const end = outsideMarkerBlocks(
+        document,
+        trailingCommentEnd(text, lastInFamily.lastEnd),
+      );
       if (end !== null) {
         return splice(text, end, end, `${eol}${eol}${block}`);
       }
@@ -739,15 +866,20 @@ export function setTomlValue(
   switch (definition.kind) {
     case 'header':
       if (rest.length === 1) {
-        const anchor = definition.section;
+        const { section } = definition;
         const lastEntry = findLast(
           document.entries,
-          (entry) => entry.section === anchor && entry.inline === null,
+          (entry) => entry.section === section && entry.inline === null,
         );
-        return insertAfterStatement(
+        return insertIntoSection(
           text,
-          lastEntry?.lineStart ?? anchor.header!.lineStart,
-          anchor.lastEnd,
+          document,
+          section,
+          {
+            lineStart: lastEntry?.lineStart ?? section.header!.lineStart,
+            end: section.lastEnd,
+          },
+          path,
           `${renderKey(rest[0]!)} = ${renderedValue}`,
         );
       }
@@ -759,15 +891,34 @@ export function setTomlValue(
           (inner, segment) => `${renderKey(segment)} = { ${inner} }`,
           `${renderKey(rest.at(-1)!)} = ${renderedValue}`,
         );
-      return insertIntoInlineTable(text, definition.table, member);
+      return insertIntoInlineTable(
+        text,
+        document,
+        definition.table,
+        path,
+        member,
+      );
     }
     case 'dotted': {
       const { anchor } = definition;
       const member = `${renderKeyPath(path.slice(anchor.containerPath.length))} = ${renderedValue}`;
       if (anchor.inline) {
-        return insertIntoInlineTable(text, anchor.inline, member);
+        return insertIntoInlineTable(
+          text,
+          document,
+          anchor.inline,
+          path,
+          member,
+        );
       }
-      return insertAfterStatement(text, anchor.lineStart, anchor.end, member);
+      return insertIntoSection(
+        text,
+        document,
+        anchor.section,
+        anchor,
+        path,
+        member,
+      );
     }
     case 'root':
     case 'implicit':

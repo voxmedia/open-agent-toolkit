@@ -708,6 +708,219 @@ describe('mergeCodexConfig preserves user-owned content', () => {
     expect(second.changed).toBe(false);
   });
 
+  // The strictest owner of a marker block deletes every line between
+  // `# BEGIN <label>` and the matching `# END <label>`.
+  const stripMarkerBlocks = (text: string) =>
+    text.replace(/^# BEGIN (\S+)\r?\n[\s\S]*?^# END \1(?:\r?\n|$)/gm, '');
+
+  it.each([
+    {
+      label: 'a flag table that ends with a marker block',
+      existing: lines(
+        '[features]',
+        'web_search = true',
+        '# BEGIN codex-router-multi-agent-v2-managed',
+        'multi_agent_v2 = { enabled = true, max_concurrent_threads_per_session = 6 }',
+        '# END codex-router-multi-agent-v2-managed',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+      ),
+      expected: lines(
+        '[features]',
+        'web_search = true',
+        'multi_agent = true',
+        '# BEGIN codex-router-multi-agent-v2-managed',
+        'multi_agent_v2 = { enabled = true, max_concurrent_threads_per_session = 6 }',
+        '# END codex-router-multi-agent-v2-managed',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'a flag table whose only keys sit in a marker block',
+      existing: lines(
+        '[features]',
+        '# BEGIN codex-router-multi-agent-v2-managed',
+        'multi_agent_v2 = { enabled = true }',
+        '# END codex-router-multi-agent-v2-managed',
+        '',
+      ),
+      expected: lines(
+        '[features]',
+        'multi_agent = true',
+        '# BEGIN codex-router-multi-agent-v2-managed',
+        'multi_agent_v2 = { enabled = true }',
+        '# END codex-router-multi-agent-v2-managed',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'a new role after a block with a blank line before its end',
+      existing: lines(
+        '[features]',
+        'multi_agent = true',
+        '',
+        '# BEGIN codex-router-managed',
+        '[agents.router]',
+        'description = "r"',
+        '',
+        '# END codex-router-managed',
+        '[mcp]',
+        'x = 1',
+        '',
+      ),
+      expected: lines(
+        '[features]',
+        'multi_agent = true',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '# BEGIN codex-router-managed',
+        '[agents.router]',
+        'description = "r"',
+        '',
+        '# END codex-router-managed',
+        '[mcp]',
+        'x = 1',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'a parent table after a block with a blank line after its start',
+      existing: lines(
+        '[features]',
+        'multi_agent = true',
+        '',
+        '# BEGIN codex-router-managed',
+        '',
+        '[agents.router]',
+        'description = "r"',
+        '# END codex-router-managed',
+        '',
+      ),
+      expected: lines(
+        '[features]',
+        'multi_agent = true',
+        '',
+        '# BEGIN codex-router-managed',
+        '',
+        '[agents.router]',
+        'description = "r"',
+        '# END codex-router-managed',
+        '',
+        '[agents]',
+        'max_depth = 2',
+        '',
+        '[agents.oat-reviewer]',
+        'description = "Reviewer"',
+        'config_file = "agents/oat-reviewer.toml"',
+        '',
+      ),
+    },
+    {
+      label: 'CRLF endings around a marker block',
+      existing:
+        '[features]\r\nweb_search = true\r\n# BEGIN codex-router-multi-agent-v2-managed\r\nmulti_agent_v2 = { enabled = true }\r\n# END codex-router-multi-agent-v2-managed\r\n',
+      expected:
+        '[features]\r\nweb_search = true\r\nmulti_agent = true\r\n# BEGIN codex-router-multi-agent-v2-managed\r\nmulti_agent_v2 = { enabled = true }\r\n# END codex-router-multi-agent-v2-managed\r\n\r\n[agents]\r\nmax_depth = 2\r\n\r\n[agents.oat-reviewer]\r\ndescription = "Reviewer"\r\nconfig_file = "agents/oat-reviewer.toml"\r\n',
+    },
+  ])(
+    'keeps new keys outside other tools’ marker blocks ($label)',
+    ({ existing, expected }) => {
+      const first = mergeCodexConfig({
+        existingContent: existing,
+        desiredRoles: [managedRole],
+      });
+      const second = mergeCodexConfig({
+        existingContent: first.mergedContent,
+        desiredRoles: [managedRole],
+      });
+
+      expect(first.mergedContent).toBe(expected);
+      expect(second.changed).toBe(false);
+      const stripped = TOML.parse(
+        stripMarkerBlocks(first.mergedContent),
+      ) as Record<string, Record<string, unknown>>;
+      expect(stripped.features!.multi_agent).toBe(true);
+      expect(stripped.agents!.max_depth).toBe(2);
+      expect(stripped.agents!['oat-reviewer']).toEqual({
+        description: 'Reviewer',
+        config_file: 'agents/oat-reviewer.toml',
+      });
+    },
+  );
+
+  it('does not treat a BEGIN line inside a multiline string as a marker', () => {
+    const existing = lines(
+      '[features]',
+      'web_search = true',
+      'notes = """',
+      '# BEGIN fake',
+      '"""',
+      'x = 1',
+      '# END fake',
+      '',
+    );
+
+    const result = mergeCodexConfig({
+      existingContent: existing,
+      desiredRoles: [managedRole],
+    });
+
+    expect(
+      result.mergedContent.startsWith(
+        lines(
+          '[features]',
+          'web_search = true',
+          'notes = """',
+          '# BEGIN fake',
+          '"""',
+          'x = 1',
+          'multi_agent = true',
+          '# END fake',
+          '',
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it('refuses to add a key to a table that sits inside a marker block', () => {
+    expect(() =>
+      mergeCodexConfig({
+        existingContent: lines(
+          '# BEGIN other-tool',
+          '[features]',
+          'web_search = true',
+          '# END other-tool',
+          '',
+        ),
+        desiredRoles: [managedRole],
+      }),
+    ).toThrow(
+      'Cannot edit .codex/config.toml without rewriting user content: features.multi_agent would be written inside the "# BEGIN other-tool" block',
+    );
+  });
+
   it('round-trips descriptions that need escaping', () => {
     const description =
       'Says "hi"\\ then\nwraps\ttabs and \u0007 bell — ünïcode';
