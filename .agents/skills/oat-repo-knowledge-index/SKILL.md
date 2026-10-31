@@ -86,14 +86,15 @@ before Step 2 with the provider, missing capability, and the utility-pack
 recovery commands above. Do not delete generated output, create the thin
 index, or launch a write probe.
 
-The request always names role `oat-codebase-mapper`, class `recon`, a bounded
-focus and output list, exact read/write authority, verification evidence,
-deadline, retry limit, and no post-acceptance fallback. Launch the installed
-provider projection; portable role text is instructions, not a registered
-native role. Build the complete dispatch record before launch, launch once,
-and retain every accepted handle through collection. A launch surface that
-did not launch a child is a route failure: record the pre-start rejection and
-stop before Step 2. Do not reinterpret it as read-only mode.
+Every request names role `oat-codebase-mapper`, a bounded focus and output
+list, exact authority, verification evidence, deadline, retry limit, and no
+post-acceptance fallback. The write probe and direct-write mapper lanes use
+class `generator`; read-only response lanes use class `recon`. Launch the
+installed provider projection; portable role text is instructions, not a
+registered native role. Build the complete dispatch record before launch,
+launch once, and retain every accepted handle through collection. A launch
+surface that did not launch a child is a route failure: record the pre-start
+rejection and stop before Step 2. Do not reinterpret it as read-only mode.
 
 #### Claude route
 
@@ -131,16 +132,18 @@ availability, and no alternate route may be improvised after acceptance.
 
 With the route resolved, create only
 `.oat/repo/knowledge/.preflight`, then launch the bounded write-permission
-probe before Step 2. Its only write authority is
+probe with class `generator` before Step 2. Its only write authority is
 `.oat/repo/knowledge/.preflight/test.txt`, with content `test`; it returns
-`WRITE_OK` or `WRITE_BLOCKED`. Remove `.preflight` after collecting the
-accepted handle. A launched probe reporting `WRITE_OK` selects direct-write
-mode. The read-only fallback is allowed only when that launched worker reports
-`WRITE_BLOCKED` and the same resolved route can launch independently usable
-read-only response lanes. Any missing handle, malformed result, or launch
-failure stops before Step 2 and leaves existing knowledge unchanged. Retain
-the resolved route, authorization, mode, and accepted probe result for the
-four mapper requests.
+`WRITE_OK` or `WRITE_BLOCKED`. Before removing `.preflight`, require
+`WRITE_OK` to coincide with `.preflight/test.txt` existing with exact content
+`test`, and require `WRITE_BLOCKED` to coincide with that file being absent.
+Any disagreement is a malformed result and route failure; stop before Step 2.
+A verified `WRITE_OK` selects direct-write mode. The read-only fallback is
+allowed only when the launched probe has a verified `WRITE_BLOCKED` and the
+same resolved route can launch independently usable read-only response lanes.
+Any missing handle, malformed result, or launch failure stops before Step 2
+and leaves existing knowledge unchanged. Retain the resolved route,
+authorization, mode, and accepted probe result for the four mapper requests.
 
 ### Step 2: Prepare Only Owned Generated Outputs
 
@@ -236,7 +239,7 @@ launch the installed provider projection of `oat-codebase-mapper`.
 
 ```yaml
 role: oat-codebase-mapper
-class: recon
+class: generator
 focus: tech
 outputs: [stack.md, integrations.md]
 authority: write-declared-outputs
@@ -276,7 +279,7 @@ Instructions:
 
 ```yaml
 role: oat-codebase-mapper
-class: recon
+class: generator
 focus: arch
 outputs: [architecture.md, structure.md]
 authority: write-declared-outputs
@@ -316,7 +319,7 @@ Instructions:
 
 ```yaml
 role: oat-codebase-mapper
-class: recon
+class: generator
 focus: quality
 outputs: [conventions.md, testing.md]
 authority: write-declared-outputs
@@ -356,7 +359,7 @@ Instructions:
 
 ```yaml
 role: oat-codebase-mapper
-class: recon
+class: generator
 focus: concerns
 outputs: [concerns.md]
 authority: write-declared-outputs

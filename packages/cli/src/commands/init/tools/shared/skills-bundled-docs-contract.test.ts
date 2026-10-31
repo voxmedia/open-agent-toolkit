@@ -2959,6 +2959,15 @@ describe('skills bundled docs contract', () => {
       content.indexOf('### Step 4b:'),
       content.indexOf('### Step 5:'),
     );
+    const preflightSection = content.slice(preflight, prepare);
+    const directWrite = content.slice(
+      content.indexOf('### Step 5a:'),
+      content.indexOf('### Step 5b:'),
+    );
+    const readOnly = content.slice(
+      content.indexOf('### Step 5b:'),
+      content.indexOf('### Step 6:'),
+    );
 
     expect(preflight).toBeGreaterThan(-1);
     expect(prepare).toBeGreaterThan(preflight);
@@ -2989,6 +2998,19 @@ describe('skills bundled docs contract', () => {
     expect(step4b).toContain(
       'A missing accepted probe handle or result is a route\nfailure, not evidence for read-only mode',
     );
+    expect(preflightSection).toContain(
+      'write-permission\nprobe with class `generator`',
+    );
+    expect(preflightSection).toContain(
+      '`WRITE_OK` to coincide with `.preflight/test.txt` existing with exact content\n`test`',
+    );
+    expect(preflightSection).toContain(
+      '`WRITE_BLOCKED` to coincide with that file being absent',
+    );
+    expect(directWrite.match(/class: generator/g)).toHaveLength(4);
+    expect(directWrite).not.toContain('class: recon');
+    expect(readOnly.match(/class: recon/g)).toHaveLength(4);
+    expect(readOnly).not.toContain('class: generator');
     expect(content).not.toContain('/private/tmp/claude-');
     expect(content).toMatch(
       /did not launch[\s\S]{0,120}route failure[\s\S]{0,120}stop before Step 2/i,
@@ -3003,8 +3025,8 @@ describe('skills bundled docs contract', () => {
         ),
       );
     }
-    expect(content).toContain(
-      'portable role text is instructions, not a registered\nnative role',
+    expect(content).toMatch(
+      /portable role text is instructions, not a\s+registered native role/,
     );
     expect(content).toMatch(/accepted handle[\s\S]{0,120}returned output/i);
   });
