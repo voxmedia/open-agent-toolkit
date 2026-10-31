@@ -45,7 +45,11 @@ export function createToolsInstallCommand(
       ? createInitToolsCommand(effectiveOverrides)
       : createBaseCommand();
   cmd.name('install');
-  withScopeOption(cmd);
+  withScopeOption(
+    cmd,
+    'all',
+    'Limit execution scope. With the default (all), each installed pack keeps its existing placement and a pack not yet installed lands at user scope; project or user writes only that scope. core is user-scope only',
+  );
   withProjectGuidanceOptions(cmd);
   cmd.option('--no-sync', 'Skip auto-sync after install');
   cmd.hook('preAction', (thisCommand) => {

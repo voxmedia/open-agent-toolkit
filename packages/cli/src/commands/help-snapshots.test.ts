@@ -1636,8 +1636,12 @@ describe('help output snapshots', () => {
         --project-guidance            Create or append repository AGENTS.md tool
                                       guidance, or print a manual patch
         --no-project-guidance         Decline repository AGENTS.md tool guidance
-        --scope <scope>               Limit execution scope (choices: "project",
-                                      "user", "all", default: "all")
+        --scope <scope>               Limit execution scope. With the default (all),
+                                      each installed pack keeps its existing
+                                      placement and a pack not yet installed lands at
+                                      user scope; project or user writes only that
+                                      scope. core is user-scope only (choices:
+                                      "project", "user", "all", default: "all")
         --no-sync                     Skip auto-sync after install
         -h, --help                    display help for command
 
