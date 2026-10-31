@@ -304,6 +304,41 @@ describe('oat project journal check', () => {
     expect(result.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
   });
 
+  it('refuses when the committed journal frontmatter is unparseable', async () => {
+    const fixture = await project(
+      GOAL_JOURNAL.replace('oat_status: complete', '['),
+      {
+        plan: GOAL_PLAN,
+        state: GOAL_STATE,
+      },
+    );
+    initializeGit(fixture);
+    await writeFile(
+      join(fixture.projectPath, 'implementation.md'),
+      GOAL_JOURNAL.replace(
+        'Verified with the reader tests.',
+        'Verified with rewritten reader tests.',
+      ),
+      'utf8',
+    );
+
+    const result = await run(fixture, ['--at', 'review', '--scope', 'p01']);
+    expect(result.exitCode).toBe(1);
+    expect(result.capture.jsonPayloads[0]).toMatchObject({
+      status: 'refused',
+      reasons: [
+        {
+          code: 'journal-frontmatter-malformed',
+          path: 'implementation.md',
+          owner: 'oat-project-implement',
+          message: expect.stringContaining(
+            'Committed implementation.md frontmatter could not be parsed',
+          ),
+        },
+      ],
+    });
+  });
+
   it('keeps append-only goal changes and extraction markers out of rewrite reasons', async () => {
     const fixture = await project(GOAL_JOURNAL, {
       plan: GOAL_PLAN,

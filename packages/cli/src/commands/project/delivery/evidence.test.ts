@@ -443,6 +443,24 @@ Appended observation.
       expect(journalRewrites(before, after)).toEqual([]);
     });
 
+    it('signals unparseable frontmatter instead of reporting no rewrites', () => {
+      const malformed = `---
+[
+---
+
+Recorded.
+`;
+      const valid = `---
+---
+
+Recorded rewritten.
+`;
+
+      expect(journalRewrites(malformed, valid)).toEqual([
+        { kind: 'frontmatter-unparseable', line: '', side: 'before' },
+      ]);
+    });
+
     it('rejects an Outcome change inside allowed plan.md that a paths-only evaluator accepts', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);

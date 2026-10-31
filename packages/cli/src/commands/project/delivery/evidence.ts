@@ -901,10 +901,16 @@ const PLACEHOLDER_FIELD =
   /^(?:-[ \t]+)?\*\*[^*\n]+:\*\*\s*(?:-|—|pending|tbd|null)?\s*$/i;
 const EXTRACTION_MARKER = /^\*\*(?:Status:\*\*\s+extracted|Extracted to:\*\*)/;
 
-export interface JournalRewrite {
-  kind: 'recorded-line-rewritten' | 'extraction-marker';
-  line: string;
-}
+export type JournalRewrite =
+  | {
+      kind: 'recorded-line-rewritten' | 'extraction-marker';
+      line: string;
+    }
+  | {
+      kind: 'frontmatter-unparseable';
+      line: '';
+      side: 'before' | 'after' | 'both';
+    };
 
 function listJournalRewrites(
   previousBody: string,
@@ -957,9 +963,21 @@ export function journalRewrites(
 ): JournalRewrite[] {
   const previous = splitFrontmatter(before);
   const next = splitFrontmatter(after);
-  return previous === null || next === null
-    ? []
-    : listJournalRewrites(previous.body, next.body);
+  if (previous === null || next === null) {
+    return [
+      {
+        kind: 'frontmatter-unparseable',
+        line: '',
+        side:
+          previous === null && next === null
+            ? 'both'
+            : previous === null
+              ? 'before'
+              : 'after',
+      },
+    ];
+  }
+  return listJournalRewrites(previous.body, next.body);
 }
 
 /**

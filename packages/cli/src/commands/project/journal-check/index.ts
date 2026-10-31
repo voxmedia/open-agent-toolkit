@@ -294,15 +294,35 @@ async function runJournalCheck(
         const reasons: JournalCheckReason[] = journalRewrites(
           committed,
           files.journalContent,
-        )
-          .filter((rewrite) => rewrite.kind === 'recorded-line-rewritten')
-          .map((rewrite) => ({
-            code: 'journal-line-rewritten',
-            path: 'implementation.md',
-            line: null,
-            owner: 'oat-project-implement',
-            message: `Committed journal line "${rewrite.line}" was removed or rewritten.`,
-          }));
+        ).flatMap((rewrite): JournalCheckReason[] => {
+          if (rewrite.kind === 'recorded-line-rewritten') {
+            return [
+              {
+                code: 'journal-line-rewritten',
+                path: 'implementation.md',
+                line: null,
+                owner: 'oat-project-implement',
+                message: `Committed journal line "${rewrite.line}" was removed or rewritten.`,
+              },
+            ];
+          }
+          if (
+            rewrite.kind === 'frontmatter-unparseable' &&
+            rewrite.side !== 'after'
+          ) {
+            return [
+              {
+                code: 'journal-frontmatter-malformed',
+                path: 'implementation.md',
+                line: null,
+                owner: 'oat-project-implement',
+                message:
+                  'Committed implementation.md frontmatter could not be parsed.',
+              },
+            ];
+          }
+          return [];
+        });
         if (reasons.length > 0) {
           result = {
             ...result,
