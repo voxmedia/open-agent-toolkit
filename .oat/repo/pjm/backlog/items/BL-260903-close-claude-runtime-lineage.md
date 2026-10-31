@@ -11,9 +11,10 @@ labels:
   - provenance
   - claude
   - residue
+  - deferred
 assignee: null
 created: 2026-09-03T00:55:45.819Z
-updated: 2026-10-31T21:08:00Z
+updated: 2026-10-31T22:35:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -29,6 +30,8 @@ The Claude stream-json shape is unverified. The parser retains a secondary path 
 Also unresolved from p07 review rounds 3 and 4, all wording or coverage rather than behavior: FR9 names `missing` but omits `not-comparable`; corpus statistics in code comments carry no capture-environment provenance and go stale as the corpora grow; and one `record.ts` docstring still says "sanitized" where the projection is now the guarantee.
 
 Reopen only if this becomes a recurring problem in practice. Claude's on-disk transcript already yields model, effort, service tier and role, which is the substance of runtime observation. Depth matters mainly for Codex, where dispatch depth caps are enforced and where it already works.
+
+**Deferred (2026-10-31, operator):** Accepted residue; reopen only on recurrence.
 
 ## Acceptance Criteria
 

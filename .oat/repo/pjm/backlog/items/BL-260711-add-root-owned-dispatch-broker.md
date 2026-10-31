@@ -12,9 +12,10 @@ labels:
   - dispatch
   - provenance
   - sandboxing
+  - deferred
 assignee: null
 created: '2026-07-11T00:25:15Z'
-updated: '2026-10-31T21:08:00Z'
+updated: '2026-10-31T22:35:00Z'
 associated_issues: []
 ---
 
@@ -112,6 +113,8 @@ model (`.agents/agents/oat-phase-implementer.md` implements one plan phase
 end-to-end). Remaining: the coordinator-to-root broker itself, which the
 standard topology no longer needs; the 2026-10-31 backlog review lists this
 item as a close candidate pending the operator's decision.
+
+**Deferred (2026-10-31, operator):** Premise weakened by phase-direct implementers; the standard implementer topology no longer needs a coordinator-to-root broker.
 
 ## Acceptance Criteria
 

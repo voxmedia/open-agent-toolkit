@@ -10,9 +10,10 @@ labels:
   - orchestration
   - gates
   - efficiency
+  - deferred
 assignee: null
 created: 2026-07-29T14:46:45.249Z
-updated: 2026-09-02T23:49:54Z
+updated: 2026-10-31T22:35:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/206
@@ -22,6 +23,8 @@ external_plans: []
 ## Description
 
 Redesign broad OAT reviews around an enforced artifact-only intake, metadata-only change map, explicit ReviewPlan, selective evidence lanes, economically justified delegation, bounded deadlines, and narrower primary replay obligations. Preserve independent reviewer judgment while preventing giant-diff-first intake, single oversized reconnaissance workers, duplicated verification, and timeout-without-artifact failure modes observed during the 2026-07-26 multi-provider-support final reviews. Treat PR #185 diagnostics and PR #186 guarded re-review narrowing as prerequisites rather than reimplementing them; revalidate transactional partial artifacts, timeout scaling, manual freshness reuse, and ownership deduplication during discovery.
+
+**Deferred (2026-10-31, operator):** Parked with the review-plan-workflow project, which is paused for reconsideration while PR #190 stays open.
 
 ## Acceptance Criteria
 
