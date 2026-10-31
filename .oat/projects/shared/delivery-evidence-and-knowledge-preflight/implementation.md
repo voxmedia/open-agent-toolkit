@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p04-t05
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -21,10 +21,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
 | Phase 3 (p03) | complete    | 7     | 7/7       |
-| Phase 4 (p04) | in_progress | 6     | 4/6       |
+| Phase 4 (p04) | in_progress | 6     | 6/6       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 25/29 tasks completed
+**Total:** 27/29 tasks completed
 
 ---
 
@@ -678,13 +678,45 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p04-t05: (review) Give the write probe its own heading and gate Step 2 on its result
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5e98037de70ca52a5af3484c0f3efc9f213fa90d
+
+**Outcome (required when completed):**
+
+- The write probe has its own `Write-Permission Probe (all providers)` heading after the provider routes; Step 2 runs only with the accepted, file-verified probe result; a pre-existing `.preflight` stops the run (or is removed only when it is a real directory holding only `test.txt`) before a fresh one is created.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Verification:** contract suites 1,089 passed (root rerun matched). Can-fail: probe moved inside the Claude route, Step 2 gate removed, and `.preflight` guard removed each failed the pin; prior seeds R1-R10 still fail.
+
+**Notes / Decisions:**
+
+- Review-fix for p04 round-2 M1, L1 and L2 (request `dedkp-p04-implementation-3`).
 
 ### Task p04-t06: (review) State the Codex direct-write rule when writable roots cannot be narrowed
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7901f4f56c282cf3c1e5f5d0c90d8eee5dcdb8c2
+
+**Outcome (required when completed):**
+
+- When Codex cannot narrow writable roots per spawn, the probe and direct-write lanes run under the projection's `workspace-write` sandbox constrained to declared outputs, and a pre-Step-10 `git status --porcelain` check stops on any change outside `.oat/repo/knowledge/`.
+
+**Files changed:**
+
+- `.agents/skills/oat-repo-knowledge-index/SKILL.md`
+- `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+- `apps/oat-docs/docs/skills/repo-improve.md`
+
+**Verification:** contract suites, `refresh-owned.test.mjs`, skill oxlint, `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format` and docs markdownlint passed. Can-fail: removing the Codex direct-write rule sentence failed the pin.
+
+**Notes / Decisions:**
+
+- Review-fix for p04 round-2 M2.
 
 ### Review Received: p04 (round 2)
 
@@ -699,7 +731,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L1 (Low): a pre-existing `.preflight` is not guarded → fix task p04-t05.
 - L2 (Low): docs attribute the symlink check to the probe → fix task p04-t05.
 
-**Outcome:** fixes queued: p04-t05, p04-t06 (reviewer request `dedkp-p04-review-2`; 0 Critical / 0 High; review cycle 2 of 3).
+**Outcome:** fixes completed: p04-t05, p04-t06 (request `dedkp-p04-implementation-3`); awaiting re-review (cycle 3 of 3). Original queue: p04-t05, p04-t06 (reviewer request `dedkp-p04-review-2`; 0 Critical / 0 High; review cycle 2 of 3).
 
 ---
 
@@ -763,6 +795,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p04-review-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p04-implementation-2 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-review-2 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-implementation-3 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
