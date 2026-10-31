@@ -27,6 +27,7 @@ import {
 import {
   classifyPath,
   deliveryEvidenceScope,
+  evaluateDeliveryExitCarrier,
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
@@ -179,6 +180,31 @@ function delivery(
     exit_gate: null,
     endpoint_attainment: null,
   };
+}
+
+function deliveryWithHeads(
+  kind: GoalDelivery['kind'],
+  heads: readonly (string | null)[],
+  base: string,
+): GoalDelivery {
+  const result = delivery({});
+  result.kind = kind;
+  result.members = heads.map((head, index) => ({
+    url: `https://github.com/owner/name/pull/${index + 1}`,
+    base,
+    reviewed_head: head,
+    observed_head: head,
+    observed_base: base,
+    status: 'open',
+  }));
+  result.integrated_review!.bound_revisions = result.members.map(
+    (member, index) => ({
+      member: index,
+      base: member.base,
+      head: member.reviewed_head,
+    }),
+  );
+  return result;
 }
 
 describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', () => {
@@ -1365,6 +1391,111 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
       });
       expect(stale).toMatchObject({ outcome: 'allowed', freshness: 'stale' });
       expect(stale.reason).toMatch(/^disallowed-path/);
+    });
+  });
+
+  describe('stack-aware delivery exit carriers', () => {
+    const configuredCarrier = (reviewedHead: string) =>
+      carrier({
+        resolution: 'configured',
+        disposition: 'passed',
+        reviewed_head: reviewedHead,
+      });
+    const expected = { kind: 'code' as const, scope: ['p01', 'p02'] };
+
+    it('judges a linear stack against its tip after validating member order', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const middle = repo.commitAll('feat: middle layer');
+      await repo.writeRepo('src/app.ts', 'export const value = 4;\n');
+      const tip = repo.commitAll('feat: tip layer');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads(
+            'stack',
+            [lower, middle, tip],
+            repo.baseSha,
+          ),
+        }),
+      ).resolves.toMatchObject({ freshness: 'fresh', reason: null });
+    });
+
+    it('rejects a stack whose lower member is not an ancestor of its tip', async () => {
+      repo = await createGoalRepo();
+      repo.git(['checkout', '-q', '-b', 'lower']);
+      await repo.writeRepo('src/lower.ts', 'export const lower = 1;\n');
+      const lower = repo.commitAll('feat: unrelated lower layer');
+      repo.git(['checkout', '-q', 'main']);
+      await repo.writeRepo('src/tip.ts', 'export const tip = 1;\n');
+      const tip = repo.commitAll('feat: tip layer');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [lower, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^stack-order/),
+      });
+    });
+
+    it('rejects an unobserved lower stack member', async () => {
+      repo = await createGoalRepo();
+      const tip = repo.git(['rev-parse', 'HEAD']);
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('stack', [null, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^member-unobserved/),
+      });
+    });
+
+    it('keeps multi-member pr delivery evaluation on every member head', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const lower = repo.commitAll('feat: lower member');
+      await repo.writeRepo('src/app.ts', 'export const value = 3;\n');
+      const tip = repo.commitAll('feat: tip member');
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: deliveryWithHeads('pr', [lower, tip], repo.baseSha),
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^not-ancestor/),
+      });
+    });
+
+    it('rejects a stack with no members without evaluating a carrier head', async () => {
+      repo = await createGoalRepo();
+      const tip = repo.git(['rev-parse', 'HEAD']);
+      const empty = deliveryWithHeads('stack', [], repo.baseSha);
+
+      await expect(
+        evaluateDeliveryExitCarrier(configuredCarrier(tip), expected, {
+          git,
+          scope: scopeFor(repo),
+          delivery: empty,
+        }),
+      ).resolves.toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(/^member-missing/),
+      });
     });
   });
 });

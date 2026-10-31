@@ -284,6 +284,15 @@ export async function bookkeepingChain(
 export interface RegistryOptions {
   reviewed: string;
   base: string;
+  kind?: 'pr' | 'stack';
+  members?: {
+    url: string;
+    base?: string | null;
+    reviewedHead?: string | null;
+    observedHead?: string | null;
+    observedBase?: string | null;
+    status?: string;
+  }[];
   observedHead?: string | null;
   observedBase?: string | null;
   memberStatus?: string;
@@ -300,12 +309,38 @@ export interface RegistryOptions {
 export function registryYaml(options: RegistryOptions): string {
   const quote = (value: string | null | undefined) =>
     value === null || value === undefined ? 'null' : `'${value}'`;
+  const members = options.members ?? [
+    {
+      url: 'https://github.com/owner/name/pull/7',
+      base: options.base,
+      reviewedHead: options.reviewed,
+      observedHead: options.observedHead,
+      observedBase: options.observedBase,
+      status: options.memberStatus ?? 'open',
+    },
+  ];
+  const memberYaml = members
+    .map(
+      (member) => `      - url: ${member.url}
+        base: ${quote(member.base === undefined ? options.base : member.base)}
+        reviewed_head: ${quote(member.reviewedHead === undefined ? options.reviewed : member.reviewedHead)}
+        observed_head: ${quote(member.observedHead)}
+        observed_base: ${quote(member.observedBase)}
+        status: ${member.status ?? 'open'}`,
+    )
+    .join('\n');
+  const boundRevisions = members
+    .map(
+      (member, index) =>
+        `{ member: ${index}, base: ${quote(member.base === undefined ? options.base : member.base)}, head: ${quote(member.reviewedHead === undefined ? options.reviewed : member.reviewedHead)} }`,
+    )
+    .join(', ');
   return `oat_deliveries:
   - delivery_id: d01
     milestone: m01
     scope: [p01, p02]
     endpoint: ${options.endpoint ?? 'merged'}
-    kind: pr
+    kind: ${options.kind ?? 'pr'}
     status: ${options.status ?? 'open'}
     superseded_by: null
     corrects_delivery_id: null
@@ -315,16 +350,11 @@ export function registryYaml(options: RegistryOptions): string {
       head_branch: feat/goal
       head_sha_at_registration: ${quote(options.reviewed)}
     members:
-      - url: https://github.com/owner/name/pull/7
-        base: ${quote(options.base)}
-        reviewed_head: ${quote(options.reviewed)}
-        observed_head: ${quote(options.observedHead)}
-        observed_base: ${quote(options.observedBase)}
-        status: ${options.memberStatus ?? 'open'}
+${memberYaml}
     integrated_review:
       artifact: ${ARCHIVED_REVIEW_ARTIFACT}
       scope: [p01, p02]
-      bound_revisions: [{ member: 0, base: ${quote(options.base)}, head: ${quote(options.reviewed)} }]
+      bound_revisions: [${boundRevisions}]
       disposition: ${options.disposition ?? 'passed'}
 ${options.deliveryExitGate === undefined ? '' : `    exit_gate:\n${options.deliveryExitGate}\n`}${options.attainment ?? ''}oat_milestone_gates:
   m01:

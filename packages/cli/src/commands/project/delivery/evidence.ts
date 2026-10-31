@@ -1096,6 +1096,82 @@ export async function evaluateGateCarrier(
   return { outcome, freshness: 'fresh', reason: null };
 }
 
+/**
+ * Evaluate a delivery's exit carrier without letting callers bypass stack
+ * topology. A stack is recorded base to tip: every lower observed head must
+ * be the tip or its ancestor, then only the tip is published to the carrier.
+ * Other delivery kinds retain every-member carrier evaluation.
+ */
+export async function evaluateDeliveryExitCarrier(
+  carrier: MilestoneGateCarrier | null,
+  expected: CarrierExpectation,
+  successor: {
+    git: GitRunner;
+    scope: EvidenceScope;
+    delivery: GoalDelivery;
+  },
+): Promise<CarrierEvaluation> {
+  const { delivery, git, scope } = successor;
+  const publishedHeads = delivery.members.map((member) => member.observed_head);
+  if (delivery.kind !== 'stack') {
+    return evaluateGateCarrier(carrier, expected, {
+      git,
+      scope,
+      publishedHeads,
+    });
+  }
+
+  const stale = (reason: string): CarrierEvaluation => ({
+    outcome:
+      carrier === null
+        ? 'missing'
+        : carrier.status === 'allowed'
+          ? 'allowed'
+          : 'blocked',
+    freshness: 'stale',
+    reason,
+  });
+  if (publishedHeads.length === 0) {
+    return stale('member-missing: the stack has no members');
+  }
+  const unobserved = publishedHeads.findIndex((head) => head === null);
+  if (unobserved >= 0) {
+    return stale(
+      `member-unobserved: stack member ${unobserved} has no observed head`,
+    );
+  }
+
+  const tip = publishedHeads.at(-1)!;
+  try {
+    for (const [index, lower] of publishedHeads.slice(0, -1).entries()) {
+      const ancestry = await git.run(
+        ['merge-base', '--is-ancestor', lower!, tip!],
+        { cwd: scope.repoRoot, allowFailure: true },
+      );
+      if (ancestry.code === 1) {
+        return stale(
+          `stack-order: member ${index} head ${lower} is not an ancestor of tip ${tip}`,
+        );
+      }
+      if (ancestry.code !== 0) {
+        return stale(
+          `stack-order: ancestry inspection failed for member ${index}: ${ancestry.stderr || `git exited ${ancestry.code}`}`,
+        );
+      }
+    }
+  } catch (error) {
+    return stale(
+      `stack-order: ancestry inspection failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+
+  return evaluateGateCarrier(carrier, expected, {
+    git,
+    scope,
+    publishedHeads: [tip],
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Integrated review evidence
 // ---------------------------------------------------------------------------
