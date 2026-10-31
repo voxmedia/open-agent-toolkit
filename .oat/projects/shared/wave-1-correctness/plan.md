@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-10-31
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p01', 'p02', 'p03', 'p04']]
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: wave-1-correctness
@@ -813,16 +813,16 @@ When every gate passes, no task is appended and nothing is committed.
 
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                           | Reviewed Head                            | Invocation | Gate Target |
-| ----- | -------- | --------------- | ---------- | -------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p02   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p03   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p04   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| p05   | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| final | code     | pending         | -          | -                                                  | -                                        | -          | -           |
-| plan  | artifact | fixes_completed | 2026-10-31 | -                                                  | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -           |
-| plan  | artifact | received        | 2026-10-31 | reviews/artifact-plan-review-2026-10-31T230813Z.md | -                                        | -          | -           |
+| Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
+| ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
+| p01   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
+| plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
 
 Plan artifact review disposition (Auto Artifact-Review Loop, structured
 mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
