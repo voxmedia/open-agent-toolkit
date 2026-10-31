@@ -466,6 +466,123 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p02-t02" --message "docs(
 
 ---
 
+### Task p02-t03: (review) Revert the milestone-subject stack carrier deviation
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/check.ts`
+- Modify: `packages/cli/src/commands/project/delivery/check.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: H1 — for `--subject mNN` with a registered `kind: stack` delivery, p02-t01 judges the exit carrier against stored member heads while the review is judged against local `HEAD`; a substantive commit plus a passing re-review without a new gate reads as deliverable, which phase 1 refused.
+Location: see `reviews/archived/p02-review-2026-10-31T010236Z.md`.
+
+**Step 2: Implement fix**
+
+Revert the milestone branch to `evaluateGateCarrier(workingCarrier, expected, { git, scope, publishedHeads: [publishedHead] })` for every delivery kind (scope alignment and gate admission stay). Add a command-level regression: milestone subject with a registered stack, a substantive commit after the carrier, and a passing re-review stays `undeliverable`. Re-run the stack built-CLI control with `--subject d01` (expected exit 1, `stack-order`). Can-fail: reintroduce the stack wrapper in the milestone branch and confirm the regression test fails.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p02-t03" --message "fix(p02-t03): revert the milestone-subject stack carrier deviation" -- <exact files changed>
+```
+
+---
+
+### Task p02-t04: (review) Cover the unregistered milestone gate path and own-evidence effect
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/__tests__/goal-repo.ts`
+- Modify: `packages/cli/src/commands/project/delivery/check.test.ts`
+- Modify: `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: M1 — every gate fixture registers `d01`, so the production pre-registration path (`mNN`-row branch) has no regression test; removing its gate admission leaves all tests green. L2 — own-evidence isolation is pinned only by a static `not.toContain`.
+Location: see `reviews/archived/p02-review-2026-10-31T010236Z.md`.
+
+**Step 2: Implement fix**
+
+Add an unregistered option to `gateArtifactScenario` (milestone gates without `oat_deliveries`) and `--subject m01` cases: matching gate row → `ok`/fresh; manual and mismatched → `undeliverable`/`disallowed-path`. Add a behavioral control: a commit swapping `d01`'s `integrated_review.artifact` to the gate artifact is `substantive-change` on `state.md` through `deliveryEvidenceScope` with the carrier supplied. Can-fail: remove the gate spread in the unregistered milestone branch (matching case red); leak gate artifacts into `ownEvidenceArtifacts` (swap control red). Add the unregistered matching built-CLI control.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p02-t04" --message "fix(p02-t04): cover the unregistered milestone gate path and own-evidence effect" -- <exact files changed>
+```
+
+---
+
+### Task p02-t05: (review) Admit gate artifacts only under reviews/
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/delivery/evidence.ts`
+- Modify: `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: L1 — `gateEvidenceArtifacts` admits any non-placeholder artifact of a code/gate row, so a forged gate row naming `design.md` makes a `design.md` change read as bookkeeping.
+Location: see `reviews/archived/p02-review-2026-10-31T010236Z.md`.
+
+**Step 2: Implement fix**
+
+Admit a gate row's artifact only when its project-relative path is under `reviews/` (or `reviews/archived/`), matching `artifactVariants` and the `EvidenceScope` contract. Add a negative control: a gate row naming `design.md` stays `disallowed-path`. (Treating an `Invocation` cell change as an identity change is deferred; see Deferred Findings.)
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/delivery src/commands/project/closeout-check && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p02-t05" --message "fix(p02-t05): admit gate artifacts only under reviews/" -- <exact files changed>
+```
+
+---
+
+### Task p02-t06: (review) Correct gate-admission wording in the contract and CLI reference
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-brief/references/brief-contract.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Understand the issue**
+
+Review finding: L3 — §12.8 says the gate artifact is admitted "for that carrier only", but it joins the whole evidence scope built with that carrier (review and exit evaluations); the `delivery check` CLI reference allowlist omits the gate-row admission.
+Location: see `reviews/archived/p02-review-2026-10-31T010236Z.md`.
+
+**Step 2: Implement fix**
+
+Reword §12.8 to "admitted in evidence scopes built for that carrier (its review and exit evaluations)", note the `reviews/` path restriction, and add one clause to the `delivery check` entry naming the gate-row admission and its head binding.
+
+**Step 3: Verify**
+
+Run: `HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation && pnpm --filter oat-docs exec markdownlint-cli2 docs/reference/cli-reference.md`
+Expected: pass; record any can-fail proof the fix adds.
+
+**Step 4: Commit**
+
+```bash
+oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receive:p02-t06" --message "fix(p02-t06): correct gate-admission wording in the contract and CLI reference" -- <exact files changed>
+```
+
+---
+
 ## Phase 3: Journal rewrite detection (#385)
 
 ### Task p03-t01: Export a journal-rewrite lister from delivery evidence
@@ -727,7 +844,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01   | code     | fixes_completed | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
 | p01   | code     | passed          | 2026-10-31 | reviews/archived/p01-review-2026-10-31T004233Z.md           | b9c8c436e274083bc1bd994d99cce3cb26320d75 | auto       | -                 |
-| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p02   | code     | fixes_added     | 2026-10-31 | reviews/archived/p02-review-2026-10-31T010236Z.md           | 6abea4b392bf44a9535cc74fda4769366d86ee5b | auto       | -                 |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
@@ -752,12 +869,12 @@ cell; never truncate a widened row back to five columns.
 **Summary:**
 
 - Phase 1: 7 tasks - Stack-aware delivery exit carriers (#383), including 4 review-fix tasks
-- Phase 2: 2 tasks - Gate-originated artifact admission (#384)
+- Phase 2: 6 tasks - Gate-originated artifact admission (#384), including 4 review-fix tasks
 - Phase 3: 2 tasks - Journal rewrite detection (#385)
 - Phase 4: 1 task - Knowledge-index dispatch preflight (#355)
 - Phase 5: 2 tasks - Release bookkeeping and gates
 
-**Total: 14 tasks**
+**Total: 18 tasks**
 
 Ready for code review and merge.
 

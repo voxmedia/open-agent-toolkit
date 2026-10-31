@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | in_progress | 2     | 2/2       |
+| Phase 2 (p02) | in_progress | 6     | 2/6       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 9/14 tasks completed
+**Total:** 9/18 tasks completed
 
 ---
 
@@ -251,6 +251,41 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Built-CLI controls (p02, reproducible):** build with `pnpm --filter @open-agent-toolkit/cli build`; from inside each scratch repository run `node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject m01`. Fixtures: `createGoalRepo` + `gateArtifactScenario()` (commits: implementation, carrier, final gate review) → exit 0, `ok`, fresh; same with `{ invocation: 'manual' }` → exit 1, `undeliverable`, `disallowed-path`; same with `{ reviewedHead: 'mismatched' }` → exit 1, `undeliverable`, `disallowed-path`; `createGoalRepo` with an unrelated lower-layer commit, a main tip commit and `registryYaml({ kind: 'stack' })` → exit 1, `undeliverable`, `stack-order`. Observed equals expected for all four.
 
+### Task p02-t03: (review) Revert the milestone-subject stack carrier deviation
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t04: (review) Cover the unregistered milestone gate path and own-evidence effect
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t05: (review) Admit gate artifacts only under reviews/
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t06: (review) Correct gate-admission wording in the contract and CLI reference
+
+**Status:** pending
+**Commit:** -
+
+### Review Received: p02
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p02-review-2026-10-31T010236Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 1 · Low 3
+
+- H1 (High): the milestone-subject stack deviation judges the exit carrier on stored member heads but the review on local `HEAD`, so an ungated substantive commit reads as deliverable → fix task p02-t03 (revert; the stack control runs with `--subject d01`).
+- M1 (Medium): the pre-registration `mNN` gate path has no regression evidence → fix task p02-t04.
+- L1 (Low): gate admission accepts a non-review artifact path from a forged row → fix task p02-t05 (`reviews/` restriction); the suggested `Invocation`-change identity rule is deferred (see Deferred Findings).
+- L2 (Low): own-evidence isolation is pinned only statically → fix task p02-t04 (behavioral swap control).
+- L3 (Low): §12.8 "for that carrier only" overstates the narrowing; CLI reference allowlist omits the gate row → fix task p02-t06.
+
+**Outcome:** fixes queued: p02-t03, p02-t04, p02-t05, p02-t06 (blocking High; reviewer request `dedkp-p02-review-1`).
+
 ---
 
 ## Phase 3: Journal rewrite detection (#385)
@@ -343,15 +378,17 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
+- Low · p02 review L1 (second part): treating a change to an existing non-placeholder `Invocation` cell as a Reviews-row identity change in `judgeReviewRows`. Deferred: it widens the ledger identity rule beyond #384's scope and the reviewer left it for operator decision; the `reviews/` path restriction (p02-t05) closes the non-review-path exposure. Approved by: autonomous run (QS-11/IMPLEMENT scope rule; no scope expansion). Follow-up trigger: operator decision or a later evidence-hardening item.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                | Source of Truth | Follow-up                   |
-| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------- | --------------------------- |
-| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                     | -               | -                           |
-| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                      | Implementation  | None                        |
-| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics | Implementation  | Per-phase review to confirm |
+| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                | Source of Truth | Follow-up                        |
+| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------- | -------------------------------- |
+| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                     | -               | -                                |
+| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                      | Implementation  | None                             |
+| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics | Implementation  | Retracted by p02-t03 (review H1) |
 
 ## Final Summary (for PR/docs)
 
