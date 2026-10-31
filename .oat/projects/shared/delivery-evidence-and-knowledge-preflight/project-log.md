@@ -35,6 +35,18 @@ Phase p01 (#383 stack-aware exit carriers) complete: 7 tasks (3 planned, 4 revie
 
 Phase p02 (#384 gate artifact admission) complete: 7 tasks (2 planned, 5 review-fix); review round 1 0C/1H/1M/3L (H1 retracted a milestone stack deviation), round 2 passed 0C/0H/0M/1L; recovery attempts 1/10 settled; delivery-evidence-p02-outcome
 
+### 2026-10-31 · project · friction · Fix mode rejects Medium/Low review-fix tasks
+
+**Category:** gotcha
+**Source:** autonomous-20261030de-02
+**Origin:** oat-project-autonomous
+**Recorded:** 2026-10-31T01:45:51Z
+
+Observation: review-receive in auto-disposition mode converts Medium and Low findings into plan fix tasks, and the implement fix loop resumes the phase implementer in mode: fix; the p03 implementer (gpt-5.6-sol-medium) returned BLOCKED because its fix-mode contract accepts only Critical/High findings, while the p01 and p02 implementers (gpt-5.6-sol-high) accepted the same shape.
+Impact: one wasted dispatch, and Medium/Low review-fix tasks must run as a new implementation-mode request for the queued tasks.
+Recommendation: have implement route Medium/Low review-fix plan tasks through mode: implement (or let fix mode accept queued review-fix tasks explicitly), and align the phase-implementer contract with review-receive auto-disposition.
+Uncertainty: whether the p01/p02 acceptance was a contract violation or the p03 rejection was over-strict.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
