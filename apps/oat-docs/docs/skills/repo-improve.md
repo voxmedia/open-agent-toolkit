@@ -241,19 +241,21 @@ answered.
 
 **What it does without asking:** It asks refresh-or-skip when knowledge files
 already exist and may ask once for authorization covering the write probe and
-four mapper lanes. After a mapper route is accepted, a launched probe checks
-the knowledge path for symlinks, then checks whether that route can write its
-one test file. `WRITE_OK` is accepted only when the file exists with the
-expected bytes; `WRITE_BLOCKED` requires its absence. The probe directory is
-removed on every exit path. The read-only fallback is available only after a
-verified blocked write and when the route can launch independently usable
-read-only lanes. A worker that never launches is a route failure, not read-only
-evidence. The skill then prepares owned outputs, creates the thin index,
-launches four mapper lanes through the provider-neutral dispatcher, and writes
-the knowledge files. Read-only returned text travels through scratch files
-outside the repository. It runs `oat internal commit-paths` on your current
-branch with the exact generated output/deletion paths and enabled hooks.
-Unrelated staged and unstaged work remains intact.
+four mapper lanes. After a mapper route is accepted, the skill checks the
+knowledge path and `.preflight` for symlinks or stale entries, then launches
+one probe to test whether that route can write its test file. `WRITE_OK` is
+accepted only when the file exists with the expected bytes; `WRITE_BLOCKED`
+requires its absence. The probe directory is removed on every exit path, and
+owned-output preparation requires the accepted, file-verified result. The
+read-only fallback is available only after a verified blocked write and when
+the route can launch independently usable read-only lanes. A worker that never
+launches is a route failure, not read-only evidence. The skill then prepares
+owned outputs, creates the thin index, launches four mapper lanes through the
+provider-neutral dispatcher, and writes the knowledge files. Read-only
+returned text travels through scratch files outside the repository. It runs
+`oat internal commit-paths` on your current branch with the exact generated
+output/deletion paths and enabled hooks. Unrelated staged and unstaged work
+remains intact.
 Afterwards it records the run in `.oat/tracking.json` and regenerates the
 `.oat/state.md` dashboard with `oat state refresh`; those two files are not
 part of the commit. It does not push.

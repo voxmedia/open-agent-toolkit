@@ -2948,6 +2948,9 @@ describe('skills bundled docs contract', () => {
     const claude = content.indexOf('#### Claude route');
     const codex = content.indexOf('#### Codex route');
     const cursor = content.indexOf('#### Cursor route');
+    const probeHeading = content.indexOf(
+      '#### Write-Permission Probe (all providers)',
+    );
     const afterRoutes = content.indexOf('### Step 2:', cursor);
     const step1 = content.slice(
       content.indexOf('### Step 1: Check Existing Knowledge'),
@@ -2968,6 +2971,10 @@ describe('skills bundled docs contract', () => {
       content.indexOf('### Step 5b:'),
       content.indexOf('### Step 6:'),
     );
+    const step2 = content.slice(
+      prepare,
+      content.indexOf('### Step 3:', prepare),
+    );
 
     expect(preflight).toBeGreaterThan(-1);
     expect(prepare).toBeGreaterThan(preflight);
@@ -2986,6 +2993,8 @@ describe('skills bundled docs contract', () => {
     expect(claude).toBeGreaterThan(preflight);
     expect(codex).toBeGreaterThan(claude);
     expect(cursor).toBeGreaterThan(codex);
+    expect(probeHeading).toBeGreaterThan(cursor);
+    expect(prepare).toBeGreaterThan(probeHeading);
     expect(afterRoutes).toBeGreaterThan(cursor);
     expect(claudeRoute).toMatch(/model:\s*['"]haiku['"]/);
     expect(claudeRoute).toContain('run_in_background');
@@ -3006,6 +3015,12 @@ describe('skills bundled docs contract', () => {
     );
     expect(preflightSection).toContain(
       '`WRITE_BLOCKED` to coincide with that file being absent',
+    );
+    expect(preflightSection).toMatch(
+      /If\s+`\.preflight` already exists as any file type, stop and name it/,
+    );
+    expect(step2).toContain(
+      'Run this step only with the accepted, file-verified probe result and\n`WRITE_MODE` retained by the dispatch-route preflight. Otherwise stop before\ndeleting anything.',
     );
     expect(directWrite.match(/class: generator/g)).toHaveLength(4);
     expect(directWrite).not.toContain('class: recon');

@@ -143,10 +143,15 @@ exact agent type, model selector when exposed, service tier, authority, and
 accepted handle. A CLI or SDK catalog does not establish native role
 availability, and no alternate route may be improvised after acceptance.
 
+#### Write-Permission Probe (all providers)
+
 With the route resolved, run a non-mutating `lstat` check of `.oat`,
-`.oat/repo`, and `.oat/repo/knowledge` before creating anything. Stop if any
-existing component is a symlink or a non-directory. Only after that check,
-create `.oat/repo/knowledge/.preflight`, then launch the bounded
+`.oat/repo`, `.oat/repo/knowledge`, and
+`.oat/repo/knowledge/.preflight` before creating anything. Stop and name the
+path if any existing component is a symlink or a non-directory. If
+`.preflight` already exists as any file type, stop and name it; do not let
+stale bytes satisfy the probe. Only after proving `.preflight` is absent,
+create it fresh, then launch the bounded
 write-permission
 probe with class `generator` before Step 2. Its only write authority is
 `.oat/repo/knowledge/.preflight/test.txt`, with content `test`; it returns
@@ -165,6 +170,10 @@ leaves existing knowledge unchanged. Retain the resolved route, authorization,
 mode, and accepted probe result for the four mapper requests.
 
 ### Step 2: Prepare Only Owned Generated Outputs
+
+Run this step only with the accepted, file-verified probe result and
+`WRITE_MODE` retained by the dispatch-route preflight. Otherwise stop before
+deleting anything.
 
 Set `SKILL_DIR` to the absolute directory containing this loaded `SKILL.md`.
 Resolve the repository root, then run the deterministic ownership preflight
