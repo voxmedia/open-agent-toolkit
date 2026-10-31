@@ -1006,6 +1006,20 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
 
+### Review Received: final (implementation exit gate)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/final-review-2026-10-31T152346Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 0
+
+- Gate run `2fc8f86e-4a13-4a50-bfdf-34cf37848dff`, target `codex-6-sol-xhigh` (gpt-6.1-sol, xhigh; operator-directed local override), reviewed range `61e06254ab3b23a636c39d4cdfae8f0ff784a81a..d6ce3a606ab70273697428d6c808188bad06494f`: no blocking findings; delivery evaluators keep rejecting invalid evidence while admitting valid stack-tip and gate-artifact successors; journal checks reuse the delivery journal rule; knowledge-index guidance requires a resolved route and verified probe before cleanup.
+- Passing-gate judgment sweep: nothing to disposition.
+
+**Outcome:** passed.
+
+- **Gate:** oat-project-implement exit gate · **Scope:** final · **Outcome:** allowed/passed (run `2fc8f86e-4a13-4a50-bfdf-34cf37848dff`, `codex-6-sol-xhigh`) · attempt 0 of 2 consumed · gate IMPLEMENT-18 auto-resolved.
+
 - **Gate:** oat-project-implement exit gate · **Scope:** final · **Outcome:** blocked (runtime unavailable: run `e77017c2-3b44-4995-93c6-5609706696dd` selected `claude-opus-5-5-high`, which hit its Claude weekly usage limit; envelope `review_failed`/`unexpected_post_selection_failure`) · attempt 0 of 2 consumed (infrastructure failure consumes none); gate IMPLEMENT-18 stop regardless of `on_failure`; operator action required. Operator (2026-10-31) retired this generation and switched the gate to the Sol target via a local override (`--avoid same-runtime`; Claude targets disabled in `.oat/config.local.json`); a new generation follows.
 
 ### Review Received: final
