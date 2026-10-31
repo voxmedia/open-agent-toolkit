@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p03-t03
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -20,11 +20,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
 | Phase 2 (p02) | complete    | 7     | 7/7       |
-| Phase 3 (p03) | in_progress | 6     | 2/6       |
+| Phase 3 (p03) | in_progress | 6     | 6/6       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 16/23 tasks completed
+**Total:** 20/23 tasks completed
 
 ---
 
@@ -443,23 +443,83 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p03-t03: (review) Resolve the committed journal path through Git from the project directory
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6d92f4923e9be8d489f0765bf1e6617d2f34896d
+
+**Outcome (required when completed):**
+
+- Journal check resolves the committed journal through Git from the project directory, so an absolute `--project` spelled through a symlink alias works.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts`
+- `packages/cli/src/commands/project/journal-check/index.test.ts`
+
+**Verification:** journal-check suite passed. Can-fail: restoring lexical `relative(repoRoot, …)` made the aliased-path test exit 2 instead of 0.
+
+**Notes / Decisions:**
+
+- Review-fix for p03 review M1 (request `dedkp-p03-implementation-2`).
 
 ### Task p03-t04: (review) Fail closed on a dangling HEAD and cover each Git failure branch
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0f708b5be6555af21ff79a91d879d8494631e2bb
+
+**Outcome (required when completed):**
+
+- A dangling HEAD ref is a command error (exit 2), not an unborn HEAD; each Git call's failure branch, the rewritten-line reason and a pure deletion are tested.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts`
+- `packages/cli/src/commands/project/journal-check/index.test.ts`
+
+**Verification:** journal-check suite passed. Can-fail: returning `null` on any exit 1 made the dangling-HEAD test exit 0 instead of 2.
+
+**Notes / Decisions:**
+
+- Review-fix for p03 review L1 and L4.
 
 ### Task p03-t05: (review) Signal unparseable committed frontmatter from the shared journal rule
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 2698a71fe2e420fc32afa3ff422971bb8db4b728
+
+**Outcome (required when completed):**
+
+- The shared `journalRewrites` lister signals unparseable frontmatter, so journal check refuses the committed-side case that delivery evidence refuses; `judgeJournalChange` messages are unchanged.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts`, `evidence.test.ts`
+- `packages/cli/src/commands/project/journal-check/index.ts`, `index.test.ts`
+
+**Verification:** delivery, closeout and journal-check suites passed. Can-fail: returning `[]` for unparseable frontmatter failed both the lister and journal-check cases.
+
+**Notes / Decisions:**
+
+- Review-fix for p03 review L2.
 
 ### Task p03-t06: (review) Make the journal-line-rewritten message actionable
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eb33f5dbc1d7f8325655a964829c2af64be78f16
+
+**Outcome (required when completed):**
+
+- The `journal-line-rewritten` refusal tells the operator to restore the committed line and append the correction; the CLI reference notes the comparison base is `HEAD`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/journal-check/index.ts`, `index.test.ts`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** phase suites 278 passed (root rerun matched); type-check, CLI lint and docs markdownlint passed.
+
+**Notes / Decisions:**
+
+- Review-fix for p03 review L3.
 
 ### Review Received: p03
 
@@ -474,7 +534,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L3 (Low): the refusal message omits the correction → fix task p03-t06.
 - L4 (Low): Git failure branches and the parity reason are covered only indirectly → fix task p03-t04.
 
-**Outcome:** fixes queued: p03-t03, p03-t04, p03-t05, p03-t06 (reviewer request `dedkp-p03-review-1`; 0 Critical / 0 High).
+**Outcome:** fixes completed: p03-t03, p03-t04, p03-t05, p03-t06 (fix-mode request `dedkp-p03-fix-1` returned BLOCKED because fix mode accepts only Critical/High; the queued plan tasks ran as implementation request `dedkp-p03-implementation-2` on the same handle and target); awaiting re-review. Original queue: p03-t03, p03-t04, p03-t05, p03-t06 (reviewer request `dedkp-p03-review-1`; 0 Critical / 0 High).
 
 ---
 
@@ -534,6 +594,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p02-fix-2 · scope=p02-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p02-implementation · observed=~ · match=~
 
 - run/v1 · request=dedkp-p03-implementation · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-review-1 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-fix-1 · scope=p03-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=blocked · terminal=yes · class=terminal-stop · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p03-implementation-2 · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p03-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
