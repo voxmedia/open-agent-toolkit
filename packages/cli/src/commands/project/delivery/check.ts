@@ -290,18 +290,15 @@ export async function evaluateSubjectEvidence(
     scope,
     overrideDisabled: project.exitGateDisabled,
   };
-  const exitEvaluation =
-    milestoneDelivery?.kind !== 'stack'
-      ? await evaluateGateCarrier(workingCarrier, expectedCarrier, {
-          git,
-          scope: evidence,
-          publishedHeads: [publishedHead],
-        })
-      : await evaluateDeliveryExitCarrier(workingCarrier, expectedCarrier, {
-          git,
-          scope: evidence,
-          delivery: milestoneDelivery,
-        });
+  const exitEvaluation = await evaluateGateCarrier(
+    workingCarrier,
+    expectedCarrier,
+    {
+      git,
+      scope: evidence,
+      publishedHeads: [publishedHead],
+    },
+  );
   const exit = {
     ...exitEvaluation,
     source: 'milestone-carrier' as const,

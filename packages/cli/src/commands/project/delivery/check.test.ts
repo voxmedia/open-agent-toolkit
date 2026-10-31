@@ -382,6 +382,38 @@ describe('oat project delivery check', () => {
     expect(exitCode).toBe(0);
   });
 
+  it('keeps a registered stack milestone undeliverable after a substantive post-carrier commit and passing re-review', async () => {
+    const heads = await registeredStack('linear');
+    await repo!.writeRepo('src/app.ts', 'export const value = 5;\n');
+    const substantive = repo!.commitAll('feat: ungated post-carrier change');
+    const second = 'reviews/archived/m01-code-review-2.md';
+    await repo!.write(second, '# m01 re-review\n\nNo findings.\n');
+    await repo!.write(
+      'plan.md',
+      goalPlan({
+        reviews: [
+          reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, heads.tip, 'd01'),
+          reviewRow('passed', second, substantive, 'm01'),
+        ].join('\n'),
+      }),
+    );
+    repo!.commitAll('chore(oat): record passing m01 re-review');
+
+    const { payload, exitCode } = await check(repo!, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'undeliverable',
+      review: { fresh: true, disposition: 'passed', reason: null },
+      exit: {
+        freshness: 'stale',
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      deliverable: false,
+    });
+    expect(payload.exit?.reason).toContain(substantive);
+    expect(exitCode).toBe(1);
+  });
+
   it.each([
     ['misordered', /^stack-order/],
     ['unobserved', /^member-unobserved/],
@@ -398,15 +430,6 @@ describe('oat project delivery check', () => {
       });
       expect(payload.status).toBe('undeliverable');
       expect(exitCode).toBe(1);
-
-      process.exitCode = undefined;
-      const milestone = await check(repo!, 'm01');
-      expect(milestone.payload.exit).toMatchObject({
-        freshness: 'stale',
-        reason: expect.stringMatching(reason),
-      });
-      expect(milestone.payload.status).toBe('undeliverable');
-      expect(milestone.exitCode).toBe(1);
     },
   );
 
