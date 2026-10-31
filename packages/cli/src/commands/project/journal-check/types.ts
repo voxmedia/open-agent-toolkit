@@ -24,6 +24,7 @@ export type JournalReasonCode =
   | 'journal-frontmatter-malformed'
   | 'journal-frontmatter-missing'
   | 'journal-missing'
+  | 'journal-line-rewritten'
   | 'state-frontmatter-malformed'
   | 'journal-status-not-terminal'
   | 'journal-pointer-not-cleared'

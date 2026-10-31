@@ -1,11 +1,13 @@
 import { readFile as defaultReadFile } from 'node:fs/promises';
-import { isAbsolute, join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { journalRewrites } from '@commands/project/delivery/evidence';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   resolveActiveProject,
@@ -49,6 +51,7 @@ export interface JournalCheckDependencies {
   readFile: (path: string, encoding: 'utf8') => Promise<string>;
   dirExists: (path: string) => Promise<boolean>;
   fileExists: (path: string) => Promise<boolean>;
+  git: GitRunner;
 }
 
 const DEFAULT_DEPENDENCIES: JournalCheckDependencies = {
@@ -58,6 +61,7 @@ const DEFAULT_DEPENDENCIES: JournalCheckDependencies = {
   readFile: (path, encoding) => defaultReadFile(path, encoding),
   dirExists,
   fileExists,
+  git: defaultGitRunner,
 };
 
 /**
@@ -121,6 +125,55 @@ function readWorkflowMode(stateContent: string): string {
   const mode =
     metadata.state === 'ok' ? metadata.record.oat_workflow_mode : undefined;
   return typeof mode === 'string' && mode.length > 0 ? mode : 'spec-driven';
+}
+
+async function readCommittedJournal(
+  repoRoot: string,
+  projectDir: string,
+  git: GitRunner,
+): Promise<string | null> {
+  const head = await git.run(
+    ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (head.code === 1) {
+    return null;
+  }
+  if (head.code !== 0) {
+    throw new CliError(
+      `Unable to inspect the committed journal: ${head.stderr || `git exited ${head.code}`}`,
+      2,
+    );
+  }
+
+  const repoPath = relative(repoRoot, join(projectDir, 'implementation.md'))
+    .split(sep)
+    .join('/');
+  const entry = await git.run(
+    ['ls-tree', '--full-tree', '-z', 'HEAD', '--', repoPath],
+    { cwd: repoRoot, allowFailure: true },
+  );
+  if (entry.code !== 0) {
+    throw new CliError(
+      `Unable to inspect the committed journal path: ${entry.stderr || `git exited ${entry.code}`}`,
+      2,
+    );
+  }
+  if (entry.stdout === '') {
+    return null;
+  }
+
+  const blob = await git.run(['show', `HEAD:${repoPath}`], {
+    cwd: repoRoot,
+    allowFailure: true,
+  });
+  if (blob.code !== 0) {
+    throw new CliError(
+      `Unable to read the committed journal: ${blob.stderr || `git exited ${blob.code}`}`,
+      2,
+    );
+  }
+  return blob.stdout;
 }
 
 export function formatJournalReason(reason: JournalCheckReason): string {
@@ -212,7 +265,38 @@ async function runJournalCheck(
               : 'task',
           )
         : null;
-    const result = evaluateJournal({ boundary, scope, ...files });
+    let result = evaluateJournal({ boundary, scope, ...files });
+    if (
+      workflowMode === 'goal' &&
+      (boundary === 'implement-preflight' || boundary === 'review')
+    ) {
+      const committed = await readCommittedJournal(
+        repoRoot,
+        projectDir,
+        dependencies.git,
+      );
+      if (committed !== null) {
+        const reasons: JournalCheckReason[] = journalRewrites(
+          committed,
+          files.journalContent,
+        )
+          .filter((rewrite) => rewrite.kind === 'recorded-line-rewritten')
+          .map((rewrite) => ({
+            code: 'journal-line-rewritten',
+            path: 'implementation.md',
+            line: null,
+            owner: 'oat-project-implement',
+            message: `Committed journal line "${rewrite.line}" was removed or rewritten.`,
+          }));
+        if (reasons.length > 0) {
+          result = {
+            ...result,
+            status: 'refused',
+            reasons: [...result.reasons, ...reasons],
+          };
+        }
+      }
+    }
 
     if (context.json) {
       context.logger.json({ ...result, projectPath: projectDir });
