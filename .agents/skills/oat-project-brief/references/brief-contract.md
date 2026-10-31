@@ -531,7 +531,8 @@ root commits shared routing, registry, gate and acceptance records.
 
 `oat_deliveries` entries carry `delivery_id` (`dNN`, unique), `milestone`, a
 `scope` frozen on registration, the agreed `endpoint` (`open | merged`),
-`kind: pr`, `status` (`registering | open | at_endpoint | superseded`), the
+`kind: pr | stack`, `status`
+(`registering | open | at_endpoint | superseded`), the
 supersession links `superseded_by` and `covers_scope_of`, an additive
 `corrects_delivery_id`, persisted `lookup` keys (`repository`, `head_branch`,
 `head_sha_at_registration`), `members` (`url`, `base`, `reviewed_head`,
@@ -546,6 +547,13 @@ binding `exit_gate`, and the first observed `endpoint_attainment`.
 all --json url,headRefOid`: exactly one match is attached without creating a
   duplicate; zero matches create once; more than one stops and routes to
   `oat-project-reconcile`.
+- **Stacked deliveries.** A stack records members base to tip. Its exit carrier
+  is judged against the tip member's observed head, and every lower member's
+  observed head must be an ancestor of the tip (`stack-order` otherwise); the
+  integrated review remains per member. Post-review bookkeeping lands on the
+  tip member's branch, because a commit on a lower layer changes upper members'
+  bases and stales their review. A misordered stack is never repaired in place:
+  replace it through supersession with `covers_scope_of`.
 - **Prerequisites.** Before registration the owner runs
   `oat project delivery refresh --project <path>` and
   `oat project delivery check --project <path> --subject <mNN|dNN> --json`; it

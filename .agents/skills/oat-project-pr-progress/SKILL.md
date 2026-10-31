@@ -399,9 +399,14 @@ entry is not registered yet and resumes at item 5.
    non-superseded registered delivery (item 3a), allocate the next unused
    `dNN` and write its entry with `status: registering`: `milestone`, the
    frozen `scope` (the ordered set), the agreed `endpoint` from the brief's
-   Delivery endpoint and authority, `kind: pr`, the persisted `lookup` keys
-   (`repository` from `gh repo view --json nameWithOwner`, `head_branch`,
-   `head_sha_at_registration` from `git rev-parse HEAD`), the
+   Delivery endpoint and authority, `kind: pr` for one pull request or
+   `kind: stack` when the milestone is delivered as an existing gh-stack, and
+   the persisted `lookup` keys (`repository` from
+   `gh repo view --json nameWithOwner`, `head_branch`,
+   `head_sha_at_registration` from `git rev-parse HEAD`). For a stack,
+   `lookup.head_branch` names the tip layer's branch and this same
+   `registering` write records every existing layer's `url` in base-to-tip
+   member order. Also record the
    `integrated_review` (`artifact`, `scope`, `bound_revisions`,
    `disposition: passed`) and the accepted `exit_gate` copied from the
    milestone's current exit carrier, so the gate result is captured with the
@@ -409,16 +414,21 @@ entry is not registered yet and resumes at item 5.
    and the predecessor's `superseded_by: <dNN>` in the same write; an additive
    correction writes `corrects_delivery_id` instead. Commit this registration
    record before creating anything.
-5. **Create or attach.** Generate the PR description (Steps 2–5), push the
-   branch, and create the pull request with the Step 6 commands. On resume
-   with a `registering` entry, first run
+5. **Create or attach.** For `kind: pr`, generate the PR description (Steps
+   2–5), push the branch, and create the pull request with the Step 6 commands.
+   On resume, first run
    `gh pr list --repo <repository> --head <head_branch> --state all --json url,headRefOid`:
    exactly one match is attached without creating a duplicate; zero matches
-   create once; more than one stops and routes to `oat-project-reconcile`.
-6. **Record.** Write the member (`url`, `base`, `reviewed_head`),
-   `status: open`, `oat_milestone_status: delivered` for the active milestone,
-   `oat_pr_status: open`, `oat_pr_url`, and `oat_phase_status: pr_open`;
-   commit this registration bookkeeping.
+   create once; more than one stops and routes to `oat-project-reconcile`. For
+   `kind: stack`, attach the already-created pull requests; never create a
+   stack. On resume, re-check every recorded member URL with `gh pr view`; a
+   missing, closed-unmerged, or re-targeted layer stops under the preceding
+   reconciliation route.
+6. **Record.** For a stack, fill every member's `base` and `reviewed_head`;
+   for one pull request, write its member (`url`, `base`, `reviewed_head`).
+   Then write `status: open`, `oat_milestone_status: delivered` for the active
+   milestone, `oat_pr_status: open`, `oat_pr_url`, and
+   `oat_phase_status: pr_open`; commit this registration bookkeeping.
 7. **Log.** After that registration commit, append exactly one structural
    entry and commit it in this same step:
    `oat project log append --project "$PROJECT_PATH" --structural --producer oat-project-pr-progress --ref <dNN> --idempotency-key "<goal-slug>-register-<dNN>" --body "Registered <dNN> for <mNN> (<ordered phase ids>) at <url>; <goal-slug>-register-<dNN>"`.
