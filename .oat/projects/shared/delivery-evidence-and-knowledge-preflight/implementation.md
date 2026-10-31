@@ -733,6 +733,20 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Outcome:** fixes completed: p04-t05, p04-t06 (request `dedkp-p04-implementation-3`); awaiting re-review (cycle 3 of 3). Original queue: p04-t05, p04-t06 (reviewer request `dedkp-p04-review-2`; 0 Critical / 0 High; review cycle 2 of 3).
 
+### Review Received: p04 (round 3)
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p04-review-2026-10-31T024404Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 2
+
+- Round-2 M1, M2, L1 and L2 verified resolved (20 seeded regressions; 18 fail as intended, 1 acceptable characterization pass, 1 heading-only variant filed as L1); no path mutates knowledge before an authorized route and a file-verified probe exist.
+- M1 (Medium, regression from p04-t06): the pre-Step-10 `git status --porcelain` check has no baseline and applies on every provider, so unrelated dirty work (including the skill's own uncommitted `.oat/tracking.json` from Step 10b) stops the run late, while a lane's stray edit to an already-dirty file goes undetected; the docs describe it as Codex-only → disposition pending operator (review-cycle cap reached).
+- L1 (Low): the contract pin checks the probe heading position, not the probe paragraph → disposition pending operator.
+- L2 (Low): the p04-t05 journal entry describes a stale-`.preflight` removal option the skill does not implement (it only stops) → disposition pending operator.
+
+**Outcome:** received; three-cycle review cap reached for p04 (Step 8). Complexity review dispatched; disposition awaits the operator.
+
 ---
 
 ## Phase 5: Release bookkeeping and gates
@@ -799,6 +813,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p04-review-2 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p04-implementation-3 · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-medium · model=gpt-5.6-sol-medium · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-medium · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p04-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p04-review-3 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
