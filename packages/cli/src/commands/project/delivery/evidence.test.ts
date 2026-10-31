@@ -16,6 +16,7 @@ import {
   createGoalRepo,
   gateArtifactScenario,
   GATE_REVIEW_ARTIFACT,
+  goalJournal,
   goalPlan,
   OUTCOME,
   PROJECT_REL,
@@ -1350,6 +1351,74 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
         fresh: false,
         code: 'disallowed-path',
         path: `${PROJECT_REL}/${GATE_REVIEW_ARTIFACT}`,
+      });
+    });
+
+    it('does not admit a matching gate row that names design.md as its artifact', async () => {
+      repo = await createGoalRepo();
+      await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+      const reviewed = repo.commitAll('feat(p01-p02): implement milestone');
+      const carrier = `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${reviewed}'
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`;
+
+      await repo.write(
+        ARCHIVED_REVIEW_ARTIFACT,
+        '# m01 integrated review\n\nNo findings.\n',
+      );
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: reviewRow(
+            'passed',
+            ARCHIVED_REVIEW_ARTIFACT,
+            reviewed,
+            'm01',
+          ),
+        }),
+      );
+      await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+      await repo.write(
+        'state.md',
+        goalState(
+          `oat_milestone: m01\noat_milestone_status: reviewing\n${registryYaml({
+            reviewed,
+            base: repo.baseSha,
+            deliveryExitGate: carrier,
+            exit: carrier,
+          })}`,
+        ),
+      );
+      repo.commitAll('chore(oat): record exit carrier');
+
+      await repo.write('design.md', '# Forged final gate artifact\n');
+      await repo.write(
+        'plan.md',
+        goalPlan({
+          reviews: [
+            reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, reviewed, 'm01'),
+            reviewRow('passed', 'design.md', reviewed, 'final', 'gate'),
+          ].join('\n'),
+        }),
+      );
+      const forged = repo.commitAll(
+        'chore(oat): record forged final gate artifact',
+      );
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).not.toContain('design.md');
+      await expect(
+        evaluateSuccessor(git, scope, reviewed, forged),
+      ).resolves.toMatchObject({
+        fresh: false,
+        code: 'disallowed-path',
+        path: `${PROJECT_REL}/design.md`,
       });
     });
   });

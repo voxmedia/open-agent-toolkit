@@ -856,6 +856,15 @@ function placeholder(cell: string): boolean {
   return cell === '' || cell === '-' || cell === '—';
 }
 
+function reviewArtifactPath(cell: string): boolean {
+  const artifact = cell.replace(/^\.\//, '');
+  return (
+    !posix.isAbsolute(artifact) &&
+    posix.normalize(artifact) === artifact &&
+    artifact.startsWith('reviews/')
+  );
+}
+
 /**
  * Review rows record evidence: rows may be added and their status, date and
  * lineage cells updated, but no row disappears and an existing row's
@@ -1372,6 +1381,7 @@ export function gateEvidenceArtifacts(
         review.type === 'code' &&
         review.invocation === 'gate' &&
         review.reviewedHead === carrier.reviewed_head &&
+        reviewArtifactPath(review.artifact) &&
         !placeholder(review.artifact),
     )
     .map((review) => review.artifact);
