@@ -2,7 +2,7 @@
 id: BL-260827-refresh-provider-codex-md
 title: Refresh provider-codex.md for the ultra effort tier, the GPT-5.4
   retirement, and per-subcommand flags
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-4-follow-up
 assignee: null
 created: 2026-08-27T06:56:35.774Z
-updated: 2026-08-27T06:56:35.774Z
+updated: '2026-10-31T21:02:28Z'
 associated_issues: []
 external_plans: []
 ---

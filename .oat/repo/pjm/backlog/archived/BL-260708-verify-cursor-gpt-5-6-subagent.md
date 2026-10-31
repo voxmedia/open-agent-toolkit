@@ -1,14 +1,14 @@
 ---
 id: BL-260708-verify-cursor-gpt-5-6-subagent
 title: 'Verify Cursor GPT-5.6 subagent model slugs'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [cursor, subagents, model-dispatch, gpt-5.6]
 assignee: null
 created: '2026-07-08T21:08:00Z'
-updated: '2026-07-11T12:25:03Z'
+updated: '2026-10-31T21:02:28Z'
 associated_issues: []
 ---
 

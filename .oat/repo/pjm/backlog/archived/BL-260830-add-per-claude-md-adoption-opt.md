@@ -1,7 +1,7 @@
 ---
 id: BL-260830-add-per-claude-md-adoption-opt
 title: Add per-CLAUDE.md adoption opt-out for instruction sync
-status: open
+status: closed
 priority: low
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:40.300Z
-updated: 2026-08-30T22:30:40.300Z
+updated: '2026-10-31T21:02:29Z'
 associated_issues: []
 external_plans: []
 ---

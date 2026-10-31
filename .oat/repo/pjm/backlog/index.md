@@ -529,7 +529,6 @@
 | BL-261003-reassess-lite-execution-scope  | Reassess Lite execution scope and preserve completed work on promotion                                   | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete        | open   | medium   | task       | S        |
 | BL-261003-reconcile-oat-tracking-commit  | Reconcile OAT tracking commit cadence with resumable phase/group batching                                | open   | medium   | bug        | M        |
-| BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags    | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                             | open   | medium   | task       | S        |
 | BL-261030-report-gate-project-log        | Report gate project-log finalization in the terminal JSON envelope                                       | open   | medium   | feature    | M        |
 | BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge               | open   | medium   | task       | M        |
@@ -544,7 +543,6 @@
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                               | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                            | open   | medium   | task       | S        |
 | BL-261011-validate-skill-bumps-against   | Validate skill bumps against a stacked PR's base branch, not only origin/main                            | open   | medium   | task       | S        |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                               | open   | medium   | task       | S        |
 | BL-261002-verify-local-scope-lifecycle   | Verify local-scope lifecycle commits and empty HiLL phase defaults                                       | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                               | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                               | open   | medium   | feature    | L        |
@@ -554,7 +552,6 @@
 | BL-260925-add-grok-4-7-cursor-pin        | Add Grok 4.7 Cursor pin mappings                                                                         | open   | low      | task       | S        |
 | BL-260909-add-a-grep-by-shape-control    | Add a grep-by-shape control for own-key sweeps keyed to variable names                                   | open   | low      | task       | S        |
 | BL-261011-add-brief-to-the-legacy        | Add brief to the legacy generate-oat-state.sh mode table                                                 | open   | low      | task       | S        |
-| BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                  | open   | low      | feature    | M        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                              | open   | low      | feature    | L        |
 | BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                               | open   | low      | task       | XS       |
 | BL-261012-archive-metadata-reads-map     | Archive metadata reads map EACCES to a missing file                                                      | open   | low      | task       | XS       |
