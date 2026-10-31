@@ -30,6 +30,7 @@ import {
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
+  gateEvidenceArtifacts,
   latestDeliveryForMilestone,
   reviewRowsFor,
   type CarrierEvaluation,
@@ -170,15 +171,21 @@ export async function evaluateSubjectEvidence(
   if (delivery) {
     const milestoneId = delivery.milestone;
     const scope = deliveryEffectiveScope(deliveries, delivery);
-    const evidence = deliveryEvidenceScope(project, deliveries, delivery);
+    const workingCarrier =
+      milestoneId === null
+        ? null
+        : (project.state.milestoneGates?.[milestoneId]?.exit ?? null);
+    const evidence = deliveryEvidenceScope(
+      { ...project, evidenceCarrier: workingCarrier },
+      deliveries,
+      delivery,
+    );
     const publishedHeads = delivery.members.map(
       (member) => member.observed_head,
     );
     const review = await evaluateDeliveryReview(git, evidence, delivery, scope);
     const exitEvaluation = await evaluateDeliveryExitCarrier(
-      milestoneId === null
-        ? null
-        : (project.state.milestoneGates?.[milestoneId]?.exit ?? null),
+      workingCarrier,
       {
         kind: 'code',
         scope,
@@ -233,16 +240,25 @@ export async function evaluateSubjectEvidence(
   const rows = reviewRowsFor(project.state.reviews, [milestoneId]);
   const row = rows.at(-1) ?? null;
   const milestoneDelivery = latestDeliveryForMilestone(deliveries, milestoneId);
+  const workingCarrier =
+    project.state.milestoneGates?.[milestoneId]?.exit ?? null;
   const evidence: EvidenceScope =
     milestoneDelivery === undefined
       ? {
           repoRoot: project.repoRoot,
           projectDir: project.projectDir,
-          evidenceArtifacts: rows
-            .map((entry) => entry.artifact)
-            .filter((artifact) => artifact !== '' && artifact !== '-'),
+          evidenceArtifacts: [
+            ...rows
+              .map((entry) => entry.artifact)
+              .filter((artifact) => artifact !== '' && artifact !== '-'),
+            ...gateEvidenceArtifacts(project.state.reviews, workingCarrier),
+          ],
         }
-      : deliveryEvidenceScope(project, deliveries, milestoneDelivery);
+      : deliveryEvidenceScope(
+          { ...project, evidenceCarrier: workingCarrier },
+          deliveries,
+          milestoneDelivery,
+        );
 
   let review: ReviewEvaluation;
   if (row === null || row.artifact === '' || row.artifact === '-') {
@@ -269,12 +285,25 @@ export async function evaluateSubjectEvidence(
     };
   }
 
+  const expectedCarrier = {
+    kind: 'code' as const,
+    scope,
+    overrideDisabled: project.exitGateDisabled,
+  };
+  const exitEvaluation =
+    milestoneDelivery?.kind !== 'stack'
+      ? await evaluateGateCarrier(workingCarrier, expectedCarrier, {
+          git,
+          scope: evidence,
+          publishedHeads: [publishedHead],
+        })
+      : await evaluateDeliveryExitCarrier(workingCarrier, expectedCarrier, {
+          git,
+          scope: evidence,
+          delivery: milestoneDelivery,
+        });
   const exit = {
-    ...(await evaluateGateCarrier(
-      project.state.milestoneGates?.[milestoneId]?.exit ?? null,
-      { kind: 'code', scope, overrideDisabled: project.exitGateDisabled },
-      { git, scope: evidence, publishedHeads: [publishedHead] },
-    )),
+    ...exitEvaluation,
     source: 'milestone-carrier' as const,
   };
   return {

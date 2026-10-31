@@ -12,6 +12,7 @@ import YAML from 'yaml';
 import {
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
   goalState,
   PROJECT_REL,
   registryYaml,
@@ -253,6 +254,62 @@ describe('oat project delivery refresh', () => {
     expect(frontmatter(content)).toMatchObject({
       oat_milestone_status: 'delivered',
       oat_goal_recovery: null,
+    });
+  });
+
+  it('keeps review and carrier fresh across a matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    const chain = await gateArtifactScenario(repo);
+
+    await refresh(
+      repo,
+      stubGh(() => ({
+        state: 'OPEN',
+        head: chain.gateCommit,
+        base: repo!.baseSha,
+      })),
+    );
+
+    const content = await repo.read('state.md');
+    expect(d01(content)['integrated_review']).toMatchObject({
+      disposition: 'passed',
+    });
+    const gates = frontmatter(content)['oat_milestone_gates'] as Record<
+      string,
+      Record<string, Record<string, unknown>>
+    >;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'fresh',
+      freshness_reason: null,
+    });
+  });
+
+  it('marks review and carrier stale for a mismatched-head gate artifact', async () => {
+    repo = await createGoalRepo();
+    const chain = await gateArtifactScenario(repo, {
+      reviewedHead: 'mismatched',
+    });
+
+    await refresh(
+      repo,
+      stubGh(() => ({
+        state: 'OPEN',
+        head: chain.gateCommit,
+        base: repo!.baseSha,
+      })),
+    );
+
+    const content = await repo.read('state.md');
+    expect(d01(content)['integrated_review']).toMatchObject({
+      disposition: 'stale',
+    });
+    const gates = frontmatter(content)['oat_milestone_gates'] as Record<
+      string,
+      Record<string, Record<string, unknown>>
+    >;
+    expect(gates['m01']!['exit']).toMatchObject({
+      freshness: 'stale',
+      freshness_reason: expect.stringContaining('disallowed-path'),
     });
   });
 

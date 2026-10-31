@@ -281,7 +281,11 @@ export async function loadGoalCloseoutInputs(
   for (const terminal of graph.terminals) {
     const { delivery, effectiveScope } = terminal;
     if (delivery.status === 'registering') continue;
-    const evidenceScope = deliveryEvidenceScope(project, observed, delivery);
+    const evidenceScope = deliveryEvidenceScope(
+      { ...project, evidenceCarrier: delivery.exit_gate },
+      observed,
+      delivery,
+    );
     const fact: DeliveryEvidenceFact = {
       scope: effectiveScope,
       review: await evaluateDeliveryReview(

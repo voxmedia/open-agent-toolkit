@@ -7,6 +7,7 @@ import {
   ARCHIVED_REVIEW_ARTIFACT,
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
   goalPlan,
   goalState,
   PROJECT_REL,
@@ -210,6 +211,42 @@ describe('oat project delivery check', () => {
     expect(chain.registered).toBe(repo!.git(['rev-parse', 'HEAD']));
   });
 
+  it('keeps a milestone fresh across its matching gate artifact commit', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo);
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'ok',
+      review: { fresh: true, reason: null },
+      exit: { freshness: 'fresh', reason: null },
+      deliverable: true,
+    });
+    expect(exitCode).toBe(0);
+  });
+
+  it('rejects a gate artifact whose reviewed head differs from the carrier', async () => {
+    repo = await createGoalRepo();
+    await gateArtifactScenario(repo, { reviewedHead: 'mismatched' });
+
+    const { payload, exitCode } = await check(repo, 'm01');
+
+    expect(payload).toMatchObject({
+      status: 'undeliverable',
+      review: {
+        fresh: false,
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      exit: {
+        freshness: 'stale',
+        reason: expect.stringMatching(/^disallowed-path/),
+      },
+      deliverable: false,
+    });
+    expect(exitCode).toBe(1);
+  });
+
   it('reports a milestone stale for a substantive successor and writes nothing', async () => {
     await receivedMilestone();
     await repo!.writeRepo('src/app.ts', 'export const value = 9;\n');
@@ -361,6 +398,15 @@ describe('oat project delivery check', () => {
       });
       expect(payload.status).toBe('undeliverable');
       expect(exitCode).toBe(1);
+
+      process.exitCode = undefined;
+      const milestone = await check(repo!, 'm01');
+      expect(milestone.payload.exit).toMatchObject({
+        freshness: 'stale',
+        reason: expect.stringMatching(reason),
+      });
+      expect(milestone.payload.status).toBe('undeliverable');
+      expect(milestone.exitCode).toBe(1);
     },
   );
 

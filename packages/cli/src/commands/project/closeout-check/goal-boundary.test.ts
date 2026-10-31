@@ -5,6 +5,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { createProjectCompleteStateCommand } from '@commands/project/complete-state/index';
 import {
   createGoalRepo,
+  GATE_REVIEW_ARTIFACT,
   goalState,
   OUTCOME as GOAL_REPO_OUTCOME,
   PROJECT_REL,
@@ -77,8 +78,8 @@ oat_template: false
 
 ## Reviews
 
-| Scope | Type | Status | Date | Artifact | Reviewed Head |
-| ----- | ---- | ------ | ---- | -------- | ------------- |
+| Scope | Type | Status | Date | Artifact | Reviewed Head | Invocation |
+| ----- | ---- | ------ | ---- | -------- | ------------- | ---------- |
 ${reviews}
 `;
 }
@@ -263,7 +264,9 @@ interface Scenario {
  * records the head, the passed review, the registry and the closeout.
  */
 async function scenario(
-  options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> = {},
+  options: Partial<Omit<StateOptions, 'reviewed' | 'base'>> & {
+    gateArtifact?: 'matching' | 'mismatched';
+  } = {},
 ): Promise<Scenario> {
   const repo = await createGoalRepo('oat-goal-boundary-');
   await repo.writeRepo(
@@ -284,13 +287,42 @@ async function scenario(
     plan(`| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} |`),
   );
   await repo.write('implementation.md', journal('completed', reviewed));
+  const { gateArtifact, ...stateOptions } = options;
+  const configuredCarrier = `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${reviewed}'
+      subject: { kind: code, scope: [p01, p02, p03] }
+      decided_at: '2026-10-11T11:00:00Z'`;
   await repo.write(
     'state.md',
-    state({ reviewed, base: repo.baseSha, ...options }),
+    state({
+      reviewed,
+      base: repo.baseSha,
+      ...stateOptions,
+      ...(gateArtifact === undefined ? {} : { exitGate: configuredCarrier }),
+    }),
   );
-  const published = repo.commitAll(
+  let published = repo.commitAll(
     'chore(oat): record, receive and register d02',
   );
+  if (gateArtifact !== undefined) {
+    await repo.write(
+      GATE_REVIEW_ARTIFACT,
+      '# final gate review\n\nNo findings.\n',
+    );
+    await repo.write(
+      'plan.md',
+      plan(
+        [
+          `| d02 | code | passed | 2026-10-11 | ${REVIEW} | ${reviewed} | auto |`,
+          `| final | code | passed | 2026-10-11 | ${GATE_REVIEW_ARTIFACT} | ${gateArtifact === 'matching' ? reviewed : published} | gate |`,
+        ].join('\n'),
+      ),
+    );
+    published = repo.commitAll('chore(oat): record final gate review');
+  }
   return { repo, reviewed, published };
 }
 
@@ -569,6 +601,30 @@ describe('goal closeout boundary (end to end)', () => {
       const checked = await closeoutCheck(observed(() => built.published));
       expect(checked.payload).toMatchObject({ status: 'complete' });
     });
+  });
+
+  it('keeps a delivery exit binding fresh across its matching gate artifact commit', async () => {
+    const built = await scenario({ gateArtifact: 'matching' });
+    repo = built.repo;
+
+    const checked = await closeoutCheck(observed(() => built.published));
+
+    expect(checked.payload).toMatchObject({ status: 'complete' });
+    expect(checked.exitCode).toBe(0);
+  });
+
+  it('rejects a delivery gate artifact whose reviewed head differs from the binding', async () => {
+    const built = await scenario({ gateArtifact: 'mismatched' });
+    repo = built.repo;
+
+    const checked = await closeoutCheck(observed(() => built.published));
+
+    expect(checked.payload).toMatchObject({
+      status: 'incomplete',
+      invariant: 'goal_coverage_incomplete',
+    });
+    expect(JSON.stringify(checked.payload)).toContain('disallowed-path');
+    expect(checked.exitCode).toBe(1);
   });
 
   it('refuses a substantive successor of the reviewed revision and names the review owner', async () => {

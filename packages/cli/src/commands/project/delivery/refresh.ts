@@ -435,8 +435,12 @@ function evidenceScope(
   project: GoalDeliveryProject,
   delivery: GoalDelivery,
 ): EvidenceScope {
+  const evidenceCarrier =
+    delivery.milestone === null
+      ? null
+      : (project.state.milestoneGates?.[delivery.milestone]?.exit ?? null);
   return deliveryEvidenceScope(
-    project,
+    { ...project, evidenceCarrier },
     project.state.deliveries ?? [],
     delivery,
   );

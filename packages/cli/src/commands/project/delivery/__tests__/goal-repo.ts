@@ -13,6 +13,7 @@ export const PROJECT_REL = '.oat/projects/shared/goal';
 
 export const REVIEW_ARTIFACT = 'reviews/m01-code-review.md';
 export const ARCHIVED_REVIEW_ARTIFACT = 'reviews/archived/m01-code-review.md';
+export const GATE_REVIEW_ARTIFACT = 'reviews/final-gate-review.md';
 
 export interface GoalRepo {
   root: string;
@@ -81,8 +82,8 @@ ${options.milestones ?? '| m01 | p01, p02 |\n| m02 | p03 |'}
 
 ## Reviews
 
-| Scope | Type | Status | Date | Artifact | Reviewed Head |
-| ----- | ---- | ------ | ---- | -------- | ------------- |
+| Scope | Type | Status | Date | Artifact | Reviewed Head | Invocation |
+| ----- | ---- | ------ | ---- | -------- | ------------- | ---------- |
 ${options.reviews ?? ''}
 `;
 }
@@ -214,8 +215,95 @@ export function reviewRow(
   artifact: string,
   reviewedHead: string,
   scope = 'm01',
+  invocation = 'auto',
+  type = 'code',
 ): string {
-  return `| ${scope} | code | ${status} | 2026-10-11 | ${artifact} | ${reviewedHead} |`;
+  return `| ${scope} | ${type} | ${status} | 2026-10-11 | ${artifact} | ${reviewedHead} | ${invocation} |`;
+}
+
+export interface GateArtifactScenarioOptions {
+  invocation?: string;
+  reviewedHead?: 'matching' | 'mismatched' | 'placeholder';
+  type?: string;
+}
+
+/**
+ * Build the production #384 shape: a configured milestone and delivery
+ * carrier are committed first, then the gate's final-scope Reviews row and
+ * artifact land in a later commit.
+ */
+export async function gateArtifactScenario(
+  repo: GoalRepo,
+  options: GateArtifactScenarioOptions = {},
+): Promise<{
+  reviewed: string;
+  carrierCommit: string;
+  gateCommit: string;
+}> {
+  await repo.writeRepo('src/app.ts', 'export const value = 2;\n');
+  const reviewed = repo.commitAll('feat(p01-p02): implement milestone');
+  const carrier = `      status: allowed
+      resolution: configured
+      disposition: passed
+      config_fingerprint: null
+      reviewed_head: '${reviewed}'
+      subject: { kind: code, scope: [p01, p02] }
+      decided_at: '2026-10-11T10:00:00Z'
+      freshness: fresh
+      freshness_reason: null`;
+
+  await repo.write(
+    ARCHIVED_REVIEW_ARTIFACT,
+    '# m01 integrated review\n\nNo findings.\n',
+  );
+  await repo.write(
+    'plan.md',
+    goalPlan({
+      reviews: reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, reviewed, 'm01'),
+    }),
+  );
+  await repo.write('implementation.md', goalJournal(reviewed, 'completed'));
+  await repo.write(
+    'state.md',
+    goalState(
+      `oat_milestone: m01\noat_milestone_status: reviewing\n${registryYaml({
+        reviewed,
+        base: repo.baseSha,
+        deliveryExitGate: carrier,
+        exit: carrier,
+      })}`,
+    ),
+  );
+  const carrierCommit = repo.commitAll('chore(oat): record exit carrier');
+
+  const gateReviewedHead =
+    options.reviewedHead === 'placeholder'
+      ? '-'
+      : options.reviewedHead === 'mismatched'
+        ? carrierCommit
+        : reviewed;
+  await repo.write(
+    GATE_REVIEW_ARTIFACT,
+    '# final gate review\n\nNo findings.\n',
+  );
+  await repo.write(
+    'plan.md',
+    goalPlan({
+      reviews: [
+        reviewRow('passed', ARCHIVED_REVIEW_ARTIFACT, reviewed, 'm01'),
+        reviewRow(
+          'passed',
+          GATE_REVIEW_ARTIFACT,
+          gateReviewedHead,
+          'final',
+          options.invocation ?? 'gate',
+          options.type ?? 'code',
+        ),
+      ].join('\n'),
+    }),
+  );
+  const gateCommit = repo.commitAll('chore(oat): record final gate review');
+  return { reviewed, carrierCommit, gateCommit };
 }
 
 /**

@@ -1351,6 +1351,33 @@ export function reviewRowsFor(
 }
 
 /**
+ * Artifacts emitted by the configured gate run that produced `carrier`.
+ * These join the shared bookkeeping allowlist only; they never join a
+ * delivery's own evidence set or integrated-review selection.
+ */
+export function gateEvidenceArtifacts(
+  reviews: readonly ReviewStatus[],
+  carrier: MilestoneGateCarrier | null,
+): string[] {
+  if (
+    carrier?.reviewed_head === null ||
+    carrier?.reviewed_head === undefined ||
+    placeholder(carrier.reviewed_head)
+  ) {
+    return [];
+  }
+  return reviews
+    .filter(
+      (review) =>
+        review.type === 'code' &&
+        review.invocation === 'gate' &&
+        review.reviewedHead === carrier.reviewed_head &&
+        !placeholder(review.artifact),
+    )
+    .map((review) => review.artifact);
+}
+
+/**
  * The newest active registry entry for a milestone. Registration-in-progress
  * and superseded entries cannot carry the milestone's current evidence.
  */
@@ -1375,6 +1402,8 @@ export interface DeliveryEvidenceProject {
   repoRoot: string;
   projectDir: string;
   state: { reviews: readonly ReviewStatus[] };
+  /** Carrier whose own gate artifact may join shared bookkeeping evidence. */
+  evidenceCarrier?: MilestoneGateCarrier | null;
 }
 
 /**
@@ -1410,11 +1439,17 @@ export function deliveryEvidenceScope(
   return {
     repoRoot: project.repoRoot,
     projectDir: project.projectDir,
-    evidenceArtifacts: deliveryEvidenceArtifacts(
-      delivery,
-      reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
-      sharing,
-    ),
+    evidenceArtifacts: [
+      ...deliveryEvidenceArtifacts(
+        delivery,
+        reviewRowsFor(project.state.reviews, labels).map((row) => row.artifact),
+        sharing,
+      ),
+      ...gateEvidenceArtifacts(
+        project.state.reviews,
+        project.evidenceCarrier ?? null,
+      ),
+    ],
     ownEvidenceArtifacts,
   };
 }

@@ -14,6 +14,8 @@ import {
   ARCHIVED_REVIEW_ARTIFACT,
   bookkeepingChain,
   createGoalRepo,
+  gateArtifactScenario,
+  GATE_REVIEW_ARTIFACT,
   goalPlan,
   OUTCOME,
   PROJECT_REL,
@@ -32,6 +34,7 @@ import {
   evaluateGateCarrier,
   evaluateSuccessor,
   latestDeliveryForMilestone,
+  reviewRowsFor,
   type EvidenceScope,
 } from './evidence';
 
@@ -46,13 +49,21 @@ const git = defaultGitRunner;
 async function productionScope(
   target: GoalRepo,
   deliveryId: string,
+  includeMilestoneCarrier = false,
 ): Promise<EvidenceScope> {
   const state = await getProjectState(target.projectPath);
   const deliveries = state.deliveries ?? [];
   const entry = deliveries.find((item) => item.delivery_id === deliveryId);
   expect(entry, deliveryId).toBeDefined();
   return deliveryEvidenceScope(
-    { repoRoot: target.root, projectDir: PROJECT_REL, state },
+    {
+      repoRoot: target.root,
+      projectDir: PROJECT_REL,
+      state,
+      ...(includeMilestoneCarrier
+        ? { evidenceCarrier: state.milestoneGates?.['m01']?.exit ?? null }
+        : {}),
+    },
     deliveries,
     entry!,
   );
@@ -1263,6 +1274,51 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
           published,
         ),
       ).resolves.toMatchObject({ fresh: true, code: 'bookkeeping-successor' });
+    });
+  });
+
+  describe('gate-originated artifact admission', () => {
+    it('admits only a matching gate artifact into shared evidence, never own evidence or integrated-review selection', async () => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo);
+      const scope = await productionScope(repo, 'd01', true);
+      const state = await getProjectState(repo.projectPath);
+
+      expect(scope.evidenceArtifacts).toContain(GATE_REVIEW_ARTIFACT);
+      expect(scope.ownEvidenceArtifacts?.get('d01')).not.toContain(
+        GATE_REVIEW_ARTIFACT,
+      );
+      expect(
+        reviewRowsFor(state.reviews, ['m01', 'd01']).map(
+          (review) => review.artifact,
+        ),
+      ).not.toContain(GATE_REVIEW_ARTIFACT);
+      await expect(
+        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+      ).resolves.toMatchObject({
+        fresh: true,
+        code: 'bookkeeping-successor',
+      });
+    });
+
+    it.each([
+      ['manual final row', { invocation: 'manual' }],
+      ['mismatched reviewed head', { reviewedHead: 'mismatched' as const }],
+      ['placeholder reviewed head', { reviewedHead: 'placeholder' as const }],
+      ['artifact-type gate row', { type: 'artifact' }],
+    ])('does not admit a %s', async (_label, options) => {
+      repo = await createGoalRepo();
+      const chain = await gateArtifactScenario(repo, options);
+      const scope = await productionScope(repo, 'd01', true);
+
+      expect(scope.evidenceArtifacts).not.toContain(GATE_REVIEW_ARTIFACT);
+      await expect(
+        evaluateSuccessor(git, scope, chain.reviewed, chain.gateCommit),
+      ).resolves.toMatchObject({
+        fresh: false,
+        code: 'disallowed-path',
+        path: `${PROJECT_REL}/${GATE_REVIEW_ARTIFACT}`,
+      });
     });
   });
 
