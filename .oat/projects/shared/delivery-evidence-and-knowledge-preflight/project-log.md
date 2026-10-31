@@ -27,6 +27,10 @@ Uncertainty: Whether the forced recap was meant to override explicit operator in
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:1 exit=0 status=ok artifact=.oat/projects/shared/delivery-evidence-and-knowledge-preflight/reviews/artifact-plan-review-2026-10-30T235710Z.md run=0820f334-2a3e-4915-aebf-0044c16a37da
 
+### 2026-10-31 · structural · oat-project-implement · p01
+
+Phase p01 (#383 stack-aware exit carriers) complete: 7 tasks (3 planned, 4 review-fix); review round 1 0C/0H/2M/3L, round 2 passed 0C/0H/0M/1L; recovery attempts 0/10; delivery-evidence-p01-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
