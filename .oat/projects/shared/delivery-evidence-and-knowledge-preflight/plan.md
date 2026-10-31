@@ -1277,6 +1277,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:oat-project-review-receiv
 | final | code     | passed          | 2026-10-31 | reviews/archived/final-review-2026-10-31T123203Z.md         | 0c4f02b492bf82d2590b304ca4c21114432f9b33 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-10-30 | -                                                           | -                                        | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-30 | reviews/archived/artifact-plan-review-2026-10-30T235710Z.md | -                                        | gate       | codex-6-sol-xhigh |
+| final | code     | received        | 2026-10-31 | reviews/final-review-2026-10-31T152346Z.md                  | d6ce3a606ab70273697428d6c808188bad06494f | gate       | codex-6-sol-xhigh |
 
 Plan artifact review (structured, `oat-reviewer-claude-opus-5-5-high`, ceiling exception; `Dispatch: scope=plan action=review role=reviewer provider=cursor variant=oat-reviewer-claude-opus-5-5-high policy=high source=project-state`): attempt 1 returned 3 High, 7 Medium and 8 Low; attempt 2 confirmed all 18 resolved and raised 2 Medium and 3 Low; attempt 3 confirmed those resolved and raised 1 Low (design wording drift on extraction markers). That Low was fixed after the retry bound (`oat_orchestration_retry_limit` default 2) was exhausted and was not re-reviewed; no residual findings remain open.
 
