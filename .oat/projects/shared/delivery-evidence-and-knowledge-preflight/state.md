@@ -113,14 +113,14 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-10-30T23:31:38.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-10-31T12:38:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-10-31T15:18:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: skip
   source: interactive
   decided_at: '2026-10-30T23:32:02Z'
 oat_implement_exit_gate:
-  status: 'blocked'
+  status: 'stale'
   resolution: 'configured'
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -155,12 +155,9 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure:
-    class: 'runtime-unavailable'
-    envelope_status: 'review_failed'
-    outcome: 'unexpected_post_selection_failure'
-    target: 'claude-opus-5-5-high'
-    detail: 'Claude runtime weekly usage limit reached (resets 2026-11-02 11:00 America/Chicago); branch-local gate route returned no JSON'
-  updated_at: '2026-10-31T12:38:13Z'
+    class: 'retired-by-operator'
+    detail: 'Operator directed switching the exit gate from the Opus target to the Sol target (local override: --avoid same-runtime, Claude targets disabled locally); prior run e77017c2 review_failed on a Claude weekly limit, no attempt consumed'
+  updated_at: '2026-10-31T15:18:57Z'
   decided_at: '2026-10-31T12:38:13Z'
 ---
 
