@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: 2026-10-02T22:53:49Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 ---
 
@@ -48,6 +48,16 @@ Source: [GitHub issue #197](https://github.com/voxmedia/open-agent-toolkit/issue
 linked during the 2026-08-19 issue-triage pass after confirming this existing
 item already owns the remaining adaptive-timeout work.
 
+**Delivery status (2026-10-31):** Landed: configurable hard budgets, liveness
+evidence and correlated, artifact-aware timeout recovery
+(`gate-execution-hardening`, CLI `0.1.72`), then the 30-minute artifact-gate
+default and duplicate-gate rejection (#351, `4a85d2eda`). Remaining: the
+idle-kill timer, which first needs Codex transcript activity attributed to the
+gate child (`packages/cli/src/commands/gate/activity-probes.ts:169` still
+scopes Codex activity `ambient-runtime`); the early artifact-template write;
+distinct idle-kill and hard-cap outcomes; the operational preflight; and the
+structured `blocked` envelope for a target lost after selection.
+
 ## Partial Progress (2026-07-16)
 
 The `gate-execution-hardening` project shipped the enabling and diagnostic
@@ -60,22 +70,22 @@ idle-kill versus hard-cap outcomes.
 
 ## Acceptance Criteria
 
+- Codex transcript activity can be attributed to the gate child
+  (`project-dir`-scoped, not `ambient-runtime`) before the idle mechanism
+  serves Codex gates.
 - A gate child producing output activity is not killed by the idle mechanism,
   even when total duration exceeds the legacy fixed timeout.
 - A silent/hung child is terminated within the idle window — faster than the
-  current fixed timeout would have caught it.
-- A hard cap still bounds total runtime and remains configurable.
+  current fixed timeout would have caught it — while the existing configurable
+  hard cap still bounds total runtime.
 - Gate-originated reviewer instructions direct the reviewer to write the
   review artifact template early; the wrapper can verify the correlated
   artifact path exists shortly after launch.
-- On any timeout, the gate checks for a correlated, complete, run-ID-matching
-  review artifact before reporting loss; a recovered artifact flows through
-  normal corroboration and severity thresholds.
 - Structured gate output distinguishes idle-kill, hard-cap-kill, and
   recovered-after-timeout outcomes.
-- Behavior is covered by gate command tests (idle reset, idle kill, cap kill,
-  recovery path) and verifiable via the live smoke fixture
-  (`oat-project-fixture` project) once available.
+- Behavior is covered by gate command tests (idle reset, idle kill, cap kill)
+  and verifiable via the live smoke fixture (`oat-project-fixture` project)
+  once available.
 - Where a provider supports it, offer a non-mutating operational preflight before starting the review (GitHub issue #197, second failure mode).
 - When a selected target becomes unavailable after selection but before an artifact exists, emit a structured `blocked` terminal envelope that preserves the selected target, the failure stage, whether an artifact exists, receive eligibility, and a bounded reason category such as provider unavailable or usage limited, without exposing account details.
 

@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T11:56:51.284Z
-updated: 2026-10-02T22:53:49.000Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -33,6 +33,12 @@ Wave-7 Phase 21 (lane p21b, final review C4) length-framed the managed-copy dige
 - p03-t03: a `skill` / `agent` provider directory with no marker file plans a
   non-repeating `error` operation naming the missing marker instead of
   `update_copy` on every run.
+
+**Delivery status (2026-10-31):** Landed: restamp-on-skip and the
+legacy-manifest retirement classification (wave 4, #351, `4a85d2eda`).
+Remaining: deleting the pre-framing bridge, still present at
+`packages/cli/src/drift/detector.ts:141-168`. It is gated on field installs
+having restamped, which cannot be observed from this repository.
 
 ## Acceptance Criteria
 

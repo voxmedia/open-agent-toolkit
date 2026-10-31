@@ -213,8 +213,10 @@ before editing matching files.
   wrote: Markdown tables are re-padded and YAML scalars may be re-quoted. After
   committing, re-read a file before any exact-text edit, match table rows by
   cell content rather than padding, and confirm `git status --short` is clean.
-  A file the hook leaves modified after a successful commit is tracked by
-  `BL-260927-share-one-hook-safe-exact-path`.
+  Committing through `oat internal commit-paths` leaves no hook-modified
+  committed path dirty (`DR-261005-share-one-hook-safe-exact-path`); a plain
+  `git commit` has no such guarantee, so restage and commit any file it leaves
+  modified.
 - `oat gate review` runs the `oat` on your PATH, and gate reviewers load the
   installed (often user-scope) skills, so a project's own gates exercise the
   released gate and review-provide behavior, not the branch's. When a change

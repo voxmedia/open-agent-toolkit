@@ -11,7 +11,7 @@ labels:
   - follow-up
 assignee: null
 created: 2026-07-28T02:30:12.949Z
-updated: 2026-07-28T02:30:12.949Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,6 +21,9 @@ external_plans: []
 Evaluate diff review, plan review, fact-check, dashboard, complex table, and
 richer composition workflows after golden unattended recap quality is
 restored.
+
+**Trigger fired (2026-10-31):** all four golden-recovery dependencies listed
+below are archived under `.oat/repo/pjm/backlog/archived/`.
 
 ## Dependencies
 

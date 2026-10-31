@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:02.822Z
-updated: 2026-10-02T18:41:02.822Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -59,6 +59,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - `scripts/worktree/init.sh` and the AGENTS.md guidance block use
   `oat sync --scope project`, and `scripts/worktree/init.test.mjs` pins it.
 - The local-scope scaffold message names the real reason no commit was made.
-- The matching notes on the docs branch `docs-overhaul-readme-visual` (`reference/troubleshooting.md` for
-  `packs:inventory`, `reference/what-oat-writes.md:203` for the guidance block)
+- The matching notes in `apps/oat-docs/docs/reference/troubleshooting.md`
+  (the `packs:inventory` section at `:307`) and
+  `apps/oat-docs/docs/reference/what-oat-writes.md:206` (the guidance block)
   are updated once fixed.

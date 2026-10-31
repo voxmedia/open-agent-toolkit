@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:00.699Z
-updated: 2026-10-02T18:41:00.699Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -67,6 +67,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - A hand-edited `pjm.remote.storage.state: shared` without the approved
   storage transition is detected and refused (or reported by
   `oat pjm doctor`).
-- The warnings on the docs branch `docs-overhaul-readme-visual`
-  (`workflows/backlog-and-planning/remote-project-management.md:184-189` and
-  `:203-205`, and the replace-mode cap note) are removed once fixed.
+- The warnings in
+  `apps/oat-docs/docs/workflows/backlog-and-planning/remote-project-management.md`
+  (`:176-180` and `:195-198`, and the replace-mode cap note at `:156-162`) are
+  removed once fixed.

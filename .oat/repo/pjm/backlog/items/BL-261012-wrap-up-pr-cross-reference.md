@@ -9,7 +9,7 @@ labels:
   - artifact-cleanup
 assignee: null
 created: 2026-10-12T13:52:38.837Z
-updated: 2026-10-12T13:52:38.837Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -20,5 +20,8 @@ artifact-cleanup p04-t13 (external PR review W1) removed pr/ from the archive re
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `oat-wrap-up` Step 7 finds an archived project's PR from `oat_pr_url` in the
+  archived `state.md` or from the summary's PR line, without reading a `pr/`
+  directory, including for S3-hydrated archives.
+- The `pr/` workaround sentence is removed from the wrap-up troubleshooting
+  notes, and the skill's `metadata.version` is bumped.

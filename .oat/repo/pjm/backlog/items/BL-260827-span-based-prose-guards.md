@@ -13,7 +13,7 @@ labels:
   - wave-4-follow-up
 assignee: null
 created: 2026-08-27T06:56:35.554Z
-updated: 2026-08-27T06:56:35.554Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -31,5 +31,19 @@ Wave 4's codex-skill contract guard took six review rounds to converge because e
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- The codex-skill contract guard scans backticked spans rather than physical
+  lines, and keys its exemptions on structural rules instead of keyword lists
+  or row-level phrase carve-outs.
+- The documented exception row loses its exemption when its use-case cell also
+  advertises a general case or its flag cell is unconditional (final round 3
+  M2 / gate M1, probe y1).
+- Probe records carry insertion anchors, and the wave-4 probe runner
+  (`run-all.sh` + `apply.py`, with its NO-TESTS-RAN guard and isolation
+  controls) lives under `tools/` and serves `.agents/skills/*/tests/`.
+- The wave 2 residuals are fixed or recorded as named residuals:
+  blockquote-prefixed list markers no longer escape attachment,
+  `requiresConfirmation` covers the listed approval synonyms in an attached
+  continuation, and the `clauseOpener` and `requiresConfirmation` comments
+  describe their actual coverage.
+- Each guard change has a probe that the pre-change guard accepts and the
+  changed guard rejects, plus an accepted valid control.

@@ -14,7 +14,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:12.309Z
-updated: 2026-10-02T18:41:12.309Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -49,5 +49,6 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   message, or keep synced and make every entry skill accept a scope).
 - A decision is recorded on the non-interactive default pack set.
 - Whatever is chosen is implemented with tests for the no-`origin` case, and
-  the docs branch `docs-overhaul-readme-visual` (`workflows/projects/planning/starting-projects.md:55-57` and
-  `:155`, `reference/what-oat-writes.md:139`) describe it.
+  `apps/oat-docs/docs/workflows/projects/planning/starting-projects.md`
+  (`:55-59` and `:161-162`) and `apps/oat-docs/docs/reference/what-oat-writes.md:139`
+  describe it.

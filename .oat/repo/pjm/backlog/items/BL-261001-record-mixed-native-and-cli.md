@@ -12,7 +12,7 @@ labels:
   - deferred
 assignee: null
 created: 2026-10-01T04:53:42.661Z
-updated: 2026-10-01T04:53:42.661Z
+updated: 2026-10-31T21:08:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/333
@@ -43,6 +43,10 @@ sandbox-enforced.
   continuations keep happening after
   `BL-261001-recover-recon-lanes-after` ships its note and bounded retry. This
   adds manifest machinery, so it needs evidence of repeated friction first.
+
+**Trigger fired (2026-10-31):** `BL-261001-recover-recon-lanes-after` is
+archived, so the revisit condition now turns on whether mixed-route
+continuations have recurred since.
 
 ## Acceptance Criteria
 

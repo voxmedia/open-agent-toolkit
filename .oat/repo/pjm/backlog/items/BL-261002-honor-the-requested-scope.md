@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:54.250Z
-updated: 2026-10-02T18:40:54.250Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -62,6 +62,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   and does not call `gh` unless the user opted into remote detection.
 - Tests snapshot HOME and the repository for each command and assert no writes
   outside the requested scope.
-- The "Known surprises" bullets on the docs branch `docs-overhaul-readme-visual`
-  (`reference/what-oat-writes.md`, "Known surprises in 0.3.14") and the matching
-  notes in `getting-started/tool-packs.md` are removed once fixed.
+- The "Known surprises" bullets in
+  `apps/oat-docs/docs/reference/what-oat-writes.md` ("Known surprises in
+  0.3.14") and the matching notes in
+  `apps/oat-docs/docs/getting-started/tool-packs.md` are removed once fixed.

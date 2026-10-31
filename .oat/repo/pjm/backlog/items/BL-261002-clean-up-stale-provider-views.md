@@ -15,7 +15,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:49.939Z
-updated: 2026-10-02T18:40:49.939Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -60,7 +60,6 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - `--dry-run` lists these removals and writes nothing.
 - Regression tests cover delete and rename with Cursor and Codex enabled, and
   fail when the cleanup is removed.
-- The manual-cleanup warnings on the docs branch `docs-overhaul-readme-visual`
-  (`provider-sync/manifest-and-drift.md:65-70`,
-  `provider-sync/pilot-with-a-team.md:147` and `:158`) are removed once the
-  fix ships.
+- The manual-cleanup warnings under `apps/oat-docs/docs/provider-sync/`
+  (`manifest-and-drift.md:65-70`, `pilot-with-a-team.md:147` and `:158`) are
+  removed once the fix ships.

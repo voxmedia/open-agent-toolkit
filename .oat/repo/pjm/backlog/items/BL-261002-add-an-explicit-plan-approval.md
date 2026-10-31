@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:57.426Z
-updated: 2026-10-02T18:40:57.426Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -61,5 +61,6 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
 - Router, progress and next tables route an unapproved ready plan to the
   approval step; tests cover both modes and fail when the gate is removed.
 - Changed skills get `metadata.version` bumps, and the "no plan approval"
-  rows on the docs branch `docs-overhaul-readme-visual` (`workflows/approvals-and-automation.md:22-23` and
-  `:107`) are updated once it ships.
+  rows in `apps/oat-docs/docs/workflows/approvals-and-automation.md` (the
+  Quick and Spec-driven table rows at `:24-25`, and the notes at `:35` and
+  `:151`) are updated once it ships.

@@ -12,7 +12,7 @@ labels:
   - skills
 assignee: null
 created: 2026-08-18T00:01:02.918Z
-updated: 2026-10-02T22:53:49Z
+updated: 2026-10-31T21:08:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/207
@@ -97,6 +97,14 @@ chooses, and the choice is recorded with the report path in
 are a separate follow-up. The criteria below no longer ask for any of that;
 what stays open is the consolidated question across all dispositions and the
 shared authorization record.
+
+**Delivery status (2026-10-31):** Landed: the complexity review and the
+**simplify** disposition at exhaustion (#351, `4a85d2eda`;
+`BL-261001-run-a-complexity-review-when` archived), and the prerequisite
+`BL-260927-persist-quick-start-prompt` (archived). Remaining: the shared
+append-only authorization record and the extra-cycles, proceed-with-override
+and corrective-revision dispositions; the other prerequisite,
+`BL-260927-mark-gate-findings-as-new-or`, is still open.
 
 ## Acceptance Criteria
 

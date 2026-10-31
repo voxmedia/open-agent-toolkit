@@ -14,7 +14,7 @@ labels:
   - sandboxing
 assignee: null
 created: '2026-07-11T00:25:15Z'
-updated: '2026-07-11T00:25:15Z'
+updated: '2026-10-31T21:08:00Z'
 associated_issues: []
 ---
 
@@ -102,6 +102,17 @@ not launch nested task workers. That project-local unblock must not be mistaken
 for resolution of this backlog item or silently generalized into the OAT
 workflow.
 
+**Delivery status (2026-10-31):** Landed: launcher-owned dispatch provenance
+through `oat project dispatch record` (#255, extended in #315), since reduced
+to a validate-only check before managed effort-pinned Claude launches (#336,
+`DR-260927-dispatch-record-validates`;
+`packages/cli/src/commands/project/dispatch/record.ts`). The phase-direct
+topology this item called an interim fallback is now the standard implementer
+model (`.agents/agents/oat-phase-implementer.md` implements one plan phase
+end-to-end). Remaining: the coordinator-to-root broker itself, which the
+standard topology no longer needs; the 2026-10-31 backlog review lists this
+item as a close candidate pending the operator's decision.
+
 ## Acceptance Criteria
 
 - OAT defines a structured coordinator-to-root dispatch request containing the
@@ -131,10 +142,6 @@ workflow.
   deterministic named-role selection available, exact CLI broker fallback
   available, and no target-preserving route available. It fails before task
   edits when no safe exact route exists.
-- Documented phase-direct and root-direct fallbacks preserve exact dispatch and
-  phase bookkeeping when the broker protocol is unavailable; either fallback
-  is recorded as an execution deviation rather than presented as the normal
-  topology.
 - `danger-full-access` for a coordinator is not the default fallback. If a
   narrow writable-root configuration can support nested initialization, it is
   separately investigated and documented, but nested provider processes are

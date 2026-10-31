@@ -12,7 +12,7 @@ labels:
   - portability
 assignee: null
 created: 2026-09-27T03:35:37.500Z
-updated: 2026-09-27T03:35:37.500Z
+updated: 2026-10-31T21:08:00Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/307
@@ -24,6 +24,13 @@ external_plans: []
 ## Description
 
 Configured-gate result receipts are described as durable and closeout-owned in `oat-project-implement/references/completion-and-closeout.md`, but the contract never defines their location, tracking, redaction, cleanup, or fresh-clone behavior, while tracked state stores the receipt path (#307). Gate project-log receipts store absolute `projectPath` and `worktreeRoot` (`packages/cli/src/commands/gate/index.ts`), and the `**/gate-receipts/` ignore rule exists only in this repository's `.gitignore`; `oat init` does not add it, so a downstream `git add -A` commits machine-local paths (#312). Related: `BL-260820-emit-source-qualified` and `DR-260907-gate-log-receipts-live-under`. Sources: GitHub issues #307 and #312.
+
+**Delivery status (2026-10-31):** Landed: #275 (`cc91a2d21`) warns when a
+gate receipt path is not ignored (`warnWhenReceiptIsTracked`,
+`packages/cli/src/commands/gate/index.ts:582`). Remaining: everything below.
+`packages/cli/src/commands/init/gitignore.ts` still ships no
+`**/gate-receipts/` entry, and the project-log receipt still records an
+absolute `worktreeRoot` (`gate/index.ts:3433`).
 
 ## Acceptance Criteria
 

@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:13.673Z
-updated: 2026-10-02T18:41:13.673Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -44,5 +44,5 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   review-artifact write) is documented and tested in an unattended gate run
   that completes without prompts and without a bypass flag, or the item
   records why that is not possible.
-- `workflows/advanced/workflow-gates.md` on the docs branch `docs-overhaul-readme-visual` documents the supported
-  setup.
+- `apps/oat-docs/docs/workflows/advanced/workflow-gates.md` documents the
+  supported setup.

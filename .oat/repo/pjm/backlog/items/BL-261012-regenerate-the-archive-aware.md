@@ -9,7 +9,7 @@ labels:
   - artifact-cleanup
 assignee: null
 created: 2026-10-12T14:30:42.193Z
-updated: 2026-10-12T14:30:42.193Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -20,5 +20,10 @@ Since artifact-cleanup p04-t21, oat-project-complete carries the archive-aware P
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- A recordless resume of `oat-project-complete` after the archive (between
+  Step 8 and cleanup) regenerates the archive-aware PR body from the archive's
+  retained artifacts and the retained project ref (`PROJECT_LINKS_PIN_COMMIT`)
+  instead of reporting a manual PR update.
+- Step 11.5 syncs the regenerated body on that resume.
+- A scripted control or test covers the resumed path, and the skill's
+  `metadata.version` is bumped.

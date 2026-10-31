@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:58.502Z
-updated: 2026-10-02T18:40:58.502Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -59,5 +59,5 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   (it either maps to named tiers or is rejected with a pointer to the
   current keys); a test proves exact selection still works afterwards.
 - Changed skills get `metadata.version` bumps; the precedence warning on the
-  docs branch `docs-overhaul-readme-visual` (`workflows/advanced/dispatch-ceiling.md:631` and `:642-647`) is
-  updated or removed to match.
+  `apps/oat-docs/docs/workflows/advanced/dispatch-ceiling.md:666-671` (and
+  its summary at `:28-29`) is updated or removed to match.

@@ -14,7 +14,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:53.219Z
-updated: 2026-10-02T18:40:53.219Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -68,6 +68,7 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   confirmation.
 - Tests cover a full install-then-remove cycle and assert the leftover list is
   empty (or matches a documented, intentional remainder).
-- The "Backing out" section and removal table on the docs branch `docs-overhaul-readme-visual`
-  (`reference/what-oat-writes.md`, "Supported removal commands" and "Remove
-  everything") are replaced by the supported command once it ships.
+- The "Backing out" section and removal table in
+  `apps/oat-docs/docs/reference/what-oat-writes.md` ("Supported removal
+  commands" and "Remove everything") are replaced by the supported command
+  once it ships.

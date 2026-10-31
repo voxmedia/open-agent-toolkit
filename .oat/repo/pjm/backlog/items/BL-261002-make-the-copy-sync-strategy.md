@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:56.336Z
-updated: 2026-10-02T18:40:56.336Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -58,6 +58,6 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   accepted with the default or rejected with a message naming the missing key.
 - Windows fresh-clone behavior with committed symlinks is tested once and the
   result recorded, or explicitly left out of scope.
-- The warnings on the docs branch `docs-overhaul-readme-visual` (`provider-sync/config.md:177` and `:195`,
-  `provider-sync/pilot-with-a-team.md:207`, and the copy-strategy note in
-  `provider-sync/manifest-and-drift.md`) are removed once fixed.
+- The warnings under `apps/oat-docs/docs/provider-sync/`
+  (`config.md:177` and `:195`, `pilot-with-a-team.md:207`, and the
+  copy-strategy note in `manifest-and-drift.md`) are removed once fixed.

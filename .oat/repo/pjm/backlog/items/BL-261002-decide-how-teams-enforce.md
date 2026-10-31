@@ -12,7 +12,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:41:01.761Z
-updated: 2026-10-02T18:41:01.761Z
+updated: 2026-10-31T21:08:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -54,5 +54,5 @@ Source: product defect list `.oat/projects/shared/docs-improvement-overhaul/refe
   source, and a documented CI check fails a PR whose record shows a shared
   gate disabled or skipped.
 - Docs explain the chosen model; the section "Can a teammate weaken a team
-  rule?" on the docs branch `docs-overhaul-readme-visual` (`workflows/approvals-and-automation.md:173-195`) is
-  updated to match.
+  rule?" in `apps/oat-docs/docs/workflows/approvals-and-automation.md`
+  (`:230`) is updated to match.
