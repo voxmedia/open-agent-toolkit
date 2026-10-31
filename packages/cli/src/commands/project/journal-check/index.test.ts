@@ -19,6 +19,7 @@ import {
 import {
   deliveryEvidenceScope,
   evaluateSuccessor,
+  journalRewrites,
 } from '@commands/project/delivery/evidence';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import type { GoalDelivery } from '@open-agent-toolkit/control-plane';
@@ -280,6 +281,7 @@ describe('oat project journal check', () => {
       fresh: false,
       code: 'substantive-change',
       path: `${PROJECT_REL}/implementation.md`,
+      reason: expect.stringContaining('Verified with the reader tests.'),
     });
   });
 
@@ -392,28 +394,76 @@ describe('oat project journal check', () => {
     expect(unbornResult.exitCode).toBe(0);
   });
 
-  it('reports other Git inspection failures as command errors', async () => {
+  it('reports a dangling HEAD as a command error', async () => {
     const fixture = await project(GOAL_JOURNAL, {
       plan: GOAL_PLAN,
       state: GOAL_STATE,
     });
-    const failingGit: GitRunner = {
-      run: async () => ({
-        code: 128,
-        stdout: '',
-        stderr: 'fatal: inspection unavailable',
-      }),
-    };
-    const result = await run(
-      fixture,
-      ['--at', 'review', '--scope', 'p01'],
-      true,
-      failingGit,
+    initializeGit(fixture);
+    git(fixture.root, ['symbolic-ref', 'HEAD', 'refs/heads/dangling']);
+    await writeFile(
+      join(fixture.root, '.git', 'refs', 'heads', 'dangling'),
+      `${'f'.repeat(40)}\n`,
+      'utf8',
     );
+
+    const result = await run(fixture, ['--at', 'review', '--scope', 'p01']);
     expect(result.exitCode).toBe(2);
     expect(result.capture.jsonPayloads[0]).toMatchObject({
       status: 'error',
-      message: expect.stringContaining('inspection unavailable'),
+      message: expect.stringContaining('HEAD does not resolve'),
     });
+  });
+
+  it.each([1, 2, 3])(
+    'reports a failure from committed-journal Git call %i as a command error',
+    async (failureCall) => {
+      const fixture = await project(GOAL_JOURNAL, {
+        plan: GOAL_PLAN,
+        state: GOAL_STATE,
+      });
+      initializeGit(fixture);
+      let calls = 0;
+      const failingGit: GitRunner = {
+        run: async (args, options) => {
+          calls += 1;
+          return calls === failureCall
+            ? {
+                code: 128,
+                stdout: '',
+                stderr: `fatal: inspection ${failureCall} unavailable`,
+              }
+            : defaultGitRunner.run(args, options);
+        },
+      };
+      const result = await run(
+        fixture,
+        ['--at', 'review', '--scope', 'p01'],
+        true,
+        failingGit,
+      );
+      expect(result.exitCode).toBe(2);
+      expect(result.capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining(
+          `inspection ${failureCall} unavailable`,
+        ),
+      });
+    },
+  );
+
+  it('lists a removed recorded line without requiring a replacement', () => {
+    const before = `---
+---
+
+Recorded line.
+`;
+    const after = `---
+---
+`;
+
+    expect(journalRewrites(before, after)).toEqual([
+      { kind: 'recorded-line-rewritten', line: 'Recorded line.' },
+    ]);
   });
 });

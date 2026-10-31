@@ -136,7 +136,27 @@ async function readCommittedJournal(
     { cwd: projectDir, allowFailure: true },
   );
   if (head.code === 1) {
-    return null;
+    const symbolic = await git.run(['symbolic-ref', '-q', 'HEAD'], {
+      cwd: projectDir,
+      allowFailure: true,
+    });
+    if (symbolic.code !== 0 || symbolic.stdout === '') {
+      throw new CliError(
+        `Unable to inspect the committed journal: HEAD does not resolve and its branch could not be identified${symbolic.stderr ? `: ${symbolic.stderr}` : ''}`,
+        2,
+      );
+    }
+    const branch = await git.run(
+      ['show-ref', '--verify', '--quiet', symbolic.stdout],
+      { cwd: projectDir, allowFailure: true },
+    );
+    if (branch.code === 1) {
+      return null;
+    }
+    throw new CliError(
+      `Unable to inspect the committed journal: HEAD does not resolve${branch.stderr ? `: ${branch.stderr}` : ''}`,
+      2,
+    );
   }
   if (head.code !== 0) {
     throw new CliError(
