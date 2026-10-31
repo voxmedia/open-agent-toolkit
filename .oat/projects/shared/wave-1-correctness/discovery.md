@@ -75,9 +75,14 @@ describe the old behavior.
   the main sync plan (which already removes manifest-tracked agent views whose
   canonical file is gone) can apply; `oat status` runs the same planner.
   Codex base role exports from canonical agents carry `# oat-managed` and
-  `# oat-role` but no `# oat-owner`, and stale cleanup removes only roles whose
-  owner equals the scope's cleanup owner (`project-config` or `user-config`)
-  plus a legacy name-prefix rule, so deleted agents' roles and tables stay.
+  `# oat-role` but no `# oat-owner`. Materialized model/effort variants of the
+  supported base roles (`oat-phase-implementer`, `oat-reviewer`) carry
+  `# oat-owner: supported-catalogue` (66 of the 71 tracked `.codex/agents`
+  files in this repository) or the config owner. Stale cleanup removes only
+  roles whose owner equals the scope's cleanup owner (`project-config` or
+  `user-config`) plus a legacy name-prefix rule, so deleted agents' base roles,
+  `supported-catalogue` variants and tables stay. The Cursor extension already
+  cleans `supported-catalogue` and `project-config` owners at project scope.
   Partial sync (pack removal through `removedCanonicalPaths`) skips Codex stale
   cleanup entirely. Codex owner headers are read only by stale cleanup. An
   unknown owner value makes the header parser reject the file as unmanaged.
@@ -136,9 +141,11 @@ describe the old behavior.
 - **Option C: persist extension-managed role names in the sync manifest.**
   Larger change to the manifest schema and its consumers.
 
-**Chosen:** A. Smallest change; compatible with older readers. Roles that an
-older CLI left behind with no owner header stay as today (they cannot be
-proved canonical-derived); the docs say so.
+**Chosen:** A. Smallest change; compatible with older readers. At project
+scope, cleanup covers the `supported-catalogue` and `project-config` owners
+(the Cursor extension's existing precedent); at user scope, `user-config`.
+Roles that an older CLI left behind with no owner header stay as today (they
+cannot be proved canonical-derived); the docs say so.
 
 ### Item 1 — dangling agent links during the Cursor collision scan
 
@@ -182,6 +189,13 @@ is reported as a conflict (default dispatch needs depth 1); an explicit
 
 **Chosen:** A. Satisfies "does not call gh unless the user opted in" with no
 new flag (there is no opt-in, so `gh` is never called).
+
+### Item 3 — what an explicit `--scope` means
+
+Explicit `--scope project|user` writes only that scope, for both the
+single-pack command and the aggregate install; an existing placement in the
+other scope is neither reconciled nor removed. No-flag and `--scope all`
+behavior is unchanged.
 
 ### Item 7 — who owns the temporary HOME
 

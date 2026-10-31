@@ -58,6 +58,11 @@ Each item's acceptance criteria are the requirement; do not expand scope.
   `oat internal commit-paths --identity "<run identity>:<task-id>" --message "<message>" -- <exact files>`
   (hooks enabled; restage nothing by hand).
 - Do not commit `.oat/sync/manifest.json` changes produced by worktree init.
+- **Phase-end check** (every phase, before its report): run the whole CLI
+  suite forced, with a self-removing isolated HOME:
+  `H=$(mktemp -d); HOME="$H" pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli; S=$?; rm -rf "$H"; echo "exit=$S"`.
+  Fix failures inside the phase boundary; report any failure in a file
+  another phase owns instead of editing it (p05-t05 owns cross-phase fixes).
 - Stay inside the phase's **File boundary**. If a needed change falls outside
   it, stop and report instead of editing (another parallel phase owns it).
 
@@ -74,7 +79,12 @@ the group merges.
   `getting-started/tool-packs.md`, `reference/troubleshooting.md` and other
   reference pages) are all assigned to `p05`, so `p01` and `p02` change code
   and tests only. `commands/status/index.test.ts` belongs to `p02`; `p01`
-  adds new test files instead of editing it.
+  adds new test files instead of editing it. The skill-sentence contract test
+  `validation/named-skill-load-contract.test.ts` belongs to `p03`. Root
+  `README.md` and `packages/cli/README.md` belong to `p05`.
+- **Cross-phase test expectations** (for example a `p02`-owned test fixture
+  that pins the old Codex base-role header) surface only after the merge;
+  `p05-t05` owns reconciling them.
 - **Verification is independent.** Each phase's tests run against its own
   code; none depends on another phase's behavior.
 - **`p05` depends on all four:** its docs describe the shipped behavior, its
@@ -98,9 +108,13 @@ values in .codex/config.toml.
 `packages/cli/src/commands/sync/**` (existing and new tests; source only if
 needed for output), `packages/cli/src/commands/providers/codex/**`,
 `packages/cli/src/commands/tools/remove/**` and
-`packages/cli/src/commands/tools/shared/auto-sync*` (tests only), and **new**
-test files under `packages/cli/src/commands/status/` (do not edit
-`commands/status/index.ts` or `index.test.ts`). No docs edits (p05 owns them).
+`packages/cli/src/commands/tools/shared/auto-sync*` (tests only),
+`packages/cli/src/commands/shared/codex-strays.test.ts` (fixture updates for
+the base-role owner header), and **new** test files under
+`packages/cli/src/commands/status/` (do not edit `commands/status/index.ts`
+or `index.test.ts`). Fixture breakage in files p02 owns (status, init, doctor
+tests) is reported for p05-t05, not edited here. No docs edits (p05 owns
+them).
 
 ### Task p01-t01: Skip dangling agent links in the Cursor collision scan
 
@@ -119,12 +133,12 @@ test files under `packages/cli/src/commands/status/` (do not edit
   `.agents/agents/gone.md`, `assertNoUnmanagedCursorAgentCollisions` resolves
   without throwing; a link whose existing target is outside the scope still
   throws the "escapes the sync scope" error.
-- Integration: scratch repository with claude, cursor, codex (and copilot, if
-  the harness supports it) enabled and a canonical agent synced once. Then
+- Integration: scratch repository with claude, cursor, codex and copilot
+  enabled and a canonical agent synced once. Then
   (a) delete the canonical agent, (b) rename it. For each: `oat sync --scope
 project --dry-run` exits 0, lists the removals of `.cursor/agents/<name>.md`,
-  `.claude/agents/<name>.md` (and `.github/agents/<name>.md` when copilot is
-  enabled) and writes nothing (snapshot the tree); `oat sync --scope project`
+  `.claude/agents/<name>.md` and the `.github/agents/` view, and writes
+  nothing (snapshot the tree); `oat sync --scope project`
   exits 0 and removes those views (rename: creates the new name's views);
   `oat status --scope project` exits without the escapes error and reports
   the pending change before sync.
@@ -150,10 +164,11 @@ with the escapes error, restore.
 
 **Files:**
 
-- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`,
-  `packages/cli/src/providers/codex/codec/shared.ts` and/or
-  `packages/cli/src/providers/codex/codec/export-to-codex.ts` (whichever owns
-  the base export header)
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.ts`
+  (stamp the owner in `desiredRolesFromCanonical` by wrapping
+  `exported.content` with `withOatManagedCodexRoleOwner(…, scopeOwner)`;
+  leave `export-to-codex.ts` unchanged because materialized variants build on
+  it and are stamped separately)
 - Modify: related tests (`sync-extension.test.ts`, `export-to-codex` and
   `shared` tests, `commands/sync/index.test.ts` expectations that pin base
   role content)
@@ -174,24 +189,33 @@ with the escapes error, restore.
 - Base canonical exports now carry `# oat-owner: project-config` at project
   scope and `# oat-owner: user-config` at user scope, and the header still
   parses as managed.
+- Supported base role removed (`oat-reviewer`), both by deleting it before a
+  full project sync and through `removedCanonicalPaths`: every
+  `oat-reviewer-<model>-<effort>.toml` variant (owner `supported-catalogue`
+  or `project-config`) and its `[agents.*]` table are removed; a variant owned
+  by another scope (`user-config`) and a user-authored table stay.
 
 **Step 2: Implement (GREEN)**
 
 Decision (discovery Options Considered, item 1): stamp each canonical agent's
 base Codex export with the sync scope's existing owner value. Do not add a new
-owner value (older CLIs reject unknown owners). Stale cleanup then removes it
-through the existing owner rule. In partial sync, derive the removed agents'
-role names (and their materialized variants for supported base roles) from
-`allowedCanonicalPaths` entries under `.agents/agents/` that no longer exist,
-mirroring the Claude extension's `removedSupportedBaseRoles`, and remove only
-roles that are OAT-managed with the scope's owner (or match the existing
-legacy rule).
+owner value (older CLIs reject unknown owners). At project scope, stale
+cleanup covers the owners `supported-catalogue` and `project-config` (the
+Cursor extension's precedent, `cursor/codec/sync-extension.ts` cleanup
+owners); at user scope it stays `user-config`. Apply the same owner set to
+full-sync cleanup and to the new partial-sync removal. In partial sync, derive
+the removed agents' role names (and their materialized variants for supported
+base roles) from `allowedCanonicalPaths` entries under `.agents/agents/` that
+no longer exist, mirroring the Claude extension's `removedSupportedBaseRoles`,
+and remove only roles that are OAT-managed with one of those owners (or match
+the existing legacy rule).
 
 **Step 3: Verify**
 
 Focused Codex and sync tests (isolated HOME), lint, type-check. Prove the
-guard can fail: drop the owner stamp (and separately the partial-sync
-removal), confirm the new tests fail, restore.
+guard can fail: separately drop the owner stamp, the `supported-catalogue`
+cleanup owner, and the partial-sync removal; confirm the new tests fail each
+time; restore.
 
 **Step 4: Commit** — `fix(p01-t02): remove stale canonical-derived Codex roles on agent delete, rename, and pack removal`
 
@@ -301,20 +325,25 @@ installs at user scope).
 **Files:**
 
 - Modify: `packages/cli/src/commands/init/tools/index.ts` (additive scope
-  union and the workflows `localPaths` / `.gitignore` step)
+  union, the single-pack `resolvePackCommandSelection`, and the workflows
+  `localPaths` / `.gitignore` step)
+- Modify if needed: `packages/cli/src/commands/tools/shared/pack-lifecycle-outcome.ts`
+  (`resolveAdditivePackScopeSelection`) and its test
 - Test: same real-filesystem test file as p02-t01
 
 **Step 1: Write tests (RED)** — with workflows already installed at project
-scope in the scratch repository, `oat tools install --scope user` writes
-nothing into the repository (no `localPaths` added to `.oat/config.json`, no
-`# OAT local paths` block in `.gitignore`, no project skill writes) and
-installs at user scope. With a pack installed at user scope,
-`oat tools install --scope project` writes nothing under HOME.
+scope in the scratch repository, both `oat tools install --scope user` and
+`oat tools install workflows --scope user` write nothing into the repository
+(no `localPaths` added to `.oat/config.json`, no `# OAT local paths` block in
+`.gitignore`, no project skill writes) and install at user scope. With a pack
+installed at user scope, `oat tools install --scope project` and
+`oat tools install <pack> --scope project` write nothing under HOME.
 
-**Step 2: Implement (GREEN)** — an explicit `--scope project|user` limits
-writes to that scope's targets; existing placements in the other scope stay as
-they are (neither reconciled nor removed). Keep the no-flag and `--scope all`
-behavior unchanged.
+**Step 2: Implement (GREEN)** — decision (discovery item 3): an explicit
+`--scope project|user` limits writes to that scope's targets for both the
+single-pack and aggregate commands; existing placements in the other scope
+stay as they are (neither reconciled nor removed). Keep the no-flag and
+`--scope all` behavior unchanged.
 
 **Step 3: Verify** — focused tests, lint, type-check. Prove the guard can
 fail: restore the union-driven project request, confirm the repository
@@ -460,7 +489,10 @@ pr-final skill contracts with their actual behavior.
 
 **File boundary:** `.agents/skills/oat-project-implement/SKILL.md`,
 `.agents/skills/oat-project-complete/SKILL.md`,
-`.agents/skills/oat-project-pr-final/SKILL.md`, and
+`.agents/skills/oat-project-pr-final/SKILL.md`,
+`packages/cli/src/validation/named-skill-load-contract.test.ts` (and any other
+skill-sentence contract test under `packages/cli/src/validation` or
+`packages/cli/src/commands/init/tools/shared` that pins changed text), and
 `apps/oat-docs/docs/workflows/projects/execution/execution-skills.md` plus
 any other docs page that restates these three behaviors (search
 `apps/oat-docs/docs` for `--retry-limit`, `--base main`, and the pr-final
@@ -476,7 +508,16 @@ the `--retry-limit` note at line 79, keep the retry-limit source sentence).
 
 **Verify:** `pnpm oat:validate-skills`; skill contract tests
 `H=$(mktemp -d); HOME="$H" pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared src/validation; S=$?; rm -rf "$H"; echo "exit=$S"`;
-`pnpm exec markdownlint-cli2 <changed docs>` or the docs app check.
+`pnpm lint` and `pnpm format` (AGENTS.md: required when `.agents/skills`
+changes); `pnpm --filter oat-docs docs:check` for the changed docs page.
+
+**Contract-test note (applies to p03-t02 and p03-t03):**
+`packages/cli/src/validation/named-skill-load-contract.test.ts` pins the
+pr-final "Without arguments" sentence ("Run the `oat-project-pr-final` skill
+and it will ask for") and fails on unclassified named-skill mentions. Update
+that row's `match` when p03-t03 rewrites the sentence, and either add a row for
+a new `oat-project-pr-final` mention in `oat-project-complete` (p03-t02) or
+word the new sentence without naming the skill.
 
 **Commit** — `fix(p03-t01): drop the unread --retry-limit hint from oat-project-implement`
 
@@ -520,8 +561,9 @@ under TMPDIR.
 **File boundary:** `packages/cli/src/commands/shared/exact-path-commit.ts`
 and `exact-path-commit.test.ts`,
 `apps/oat-docs/docs/reference/cli-reference.md` (the "Exact-path maintenance
-commits" section only), a new script and test under `scripts/`, root
-`package.json` (scripts only), and root `AGENTS.md`.
+commits" section only), `.lintstagedrc.mjs` and `tools/git-hooks/pre-commit`
+(only if the real-hook probe in p04-t01 requires it), a new script and test
+under `scripts/`, root `package.json` (scripts only), and root `AGENTS.md`.
 
 ### Task p04-t01: Stage tracked files under ignored directories in commit-paths
 
@@ -551,9 +593,22 @@ the guard can fail: (a) remove the tracked/force split and confirm the
 tracked-file test fails; (b) force-add every path and confirm the
 untracked-ignored refusal test fails; restore. Re-run the scratch probe with
 the rebuilt CLI and report the pre-fix bad state, post-fix commit, refusal,
-and accepted control. Update the cli-reference paragraph to say tracked files
-under ignored directories are committed and untracked ignored paths are
-rejected.
+and accepted control.
+
+**Real-hook probe (acceptance criterion 3):** this repository's pre-commit
+hook runs lint-staged, which matches `*.md` and re-stages task files with its
+own `git add` (no `-f`), so a scratch hook is not enough evidence. In a
+throwaway worktree of this repository at the task's HEAD
+(`git worktree add <tmp> HEAD`, hooks installed as in the main checkout),
+modify `packages/cli/assets/templates/plan-lite.md` and commit it with the
+branch-built `node packages/cli/dist/index.js internal commit-paths`. Record
+the outcome, then remove the worktree. If the hook's re-stage fails, fix it
+within this phase's boundary (lint-staged config or hook script) so a tracked
+file under `packages/cli/assets/templates/` commits with hooks enabled and no
+`git add -f`, and re-run the probe.
+
+Update the cli-reference paragraph to say tracked files under ignored
+directories are committed and untracked ignored paths are rejected.
 
 **Step 4: Commit** — `fix(p04-t01): commit tracked files under ignored directories in commit-paths`
 
@@ -589,10 +644,12 @@ the trap, confirm the removal tests fail, restore.
 ## Phase 5: Integration — docs, generated views, release, close-out
 
 Runs after the p01–p04 group merges. **File boundary:** `apps/oat-docs/docs/**`
-pages that describe the fixed behavior, this repository's generated provider
-views and `.oat/sync/manifest.json`, the five public `package.json` files and
-`packages/cli/assets/public-package-versions.json`, and `.oat/repo/pjm/**`
-paths returned by `oat backlog archive`.
+pages that describe the fixed behavior, root `README.md` and
+`packages/cli/README.md`, this repository's generated provider views and
+`.oat/sync/manifest.json`, the five public `package.json` files and
+`packages/cli/assets/public-package-versions.json`, the `.oat/repo/**` paths
+returned in `oat backlog archive` `affectedPaths`, and (p05-t05 only) any file
+needed to fix a cross-phase gate failure.
 
 ### Task p05-t01: Update docs that describe the fixed behavior
 
@@ -601,8 +658,11 @@ paths returned by `oat backlog archive`.
 `provider-sync/pilot-with-a-team.md`, `provider-sync/providers.md`,
 `provider-sync/scope-and-surface.md`, `provider-sync/commands.md`,
 `apps/oat-docs/docs/getting-started/tool-packs.md`,
-`apps/oat-docs/docs/reference/troubleshooting.md`, and any other page found by
-searching `apps/oat-docs/docs` for the old behaviors (`escapes the sync
+`apps/oat-docs/docs/reference/troubleshooting.md`, root `README.md` (line 36
+says a no-name `--scope project` install also installs core under HOME),
+`packages/cli/README.md`, and any other page found by searching
+`apps/oat-docs/docs`, `README.md`, and `packages/cli/README.md` for the old
+behaviors (`escapes the sync
 scope`, `multi_agent`, `max_depth`, `Known surprises`, `--scope all` in sync
 guidance, `packs:inventory`, `--no-hook`, `EPIPE`, `--no-commit)`, `gh repo
 view`, core and `--scope project`).
@@ -672,17 +732,43 @@ code captured.
 
 ### Task p05-t04: Archive the delivered backlog items
 
-**Steps:** For each delivered item, run
-`oat backlog archive <id> --summary "<outcome>" --json`, capture
+**Steps:** For each delivered item, run the branch CLI
+`pnpm run cli:source -- backlog archive <id> --summary "<outcome>" --json`, capture
 `affectedPaths`, convert to repository-relative paths, deduplicate, format the
 existing text files, and commit the exact union through `oat internal
 commit-paths` with identity `<run identity>:backlog-closeout`. If an item was
 dropped, record why in `implementation.md` instead of archiving it.
 
-**Verify:** `oat pjm doctor --json` reports no backlog drift; the seven items
-are under `.oat/repo/pjm/backlog/archived/`.
+**Verify:** `pnpm run cli:source -- pjm doctor --json` reports no backlog
+drift; the delivered items are under `.oat/repo/pjm/backlog/archived/`.
 
 **Commit** — `chore(p05-t04): archive wave 1 backlog items`
+
+---
+
+### Task p05-t05: Run the Definition of Done gates and fix cross-phase breakage
+
+**Steps:** Run the nine root AGENTS.md Definition of Done gates in CI order,
+capturing each exit code (`pnpm <gate> > /tmp/wave1-<gate>.log 2>&1; echo "exit=$?"`):
+`pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+`pnpm run check:skill-bumps`, `git fetch origin main` then
+`pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, and
+the generated docs index freshness check
+(`pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+then `git diff --exit-code -- apps/oat-docs/index.md`). Also run the
+evidence-grade suite through `pnpm test:evidence`, `pnpm lint`, and
+`pnpm format` (this delivery changes `.agents/skills`). Confirm `pnpm test`
+actually executed (no `>>> FULL TURBO` replay for changed packages).
+
+Fix any failure that comes from combining the parallel phases (for example a
+test outside p01's boundary that pins the old Codex base-role header), each fix
+within the failing component, and re-run the failing gate and every later
+gate. Report every gate's exit code; the root records them in
+`implementation.md`.
+
+**Commit** — `fix(p05-t05): reconcile cross-phase test expectations` when a
+fix was needed. When every gate passes on the first run there is nothing to
+commit: report that, with the gate log paths, and make no empty commit.
 
 ---
 
@@ -723,9 +809,9 @@ cell; never truncate a widened row back to five columns.
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
 - Phase 3: 3 tasks - Lifecycle skill contracts (item 5)
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
-- Phase 5: 4 tasks - Docs, generated views, version bump, backlog close-out
+- Phase 5: 5 tasks - Docs, generated views, version bump, backlog close-out, Definition of Done gates
 
-**Total: 19 tasks**
+**Total: 20 tasks**
 
 Ready for code review and merge.
 
