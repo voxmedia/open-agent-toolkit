@@ -34,6 +34,7 @@ import {
   evaluateDeliveryReview,
   evaluateGateCarrier,
   evaluateSuccessor,
+  journalRewrites,
   latestDeliveryForMilestone,
   reviewRowsFor,
   type EvidenceScope,
@@ -390,6 +391,58 @@ describe('delivery evidence evaluator (bookkeeping-successor freshness, A2)', ()
   });
 
   describe('A2 negative controls', () => {
+    it('lists every recorded-line rewrite and new extraction marker', () => {
+      const before = `---
+---
+
+# Journal
+
+Recorded alpha.
+Recorded beta.
+**Status:** pending
+**Owner:** -
+`;
+      const after = `---
+---
+
+# Journal
+
+Recorded alpha rewritten.
+**Status:** completed
+**Owner:** oat-project-implement
+**Extracted to:** child
+`;
+
+      expect(journalRewrites(before, after)).toEqual([
+        { kind: 'recorded-line-rewritten', line: 'Recorded alpha.' },
+        { kind: 'recorded-line-rewritten', line: 'Recorded beta.' },
+        { kind: 'extraction-marker', line: '**Extracted to:** child' },
+      ]);
+    });
+
+    it('does not list append-only additions or mutable progress updates', () => {
+      const before = `---
+---
+
+# Journal
+
+Recorded.
+**Status:** pending
+`;
+      const after = `---
+---
+
+# Journal
+
+Recorded.
+**Status:** completed
+
+Appended observation.
+`;
+
+      expect(journalRewrites(before, after)).toEqual([]);
+    });
+
     it('rejects an Outcome change inside allowed plan.md that a paths-only evaluator accepts', async () => {
       repo = await createGoalRepo();
       const chain = await bookkeepingChain(repo);

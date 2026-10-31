@@ -901,24 +901,23 @@ const PLACEHOLDER_FIELD =
   /^(?:-[ \t]+)?\*\*[^*\n]+:\*\*\s*(?:-|—|pending|tbd|null)?\s*$/i;
 const EXTRACTION_MARKER = /^\*\*(?:Status:\*\*\s+extracted|Extracted to:\*\*)/;
 
-/**
- * The journal is append-mostly: progress fields and placeholders may be
- * rewritten and tables re-rendered, but no recorded observation is removed
- * or rewritten, and marking a phase extracted changes scope.
- */
-function judgeJournalChange(before: string, after: string): Verdict {
-  const previous = splitFrontmatter(before);
-  const next = splitFrontmatter(after);
-  if (previous === null || next === null) {
-    return refuse('implementation.md frontmatter could not be parsed');
-  }
+export interface JournalRewrite {
+  kind: 'recorded-line-rewritten' | 'extraction-marker';
+  line: string;
+}
+
+function listJournalRewrites(
+  previousBody: string,
+  nextBody: string,
+): JournalRewrite[] {
+  const rewrites: JournalRewrite[] = [];
   const remaining = new Map<string, number>();
-  for (const line of next.body.split('\n')) {
+  for (const line of nextBody.split('\n')) {
     const key = line.trimEnd();
     remaining.set(key, (remaining.get(key) ?? 0) + 1);
   }
   const previousLines = new Set<string>();
-  for (const line of previous.body.split('\n')) {
+  for (const line of previousBody.split('\n')) {
     const key = line.trimEnd();
     previousLines.add(key.trim());
     const count = remaining.get(key) ?? 0;
@@ -935,16 +934,53 @@ function judgeJournalChange(before: string, after: string): Verdict {
       (progress !== null &&
         !(progress[1] === 'Status' && /^extracted\b/.test(progress[2] ?? '')));
     if (!mutable) {
-      return refuse(
-        `recorded journal line "${trimmed}" was removed or rewritten`,
-      );
+      rewrites.push({ kind: 'recorded-line-rewritten', line: trimmed });
     }
   }
-  for (const line of next.body.split('\n')) {
+  for (const line of nextBody.split('\n')) {
     const trimmed = line.trim();
     if (EXTRACTION_MARKER.test(trimmed) && !previousLines.has(trimmed)) {
-      return refuse(`"${trimmed}" marks a phase extracted`);
+      rewrites.push({ kind: 'extraction-marker', line: trimmed });
     }
+  }
+  return rewrites;
+}
+
+/**
+ * List every recorded journal line removed or rewritten by `after`, followed
+ * by every newly introduced extraction marker. Mutable progress fields,
+ * placeholders, table rendering, and append-only additions are excluded.
+ */
+export function journalRewrites(
+  before: string,
+  after: string,
+): JournalRewrite[] {
+  const previous = splitFrontmatter(before);
+  const next = splitFrontmatter(after);
+  return previous === null || next === null
+    ? []
+    : listJournalRewrites(previous.body, next.body);
+}
+
+/**
+ * The journal is append-mostly: progress fields and placeholders may be
+ * rewritten and tables re-rendered, but no recorded observation is removed
+ * or rewritten, and marking a phase extracted changes scope.
+ */
+function judgeJournalChange(before: string, after: string): Verdict {
+  const previous = splitFrontmatter(before);
+  const next = splitFrontmatter(after);
+  if (previous === null || next === null) {
+    return refuse('implementation.md frontmatter could not be parsed');
+  }
+  const [first] = listJournalRewrites(previous.body, next.body);
+  if (first?.kind === 'recorded-line-rewritten') {
+    return refuse(
+      `recorded journal line "${first.line}" was removed or rewritten`,
+    );
+  }
+  if (first?.kind === 'extraction-marker') {
+    return refuse(`"${first.line}" marks a phase extracted`);
   }
   return OK;
 }
