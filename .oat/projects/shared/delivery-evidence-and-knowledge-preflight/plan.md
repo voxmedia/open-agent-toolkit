@@ -844,7 +844,7 @@ oat internal commit-paths --identity "$COMMIT_IDENTITY:p05-t02" --message "chore
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
 | p01   | code     | fixes_completed | 2026-10-31 | reviews/archived/p01-review-2026-10-31T002508Z.md           | 1b89c4cce67a9fd5b1ab1b18dce914b6611a5be3 | auto       | -                 |
 | p01   | code     | passed          | 2026-10-31 | reviews/archived/p01-review-2026-10-31T004233Z.md           | b9c8c436e274083bc1bd994d99cce3cb26320d75 | auto       | -                 |
-| p02   | code     | fixes_added     | 2026-10-31 | reviews/archived/p02-review-2026-10-31T010236Z.md           | 6abea4b392bf44a9535cc74fda4769366d86ee5b | auto       | -                 |
+| p02   | code     | fixes_completed | 2026-10-31 | reviews/archived/p02-review-2026-10-31T010236Z.md           | 6abea4b392bf44a9535cc74fda4769366d86ee5b | auto       | -                 |
 | p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |

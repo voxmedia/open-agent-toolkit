@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -19,12 +19,12 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase         | Status      | Tasks | Completed |
 | ------------- | ----------- | ----- | --------- |
 | Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | in_progress | 6     | 2/6       |
+| Phase 2 (p02) | in_progress | 6     | 6/6       |
 | Phase 3 (p03) | pending     | 2     | 0/2       |
 | Phase 4 (p04) | pending     | 1     | 0/1       |
 | Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 9/18 tasks completed
+**Total:** 13/18 tasks completed
 
 ---
 
@@ -253,23 +253,84 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p02-t03: (review) Revert the milestone-subject stack carrier deviation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** d76e41b0504292a55054ea546c66aa05eacb5ac0
+
+**Outcome (required when completed):**
+
+- Milestone subjects judge the exit carrier against local `HEAD` for every delivery kind again; a registered stack with an ungated substantive commit and a passing re-review is `undeliverable` (`disallowed-path`).
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/check.ts`
+- `packages/cli/src/commands/project/delivery/check.test.ts`
+
+**Verification:** regression and delivery/closeout suites passed; type-check passed. Can-fail: restoring the milestone stack wrapper made the regression report `ok`/deliverable.
+
+**Notes / Decisions:**
+
+- Review-fix for p02 review H1; retracts the p02-t01 deviation. Stack built-CLI control now runs with `--subject d01`.
 
 ### Task p02-t04: (review) Cover the unregistered milestone gate path and own-evidence effect
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 82a102162b705227fcddbb9d5d0e055ff9b86e27
+
+**Outcome (required when completed):**
+
+- The pre-registration milestone gate path is covered (`--subject m01` matching → ok/fresh; manual and mismatched → `disallowed-path`), and a behavioral control proves a swap of `d01`'s integrated review to the gate artifact stays `substantive-change`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/__tests__/goal-repo.ts`
+- `packages/cli/src/commands/project/delivery/check.test.ts`
+- `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Verification:** focused cases and suites passed. Can-fail: removing the unregistered gate spread turned the matching case stale `disallowed-path`; leaking gate artifacts into own evidence turned the swap control into `bookkeeping-successor`.
+
+**Notes / Decisions:**
+
+- Review-fix for p02 review M1 and L2.
 
 ### Task p02-t05: (review) Admit gate artifacts only under reviews/
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 26ddb708f7b9bdbe8a17507c1f348b3be6331157
+
+**Outcome (required when completed):**
+
+- Gate-row artifacts are admitted only under `reviews/` or `reviews/archived/`; a forged gate row naming `design.md` stays `disallowed-path`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts`
+- `packages/cli/src/commands/project/delivery/evidence.test.ts`
+
+**Verification:** forged-artifact control and suites passed. Can-fail: removing `reviewArtifactPath(...)` admitted `design.md`. Recovery commit 5fba40931897c85e2ec2620eae637f98a2172ec6 fixed a `no-shadow` lint in this task's test (see Recovery Event dedkp-p02-recovery-1).
+
+**Notes / Decisions:**
+
+- Review-fix for p02 review L1 (path restriction); the Invocation-identity hardening is deferred.
 
 ### Task p02-t06: (review) Correct gate-admission wording in the contract and CLI reference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 55e618592afc3984d2b0389d1014be72692e198d
+
+**Outcome (required when completed):**
+
+- §12.8 states the gate artifact is admitted in evidence scopes built for that carrier (its review and exit evaluations) and only under `reviews/`; the `delivery check` CLI reference names the gate-row admission and its head binding.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-brief/references/brief-contract.md`
+- `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** shared and validation suites 1,088 passed; markdownlint passed.
+
+**Notes / Decisions:**
+
+- Review-fix for p02 review L3.
 
 ### Review Received: p02
 
@@ -284,7 +345,24 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - L2 (Low): own-evidence isolation is pinned only statically → fix task p02-t04 (behavioral swap control).
 - L3 (Low): §12.8 "for that carrier only" overstates the narrowing; CLI reference allowlist omits the gate row → fix task p02-t06.
 
-**Outcome:** fixes queued: p02-t03, p02-t04, p02-t05, p02-t06 (blocking High; reviewer request `dedkp-p02-review-1`).
+**Outcome:** fixes completed: p02-t03, p02-t04, p02-t05, p02-t06; awaiting re-review. Original queue: p02-t03, p02-t04, p02-t05, p02-t06 (blocking High; reviewer request `dedkp-p02-review-1`).
+
+### Recovery Event dedkp-p02-recovery-1
+
+- Phase/task: p02 / p02-t05
+- Original request: dedkp-p02-implementation
+- Original commit: 26ddb708f7b9bdbe8a17507c1f348b3be6331157
+- Defect class: lint
+- Discovered by: pnpm lint
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Recovery commit: 5fba40931897c85e2ec2620eae637f98a2172ec6
+- Verification: CLI lint, delivery/closeout suites and type-check passed before and after the recovery commit; root rerun: lint exit 0, 182 tests passed, type-check exit 0.
+- Reason: mechanically bounded `no-shadow` rename in the forged-artifact test; no behavior change; reservation commit 328a85e249564656dee7be3a8c57cef65a627ffb touched only state.md.
+
+**Built-CLI controls (p02 fix round):** mis-ordered stack — `createGoalRepo`, lower branch `feat: unrelated lower layer`, main `feat: tip layer`, m01 review, `registryYaml({ kind: 'stack' })`, registration commit; `node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject d01` → expected and observed exit 1, `undeliverable`, `stack-order`. Unregistered milestone — `createGoalRepo` + `gateArtifactScenario(repo, { registered: false })`; same command with `--subject m01` → expected and observed exit 0, `ok`, review and exit fresh.
 
 ---
 
@@ -351,6 +429,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p01-fix-2 · scope=p01-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p01-implementation · observed=~ · match=~
 
 - run/v1 · request=dedkp-p02-implementation · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p02-review-1 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p02-fix-1 · scope=p02-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p02-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
