@@ -16,70 +16,97 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | in_progress | 3     | 0/3       |
+| Phase 2 (p02) | pending     | 2     | 0/2       |
+| Phase 3 (p03) | pending     | 2     | 0/2       |
+| Phase 4 (p04) | pending     | 1     | 0/1       |
+| Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 0/N tasks completed
+**Total:** 0/10 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Stack-aware delivery exit carriers (#383)
 
 **Status:** in_progress
 **Started:** 2026-10-30
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:** {command(s) run for the phase and the result}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add a stack-aware exit-carrier wrapper
 
 **Status:** pending
 **Commit:** -
 
-**Outcome (required when completed):**
+### Task p01-t02: Use the wrapper in check, refresh and closeout; align the milestone subject scope
 
-- {what materially changed (not “did task”, but “system now does X”)}
+**Status:** pending
+**Commit:** -
 
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:** {command(s) and result}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t03: Document stacked deliveries and their registration
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Gate-originated artifact admission (#384)
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Admit the exit gate's own artifact as bookkeeping
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Reconcile goal exit-gate guidance
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Journal rewrite detection (#385)
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Export a journal-rewrite lister from delivery evidence
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Report rewritten committed journal lines in goal projects
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Knowledge-index dispatch preflight (#355)
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Resolve a mapper route before mutating knowledge
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Release bookkeeping and gates
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Bump changed skills and lockstep package versions
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Close out backlog items and run the full gate list
 
 **Status:** pending
 **Commit:** -
@@ -93,6 +120,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 <!-- orchestration-runs-start -->
 
 <!-- orchestration-runs-end -->
+
+- Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
+- Tier 1 — Subagents (Cursor native Task, available without authorization); dispatch policy managed/high from project state.
 
 ## Reviews and Gates
 

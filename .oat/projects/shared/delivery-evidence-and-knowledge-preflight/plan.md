@@ -12,6 +12,8 @@ oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
 oat_template: false
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 ---
 
 # Implementation Plan: delivery-evidence-and-knowledge-preflight
