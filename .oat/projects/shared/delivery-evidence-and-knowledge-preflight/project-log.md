@@ -31,6 +31,10 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 Phase p01 (#383 stack-aware exit carriers) complete: 7 tasks (3 planned, 4 review-fix); review round 1 0C/0H/2M/3L, round 2 passed 0C/0H/0M/1L; recovery attempts 0/10; delivery-evidence-p01-outcome
 
+### 2026-10-31 · structural · oat-project-implement · p02
+
+Phase p02 (#384 gate artifact admission) complete: 7 tasks (2 planned, 5 review-fix); review round 1 0C/1H/1M/3L (H1 retracted a milestone stack deviation), round 2 passed 0C/0H/0M/1L; recovery attempts 1/10 settled; delivery-evidence-p02-outcome
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

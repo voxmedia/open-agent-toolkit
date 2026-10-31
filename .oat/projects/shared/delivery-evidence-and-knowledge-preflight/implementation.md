@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p02-t07
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status      | Tasks | Completed |
-| ------------- | ----------- | ----- | --------- |
-| Phase 1 (p01) | complete    | 7     | 7/7       |
-| Phase 2 (p02) | in_progress | 7     | 6/7       |
-| Phase 3 (p03) | pending     | 2     | 0/2       |
-| Phase 4 (p04) | pending     | 1     | 0/1       |
-| Phase 5 (p05) | pending     | 2     | 0/2       |
+| Phase         | Status   | Tasks | Completed |
+| ------------- | -------- | ----- | --------- |
+| Phase 1 (p01) | complete | 7     | 7/7       |
+| Phase 2 (p02) | complete | 7     | 7/7       |
+| Phase 3 (p03) | pending  | 2     | 0/2       |
+| Phase 4 (p04) | pending  | 1     | 0/1       |
+| Phase 5 (p05) | pending  | 2     | 0/2       |
 
-**Total:** 13/19 tasks completed
+**Total:** 14/19 tasks completed
 
 ---
 
@@ -208,7 +208,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 2: Gate-originated artifact admission (#384)
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-10-31
 
 ### Task p02-t01: Admit the exit gate's own artifact as bookkeeping
@@ -366,8 +366,23 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task p02-t07: (review) Add the reviews/ restriction to exit-gate guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ff3878c1424fb40f6a806265a9930e8dc63e4e47
+
+**Outcome (required when completed):**
+
+- Goal-mode exit-gate guidance and `workflow-gates.md` state that the admitted gate artifact must live under `reviews/` (or `reviews/archived/`), matching §12.8.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+
+**Verification:** shared and validation suites 1,088 passed; markdownlint, lint and format passed.
+
+**Notes / Decisions:**
+
+- Review-fix task for p02 round-2 L1 (fix request `dedkp-p02-fix-2`).
 
 ### Review Received: p02 (round 2)
 
@@ -379,7 +394,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - Round-1 H1, M1, L1 (path part), L2 and L3 verified resolved with built-CLI probes and neutralizations; the L1 Invocation-identity deferral was accepted; the recovery event and ledger settlement match the contract.
 - L1 (Low): `completion-and-closeout.md` and `workflow-gates.md` omit the `reviews/` restriction → fix task p02-t07.
 
-**Outcome:** passed (reviewer request `dedkp-p02-review-2`); Low converted to p02-t07.
+**Outcome:** passed (reviewer request `dedkp-p02-review-2`); Low converted to p02-t07, completed in ff3878c.
+
+**Phase p02 outcome:** complete. Review round 1 (`dedkp-p02-review-1`) 0C/1H/1M/3L → 4 fix tasks (H1 retracted the milestone stack deviation); round 2 (`dedkp-p02-review-2`) 0C/0H/0M/1L → passed, 1 fix task. Blocking fix rounds used 1 of `oat_orchestration_retry_limit` 2; recovery attempts 1/10 (settled). Phase range `5248c2fd1b1957bdfef6e3c2a4939192366b8574..ff3878c1424fb40f6a806265a9930e8dc63e4e47`.
 
 ---
 
@@ -450,6 +467,10 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=dedkp-p02-review-1 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 - run/v1 · request=dedkp-p02-fix-1 · scope=p02-fix-1 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix-1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p02-implementation · observed=~ · match=~
+
+- run/v1 · request=dedkp-p02-review-2 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
+- run/v1 · request=dedkp-p02-fix-2 · scope=p02-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p02-implementation · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
