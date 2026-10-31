@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.18
+  version: 1.7.19
 ---
 
 # Complete Project
@@ -1628,17 +1628,29 @@ Steps:
    description artifact at `PR_DESCRIPTION_PATH`.
 2. For the non-archive artifact, write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
-4. Create the PR from the branch already pushed in Step 10:
+4. Resolve the base branch with the same chain the final PR skill uses (this
+   skill takes no base argument):
 
 ```bash
-gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
+# Resolution chain: OAT config > git remote > fallback
+BASE_BRANCH=$(oat config get git.defaultBranch 2>/dev/null || true)
+if [ -z "$BASE_BRANCH" ]; then
+  BASE_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||' || true)
+fi
+BASE_BRANCH="${BASE_BRANCH:-main}"
 ```
 
-5. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
+5. Create the PR from the branch already pushed in Step 10:
+
+```bash
+gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
+```
+
+6. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
    When `gh` is missing or `gh pr create` fails, keep it and report its path
    in Step 12.
 
-Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
+Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents and note the resolved base branch (`BASE_BRANCH`).
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 
