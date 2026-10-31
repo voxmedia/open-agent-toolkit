@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status   | Tasks | Completed |
-| ------------- | -------- | ----- | --------- |
-| Phase 1 (p01) | complete | 7     | 7/7       |
-| Phase 2 (p02) | pending  | 2     | 0/2       |
-| Phase 3 (p03) | pending  | 2     | 0/2       |
-| Phase 4 (p04) | pending  | 1     | 0/1       |
-| Phase 5 (p05) | pending  | 2     | 0/2       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | complete    | 7     | 7/7       |
+| Phase 2 (p02) | in_progress | 2     | 2/2       |
+| Phase 3 (p03) | pending     | 2     | 0/2       |
+| Phase 4 (p04) | pending     | 1     | 0/1       |
+| Phase 5 (p05) | pending     | 2     | 0/2       |
 
-**Total:** 7/14 tasks completed
+**Total:** 9/14 tasks completed
 
 ---
 
@@ -208,18 +208,48 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Phase 2: Gate-originated artifact admission (#384)
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-10-31
 
 ### Task p02-t01: Admit the exit gate's own artifact as bookkeeping
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ab6878c9a0f38fa6469b0c3b2e773d737405626f
+
+**Outcome (required when completed):**
+
+- A configured exit gate's own artifact commit is now a bookkeeping successor of the carrier it produced: the artifact of a Type `code`, Invocation `gate` Reviews row whose Reviewed Head equals the carrier's `reviewed_head` joins `evidenceArtifacts` only.
+- Gate rows never enter `ownEvidenceArtifacts` or integrated-review selection; manual `final` rows, mismatched heads, placeholder heads and non-code gate rows stay `disallowed-path`; callers without a carrier keep their scope.
+- Milestone-subject checks for a registered stack delivery evaluate the carrier through `evaluateDeliveryExitCarrier` (see deviation).
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/delivery/evidence.ts` - `gateEvidenceArtifacts`, optional carrier input to `deliveryEvidenceScope`
+- `packages/cli/src/commands/project/delivery/check.ts`, `refresh.ts`, `closeout-check/index.ts` - carrier supplied per consumer
+- `evidence.test.ts`, `check.test.ts`, `refresh.test.ts`, `closeout-check/goal-boundary.test.ts`, `__tests__/goal-repo.ts` - cases (a)-(g) and the Invocation-column fixture
+
+**Verification:** focused suites 1,264 passed; delivery and closeout suites 176 passed (root rerun matched); type-check, build, `pnpm check`, `pnpm lint`, `pnpm format` passed.
 
 ### Task p02-t02: Reconcile goal exit-gate guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** eea398036d498deadc13a0bbb624f20f0753ac66
+
+**Outcome (required when completed):**
+
+- Goal-mode exit-gate guidance states the verbatim `--review-scope final` command, the gate-row bookkeeping admission and its isolation, and that no placeholder row is required; §12.8 lists the admission.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
+- `.agents/skills/oat-project-brief/references/brief-contract.md`
+- `apps/oat-docs/docs/workflows/advanced/workflow-gates.md`
+
+**Verification:** shared and validation contract suites passed; workflow-gates markdownlint passed.
+
+**Can-fail neutralizations (p02):** gate head binding — removed `review.reviewedHead === carrier.reviewed_head` from `gateEvidenceArtifacts`; the mismatched-head check, refresh and closeout tests failed by accepting the artifact. Own-evidence isolation — concatenated `gateEvidenceArtifacts(...)` into each `ownEvidenceArtifacts` value; the isolation assertion failed because `reviews/final-gate-review.md` entered d01's own evidence. Both restored.
+
+**Built-CLI controls (p02, reproducible):** build with `pnpm --filter @open-agent-toolkit/cli build`; from inside each scratch repository run `node "$REPO/packages/cli/dist/index.js" --json project delivery check --project .oat/projects/shared/goal --subject m01`. Fixtures: `createGoalRepo` + `gateArtifactScenario()` (commits: implementation, carrier, final gate review) → exit 0, `ok`, fresh; same with `{ invocation: 'manual' }` → exit 1, `undeliverable`, `disallowed-path`; same with `{ reviewedHead: 'mismatched' }` → exit 1, `undeliverable`, `disallowed-path`; `createGoalRepo` with an unrelated lower-layer commit, a main tip commit and `registryYaml({ kind: 'stack' })` → exit 1, `undeliverable`, `stack-order`. Observed equals expected for all four.
 
 ---
 
@@ -285,6 +315,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - run/v1 · request=dedkp-p01-fix-2 · scope=p01-fix-2 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix-2 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=continues:dedkp-p01-implementation · observed=~ · match=~
 
+- run/v1 · request=dedkp-p02-implementation · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 - Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
@@ -315,10 +347,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact        | Planned / Documented                            | Actual / Accepted                                                                                                                                                         | Reason                                                                           | Source of Truth | Follow-up |
-| ------------- | ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------- | --------- |
-| -             | -                      | -                                               | -                                                                                                                                                                         | -                                                                                | -               | -         |
-| p01-t02       | plan.md p01-t02 Step 1 | Unobserved lower member stale at each call site | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there | Mechanically derived: the observation step precedes evaluation in those commands | Implementation  | None      |
+| Task / Review | Source Artifact                      | Planned / Documented                                      | Actual / Accepted                                                                                                                                                                     | Reason                                                                                                | Source of Truth | Follow-up                   |
+| ------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------- | --------------------------- |
+| -             | -                                    | -                                                         | -                                                                                                                                                                                     | -                                                                                                     | -               | -                           |
+| p01-t02       | plan.md p01-t02 Step 1               | Unobserved lower member stale at each call site           | Covered at the wrapper and `delivery check`; refresh and closeout observe every member through `gh` (or fail) before carrier evaluation, so the case is unreachable there             | Mechanically derived: the observation step precedes evaluation in those commands                      | Implementation  | None                        |
+| p02-t01       | plan.md p02-t01; design.md #383/#384 | Milestone branch of `delivery check` unchanged for stacks | For a milestone with a registered stack delivery, the milestone subject evaluates its carrier through `evaluateDeliveryExitCarrier`; non-stack milestones keep branch-head evaluation | Required for the mandated `--subject m01` built-CLI stack control; consistent with #383 tip semantics | Implementation  | Per-phase review to confirm |
 
 ## Final Summary (for PR/docs)
 
