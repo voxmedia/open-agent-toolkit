@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-30
-oat_current_task_id: null
+oat_current_task_id: p05-t03
 oat_generated: false
 ---
 
@@ -16,15 +16,15 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase         | Status   | Tasks | Completed |
-| ------------- | -------- | ----- | --------- |
-| Phase 1 (p01) | complete | 7     | 7/7       |
-| Phase 2 (p02) | complete | 7     | 7/7       |
-| Phase 3 (p03) | complete | 7     | 7/7       |
-| Phase 4 (p04) | complete | 8     | 8/8       |
-| Phase 5 (p05) | complete | 2     | 2/2       |
+| Phase         | Status      | Tasks | Completed |
+| ------------- | ----------- | ----- | --------- |
+| Phase 1 (p01) | complete    | 7     | 7/7       |
+| Phase 2 (p02) | complete    | 7     | 7/7       |
+| Phase 3 (p03) | complete    | 7     | 7/7       |
+| Phase 4 (p04) | complete    | 8     | 8/8       |
+| Phase 5 (p05) | in_progress | 3     | 2/3       |
 
-**Total:** 31/31 tasks completed
+**Total:** 31/32 tasks completed
 
 ---
 
@@ -906,6 +906,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 **Phase p05 outcome:** complete. Two tasks; one direction-required stop from a root scope omission (corrected), one phase-standing recovery (1/10) for the version pins; review passed 0C/0H/0M/2L, both resolved by the root. Phase range `eed4d90e98dd9509af7a1d382aacaeec5dadb7ad..ad93669bfdc45f140a404630e67938de9a8550fb`.
 
+### Task p05-t03: (review) Align stack and registration wording in user docs
+
+**Status:** pending
+**Commit:** -
+
 ---
 
 ## Orchestration Runs
@@ -972,6 +977,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - run/v1 · request=dedkp-p05-review-1 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
+- run/v1 · request=dedkp-final-review-1 · scope=final · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 - Gate IMPLEMENT-03 (auto-resolved): first autonomous run with `oat_plan_hill_phases` absent → `hillCheckpointDefault: final`; wrote `oat_plan_hill_phases: ["p05"]` and `oat_auto_review_at_hill_checkpoints: true`.
@@ -980,6 +987,22 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 ## Reviews and Gates
 
 <!-- Receipts for final and multi-phase reviews (a phase review receipt may stay in its phase) and one terminal line per gate run. state.md owns gate transitions; this slot keeps the outcome, waivers and operator choices. -->
+
+### Review Received: final
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/final-review-2026-10-31T123203Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+
+- Cross-phase probe: a two-layer stack reviewed at the tip followed by the gate's own artifact commit is deliverable; the manual-invocation control stays `disallowed-path`; a mis-ordered stack reports `stack-order` for `--subject d01` (milestone subjects keep branch-head evaluation by the accepted p02-t03 revert). Release bookkeeping verified.
+- L1 (Low): CLI reference stack wording lacks the configured-carrier and `dNN` qualifiers; the Final Summary overstated `stack-order` → fix task p05-t03 (docs); Final Summary corrected by the root.
+- L2 (Low): `closeout-skills.md` and `lifecycle.md` omit attach-only stack registration → fix task p05-t03.
+- L3 (Low): journal References listed a nonexistent `spec.md` → removed by the root.
+- Deferred-Medium resurfacing (Step 8.5): none deferred (the only deferral, p02 review L1 second part, is Low and unchanged). Low disposition (Step 9): auto-disposition, all converted.
+- Gate IMPLEMENT-11 (auto-resolved): route native Cursor Task, target `oat-reviewer-claude-opus-5-5-high` (cross-family from the GPT-5.6 Sol implementers), reviewer request `dedkp-final-review-1`.
+
+**Outcome:** passed; Lows converted to p05-t03 and root alignments.
 
 - Review-cycle cap reached for p04 (oat-project-review-receive Step 8, 3 cycles: 1C/1H/2M/5L → 0C/0H/2M/2L → 0C/0H/1M/2L). Complexity review `dedkp-p04-complexity-1` (installed complexity-review method): verdict Partially compliant; recommended disposition simplify; report `reviews/archived/complexity-p04-2026-10-31T025003Z.md` (local). Operator disposition (2026-10-31, recorded on resume): **simplify** — apply the complexity review's accepted ledger as fix task p04-t07, then one fresh p04 review of the simplified work; round-3 L1 declined (override at the cap; the pinned Step 2 gate already stops the failure); round-3 L2 corrected in the journal by the root. Pack dependency (workflows→utility) left out of this PR by operator discussion: `workflows` already depends on these utility skills undeclared, and a same-scope declaration would conflict with documented mixed-scope installs.
 
@@ -1024,7 +1047,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 **Behavioral changes (user-facing):**
 
-- `delivery check`/`refresh` and closeout accept a correctly ordered stacked delivery that previously always read stale, and report `stack-order` for a mis-ordered one.
+- `delivery check`/`refresh` and closeout accept a correctly ordered stacked delivery that previously always read stale, and report `stack-order` for a mis-ordered one when checked as a delivery (`--subject dNN`); milestone subjects keep branch-head carrier evaluation.
 - A goal milestone's exit carrier stays fresh across the gate's own artifact commit.
 - `journal check` now refuses uncommitted rewrites of committed journal lines in goal projects, with a corrective message.
 - The knowledge-index skill stops cleanly, without touching knowledge, when no mapper route can be launched, and runs on Codex and Cursor as well as Claude.
@@ -1056,4 +1079,3 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
