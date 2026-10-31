@@ -139,19 +139,6 @@ repointed, the retirement schedule recorded, and one lockstep bump
 
 - `BL-260904-migrate-bundled-skills-from` — archived (GitHub #258 follow-up).
 
-## Workflow Observations
-
-### 2026-09-08 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-
-````
-
-Structural entries:
-
-```text
-
-### 2026-09-08 · structural · <producer> · <ref>
-````
-
 ## Entries
 
 Entries are chronological and append-only.
