@@ -787,6 +787,8 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 - **Gate:** oat-project-implement · **Scope:** final · **Outcome:** generation 2 `allowed/passed` (envelope `ok`, `review_completed_gate_passed`, threshold high) · attempt 1 of 2 · no waivers.
 
+- Gate `IMPLEMENT-16` (autonomous final HiLL approval, final phase `p05`): approved by `oat-autonomous` after pre-approval steps summary, document and pr completed; references the passed final review `reviews/archived/final-review-2026-11-01T015001Z.md` (request `wave1-final-review-2`) and the allowed implementation exit gate generation 2 (run `55df7ef0-1867-448a-ae66-a8f39e483790`). Recap gate: persisted `oat_project_recap: skip/interactive` (operator choice at kickoff); `check-terminal-outcome.mjs --intent skip --skip-reason interactive` → ok. PR: https://github.com/voxmedia/open-agent-toolkit/pull/395.
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
