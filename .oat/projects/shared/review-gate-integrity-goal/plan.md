@@ -9,6 +9,11 @@ oat_phase_status: in_progress
 oat_plan_hill_phases: [] # [] = none for brief modes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: goal
+oat_phase_review_gate:
+  enabled: true
+  phases: [p02, p03, p05]
+  review_type: code
+  exit_nonzero_on: high
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
@@ -220,6 +225,7 @@ changes policy or exceeds a budget.
 - **Split planning gates out of m01 (Round 2 Q9).** m01 is project code-review and implementation paths plus their real code consumers (verifier, receive, carrier, router, delivery and closeout must compose, including a blocked clerical integrated review in goal mode). Planning-skill gates are m02, and the later milestones are renumbered. Rejected: one milestone changing code-review acceptance and every planning gate's approval semantics in one PR.
 - **Autonomous settlement (Round 2 Q10).** Allowed after this policy is approved, only for verified clerical settlement, with the shared rules and existing inventory rows updated (see Approach). Rejected: an autonomous stop for every candidate settlement, because autonomous runs are where paperwork reruns cost most.
 - **Authority and decision record (Round 2 Q11).** As recorded under Delivery endpoint and authority. m01 records a decision stating the narrow exception and its exclusions, not a general power to repair lifecycle state.
+- **Planning setup (2026-11-01).** Dispatch policy High (recorded in `state.md`). Optional phase gate review runs after p02, p03 and p05; the phase gate selection for later milestones' phases is decided at each milestone's re-alignment. Both configured lifecycle gates (`oat-project-goal`, `oat-project-implement`) are kept.
 - **Goal workflow fit.** Several deliveries over time, each merged and re-aligned. The first milestone is concrete; later milestones depend on what m01 teaches about the verifier and records. One delivery would bundle four approval semantics into one PR; quick mode would require an approved up-front task plan the operator did not ask for.
 
 ## Known Unknowns
