@@ -1,7 +1,7 @@
 ---
 id: BL-261012-commit-paths-should-accept
 title: commit-paths should accept tracked files under ignored directories
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - developer-experience
 assignee: null
 created: 2026-10-12T04:48:58.861Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:54Z'
 associated_issues: []
 external_plans: []
 ---
