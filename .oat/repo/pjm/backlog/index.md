@@ -374,7 +374,8 @@
   base updates (`BL-260719-avoid-final-gate-reruns`), then evaluate the
   lower-priority broader policy only if usage evidence shows CI, Bugbot, and
   lifecycle self-review leave meaningful gaps
-  (`BL-260719-evaluate-broader-final-gate`).
+  (`BL-260719-evaluate-broader-final-gate`, dropped as `wont_do` on 2026-11-01
+  with no observed gap; file a concrete item if one appears).
 - Review-loop bookkeeping is now the urgent reliability priority:
   `BL-260711-skip-re-review-for-bookkeeping` expands the existing reporting-only
   classification into a semantic, auditable disposition for direct reviews and
@@ -397,9 +398,10 @@
   owner (including `oat gate review`), and project-start preflights auto-commit
   a manifest-only dirty tree. General sync-ownership classification was
   designed, reviewed three times, and cut — `BL-260725-classify-general-sync-owned`
-  (Classify general sync-owned dirt in project-start preflight) is parked at low
-  priority and carries the design traps, since prompting is the correct answer
-  for every case the classifier existed to handle.
+  (Classify general sync-owned dirt in project-start preflight) was dropped as
+  `wont_do` on 2026-11-01, since prompting is the correct answer for every case
+  the classifier existed to handle; its design remains in git history at
+  `13155512`.
 - Wave-workflow follow-ups now track the grouped CLI-family and stable-artifact
   contract work, a tested TypeScript bootstrap-group rewrite, and removal of
   the temporary reviews-row watch after one more clean W6 gate. The proposed
@@ -425,10 +427,10 @@
 - Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
 - The live workflow smoke fixture is complete: deterministic root verification, an opt-in authenticated runner, root-owned phase-agent topology, safe recovery/cleanup, public runbooks, and a canonical Codex packet passing 10/10 assertions.
 - Reusable dispatch contracts are split between a provider-neutral utility engine and a project lifecycle adapter. Analytical callers can use bounded reconnaissance without importing project phase/task/gate policy; a separate root-owned exact-launch broker remains optional backlog work for specialized nesting.
-- Reusable pinned reconnaissance is now tracked in
-  `BL-260719-add-pinned-recon-agents`: define read-only, non-recursive recon
-  roles that `oat-dispatch-subagents` can select by task-class floor for review
-  and non-review orchestration without recursively reusing full reviewers.
+- Reusable pinned reconnaissance (`BL-260719-add-pinned-recon-agents`) was
+  merged on 2026-11-01 into the deferred `BL-260830-integrate-recon-across` as a
+  conditional criterion: build a generic read-only, non-recursive pinned recon
+  role only when a second non-recon orchestrator needs it.
 - GPT-5.6 live Task/subagent slug eligibility remains an active recheck: structured controls exposed no Task events, so the current Cursor candidates remain configured but unvalidated. Re-run after a qualifying client rollout or Cursor support evidence, with a 2026-08-08 review-by date.
 - Bounded `oat-reviewer` reconnaissance is shipped: broad reviews can use
   cheaper/faster, read-only evidence lanes while the primary reviewer retains
@@ -445,8 +447,9 @@
   adaptive recap set, independent browser-backed critic, exact non-linear
   topology, commit-pinned backlinks, initiative catalogs, authenticated resume,
   and trusted Chromium evidence all ship in CLI `0.2.27`. The four recovery
-  successors and umbrella are archived; only
-  `BL-260728-additional-visual-workflows` remains open for lower-priority diff,
+  successors and umbrella are archived; the last follow-up,
+  `BL-260728-additional-visual-workflows`, was dropped as `wont_do` on 2026-11-01
+  for lack of observed demand; it had covered lower-priority diff,
   plan, fact-check, dashboard, complex-table, and richer-composition work.
 - The broader high-priority review redesign is tracked separately in
   `BL-260729-implement-reviewplan-first`: enforce artifact-only intake,

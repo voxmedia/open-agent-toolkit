@@ -631,7 +631,8 @@ copying their content here. -->
   Authenticated `ekrt2` resume tokens bind the complete canonical request.
   Three portable real-Chromium golden cases, five public package payloads, and
   the 65-measurement release visual gate pass. Additional visual workflows
-  remain separately tracked as `BL-260728-additional-visual-workflows`.
+  (`BL-260728-additional-visual-workflows`) were dropped as `wont_do` on
+  2026-11-01 for lack of observed demand.
 - CLI `0.2.26` makes managed-capped implementation and fix dispatches
   auditable without changing compatibility exit behavior. Dispatch Report V1
   now carries provider-neutral task classification, applicable Codex task
@@ -848,9 +849,9 @@ also covers adaptive idle-kill and early-artifact semantics beyond the shipped
 gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
 eligibility by 2026-08-08, optional root-owned exact dispatch, and avoiding
-redundant bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
-reusable pinned recon-role contract for review and non-review orchestration if
-observed value justifies the additional provider role matrix.
+redundant bookkeeping-only re-reviews. A reusable pinned recon role is now a
+conditional criterion of the deferred `BL-260830-integrate-recon-across`, into
+which `BL-260719-add-pinned-recon-agents` was merged on 2026-11-01.
 
 PR #242 closes the remaining unenforced portable-read direction with a
 dependency-owned `${AGENT_PROVIDER_ROOT}` contract and an
