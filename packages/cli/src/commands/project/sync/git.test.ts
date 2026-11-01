@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -38,6 +38,44 @@ describe('GitRunner', () => {
       defaultGitRunner.run(['rev-parse', '--is-inside-work-tree'], { cwd }),
     ).resolves.toEqual({ stdout: 'true', stderr: '', code: 0 });
   });
+
+  it('reads a complete historical project blob larger than the default subprocess buffer', async () => {
+    const cwd = await createRepository();
+    const content = `${'journal observation\n'.repeat(100_000)}last observation`;
+    await writeFile(join(cwd, 'journal.md'), content);
+    const object = execFileSync('git', ['hash-object', '-w', 'journal.md'], {
+      cwd,
+      encoding: 'utf8',
+    }).trim();
+
+    const result = await defaultGitRunner.run(['cat-file', '-p', object], {
+      cwd,
+    });
+
+    expect(result).toEqual({ stdout: content, stderr: '', code: 0 });
+  });
+
+  it.each([false, true])(
+    'rejects truncated output with an output-limit diagnostic when allowFailure=%s',
+    async (allowFailure) => {
+      const runner = createGitRunner((_file, _args, _options, callback) => {
+        callback(
+          Object.assign(new Error('stdout maxBuffer length exceeded'), {
+            code: 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER',
+          }),
+          'partial evidence',
+          '',
+        );
+      });
+
+      await expect(
+        runner.run(['show', 'HEAD:journal.md'], { cwd: '/repo', allowFailure }),
+      ).rejects.toMatchObject({
+        exitCode: 2,
+        message: expect.stringMatching(/Git output exceeded the 64 MiB limit/),
+      });
+    },
+  );
 
   it('throws CliError with usage exit code for failed commands', async () => {
     const cwd = await createRepository();
