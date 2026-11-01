@@ -63,6 +63,25 @@ oat_template: false
 
 Worktree: the project branch checkout (`goal/review-gate-integrity`). Committing owner: the phase implementer. Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the parser grammar, its tests and fixtures, and the reviewer contract and hint are one coupled surface, with no two slices that pass the independence test. Rung 4 does not apply, because the phase changes an assurance-bearing parser contract. The base is the merge of `origin/main` `1299755e4` (wave 1, lockstep 0.3.39), reconciled before this phase started.
 
+### Task p01-t01: Identify verdict findings with the captured narrow grammar
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p01-impl-20261101-01
+**Handle:** direct:rgi-p01-impl-20261101-01:p01-t01
+**Intent:** Parse captured explicit bold finding titles and their closed-label column-zero details as one finding, preserve list-item findings and all-source disagreement refusal, emit per-finding records, and align the reviewer contract and provider projections.
+**Files:** `packages/cli/src/commands/gate/review-verdict.ts`, `packages/cli/src/commands/gate/review-verdict.test.ts`, `packages/cli/src/commands/gate/__fixtures__/issue-339-review-shape.md`, `packages/cli/src/commands/gate/__fixtures__/backlog-wave-5-exit-gate-r1-return.md`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts`, `.agents/agents/oat-reviewer.md`, and its generated Cursor and Codex reviewer views.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts`
+**Commit:** 82df5ab2e933918c8195a124c40a55b63071945e
+
+Verification: focused verdict suite 64/64 passed; CLI lint and type-check passed; isolated-HOME agent/skill contract suites 1089/1089 passed; scoped CLI build passed. `oat sync --scope project` regenerated and then confirmed all reviewer views current; `.oat/sync/manifest.json` had no generated delta.
+
+Negative controls:
+
+- With explicit-title recognition and detail ownership neutralized to the legacy list tally, the #339 body test failed with 6 Medium / 2 Low instead of 2 / 1 (exit 1); restoring the guards returned the suite to exit 0.
+- With exact bold-label closure broadened so `**Issue: a genuinely separate finding**` was consumed as a detail, the title-precedence test failed with 1 Medium instead of 2 (exit 1); restoring exact matching returned the suite to exit 0.
+
+Captured-output controls: the wave-5 returned-message fixture's pre-change expected outcome is a structured `findings_unrecognizable` refusal because it is not the separately parsed review artifact and has no canonical Findings sections or count line. The branch build parsed `.oat/projects/shared/review-gate-integrity-goal/reviews/archived/artifact-plan-review-2026-11-01T214129Z.md` as accepted with counts 0/0/0/0, zero finding records, and `blocking: false`.
+
 ## Phase p02: Read-only clerical-resolution verifier
 
 **Status:** pending
