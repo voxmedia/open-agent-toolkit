@@ -43,9 +43,9 @@ oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: pending # pending | allowed | blocked | stale
+#   status: allowed # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | project_disabled | no_gate
+#   disposition: passed # null | passed | warned | prompt_approved | project_disabled | no_gate
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   resolved_command: null
 #   resolved_description: null
@@ -68,18 +68,18 @@ oat_workflow_origin: native # native | imported
 #   envelope_status: ok # ok | blocked | review_failed | other terminal status
 #   artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
 #   handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md to disposition them before marking the final review row passed.'
-#   receive_state: intent_persisted # not_started | intent_persisted | completed | reconciliation_required
+#   receive_state: completed # not_started | intent_persisted | completed | reconciliation_required
 #   receive_correlation: {gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f, scope: final, type: code, source_filename: final-review-2026-11-01T012851Z.md}
 #   receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
 #   receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T012851Z.md
 #   receive_event_identity: 'final|code|final-review-2026-11-01T012851Z.md'
 #   receive_pre_head: 'cfb5e67804db2e97bd0d27aabb8594e2f5491ce1'
-#   receive_commit: null
+#   receive_commit: '055b9df690fe0c0a8c95795b1020d0f0ee7631ab'
 #   receive_eligible: true
-#   receive_completed: false
+#   receive_completed: true
 #   failure: null
-#   updated_at: '2026-11-01T01:32:00Z'
-#   decided_at: null # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
+#   updated_at: '2026-11-01T01:35:00Z'
+#   decided_at: '2026-11-01T01:35:00Z' # ISO 8601 UTC; set with every allowed or blocked outcome (core record: gate-approval-record.md)
 # oat_quick_start_gate: # optional; persisted quick-start plan gate outcome, absent when no gate is configured (core record: gate-approval-record.md)
 #   status: allowed # allowed | blocked
 #   disposition: passed # passed | warned | prompt_approved | project_disabled; null when blocked
@@ -134,7 +134,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-11-01T01:32:00Z'
+  updated_at: '2026-11-01T01:35:00Z'
   decided_at: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
