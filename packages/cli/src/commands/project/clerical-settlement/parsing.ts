@@ -194,7 +194,7 @@ export function parseProposal(content: string): ClericalSettlementProposal {
   exactKeys(
     raw,
     ['schemaVersion', 'mode', 'event', 'repairRange', 'receipt', 'findings'],
-    ['gateProof', 'goal'],
+    ['publishedHead', 'gateProof', 'goal'],
     'proposal',
   );
   if (raw['schemaVersion'] !== CLERICAL_SETTLEMENT_SCHEMA_VERSION) {
@@ -216,21 +216,29 @@ export function parseProposal(content: string): ClericalSettlementProposal {
   if (!Array.isArray(raw['findings']) || raw['findings'].length === 0) {
     throw new Error('proposal.findings must be a non-empty array');
   }
+  let publishedHead: string | undefined;
+  if (raw['publishedHead'] !== undefined) {
+    publishedHead = nonEmptyString(
+      raw['publishedHead'],
+      'proposal.publishedHead',
+    );
+    if (!FULL_SHA.test(publishedHead)) {
+      throw new Error('proposal.publishedHead must be a full commit SHA');
+    }
+  }
+  if (raw['mode'] === 'replay' && !publishedHead) {
+    throw new Error('proposal.publishedHead is required in replay mode');
+  }
+  if (raw['mode'] === 'first-settlement' && publishedHead) {
+    throw new Error('proposal.publishedHead is permitted only in replay mode');
+  }
   const goal = raw['goal'];
   let parsedGoal: ClericalSettlementProposal['goal'];
   if (goal !== undefined) {
     if (!isRecord(goal)) throw new Error('proposal.goal must be an object');
-    exactKeys(goal, ['subject', 'publishedHead'], [], 'proposal.goal');
-    const publishedHead = nonEmptyString(
-      goal['publishedHead'],
-      'proposal.goal.publishedHead',
-    );
-    if (!FULL_SHA.test(publishedHead)) {
-      throw new Error('proposal.goal.publishedHead must be a full commit SHA');
-    }
+    exactKeys(goal, ['subject'], [], 'proposal.goal');
     parsedGoal = {
       subject: nonEmptyString(goal['subject'], 'proposal.goal.subject'),
-      publishedHead,
     };
   }
   return {
@@ -238,6 +246,7 @@ export function parseProposal(content: string): ClericalSettlementProposal {
     mode: raw['mode'],
     event: parseEvent(raw['event'], 'proposal.event'),
     repairRange: { base, head },
+    ...(publishedHead ? { publishedHead } : {}),
     receipt: nonEmptyString(raw['receipt'], 'proposal.receipt'),
     findings: raw['findings'].map(parseFinding),
     ...(raw['gateProof'] === undefined
@@ -342,23 +351,323 @@ export function extractReceipt(
   };
 }
 
+export interface SettlementEntryParseResult {
+  entries: ClericalSettlementEntry[];
+  errors: string[];
+}
+
+function nullableString(value: unknown, label: string): string | null {
+  if (value === null) return null;
+  return nonEmptyString(value, label);
+}
+
+function parseSettlementEntry(
+  value: unknown,
+  label: string,
+): ClericalSettlementEntry {
+  if (!isRecord(value)) throw new Error(`${label} must be an object`);
+  exactKeys(
+    value,
+    [
+      'schemaVersion',
+      'settlementId',
+      'event',
+      'receipt',
+      'findingsComplete',
+      'findings',
+      'counts',
+      'reviewedRevision',
+      'repairRange',
+      'proof',
+    ],
+    [],
+    label,
+  );
+  if (value['schemaVersion'] !== CLERICAL_SETTLEMENT_SCHEMA_VERSION) {
+    throw new Error(`${label}.schemaVersion must be 1`);
+  }
+  const settlementId = nonEmptyString(
+    value['settlementId'],
+    `${label}.settlementId`,
+  );
+  if (!/^[0-9a-f]{16}$/.test(settlementId)) {
+    throw new Error(`${label}.settlementId must be 16 lowercase hex digits`);
+  }
+  const receipt = value['receipt'];
+  if (!isRecord(receipt)) throw new Error(`${label}.receipt must be an object`);
+  exactKeys(receipt, ['heading', 'sha256'], [], `${label}.receipt`);
+  const receiptSha = nonEmptyString(
+    receipt['sha256'],
+    `${label}.receipt.sha256`,
+  );
+  if (!/^[0-9a-f]{64}$/.test(receiptSha)) {
+    throw new Error(`${label}.receipt.sha256 must be a SHA-256 digest`);
+  }
+  if (value['findingsComplete'] !== true) {
+    throw new Error(`${label}.findingsComplete must be true`);
+  }
+  if (!Array.isArray(value['findings']) || value['findings'].length === 0) {
+    throw new Error(`${label}.findings must be a non-empty array`);
+  }
+  const findings = value['findings'].map((finding, index) => {
+    const findingLabel = `${label}.findings[${index}]`;
+    if (!isRecord(finding)) {
+      throw new Error(`${findingLabel} must be an object`);
+    }
+    exactKeys(
+      finding,
+      [
+        'id',
+        'repairKind',
+        'correctedField',
+        'record',
+        'authoritativeSource',
+        'severity',
+        'title',
+        'location',
+      ],
+      [],
+      findingLabel,
+    );
+    const proposalFinding = parseFinding(
+      {
+        id: finding['id'],
+        repairKind: finding['repairKind'],
+        correctedField: finding['correctedField'],
+        record: finding['record'],
+        authoritativeSource: finding['authoritativeSource'],
+      },
+      index,
+    );
+    const severity = nonEmptyString(
+      finding['severity'],
+      `${findingLabel}.severity`,
+    );
+    if (!['critical', 'high', 'medium', 'low'].includes(severity)) {
+      throw new Error(`${findingLabel}.severity is invalid`);
+    }
+    return {
+      ...proposalFinding,
+      severity:
+        severity as ClericalSettlementEntry['findings'][number]['severity'],
+      title: nonEmptyString(finding['title'], `${findingLabel}.title`),
+      location: nonEmptyString(finding['location'], `${findingLabel}.location`),
+    };
+  });
+  const counts = value['counts'];
+  if (!isRecord(counts)) throw new Error(`${label}.counts must be an object`);
+  exactKeys(
+    counts,
+    ['critical', 'high', 'medium', 'low'],
+    [],
+    `${label}.counts`,
+  );
+  const parsedCounts = Object.fromEntries(
+    ['critical', 'high', 'medium', 'low'].map((severity) => {
+      const count = counts[severity];
+      if (!Number.isInteger(count) || (count as number) < 0) {
+        throw new Error(`${label}.counts.${severity} must be non-negative`);
+      }
+      return [severity, count];
+    }),
+  ) as unknown as ClericalSettlementEntry['counts'];
+  const reviewedRevision = nonEmptyString(
+    value['reviewedRevision'],
+    `${label}.reviewedRevision`,
+  );
+  if (!FULL_SHA.test(reviewedRevision)) {
+    throw new Error(`${label}.reviewedRevision must be a full commit SHA`);
+  }
+  const repairRange = value['repairRange'];
+  if (!isRecord(repairRange)) {
+    throw new Error(`${label}.repairRange must be an object`);
+  }
+  exactKeys(repairRange, ['base', 'head'], [], `${label}.repairRange`);
+  const repairBase = nonEmptyString(
+    repairRange['base'],
+    `${label}.repairRange.base`,
+  );
+  const repairHead = nonEmptyString(
+    repairRange['head'],
+    `${label}.repairRange.head`,
+  );
+  if (!FULL_SHA.test(repairBase) || !FULL_SHA.test(repairHead)) {
+    throw new Error(`${label}.repairRange revisions must be full commit SHAs`);
+  }
+  const proof = value['proof'];
+  if (!isRecord(proof)) throw new Error(`${label}.proof must be an object`);
+  exactKeys(proof, ['artifact', 'gate'], [], `${label}.proof`);
+  const artifact = proof['artifact'];
+  if (!isRecord(artifact)) {
+    throw new Error(`${label}.proof.artifact must be an object`);
+  }
+  exactKeys(
+    artifact,
+    [
+      'path',
+      'sha256',
+      'generatedAt',
+      'reviewType',
+      'scope',
+      'reviewedHead',
+      'invocation',
+      'gateRunId',
+      'gateTarget',
+    ],
+    [],
+    `${label}.proof.artifact`,
+  );
+  const artifactSha = nonEmptyString(
+    artifact['sha256'],
+    `${label}.proof.artifact.sha256`,
+  );
+  if (!/^[0-9a-f]{64}$/.test(artifactSha)) {
+    throw new Error(`${label}.proof.artifact.sha256 must be a SHA-256 digest`);
+  }
+  if (artifact['reviewType'] !== 'code') {
+    throw new Error(`${label}.proof.artifact.reviewType must be code`);
+  }
+  const artifactReviewedHead = nonEmptyString(
+    artifact['reviewedHead'],
+    `${label}.proof.artifact.reviewedHead`,
+  );
+  if (!FULL_SHA.test(artifactReviewedHead)) {
+    throw new Error(
+      `${label}.proof.artifact.reviewedHead must be a full commit SHA`,
+    );
+  }
+  const gate = proof['gate'];
+  let parsedGate: NonNullable<ClericalSettlementEntry['proof']['gate']> | null =
+    null;
+  if (gate !== null) {
+    if (!isRecord(gate)) {
+      throw new Error(`${label}.proof.gate must be an object or null`);
+    }
+    exactKeys(
+      gate,
+      [
+        'path',
+        'sha256',
+        'runId',
+        'target',
+        'artifactPath',
+        'generatedAt',
+        'reviewedHead',
+        'archivedArtifact',
+      ],
+      [],
+      `${label}.proof.gate`,
+    );
+    const gateSha = nonEmptyString(
+      gate['sha256'],
+      `${label}.proof.gate.sha256`,
+    );
+    if (!/^[0-9a-f]{64}$/.test(gateSha)) {
+      throw new Error(`${label}.proof.gate.sha256 must be a SHA-256 digest`);
+    }
+    const gateReviewedHead = nonEmptyString(
+      gate['reviewedHead'],
+      `${label}.proof.gate.reviewedHead`,
+    );
+    if (!FULL_SHA.test(gateReviewedHead)) {
+      throw new Error(
+        `${label}.proof.gate.reviewedHead must be a full commit SHA`,
+      );
+    }
+    parsedGate = {
+      path: nonEmptyString(gate['path'], `${label}.proof.gate.path`),
+      sha256: gateSha,
+      runId: nonEmptyString(gate['runId'], `${label}.proof.gate.runId`),
+      target: nonEmptyString(gate['target'], `${label}.proof.gate.target`),
+      artifactPath: nonEmptyString(
+        gate['artifactPath'],
+        `${label}.proof.gate.artifactPath`,
+      ),
+      generatedAt: nonEmptyString(
+        gate['generatedAt'],
+        `${label}.proof.gate.generatedAt`,
+      ),
+      reviewedHead: gateReviewedHead,
+      archivedArtifact: nonEmptyString(
+        gate['archivedArtifact'],
+        `${label}.proof.gate.archivedArtifact`,
+      ),
+    };
+  }
+  return {
+    schemaVersion: 1,
+    settlementId,
+    event: parseEvent(value['event'], `${label}.event`),
+    receipt: {
+      heading: nonEmptyString(receipt['heading'], `${label}.receipt.heading`),
+      sha256: receiptSha,
+    },
+    findingsComplete: true,
+    findings,
+    counts: parsedCounts,
+    reviewedRevision,
+    repairRange: { base: repairBase, head: repairHead },
+    proof: {
+      artifact: {
+        path: nonEmptyString(artifact['path'], `${label}.proof.artifact.path`),
+        sha256: artifactSha,
+        generatedAt: nonEmptyString(
+          artifact['generatedAt'],
+          `${label}.proof.artifact.generatedAt`,
+        ),
+        reviewType: 'code',
+        scope: nonEmptyString(
+          artifact['scope'],
+          `${label}.proof.artifact.scope`,
+        ),
+        reviewedHead: artifactReviewedHead,
+        invocation: nullableString(
+          artifact['invocation'],
+          `${label}.proof.artifact.invocation`,
+        ),
+        gateRunId: nullableString(
+          artifact['gateRunId'],
+          `${label}.proof.artifact.gateRunId`,
+        ),
+        gateTarget: nullableString(
+          artifact['gateTarget'],
+          `${label}.proof.artifact.gateTarget`,
+        ),
+      },
+      gate: parsedGate,
+    },
+  };
+}
+
 export function parseSettlementEntries(
   journal: string,
-): ClericalSettlementEntry[] {
+): SettlementEntryParseResult {
+  const sectionMatch = /^## Reviews and Gates[ \t]*$/m.exec(journal);
+  if (!sectionMatch) {
+    return { entries: [], errors: ['journal has no ## Reviews and Gates'] };
+  }
+  const tail = journal.slice(sectionMatch.index + sectionMatch[0].length);
+  const sectionEnd = tail.search(/^##(?!#)[ \t]+\S/m);
+  const section = sectionEnd < 0 ? tail : tail.slice(0, sectionEnd);
   const pattern =
-    /^### Clerical Settlement: [^\n]+\n+```json\n([\s\S]*?)\n```[ \t]*$/gm;
+    /^### Clerical Settlement: ([^\n]+)\n+```json\n([\s\S]*?)\n```[ \t]*$/gm;
   const entries: ClericalSettlementEntry[] = [];
-  for (const match of journal.matchAll(pattern)) {
+  const errors: string[] = [];
+  for (const [index, match] of [...section.matchAll(pattern)].entries()) {
     try {
-      const parsed: unknown = JSON.parse(match[1]!);
-      if (isRecord(parsed) && parsed['schemaVersion'] === 1) {
-        entries.push(parsed as unknown as ClericalSettlementEntry);
+      const parsed: unknown = JSON.parse(match[2]!);
+      const entry = parseSettlementEntry(parsed, `settlement[${index}]`);
+      if (match[1]!.trim() !== entry.settlementId) {
+        throw new Error(
+          `settlement[${index}] heading does not match settlementId`,
+        );
       }
-    } catch {
-      // Malformed entries are not durable proof and therefore do not match.
+      entries.push(entry);
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
     }
   }
-  return entries;
+  return { entries, errors };
 }
 
 export function settlementHeading(entry: ClericalSettlementEntry): string {

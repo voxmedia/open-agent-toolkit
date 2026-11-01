@@ -71,12 +71,12 @@ export interface ClericalSettlementProposal {
   mode: 'first-settlement' | 'replay';
   event: SettlementEvent;
   repairRange: RepairRange;
+  publishedHead?: string;
   receipt: string;
   findings: ProposalFinding[];
   gateProof?: string;
   goal?: {
     subject: string;
-    publishedHead: string;
   };
 }
 
@@ -127,8 +127,10 @@ export interface ClericalSettlementEntry {
       sha256: string;
       runId: string;
       target: string;
+      artifactPath: string;
+      generatedAt: string;
       reviewedHead: string;
-      artifact: string;
+      archivedArtifact: string;
     } | null;
   };
 }

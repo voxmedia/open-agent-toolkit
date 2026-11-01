@@ -1,5 +1,12 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -9,6 +16,7 @@ import type {
   ClericalSettlementReport,
 } from '../contract';
 import { renderSettlementEntry } from '../parsing';
+import { gateReviewResult } from './fixtures/gate-review-result';
 
 export const PROJECT_REL = '.oat/projects/shared/settlement';
 export const SOURCE_ARTIFACT = 'reviews/m01-review.md';
@@ -24,9 +32,12 @@ export interface SettlementRepo {
   repairHead: string;
   git: (args: string[]) => string;
   write: (path: string, content: string) => Promise<void>;
+  writeRoot: (path: string, content: string) => Promise<void>;
   read: (path: string) => Promise<string>;
   commit: (message: string) => string;
   proposal: ClericalSettlementProposal;
+  sourceArtifact: string;
+  archivedArtifact: string;
 }
 
 export interface SettlementRepoOptions {
@@ -41,22 +52,60 @@ export interface SettlementRepoOptions {
   gate?: boolean;
   gateProofMismatch?: boolean;
   descriptive?: boolean;
+  archiveCollision?: boolean;
+  sharedRepair?: boolean;
+  substantiveDistinctRepair?: boolean;
+  receiptScope?: string;
+  receiptArtifact?: string;
+  receiptCounts?: string;
+  omitReceiptFindings?: boolean;
+  scope?: string;
+  moveReviewedFile?: boolean;
+}
+
+interface FixtureFinding {
+  id: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  title: string;
+  location: string;
 }
 
 function reviewArtifact(options: {
   type: 'code' | 'artifact' | 'missing';
   reviewed: string;
-  location: string;
+  findings: FixtureFinding[];
   generatedAt?: string;
   gate?: boolean;
   scope?: string;
 }): string {
   const type =
     options.type === 'missing' ? '' : `oat_review_type: ${options.type}\n`;
+  const count = (severity: FixtureFinding['severity']): number =>
+    options.findings.filter((finding) => finding.severity === severity).length;
+  const section = (
+    severity: FixtureFinding['severity'],
+    heading: string,
+  ): string => {
+    const findings = options.findings.filter(
+      (finding) => finding.severity === severity,
+    );
+    return `### ${heading}
+
+${
+  findings.length === 0
+    ? 'None'
+    : findings
+        .map(
+          (finding) =>
+            `**${finding.id} — ${finding.title}** (\`${finding.location}\`)`,
+        )
+        .join('\n\n')
+}`;
+  };
   return `---
 oat_generated: true
 oat_generated_at: ${options.generatedAt ?? '2026-11-01T12:00:00Z'}
-oat_review_scope: ${options.scope ?? 'm01'}
+oat_review_scope: ${JSON.stringify(options.scope ?? 'm01')}
 ${type}oat_review_invocation: ${options.gate ? 'gate' : 'manual'}
 oat_project: ${PROJECT_REL}
 oat_review_head_sha: ${options.reviewed}
@@ -64,25 +113,17 @@ ${options.gate ? 'oat_gate_run_id: run-01\noat_gate_target: reviewer-01\n' : ''}
 
 # Code Review: m01
 
-Findings by severity: 0 critical, 0 high, 0 medium, 1 low
+Findings by severity: ${count('critical')} critical, ${count('high')} high, ${count('medium')} medium, ${count('low')} low
 
 ## Findings
 
-### Critical
+${section('critical', 'Critical')}
 
-None
+${section('high', 'High')}
 
-### High
+${section('medium', 'Medium')}
 
-None
-
-### Medium
-
-None
-
-### Low
-
-**L1 — Repair stale review evidence** (\`${options.location}\`)
+${section('low', 'Low')}
 `;
 }
 
@@ -156,7 +197,23 @@ function reviewRow(options: {
   return `| ${options.scope ?? 'm01'} | ${options.type} | ${options.status} | ${options.date ?? '2026-11-01T12:00:00Z'} | ${options.artifact} | ${options.reviewedHead} | ${options.gate ? 'gate' : 'manual'} | ${options.gate ? 'reviewer-01' : '-'} |`;
 }
 
-function journal(receiptArtifact: string, scope = 'm01'): string {
+function journal(
+  receiptArtifact: string,
+  scope: string,
+  findings: FixtureFinding[],
+  options: {
+    receiptScope?: string;
+    receiptCounts?: string;
+    omitReceiptFindings?: boolean;
+    descriptive?: boolean;
+  } = {},
+): string {
+  const count = (severity: FixtureFinding['severity']): number =>
+    findings.filter((finding) => finding.severity === severity).length;
+  const receiptScope = options.receiptScope ?? scope;
+  const counts =
+    options.receiptCounts ??
+    `Critical ${count('critical')} · High ${count('high')} · Medium ${count('medium')} · Low ${count('low')}`;
   return `---
 oat_current_task_id: p01
 ---
@@ -182,13 +239,31 @@ oat_current_task_id: p01
 
 Build observation is immutable.
 
-### Review Received: ${scope}
+${
+  options.descriptive
+    ? `### Clerical Observation: ${scope}
+
+**Artifact:** -
+
+`
+    : ''
+}### Review Received: ${receiptScope}
 
 **Date:** 2026-11-01
 **Review artifact (local-only):** ${receiptArtifact}
 
-**Findings:** Critical 0 · High 0 · Medium 0 · Low 1
+**Findings:** ${counts}
 
+${
+  options.omitReceiptFindings
+    ? ''
+    : `${findings
+        .map(
+          (finding) =>
+            `- ${finding.id} (${finding.severity[0]!.toUpperCase()}${finding.severity.slice(1)}): ${finding.title}`,
+        )
+        .join('\n')}\n`
+}
 **Outcome:** clerical repair pending
 
 ## Orchestration Runs
@@ -231,7 +306,11 @@ oat_deliveries: []
 export async function createSettlementRepo(
   options: SettlementRepoOptions = {},
 ): Promise<SettlementRepo> {
-  const scope = options.descriptive ? 'p01' : 'm01';
+  const scope = options.scope ?? (options.descriptive ? 'p01' : 'm01');
+  const sourceArtifact = SOURCE_ARTIFACT;
+  const archivedArtifact = options.archiveCollision
+    ? 'reviews/archived/m01-review-2026-11-01T120000Z.md'
+    : ARCHIVED_ARTIFACT;
   const root = await mkdtemp(join(tmpdir(), 'oat-clerical-settlement-'));
   const projectPath = join(root, PROJECT_REL);
   const proposalPath = join(root, 'proposal.json');
@@ -275,67 +354,136 @@ export async function createSettlementRepo(
       }),
     ),
   );
-  await write('implementation.md', journal('-', scope));
+  await write(
+    'implementation.md',
+    journal('-', scope, []).replace(
+      /### Review Received:[\s\S]*?(?=## Orchestration Runs)/,
+      '',
+    ),
+  );
   await write('state.md', state());
   commit('base');
 
   await writeFile(join(root, 'app.ts'), 'export const value = 2;\n', 'utf8');
   const reviewed = commit('feat: reviewed subject');
   const artifactType = options.artifactType ?? 'code';
-  const artifact = reviewArtifact({
-    type: artifactType,
-    reviewed,
-    location: options.findingLocation ?? 'plan.md:50',
-    gate: options.gate,
-    scope,
-  });
-  await write(SOURCE_ARTIFACT, artifact);
-  await write(
-    ARCHIVED_ARTIFACT,
-    options.archiveDifferentRun
-      ? reviewArtifact({
-          type: artifactType,
-          reviewed,
-          location: options.findingLocation ?? 'plan.md:50',
-          generatedAt: '2026-11-01T13:00:00Z',
-          gate: options.gate,
-          scope,
-        })
-      : artifact,
-  );
   const baseReviewedHead =
     options.repairField === 'Reviewed Head'
       ? '1111111111111111111111111111111111111111'
       : reviewed;
-  await write(
-    'plan.md',
-    plan(
-      reviewRow({
-        type: artifactType === 'artifact' ? 'artifact' : 'code',
-        status: 'received',
-        artifact: SOURCE_ARTIFACT,
-        reviewedHead: baseReviewedHead,
-        gate: options.gate,
-        scope,
-        date:
-          options.repairField === 'Date' ? '2026-10-31T12:00:00Z' : undefined,
-      }),
-    ),
+  const staleDate =
+    options.repairField === 'Date' || options.substantiveDistinctRepair;
+  const basePlan = plan(
+    reviewRow({
+      type: artifactType === 'artifact' ? 'artifact' : 'code',
+      status: 'received',
+      artifact: sourceArtifact,
+      reviewedHead: baseReviewedHead,
+      gate: options.gate,
+      scope,
+      date: staleDate ? '2026-10-31T12:00:00Z' : undefined,
+    }),
   );
-  await write(
-    'implementation.md',
-    journal(options.descriptive ? '-' : SOURCE_ARTIFACT, scope),
-  );
+  const reviewRowLine =
+    basePlan
+      .split('\n')
+      .findIndex(
+        (line) =>
+          line.includes(`| ${scope} |`) && line.includes('| received |'),
+      ) + 1;
+  const repairField = options.repairField ?? 'Artifact';
+  const provisionalFindings: FixtureFinding[] = [
+    {
+      id: 'L1',
+      severity: 'low',
+      title: options.descriptive
+        ? 'Repair stale Artifact observation'
+        : `Repair stale ${repairField} review metadata`,
+      location: options.findingLocation ?? `plan.md:${reviewRowLine}`,
+    },
+  ];
+  if (options.sharedRepair || options.substantiveDistinctRepair) {
+    provisionalFindings.push({
+      id: 'M1',
+      severity: 'medium',
+      title: options.sharedRepair
+        ? 'Repair stale Artifact duplicate claim'
+        : 'Outcome 1 has no reachable exit evidence; add a phase',
+      location: `plan.md:${reviewRowLine}`,
+    });
+  }
+  const receiptArtifact =
+    options.receiptArtifact ??
+    (options.descriptive ? sourceArtifact : sourceArtifact);
+  let baseJournal = journal(receiptArtifact, scope, provisionalFindings, {
+    receiptScope: options.receiptScope,
+    receiptCounts: options.receiptCounts,
+    omitReceiptFindings: options.omitReceiptFindings,
+    descriptive: options.descriptive,
+  });
+  if (options.descriptive) {
+    const observationLine =
+      baseJournal.split('\n').findIndex((line) => line === '**Artifact:** -') +
+      1;
+    provisionalFindings[0] = {
+      ...provisionalFindings[0]!,
+      location:
+        options.findingLocation ?? `implementation.md:${observationLine}`,
+    };
+    baseJournal = journal(receiptArtifact, scope, provisionalFindings, {
+      receiptScope: options.receiptScope,
+      receiptCounts: options.receiptCounts,
+      omitReceiptFindings: options.omitReceiptFindings,
+      descriptive: true,
+    });
+  }
+  await write('plan.md', basePlan);
+  await write('implementation.md', baseJournal);
+  if (options.moveReviewedFile) {
+    await rename(
+      join(root, 'app.ts'),
+      join(projectPath, 'moved-reviewed-app.ts'),
+    );
+  }
   const repairBase = commit('chore(oat): record review receipt');
 
-  const repairedArtifact = options.descriptive
-    ? SOURCE_ARTIFACT
-    : options.repairField === 'Artifact' || options.repairField === undefined
-      ? ARCHIVED_ARTIFACT
-      : SOURCE_ARTIFACT;
+  const artifact = reviewArtifact({
+    type: artifactType,
+    reviewed,
+    findings: provisionalFindings,
+    gate: options.gate,
+    scope,
+  });
+  await write(sourceArtifact, artifact);
+  const repairedArtifact =
+    !options.descriptive && repairField === 'Artifact'
+      ? archivedArtifact
+      : sourceArtifact;
+  if (repairedArtifact === archivedArtifact) {
+    await mkdir(dirname(join(projectPath, archivedArtifact)), {
+      recursive: true,
+    });
+    await rename(
+      join(projectPath, sourceArtifact),
+      join(projectPath, archivedArtifact),
+    );
+    if (options.archiveDifferentRun) {
+      await write(
+        archivedArtifact,
+        reviewArtifact({
+          type: artifactType,
+          reviewed,
+          findings: provisionalFindings,
+          generatedAt: '2026-11-01T13:00:00Z',
+          gate: options.gate,
+          scope,
+        }),
+      );
+    }
+  }
   const repairedHead = options.inventReviewedHead
     ? '2222222222222222222222222222222222222222'
-    : options.repairField === 'Reviewed Head'
+    : repairField === 'Reviewed Head'
       ? reviewed
       : baseReviewedHead;
   const repairedRow = reviewRow({
@@ -345,7 +493,10 @@ export async function createSettlementRepo(
     reviewedHead: repairedHead,
     gate: options.gate,
     scope,
-    date: '2026-11-01T12:00:00Z',
+    date:
+      repairField === 'Date' || options.substantiveDistinctRepair
+        ? '2026-11-01T12:00:00Z'
+        : undefined,
   });
   await write(
     'plan.md',
@@ -363,10 +514,62 @@ export async function createSettlementRepo(
     );
   }
   if (options.descriptive) {
-    await write('implementation.md', journal(SOURCE_ARTIFACT, scope));
+    await write(
+      'implementation.md',
+      baseJournal.replace('**Artifact:** -', `**Artifact:** ${sourceArtifact}`),
+    );
   }
   const repairHead = commit('fix: repair clerical review record');
-  const repairField = options.repairField ?? 'Artifact';
+  const proposalFindings: ClericalSettlementProposal['findings'] = [
+    {
+      id: 'L1',
+      repairKind: options.descriptive
+        ? 'descriptive prose'
+        : repairField === 'Artifact'
+          ? 'archived-artifact reference'
+          : 'review-row metadata',
+      correctedField: repairField,
+      record: options.descriptive
+        ? {
+            kind: 'journal-field',
+            path: 'implementation.md',
+            heading: `Clerical Observation: ${scope}`,
+          }
+        : { kind: 'reviews-row', path: 'plan.md' },
+      authoritativeSource: options.descriptive
+        ? { kind: 'review-row', field: 'Artifact' }
+        : repairField === 'Artifact'
+          ? {
+              kind: 'archived-artifact',
+              sourcePath: sourceArtifact,
+              archivedPath: archivedArtifact,
+            }
+          : {
+              kind: 'review-artifact',
+              field: repairField === 'Date' ? 'generatedAt' : 'reviewedHead',
+            },
+    },
+  ];
+  if (options.sharedRepair) {
+    proposalFindings.push({
+      ...proposalFindings[0]!,
+      id: 'M1',
+    });
+  }
+  if (options.substantiveDistinctRepair) {
+    proposalFindings.push({
+      id: 'M1',
+      repairKind: 'review-row metadata',
+      correctedField: 'Date',
+      record: { kind: 'reviews-row', path: 'plan.md' },
+      authoritativeSource: {
+        kind: 'review-artifact',
+        field: 'generatedAt',
+      },
+    });
+  }
+  const goalSubject =
+    /^m\d+\/(d\d+)/.exec(scope)?.[1] ?? /^(m\d+|d\d+)/.exec(scope)?.[1] ?? null;
   const proposal: ClericalSettlementProposal = {
     schemaVersion: 1,
     mode: 'first-settlement',
@@ -376,52 +579,23 @@ export async function createSettlementRepo(
       artifact: repairedArtifact,
     },
     repairRange: { base: repairBase, head: repairHead },
-    receipt: `Review Received: ${scope}`,
-    findings: [
-      {
-        id: 'L1',
-        repairKind: options.descriptive
-          ? 'descriptive prose'
-          : repairField === 'Artifact'
-            ? 'archived-artifact reference'
-            : 'review-row metadata',
-        correctedField: repairField,
-        record: options.descriptive
-          ? {
-              kind: 'journal-field',
-              path: 'implementation.md',
-              heading: `Review Received: ${scope}`,
-            }
-          : { kind: 'reviews-row', path: 'plan.md' },
-        authoritativeSource: options.descriptive
-          ? { kind: 'review-row', field: 'Artifact' }
-          : repairField === 'Artifact'
-            ? {
-                kind: 'archived-artifact',
-                sourcePath: SOURCE_ARTIFACT,
-                archivedPath: ARCHIVED_ARTIFACT,
-              }
-            : {
-                kind: 'review-artifact',
-                field: repairField === 'Date' ? 'generatedAt' : 'reviewedHead',
-              },
-      },
-    ],
-    ...(scope === 'm01'
-      ? { goal: { subject: 'm01', publishedHead: repairHead } }
-      : {}),
+    receipt: `Review Received: ${options.receiptScope ?? scope}`,
+    findings: proposalFindings,
+    ...(goalSubject ? { goal: { subject: goalSubject } } : {}),
     ...(options.gate ? { gateProof: GATE_PROOF } : {}),
   };
   if (options.gate) {
     await write(
       GATE_PROOF,
       JSON.stringify(
-        {
+        gateReviewResult({
           runId: options.gateProofMismatch ? 'run-02' : 'run-01',
           target: 'reviewer-01',
-          reviewedHead: reviewed,
-          artifact: repairedArtifact,
-        },
+          artifactPath: sourceArtifact,
+          generatedAt: '2026-11-01T12:00:00Z',
+          project: PROJECT_REL,
+          scope,
+        }),
         null,
         2,
       ),
@@ -437,9 +611,16 @@ export async function createSettlementRepo(
     repairHead,
     git,
     write,
+    writeRoot: async (path, content) => {
+      const target = join(root, path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, content, 'utf8');
+    },
     read: (path) => readFile(join(projectPath, path), 'utf8'),
     commit,
     proposal,
+    sourceArtifact,
+    archivedArtifact,
   };
 }
 
@@ -479,12 +660,23 @@ export async function writeProposal(
 export async function recordSettlement(
   repo: SettlementRepo,
   entry: ClericalSettlementEntry,
-  options: { rewriteObservation?: boolean; omitProof?: boolean } = {},
+  options: {
+    rewriteObservation?: boolean;
+    omitProof?: boolean;
+    outsideReviewsAndGates?: boolean;
+    changeReviewedHead?: boolean;
+  } = {},
 ): Promise<string> {
-  const planContent = (await repo.read('plan.md')).replace(
+  let planContent = (await repo.read('plan.md')).replace(
     '| received |',
     '| resolved |',
   );
+  if (options.changeReviewedHead) {
+    planContent = planContent.replace(
+      entry.reviewedRevision,
+      '3333333333333333333333333333333333333333',
+    );
+  }
   await repo.write('plan.md', planContent);
   const stored = options.omitProof
     ? ({ ...entry, proof: undefined } as unknown as ClericalSettlementEntry)
@@ -496,12 +688,15 @@ export async function recordSettlement(
       'Build observation was rewritten.',
     );
   }
+  const rendered = renderSettlementEntry(stored);
   await repo.write(
     'implementation.md',
-    journalContent.replace(
-      '## Reviews and Gates',
-      `## Reviews and Gates\n\n${renderSettlementEntry(stored)}`,
-    ),
+    options.outsideReviewsAndGates
+      ? `${journalContent}\n\n${rendered}\n`
+      : journalContent.replace(
+          '## Reviews and Gates',
+          `## Reviews and Gates\n\n${rendered}`,
+        ),
   );
   return repo.commit('chore(oat): record clerical settlement');
 }

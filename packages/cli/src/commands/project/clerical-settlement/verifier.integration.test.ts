@@ -8,6 +8,7 @@ import {
   removeSettlementRepo,
   runBuiltVerifier,
   type SettlementRepo,
+  type SettlementRepoOptions,
   writeProposal,
 } from './__tests__/repo';
 import type {
@@ -44,25 +45,35 @@ async function replayFixture(
     rewriteObservation?: boolean;
     omitProof?: boolean;
     deleteArtifacts?: boolean;
+    repoOptions?: SettlementRepoOptions;
+    substantiveSuccessor?: boolean;
+    changeReviewedHead?: boolean;
+    outsideReviewsAndGates?: boolean;
   } = {},
 ): Promise<{
   repo: SettlementRepo;
   proposal: ClericalSettlementProposal;
   report: ClericalSettlementReport;
 }> {
-  const repo = await fixture();
+  const repo = await fixture(options.repoOptions);
   const first = runBuiltVerifier(repo);
   expect(first.status).toBe('verified');
   expect(first.settlement).not.toBeNull();
   await recordSettlement(repo, first.settlement!, {
     rewriteObservation: options.rewriteObservation,
     omitProof: options.omitProof,
+    changeReviewedHead: options.changeReviewedHead,
+    outsideReviewsAndGates: options.outsideReviewsAndGates,
   });
-  const publishedHead = await appendReceive(repo);
+  let publishedHead = await appendReceive(repo);
+  if (options.substantiveSuccessor) {
+    await repo.writeRoot('app.ts', 'export const value = 3;\n');
+    publishedHead = repo.commit('feat: substantive successor');
+  }
   const proposal: ClericalSettlementProposal = {
     ...repo.proposal,
     mode: 'replay',
-    goal: { subject: 'm01', publishedHead },
+    publishedHead,
   };
   await writeProposal(repo, proposal);
   if (options.deleteArtifacts) await removeLocalArtifacts(repo);
@@ -95,10 +106,7 @@ describe('built CLI clerical-settlement verifier', () => {
     const metadata = await fixture({ repairField: 'Date' });
     expect(runBuiltVerifier(metadata).status).toBe('verified');
 
-    const prose = await fixture({
-      descriptive: true,
-      findingLocation: 'implementation.md:30',
-    });
+    const prose = await fixture({ descriptive: true });
     expect(runBuiltVerifier(prose)).toMatchObject({
       status: 'verified',
       checks: expect.arrayContaining([
@@ -126,16 +134,13 @@ describe('built CLI clerical-settlement verifier', () => {
 
   it('refuses a goal-scope Reviewed Head correction with a section 12.8 reason', async () => {
     const bad = await fixture({ repairField: 'Reviewed Head' });
-    expectRefusal(runBuiltVerifier(bad), /goal-12\.8-substantive-change/);
+    expectRefusal(runBuiltVerifier(bad), /goal-12\.8-known-ineligible/);
     await validArchiveControl();
   });
 
   it('refuses replay when the settlement-recording commit rewrites an observation', async () => {
     const bad = await replayFixture({ rewriteObservation: true });
-    expectRefusal(
-      bad.report,
-      /goal-12\.8-substantive-change.*recorded journal line/i,
-    );
+    expectRefusal(bad.report, /settlement-successor-overreach/i);
     const valid = await replayFixture();
     expect(valid.report.status).toBe('verified');
   });
@@ -156,7 +161,7 @@ describe('built CLI clerical-settlement verifier', () => {
 
   it('refuses an archived counterpart from a different run', async () => {
     const bad = await fixture({ archiveDifferentRun: true });
-    expectRefusal(runBuiltVerifier(bad), /archive-identity-mismatch/);
+    expectRefusal(runBuiltVerifier(bad), /reviewed-revision-mismatch/);
     await validArchiveControl();
   });
 
@@ -207,8 +212,172 @@ describe('built CLI clerical-settlement verifier', () => {
 
   it('refuses replay when durable settlement proof is missing', async () => {
     const bad = await replayFixture({ omitProof: true });
-    expectRefusal(bad.report, /durable-proof-missing/);
+    expectRefusal(bad.report, /settlement-entry-malformed/);
     const valid = await replayFixture({ deleteArtifacts: true });
     expect(valid.report.status).toBe('verified');
+  });
+
+  it('verifies moved and collision-suffixed archived artifacts without the source', async () => {
+    const moved = await fixture();
+    await expect(moved.read(moved.sourceArtifact)).rejects.toThrow();
+    expect(runBuiltVerifier(moved).status).toBe('verified');
+
+    const collision = await fixture({
+      archiveCollision: true,
+      scope: 'p01',
+    });
+    expect(collision.archivedArtifact).toMatch(/2026-11-01T120000Z/);
+    await expect(collision.read(collision.sourceArtifact)).rejects.toThrow();
+    expect(runBuiltVerifier(collision).status).toBe('verified');
+  });
+
+  it('binds every finding to one distinct repaired field and its claim', async () => {
+    const shared = await fixture({ sharedRepair: true });
+    expectRefusal(runBuiltVerifier(shared), /repair-target-shared/);
+
+    const substantive = await fixture({ substantiveDistinctRepair: true });
+    expectRefusal(
+      runBuiltVerifier(substantive),
+      /finding-claim-field-mismatch/,
+    );
+    await validArchiveControl();
+  });
+
+  it('refuses a clerical claim whose location line resolves elsewhere', async () => {
+    const bad = await fixture({ findingLocation: 'plan.md:1' });
+    expectRefusal(runBuiltVerifier(bad), /finding-location-record-mismatch/);
+    await validArchiveControl();
+  });
+
+  it('replays non-goal scopes through the published head and refuses later code', async () => {
+    const valid = await replayFixture({
+      repoOptions: { descriptive: true },
+      deleteArtifacts: true,
+    });
+    expect(valid.report.status).toBe('verified');
+    expect(valid.proposal.goal).toBeUndefined();
+
+    const stale = await replayFixture({
+      repoOptions: { descriptive: true },
+      substantiveSuccessor: true,
+    });
+    expectRefusal(stale.report, /settlement-successor-substantive/);
+  });
+
+  it('requires an explicit top-level published head for every replay', async () => {
+    const replay = await replayFixture({
+      repoOptions: { descriptive: true },
+    });
+    const withoutHead = {
+      ...replay.proposal,
+    } as Partial<ClericalSettlementProposal>;
+    delete withoutHead.publishedHead;
+    await writeProposal(replay.repo, withoutHead as ClericalSettlementProposal);
+    const report = runBuiltVerifier(replay.repo);
+    expect(report.status).toBe('error');
+    expect(report.reason).toMatch(/publishedHead is required/);
+  });
+
+  it('refuses goal-only proposal fields outside an actual goal delivery scope', async () => {
+    const repo = await fixture({ descriptive: true });
+    await writeProposal(repo, {
+      ...repo.proposal,
+      goal: { subject: 'p01' },
+    });
+    expectRefusal(runBuiltVerifier(repo), /goal-scope-mismatch/);
+  });
+
+  it('refuses a Reviewed Head rewrite in a settlement successor', async () => {
+    const replay = await replayFixture({ changeReviewedHead: true });
+    expectRefusal(replay.report, /durable-proof-contradictory/);
+  });
+
+  it('requires replay ledger and selected event types to remain code', async () => {
+    const repo = await fixture();
+    const first = runBuiltVerifier(repo);
+    expect(first.status).toBe('verified');
+    const forged = {
+      ...first.settlement!,
+      event: { ...first.settlement!.event, type: 'artifact' },
+    };
+    await repo.write(
+      'plan.md',
+      (await repo.read('plan.md')).replace('| code |', '| artifact |'),
+    );
+    await recordSettlement(repo, forged);
+    const publishedHead = await appendReceive(repo);
+    await writeProposal(repo, {
+      ...repo.proposal,
+      mode: 'replay',
+      publishedHead,
+      event: { ...repo.proposal.event, type: 'artifact' },
+    });
+    expectRefusal(runBuiltVerifier(repo), /durable-proof-missing/);
+  });
+
+  it('binds receipts to scope, artifact, counts, and finding IDs', async () => {
+    const wrongScope = await fixture({ receiptScope: 'p99' });
+    expectRefusal(runBuiltVerifier(wrongScope), /receipt-event-mismatch/);
+
+    const wrongArtifact = await fixture({
+      receiptArtifact: 'reviews/unrelated.md',
+    });
+    expectRefusal(runBuiltVerifier(wrongArtifact), /receipt-artifact-mismatch/);
+
+    const wrongCounts = await fixture({
+      receiptCounts: 'Critical 0 · High 0 · Medium 1 · Low 0',
+    });
+    expectRefusal(runBuiltVerifier(wrongCounts), /receipt-counts-mismatch/);
+
+    const missingIds = await fixture({ omitReceiptFindings: true });
+    expectRefusal(runBuiltVerifier(missingIds), /receipt-findings-mismatch/);
+  });
+
+  it('restricts descriptive prose to exact Clerical Observation fields', async () => {
+    const bad = await fixture({ descriptive: true });
+    await writeProposal(bad, {
+      ...bad.proposal,
+      findings: [
+        {
+          ...bad.proposal.findings[0]!,
+          record: {
+            kind: 'journal-field',
+            path: 'implementation.md',
+            heading: 'Review Received: p01',
+          },
+        },
+      ],
+    });
+    expectRefusal(runBuiltVerifier(bad), /repair-kind-ineligible/);
+  });
+
+  it('refuses a reviewed file moved into the project directory', async () => {
+    const bad = await fixture({
+      descriptive: true,
+      moveReviewedFile: true,
+    });
+    expectRefusal(runBuiltVerifier(bad), /reviewed-subject-changed/);
+  });
+
+  it('accepts settlement entries only under Reviews and Gates with exact schema', async () => {
+    const outside = await replayFixture({ outsideReviewsAndGates: true });
+    expectRefusal(outside.report, /settlement-entry-not-unique/);
+
+    const malformed = await replayFixture({ omitProof: true });
+    expectRefusal(malformed.report, /settlement-entry-malformed/);
+  });
+
+  it('refuses replay or settlement against dirty tracked project evidence', async () => {
+    const repo = await fixture();
+    await repo.write(
+      'plan.md',
+      `${await repo.read('plan.md')}\nDirty evidence.\n`,
+    );
+    expectRefusal(runBuiltVerifier(repo), /project-state-dirty/);
+  });
+
+  it('normalizes labelled goal milestone scopes through the delivery reader', async () => {
+    const repo = await fixture({ scope: 'm01: implementation review' });
+    expect(runBuiltVerifier(repo).status).toBe('verified');
   });
 });
