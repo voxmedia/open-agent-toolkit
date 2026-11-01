@@ -4,6 +4,18 @@
 
 ## Curated Overview
 
+- 2026-11-01: the `wave-1-correctness` project (lockstep 0.3.39) delivered
+  Wave 1 of the [backlog and roadmap review](reviews/backlog-and-roadmap-review.md)
+  and archived its seven items:
+  [BL-261002-clean-up-stale-provider-views — Clean up stale provider views and Codex entries when a canonical agent is deleted or renamed](archived/BL-261002-clean-up-stale-provider-views.md),
+  [BL-261002-stop-oat-sync-from-changing — Stop oat sync from changing user values in .codex/config.toml](archived/BL-261002-stop-oat-sync-from-changing.md),
+  [BL-261002-honor-the-requested-scope — Honor the requested scope for every pack in tools install and init --setup](archived/BL-261002-honor-the-requested-scope.md),
+  [BL-261002-correct-misleading-init-status — Correct misleading init, status, and doctor messages and stop scripts from defaulting to user-scope sync](archived/BL-261002-correct-misleading-init-status.md),
+  [BL-261002-align-implement-complete — Align implement, complete, and pr-final skill contracts with their actual behavior](archived/BL-261002-align-implement-complete.md),
+  [BL-261012-commit-paths-should-accept — commit-paths should accept tracked files under ignored directories](archived/BL-261012-commit-paths-should-accept.md)
+  and
+  [BL-261011-clean-up-the-isolated-home — Clean up the isolated HOME directories that evidence-grade test runs leave under TMPDIR](archived/BL-261011-clean-up-the-isolated-home.md).
+
 - 2026-10-30: triage of #353–#385 adds a goal-mode delivery-evidence cluster
   from one stacked-milestone run:
   [BL-261030-evaluate-stacked-goal-delivery — Evaluate stacked goal-delivery exit carriers against the stack tip](archived/BL-261030-evaluate-stacked-goal-delivery.md),
