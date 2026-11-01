@@ -1706,7 +1706,7 @@ describe('codex sync extension', () => {
       },
     );
 
-    it('keeps a role a present agent declares when a removed file shares its name', async () => {
+    it('removes the declared role of a removed agent and keeps a present agent role sharing its file name', async () => {
       const { root, entries } = await seedSyncedProject([
         { file: 'gone', name: 'gone-old' },
         { file: 'keep', name: 'gone' },
@@ -1723,11 +1723,68 @@ describe('codex sync extension', () => {
       );
 
       expect(
+        plan.operations
+          .filter((operation) => operation.action === 'remove')
+          .map((operation) => operation.path),
+      ).toEqual(['.codex/agents/gone-old.toml']);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      const files = await codexRoleFiles(root);
+      const tables = await codexAgentTables(root);
+      expect(files).not.toContain('gone-old.toml');
+      expect(tables).not.toContain('gone-old');
+      expect(files).toContain('gone.toml');
+      expect(tables).toContain('gone');
+      expectUntouchedNeighbours(tables, files);
+    });
+
+    it('removes the declared role of a removed agent whose name differs from its file name', async () => {
+      const { root, entries } = await seedSyncedProject([
+        { file: 'oat-reviewer', name: 'declared-role' },
+        'agent-keep',
+      ]);
+      expect(await codexRoleFiles(root)).toContain('declared-role.toml');
+      await rm(entries[0]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        entries.slice(1),
+        ['.agents/agents/oat-reviewer.md'],
+      );
+
+      expect(
+        plan.operations
+          .filter((operation) => operation.action === 'remove')
+          .map((operation) => operation.path),
+      ).toEqual(['.codex/agents/declared-role.toml']);
+      expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
+      const files = await codexRoleFiles(root);
+      const tables = await codexAgentTables(root);
+      expect(files).not.toContain('declared-role.toml');
+      expect(tables).not.toContain('declared-role');
+      expect(files).toContain('agent-keep.toml');
+      expect(tables).toContain('agent-keep');
+      expectUntouchedNeighbours(tables, files);
+    });
+
+    it('leaves stale roles alone during an install partial sync', async () => {
+      const { root, entries } = await seedSyncedProject([
+        'agent-one',
+        'agent-two',
+      ]);
+      await rm(entries[1]!.canonicalPath);
+
+      const plan = await computeCodexProjectExtensionPlan(
+        root,
+        [entries[0]!],
+        ['.agents/agents/agent-one.md'],
+      );
+
+      expect(
         plan.operations.filter((operation) => operation.action === 'remove'),
       ).toEqual([]);
       expect((await applyCodexProjectExtensionPlan(root, plan)).failed).toBe(0);
-      expect(await codexRoleFiles(root)).toContain('gone.toml');
-      expect(await codexAgentTables(root)).toContain('gone');
+      expect(await codexRoleFiles(root)).toContain('agent-two.toml');
+      expect(await codexAgentTables(root)).toContain('agent-two');
     });
 
     it('keeps the variants of a base role a present agent still declares', async () => {

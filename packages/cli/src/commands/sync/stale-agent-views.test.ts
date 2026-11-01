@@ -335,6 +335,49 @@ describe('sync after a canonical agent is deleted or renamed', () => {
     },
   );
 
+  it('pack removal removes the role a removed agent declared under a different name', async () => {
+    const root = await syncedRepository();
+    await writeFile(
+      join(root, '.agents', 'agents', 'agent-one.md'),
+      canonicalAgent('declared-role'),
+    );
+    await writeFile(
+      join(root, '.agents', 'agents', 'keep.md'),
+      canonicalAgent('agent-one'),
+    );
+    const sync = await runCli(root, ['sync', '--scope', 'project']);
+    expect(sync.exitCode, sync.stderr).toBe(0);
+    expect(
+      await pathExists(join(root, '.codex/agents/declared-role.toml')),
+    ).toBe(true);
+    await rm(join(root, '.agents', 'agents', 'agent-one.md'));
+
+    const previousExitCode = process.exitCode;
+    const evidence = await inProcessSyncDependencies.runSync({
+      scope: 'project',
+      cwd: root,
+      home: process.env.HOME!,
+      removedCanonicalPaths: ['.agents/agents/agent-one.md'],
+    });
+    process.exitCode = previousExitCode;
+
+    expect(evidence?.failedOperations ?? 0).toBe(0);
+    expect(
+      await pathExists(join(root, '.codex/agents/declared-role.toml')),
+    ).toBe(false);
+    await expect(
+      readFile(join(root, '.codex', 'agents', 'agent-one.toml'), 'utf8'),
+    ).resolves.toContain('# oat-role: agent-one');
+    expect(
+      await pathExists(join(root, '.codex/agents/legacy-agent.toml')),
+    ).toBe(true);
+    expect(await codexAgentTables(root)).toEqual([
+      'agent-one',
+      'custom',
+      'legacy-agent',
+    ]);
+  });
+
   it.each(['delete', 'rename'] as const)(
     'after %s: sync removes the stale views and exits 0',
     async (change) => {
