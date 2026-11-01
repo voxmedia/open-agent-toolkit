@@ -1,7 +1,7 @@
 ---
 id: BL-260718-add-generated-runbook
 title: Add generated-runbook verification command pass
-status: open
+status: wont_do
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - verification
 assignee: null
 created: 2026-07-18T17:36:38.126Z
-updated: 2026-07-18T17:36:38.126Z
+updated: '2026-11-01T15:57:46Z'
 associated_issues: []
 external_plans: []
 ---

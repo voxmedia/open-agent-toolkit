@@ -1,7 +1,7 @@
 ---
 id: BL-260728-additional-visual-workflows
 title: Additional visual workflows
-status: open
+status: wont_do
 priority: low
 scope: feature
 scope_estimate: L
@@ -11,7 +11,7 @@ labels:
   - follow-up
 assignee: null
 created: 2026-07-28T02:30:12.949Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T15:57:47Z'
 associated_issues: []
 external_plans: []
 ---

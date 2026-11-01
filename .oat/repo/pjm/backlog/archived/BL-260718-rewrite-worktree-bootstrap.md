@@ -1,7 +1,7 @@
 ---
 id: BL-260718-rewrite-worktree-bootstrap
 title: Rewrite worktree bootstrap-group as tested TypeScript command
-status: open
+status: wont_do
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - typescript
 assignee: null
 created: 2026-07-18T17:31:56.257Z
-updated: 2026-07-18T17:31:56.257Z
+updated: '2026-11-01T15:57:50Z'
 associated_issues: []
 external_plans: []
 ---

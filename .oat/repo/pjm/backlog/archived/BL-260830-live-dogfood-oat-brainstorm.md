@@ -1,7 +1,7 @@
 ---
 id: BL-260830-live-dogfood-oat-brainstorm
 title: Live dogfood oat-brainstorm destination and fold-back safety
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:49.370Z
-updated: 2026-08-30T22:30:49.370Z
+updated: '2026-11-01T15:57:49Z'
 associated_issues: []
 external_plans: []
 ---

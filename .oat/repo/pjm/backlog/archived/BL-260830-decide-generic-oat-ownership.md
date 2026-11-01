@@ -1,7 +1,7 @@
 ---
 id: BL-260830-decide-generic-oat-ownership
 title: Decide generic OAT ownership of Jira backlog refinement
-status: open
+status: wont_do
 priority: medium
 scope: idea
 scope_estimate: L
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:32:54.710Z
-updated: 2026-08-30T22:32:54.710Z
+updated: '2026-11-01T15:57:48Z'
 associated_issues: []
 external_plans: []
 ---

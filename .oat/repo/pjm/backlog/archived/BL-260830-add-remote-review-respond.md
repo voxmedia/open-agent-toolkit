@@ -1,7 +1,7 @@
 ---
 id: BL-260830-add-remote-review-respond
 title: Add remote review respond and summarize skill set
-status: open
+status: wont_do
 priority: medium
 scope: feature
 scope_estimate: L
@@ -11,7 +11,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:54.971Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T15:57:47Z'
 associated_issues: []
 external_plans: []
 ---

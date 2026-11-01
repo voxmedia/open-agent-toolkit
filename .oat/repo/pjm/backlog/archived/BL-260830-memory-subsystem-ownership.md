@@ -1,7 +1,7 @@
 ---
 id: BL-260830-memory-subsystem-ownership
 title: Memory subsystem ownership decision for OAT
-status: open
+status: wont_do
 priority: low
 scope: idea
 scope_estimate: XL
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:33:25.918Z
-updated: 2026-08-30T22:33:25.918Z
+updated: '2026-11-01T15:57:49Z'
 associated_issues: []
 external_plans: []
 ---

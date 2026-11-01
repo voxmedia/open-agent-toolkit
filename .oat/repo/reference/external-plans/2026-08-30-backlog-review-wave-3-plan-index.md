@@ -20,7 +20,7 @@ not an `oat-project-import-plan` target.
 - Selected: five bounded outcomes. All five are plan-ready and have no
   unsatisfied hard dependency.
 - Deferred/rejected:
-  - [BL-260827-span-based-prose-guards](../../pjm/backlog/items/BL-260827-span-based-prose-guards.md)
+  - [BL-260827-span-based-prose-guards](../../pjm/backlog/archived/BL-260827-span-based-prose-guards.md)
     is not plan-ready. The shared runner contract, structural anchor/probe
     record, migration roster, and ownership boundary remain unresolved. Keep
     the narrow codex-skill guard independent.

@@ -1,7 +1,7 @@
 ---
 id: BL-260830-complete-control-plane-backed
 title: Complete control-plane-backed lifecycle reads
-status: open
+status: wont_do
 priority: medium
 scope: initiative
 scope_estimate: M
@@ -14,7 +14,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:56.885Z
-updated: 2026-08-30T22:30:56.885Z
+updated: '2026-11-01T15:57:51Z'
 associated_issues: []
 external_plans: []
 ---

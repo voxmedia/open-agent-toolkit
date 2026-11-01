@@ -1,7 +1,7 @@
 ---
 id: BL-260830-decide-whether-oat-owns
 title: Decide whether OAT owns dependency intelligence
-status: open
+status: wont_do
 priority: low
 scope: idea
 scope_estimate: L
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:33:02.666Z
-updated: 2026-08-30T22:33:02.666Z
+updated: '2026-11-01T15:57:48Z'
 associated_issues: []
 external_plans: []
 ---

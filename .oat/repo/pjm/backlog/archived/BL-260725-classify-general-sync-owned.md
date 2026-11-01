@@ -1,7 +1,7 @@
 ---
 id: BL-260725-classify-general-sync-owned
 title: Classify general sync-owned dirt in project-start preflight
-status: open
+status: wont_do
 priority: low
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - deferred-design
 assignee: null
 created: 2026-07-25T21:32:04.951Z
-updated: 2026-07-25T21:32:04.951Z
+updated: '2026-11-01T15:57:46Z'
 associated_issues: []
 external_plans: []
 ---

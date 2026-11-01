@@ -14,7 +14,7 @@ legacy_id: ADR-015
 - **Related:**
   - `.oat/projects/shared/control-plane-state-parsing/discovery.md`
   - `.oat/projects/shared/control-plane-state-parsing/design.md`
-  - `.oat/repo/pjm/backlog/items/BL-260830-benchmark-listprojects-before.md`
+  - `.oat/repo/pjm/backlog/archived/BL-260830-benchmark-listprojects-before.md`
 
 #### Context
 

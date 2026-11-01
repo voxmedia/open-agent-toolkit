@@ -2,7 +2,7 @@
 id: BL-260827-span-based-prose-guards
 title: Span-based prose guards, anchored probe records, and a shared probe
   runner for skill contract tests
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - wave-4-follow-up
 assignee: null
 created: 2026-08-27T06:56:35.554Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T15:57:47Z'
 associated_issues: []
 external_plans: []
 ---

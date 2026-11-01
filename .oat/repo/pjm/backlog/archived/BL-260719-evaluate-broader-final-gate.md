@@ -1,7 +1,7 @@
 ---
 id: BL-260719-evaluate-broader-final-gate
 title: Evaluate broader final-gate freshness policy after narrow optimization
-status: open
+status: wont_do
 priority: low
 scope: feature
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - follow-up
 assignee: null
 created: 2026-07-19T13:42:05.701Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T15:57:46Z'
 associated_issues: []
 external_plans: []
 ---

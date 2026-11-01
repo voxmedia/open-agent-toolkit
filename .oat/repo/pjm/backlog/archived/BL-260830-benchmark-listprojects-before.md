@@ -1,7 +1,7 @@
 ---
 id: BL-260830-benchmark-listprojects-before
 title: Benchmark listProjects before approving a summary fast path
-status: open
+status: wont_do
 priority: low
 scope: idea
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:32:58.611Z
-updated: 2026-08-30T22:32:58.611Z
+updated: '2026-11-01T15:57:48Z'
 associated_issues: []
 external_plans: []
 ---

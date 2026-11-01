@@ -1,7 +1,7 @@
 ---
 id: BL-260719-add-pinned-recon-agents
 title: Add pinned recon agents for reusable orchestration
-status: open
+status: wont_do
 priority: medium
 scope: feature
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - dispatch
 assignee: null
 created: 2026-07-19T02:43:56.881Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T15:57:50Z'
 associated_issues: []
 external_plans: []
 ---
