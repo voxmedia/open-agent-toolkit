@@ -11,9 +11,10 @@ labels:
   - reference
   - needs-discussion
   - legacy-promoted
+  - deferred
 assignee: null
 created: 2026-08-30T22:31:02.506Z
-updated: 2026-08-30T22:31:02.506Z
+updated: 2026-11-01T16:05:00Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,6 +22,8 @@ external_plans: []
 ## Description
 
 Promoted from legacy backlog record bl-e582. Define bounded, optional reads of canonical current state, decisions, and project summaries for discovery, planning, and review without exceeding context budgets.
+
+**Deferred (2026-11-01, operator):** Take up only after BL-260830-make-documentation-aware ships and a real plan or review contradicts an accepted decision record.
 
 ## Acceptance Criteria
 
