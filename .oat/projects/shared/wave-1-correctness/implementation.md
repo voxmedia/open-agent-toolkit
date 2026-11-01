@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -23,9 +23,9 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 | Phase 3      | complete    | 4     | 4/4       |
 | Phase 4      | complete    | 2     | 2/2       |
 | Phase 5      | complete    | 6     | 6/6       |
-| Phase p-rev1 | in_progress | 2     | 0/2       |
+| Phase p-rev1 | in_progress | 2     | 2/2       |
 
-**Total:** 25/27 tasks completed
+**Total:** 27/27 tasks completed
 
 ---
 
@@ -695,15 +695,39 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ### Task prev1-t01: (revision) Remove a Codex config table only when it still names the stale owned role file
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 105ac281fa94b8db54fc1972c44467278d9c7f27
+
+**Outcome (required when completed):**
+
+- `collectStaleManagedRoles` returns stale role files and stale config tables separately. A `[agents.<name>]` table is removed only when its `config_file` still names the stale OAT-owned role file; a table the user re-pointed elsewhere stays while the leftover owned `<name>.toml` is still removed.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test
+
+**Verification:** new test `keeps a config table the user re-pointed away from a stale owned role file`; Codex/sync/providers/tools suites 794 passed; CLI lint, type-check exit 0. Negative control: pre-fix source → the test fails (`expected '[agents]…' to contain '[agents.gone]'`, the re-pointed table was deleted); post-fix → passes; valid control (an un-re-pointed `[agents.stale]` table and its file are still removed) passes. Guard-can-fail: re-adding the table in the directory-scan loop fails the test; restored passes. CLI probe (`references/pr395-codex-cleanup-probe.sh`): pre-fix `[agents.gone]` DELETED, post-fix KEPT; leftover `gone.toml` removed and `[agents.keep]` kept on both.
 
 ---
 
 ### Task prev1-t02: (revision) Never delete a Codex role file outside the repository
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** b8eb99669ba43e1c4daec5bb4c7910ad04560f72
+
+**Outcome (required when completed):**
+
+- Stale cleanup resolves each candidate's real path (through a symlinked role file or `.codex/agents` directory) and skips the file, and its table, when it lies outside the sync scope; the removal step re-checks containment at the actual removal path.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test
+
+**Verification:** new test `never removes a stale owned role file whose real path is outside the scope` (symlinked directory and symlinked file cases, plus an in-scope stale role that is still removed); Codex/sync/providers/tools suites 795 passed; CLI lint, type-check exit 0. Negative control: pre-fix source → the external file is deleted (`ENOENT` on read-back); post-fix → it survives and its table stays; valid control (in-scope stale role removed) passes. Guard-can-fail: both containment checks neutralized → test fails; restored passes. CLI probe: pre-fix external sentinel DELETED, post-fix SURVIVED; in-scope stale role removed on both.
+
+**Notes / Decisions:**
+
+- prev1-t01 and prev1-t02 were implemented in the root (operator-authorized revision, small bounded fix; see the `Root-inline` line under Orchestration Runs).
 
 ---
 
@@ -731,6 +755,7 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - run/v1 · request=wave1-p05-review-2 · scope=p05 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p05 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 - Root-inline phase: p05 task p05-t06 (review fix) — reason: one-sentence docs correction for review R2-M1 after the p05 fix loop; root model claude-opus-5-5 (Cursor). No child launched.
 - Root-inline phase: p01 task p01-t06 (review fix) — reason: one-line regression found while validating the p01-t05 commit; root model claude-opus-5-5 (Cursor). No child launched.
+- Root-inline phase: p-rev1 tasks prev1-t01, prev1-t02 (operator-authorized revision for PR #395 review findings) — reason: small bounded fix the operator asked the root to make; root model claude-opus-5-5 (Cursor). No child launched.
 
 <!-- orchestration-runs-end -->
 
