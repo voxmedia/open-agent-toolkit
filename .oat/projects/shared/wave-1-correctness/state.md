@@ -99,9 +99,9 @@ oat_quick_start_gate:
   reviewed_head: 'b37cd7c49b32083f10e7d1794d2c9d92baa01966'
   decided_at: '2026-10-31T23:08:13Z'
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -109,39 +109,33 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 0
-  reviewed_head: 'c0fcf06875bd97199fecde5702ce49cfdc747d98'
+  reviewed_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v2:f7ac9152f463c67d716dcb9fde0fba40e062bf72589d8428fb35e5e7d1c51297'
-  freshness_head: 'c0fcf06875bd97199fecde5702ce49cfdc747d98'
-  freshness_fingerprint: 'sha256:effective-delta-v2:f7ac9152f463c67d716dcb9fde0fba40e062bf72589d8428fb35e5e7d1c51297'
+  implementation_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
+  freshness_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
+  freshness_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
   waivers: []
-  launch_state: result_persisted
-  launch_attempt_id: wave1-exit-gate-1
-  launch_started_at: '2026-11-01T01:24:53Z'
-  launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-1.json
-  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/b066376d-1060-4d4b-b0de-1dac7fe96d0f.json
-  gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f
-  envelope_status: ok
-  artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
-  handoff: 'Gate passed at the high threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md to disposition them before marking the final review row passed.'
-  receive_state: completed
-  receive_correlation:
-    {
-      gate_run_id: b066376d-1060-4d4b-b0de-1dac7fe96d0f,
-      scope: final,
-      type: code,
-      source_filename: final-review-2026-11-01T012851Z.md,
-    }
-  receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md
-  receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T012851Z.md
-  receive_event_identity: 'final|code|final-review-2026-11-01T012851Z.md'
-  receive_pre_head: '80196c2c2da87e04ccefc87eaca5624d741f097c'
-  receive_commit: '055b9df690fe0c0a8c95795b1020d0f0ee7631ab'
-  receive_eligible: true
-  receive_completed: true
+  launch_state: intent_persisted
+  launch_attempt_id: wave1-exit-gate-2
+  launch_started_at: '2026-11-01T01:51:41Z'
+  launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-2.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-11-01T01:50:00Z'
-  decided_at: '2026-11-01T01:35:00Z'
+  updated_at: '2026-11-01T01:51:41Z'
+  decided_at: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
