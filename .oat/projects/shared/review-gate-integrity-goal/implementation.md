@@ -155,10 +155,11 @@ p01 accepted 2026-11-01: per-phase review passed in round 2, every review dispos
 
 **Status:** in_progress
 **Base:** c8a12f51dc6ee7a4f863a0fbb0c58290377e2292
-**Head:** 4497d05f532e3d52984efaf7fde684c65f008b71
+**Head:** 9ef1fcb89807a67dd9da78bbe4b6b8e45810116c
 **Executor:** phase-implementer:rgi-p02-impl-20261101-01
 **Verification:** built-CLI verifier and unchanged goal-successor suites passed 93/93; isolated-HOME help and contract suites passed 1157/1157; CLI lint, CLI type-check, `pnpm check`, and `pnpm build` each exited 0. The restored refusal guard passed all 13 verifier tests after its negative-control neutralization run.
 **Late-fix verification:** after p02-t02, the built-CLI verifier, help snapshot and unchanged delivery suites passed 175/175; isolated-HOME help/contracts passed 1157/1157 on the no-edit rerun after a concurrent-build race; CLI lint, CLI type-check, `pnpm check`, direct CLI build and `pnpm build` exited 0. Twenty-seven restored verifier controls passed after the per-guard neutralization probes recorded below.
+**Late-fix round-2 verification:** after p02-t03, the built-CLI verifier, help snapshot and unchanged delivery suites passed 194/194; isolated-HOME help/contracts passed 1157/1157; direct CLI build, CLI lint, CLI type-check, `pnpm check` and `pnpm build` exited 0. The restored verifier suite passed 30/30 after the eleven per-guard neutralization probes recorded below.
 
 Worktree: the project branch checkout. Committing owner: the phase implementer. Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the verifier command, its settlement-entry definition, and its controls share the module, fixtures and test harness, and fail the independence test. Rung 4 does not apply, because this is a new assurance-bearing CLI surface. The selected phase gate runs after the per-phase review passes.
 
