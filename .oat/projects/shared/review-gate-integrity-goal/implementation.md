@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-11-01
-oat_current_task_id: p01
+oat_current_task_id: p02
 oat_generated: false
 oat_template: false
 ---
@@ -39,25 +39,25 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status      | Units | Accepted |
-| ----- | ----------- | ----- | -------- |
-| p01   | in_progress | 1     | 0/1      |
-| p02   | pending     | 1     | 0/1      |
-| p03   | pending     | 1     | 0/1      |
-| p04   | pending     | 1     | 0/1      |
-| p05   | pending     | 1     | 0/1      |
-| p06   | pending     | 1     | 0/1      |
-| p07   | pending     | 1     | 0/1      |
-| p08   | pending     | 1     | 0/1      |
-| p09   | pending     | 1     | 0/1      |
+| Phase | Status    | Units | Accepted |
+| ----- | --------- | ----- | -------- |
+| p01   | completed | 1     | 1/1      |
+| p02   | pending   | 1     | 0/1      |
+| p03   | pending   | 1     | 0/1      |
+| p04   | pending   | 1     | 0/1      |
+| p05   | pending   | 1     | 0/1      |
+| p06   | pending   | 1     | 0/1      |
+| p07   | pending   | 1     | 0/1      |
+| p08   | pending   | 1     | 0/1      |
+| p09   | pending   | 1     | 0/1      |
 
-**Total:** 0/9 phases accepted
+**Total:** 1/9 phases accepted
 
 ---
 
 ## Phase p01: Verdict parser finding identification
 
-**Status:** in_progress
+**Status:** completed
 **Base:** 56f55a3378d6e35dc3e67dc1437f9ca864477728
 **Head:** ded0985d59ee8039415ad163c750cb9abe2f2c08
 **Executor:** phase-implementer:rgi-p01-impl-20261101-01
@@ -135,6 +135,22 @@ Reviewer request `rgi-p01-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 - `pnpm check`, `pnpm build`, direct CLI build, root lint, and root format: exit 0.
 - `oat sync --scope project`: exit 0; 65 tracked reviewer projections regenerated and the sync manifest remained unchanged.
 
+### Review Received: p01 (round 2)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p01-review-2026-11-01T222248Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 2
+
+Reviewer request `rgi-p01-rev-20261101-02` (`oat-reviewer-claude-opus-5-5-high`); reviewed range `56f55a3378d6e35dc3e67dc1437f9ca864477728..ded0985d59ee8039415ad163c750cb9abe2f2c08`; reconnaissance not attempted. The reviewer confirmed every round-1 fix in `bd8867964` and reproduced all eight journaled negative controls in an isolated copy; the L2 and L3 deferrals remain valid.
+
+- L1 (Low): a wrapped or nested detail line under a bold title refuses the artifact as orphaned, with a misleading cause → approved deferral (see Deferred Findings); fails closed and never accepts wrongly.
+- L2 (Low): a plain list finding followed by an explicit `**M1 — …**` is refused as a duplicate `M1` (order-dependent) → approved deferral to p08 (see Deferred Findings); fails closed, and p08 owns finding identity.
+
+**Outcome:** passed
+
+p01 accepted 2026-11-01: per-phase review passed in round 2, every review disposition is settled, and no phase gate is selected for p01.
+
 ## Phase p02: Read-only clerical-resolution verifier
 
 **Status:** pending
@@ -176,6 +192,9 @@ Reviewer request `rgi-p01-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 <!-- orchestration-runs-start -->
 
 - run/v1 · request=rgi-p01-impl-20261101-01 · scope=project:review-gate-integrity-goal:p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p01-rev-20261101-01 · scope=project:review-gate-integrity-goal:p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=rgi-p01-fix-20261101-01 · scope=project:review-gate-integrity-goal:p01 · action=fix · role=oat-phase-implementer · target=oat-phase-implementer-gpt-5-6-sol-high · model=gpt-5.6-sol-high · effort=~ · stamp=Dispatch: scope=p01-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-gpt-5-6-sol-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=resume:rgi-p01-impl-20261101-01 · observed=~ · match=~
+- run/v1 · request=rgi-p01-rev-20261101-02 · scope=project:review-gate-integrity-goal:p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
 
 <!-- orchestration-runs-end -->
 
@@ -202,6 +221,8 @@ Reviewer request `rgi-p01-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
 
 - p01 review L2 (Low): `- **L1:** text` list items parse with title `L1:` and no explicit ID. Deferred to p08, which owns the stable finding key over p01's records. Trigger: p08 start.
+- p01 review round 2 L1 (Low): a wrapped or nested detail line under a bold finding title is refused as orphaned, and the reviewer contract does not warn about the shape. It fails closed. Deferred. Trigger: the first observed refusal of this shape in a real gate run, or p08.
+- p01 review round 2 L2 (Low): explicit-ID duplicate refusal is order-dependent (a plain list finding before `**M1 — …**` is refused as a duplicate). It fails closed. Deferred to p08, which owns finding identity and keys.
 - p01 review L3 (Low): the gate JSON validation-failure envelope carries only `message`, not the typed refusal `code`. Deferred: no consumer branches on it yet (Feature Planning Triage). Trigger: the first consumer (p02 to p04 or m04) that needs the code without matching message text.
 
 ## Deviations from Plan / Design

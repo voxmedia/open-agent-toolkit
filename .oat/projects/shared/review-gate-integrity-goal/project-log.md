@@ -19,6 +19,21 @@ target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:
 
 Activated m01 (p01, p02, p03, p04, p05); review-gate-integrity-goal-activate-m01
 
+### 2026-11-01 · structural · oat-project-implement · p01
+
+p01 accepted: per-phase review passed in round 2 (round 1 0C/0H/4M/4L, one fix loop p01-t02; round 2 0C/0H/0M/2L, Lows deferred); head ded0985d59ee8039415ad163c750cb9abe2f2c08; no phase gate selected for p01. rgi-p01-outcome-20261101
+
+### 2026-11-01 · general · friction · Temporary HOME leaked into the root shell
+
+**Category:** gotcha
+**Source:** rgi-learning-p01-home-leak
+**Origin:** oat-project-implement
+**Recorded:** 2026-11-01T22:25:24Z
+
+Observation: after the p01 phase implementer ran isolated-HOME test suites, the root shell's HOME pointed at a mktemp directory, so the dispatch resolver lost the user-scope ladder and one root commit got a hostname fallback author email. rgi-learning-p01-home-leak
+Impact: the fix-dispatch resolve failed with a misleading 'requires a configured high candidate ladder' error, and a commit author had to be reset.
+Recommendation: children must use an inline HOME=$(mktemp -d) prefix, never export HOME; the root should check $HOME before resolver calls and commits after a child returns.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
