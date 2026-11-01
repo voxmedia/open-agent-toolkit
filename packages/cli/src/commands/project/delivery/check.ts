@@ -155,6 +155,93 @@ export interface SubjectEvidenceReport {
 /** Which exit carrier an evaluation judged. */
 export type ExitCarrierSource = 'milestone-carrier' | 'delivery-binding';
 
+export interface SubjectEvidenceScope {
+  kind: 'milestone' | 'delivery';
+  milestone: string | null;
+  scope: string[];
+  evidence: EvidenceScope;
+  delivery: GoalDelivery | null;
+}
+
+/**
+ * Build the bookkeeping-successor scope for a goal milestone or delivery.
+ * Delivery check and the clerical-settlement verifier share this builder so
+ * assurance probes cannot accidentally exercise a broader hand-built scope.
+ */
+export function buildSubjectEvidenceScope(
+  project: GoalDeliveryProject,
+  subject: string,
+): SubjectEvidenceScope {
+  const deliveries = project.state.deliveries ?? [];
+  const delivery = deliveries.find((entry) => entry.delivery_id === subject);
+  if (delivery) {
+    const milestone = delivery.milestone;
+    const scope = deliveryEffectiveScope(deliveries, delivery);
+    const workingCarrier =
+      milestone === null
+        ? null
+        : (project.state.milestoneGates?.[milestone]?.exit ?? null);
+    return {
+      kind: 'delivery',
+      milestone,
+      scope,
+      evidence: deliveryEvidenceScope(
+        { ...project, evidenceCarrier: workingCarrier },
+        deliveries,
+        delivery,
+      ),
+      delivery,
+    };
+  }
+
+  const milestone = normalizeMilestoneId(subject);
+  if (milestone === null) {
+    throw new CliError(
+      `Unknown delivery subject "${subject}": name a milestone (mNN) or a registered delivery (dNN).`,
+      1,
+    );
+  }
+  const membership = project.state.milestoneMembership;
+  const scope = membership ? milestonePhaseScope(membership, milestone) : null;
+  if (scope === null) {
+    const [firstError] = membership?.errors ?? [];
+    throw new CliError(
+      firstError
+        ? `Milestone membership is invalid (${firstError.code}: ${firstError.message}); repair it with oat-project-goal.`
+        : `No ## Milestones row for ${milestone}.`,
+      1,
+    );
+  }
+  const rows = reviewRowsFor(project.state.reviews, [milestone]);
+  const workingCarrier =
+    project.state.milestoneGates?.[milestone]?.exit ?? null;
+  const milestoneDelivery = latestDeliveryForMilestone(deliveries, milestone);
+  const evidence =
+    milestoneDelivery === undefined
+      ? {
+          repoRoot: project.repoRoot,
+          projectDir: project.projectDir,
+          evidenceArtifacts: [
+            ...rows
+              .map((entry) => entry.artifact)
+              .filter((artifact) => artifact !== '' && artifact !== '-'),
+            ...gateEvidenceArtifacts(project.state.reviews, workingCarrier),
+          ],
+        }
+      : deliveryEvidenceScope(
+          { ...project, evidenceCarrier: workingCarrier },
+          deliveries,
+          milestoneDelivery,
+        );
+  return {
+    kind: 'milestone',
+    milestone,
+    scope,
+    evidence,
+    delivery: null,
+  };
+}
+
 /**
  * Evaluate the delivery evidence for one subject. A registered delivery is
  * judged against its persisted member observations; a milestone (before
@@ -165,21 +252,17 @@ export async function evaluateSubjectEvidence(
   subject: string,
   git: GitRunner,
 ): Promise<SubjectEvidenceReport> {
-  const deliveries = project.state.deliveries ?? [];
-  const delivery = deliveries.find((entry) => entry.delivery_id === subject);
+  const subjectScope = buildSubjectEvidenceScope(project, subject);
+  const delivery = subjectScope.delivery;
 
   if (delivery) {
-    const milestoneId = delivery.milestone;
-    const scope = deliveryEffectiveScope(deliveries, delivery);
+    const milestoneId = subjectScope.milestone;
+    const scope = subjectScope.scope;
     const workingCarrier =
       milestoneId === null
         ? null
         : (project.state.milestoneGates?.[milestoneId]?.exit ?? null);
-    const evidence = deliveryEvidenceScope(
-      { ...project, evidenceCarrier: workingCarrier },
-      deliveries,
-      delivery,
-    );
+    const evidence = subjectScope.evidence;
     const publishedHeads = delivery.members.map(
       (member) => member.observed_head,
     );
@@ -211,26 +294,8 @@ export async function evaluateSubjectEvidence(
     };
   }
 
-  const milestoneId = normalizeMilestoneId(subject);
-  if (milestoneId === null) {
-    throw new CliError(
-      `Unknown delivery subject "${subject}": name a milestone (mNN) or a registered delivery (dNN).`,
-      1,
-    );
-  }
-  const membership = project.state.milestoneMembership;
-  const scope = membership
-    ? milestonePhaseScope(membership, milestoneId)
-    : null;
-  if (scope === null) {
-    const [firstError] = membership?.errors ?? [];
-    throw new CliError(
-      firstError
-        ? `Milestone membership is invalid (${firstError.code}: ${firstError.message}); repair it with oat-project-goal.`
-        : `No ## Milestones row for ${milestoneId}.`,
-      1,
-    );
-  }
+  const milestoneId = subjectScope.milestone!;
+  const scope = subjectScope.scope;
 
   const head = await git.run(['rev-parse', '--verify', 'HEAD'], {
     cwd: project.repoRoot,
@@ -239,26 +304,9 @@ export async function evaluateSubjectEvidence(
   const publishedHead = head.code === 0 ? head.stdout.trim() : null;
   const rows = reviewRowsFor(project.state.reviews, [milestoneId]);
   const row = rows.at(-1) ?? null;
-  const milestoneDelivery = latestDeliveryForMilestone(deliveries, milestoneId);
   const workingCarrier =
     project.state.milestoneGates?.[milestoneId]?.exit ?? null;
-  const evidence: EvidenceScope =
-    milestoneDelivery === undefined
-      ? {
-          repoRoot: project.repoRoot,
-          projectDir: project.projectDir,
-          evidenceArtifacts: [
-            ...rows
-              .map((entry) => entry.artifact)
-              .filter((artifact) => artifact !== '' && artifact !== '-'),
-            ...gateEvidenceArtifacts(project.state.reviews, workingCarrier),
-          ],
-        }
-      : deliveryEvidenceScope(
-          { ...project, evidenceCarrier: workingCarrier },
-          deliveries,
-          milestoneDelivery,
-        );
+  const evidence = subjectScope.evidence;
 
   let review: ReviewEvaluation;
   if (row === null || row.artifact === '' || row.artifact === '-') {

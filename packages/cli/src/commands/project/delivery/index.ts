@@ -4,10 +4,12 @@ import { createProjectDeliveryCheckCommand } from './check';
 import { createProjectDeliveryRefreshCommand } from './refresh';
 
 export {
+  buildSubjectEvidenceScope,
   createProjectDeliveryCheckCommand,
   deliveryEffectiveScope,
   evaluateSubjectEvidence,
   loadGoalDeliveryProject,
+  type SubjectEvidenceScope,
 } from './check';
 export {
   applyObservationWrites,
