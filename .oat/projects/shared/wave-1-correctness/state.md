@@ -103,7 +103,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
@@ -123,7 +123,7 @@ oat_implement_exit_gate:
   reviewed_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
-  freshness_head: '3d83c54411cc20acef66dedf9e2653f028fca814'
+  freshness_head: '4e8dde2e9c7e4538223f2f1f505be419771a3fdb'
   freshness_fingerprint: 'sha256:effective-delta-v2:95fc017fed366ac60a0f840e6a2af6de6f88263e6d27c072229405654f21e5ad'
   waivers: []
   launch_state: result_persisted
