@@ -12,7 +12,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 > - A tool pack is a bundle of OAT skills (instructions your coding agent follows), agents, templates and scripts that installs as one unit.
 > - There are eight packs: `core` (setup diagnostics and a local copy of these docs), `workflows` (tracked projects), `docs` (documentation upkeep), `utility` (reviews and maintenance helpers), `research` (evidence gathering and comparison), `ideas` and `brainstorm` (exploring ideas), and `project-management` (backlog and decisions kept in the repository).
 > - Install one pack with an explicit scope: `oat tools install research --scope project` puts it in this repository, and `oat tools install research --scope user` puts it in your home directory. Leave out the pack name, as in `oat tools install --scope project`, to install every pack; in an interactive terminal it first asks which packs to include.
-> - The `core` pack only ever installs under your home directory, whatever `--scope` you pass. [Where packs install](#where-packs-install) shows what that means for each command.
+> - The `core` pack only ever installs under your home directory; `--scope project` refuses or skips it. [Where packs install](#where-packs-install) shows what that means for each command.
 > - Installing the `project-management` pack is not the same as adopting project management: the repository's planning files are created only when someone runs `oat pjm init`.
 > - Read next: [Choosing packs and their ownership](#choosing-packs-and-their-ownership), [Install vs. initialize](#install-vs-initialize), [Upgrading from an earlier CLI](#upgrading-from-an-earlier-cli), and [What OAT Writes](../reference/what-oat-writes.md) for every file each command creates.
 
@@ -54,18 +54,19 @@ mean both scopes:
   packs asks where each one should go and suggests the same answer.
 - With `--scope project`, the pack is installed in this repository
   (`.agents/` and `.oat/`). With `--scope user`, it is installed under your
-  home directory.
+  home directory. An explicit `--scope project` or `--scope user` writes only
+  that scope, with or without a pack name: a copy the pack already has at the
+  other scope is left as it is, and the summary names only the scope written.
 - With `--scope all` given explicitly for one pack, as in
   `oat tools install docs --scope all`, that pack is installed at both scopes.
 
 The `core` pack can only live under your home directory:
 
 - `oat tools install --scope project`, with no pack name, installs the other
-  seven packs in this repository and still installs `core` under your home
-  directory.
-- `oat tools install core --scope project` exits successfully and prints
-  `Installed core tool pack.`, but it writes nothing, neither in the
-  repository nor in your home directory. Run `oat tools install core` (or add
+  seven packs in this repository, skips `core`, and reports that core is
+  user-scope only; nothing is written under your home directory.
+- `oat tools install core --scope project` exits 1 with a message that core is
+  user-scope only and writes nothing. Run `oat tools install core` (or add
   `--scope user`) to install it.
 - `oat tools remove --all --scope project` fails with
   `Pack core does not allow project scope`, and so does
@@ -773,7 +774,8 @@ Key behavior:
 - Installing is **additive**: choosing a scope for a pack never removes it from another scope. A pack installed at user scope plus a project install ends up at `project + user`, not moved
 - For every pack that allows both scopes (`ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
 - Fresh installs default to **user scope** for every pack; existing installs keep their current placement. The `--scope` default shown in `--help` is `all`, but with no `--scope` a pack that is not installed yet goes under your home directory; see [Where packs install](#where-packs-install)
-- `oat init --setup` uses this same additive scope resolver. In guided setup, choosing to customize scope reaches the per-pack selector; choosing the recommended defaults, or running non-interactively, applies additive per-pack defaults without removals
+- `oat init --setup` uses this same additive scope resolver. In guided setup, choosing to customize scope reaches the per-pack selector; choosing the recommended defaults, or running non-interactively, applies additive per-pack defaults without removals. An explicit `oat init --scope project --setup` or `--scope user --setup` installs the selected packs at that scope only (core is skipped under `--scope project`), and guided setup never runs `gh`: it detects the default branch from `origin/HEAD`, then `main`
+- An explicit `--scope project` or `--scope user` writes only that scope, for one pack or all of them; existing placements at the other scope are neither reconciled nor removed. With no `--scope` or with `--scope all`, the rules above apply
 - Every pack's fresh-install default is user scope (`defaultScope` in the release manifest); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes or creates a second copy at the other one. This applies to the per-pack subcommands too: a bare `oat tools install docs` in a repository where `docs` is already at project scope stays at project scope, and only an explicit `--scope` overrides that
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
 - Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
@@ -963,7 +965,7 @@ The `core` pack contains foundational diagnostic and documentation skills:
 
 Key behavior:
 
-- Core pack always installs at **user scope** (`~/.agents/skills/`). It is the only pack whose sole allowed scope is `user`. A conflicting explicit `--scope project` is not rejected: `oat tools install core --scope project` (and the legacy `oat init tools core --scope project`) exits successfully and prints `Installed core tool pack.` but writes nothing, while `oat tools install --scope project` with no pack name still installs core under your home directory. To install core, omit `--scope` or pass `--scope user`. Keeping core in your home directory makes its skills available in any directory. See [Where packs install](#where-packs-install).
+- Core pack always installs at **user scope** (`~/.agents/skills/`). It is the only pack whose sole allowed scope is `user`. A conflicting explicit `--scope project` is refused: `oat tools install core --scope project` (and the legacy `oat init tools core --scope project`) exits 1 with a message that core is user-scope only and writes nothing, and `oat tools install --scope project` with no pack name skips core and says so. To install core, omit `--scope` or pass `--scope user`. Keeping core in your home directory makes its skills available in any directory. See [Where packs install](#where-packs-install).
 - `~/.oat/docs/` is a managed directory asset: its completeness and drift are compared as a whole tree, so a partially deleted docs tree is reported as a partial `core` install rather than passing silently.
 - Core is checked by default in the `oat init tools` guided setup.
 - Installation also bundles OAT documentation to `~/.oat/docs/` for the oat-docs skill.
@@ -1277,11 +1279,10 @@ created until someone runs `oat pjm init` (see [Install vs. initialize](#install
 A fresh install goes to user scope, which lets you reuse packs across
 repositories without update churn in each one; a pack that is already installed
 keeps its scope. **`core` is user-only**: `oat tools install --scope project`
-with no pack name still installs it in your home directory, and
-`oat tools install core --scope project` reports success but installs nothing
-(see [Where packs install](#where-packs-install)). `oat init --scope project --setup` does not choose
-project scope for packs; customize each pack's scope at the prompt, or install
-packs explicitly. Installing a pack at a second scope adds a second copy rather
+with no pack name skips it, and `oat tools install core --scope project` exits
+1 without installing anything (see [Where packs install](#where-packs-install)).
+`oat init --scope project --setup` installs the packs you select at project
+scope. Installing a pack at a second scope adds a second copy rather
 than moving it, so use `oat tools migrate` to move a pack between scopes.
 Templates that a project-scope install writes belong to the repository after
 that: later pack updates and `oat tools remove` leave them alone.

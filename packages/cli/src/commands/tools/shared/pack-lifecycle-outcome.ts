@@ -70,6 +70,30 @@ export function resolveAdditivePackScopeSelection(input: {
 }
 
 /**
+ * Selection for an explicit `--scope project|user`: only the requested scope
+ * is a target. A placement in the other scope is retained as-is, neither
+ * reconciled nor removed.
+ */
+export function resolveExplicitPackScopeSelection(input: {
+  pack: PackName;
+  requested: ConcreteScope;
+  knownRealizedScopes: readonly ConcreteScope[];
+  unknownScopes: readonly ConcreteScope[];
+}): PackScopeSelection {
+  if (input.unknownScopes.includes(input.requested)) {
+    throw new Error(
+      `Cannot select scope for ${input.pack}: inventory is unknown at ${input.requested} scope`,
+    );
+  }
+  return {
+    pack: input.pack,
+    requested: input.requested,
+    retainedRealizedScopes: orderedScopes(input.knownRealizedScopes),
+    targetScopes: [input.requested],
+  };
+}
+
+/**
  * Derives the provider sync outcome from an auto-sync run and its evidence.
  *
  * Status follows the pinned severity matrix rather than the diagnostic code

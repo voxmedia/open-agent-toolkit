@@ -54,32 +54,39 @@ Diagram: canonical assets produce provider views and a manifest; status reports 
 - **What re-running `oat sync` does.** It writes unless you pass `--dry-run`.
   It recreates missing views and rewrites drifted ones from canonical, so an
   edit made in a provider copy is lost, not merged. A file you placed at a
-  view's path without OAT is replaced too. When a skill or rule is deleted
-  from `.agents/`, sync removes its views. When an agent is deleted or
-  renamed, it does not; see the warning below.
+  view's path without OAT is replaced too. When a skill, rule or agent is
+  deleted from `.agents/`, sync removes its views; see the note below for
+  agents.
 - **What to do with a stray.** In an interactive `oat status` or `oat init` you
   can adopt it, which moves or converts it into `.agents/`. For a Cursor or
   Copilot skill you can keep it in place; OAT records the path under
   `knownStrays` in `.oat/sync/config.json` and leaves it out of later reports.
   You can also list a path there by hand.
 
-> [!WARNING]
-> Sync does not clean up after a deleted or renamed agent. With Cursor enabled,
-> once `.agents/agents/<name>.md` is gone, `oat sync`, `oat sync --dry-run` and
-> `oat status` exit 1 with
-> `Cursor agent definition is a symbolic link at .cursor/agents/<name>.md whose target escapes the sync scope.`
-> With Codex enabled, the agent's generated files stay behind. After deleting
-> or renaming an agent, clean up by hand:
+> [!NOTE]
+> From 0.3.39, sync cleans up after a deleted or renamed agent. Once
+> `.agents/agents/<name>.md` is gone, `oat status` reports the pending change,
+> `oat sync --dry-run` lists the removals and writes nothing, and
+> `oat sync --scope project` removes the agent's `.claude/agents/`,
+> `.cursor/agents/` and `.github/agents/` views, its
+> `.codex/agents/<name>.toml` with any generated model variants, and its
+> `[agents.<name>]` tables in `.codex/config.toml`. A rename also creates the
+> new name's views. User-authored `[agents.*]` tables stay. A dangling link
+> left in `.cursor/agents/`, `.claude/agents/` or `.codex/agents/` no longer
+> stops sync with an `escapes the sync scope` error. At an agent view path,
+> such as `.cursor/agents/<name>.md`, sync restores the managed link. Sync
+> cannot write a generated file through a dangling link: at the path of a
+> generated Cursor model variant, such as
+> `.cursor/agents/oat-reviewer-<model>-<effort>.md`, it reports a failed
+> materialization, and at a Codex role path, such as
+> `.codex/agents/<name>.toml` or one of its model variants, it reports the
+> role as `missing`. Either way sync exits 1; delete the link and rerun sync.
+> A link whose existing target lies outside the sync scope is still refused.
 >
-> 1. Delete the link `.cursor/agents/<name>.md`.
-> 2. Delete the link `.claude/agents/<name>.md`; until it is gone, the same
->    error names that path instead.
-> 3. Delete `.codex/agents/<name>.toml`.
-> 4. In `.codex/config.toml`, delete the `[agents.<name>]` table.
-> 5. Run `oat sync --scope project`; it should now succeed.
->
-> Skills and rules are not affected: sync removes their views when the
-> canonical file is deleted.
+> Codex roles written by versions before 0.3.39 carry no owner header until
+> the next sync rewrites them. If such an agent was deleted before you first
+> synced with 0.3.39, delete its `.codex/agents/<name>.toml` and its
+> `[agents.<name>]` table by hand once.
 
 ## Manifest locations
 

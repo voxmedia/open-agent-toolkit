@@ -569,8 +569,9 @@ worktree registrations before materializing or updating the current checkout.
 
 Default execution needs the root-to-phase-agent depth. `agents.max_depth >= 2`
 is useful capability for optional phase-agent nesting, but it is not a default
-topology preflight requirement. OAT may still materialize a higher depth floor
-so recon or specialist fanout is available when justified.
+topology preflight requirement. When `agents.max_depth` is absent, sync adds
+`2` so recon or specialist fanout is available when justified; an explicit
+value is kept.
 
 ## Accepted Launches
 

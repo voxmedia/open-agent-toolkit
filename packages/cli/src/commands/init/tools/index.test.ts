@@ -1858,20 +1858,15 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, ['docs'], ['--scope', 'user']);
 
-    expect(reconcilePacks).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({
-          pack: 'docs',
-          scope: 'project',
-          action: 'install',
-        }),
-        expect.objectContaining({
-          pack: 'docs',
-          scope: 'user',
-          action: 'install',
-        }),
-      ]),
-    );
+    // An explicit --scope user reconciles only user scope; the existing
+    // project placement is left as it is.
+    expect(reconcilePacks).toHaveBeenCalledWith([
+      expect.objectContaining({
+        pack: 'docs',
+        scope: 'user',
+        action: 'install',
+      }),
+    ]);
     expect(installDocs).not.toHaveBeenCalled();
   });
 
@@ -2355,7 +2350,7 @@ describe('createInitToolsCommand', () => {
   });
 });
 
-describe('additive non-interactive scope resolution', () => {
+describe('explicit non-interactive scope resolution', () => {
   let originalExitCode: number | undefined;
 
   beforeEach(() => {
@@ -2367,7 +2362,7 @@ describe('additive non-interactive scope resolution', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('--scope project over a pack at user resolves to both and never removes user', async () => {
+  it('--scope project over a pack at user installs only project and leaves user untouched', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
         interactive: false,
@@ -2379,19 +2374,19 @@ describe('additive non-interactive scope resolution', () => {
 
     await runCommand(command, [], ['--scope', 'project']);
 
-    // Additive: research now lives at project + user; the project scope
-    // received the new install and the preserved user scope is never removed.
+    // Only the requested project scope is written; the user install is
+    // neither reinstalled nor removed.
+    expect(installResearch).toHaveBeenCalledTimes(1);
     expect(installResearch).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/workspace' }),
     );
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(removeFile).not.toHaveBeenCalled();
-    // research becomes both — no longer surfaces only project; user is retained.
     const output = capture.info.join('\n');
-    expect(output).toContain('research (project + user)');
+    expect(output).toContain('research (project)');
   });
 
-  it('--scope user over a pack at project resolves to both and never removes project', async () => {
+  it('--scope user over a pack at project installs only user and leaves project untouched', async () => {
     const { command, installResearch, removeDirectory, removeFile, capture } =
       createHarness({
         interactive: false,
@@ -2403,13 +2398,14 @@ describe('additive non-interactive scope resolution', () => {
 
     await runCommand(command, [], ['--scope', 'user']);
 
+    expect(installResearch).toHaveBeenCalledTimes(1);
     expect(installResearch).toHaveBeenCalledWith(
       expect.objectContaining({ targetRoot: '/tmp/home' }),
     );
     expect(removeDirectory).not.toHaveBeenCalled();
     expect(removeFile).not.toHaveBeenCalled();
     const output = capture.info.join('\n');
-    expect(output).toContain('research (project + user)');
+    expect(output).toContain('research (user)');
   });
 
   it('default non-interactive set preserves existing placement (no removals)', async () => {

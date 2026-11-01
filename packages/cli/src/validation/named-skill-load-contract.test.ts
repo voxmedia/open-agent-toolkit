@@ -2815,7 +2815,8 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-pr-final/SKILL.md',
     anchor: 'Without arguments',
-    match: 'Run the `oat-project-pr-final` skill and it will ask for',
+    match:
+      'Run the `oat-project-pr-final` skill and it fills these from the defaults below without asking',
     classification: 'non-executing',
     skills: ['oat-project-pr-final'],
     reason: 'Usage documentation addressed to the user.',

@@ -25,7 +25,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 
 - Mutate by default; `--dry-run` to preview
 - Explicit `--dry-run` for safe preview of mutations
-- Deletions are limited to manifest-tracked entries: sync removes a skill or rule view only when the manifest records it and its canonical source is gone. Deleted agents are not cleaned up this way: with Cursor enabled, sync and status stop with an `escapes the sync scope` error until you delete the agent's dangling links in `.cursor/agents/` and `.claude/agents/`, and Codex's `.codex/agents/<name>.toml` and `[agents.<name>]` table are never removed (see [Manifest and Drift](manifest-and-drift.md#quick-look)). A provider file with no canonical source and no manifest entry is reported as a stray by `oat status`, not deleted. Writing a view is not limited this way: sync replaces whatever sits at a view's expected path, including an untracked file (see the warning under [Choosing sync scope](#choosing-sync-scope))
+- Deletions are limited to managed entries: sync removes a skill, rule or agent view only when the manifest records it and its canonical source is gone. A deleted or renamed agent's generated Codex role and `[agents.<name>]` table are removed through their owner header instead (0.3.39 and later; see [Manifest and Drift](manifest-and-drift.md#quick-look)). A provider file with no canonical source and no manifest entry is reported as a stray by `oat status`, not deleted. Writing a view is not limited this way: sync replaces whatever sits at a view's expected path, including an untracked file (see the warning under [Choosing sync scope](#choosing-sync-scope))
 - Cross-provider compatibility via adapters
 - Native-read assets stay canonical while provider-local adoption sources remain discoverable independently
 - Obsolete managed mappings are deleted only when their provider paths are verified clean; changed or unverified paths are preserved and detached from manifest ownership
@@ -64,7 +64,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Cursor provider enablement still controls agents, rules, migration discovery, and legacy cleanup even though Cursor reads canonical skills without a generated skill view.
 - Copilot provider enablement still controls agents, project rules, migration discovery, and legacy cleanup even though Copilot reads canonical skills without a generated skill view.
 - Codex project-scope subagent sync writes `.codex/config.toml` and `.codex/agents/*.toml` at command layer after path-mapping sync. Every generated project Codex variant and registration is repository-owned, version-controlled provider output. OAT provides no automatic ignore mechanism for this project output; collaborators review and commit it like other project configuration.
-- Default Codex execution requires `root (0) → phase implementer (1)`. Sync and direct materialization continue to apply an `agents.max_depth` floor of `2` as optional nested-work capability without lowering a higher target value. A project write may read a higher lower-precedence user value and preserves it in project configuration; it writes only project `.codex/config.toml`. User scope writes only `~/.codex/config.toml` and does not read or change project configuration.
+- Default Codex execution requires `root (0) → phase implementer (1)`. When `agents.max_depth` is absent, sync and direct materialization add `2` (or a higher inherited value) as optional nested-work capability; they keep an explicit value and report it as a conflict when it is below `1`. A project write may read a higher lower-precedence user value and preserves it in project configuration; it writes only project `.codex/config.toml`. User scope writes only `~/.codex/config.toml` and does not read or change project configuration.
 - Missing depth or depth `1` does not block default phase execution. Invalid values or explicit values below `1` fail managed implementation preflight. `oat doctor` reports whether optional depth-two nesting is available and gives a scope-specific repair when the configured value is unusable.
 - Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
 - Codex user-config materialization writes user-owned implementer and reviewer roles under the user provider directory, `~/.codex`; it does not write those roles into the repository.
@@ -154,9 +154,9 @@ the provider views, because sync overwrites changes made in the views.
 > A bare `oat sync` uses scope `all`, so it also writes under your home
 > directory. Every sync also overwrites edits made directly in provider folders,
 > replaces an untracked file sitting at a view path, and removes the view of a
-> deleted skill or rule. It does not clean up after a deleted or renamed agent;
-> see [Manifest and Drift](manifest-and-drift.md#quick-look) for the manual
-> steps. Pass `--scope` explicitly, and preview with `--dry-run` when you are
+> deleted skill or rule. From 0.3.39 it also removes a deleted or renamed
+> agent's views, Codex role and `[agents.<name>]` table; see
+> [Manifest and Drift](manifest-and-drift.md#quick-look). Pass `--scope` explicitly, and preview with `--dry-run` when you are
 > unsure.
 
 - If the run is in CI or a script, always pass `--scope project`, and preview

@@ -1,4 +1,6 @@
+import { execFileSync } from 'node:child_process';
 import {
+  chmod,
   mkdir,
   mkdtemp,
   readFile,
@@ -7,7 +9,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, relative } from 'node:path';
+import { delimiter, join, relative } from 'node:path';
 
 import { createDocsGenerateIndexCommand } from '@commands/docs/index-generate/index';
 import { dirExists } from '@fs/io';
@@ -18,6 +20,7 @@ import {
   BUILTIN_EXEC_TARGETS,
   clearActiveIdea,
   clearActiveProject,
+  detectDefaultBranch,
   normalizeWorkflowPostImplementSequence,
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
@@ -3997,5 +4000,97 @@ describe('oat-config', () => {
         'explainers.defaults.style',
       );
     });
+  });
+});
+
+describe('detectDefaultBranch', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function createGitRepo(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-default-branch-'));
+    tempDirs.push(root);
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    return root;
+  }
+
+  async function withRecordingGh<T>(
+    run: () => T,
+  ): Promise<{ result: T; ghCalls: string }> {
+    const bin = await mkdtemp(join(tmpdir(), 'oat-default-branch-bin-'));
+    tempDirs.push(bin);
+    const ghLog = join(bin, 'gh-calls.log');
+    await writeFile(
+      join(bin, 'gh'),
+      `#!/bin/sh\necho "$@" >> "${ghLog}"\necho trunk\n`,
+      'utf8',
+    );
+    await chmod(join(bin, 'gh'), 0o755);
+    const previousPath = process.env.PATH;
+    process.env.PATH = `${bin}${delimiter}${previousPath ?? ''}`;
+    try {
+      const result = run();
+      const ghCalls = await readFile(ghLog, 'utf8').catch(() => '');
+      return { result, ghCalls };
+    } finally {
+      process.env.PATH = previousPath;
+    }
+  }
+
+  it('never runs gh, even when gh is on PATH and would answer', async () => {
+    const repoRoot = await createGitRepo();
+
+    const { result, ghCalls } = await withRecordingGh(() =>
+      detectDefaultBranch(repoRoot),
+    );
+
+    expect(ghCalls).toBe('');
+    expect(result).toBe('main');
+  });
+
+  it('uses origin/HEAD when it is set', async () => {
+    const repoRoot = await createGitRepo();
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=OAT Test',
+        '-c',
+        'user.email=oat@example.com',
+        'commit',
+        '-q',
+        '--allow-empty',
+        '-m',
+        'init',
+      ],
+      { cwd: repoRoot },
+    );
+    execFileSync('git', ['update-ref', 'refs/remotes/origin/trunk', 'HEAD'], {
+      cwd: repoRoot,
+    });
+    execFileSync(
+      'git',
+      ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/trunk'],
+      { cwd: repoRoot },
+    );
+
+    expect(detectDefaultBranch(repoRoot)).toBe('trunk');
+  });
+
+  it('asks only git for origin/HEAD and falls back to main', () => {
+    const calls: Array<readonly string[]> = [];
+    const branch = detectDefaultBranch('/tmp/workspace', (args) => {
+      calls.push(args);
+      throw new Error('origin/HEAD is not set');
+    });
+
+    expect(branch).toBe('main');
+    expect(calls).toEqual([['rev-parse', '--abbrev-ref', 'origin/HEAD']]);
   });
 });

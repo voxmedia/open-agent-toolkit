@@ -2231,6 +2231,45 @@ config_file = "agents/${roleName}.toml"
     expect(capture.info[0]).toContain('packs:inventory');
     expect(capture.info[0]).toContain('assets unavailable');
   });
+
+  it('points an installed CLI at reinstall or OAT_ASSETS_DIR when inventory fails', async () => {
+    const { command, capture } = createHarness({
+      resolveAssetsRootThrows: true,
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const inventoryCheck = payload.checks.find(
+      (check) => check.name === 'packs:inventory',
+    );
+    expect(inventoryCheck?.fix).toBe(
+      'Reinstall the OAT CLI (`npm install --global @open-agent-toolkit/cli`) or point `OAT_ASSETS_DIR` at a complete asset bundle for this CLI version, then rerun `oat doctor`. In an OAT source checkout, run `pnpm build` instead.',
+    );
+  });
+
+  it('gives the same installed-CLI recovery when skill versions cannot be compared', async () => {
+    const { command, capture } = createHarness({
+      checkSkillVersionsOverride: async () => {
+        throw new Error('bundle unreadable');
+      },
+    });
+
+    await runDoctor(command, { globalArgs: ['--json'] });
+
+    const payload = capture.jsonPayloads[0] as { checks: DoctorCheck[] };
+    const versionCheck = payload.checks.find(
+      (check) => check.name === 'project:skill_versions',
+    );
+    expect(versionCheck?.status).toBe('warn');
+    expect(versionCheck?.fix).toContain(
+      'npm install --global @open-agent-toolkit/cli',
+    );
+    expect(versionCheck?.fix).toContain('OAT_ASSETS_DIR');
+    expect(versionCheck?.fix).toContain(
+      'In an OAT source checkout, run `pnpm build` instead.',
+    );
+  });
 });
 
 describe('checkSkillVersionsDefault', () => {

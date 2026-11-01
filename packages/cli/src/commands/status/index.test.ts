@@ -2895,7 +2895,8 @@ describe('createStatusCommand', () => {
           code: 'packs:inventory',
           message:
             'Unable to inventory managed packs: cannot read ~/.agents/skills/oat-project-new',
-          recovery: 'Run `pnpm build` and rerun `oat status`.',
+          recovery:
+            'Reinstall the OAT CLI (`npm install --global @open-agent-toolkit/cli`) or point `OAT_ASSETS_DIR` at a complete asset bundle for this CLI version, then rerun `oat status`. In an OAT source checkout, run `pnpm build` instead.',
         },
       });
       expect(payload.packs.states).toEqual([]);
