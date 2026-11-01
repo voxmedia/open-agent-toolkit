@@ -126,26 +126,32 @@ oat_implement_exit_gate:
   freshness_head: '76247b17e14664397ce1d3a2ac842db2bd34dfeb'
   freshness_fingerprint: 'sha256:effective-delta-v2:90e5756cadb0a7906a98cc1fbf30d165c6ee654552eea568500e070b19f5dec5'
   waivers: []
-  launch_state: intent_persisted
+  launch_state: result_persisted
   launch_attempt_id: wave1-exit-gate-3
   launch_started_at: '2026-11-01T16:18:27Z'
   launch_result_receipt: .oat/projects/shared/wave-1-correctness/reviews/archived/exit-gate-wave1-exit-gate-3.json
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  gate_run_marker: /var/folders/_v/ld1wc16d0sg2qxkqjxgm7dyc0000gn/T/oat-gate-runs/0d4d9f07-8c22-4907-9108-611d39fc3633.json
+  gate_run_id: 0d4d9f07-8c22-4907-9108-611d39fc3633
+  envelope_status: ok
+  artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md before treating this gate review as consumed.'
+  receive_state: intent_persisted
+  receive_correlation:
+    {
+      gate_run_id: 0d4d9f07-8c22-4907-9108-611d39fc3633,
+      scope: final,
+      type: code,
+      source_filename: final-review-2026-11-01T162337Z.md,
+    }
+  receive_source_artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md
+  receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T162337Z.md
+  receive_event_identity: 'final|code|final-review-2026-11-01T162337Z.md'
+  receive_pre_head: 'd67da24734f070ec2f6230b95a80a4099ae6a3ad'
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-11-01T16:18:27Z'
+  updated_at: '2026-11-01T16:30:00Z'
   decided_at: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
