@@ -154,9 +154,9 @@ the provider views, because sync overwrites changes made in the views.
 > A bare `oat sync` uses scope `all`, so it also writes under your home
 > directory. Every sync also overwrites edits made directly in provider folders,
 > replaces an untracked file sitting at a view path, and removes the view of a
-> deleted skill or rule. It does not clean up after a deleted or renamed agent;
-> see [Manifest and Drift](manifest-and-drift.md#quick-look) for the manual
-> steps. Pass `--scope` explicitly, and preview with `--dry-run` when you are
+> deleted skill or rule. From 0.3.39 it also removes a deleted or renamed
+> agent's views, Codex role and `[agents.<name>]` table; see
+> [Manifest and Drift](manifest-and-drift.md#quick-look). Pass `--scope` explicitly, and preview with `--dry-run` when you are
 > unsure.
 
 - If the run is in CI or a script, always pass `--scope project`, and preview

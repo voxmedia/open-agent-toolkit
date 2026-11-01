@@ -73,8 +73,11 @@ Diagram: canonical assets produce provider views and a manifest; status reports 
 > `[agents.<name>]` tables in `.codex/config.toml`. A rename also creates the
 > new name's views. User-authored `[agents.*]` tables stay. A dangling link
 > left in `.cursor/agents/`, `.claude/agents/` or `.codex/agents/` no longer
-> stops sync with an `escapes the sync scope` error; if its name matches a role
-> sync is about to write, sync replaces it with a managed view. A link whose
+> stops sync with an `escapes the sync scope` error. At an agent view path,
+> such as `.cursor/agents/<name>.md`, sync restores the managed link. At the
+> path of a generated Cursor model variant, such as
+> `.cursor/agents/oat-reviewer-<model>-<effort>.md`, sync reports a failed
+> materialization and exits 1; delete the link and rerun sync. A link whose
 > existing target lies outside the sync scope is still refused.
 >
 > Codex roles written by versions before 0.3.39 carry no owner header until

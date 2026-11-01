@@ -73,9 +73,8 @@ on your `PATH`. OAT adds its lines between `# >>> oat pre-commit hook >>>` and
 
 To remove the hook, run `oat init --scope project --no-hook` in the
 repository. (Without `--scope project`, `oat init` uses scope `all` and also
-writes under your home directory.) Although its
-help text reads "Skip optional pre-commit hook install", the flag also removes
-an OAT hook that is already installed. It deletes only the marked OAT block
+writes under your home directory.) As its help text says, `--no-hook` removes
+an installed optional pre-commit hook and skips installing one. It deletes only the marked OAT block
 and keeps any other hook content; if the file contained nothing but the OAT
 block, the file is deleted (or emptied, when it is a symlink). You can also
 delete the lines between the two markers by hand. To install the hook later
