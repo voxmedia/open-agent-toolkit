@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: wave1-botprobe.sh <path to packages/cli/dist/index.js>
+# Usage: bash pr395-codex-cleanup-probe.sh <path to packages/cli/dist/index.js>
 set -u
 CLI="$1"
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/wave1-botprobe.XXXXXX")
@@ -23,7 +23,8 @@ agent gone > "$R/.agents/agents/gone.md"
 agent keep > "$R/.agents/agents/keep.md"
 node "$CLI" --cwd "$R" sync --scope project > /dev/null 2>&1; echo "initial sync exit=$?"
 printf 'developer_instructions = "mine"\n' > "$R/.codex/agents/replacement.toml"
-sed -i '' 's#config_file = "agents/gone.toml"#config_file = "agents/replacement.toml"#' "$R/.codex/config.toml"
+node -e 'const fs=require("fs");const p=process.argv[1];fs.writeFileSync(p,fs.readFileSync(p,"utf8").replace("config_file = \"agents/gone.toml\"","config_file = \"agents/replacement.toml\""))' "$R/.codex/config.toml"
+grep -q 'config_file = "agents/replacement.toml"' "$R/.codex/config.toml" || { echo "probe setup failed: table not re-pointed"; exit 2; }
 rm "$R/.agents/agents/gone.md"
 node "$CLI" --cwd "$R" sync --scope project > /dev/null 2>&1; echo "second sync exit=$?"
 grep -q '^\[agents.gone\]' "$R/.codex/config.toml" && echo "F2 table [agents.gone]: KEPT" || echo "F2 table [agents.gone]: DELETED"
