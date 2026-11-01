@@ -192,10 +192,10 @@ generates or refreshes a missing or stale `summary.md` through
 decision-record promotion also happen. It then writes the PR description,
 pushes the current branch with `git push -u origin`, and runs
 `gh pr create`. For a synced project, it also publishes the project artifacts
-with `oat project push` before and after creating the PR. Besides the PR title
-and base branch when you did not pass them, the only question it asks is
-whether to continue when the latest final review has not passed. It never
-merges the PR.
+with `oat project push` before and after creating the PR. When you do not pass
+a PR title or base branch, it fills them from the defaults without asking. The
+only question it asks is whether to continue when the latest final review has
+not passed. It never merges the PR.
 
 **Goal projects:** in a goal project this skill is the terminal delivery
 registration owner, not a second project PR. It runs its own registration step
@@ -584,7 +584,8 @@ writes a PR description file, clears the active
 project (or keeps it until an archive succeeds), commits the completion
 bookkeeping, and pushes it. A yes to the PR question, or
 `workflow.createPrOnComplete: true` when no PR is tracked, creates a new PR
-against `main`. If a PR is already open, the skill updates its description
+against the base branch resolved from `git.defaultBranch` (default `main`), the
+same way `oat-project-pr-final` resolves it. If a PR is already open, the skill updates its description
 with `gh pr edit` when archiving or for a synced project. Archives keep no
 `pr/` directory, so when archiving the skill carries the regenerated PR body in
 a temporary file until the PR is created or updated; a run that resumes an
