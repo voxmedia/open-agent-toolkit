@@ -110,9 +110,9 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -135,7 +135,7 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T162337Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation:
     {
       gate_run_id: 0d4d9f07-8c22-4907-9108-611d39fc3633,
@@ -147,12 +147,12 @@ oat_implement_exit_gate:
   receive_archived_artifact: .oat/projects/shared/wave-1-correctness/reviews/archived/final-review-2026-11-01T162337Z.md
   receive_event_identity: 'final|code|final-review-2026-11-01T162337Z.md'
   receive_pre_head: 'd67da24734f070ec2f6230b95a80a4099ae6a3ad'
-  receive_commit: null
+  receive_commit: 'cb2484c0c9213d0a4cb5c439dca4778e4561d885'
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-11-01T16:30:00Z'
-  decided_at: null
+  updated_at: '2026-11-01T16:31:00Z'
+  decided_at: '2026-11-01T16:31:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/395' # null | string — tracked PR URL when a PR exists
