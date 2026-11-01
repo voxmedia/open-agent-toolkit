@@ -181,7 +181,7 @@ Implementation complete - final review, implementation exit gate and the post-im
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode, straight to plan)
-- **Plan:** `plan.md` (complete; 5 phases, 23 tasks)
+- **Plan:** `plan.md` (complete; 5 phases, 25 tasks)
 - **Implementation:** `implementation.md` (all tasks complete)
 
 ## Progress
