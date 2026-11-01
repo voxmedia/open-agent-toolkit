@@ -269,6 +269,28 @@ restore.
 
 ---
 
+### Task p01-t04: (review) Protect still-desired Codex roles in partial-sync removal and keep link-loop errors controlled
+
+Review fix for `reviews/archived/p01-code-review-2026-11-01T001410Z.md`
+(Medium: partial-sync removal derived role names from removed file names and
+could delete a role another present agent still produces; Low: a link loop in
+`.cursor/agents/` surfaced a raw `ELOOP` error with exit 2).
+
+**Files:** `packages/cli/src/providers/codex/codec/sync-extension.ts` and its
+test, `packages/cli/src/providers/cursor/codec/materialize.ts` and its test.
+
+**Steps:** protect every role name (and materialized variant) produced by a
+present canonical agent from partial-sync removal; treat only `ENOENT` as a
+dangling link and keep the controlled `CliError` for other stat errors.
+Regression tests for a filename/frontmatter-name mismatch and a
+self-referencing link; prove both guards can fail.
+
+**Verify:** focused tests, lint, type-check, phase-end forced CLI suite.
+
+**Commit** — `fix(p01-t04): protect still-desired Codex roles in partial-sync removal`
+
+---
+
 ## Phase 2: Install scope and CLI messages
 
 Items: BL-261002-honor-the-requested-scope — Honor the requested scope for
@@ -560,6 +582,28 @@ defaults without asking and then pushes the branch and creates the PR;
 
 ---
 
+### Task p03-t04: (review) Resolve the completion merge-base from the configured base branch
+
+Review fix for `reviews/archived/p03-code-review-2026-11-01T000944Z.md`
+(High: `oat-project-complete` Step 7 still ran `git merge-base origin/main`,
+missing "no hardcoded `main` remains"; Medium: `closeout-skills.md` said the
+completion PR goes "against `main`").
+
+**Files:** `.agents/skills/oat-project-complete/SKILL.md`,
+`apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`.
+
+**Steps:** resolve `BASE_BRANCH` before Step 7's merge-base and merge against
+`origin/$BASE_BRANCH` then `$BASE_BRANCH`; Step 11 reuses it (re-resolving on
+resume routes that skip Step 7) and refuses an empty base; correct the docs
+sentence. No further version bump (already bumped once in this PR).
+
+**Verify:** skill validation, skill contract tests, `pnpm lint`, `pnpm format`,
+`pnpm run check:skill-bumps`, docs check, phase-end forced CLI suite.
+
+**Commit** — `fix(p03-t04): resolve the completion merge-base from the configured base branch`
+
+---
+
 ## Phase 4: Exact-path commits and isolated test HOME
 
 Items: BL-261012-commit-paths-should-accept — commit-paths should accept
@@ -817,10 +861,12 @@ When every gate passes, no task is appended and nothing is committed.
 
 | Scope | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target       |
 | ----- | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------- |
-| p01   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
-| p02   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
-| p03   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
-| p04   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
+| p01   | code     | fixes_completed | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T001410Z.md      | c5e8cf91ab98f3aa42dd8f4008f38a0adf1d342c | auto       | -                 |
+| p01   | code     | passed          | 2026-11-01 | reviews/archived/p01-code-review-2026-11-01T002805Z.md      | 53c562a31f478b34b9f053aa55e827dd7433e13f | auto       | -                 |
+| p02   | code     | passed          | 2026-10-31 | reviews/archived/p02-code-review-2026-10-31T234909Z.md      | 5a46800c62fd2b68f86255ecbda22c768016d62f | auto       | -                 |
+| p03   | code     | fixes_completed | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T000944Z.md      | 58aa2d4b686544cfc67631220577d9b9369f86d7 | auto       | -                 |
+| p03   | code     | passed          | 2026-11-01 | reviews/archived/p03-code-review-2026-11-01T002455Z.md      | 28c375820bcacb504d616b99fe6cf662dbf5a881 | auto       | -                 |
+| p04   | code     | passed          | 2026-11-01 | reviews/archived/p04-code-review-2026-11-01T001445Z.md      | e7a16361fecf3129061d03d9316dbab8cb3cbb06 | auto       | -                 |
 | p05   | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | final | code     | pending         | -          | -                                                           | -                                        | -          | -                 |
 | plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
@@ -859,13 +905,13 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 3 tasks - Provider sync cleanup and Codex config values (items 1, 2)
+- Phase 1: 4 tasks - Provider sync cleanup and Codex config values (items 1, 2), including review fix p01-t04
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
-- Phase 3: 3 tasks - Lifecycle skill contracts (item 5)
+- Phase 3: 4 tasks - Lifecycle skill contracts (item 5), including review fix p03-t04
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
 - Phase 5: 4 tasks - Docs, generated views, version bump, backlog close-out (Definition of Done gates run as its phase-end check)
 
-**Total: 19 tasks**
+**Total: 21 tasks**
 
 Ready for code review and merge.
 

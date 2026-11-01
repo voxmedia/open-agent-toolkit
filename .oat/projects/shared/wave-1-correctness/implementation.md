@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -16,140 +16,474 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 7     | 0/7       |
-| Phase 3 | pending | 3     | 0/3       |
-| Phase 4 | pending | 2     | 0/2       |
-| Phase 5 | pending | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 7     | 7/7       |
+| Phase 3 | complete | 4     | 4/4       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | pending  | 4     | 0/4       |
 
-**Total:** 0/19 tasks completed
+**Total:** 17/21 tasks completed
 
 ---
 
 ## Phase 1: Provider sync cleanup and Codex config values
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-10-31
+**Worktree:** `.worktrees/wave1-p01` (branch `fix/wave-1-correctness-20261031-p01`), merged `--no-ff` at fan-in
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Deleting or renaming a canonical agent no longer breaks `oat sync`, `--dry-run` or `oat status` with "target escapes the sync scope": dangling agent links are skipped by the Cursor collision scan, and sync removes the stale `.claude/`, `.cursor/` and `.github/agents/` views (dry-run lists them and writes nothing).
+- Canonical-derived Codex roles now carry the scope owner (`project-config` / `user-config`); project cleanup also covers `supported-catalogue` variants, so sync and pack removal (partial sync with `removedCanonicalPaths`) remove a deleted agent's `.codex/agents/<name>.toml`, its variants and `[agents.<name>]` tables, while user-authored tables, other-scope roles and ownerless legacy roles stay.
+- `oat sync` and `oat providers codex materialize` keep explicit `[features] multi_agent` and `[agents] max_depth` values, add only absent keys, and print each added key, conflict, or note in the config operation reason (human and `--json`, also on `skip`).
+
+**Key files touched:**
+
+- `packages/cli/src/providers/cursor/codec/materialize.ts` - dangling-link skip; controlled errors for other stat failures
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` - owner stamp, cleanup owners, partial-sync removal with protected desired roles, config reason
+- `packages/cli/src/providers/codex/codec/config-merge.ts` - user-value preservation and change reporting
+- `packages/cli/src/commands/providers/codex/materialize.ts` - `Config:` lines and JSON notices
+- New tests: `commands/sync/stale-agent-views.test.ts`, `commands/status/stale-agent-views.test.ts`, `commands/sync/codex-config-values.test.ts`
+
+**Verification:** phase-end forced CLI suite (self-removing isolated HOME) exit 0, 434 files / 9245 tests after p01-t04; lint and type-check exit 0.
+
+**Notes / Decisions:**
+
+- A dangling link whose name collides with a desired role is also skipped (main sync replaces it with a managed link); the plan text said the colliding-link refusal is kept. Accepted as safe by review (artifact `p01-code-review-2026-11-01T001410Z.md`, Low); docs describe shipped behavior.
 
 ### Task p01-t01: Skip dangling agent links in the Cursor collision scan
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 1ea460f8fccd08cca78452ceff945b97ee126f44
+
+**Outcome (required when completed):**
+
+- The Cursor collision scan skips dangling agent links; an existing target outside the scope is still refused. Sync, dry-run and status handle agent delete and rename with claude, cursor, codex and copilot enabled.
+
+**Files changed:**
+
+- `packages/cli/src/providers/cursor/codec/materialize.ts` and test - skip dangling links
+- `packages/cli/src/commands/sync/stale-agent-views.test.ts`, `packages/cli/src/commands/status/stale-agent-views.test.ts` - integration coverage
+
+**Verification:** focused tests (248) exit 0; lint, type-check exit 0. Pre-fix bad state with the built CLI: `sync --dry-run`, `status`, `status --json` exit 1 with the escapes error. Guard-can-fail: with the skip disabled, 7 of 24 tests failed with that error; restored, 24 of 24 pass.
 
 ---
 
 ### Task p01-t02: Remove stale canonical-derived Codex roles, including on pack removal
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0defa23e2dfb369da92cd16cd502a533ca357c5b
+
+**Outcome (required when completed):**
+
+- Base canonical exports carry the scope owner; project cleanup owners are `supported-catalogue` and `project-config`; full and partial sync remove a deleted or renamed agent's role files, variants and tables; dry-run lists `codex:role:remove` and the removed tables.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test; `commands/sync/stale-agent-views.test.ts`
+
+**Verification:** wide run 154 files / 3042 tests exit 0; `pnpm lint`, `pnpm type-check` exit 0. Guard-can-fail (48 focused tests): owner stamp removed → 13 failed; `supported-catalogue` owner removed → 3 failed; partial-sync removal disabled → 5 failed; restored byte-identical, 48 of 48 pass. Dry-run on this repository: 66 role skips, 5 owner-header updates, 0 removals.
 
 ---
 
 ### Task p01-t03: Keep user values for Codex multi_agent and max_depth
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c5e8cf91ab98f3aa42dd8f4008f38a0adf1d342c
+
+**Outcome (required when completed):**
+
+- Explicit `multi_agent` / `max_depth` values are never rewritten; absent keys are added (`max_depth` 2 or a higher inherited value) and named; `multi_agent = false` and `max_depth < 1` are reported as conflicts, `max_depth = 1` as a note; no refusal of the role step.
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/config-merge.ts`, `sync-extension.ts`, `commands/providers/codex/materialize.ts` and tests; `commands/sync/codex-config-values.test.ts`
+
+**Verification:** focused 114 tests exit 0; wide 155 files / 3054 tests exit 0; lint, type-check, `oxfmt --check .` exit 0. Guard-can-fail: restoring the unconditional upsert failed 20 of 108 tests (seeded config received `multi_agent = true` / `max_depth = 2`); restored, 108 of 108 pass.
+
+---
+
+### Task p01-t04: (review) Protect still-desired Codex roles in partial-sync removal and keep link-loop errors controlled
+
+**Status:** completed
+**Commit:** 53c562a31f478b34b9f053aa55e827dd7433e13f
+
+**Outcome (required when completed):**
+
+- Partial-sync removal never removes a role (or variant) produced by a present canonical agent's frontmatter name; only `ENOENT` counts as a dangling link, so a link loop keeps the controlled `CliError` (exit 1).
+
+**Files changed:**
+
+- `packages/cli/src/providers/codex/codec/sync-extension.ts` and test; `packages/cli/src/providers/cursor/codec/materialize.ts` and test
+
+**Verification:** focused 70 tests exit 0; wide 45 files / 590 tests exit 0; forced CLI suite 434 files / 9245 tests exit 0. Guard-can-fail: unprotected predicate → both new tests fail (planned removals `gone.toml`, `oat-reviewer.toml`); old rethrow → ELOOP test fails; restored, all pass.
+
+### Review Received: p01
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p01-code-review-2026-11-01T001410Z.md, re-review reviews/archived/p01-code-review-2026-11-01T002805Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 2 (round 1); Critical 0 · High 0 · Medium 0 · Low 1 (round 2)
+
+- M1 (Medium): partial-sync removal derived roles from removed file names and could delete a still-desired role → fix task p01-t04; resolved in round 2.
+- L1 (Low): link loop surfaced a raw `ELOOP` with exit 2 (regression from p01-t01) → fixed in p01-t04.
+- L2 (Low): plan text said colliding dangling links are refused; shipped behavior skips them safely → accepted drift; recorded under Deviations.
+- R2-L1 (Low): partial sync now parses every present agent, so a malformed unrelated agent makes removal auto-sync fail closed instead of deleting → accepted (refusing to delete is the safe direction; a full sync already fails on such a repository).
+
+**Outcome:** passed (round 2, request `wave1-p01-review-2`)
 
 ---
 
 ## Phase 2: Install scope and CLI messages
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-10-31
+**Worktree:** `.worktrees/wave1-p02` (branch `fix/wave-1-correctness-20261031-p02`), merged `--no-ff` at fan-in
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- A pack install that resolves to no allowed scope is refused with exit 1 (`tools install core --scope project`: "core is user-scope only", recovery code `scope-not-allowed`); the aggregate `--scope project` install skips core and reports `skippedPacks`.
+- Explicit `--scope project|user` writes only that scope for single-pack, aggregate and `init --setup` installs; no-flag and `--scope all` behavior is unchanged. `init --setup` no longer runs `gh` (default branch comes from `origin/HEAD`, then `main`).
+- `tools install --help` states the real scope default; `--no-hook` help says it removes an installed hook; `packs:inventory` remedies name a CLI reinstall or `OAT_ASSETS_DIR` (with `pnpm build` only for an OAT source checkout); local-scope `project new` reports `skipped_local_scope`.
+- `oat … | head` exits 0 quietly on `EPIPE`; `scripts/worktree/init.sh` and the AGENTS.md tool-guidance block use `oat sync --scope project`.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/init/tools/index.ts`, `commands/tools/shared/pack-lifecycle-outcome.ts` - scope resolution
+- `packages/cli/src/commands/init/index.ts`, `packages/cli/src/config/oat-config.ts` - guided setup scope, `--no-hook` help, no `gh`
+- `packages/cli/src/commands/status/index.ts`, `commands/doctor/index.ts`, `commands/project/new/*` - messages
+- `packages/cli/src/index.ts` - EPIPE handling
+- `scripts/worktree/init.sh`, `packages/cli/src/commands/init/tools/project-guidance.ts` - project-scope sync
+- New tests: `commands/tools/install-scope.integration.test.ts`, `commands/init/setup-scope.integration.test.ts`, `src/broken-pipe.test.ts`
+
+**Verification:** phase-end forced CLI suite exit 0 (434 files / 9240 tests); `pnpm test:scripts` exit 0; lint, type-check exit 0 per task.
+
+**Notes / Decisions:**
+
+- EPIPE test uses a real `sh -c '… | head -1'` pipeline (Node socket stdio raised `ENOTCONN` intermittently on macOS); only `EPIPE` is swallowed.
+- `assetRecoveryFix` is duplicated in status and doctor (shared module outside the boundary).
 
 ### Task p02-t01: Refuse a pack install that resolves to no allowed scope
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6b859043407fde090ea7bb737a717711c898c2cd
+
+**Outcome (required when completed):**
+
+- Empty-scope pack installs exit 1 with a user-scope-only message and write nothing; aggregate `--scope project` skips core.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts`; new `packages/cli/src/commands/tools/install-scope.integration.test.ts`
+
+**Verification:** focused 375 tests exit 0. Negative control: pre-fix `core --scope project` exited 0 printing "Installed core tool pack." with no writes, and aggregate `--scope project` wrote 110 files under HOME; post-fix both snapshots unchanged with exit 1 / skip; accepted control `tools install core` installs at user scope. Guard-can-fail: skip removed → HOME snapshot test fails; restored 5 of 5 pass.
 
 ---
 
 ### Task p02-t02: Write only the requested scope when --scope is explicit
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 70d6929381fcd400d87ea4d7ee68ad8e766b8bc1
+
+**Outcome (required when completed):**
+
+- Explicit `--scope` limits writes and sync to that scope (single-pack and aggregate, new `resolveExplicitPackScopeSelection`); the other scope's placement stays untouched.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/tools/index.ts` and test; `commands/tools/shared/pack-lifecycle-outcome.ts` and test; `commands/tools/install/index.test.ts`; `commands/tools/install-scope.integration.test.ts`
+
+**Verification:** focused 941 tests exit 0. Negative control: pre-fix repository grew 239 → 243–244 entries under `--scope user` and HOME 121 → 146 under `--scope project`; post-fix both unchanged; accepted control `tools install workflows` (no flag) repairs project and leaves HOME unchanged. Guard-can-fail: merge behavior restored → 4 tests fail; restored 9 of 9 pass.
 
 ---
 
 ### Task p02-t03: State the real --scope default in tools install help
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 93a8242616030c8bf1ecaacb5d3eeae69a51d275
+
+**Outcome (required when completed):**
+
+- `tools install --help` explains existing placements are kept, new packs land at user scope, and core is user-only.
+
+**Files changed:**
+
+- `packages/cli/src/commands/shared/scope-option.ts`, `commands/tools/install/index.ts`, `commands/help-snapshots.test.ts`
+
+**Verification:** focused 374 tests exit 0; lint exit 0.
 
 ---
 
 ### Task p02-t04: Honor --scope in init --setup and stop calling gh
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** ceff865ac01443f8b2c4c70b6b0ab041a8ac516d
+
+**Outcome (required when completed):**
+
+- `init --scope project --setup` installs packs at project scope (core skipped) and writes nothing under HOME; default-branch detection never runs `gh`.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/index.ts` and tests (`index.test.ts`, `guided-setup.test.ts`, new `setup-scope.integration.test.ts`); `packages/cli/src/config/oat-config.ts` and test
+
+**Verification:** focused 1305 tests exit 0. Negative control: pre-fix 478 files under HOME and a `gh repo view` call; post-fix HOME unchanged, no `gh`, branch `main`; accepted control `--setup` without scope installs at user scope with no `gh`. Guard-can-fail: scope check neutralized → HOME snapshot fails; `gh` call reinserted → "never runs gh" test fails; restored 229 of 229 pass.
 
 ---
 
 ### Task p02-t05: Correct the --no-hook, packs:inventory, and local-scope scaffold messages
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 13d8f1312341f256758185f63a48a38a0054e5fb
+
+**Outcome (required when completed):**
+
+- Corrected `--no-hook` help, adopter-runnable `packs:inventory` and skill-version remedies, and a `skipped_local_scope` scaffold status.
+
+**Files changed:**
+
+- `packages/cli/src/commands/init/index.ts`, `help-snapshots.test.ts`, `commands/status/index.ts` and test, `commands/doctor/index.ts` and test, `commands/project/new/scaffold.ts`, `index.ts` and tests
+
+**Verification:** focused 329 tests exit 0; lint, type-check exit 0.
 
 ---
 
 ### Task p02-t06: Exit quietly when stdout is closed (EPIPE)
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8a06125b9c65023dda96faba4c0108a7b33fadc4
+
+**Outcome (required when completed):**
+
+- `EPIPE` on stdout or stderr exits 0 quietly; other stream errors stay fatal.
+
+**Files changed:**
+
+- `packages/cli/src/index.ts`; new `packages/cli/src/broken-pipe.test.ts`
+
+**Verification:** pre-fix `tools list | head -1` exited 1 with an EPIPE stack (3 of 3); guard-can-fail with handler removed and rebuilt → 3 of 3 fail; restored and rebuilt 29 of 29 pass, 6 of 6 repeats.
 
 ---
 
 ### Task p02-t07: Use project-scope sync in the worktree script and AGENTS.md guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5a46800c62fd2b68f86255ecbda22c768016d62f
+
+**Outcome (required when completed):**
+
+- `init.sh` runs `cli -- sync --scope project` (pinned by `init.test.mjs`); the guidance block recommends `oat sync --scope project` (pinned).
+
+**Files changed:**
+
+- `scripts/worktree/init.sh`, `scripts/worktree/init.test.mjs`, `packages/cli/src/commands/init/tools/project-guidance.ts` and test
+
+**Verification:** `pnpm test:scripts` exit 0; focused 17 tests exit 0; guard probe: bare sync restored → script test fails; restored passes.
+
+### Review Received: p02
+
+**Date:** 2026-10-31
+**Review artifact (local-only):** reviews/archived/p02-code-review-2026-10-31T234909Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+
+- L1 (Low): the EPIPE handler always exits 0 even when the command had set a failing exit code (matters only under `set -o pipefail`) → recorded under Deferred Findings.
+- L2 (Low): `packs:inventory` remedy text duplicated in status and doctor → recorded under Deferred Findings.
+- L3 (Low): after an explicit-scope install the summary names only the written scope → covered in p05 docs.
+
+**Outcome:** passed (request `wave1-p02-review-1`; reviewer re-ran the new scope tests against base source: 10 of 12 failed on the bad states, controls passed)
 
 ---
 
 ## Phase 3: Lifecycle skill contracts
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-10-31
+**Worktree:** `.worktrees/wave1-p03` (branch `fix/wave-1-correctness-20261031-p03`), merged `--no-ff` at fan-in
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- `oat-project-implement` no longer advertises the unread `--retry-limit` (2.3.24).
+- `oat-project-complete` resolves its base branch from `git.defaultBranch`, then `origin/HEAD`, then `main`, for both the PR description merge-base and `gh pr create` (1.7.19); no hardcoded `main` base remains.
+- `oat-project-pr-final` usage text says it fills the title and base from defaults without asking, then pushes and creates the PR (1.6.13).
+- Docs: `execution-skills.md` and `closeout-skills.md` match.
+
+**Key files touched:**
+
+- `.agents/skills/oat-project-implement/SKILL.md`, `.agents/skills/oat-project-complete/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`
+- `apps/oat-docs/docs/workflows/projects/execution/execution-skills.md`, `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+- `packages/cli/src/validation/skills.test.ts`, `named-skill-load-contract.test.ts`, `commands/init/tools/shared/review-skill-contracts.test.ts` (pins)
+
+**Verification:** forced CLI suite exit 0 (431 files / 9214 tests); `pnpm oat:validate-skills`, `pnpm lint`, `pnpm format`, `pnpm run check:skill-bumps`, docs check exit 0.
+
+**Notes / Decisions:**
+
+- The new complete-skill sentence avoids naming `oat-project-pr-final` so no new named-skill contract row is needed.
 
 ### Task p03-t01: Remove the unread --retry-limit hint from oat-project-implement
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 24143b2485aa902b15ad97bac8fa3d3b60d1baa9
+
+**Outcome (required when completed):**
+
+- Argument hint is `[--dry-run]`; the docs note about the ignored flag is removed.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md`, `execution-skills.md`, `packages/cli/src/validation/skills.test.ts`
+
+**Verification:** skill validation exit 0; contract tests 1089 pass; `oxlint .agents/skills`, `format:root`, docs check exit 0.
 
 ---
 
 ### Task p03-t02: Resolve the completion PR base branch from config
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4a5f6afde6127b66621de0eae42ddd118c9d1f83
+
+**Outcome (required when completed):**
+
+- Step 11 resolves `BASE_BRANCH` and uses `gh pr create --base "$BASE_BRANCH"`; the manual fallback names the resolved base.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md`, `packages/cli/src/validation/skills.test.ts`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Verification:** `grep -- '--base main'` no match; skill validation, contract tests (1089), lint, format exit 0.
 
 ---
 
 ### Task p03-t03: Make oat-project-pr-final usage text match its behavior
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 58aa2d4b686544cfc67631220577d9b9369f86d7
+
+**Outcome (required when completed):**
+
+- "Without arguments" describes defaults without prompts and the automatic push and PR creation.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-pr-final/SKILL.md`, `closeout-skills.md`, `named-skill-load-contract.test.ts`, `skills.test.ts`
+
+**Verification:** skill validation, contract tests (1089), lint, format, `pnpm --filter oat-docs check` exit 0.
+
+---
+
+### Task p03-t04: (review) Resolve the completion merge-base from the configured base branch
+
+**Status:** completed
+**Commit:** 28c375820bcacb504d616b99fe6cf662dbf5a881
+
+**Outcome (required when completed):**
+
+- Step 7 resolves `BASE_BRANCH` before the merge-base (`origin/$BASE_BRANCH`, then `$BASE_BRANCH`); Step 11 reuses it, re-resolves on resume routes that skip Step 7, and refuses an empty base; docs no longer say "against `main`".
+
+**Files changed:**
+
+- `.agents/skills/oat-project-complete/SKILL.md`, `apps/oat-docs/docs/workflows/projects/closeout/closeout-skills.md`
+
+**Verification:** no `origin/main` / `merge-base main` / `--base main` match; skill validation, contract tests (1089), lint, format, skill-bump check, docs check exit 0; forced CLI suite exit 0.
+
+### Review Received: p03
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p03-code-review-2026-11-01T000944Z.md, re-review reviews/archived/p03-code-review-2026-11-01T002455Z.md
+
+**Findings:** Critical 0 · High 1 · Medium 2 · Low 2 (round 1); Critical 0 · High 0 · Medium 0 · Low 2 (round 2)
+
+- H1 (High): Step 7 merge-base hardcoded `origin/main` → fix task p03-t04; resolved.
+- M1 (Medium): `closeout-skills.md` said "against `main`" → fixed in p03-t04.
+- M2 (Medium): the shared base-branch chain's `origin/HEAD` step never runs because `oat config get git.defaultBranch` prints its default `main` (pre-existing; same chain in pr-final and pr-progress) → out of this item's scope; recorded under Deferred Findings as a follow-up.
+- L1 (Low): `oat-directory-structure.md` `git.defaultBranch` row omits `oat-project-complete` → p05 docs.
+- L2 (Low): no contract test pins complete's `--base "$BASE_BRANCH"` → optional; not added.
+- R2-L1, R2-L2 (Low): Step 11's resume note names one route; the standalone `:?` guard does not stop an interactive line-by-line shell → recorded under Deferred Findings.
+
+**Outcome:** passed (round 2, request `wave1-p03-review-2`)
 
 ---
 
 ## Phase 4: Exact-path commits and isolated test HOME
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-10-31
+**Worktree:** `.worktrees/wave1-p04` (branch `fix/wave-1-correctness-20261031-p04`), merged `--no-ff` at fan-in
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- `oat internal commit-paths` stages paths already tracked in `HEAD` with Git's force flag and everything else normally, so tracked files under ignored directories commit and untracked ignored paths are still refused.
+- `.lintstagedrc.mjs` excludes `packages/cli/assets/**` from the `*.md` and `*.json` tasks, so the pre-commit hook's re-stage no longer fails on tracked template files (oxfmt already ignored that path).
+- `pnpm test:evidence` runs the forced turbo test through `scripts/with-isolated-home.sh`, which removes the temporary HOME on success, failure, `INT` and `TERM`; AGENTS.md points both isolated-HOME recipes at it.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/shared/exact-path-commit.ts` and test
+- `.lintstagedrc.mjs`
+- `scripts/with-isolated-home.sh`, `scripts/with-isolated-home.test.mjs`, root `package.json`, root `AGENTS.md`
+- `apps/oat-docs/docs/reference/cli-reference.md` (exact-path section)
+
+**Verification:** forced CLI suite exit 0 (431 files / 9219 tests); `pnpm test:scripts` exit 0 (6 of 6).
+
+**Notes / Decisions:**
+
+- Real-hook probe adjustments (see Deviations): pass criteria observed lint-staged's log; the `*.md` task no longer matches templates after the config fix, so a README variant proved the task still runs; commit message `chore: probe <n>` (commitlint rejects `probe`).
 
 ### Task p04-t01: Stage tracked files under ignored directories in commit-paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 5abc88a54ae741612c97bd0bad4a4cdc4bf7d1dc
+
+**Outcome (required when completed):**
+
+- Tracked files under ignored directories commit through `commit-paths` with hooks enabled and no `git add -f`; untracked ignored paths are refused.
+
+**Files changed:**
+
+- `packages/cli/src/commands/shared/exact-path-commit.ts` and test; `.lintstagedrc.mjs`; `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Verification:** 47 of 47 tests pass. Negative controls with the built CLI in a scratch repository (`.gitignore` `assets/*`, tracked `assets/templates/t.md`): pre-fix modify and delete of the tracked file exit 2 "The following paths are ignored"; post-fix both `committed`; untracked ignored `new.md` refused (exit 2) before and after; untracked non-ignored file commits (accepted control). Guard probes: (a) split removed → 3 tracked-file tests fail; (b) force-add all → refusal test fails; restored. Real-hook probe: at base, lint-staged logged `[FAILED] The following paths are ignored … packages/cli/assets/templates` yet `lint-staged-exit=0`; after the config fix, a template commit was `committed` with `lint-staged-exit=0`, byte-exact blob, and a README variant showed the `*.md` task re-staging oxfmt output. Probe worktrees removed; probe commits on no branch.
 
 ---
 
 ### Task p04-t02: Add an isolated-HOME wrapper and pnpm test:evidence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e7a16361fecf3129061d03d9316dbab8cb3cbb06
+
+**Outcome (required when completed):**
+
+- `scripts/with-isolated-home.sh` owns the temporary HOME; `pnpm test:evidence` and `test:scripts` include it; AGENTS.md updated.
+
+**Files changed:**
+
+- `scripts/with-isolated-home.sh`, `scripts/with-isolated-home.test.mjs`, root `package.json`, root `AGENTS.md`
+
+**Verification:** `pnpm test:scripts` 6 of 6 pass; shellcheck, oxlint exit 0. Guard-can-fail: `EXIT` trap removed → 4 removal tests fail; restored 5 of 5 pass.
+
+### Review Received: p04
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/p04-code-review-2026-11-01T001445Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 0 · Low 3
+
+- L1 (Low): the plan's literal probe criteria were stale after the approved config fix → recorded under Deviations.
+- L2 (Low): `TERM` sent only to the wrapper PID waits for the command → recorded under Deferred Findings (script header documents it).
+- L3 (Low): one lint-staged re-stage test needs an explanatory comment → recorded under Deferred Findings.
+
+**Outcome:** passed (request `wave1-p04-review-1`; reviewer re-verified staging safety for index-only, rename, case-variant and glob-pathspec cases)
 
 ---
 
@@ -192,6 +526,20 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 <!-- orchestration-runs-start -->
 
+- run/v1 · request=wave1-p01-implementation · scope=p01 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1,p01-review-fix-1 · observed=~ · match=~
+- run/v1 · request=wave1-p02-implementation · scope=p02 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p03-implementation · scope=p03 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1,p03-review-fix-1 · observed=~ · match=~
+- run/v1 · request=wave1-p04-implementation · scope=p04 · action=implementation · role=oat-phase-implementer · target=oat-phase-implementer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-phase-implementer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=root-restored-clean-base-1 · observed=~ · match=~
+- run/v1 · request=wave1-p01-review-1 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p01-review-2 · scope=p01 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p02-review-1 · scope=p02 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p03-review-1 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p03-review-2 · scope=p03 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-p04-review-1 · scope=p04 · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-plan-artifact-review-1 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-plan-artifact-review-2 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+- run/v1 · request=wave1-plan-artifact-review-3 · scope=plan · action=review · role=oat-reviewer · target=oat-reviewer-claude-opus-5-5-high · model=claude-opus-5-5-high · effort=~ · stamp=Dispatch: scope=plan action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:claude-opus-5-5-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-opus-5-5-high target=oat-reviewer-claude-opus-5-5-high · launch=accepted · outcome=completed · terminal=yes · class=completed · continuation=~ · observed=~ · match=~
+
 <!-- orchestration-runs-end -->
 
 ## Reviews and Gates
@@ -222,17 +570,32 @@ This journal resumes interrupted implementation sessions. Every plan task has on
   (requirements auto-confirmed) and `QS-11` (Medium/Low fixes applied) are
   recorded in `discovery.md` and `plan.md`.
 
+- Parallel group `[p01, p02, p03, p04]` fan-in (2026-11-01): base `ae94cfb0d4638b067deadabece6054226b9ff9de`; merged `--no-ff` in plan order (p01 `079951602`, p02 `671797a41`, p03 `80d09d048`, p04 `130cae1bf`) with no conflicts and no cross-branch file overlap. Integration verification: `pnpm build` exit 0; `bash scripts/with-isolated-home.sh pnpm exec turbo run test --force --filter=@open-agent-toolkit/cli` exit 0 (437 files / 9276 tests, cache bypassed); `pnpm test:scripts` exit 0; no isolated HOME left under TMPDIR.
+- Autonomy gates in implementation: `IMPLEMENT-03` resolved HiLL checkpoints to `['p05']` with auto-review on; `IMPLEMENT-08` not needed (Cursor native dispatch available without authorization; Tier 1).
+- Phase reviews: p01 passed (round 2), p02 passed, p03 passed (round 2), p04 passed; native `oat-reviewer-claude-opus-5-5-high` at the `high` ceiling (same model family as the implementers; the configured cross-family `oat-project-implement` gate reviews the final code).
+
 ## Deferred Findings
 
 <!-- One line per approved deferral (finding, rationale, approval, follow-up trigger), plus excluded parallel phases and unmerged worktrees. -->
+
+- p02 L1: the EPIPE handler exits 0 even if the command had already set a failing exit code (visible only under `set -o pipefail`); follow-up candidate, not required by BL-261002-correct-misleading-init-status.
+- p02 L2: `packs:inventory` remedy text is duplicated in `commands/status/index.ts` and `commands/doctor/index.ts`; follow-up refactor.
+- p03 M2: `oat config get git.defaultBranch` prints its built-in default `main` and exits 0 when unset, so the `origin/HEAD` step of the base-branch chain in `oat-project-pr-final`, `oat-project-pr-progress` and `oat-project-complete` never runs; pre-existing and outside BL-261002-align-implement-complete (which requires complete to match the PR skills, which it now does). Follow-up: backlog item for the operator.
+- p03 (implementer note): `oat-project-pr-final` Step 3 still computes its merge-base against `origin/main`, and `oat-docs-apply` and `oat-agent-instructions-apply` hardcode `gh pr create --base main`; outside this item. Follow-up: same backlog item.
+- p03 R2-L1/L2: Step 11's resume note names one skip route; the standalone `: "${BASE_BRANCH:?…}"` guard does not stop an interactive line-by-line shell. Polish follow-up.
+- p04 L2: a `TERM` sent only to the wrapper PID waits for the child to finish before cleanup (documented in the script header). p04 L3: add a comment to the lint-staged re-stage unit test.
+- p02 note: the EPIPE handler does not treat `ENOTCONN` as quiet; separate decision if it is observed in practice.
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review           | Source Artifact                 | Planned / Documented                                           | Actual / Accepted                                                                                                                                                                                                                                                           | Reason                                                                                                                                                          | Source of Truth | Follow-up                          |
+| ----------------------- | ------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------- |
+| p01-t01 / review p01 L2 | plan.md p01-t01 Step 2          | Keep the colliding-link refusal                                | A dangling link whose name collides with a desired role is skipped too; main sync replaces it with a managed link                                                                                                                                                           | A dangling link cannot define a role and nothing is written outside the repository (reviewer probe)                                                             | Implementation  | p05 docs describe shipped behavior |
+| p04-t01 real-hook probe | plan.md p04-t01 probe steps 3-4 | `--message probe`; log shows the `*.md` task on `plan-lite.md` | Conventional message `chore: probe <n>`; after the in-boundary `.lintstagedrc.mjs` fix the `*.md` task no longer matches templates, so a README variant proved the task still runs and re-stages                                                                            | commitlint rejects `probe`; the plan's own fallback (fix the hook config) changes the observable criterion                                                      | Implementation  | None                               |
+| p04-t01 files           | plan.md p04-t01 Files           | exact-path-commit source/test, cli-reference.md                | Also `.lintstagedrc.mjs`                                                                                                                                                                                                                                                    | Real-hook probe showed lint-staged's re-stage failing on tracked templates; allowed by the Phase 4 boundary                                                     | Implementation  | None                               |
+| p01, p03, p04 dispatch  | phase-execution contract        | Implementer starts on a clean worktree                         | First attempts left partial uncommitted work and the implementers stopped BLOCKED at preflight; root saved the diffs to `/tmp/wave1-abandoned/`, restored clean trees, and continued each through its accepted handle (`root-restored-clean-base-1`); no replacement launch | Abandoned partial output of this run's own children (no writer for 25+ minutes), replaceable; one p01 untracked partial test file was not copied before removal | Implementation  | Learning recorded in project-log   |
 
 ## Final Summary (for PR/docs)
 
