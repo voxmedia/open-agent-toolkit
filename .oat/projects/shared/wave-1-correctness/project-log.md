@@ -74,6 +74,10 @@ b066376d-1060-4d4b-b0de-1dac7fe96d0f-recon: two read-only consequential reconnai
 
 target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:1,low:0 exit=0 status=ok artifact=.oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T012851Z.md run=b066376d-1060-4d4b-b0de-1dac7fe96d0f
 
+### 2026-11-01 · structural · oat gate review · final
+
+target=codex-6-sol-xhigh threshold=high findings=critical:0,high:0,medium:0,low:0 exit=0 status=ok artifact=.oat/projects/shared/wave-1-correctness/reviews/final-review-2026-11-01T015445Z.md run=55df7ef0-1867-448a-ae66-a8f39e483790
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
