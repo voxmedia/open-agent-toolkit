@@ -105,6 +105,36 @@ Reviewer request `rgi-p01-rev-20261101-01` (`oat-reviewer-claude-opus-5-5-high`)
 
 **Outcome:** fixes queued: p01-t02
 
+### Task p01-t02: Address p01 review findings
+
+**Status:** completed
+**Executor:** phase-implementer:rgi-p01-impl-20261101-01
+**Handle:** direct:rgi-p01-fix-20261101-01:p01-t02
+**Source review:** `reviews/archived/p01-review-2026-11-01T220753Z.md` (M1, M2, M3, M4, L1, L4)
+**Intent:** Refuse ambiguous detail ownership and duplicate finding IDs, expose record completeness, pin the captured wave-5 title block, and clarify the exact separator and closed-label list-item contracts.
+**Files:** `packages/cli/src/commands/gate/review-verdict.ts`, `packages/cli/src/commands/gate/review-verdict.test.ts`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `.agents/agents/oat-reviewer.md`, and regenerated provider views.
+**Proof command:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-verdict.test.ts`
+**Commit:** `bd88679646b232cc544c1672ca1abaa85dc0a27a`
+**Negative controls:**
+
+- M1 second-run guard neutralized: `refuses a second detail run under one explicit title` resolved instead of refusing and failed as expected (exit 1); restored test passed.
+- M1 repeated-label guard neutralized: `refuses a repeated closed label within one owned detail run` resolved instead of refusing and failed as expected (exit 1); restored test passed.
+- M2 duplicate-ID guard neutralized: `refuses duplicate explicit finding IDs across the artifact` resolved instead of refusing and failed as expected (exit 1); restored test passed.
+- M2 generated-ID collision skip neutralized: `skips explicit IDs when generating list-finding IDs` failed with `finding_id_duplicate` (exit 1); restored test passed with `H2` and `H3`.
+- M3 completeness calculation neutralized to always true: the count-line-only and partial-section tests both failed their `findingsComplete: false` assertions (exit 1); restored tests passed.
+- M4 explicit-title recognition neutralized: the verbatim wave-5 H1 test failed with `finding_detail_orphaned` (exit 1); restored test passed with one High, the exact title, and the exact location.
+- L1 exact-em-dash guard widened to accept a hyphen: the hyphen-separator refusal test resolved instead of refusing and failed as expected (exit 1); restored test passed.
+- L4 closed-label classification neutralized: the top-level `Fix:` test resolved instead of refusing and failed as expected (exit 1); restored test passed.
+
+**Verification:**
+
+- Focused verdict suite: 73 tests passed, exit 0.
+- Gate suites: 461 tests passed across 9 files, exit 0.
+- CLI lint and type-check: exit 0.
+- Isolated-HOME contract suites: 1,089 tests passed across 26 files, exit 0.
+- `pnpm check`, `pnpm build`, direct CLI build, root lint, and root format: exit 0.
+- `oat sync --scope project`: exit 0; 65 tracked reviewer projections regenerated and the sync manifest remained unchanged.
+
 ## Phase p02: Read-only clerical-resolution verifier
 
 **Status:** pending
