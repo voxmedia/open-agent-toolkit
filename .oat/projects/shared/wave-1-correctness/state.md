@@ -110,7 +110,7 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:dcc869a879b45e99a0713c72c9b852a91dd6a63d6d0e819ae1903b977c3dee4f'
@@ -151,7 +151,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-11-01T02:01:00Z'
+  updated_at: '2026-11-01T16:15:00Z'
   decided_at: '2026-11-01T02:01:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
