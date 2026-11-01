@@ -102,8 +102,11 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-08-29T15:29:35.738Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-02T23:49:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: 2026-11-01T15:56:52.118Z # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: paused
+oat_pause_timestamp: 2026-11-01T15:56:52.118Z
+oat_pause_reason: Superseded by goal project review-gate-integrity-goal (2026-11-01)
 ---
 
 # Project State: review-gate-integrity
