@@ -39,17 +39,17 @@ oat_template: false
 
 ## Progress Overview
 
-| Phase | Status  | Units | Accepted |
-| ----- | ------- | ----- | -------- |
-| p01   | pending | 1     | 0/1      |
-| p02   | pending | 1     | 0/1      |
-| p03   | pending | 1     | 0/1      |
-| p04   | pending | 1     | 0/1      |
-| p05   | pending | 1     | 0/1      |
-| p06   | pending | 1     | 0/1      |
-| p07   | pending | 1     | 0/1      |
-| p08   | pending | 1     | 0/1      |
-| p09   | pending | 1     | 0/1      |
+| Phase | Status      | Units | Accepted |
+| ----- | ----------- | ----- | -------- |
+| p01   | in_progress | 1     | 0/1      |
+| p02   | pending     | 1     | 0/1      |
+| p03   | pending     | 1     | 0/1      |
+| p04   | pending     | 1     | 0/1      |
+| p05   | pending     | 1     | 0/1      |
+| p06   | pending     | 1     | 0/1      |
+| p07   | pending     | 1     | 0/1      |
+| p08   | pending     | 1     | 0/1      |
+| p09   | pending     | 1     | 0/1      |
 
 **Total:** 0/9 phases accepted
 
@@ -57,7 +57,11 @@ oat_template: false
 
 ## Phase p01: Verdict parser finding identification
 
-**Status:** pending
+**Status:** in_progress
+**Base:** 56f55a3378d6e35dc3e67dc1437f9ca864477728
+**Executor:** phase-implementer:rgi-p01-impl-20261101-01
+
+Worktree: the project branch checkout (`goal/review-gate-integrity`). Committing owner: the phase implementer. Parallelism assessment: rung 3, one phase implementer. Rung 1 does not apply, because no parallel groups are declared. Rung 2 does not apply, because the parser grammar, its tests and fixtures, and the reviewer contract and hint are one coupled surface, with no two slices that pass the independence test. Rung 4 does not apply, because the phase changes an assurance-bearing parser contract. The base is the merge of `origin/main` `1299755e4` (wave 1, lockstep 0.3.39), reconciled before this phase started.
 
 ## Phase p02: Read-only clerical-resolution verifier
 
