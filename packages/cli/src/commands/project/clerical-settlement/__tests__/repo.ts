@@ -19,8 +19,9 @@ import { renderSettlementEntry } from '../parsing';
 import { gateReviewResult } from './fixtures/gate-review-result';
 
 export const PROJECT_REL = '.oat/projects/shared/settlement';
-export const SOURCE_ARTIFACT = 'reviews/m01-review.md';
-export const ARCHIVED_ARTIFACT = 'reviews/archived/m01-review.md';
+export const SOURCE_ARTIFACT = 'reviews/m01-review-2026-11-01T120000Z.md';
+export const ARCHIVED_ARTIFACT =
+  'reviews/archived/m01-review-2026-11-01T120000Z.md';
 export const GATE_PROOF = 'gate-proof.json';
 
 export interface SettlementRepo {
@@ -61,6 +62,8 @@ export interface SettlementRepoOptions {
   omitReceiptFindings?: boolean;
   scope?: string;
   moveReviewedFile?: boolean;
+  workflowMode?: 'goal' | 'quick';
+  omitInvocation?: boolean;
 }
 
 interface FixtureFinding {
@@ -77,6 +80,7 @@ function reviewArtifact(options: {
   generatedAt?: string;
   gate?: boolean;
   scope?: string;
+  omitInvocation?: boolean;
 }): string {
   const type =
     options.type === 'missing' ? '' : `oat_review_type: ${options.type}\n`;
@@ -106,7 +110,7 @@ ${
 oat_generated: true
 oat_generated_at: ${options.generatedAt ?? '2026-11-01T12:00:00Z'}
 oat_review_scope: ${JSON.stringify(options.scope ?? 'm01')}
-${type}oat_review_invocation: ${options.gate ? 'gate' : 'manual'}
+${type}${options.omitInvocation ? '' : `oat_review_invocation: ${options.gate ? 'gate' : 'manual'}\n`}
 oat_project: ${PROJECT_REL}
 oat_review_head_sha: ${options.reviewed}
 ${options.gate ? 'oat_gate_run_id: run-01\noat_gate_target: reviewer-01\n' : ''}---
@@ -193,8 +197,9 @@ function reviewRow(options: {
   gate?: boolean;
   scope?: string;
   date?: string;
+  omitInvocation?: boolean;
 }): string {
-  return `| ${options.scope ?? 'm01'} | ${options.type} | ${options.status} | ${options.date ?? '2026-11-01T12:00:00Z'} | ${options.artifact} | ${options.reviewedHead} | ${options.gate ? 'gate' : 'manual'} | ${options.gate ? 'reviewer-01' : '-'} |`;
+  return `| ${options.scope ?? 'm01'} | ${options.type} | ${options.status} | ${options.date ?? '2026-11-01'} | ${options.artifact} | ${options.reviewedHead} | ${options.omitInvocation ? '-' : options.gate ? 'gate' : 'manual'} | ${options.gate ? 'reviewer-01' : '-'} |`;
 }
 
 function journal(
@@ -264,7 +269,7 @@ ${
         )
         .join('\n')}\n`
 }
-**Outcome:** clerical repair pending
+**Outcome:** pending
 
 ## Orchestration Runs
 
@@ -280,7 +285,7 @@ ${
 `;
 }
 
-function state(): string {
+function state(workflowMode: 'goal' | 'quick'): string {
   return `---
 oat_current_task: p01
 oat_blockers: []
@@ -290,7 +295,7 @@ oat_phase: implement
 oat_phase_status: in_progress
 oat_execution_mode: single-thread
 oat_lifecycle: active
-oat_workflow_mode: goal
+oat_workflow_mode: ${workflowMode}
 oat_milestone: m01
 oat_milestone_status: reviewing
 oat_goal_status: active
@@ -309,7 +314,7 @@ export async function createSettlementRepo(
   const scope = options.scope ?? (options.descriptive ? 'p01' : 'm01');
   const sourceArtifact = SOURCE_ARTIFACT;
   const archivedArtifact = options.archiveCollision
-    ? 'reviews/archived/m01-review-2026-11-01T120000Z.md'
+    ? 'reviews/archived/m01-review-2026-11-01T120000Z-2026-11-01T121500Z.md'
     : ARCHIVED_ARTIFACT;
   const root = await mkdtemp(join(tmpdir(), 'oat-clerical-settlement-'));
   const projectPath = join(root, PROJECT_REL);
@@ -361,7 +366,7 @@ export async function createSettlementRepo(
       '',
     ),
   );
-  await write('state.md', state());
+  await write('state.md', state(options.workflowMode ?? 'goal'));
   commit('base');
 
   await writeFile(join(root, 'app.ts'), 'export const value = 2;\n', 'utf8');
@@ -381,7 +386,8 @@ export async function createSettlementRepo(
       reviewedHead: baseReviewedHead,
       gate: options.gate,
       scope,
-      date: staleDate ? '2026-10-31T12:00:00Z' : undefined,
+      omitInvocation: options.omitInvocation,
+      date: staleDate ? '2026-10-31' : undefined,
     }),
   );
   const reviewRowLine =
@@ -397,8 +403,8 @@ export async function createSettlementRepo(
       id: 'L1',
       severity: 'low',
       title: options.descriptive
-        ? 'Repair stale Artifact observation'
-        : `Repair stale ${repairField} review metadata`,
+        ? 'Repair stale Artifact cell'
+        : `Repair stale ${repairField} cell`,
       location: options.findingLocation ?? `plan.md:${reviewRowLine}`,
     },
   ];
@@ -407,8 +413,8 @@ export async function createSettlementRepo(
       id: 'M1',
       severity: 'medium',
       title: options.sharedRepair
-        ? 'Repair stale Artifact duplicate claim'
-        : 'Outcome 1 has no reachable exit evidence; add a phase',
+        ? 'Repair stale Artifact column'
+        : 'Update review metadata',
       location: `plan.md:${reviewRowLine}`,
     });
   }
@@ -453,6 +459,7 @@ export async function createSettlementRepo(
     findings: provisionalFindings,
     gate: options.gate,
     scope,
+    omitInvocation: options.omitInvocation,
   });
   await write(sourceArtifact, artifact);
   const repairedArtifact =
@@ -477,6 +484,7 @@ export async function createSettlementRepo(
           generatedAt: '2026-11-01T13:00:00Z',
           gate: options.gate,
           scope,
+          omitInvocation: options.omitInvocation,
         }),
       );
     }
@@ -493,9 +501,10 @@ export async function createSettlementRepo(
     reviewedHead: repairedHead,
     gate: options.gate,
     scope,
+    omitInvocation: options.omitInvocation,
     date:
       repairField === 'Date' || options.substantiveDistinctRepair
-        ? '2026-11-01T12:00:00Z'
+        ? '2026-11-01'
         : undefined,
   });
   await write(
@@ -663,6 +672,8 @@ export async function recordSettlement(
   options: {
     rewriteObservation?: boolean;
     omitProof?: boolean;
+    omitGateProof?: boolean;
+    contradictGateProof?: boolean;
     outsideReviewsAndGates?: boolean;
     changeReviewedHead?: boolean;
   } = {},
@@ -680,7 +691,23 @@ export async function recordSettlement(
   await repo.write('plan.md', planContent);
   const stored = options.omitProof
     ? ({ ...entry, proof: undefined } as unknown as ClericalSettlementEntry)
-    : entry;
+    : options.omitGateProof
+      ? {
+          ...entry,
+          proof: { ...entry.proof, gate: null },
+        }
+      : options.contradictGateProof
+        ? {
+            ...entry,
+            proof: {
+              ...entry.proof,
+              gate: {
+                ...entry.proof.gate!,
+                artifactPath: 'reviews/unrelated-run.md',
+              },
+            },
+          }
+        : entry;
   let journalContent = await repo.read('implementation.md');
   if (options.rewriteObservation) {
     journalContent = journalContent.replace(
@@ -703,11 +730,24 @@ export async function recordSettlement(
 
 export async function appendReceive(
   repo: SettlementRepo,
-  text = 'Settlement received.',
+  options: { appendObservation?: string } = {},
 ): Promise<string> {
+  const receivedJournal = (await repo.read('implementation.md')).replace(
+    '**Outcome:** pending',
+    '**Outcome:** clerical settlement received',
+  );
   await repo.write(
     'implementation.md',
-    `${await repo.read('implementation.md')}\n\n${text}\n`,
+    options.appendObservation
+      ? `${receivedJournal}\n\n${options.appendObservation}\n`
+      : receivedJournal,
+  );
+  await repo.write(
+    'state.md',
+    (await repo.read('state.md')).replace(
+      'oat_milestone_status: reviewing',
+      'oat_milestone_status: delivering',
+    ),
   );
   return repo.commit('chore(oat): receive clerical settlement');
 }

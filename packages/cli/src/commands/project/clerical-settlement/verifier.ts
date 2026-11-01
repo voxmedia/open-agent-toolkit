@@ -241,7 +241,7 @@ function artifactSourceValue(
 ): string | null {
   switch (field) {
     case 'generatedAt':
-      return metadata.generatedAt;
+      return generatedDate(metadata.generatedAt);
     case 'reviewedHead':
       return metadata.reviewedHead;
     case 'invocation':
@@ -249,6 +249,20 @@ function artifactSourceValue(
     case 'gateTarget':
       return metadata.gateTarget;
   }
+}
+
+function generatedDate(timestamp: string | null): string | null {
+  const match = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.exec(
+    timestamp ?? '',
+  );
+  return match?.[1] ?? null;
+}
+
+function generatedTimestampToken(timestamp: string): string | null {
+  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?Z$/.exec(
+    timestamp,
+  );
+  return match ? `${match[1]}T${match[2]}${match[3]}${match[4]}Z` : null;
 }
 
 function gateSourceValue(
@@ -379,15 +393,10 @@ function validateProposalKinds(proposal: ClericalSettlementProposal): string {
           `${finding.id} archived-artifact reference must correct the Reviews Artifact cell from an archived-artifact source`,
         );
       }
-    } else if (
-      finding.record.kind !== 'journal-field' ||
-      source.kind !== 'review-row' ||
-      source.field !== finding.correctedField ||
-      !finding.record.heading.startsWith('Clerical Observation:')
-    ) {
+    } else {
       refuse(
-        'repair-kind-ineligible',
-        `${finding.id} descriptive prose must target an exact field under a Clerical Observation heading and use the same Reviews-row field`,
+        'descriptive-prose-target-unavailable',
+        `${finding.id} descriptive prose has no lifecycle-produced target until the receive workflow defines one`,
       );
     }
   }
@@ -603,110 +612,31 @@ function canonicalReceipt(content: string): string {
     .join('\n');
 }
 
-function canonicalSettlementJournal(
-  content: string,
-  proposal: ClericalSettlementProposal,
-): string {
-  const settlementPattern =
-    /\n*### Clerical Settlement: [^\n]+\n+```json\n([\s\S]*?)\n```[ \t]*\n*/g;
-  let canonical = content.replace(
-    settlementPattern,
-    (block: string, json: string) => {
-      try {
-        const value: unknown = JSON.parse(json);
-        if (
-          isRecord(value) &&
-          isRecord(value['event']) &&
-          sameEvent(
-            value['event'] as unknown as ClericalSettlementProposal['event'],
-            proposal.event,
-          )
-        ) {
-          return '\n\n';
-        }
-      } catch {
-        // Strict settlement parsing reports malformed blocks separately.
-      }
-      return block;
-    },
-  );
-  const receipt = extractReceipt(canonical, proposal.receipt);
-  if (receipt.count !== 1) return canonical;
-  const permitted = canonicalReceipt(receipt.content);
-  canonical = canonical.replace(receipt.content, permitted);
-  return `${canonical
-    .replace(/\n+Settlement received\.\n*$/, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trimEnd()}\n`;
-}
-
-async function verifySettlementSuccessors(
+async function verifyNonGoalSuccessors(
   dependencies: ClericalSettlementDependencies,
   repoRoot: string,
   projectDir: string,
   proposal: ClericalSettlementProposal,
 ): Promise<string> {
-  const publishedHead = proposal.publishedHead!;
-  const listed = await gitText(dependencies.git, repoRoot, [
-    'rev-list',
-    '--reverse',
-    '--parents',
-    `${proposal.repairRange.head}..${publishedHead}`,
-  ]);
-  const commits = listed.split('\n').filter(Boolean);
-  if (commits.length === 0) {
-    refuse(
-      'settlement-successor-missing',
-      'replay requires committed settlement-recording or receive successors',
-    );
+  const archive = archiveSourcePaths(proposal);
+  const successor = await evaluateSuccessor(
+    dependencies.git,
+    {
+      repoRoot,
+      projectDir,
+      evidenceArtifacts: [
+        proposal.event.artifact,
+        archive?.sourcePath,
+        archive?.archivedPath,
+      ].filter((value): value is string => Boolean(value)),
+    },
+    proposal.repairRange.head,
+    proposal.publishedHead,
+  );
+  if (!successor.fresh) {
+    refuse(`bookkeeping-successor-${successor.code}`, successor.reason);
   }
-  const planPath = `${projectDir}/plan.md`;
-  const journalPath = `${projectDir}/implementation.md`;
-  for (const line of commits) {
-    const [commit, parent, ...otherParents] = line.split(/\s+/);
-    if (!commit || !parent || otherParents.length > 0) {
-      refuse(
-        'settlement-successor-merge',
-        `settlement successor ${commit ?? '(unknown)'} is not single-parent`,
-      );
-    }
-    const names = (
-      await gitText(dependencies.git, repoRoot, [
-        'diff',
-        '--no-renames',
-        '--name-only',
-        parent,
-        commit,
-      ])
-    )
-      .split('\n')
-      .filter(Boolean);
-    for (const path of names) {
-      if (path !== planPath && path !== journalPath) {
-        refuse(
-          'settlement-successor-substantive',
-          `${commit} changes ${path} after the verified repair`,
-        );
-      }
-      const before = await readBlob(dependencies.git, repoRoot, parent, path);
-      const after = await readBlob(dependencies.git, repoRoot, commit, path);
-      const canonicalBefore =
-        path === planPath
-          ? canonicalReviewTable(before, proposal, true)
-          : canonicalSettlementJournal(before, proposal);
-      const canonicalAfter =
-        path === planPath
-          ? canonicalReviewTable(after, proposal, true)
-          : canonicalSettlementJournal(after, proposal);
-      if (canonicalBefore !== canonicalAfter) {
-        refuse(
-          'settlement-successor-overreach',
-          `${commit} changes evidence beyond the selected Status, settlement entry, or receipt-permitted lines in ${path}`,
-        );
-      }
-    }
-  }
-  return `${commits.length} settlement/receive successor commit(s) are clerical-only`;
+  return `production bookkeeping judgments accept ${successor.inspected.length} non-goal successor commit(s) (${successor.code})`;
 }
 
 function journalFieldValue(journal: string, finding: ProposalFinding): string {
@@ -795,11 +725,17 @@ function validateLocation(
       );
     }
   }
-  const fieldClaim = proposalFinding.correctedField.toLowerCase();
-  if (!finding.title.toLowerCase().includes(fieldClaim)) {
+  const fieldClaim = new RegExp(
+    `\\b${proposalFinding.correctedField
+      .split(/\s+/)
+      .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('\\s+')}\\s+(?:cell|column)\\b`,
+    'i',
+  );
+  if (!fieldClaim.test(finding.title)) {
     refuse(
       'finding-claim-field-mismatch',
-      `${finding.id} claim does not identify corrected field ${proposalFinding.correctedField}`,
+      `${finding.id} claim must identify the exact ${proposalFinding.correctedField} cell or column`,
     );
   }
 }
@@ -1153,8 +1089,8 @@ export async function verifyClericalSettlement(
           !/^[0-9a-f]{40}$/.test(artifactMetadata.reviewedHead) ||
           !artifactMetadata.generatedAt ||
           row.cells['Reviewed Head'] !== artifactMetadata.reviewedHead ||
-          row.cells['Date'] !== artifactMetadata.generatedAt ||
-          row.cells['Invocation'] !== artifactMetadata.invocation ||
+          row.cells['Date'] !== generatedDate(artifactMetadata.generatedAt) ||
+          row.cells['Invocation'] !== (artifactMetadata.invocation ?? '-') ||
           row.cells['Gate Target'] !== (artifactMetadata.gateTarget ?? '-')
         ) {
           refuse(
@@ -1196,6 +1132,22 @@ export async function verifyClericalSettlement(
             refuse(
               'archive-identity-mismatch',
               'archived artifact lacks distinct source/archive references or event identity',
+            );
+          }
+          const timestampToken = generatedTimestampToken(
+            artifactMetadata.generatedAt,
+          );
+          const sourceStem = posix.basename(archive.sourcePath, '.md');
+          const archivedStem = posix.basename(archive.archivedPath, '.md');
+          if (
+            !timestampToken ||
+            !sourceStem.includes(timestampToken) ||
+            (archivedStem !== sourceStem &&
+              !archivedStem.startsWith(`${sourceStem}-`))
+          ) {
+            refuse(
+              'archive-identity-mismatch',
+              'archived filename lineage does not bind the artifact generated timestamp and source identity',
             );
           }
           return source === null
@@ -1276,6 +1228,9 @@ export async function verifyClericalSettlement(
           proof.reviewedHead !== row.cells['Reviewed Head'] ||
           !/^[0-9a-f]{40}$/.test(proof.reviewedHead) ||
           !proof.generatedAt ||
+          row.cells['Date'] !== generatedDate(proof.generatedAt) ||
+          row.cells['Invocation'] !== (proof.invocation ?? '-') ||
+          row.cells['Gate Target'] !== (proof.gateTarget ?? '-') ||
           persisted.findings.some(
             (finding, index) =>
               finding.id !== proposal.findings[index]?.id ||
@@ -1352,29 +1307,40 @@ export async function verifyClericalSettlement(
         }
         return `gate run ${gateProof.runId} and target ${gateProof.target} are corroborated`;
       });
-    } else if (proposal.mode === 'replay' && persisted?.proof.gate) {
-      gateProof = {
-        runId: persisted.proof.gate.runId,
-        target: persisted.proof.gate.target,
-        artifactPath: persisted.proof.gate.artifactPath,
-        generatedAt: persisted.proof.gate.generatedAt,
-      };
+    } else if (proposal.mode === 'replay' && gateEvent) {
       check(checks, 'gate-proof', () => {
+        if (!persisted?.proof.gate) {
+          refuse(
+            'durable-proof-missing',
+            'gate-event replay requires the committed settlement gate proof',
+          );
+        }
+        gateProof = {
+          runId: persisted.proof.gate.runId,
+          target: persisted.proof.gate.target,
+          artifactPath: persisted.proof.gate.artifactPath,
+          generatedAt: persisted.proof.gate.generatedAt,
+        };
         if (
-          gateProof!.runId !== artifactMetadata?.gateRunId ||
-          gateProof!.target !== artifactMetadata?.gateTarget ||
-          gateProof!.target !== row.cells['Gate Target'] ||
-          gateProof!.generatedAt !== artifactMetadata?.generatedAt ||
+          gateProof.runId !== artifactMetadata?.gateRunId ||
+          gateProof.target !== artifactMetadata?.gateTarget ||
+          gateProof.target !== row.cells['Gate Target'] ||
+          gateProof.generatedAt !== artifactMetadata?.generatedAt ||
           persisted!.proof.gate!.reviewedHead !==
             artifactMetadata?.reviewedHead ||
-          persisted!.proof.gate!.archivedArtifact !== proposal.event.artifact
+          persisted!.proof.gate!.archivedArtifact !== proposal.event.artifact ||
+          !artifactReferenceMatches(
+            gateProof.artifactPath,
+            archive?.sourcePath ?? proposal.event.artifact,
+            projectPath,
+          )
         ) {
           refuse(
             'gate-proof-mismatch',
             'committed gate proof no longer agrees with the selected event',
           );
         }
-        return `committed gate run ${gateProof!.runId} is corroborated`;
+        return `committed gate run ${gateProof.runId} is corroborated`;
       });
     }
 
@@ -1462,16 +1428,6 @@ export async function verifyClericalSettlement(
     await asyncCheck(checks, 'repair-range', async () =>
       verifyRepairCommits(dependencies, repoRoot, projectDir, proposal),
     );
-    if (proposal.mode === 'replay') {
-      await asyncCheck(checks, 'settlement-successors', async () =>
-        verifySettlementSuccessors(
-          dependencies,
-          repoRoot,
-          projectDir,
-          proposal,
-        ),
-      );
-    }
 
     check(checks, 'corrected-values', () => {
       const baseRows = readReviewRows(repairBasePlan);
@@ -1562,6 +1518,11 @@ export async function verifyClericalSettlement(
             : proposal.repairRange.head,
         ),
       );
+      if (proposal.mode === 'replay') {
+        await asyncCheck(checks, 'non-goal-successor-chain', async () =>
+          verifyNonGoalSuccessors(dependencies, repoRoot, projectDir, proposal),
+        );
+      }
     }
 
     if (proposal.mode === 'replay') {
@@ -1587,6 +1548,7 @@ export async function verifyClericalSettlement(
             'utf8',
           )
         : null;
+    const settlementGateProof = gateProof as GateProof | null;
     const entry: ClericalSettlementEntry = {
       schemaVersion: 1,
       settlementId: settlementId(proposal),
@@ -1613,11 +1575,11 @@ export async function verifyClericalSettlement(
           gateTarget: artifactMetadata!.gateTarget,
         },
         gate:
-          proposal.gateProof && gateProof && gateProofContent
+          proposal.gateProof && settlementGateProof && gateProofContent
             ? {
                 path: proposal.gateProof,
                 sha256: sha256(gateProofContent),
-                ...gateProof,
+                ...settlementGateProof,
                 reviewedHead: reviewedRevision,
                 archivedArtifact: proposal.event.artifact,
               }
