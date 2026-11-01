@@ -129,6 +129,15 @@ describe('buildToolPacksSectionBody', () => {
     expect(body).not.toContain('project-management -->');
     expect(body).not.toContain('oat pjm init');
   });
+
+  it('tells agents to refresh project provider views only', () => {
+    const body = buildToolPacksSectionBody(realizedPacks);
+
+    expect(body).toContain(
+      '- **Refresh provider views:** `oat sync --scope project`',
+    );
+    expect(body).not.toContain('oat sync --scope all');
+  });
 });
 
 describe('buildToolPacksSectionBody skills directories', () => {

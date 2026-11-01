@@ -10,6 +10,13 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-261101-explicit-install-scope-writes  | 2026-11-01 | accepted   | Explicit install scope writes only that scope                                                          | -       |
+| DR-261101-force-stage-only-head-tracked  | 2026-11-01 | accepted   | Force-stage only HEAD-tracked exact paths                                                              | -       |
+| DR-261101-guided-setup-never-calls-gh    | 2026-11-01 | accepted   | Guided setup never calls gh                                                                            | -       |
+| DR-261101-preserve-explicit-codex-multi  | 2026-11-01 | accepted   | Preserve explicit Codex multi-agent settings                                                           | -       |
+| DR-261101-self-cleaning-isolated-home    | 2026-11-01 | accepted   | Self-cleaning isolated HOME for evidence tests                                                         | -       |
+| DR-261101-skip-dangling-agent-links      | 2026-11-01 | accepted   | Skip dangling agent links in collision scans                                                           | -       |
+| DR-261101-stamp-canonical-codex-roles    | 2026-11-01 | accepted   | Stamp canonical Codex roles with the scope owner                                                       | -       |
 | DR-261031-bind-gate-artifact-admission   | 2026-10-31 | accepted   | Bind gate-artifact admission to tracked Reviews-row cells                                              | -       |
 | DR-261031-judge-stacked-delivery-exit    | 2026-10-31 | accepted   | Judge stacked delivery exit carriers at the stack tip                                                  | -       |
 | DR-261031-limit-journal-rewrite          | 2026-10-31 | accepted   | Limit journal rewrite detection to goal projects                                                       | -       |

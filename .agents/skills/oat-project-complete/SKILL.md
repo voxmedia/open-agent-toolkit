@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.18
+  version: 1.7.19
 ---
 
 # Complete Project
@@ -1139,11 +1139,17 @@ carries the same Steps 0.5 through 4 contract:
 1. **Archive residual review artifacts** — already handled in Step 4.
 2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
 3. **Check final review status** — already checked in Step 3.1. Use the result, don't re-check.
-4. **Collect project summary** — if `summary.md` exists (from Step 3.5), use it as the primary source for the PR description's Summary section (per `oat-project-pr-final` Step 3.0). Read remaining artifacts and collect git context:
+4. **Collect project summary** — if `summary.md` exists (from Step 3.5), use it as the primary source for the PR description's Summary section (per `oat-project-pr-final` Step 3.0). Read remaining artifacts and collect git context. Resolve `BASE_BRANCH` here with the same chain the final PR skill uses (this skill takes no base argument); Step 11 reuses it:
 
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null || echo "")
+# Resolution chain: OAT config > git remote > fallback
+BASE_BRANCH=$(oat config get git.defaultBranch 2>/dev/null || true)
+if [ -z "$BASE_BRANCH" ]; then
+  BASE_BRANCH=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|origin/||' || true)
+fi
+BASE_BRANCH="${BASE_BRANCH:-main}"
+MERGE_BASE=$(git merge-base "origin/$BASE_BRANCH" HEAD 2>/dev/null || git merge-base "$BASE_BRANCH" HEAD 2>/dev/null || echo "")
 
 if [[ -n "$MERGE_BASE" ]]; then
   git log --oneline "${MERGE_BASE}..HEAD"
@@ -1628,17 +1634,21 @@ Steps:
    description artifact at `PR_DESCRIPTION_PATH`.
 2. For the non-archive artifact, write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
-4. Create the PR from the branch already pushed in Step 10:
+4. Reuse the `BASE_BRANCH` resolved in Step 7 item 4. A Step 3.65 resume
+   route that skipped Step 7 has not set it: run that step's resolution block
+   first. Never create the PR with an empty base.
+5. Create the PR from the branch already pushed in Step 10:
 
 ```bash
-gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
+: "${BASE_BRANCH:?BASE_BRANCH is unset; run the Step 7 base-branch resolution first}"
+gh pr create --base "$BASE_BRANCH" --title "{title}" --body-file "$TMP_BODY"
 ```
 
-5. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
+6. Clean up the temp file, including `PR_BODY_FILE`, once the PR is created.
    When `gh` is missing or `gh pr create` fails, keep it and report its path
    in Step 12.
 
-Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents.
+Do not assume `gh` is installed; if missing, instruct manual PR creation using the file contents and note the resolved base branch (`BASE_BRANCH`).
 
 ### Step 11.5: Sync Open-PR Description on GitHub (Conditional)
 

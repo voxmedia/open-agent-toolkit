@@ -1,7 +1,7 @@
 ---
 id: BL-261002-stop-oat-sync-from-changing
 title: Stop oat sync from changing user values in .codex/config.toml
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:51.027Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:51Z'
 associated_issues: []
 external_plans: []
 ---

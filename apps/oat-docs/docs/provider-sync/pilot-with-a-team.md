@@ -144,23 +144,23 @@ checkouts handle committed links was not tested.
 
 Run `oat sync --scope project`, and commit its output in the same change, when
 you add, rename, or delete a skill, agent, or rule, or change an agent or rule.
-Deleting or renaming an agent also needs the manual cleanup described below.
 Rules, Codex agent files and Cursor's per-model agent variants are generated
 copies, so they only change when sync runs. An edit inside an existing linked
 skill reaches Claude Code at once, because the view is a link.
 
 Make every change in `.agents/`, never in the provider folders. Re-running sync
 overwrites edits made to generated copies, replaces an untracked file sitting
-at a view path, and removes the view of a deleted skill or rule. Editing
-through a link changes the canonical file itself, which is easy to miss in
-review.
+at a view path, and removes the views of a deleted skill, rule, or agent.
+Editing through a link changes the canonical file itself, which is easy to miss
+in review.
 
-Agents are the exception. After you delete or rename an agent, delete its old
-links in `.cursor/agents/` and `.claude/agents/` yourself: with Cursor enabled,
-`oat sync` and `oat status` stop with an error saying the link's target
-`escapes the sync scope` until both links are gone. Also delete its
-`.codex/agents/<name>.toml` file and the `[agents.<name>]` table in
-`.codex/config.toml`, which sync leaves behind.
+From 0.3.39, deleting or renaming an agent needs no manual cleanup: sync
+removes its old links in `.cursor/agents/`, `.claude/agents/` and
+`.github/agents/`, its `.codex/agents/<name>.toml` file and its
+`[agents.<name>]` table in `.codex/config.toml`. A Codex role that a version
+before 0.3.39 generated for an agent deleted before the upgrade has no owner
+header, so delete that file and its table by hand once (see
+[Manifest and Drift](manifest-and-drift.md#quick-look)).
 
 Before committing, run `oat status --scope project`. It exits 1 when any view
 is missing or drifted, or when a stray file sits in a provider folder. For a
@@ -177,12 +177,12 @@ inside the working tree. Remove it with `oat init --scope project --no-hook`.
 
 ## Mixed tools
 
-| Provider    | What OAT generates in the repository                                                                                             | What the team should know                                                                                                                                                        |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code | A relative link per skill in `.claude/skills/` and per agent in `.claude/agents/`; rules as generated copies in `.claude/rules/` | The only provider with skill views, so a new skill reaches Claude Code only after sync                                                                                           |
-| Cursor      | No skill files: it reads `.agents/skills`. A link per agent in `.cursor/agents/`; rules as `.cursor/rules/*.mdc` files           | Its `.cursor/skills/` folder is not managed; skills found there are reported as strays                                                                                           |
-| Codex       | No skill files: it reads `.agents/skills`. A generated `.codex/agents/<name>.toml` per agent, registered in `.codex/config.toml` | Sync merges into an existing `.codex/config.toml`: it adds OAT's tables, turns on `multi_agent` and raises `max_depth` to at least 2, and keeps your other settings and comments |
-| Gemini      | Nothing; it reads skills and agents from `.agents/` directly                                                                     | Nothing to commit                                                                                                                                                                |
+| Provider    | What OAT generates in the repository                                                                                             | What the team should know                                                                                                                                                                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | A relative link per skill in `.claude/skills/` and per agent in `.claude/agents/`; rules as generated copies in `.claude/rules/` | The only provider with skill views, so a new skill reaches Claude Code only after sync                                                                                                                                                                     |
+| Cursor      | No skill files: it reads `.agents/skills`. A link per agent in `.cursor/agents/`; rules as `.cursor/rules/*.mdc` files           | Its `.cursor/skills/` folder is not managed; skills found there are reported as strays                                                                                                                                                                     |
+| Codex       | No skill files: it reads `.agents/skills`. A generated `.codex/agents/<name>.toml` per agent, registered in `.codex/config.toml` | Sync merges into an existing `.codex/config.toml`: it adds OAT's tables, adds `multi_agent` and `max_depth` only when they are missing, keeps the values you set (reporting a conflict when OAT needs another), and keeps your other settings and comments |
+| Gemini      | Nothing; it reads skills and agents from `.agents/` directly                                                                     | Nothing to commit                                                                                                                                                                                                                                          |
 
 If OAT's own implementer and reviewer agents are installed in the repository,
 sync also generates one file per supported model for each of them, in

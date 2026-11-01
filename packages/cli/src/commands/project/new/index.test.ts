@@ -13,6 +13,7 @@ import { createProjectNewCommand } from './index';
 type CommitScaffoldStatus =
   | 'committed'
   | 'skipped_disabled'
+  | 'skipped_local_scope'
   | 'skipped_no_worktree'
   | 'skipped_nothing'
   | 'failed';
@@ -269,6 +270,37 @@ describe('createProjectNewCommand', () => {
       ),
     ).toBe(true);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('names local scope, not --no-commit, when a local project is not committed', async () => {
+    const result = {
+      mode: 'quick' as const,
+      scope: 'local' as const,
+      projectPath: '.oat/projects/local/demo',
+      projectsRoot: '.oat/projects/local',
+      createdFiles: ['state.md'],
+      skippedFiles: [],
+      activePointerUpdated: true,
+      dashboardRefreshed: true,
+      committed: false,
+      commitStatus: 'skipped_local_scope' as const,
+    };
+    const { command, capture } = createHarness({ result });
+
+    await runCommand(command, ['demo', '--scope', 'local']);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain(
+      'Scaffold commit: skipped (local-scope projects are gitignored and never committed)',
+    );
+    expect(output).not.toContain('--no-commit');
+    expect(process.exitCode).toBe(0);
+
+    const json = createHarness({ result });
+    await runCommand(json.command, ['demo', '--scope', 'local'], ['--json']);
+    expect(json.capture.jsonPayloads.at(-1)).toMatchObject({
+      commitStatus: 'skipped_local_scope',
+    });
   });
 
   it('reports a distinct message when the work tree is missing', async () => {

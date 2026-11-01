@@ -1,7 +1,7 @@
 ---
 id: BL-261002-honor-the-requested-scope
 title: Honor the requested scope for every pack in tools install and init --setup
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:54.250Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:52Z'
 associated_issues: []
 external_plans: []
 ---

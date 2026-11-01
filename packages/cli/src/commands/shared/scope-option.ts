@@ -18,13 +18,16 @@ import { Option } from 'commander';
  *   commands. Use `'project'` for commands that only support project scope
  *   (e.g. `providers set`) so bare invocations succeed without requiring an
  *   explicit `--scope project` flag.
+ * @param description - Help text for commands whose scope default needs
+ *   more explanation than "Limit execution scope".
  */
 export function withScopeOption(
   cmd: Command,
   defaultScope: 'project' | 'user' | 'all' = 'all',
+  description = 'Limit execution scope',
 ): Command {
   return cmd.addOption(
-    new Option('--scope <scope>', 'Limit execution scope')
+    new Option('--scope <scope>', description)
       .choices(['project', 'user', 'all'])
       .default(defaultScope),
   );

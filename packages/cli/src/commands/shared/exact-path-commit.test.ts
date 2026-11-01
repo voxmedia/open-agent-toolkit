@@ -75,6 +75,19 @@ async function lintHook(root: string): Promise<void> {
     `"${process.execPath}" "${lintStaged}" --config "${config}" --quiet`,
   );
 }
+// `assets/*` ignores the parent directory of a force-added tracked file, the
+// shape of `packages/cli/assets/*` over `packages/cli/assets/templates/`.
+async function ignoredParentRepo(): Promise<string> {
+  const root = await repo();
+  git(root, ['commit', '-qam', 'clean fixture']);
+  await writeFile(join(root, '.gitignore'), 'assets/*\n');
+  await mkdir(join(root, 'assets/templates'), { recursive: true });
+  await writeFile(join(root, 'assets/templates/t.md'), 'tracked template\n');
+  git(root, ['add', '.gitignore']);
+  git(root, ['add', '-f', 'assets/templates/t.md']);
+  git(root, ['commit', '-qm', 'tracked file under an ignored directory']);
+  return root;
+}
 function preservation(root: string) {
   expect(git(root, ['show', ':unrelated.md'])).toBe('STAGED unrelated literal');
   expect(git(root, ['show', 'HEAD:unrelated.md'])).toBe('base unrelated');
@@ -1133,6 +1146,110 @@ printf "FOREIGN temporary bytes" > "$temporary/foreign"`,
       }),
     ).toMatchObject({ outcome: 'committed' });
     preservation(root);
+  });
+
+  it('commits a modified tracked file under an ignored directory with hooks enabled', async () => {
+    const root = await ignoredParentRepo();
+    await hook(root, 'printf "hook ran" > .git/hook-ran');
+    const head = git(root, ['rev-parse', 'HEAD']);
+    await writeFile(join(root, 'assets/templates/t.md'), 'changed template\n');
+    expect(
+      await commitExactPaths({
+        repoRoot: root,
+        paths: ['assets/templates/t.md'],
+        message: 'feat: tracked under ignored directory',
+        identity: 'tracked-ignored-modify',
+      }),
+    ).toMatchObject({ outcome: 'committed', committed: true });
+    expect(git(root, ['show', '-s', '--format=%P', 'HEAD'])).toBe(head);
+    expect(git(root, ['show', 'HEAD:assets/templates/t.md'])).toBe(
+      'changed template',
+    );
+    expect(
+      git(root, ['diff', '--name-only', `${head}..HEAD`]).split('\n'),
+    ).toEqual(['assets/templates/t.md']);
+    expect(await readFile(join(root, '.git/hook-ran'), 'utf8')).toBe(
+      'hook ran',
+    );
+    expect(git(root, ['status', '--porcelain'])).toBe('');
+  });
+
+  it('commits a tracked file under an ignored directory through a real lint-staged re-stage', async () => {
+    const root = await ignoredParentRepo();
+    await lintHook(root);
+    await writeFile(join(root, 'assets/templates/t.md'), 'changed template\n');
+    expect(
+      await commitExactPaths({
+        repoRoot: root,
+        paths: ['assets/templates/t.md'],
+        message: 'feat: lint-staged tracked under ignored directory',
+        identity: 'tracked-ignored-lint-staged',
+      }),
+    ).toMatchObject({ outcome: 'committed', committed: true });
+    expect(git(root, ['show', 'HEAD:assets/templates/t.md'])).toBe(
+      'changed template\nHOOK FINAL',
+    );
+    expect(git(root, ['status', '--porcelain'])).toBe('');
+  });
+
+  it('records the removal of a tracked file under an ignored directory', async () => {
+    const root = await ignoredParentRepo();
+    await rm(join(root, 'assets/templates/t.md'));
+    expect(
+      await commitExactPaths({
+        repoRoot: root,
+        paths: ['assets/templates/t.md'],
+        message: 'feat: remove tracked under ignored directory',
+        identity: 'tracked-ignored-delete',
+      }),
+    ).toMatchObject({ outcome: 'committed', committed: true });
+    expect(git(root, ['ls-tree', 'HEAD', '--', 'assets/templates/t.md'])).toBe(
+      '',
+    );
+    expect(git(root, ['status', '--porcelain'])).toBe('');
+  });
+
+  it('refuses an untracked path matched by an ignore rule and commits nothing', async () => {
+    const root = await ignoredParentRepo();
+    await hook(root, 'printf "hook ran" > .git/hook-ran');
+    await writeFile(join(root, 'assets/templates/t.md'), 'changed template\n');
+    await writeFile(join(root, 'assets/templates/new.md'), 'untracked\n');
+    const head = git(root, ['rev-parse', 'HEAD']);
+    const index = await readFile(join(root, '.git/index'));
+    for (const paths of [
+      ['assets/templates/new.md'],
+      ['assets/templates/t.md', 'assets/templates/new.md'],
+    ]) {
+      const result = await commitExactPaths({
+        repoRoot: root,
+        paths,
+        message: 'feat: untracked ignored',
+        identity: `untracked-ignored-${paths.length}`,
+      });
+      expect(result).toMatchObject({ outcome: 'failed', committed: false });
+      expect(result.error).toMatch(
+        /paths are ignored by one of your \.gitignore files:\nassets\/templates\n/,
+      );
+    }
+    expect(git(root, ['rev-parse', 'HEAD'])).toBe(head);
+    expect(await readFile(join(root, '.git/index'))).toEqual(index);
+    expect(git(root, ['ls-files', '--', 'assets/templates/new.md'])).toBe('');
+    expect(existsSync(join(root, '.git/hook-ran'))).toBe(false);
+  });
+
+  it('still commits an untracked path that no ignore rule matches', async () => {
+    const root = await ignoredParentRepo();
+    await writeFile(join(root, 'fresh.md'), 'fresh\n');
+    expect(
+      await commitExactPaths({
+        repoRoot: root,
+        paths: ['fresh.md'],
+        message: 'feat: untracked control',
+        identity: 'untracked-control',
+      }),
+    ).toMatchObject({ outcome: 'committed', committed: true });
+    expect(git(root, ['show', 'HEAD:fresh.md'])).toBe('fresh');
+    expect(git(root, ['status', '--porcelain'])).toBe('');
   });
 
   it('preserves the real index and worktree on an actual lint-staged hook failure', async () => {

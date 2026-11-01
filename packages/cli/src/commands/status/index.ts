@@ -198,6 +198,10 @@ interface StatusPackReport {
   evidence: PackEvidenceBlockV1;
 }
 
+function assetRecoveryFix(rerun: string): string {
+  return `Reinstall the OAT CLI (\`npm install --global @open-agent-toolkit/cli\`) or point \`OAT_ASSETS_DIR\` at a complete asset bundle for this CLI version, then rerun \`${rerun}\`. In an OAT source checkout, run \`pnpm build\` instead.`;
+}
+
 function unavailablePackReport(
   error: unknown,
   roots: PackPathRoots,
@@ -227,7 +231,7 @@ function unavailablePackReport(
       diagnostic: {
         code: 'packs:inventory',
         message: `Unable to inventory managed packs: ${detail}`,
-        recovery: 'Run `pnpm build` and rerun `oat status`.',
+        recovery: assetRecoveryFix('oat status'),
       },
     },
     states: [],

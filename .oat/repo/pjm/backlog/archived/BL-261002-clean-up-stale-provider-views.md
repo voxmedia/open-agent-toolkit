@@ -2,7 +2,7 @@
 id: BL-261002-clean-up-stale-provider-views
 title: Clean up stale provider views and Codex entries when a canonical agent is
   deleted or renamed
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -15,7 +15,7 @@ labels:
   - docs-overhaul-followup
 assignee: null
 created: 2026-10-02T18:40:49.939Z
-updated: 2026-10-31T21:08:00Z
+updated: '2026-11-01T00:42:50Z'
 associated_issues: []
 external_plans: []
 ---

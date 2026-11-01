@@ -38,6 +38,23 @@ copying their content here. -->
 
 ## What's Implemented
 
+- CLI `0.3.39` (`wave-1-correctness`, implementation complete, final PR
+  pending) delivers Wave 1 of the
+  [backlog and roadmap review](backlog/reviews/backlog-and-roadmap-review.md).
+  Sync cleans up after a deleted or renamed agent: dangling agent links no
+  longer abort `oat sync` or `oat status`, and stale provider views, Codex
+  roles, variants and `[agents.*]` tables are removed on full sync and on pack
+  removal, with canonical-derived Codex roles stamped `project-config` or
+  `user-config`. Sync keeps explicit Codex `multi_agent` and `max_depth`
+  values. `oat tools install` and `oat init --setup` honor the requested scope,
+  and setup never runs `gh`. The `--no-hook` help, `packs:inventory` remedies,
+  local-scope scaffold status, `EPIPE` exit and sync guidance are corrected.
+  The implement, complete and pr-final skill contracts match their behavior.
+  `oat internal commit-paths` commits tracked files under ignored directories,
+  and `pnpm test:evidence` with `scripts/with-isolated-home.sh` removes its
+  temporary HOME. The seven items are archived; the base-branch chain masked
+  by `git.defaultBranch` defaults is deferred to the operator at closeout.
+
 - CLI `0.3.22` (`artifact-cleanup`, implementation complete, open as
   [PR #365](https://github.com/voxmedia/open-agent-toolkit/pull/365))
   makes lifecycle artifacts readable for projects archived from now on:

@@ -9,6 +9,7 @@ import {
   notRunProviderSyncOutcome,
   providerSyncOutcomeFromAutoSync,
   resolveAdditivePackScopeSelection,
+  resolveExplicitPackScopeSelection,
 } from './pack-lifecycle-outcome';
 
 function evidence(scopes: Array<'project' | 'user'>): ToolPackEvidence {
@@ -69,6 +70,48 @@ describe('pack lifecycle outcome', () => {
         unknownScopes: ['user'],
       }),
     ).toThrow(/inventory is unknown at user/);
+  });
+
+  it.each([
+    { requested: 'project' as const, retained: ['user'] as const },
+    { requested: 'user' as const, retained: ['project'] as const },
+    { requested: 'user' as const, retained: [] as const },
+  ])(
+    'targets only the explicit $requested scope and retains $retained',
+    ({ requested, retained }) => {
+      expect(
+        resolveExplicitPackScopeSelection({
+          pack: 'ideas',
+          requested,
+          knownRealizedScopes: retained,
+          unknownScopes: [],
+        }),
+      ).toEqual({
+        pack: 'ideas',
+        requested,
+        retainedRealizedScopes: retained,
+        targetScopes: [requested],
+      });
+    },
+  );
+
+  it('fails explicit selection closed only when the requested scope is unknown', () => {
+    expect(() =>
+      resolveExplicitPackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: [],
+        unknownScopes: ['user'],
+      }),
+    ).toThrow(/inventory is unknown at user/);
+    expect(
+      resolveExplicitPackScopeSelection({
+        pack: 'ideas',
+        requested: 'project',
+        knownRealizedScopes: [],
+        unknownScopes: ['user'],
+      }).targetScopes,
+    ).toEqual(['project']);
   });
 
   it('reports complete only after canonical and final placement verification', () => {
