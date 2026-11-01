@@ -291,6 +291,33 @@ self-referencing link; prove both guards can fail.
 
 ---
 
+### Task p01-t05: (review) Remove a removed agent's declared-name Codex role on pack removal
+
+Review fix for the implementation exit gate review
+`reviews/archived/final-review-2026-11-01T012851Z.md` (gate run
+`b066376d-1060-4d4b-b0de-1dac7fe96d0f`, Medium M1): partial sync derived the
+removed role from the Markdown filename, so `oat tools remove` left the
+generated role and `[agents.*]` table of a removed agent whose frontmatter
+`name` differs from its filename (closes BL-261002-clean-up-stale-provider-views
+acceptance criterion 2 for customized names).
+
+**Files:** `packages/cli/src/providers/codex/codec/sync-extension.ts` and its
+test (plus the pack-removal integration test that exercises `oat tools remove`
+or `runSyncInProcess` with `removedCanonicalPaths`).
+
+**Steps:** in a removal partial sync, remove owned roles (owner rule as in full
+sync) that no present canonical agent produces, so a removed agent's
+declared-name role and its variants are removed even when the name differs from
+the filename; keep the protection for roles produced by present agents. Extend
+the removal regression to assert the obsolete declared role and table
+disappear; prove the guard can fail.
+
+**Verify:** focused tests, lint, type-check, forced CLI suite.
+
+**Commit** — `fix(p01-t05): remove a removed agent's declared-name Codex role on pack removal`
+
+---
+
 ## Phase 2: Install scope and CLI messages
 
 Items: BL-261002-honor-the-requested-scope — Honor the requested scope for
@@ -906,7 +933,7 @@ When every gate passes, no task is appended and nothing is committed.
 | final | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T012159Z.md         | 63b8bf8ca44f353597c843c8cb8247e853dc7d05 | auto       | -                 |
 | plan  | artifact | fixes_completed | 2026-10-31 | -                                                           | ca7780669bee124cd23222f8b2f48d4c3ef39e12 | auto       | -                 |
 | plan  | artifact | passed          | 2026-10-31 | reviews/archived/artifact-plan-review-2026-10-31T230813Z.md | b37cd7c49b32083f10e7d1794d2c9d92baa01966 | gate       | codex-6-sol-xhigh |
-| final | code     | received        | 2026-11-01 | reviews/final-review-2026-11-01T012851Z.md                  | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
+| final | code     | fixes_added     | 2026-11-01 | reviews/archived/final-review-2026-11-01T012851Z.md         | 106363c85d88997f88ad8a8a8534f8cfdc03936a | gate       | codex-6-sol-xhigh |
 
 Plan artifact review disposition (Auto Artifact-Review Loop, structured
 mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
@@ -941,13 +968,13 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: 4 tasks - Provider sync cleanup and Codex config values (items 1, 2), including review fix p01-t04
+- Phase 1: 5 tasks - Provider sync cleanup and Codex config values (items 1, 2), including review fixes p01-t04 and p01-t05
 - Phase 2: 7 tasks - Install scope and CLI messages (items 3, 4)
 - Phase 3: 4 tasks - Lifecycle skill contracts (item 5), including review fix p03-t04
 - Phase 4: 2 tasks - Exact-path commits and isolated test HOME (items 6, 7)
 - Phase 5: 6 tasks - Docs, generated views, version bump, backlog close-out, review fixes p05-t05 and p05-t06 (Definition of Done gates run as its phase-end check)
 
-**Total: 23 tasks**
+**Total: 24 tasks**
 
 Ready for code review and merge.
 

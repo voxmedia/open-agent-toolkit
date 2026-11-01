@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-10-31
-oat_current_task_id: null
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -16,21 +16,21 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 7     | 7/7       |
-| Phase 3 | complete | 4     | 4/4       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 6     | 6/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 5     | 4/5       |
+| Phase 2 | complete    | 7     | 7/7       |
+| Phase 3 | complete    | 4     | 4/4       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | complete    | 6     | 6/6       |
 
-**Total:** 23/23 tasks completed
+**Total:** 23/24 tasks completed
 
 ---
 
 ## Phase 1: Provider sync cleanup and Codex config values
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-10-31
 **Worktree:** `.worktrees/wave1-p01` (branch `fix/wave-1-correctness-20261031-p01`), merged `--no-ff` at fan-in
 
@@ -122,6 +122,11 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 - `packages/cli/src/providers/codex/codec/sync-extension.ts` and test; `packages/cli/src/providers/cursor/codec/materialize.ts` and test
 
 **Verification:** focused 70 tests exit 0; wide 45 files / 590 tests exit 0; forced CLI suite 434 files / 9245 tests exit 0. Guard-can-fail: unprotected predicate → both new tests fail (planned removals `gone.toml`, `oat-reviewer.toml`); old rethrow → ELOOP test fails; restored, all pass.
+
+### Task p01-t05: (review) Remove a removed agent's declared-name Codex role on pack removal
+
+**Status:** pending
+**Commit:** -
 
 ### Review Received: p01
 
@@ -707,6 +712,19 @@ This journal resumes interrupted implementation sessions. Every plan task has on
 **Outcome:** passed
 
 - Gate `IMPLEMENT-11` (autonomous final review): route native Cursor `oat-reviewer-claude-opus-5-5-high` (resolver-selected `high` reviewer ceiling, same model family as the implementers; cross-family independence comes from the configured `oat-project-implement` exit gate), request `wave1-final-review-1`, scope `final` `1056ccb18683548a4cdc5d5e81f82a6346defe8e..63b8bf8ca44f353597c843c8cb8247e853dc7d05`.
+
+### Review Received: final (implementation exit gate, run b066376d-1060-4d4b-b0de-1dac7fe96d0f)
+
+**Date:** 2026-11-01
+**Review artifact (local-only):** reviews/archived/final-review-2026-11-01T012851Z.md
+
+**Findings:** Critical 0 · High 0 · Medium 1 · Low 0
+
+- M1 (Medium): pack removal derives the removed Codex role from the Markdown filename, so a removed agent whose frontmatter `name` differs leaves its generated role and `[agents.*]` table until the next full sync (independently probed by the gate reviewer; incomplete coverage of BL-261002-clean-up-stale-provider-views criterion 2) → fix task p01-t05 (autonomy `REVIEWRECEIVE-04`: converted, not deferred).
+
+**Outcome:** fixes queued: p01-t05
+
+- **Gate:** oat-project-implement · **Scope:** final · **Outcome:** generation 1 envelope `ok` (`review_completed_gate_passed`, threshold high, target `codex-6-sol-xhigh`, different-family) · attempt 1 of 2; receive queued p01-t05, so the generation goes stale when the fix lands and a new generation reruns final verification, final review and the gate.
 
 ## Deferred Findings
 
