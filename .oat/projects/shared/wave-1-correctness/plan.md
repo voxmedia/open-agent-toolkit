@@ -960,6 +960,7 @@ When every gate passes, no task is appended and nothing is committed.
 | final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015001Z.md         | 5ac69c397894b9e0757d2481b260ba689c38911e | auto       | -                 |
 | final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T015445Z.md         | b72c8fc983546455ff511f797a2478b4631eb9c2 | gate       | codex-6-sol-xhigh |
 | final  | code     | passed          | 2026-11-01 | reviews/archived/final-review-2026-11-01T161645Z.md         | 6504b9646640ef1d0fb00c4ff0d1cd83bef39e70 | auto       | -                 |
+| final  | code     | received        | 2026-11-01 | reviews/final-review-2026-11-01T162337Z.md                  | 9f8709d5db73d3fb21888a7e03f443a3d23ead98 | gate       | codex-6-sol-xhigh |
 
 Plan artifact review disposition (Auto Artifact-Review Loop, structured
 mode, native Cursor variant `oat-reviewer-claude-opus-5-5-high` resolved for
